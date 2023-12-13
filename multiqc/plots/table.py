@@ -36,7 +36,7 @@ def plot(data, headers=None, pconfig=None):
 
     # Make a beeswarm plot if we have lots of samples
     if len(s_names) >= config.max_table_rows and pconfig.get("no_beeswarm") is not True:
-        logger.debug(f"Plotting beeswarm instead of table, {len(s_names)} samples")
+        logger.debug("Plotting beeswarm instead of table, {} samples".format(len(s_names)))
         warning = (
             '<p class="text-muted"><span class="glyphicon glyphicon-exclamation-sign" '
             'title="A beeswarm plot has been generated instead because of the large number of samples. '
@@ -54,7 +54,7 @@ def make_table(dt: table_object.DataTable):
     :param dt: MultiQC datatable object
     """
 
-    table_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
+    table_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
     table_id = report.save_htmlid(table_id)
     t_headers = dict()
     t_modal_headers = dict()
@@ -73,7 +73,7 @@ def make_table(dt: table_object.DataTable):
         # Build the table header cell
         shared_key = ""
         if header.get("shared_key", None) is not None:
-            shared_key = f" data-shared-key={header['shared_key']}"
+            shared_key = " data-shared-key={}".format(header["shared_key"])
 
         hide = ""
         muted = ""
@@ -95,7 +95,7 @@ def make_table(dt: table_object.DataTable):
             rid=rid, h=hide, da=data_attr, c=cell_contents
         )
 
-        empty_cells[rid] = f'<td class="data-coloured {rid} {hide}"></td>'
+        empty_cells[rid] = '<td class="data-coloured {rid} {h}"></td>'.format(rid=rid, h=hide)
 
         # Build the modal table row
         t_modal_headers[rid] = """
@@ -146,7 +146,7 @@ def make_table(dt: table_object.DataTable):
         for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
-                kname = f"{header['namespace']}_{rid}"
+                kname = "{}_{}".format(header["namespace"], rid)
                 dt.raw_vals[s_name][kname] = val
 
                 if "modify" in header and callable(header["modify"]):
@@ -229,7 +229,9 @@ def make_table(dt: table_object.DataTable):
                                     if "lt" in cmp and float(cmp["lt"]) > float(val):
                                         cmatches[ftype] = True
                                 except Exception:
-                                    logger.warning(f"Not able to apply table conditional formatting to '{val}' ({cmp})")
+                                    logger.warning(
+                                        "Not able to apply table conditional formatting to '{}' ({})".format(val, cmp)
+                                    )
                 # Apply HTML in order of config keys
                 badge_col = None
                 for cfc in cond_formatting_colours:
@@ -237,11 +239,11 @@ def make_table(dt: table_object.DataTable):
                         if cmatches[cfck]:
                             badge_col = cfc[cfck]
                 if badge_col is not None:
-                    valstring = f'<span class="badge" style="background-color:{badge_col}">{valstring}</span>'
+                    valstring = '<span class="badge" style="background-color:{}">{}</span>'.format(badge_col, valstring)
 
                 # Categorical background colours supplied
                 if val in header.get("bgcols", {}).keys():
-                    col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
+                    col = 'style="background-color:{} !important;"'.format(header["bgcols"][val])
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
@@ -256,9 +258,9 @@ def make_table(dt: table_object.DataTable):
                         )
                     else:
                         col = ""
-                    bar_html = f'<span class="bar" style="width:{percentage}%;{col}"></span>'
-                    val_html = f'<span class="val">{valstring}</span>'
-                    wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
+                    bar_html = '<span class="bar" style="width:{}%;{}"></span>'.format(percentage, col)
+                    val_html = '<span class="val">{}</span>'.format(valstring)
+                    wrapper_html = '<div class="wrapper">{}{}</div>'.format(bar_html, val_html)
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
@@ -285,7 +287,7 @@ def make_table(dt: table_object.DataTable):
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug(f"Removing header {k} from table, as no data")
+            logger.debug("Removing header {} from table, as no data".format(k))
 
     #
     # Put everything together
@@ -358,7 +360,7 @@ def make_table(dt: table_object.DataTable):
 
     # Build the header row
     col1_header = dt.pconfig.get("col1_header", "Sample Name")
-    html += f"<thead><tr><th class=\"rowheader\">{col1_header}</th>{''.join(t_headers.values())}</tr></thead>"
+    html += '<thead><tr><th class="rowheader">{}</th>{}</tr></thead>'.format(col1_header, "".join(t_headers.values()))
 
     # Build the table body
     html += "<tbody>"
@@ -368,7 +370,7 @@ def make_table(dt: table_object.DataTable):
     for s_name in t_row_keys:
         # Hide the row if all cells are empty or hidden
         row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else ""
-        html += f"<tr{row_hidden}>"
+        html += "<tr{}>".format(row_hidden)
         # Sample name row header
         html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
         for k in t_headers:
@@ -418,7 +420,7 @@ def make_table(dt: table_object.DataTable):
 
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
+        fn = dt.pconfig.get("raw_data_fn", "multiqc_{}".format(table_id))
         util_functions.write_data_file(dt.raw_vals, fn)
         report.saved_raw_data[fn] = dt.raw_vals
 

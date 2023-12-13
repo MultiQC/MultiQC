@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.nanostat_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.nanostat_data)} reports")
+        log.info("Found {} reports".format(len(self.nanostat_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.nanostat_data, "multiqc_nanostat")
@@ -168,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
         if f["s_name"] in self.nanostat_data:
             # Only if the same has some keys in common
             if not set(self.nanostat_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
-                log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample data found! Overwriting: {}".format(f["s_name"]))
 
         self.nanostat_data.setdefault(f["s_name"], {}).update(out_d)
 
@@ -272,14 +272,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Table config
         table_config = {
             "namespace": "NanoStat",
-            "id": f"nanostat_{stat_type.replace(' ', '_')}_stats_table",
+            "id": "nanostat_{}_stats_table".format(stat_type.replace(" ", "_")),
             "table_title": f"NanoStat {stat_type}",
         }
 
         # Add the report section
         self.add_section(
             name="Summary Statistics",
-            anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
+            anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
 

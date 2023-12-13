@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # If we found no data
         if not self.ccs_data:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.ccs_data)} reports")
+        log.info("Found {} reports".format(len(self.ccs_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available

@@ -146,6 +146,6 @@ log = logging.getLogger('multiqc')
 def after_modules():
   """ Plugin code to run when MultiQC modules have completed  """
   num_modules = len(report.modules_output)
-  status_string = f"MultiQC hook - {num_modules} modules reported!"
+  status_string = "MultiQC hook - {} modules reported!".format(num_modules)
   log.critical(status_string)
 ```

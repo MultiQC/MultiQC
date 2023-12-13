@@ -19,7 +19,7 @@ def parse_reports(self):
     for f in self.find_log_files("rseqc/read_duplication_pos"):
         if f["f"].startswith("Occurrence	UniqReadNumber"):
             if f["s_name"] in self.read_dups:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="read_duplication")
             self.read_dups[f["s_name"]] = dict()
             for line in f["f"].splitlines():

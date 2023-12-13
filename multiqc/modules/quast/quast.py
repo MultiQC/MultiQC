@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.quast_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.quast_data)} reports")
+        log.info("Found {} reports".format(len(self.quast_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.quast_data, "multiqc_quast")
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_names = [self.clean_s_name(s_name, f) for s_name in s_names]
         for s_name in s_names[1:]:
             if s_name in self.quast_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.quast_data[s_name] = dict()
 
@@ -114,10 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
                     partial = partials.group(2)
                     try:
                         self.quast_data[s_name][k] = float(whole)
-                        self.quast_data[s_name][f"{k}_partial"] = float(partial)
+                        self.quast_data[s_name]["{}_partial".format(k)] = float(partial)
                     except ValueError:
                         self.quast_data[s_name][k] = whole
-                        self.quast_data[s_name][f"{k}_partial"] = partial
+                        self.quast_data[s_name]["{}_partial".format(k)] = partial
                 else:
                     try:
                         self.quast_data[s_name][k] = float(v)
@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "N50": {
-                "title": f"N50 ({self.contig_length_suffix})",
+                "title": "N50 ({})".format(self.contig_length_suffix),
                 "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)",
                 "min": 0,
                 "suffix": self.contig_length_suffix,
@@ -138,8 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.contig_length_multiplier,
             },
             "Total length": {
-                "title": f"Assembly Length ({self.total_length_suffix})",
-                "description": f"The total number of bases in the assembly ({self.total_length_suffix}).",
+                "title": "Assembly Length ({})".format(self.total_length_suffix),
+                "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
                 "min": 0,
                 "suffix": self.total_length_suffix,
                 "scale": "YlGn",
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Write some more statistics about the assemblies in a table."""
         headers = {
             "N50": {
-                "title": f"N50 ({self.contig_length_suffix})",
+                "title": "N50 ({})".format(self.contig_length_suffix),
                 "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.",
                 "min": 0,
                 "suffix": self.contig_length_suffix,
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.contig_length_multiplier,
             },
             "N75": {
-                "title": f"N75 ({self.contig_length_suffix})",
+                "title": "N75 ({})".format(self.contig_length_suffix),
                 "description": "N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly",
                 "min": 0,
                 "suffix": self.contig_length_suffix,
@@ -168,7 +168,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.contig_length_multiplier,
             },
             "L50": {
-                "title": f"L50 ({self.total_number_contigs_suffix})" if self.total_number_contigs_suffix else "L50",
+                "title": "L50 ({})".format(self.total_number_contigs_suffix)
+                if self.total_number_contigs_suffix
+                else "L50",
                 "description": "L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.",
                 "min": 0,
                 "suffix": self.total_number_contigs_suffix,
@@ -176,7 +178,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.total_number_contigs_multiplier,
             },
             "L75": {
-                "title": f"L75 ({self.total_number_contigs_suffix})" if self.total_number_contigs_suffix else "L75",
+                "title": "L75 ({})".format(self.total_number_contigs_suffix)
+                if self.total_number_contigs_suffix
+                else "L75",
                 "description": "L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.",
                 "min": 0,
                 "suffix": self.total_number_contigs_suffix,
@@ -184,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.total_number_contigs_multiplier,
             },
             "Largest contig": {
-                "title": f"Largest contig ({self.contig_length_suffix})",
+                "title": "Largest contig ({})".format(self.contig_length_suffix),
                 "description": "The size of the largest contig of the assembly",
                 "min": 0,
                 "suffix": self.contig_length_suffix,
@@ -192,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * self.contig_length_multiplier,
             },
             "Total length": {
-                "title": f"Length ({self.total_length_suffix})",
+                "title": "Length ({})".format(self.total_length_suffix),
                 "description": "The total number of bases in the assembly.",
                 "min": 0,
                 "suffix": self.total_length_suffix,
@@ -319,13 +323,13 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             highest_threshold = thresholds[-1]
-            highest_cat = (highest_threshold, f">= {highest_threshold} bp")  # tuple (key-for-sorting, label)
+            highest_cat = (highest_threshold, ">= {} bp".format(highest_threshold))  # tuple (key-for-sorting, label)
             all_categories.append(highest_cat)
             plot_data = {highest_cat[1]: d[data_key.format(highest_threshold)]}
 
             # converting >=T1, >=T2,.. into 0-T1, T1-T2,..
             for low, high in zip(thresholds[:-1], thresholds[1:]):
-                cat = (low, f"{low}-{high} bp")
+                cat = (low, "{}-{} bp".format(low, high))
                 all_categories.append(cat)
                 plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]
 

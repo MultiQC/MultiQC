@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hicup_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.hicup_data)} reports")
+        log.info("Found {} reports".format(len(self.hicup_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed_data["Valid_Pairs"] - parsed_data["Deduplication_Read_Pairs_Uniques"]
                 )
                 if s_name in self.hicup_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.hicup_data[s_name] = parsed_data
 
@@ -106,8 +106,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "Deduplication_Read_Pairs_Uniques": {
-                "title": f"{config.read_count_prefix} Unique",
-                "description": f"Unique Di-Tags ({config.read_count_desc})",
+                "title": "{} Unique".format(config.read_count_prefix),
+                "description": "Unique Di-Tags ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -123,8 +123,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: 100 - x,
             },
             "Valid_Pairs": {
-                "title": f"{config.read_count_prefix} Valid",
-                "description": f"Valid Pairs ({config.read_count_desc})",
+                "title": "{} Valid".format(config.read_count_prefix),
+                "description": "Valid Pairs ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -139,8 +139,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "Paired_Read_1": {
-                "title": f"{config.read_count_prefix} Pairs Aligned",
-                "description": f"Paired Alignments ({config.read_count_desc})",
+                "title": "{} Pairs Aligned".format(config.read_count_prefix),
+                "description": "Paired Alignments ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -169,12 +169,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
         data = {}
         for s_name in self.hicup_data:
-            data[f"{s_name} Read 1"] = {}
-            data[f"{s_name} Read 2"] = {}
-            data[f"{s_name} Read 1"]["Not_Truncated_Reads"] = self.hicup_data[s_name]["Not_Truncated_Reads_1"]
-            data[f"{s_name} Read 2"]["Not_Truncated_Reads"] = self.hicup_data[s_name]["Not_Truncated_Reads_2"]
-            data[f"{s_name} Read 1"]["Truncated_Read"] = self.hicup_data[s_name]["Truncated_Read_1"]
-            data[f"{s_name} Read 2"]["Truncated_Read"] = self.hicup_data[s_name]["Truncated_Read_2"]
+            data["{} Read 1".format(s_name)] = {}
+            data["{} Read 2".format(s_name)] = {}
+            data["{} Read 1".format(s_name)]["Not_Truncated_Reads"] = self.hicup_data[s_name]["Not_Truncated_Reads_1"]
+            data["{} Read 2".format(s_name)]["Not_Truncated_Reads"] = self.hicup_data[s_name]["Not_Truncated_Reads_2"]
+            data["{} Read 1".format(s_name)]["Truncated_Read"] = self.hicup_data[s_name]["Truncated_Read_1"]
+            data["{} Read 2".format(s_name)]["Truncated_Read"] = self.hicup_data[s_name]["Truncated_Read_2"]
 
         # Config for the plot
         config = {
@@ -200,16 +200,28 @@ class MultiqcModule(BaseMultiqcModule):
         # Construct a data structure for the plot - duplicate the samples for read 1 and read 2
         data = {}
         for s_name in self.hicup_data:
-            data[f"{s_name} Read 1"] = {}
-            data[f"{s_name} Read 2"] = {}
-            data[f"{s_name} Read 1"]["Unique_Alignments_Read"] = self.hicup_data[s_name]["Unique_Alignments_Read_1"]
-            data[f"{s_name} Read 2"]["Unique_Alignments_Read"] = self.hicup_data[s_name]["Unique_Alignments_Read_2"]
-            data[f"{s_name} Read 1"]["Multiple_Alignments_Read"] = self.hicup_data[s_name]["Multiple_Alignments_Read_1"]
-            data[f"{s_name} Read 2"]["Multiple_Alignments_Read"] = self.hicup_data[s_name]["Multiple_Alignments_Read_2"]
-            data[f"{s_name} Read 1"]["Failed_To_Align_Read"] = self.hicup_data[s_name]["Failed_To_Align_Read_1"]
-            data[f"{s_name} Read 2"]["Failed_To_Align_Read"] = self.hicup_data[s_name]["Failed_To_Align_Read_2"]
-            data[f"{s_name} Read 1"]["Too_Short_To_Map_Read"] = self.hicup_data[s_name]["Too_Short_To_Map_Read_1"]
-            data[f"{s_name} Read 2"]["Too_Short_To_Map_Read"] = self.hicup_data[s_name]["Too_Short_To_Map_Read_2"]
+            data["{} Read 1".format(s_name)] = {}
+            data["{} Read 2".format(s_name)] = {}
+            data["{} Read 1".format(s_name)]["Unique_Alignments_Read"] = self.hicup_data[s_name][
+                "Unique_Alignments_Read_1"
+            ]
+            data["{} Read 2".format(s_name)]["Unique_Alignments_Read"] = self.hicup_data[s_name][
+                "Unique_Alignments_Read_2"
+            ]
+            data["{} Read 1".format(s_name)]["Multiple_Alignments_Read"] = self.hicup_data[s_name][
+                "Multiple_Alignments_Read_1"
+            ]
+            data["{} Read 2".format(s_name)]["Multiple_Alignments_Read"] = self.hicup_data[s_name][
+                "Multiple_Alignments_Read_2"
+            ]
+            data["{} Read 1".format(s_name)]["Failed_To_Align_Read"] = self.hicup_data[s_name]["Failed_To_Align_Read_1"]
+            data["{} Read 2".format(s_name)]["Failed_To_Align_Read"] = self.hicup_data[s_name]["Failed_To_Align_Read_2"]
+            data["{} Read 1".format(s_name)]["Too_Short_To_Map_Read"] = self.hicup_data[s_name][
+                "Too_Short_To_Map_Read_1"
+            ]
+            data["{} Read 2".format(s_name)]["Too_Short_To_Map_Read"] = self.hicup_data[s_name][
+                "Too_Short_To_Map_Read_2"
+            ]
 
         # Config for the plot
         config = {

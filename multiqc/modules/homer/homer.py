@@ -52,11 +52,11 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
 
         n["findpeaks"] = self.parse_homer_findpeaks()
         if n["findpeaks"] > 0:
-            log.info(f"Found {n['findpeaks']} findPeaks reports")
+            log.info("Found {} findPeaks reports".format(n["findpeaks"]))
 
         n["tagDir"] = self.homer_tagdirectory()
         if n["tagDir"] > 0:
-            log.info(f"Found {n['tagDir']} tagDir reports")
+            log.info("Found {} tagDir reports".format(n["tagDir"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

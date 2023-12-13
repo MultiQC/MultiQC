@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 data[s_name] = sample
             except Exception as err:
-                log.warning(f"Error parsing record in {logf['fn']}. {err}")
+                log.warning("Error parsing record in {}. {}".format(logf["fn"], err))
                 log.debug(traceback.format_exc())
                 continue
         return data

@@ -33,7 +33,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.infer_exp:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="infer_experiment")
             self.infer_exp[f["s_name"]] = d
 

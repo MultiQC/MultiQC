@@ -19,7 +19,7 @@ def parse_reports(self):
     # Go through files and parse data
     for f in self.find_log_files("rseqc/inner_distance"):
         if f["s_name"] in self.inner_distance:
-            log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+            log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
         self.add_data_source(f, section="inner_distance")
         # saving to temporary variable for SE checking later
         parsed_data = dict()

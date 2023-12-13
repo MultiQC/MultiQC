@@ -42,7 +42,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
         GROUP = "POSITIONAL QUALITY"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = f"{s_name}_{mate}"
+                r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = defaultdict(float)
                 data_labels.append({"name": r_name})
 
@@ -127,7 +127,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                             qv_sums[pos] += int(round(count * avgs[base][pos]))
 
                 # Compute the positional, base-agnostic mean QV
-                r_name = f"{s_name}_{mate}"
+                r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = dict()
                 for pos, qv_sum in qv_sums.items():
                     total = totals[pos]

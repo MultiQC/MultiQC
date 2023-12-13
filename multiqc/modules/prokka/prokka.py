@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.prokka) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.prokka)} logs")
+        log.info("Found {} logs".format(len(self.prokka)))
 
         self.write_data_file(self.prokka, "multiqc_prokka")
 
@@ -126,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
 
         if s_name in self.prokka:
-            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.prokka[s_name] = dict()
         self.prokka[s_name]["organism"] = organism
         self.prokka[s_name]["contigs"] = int(contigs_line.split(":")[1])

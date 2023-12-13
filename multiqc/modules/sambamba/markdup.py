@@ -23,7 +23,7 @@ class SambambaMarkdupMixin:
 
         for f in self.find_log_files("sambamba/markdup"):
             if f["s_name"] in self.markdup_data:
-                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
 
             # parse sambamba output by sample name
             parsed = self.parse_markdup_stats(f)
@@ -43,7 +43,7 @@ class SambambaMarkdupMixin:
 
             # warn user if duplicate samples found
             if f["s_name"] in self.markdup_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
 
         if len(self.markdup_data) == 0:
             return 0
@@ -83,7 +83,7 @@ class SambambaMarkdupMixin:
             if m:
                 d[key] = int(m[1])
         if len(d) != len(regexes):
-            log.debug(f"Could not find all markdup fields for '{f['fn']}' - skipping")
+            log.debug("Could not find all markdup fields for '{}' - skipping".format(f["fn"]))
             return None
 
         # Calculate duplicate rate
@@ -94,7 +94,7 @@ class SambambaMarkdupMixin:
             ) * 100.0
         except ZeroDivisionError:
             d["duplicate_rate"] = 0
-            log.debug(f"Sambamba Markdup: zero division error for '{f['fn']}'")
+            log.debug("Sambamba Markdup: zero division error for '{}'".format(f["fn"]))
 
         # Calculate some read counts from pairs - Paired End
         if d["sorted_end_pairs"] > 0:

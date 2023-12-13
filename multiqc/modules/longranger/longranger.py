@@ -248,11 +248,11 @@ class MultiqcModule(BaseMultiqcModule):
             data = self.parse_summary(f["f"])
             updir, _ = os.path.split(f["root"])
             base_updir = os.path.basename(updir)
-            sid = f"longranger#{running_name}"
+            sid = "longranger#{}".format(running_name)
             if base_updir in self.paths_dict.keys():
                 sid = self.paths_dict[base_updir]
             else:
-                log.debug(f"Did not find _invocation file: {f['fn']}")
+                log.debug("Did not find _invocation file: {}".format(f["fn"]))
                 running_name += 1
 
             self.longranger_data[sid] = data
@@ -264,7 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.longranger_data) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.longranger_data.keys())} reports")
+        log.info("Found {} reports".format(len(self.longranger_data.keys())))
 
         # Write parsed report data to a file
         self.write_data_file(self.longranger_data, "multiqc_longranger")
@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
         longranger_versions = set([d["longranger_version"] for d in self.longranger_data.values()])
         version_str = ""
         if len(longranger_versions) == 1:
-            version_str = f" All samples were processed using Longranger version {list(longranger_versions)[0]}"
+            version_str = " All samples were processed using Longranger version {}".format(list(longranger_versions)[0])
             del self.headers["longranger_version"]
 
         ### Write the table

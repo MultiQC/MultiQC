@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if we didn't find anything
         if len(self.pangolin_data) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.pangolin_data)} samples")
+        log.info("Found {} samples".format(len(self.pangolin_data)))
         self.write_data_file(self.pangolin_data, "multiqc_pangolin")
 
         # Assign some lineage colours
@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
                 taxon_name = taxon_name.replace("/", "_")
                 s_name = self.clean_s_name(taxon_name, f)
                 if s_name in self.pangolin_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 # Avoid generic header ID that clashes with other modules
                 if "qc_status" not in row:
                     row["qc_status"] = row.pop("status")
@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if constellation_version not in {None, "TRUE", "FALSE"}:
                     self.add_software_version(constellation_version, s_name, "Constellations")
             except KeyError:
-                log.debug(f"File '{f['fn']}' could not be parsed - no taxon field found.")
+                log.debug("File '{}' could not be parsed - no taxon field found.".format(f["fn"]))
 
     def pangolin_general_stats_table(self):
         """Takes the parsed sample data and adds it to the general stats table"""

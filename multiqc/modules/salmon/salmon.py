@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
                     parsed[i] = float(v)
                 if len(parsed) > 0:
                     if s_name in self.salmon_fld:
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name)
                     self.salmon_fld[s_name] = parsed
 
@@ -56,10 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         if len(self.salmon_meta) > 0:
-            log.info(f"Found {len(self.salmon_meta)} meta reports")
+            log.info("Found {} meta reports".format(len(self.salmon_meta)))
             self.write_data_file(self.salmon_meta, "multiqc_salmon")
         if len(self.salmon_fld) > 0:
-            log.info(f"Found {len(self.salmon_fld)} fragment length distributions")
+            log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
 
         # Add alignment rate to the general stats table
         headers = {

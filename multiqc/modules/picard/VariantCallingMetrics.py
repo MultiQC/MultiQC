@@ -116,7 +116,7 @@ def collect_data(module):
             if header == "SAMPLE_ALIAS":
                 s_name = value
                 if s_name in data:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
                 data[s_name] = dict()
             else:
                 data[s_name][header] = value

@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kraken_raw_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.kraken_raw_data)} reports")
+        log.info("Found {} reports".format(len(self.kraken_raw_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one = f"% {top_taxa[0]}"
+            top_one = "% {}".format(top_taxa[0])
             headers["pct_top_one"] = {
                 "title": top_one,
                 "description": "Percentage of reads that were the top {} over all samples - {}".format(

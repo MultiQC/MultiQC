@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.sortmerna) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.sortmerna)} logs")
+        log.info("Found {} logs".format(len(self.sortmerna)))
 
         self.write_data_file(self.sortmerna, "multiqc_sortmerna")
 

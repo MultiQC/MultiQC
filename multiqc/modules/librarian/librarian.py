@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write the data files to disk
         if not self.librarian_data:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.librarian_data)} samples")
+        log.info("Found {} samples".format(len(self.librarian_data)))
 
         if self.librarian_data:
             self.write_data_file(self.librarian_data, "multiqc_librarian_data")

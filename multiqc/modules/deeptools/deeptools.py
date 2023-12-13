@@ -50,17 +50,17 @@ class MultiqcModule(
         # plotCorrelation
         n["plotCorrelation"] = self.parse_plotCorrelation()
         if n["plotCorrelation"] > 0:
-            log.debug(f"Found {n['plotCorrelation']} deepTools plotCorrelation samples")
+            log.debug("Found {} deepTools plotCorrelation samples".format(n["plotCorrelation"]))
 
         # plotPCA
         n["plotPCA"] = self.parse_plotPCA()
         if n["plotPCA"] > 0:
-            log.debug(f"Found {n['plotPCA']} deepTools plotPCA samples")
+            log.debug("Found {} deepTools plotPCA samples".format(n["plotPCA"]))
 
         # plotEnrichment
         n["plotEnrichment"] = self.parse_plot_enrichment()
         if n["plotEnrichment"] > 0:
-            log.debug(f"Found {n['plotEnrichment']} deepTools plotEnrichment samples")
+            log.debug("Found {} deepTools plotEnrichment samples".format(n["plotEnrichment"]))
 
         # plotFingerprint
         n["plotFingerprintOutQualityMetrics"], n["plotFingerprintOutRawCounts"] = self.parse_plotFingerprint()
@@ -88,12 +88,12 @@ class MultiqcModule(
         # bamPEFragmentSizeTable
         n["bamPEFragmentSize"] = self.parse_bamPEFragmentSize()
         if n["bamPEFragmentSize"] > 0:
-            log.debug(f"Found {n['bamPEFragmentSize']} deepTools 'bamPEFragmentSize --table' samples")
+            log.debug("Found {} deepTools 'bamPEFragmentSize --table' samples".format(n["bamPEFragmentSize"]))
 
         # plotProfile
         n["plotProfile"] = self.parse_plotProfile()
         if n["plotProfile"] > 0:
-            log.debug(f"Found {n['plotProfile']} deepTools plotProfile samples")
+            log.debug("Found {} deepTools plotProfile samples".format(n["plotProfile"]))
 
         # plotCoverage
         n["plotCoverageStdout"], n["plotCoverageOutRawCounts"] = self.parse_plotCoverage()
@@ -112,11 +112,11 @@ class MultiqcModule(
         # estimateReadFiltering
         n["estimateReadFiltering"] = self.parse_estimate_read_filtering()
         if n["estimateReadFiltering"] > 0:
-            log.debug(f"Found {n['estimateReadFiltering']} deepTools estimateReadFiltering samples")
+            log.debug("Found {} deepTools estimateReadFiltering samples".format(n["estimateReadFiltering"]))
 
         tot = sum(n.values())
         if tot > 0:
-            log.info(f"Found {tot} total deepTools samples")
+            log.info("Found {} total deepTools samples".format(tot))
         else:
             raise ModuleNoSamplesFound
 

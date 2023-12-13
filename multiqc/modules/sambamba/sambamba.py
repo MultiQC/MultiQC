@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
         n["markdup"] = self.parse_sambamba_markdup()
 
         if n["markdup"] > 0:
-            log.info(f"Found {n['markdup']} sambamba markdup reports")
+            log.info("Found {} sambamba markdup reports".format(n["markdup"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

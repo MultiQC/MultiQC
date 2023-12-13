@@ -55,13 +55,13 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = s_name[:-11]
             # Skip if we already have this report - parsing zip files is slow..
             if s_name in self.fastqc_data.keys():
-                log.debug(f"Skipping '{f['fn']}' as already parsed '{s_name}'")
+                log.debug("Skipping '{}' as already parsed '{}'".format(f["fn"], s_name))
                 continue
             try:
                 fqc_zip = zipfile.ZipFile(os.path.join(f["root"], f["fn"]))
             except Exception as e:
-                log.warning(f"Couldn't read '{f['fn']}' - Bad zip file")
-                log.debug(f"Bad zip file error: {e}")
+                log.warning("Couldn't read '{}' - Bad zip file".format(f["fn"]))
+                log.debug("Bad zip file error: {}".format(e))
                 continue
             # FastQC zip files should have just one directory inside, containing report
             d_name = fqc_zip.namelist()[0]
@@ -80,14 +80,14 @@ class MultiqcModule(BaseMultiqcModule):
                             continue
                     self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
-                log.warning(f"Error - can't find fastqc_raw_data.txt in {f}")
+                log.warning("Error - can't find fastqc_raw_data.txt in {}".format(f))
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.fastqc_data)} reports")
+        log.info("Found {} reports".format(len(self.fastqc_data)))
 
         # Write the summary stats to a file
         data = dict()
@@ -150,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = self.clean_s_name(fn_search.group(1), f)
 
         if s_name in self.fastqc_data.keys():
-            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
         self.add_data_source(f, s_name)
         self.fastqc_data[s_name] = {"statuses": dict()}
 
@@ -251,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Log warning about zero-read samples as a courtesy
             if data[s_name]["total_sequences"] == 0:
-                log.warning(f"Sample had zero reads: '{s_name}'")
+                log.warning("Sample had zero reads: '{}'".format(s_name))
 
             try:
                 # Older versions of FastQC don't have this
@@ -327,8 +327,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "total_sequences": {
-                "title": f"{config.read_count_prefix} Seqs",
-                "description": f"Total Sequences ({config.read_count_desc})",
+                "title": "{} Seqs".format(config.read_count_prefix),
+                "description": "Total Sequences ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "Blues",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -633,14 +633,14 @@ class MultiqcModule(BaseMultiqcModule):
         theoretical_gc_name = None
         for f in self.find_log_files("fastqc/theoretical_gc"):
             if theoretical_gc_raw is not None:
-                log.warning(f"Multiple FastQC Theoretical GC Content files found, now using {f['fn']}")
+                log.warning("Multiple FastQC Theoretical GC Content files found, now using {}".format(f["fn"]))
             theoretical_gc_raw = f["f"]
             theoretical_gc_name = f["fn"]
         if theoretical_gc_raw is None:
             tgc = getattr(config, "fastqc_config", {}).get("fastqc_theoretical_gc", None)
             if tgc is not None:
                 theoretical_gc_name = os.path.basename(tgc)
-                tgc_fn = f"fastqc_theoretical_gc_{tgc}.txt"
+                tgc_fn = "fastqc_theoretical_gc_{}.txt".format(tgc)
                 tgc_path = os.path.join(os.path.dirname(__file__), "fastqc_theoretical_gc", tgc_fn)
                 if not os.path.isfile(tgc_path):
                     tgc_path = tgc
@@ -648,7 +648,7 @@ class MultiqcModule(BaseMultiqcModule):
                     with io.open(tgc_path, "r", encoding="utf-8") as f:
                         theoretical_gc_raw = f.read()
                 except IOError:
-                    log.warning(f"Couldn't open FastQC Theoretical GC Content file {tgc_path}")
+                    log.warning("Couldn't open FastQC Theoretical GC Content file {}".format(tgc_path))
                     theoretical_gc_raw = None
         if theoretical_gc_raw is not None:
             theoretical_gc = list()
@@ -679,7 +679,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["extra_series"] = [[dict(esconfig)], [dict(esconfig)]]
             pconfig["extra_series"][0][0]["data"] = theoretical_gc
             pconfig["extra_series"][1][0]["data"] = [[d[0], (d[1] / 100.0) * max_total] for d in theoretical_gc]
-            desc = f" **The dashed black line shows theoretical GC content:** `{theoretical_gc_name}`"
+            desc = " **The dashed black line shows theoretical GC content:** `{}`".format(theoretical_gc_name)
 
         self.add_section(
             name="Per Sequence GC Content",
@@ -784,13 +784,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not multiple_lenths:
             lengths = "bp , ".join([str(line) for line in list(avg_seq_lengths)])
-            desc = f"All samples have sequences of a single length ({lengths}bp)."
+            desc = "All samples have sequences of a single length ({}bp).".format(lengths)
             if len(avg_seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
+                description='<div class="alert alert-info">{}</div>'.format(desc),
             )
         else:
             pconfig = {
@@ -909,7 +909,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name]["overrepresented_sequences"] = []
                 else:
                     del data[s_name]
-                    log.debug(f"Couldn't find data for {s_name}, invalid Key")
+                    log.debug("Couldn't find data for {}, invalid Key".format(s_name))
 
         if all(len(data.get(s_name, {})) == 0 for s_name in self.fastqc_data):
             log.debug("overrepresented_sequences not found in FastQC reports")
@@ -1051,7 +1051,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for adapters in self.fastqc_data[s_name]["adapter_content"]:
                     pos = self.avg_bp_from_range(adapters["position"])
                     for adapter_name, percent in adapters.items():
-                        k = f"{s_name} - {adapter_name}"
+                        k = "{} - {}".format(s_name, adapter_name)
                         if adapter_name != "position":
                             try:
                                 data[k][pos] = percent

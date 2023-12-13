@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
-            log.info(f"Found {num_samples} reports")
+            log.info("Found {} reports".format(num_samples))
 
         # Write data to file
         self.write_data_file(self.mod_data, "bbmap")
@@ -185,7 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_headers = {}
         for column_header, (description, header_options) in file_types[file_type]["kv_descriptions"].items():
             table_headers[column_header] = {
-                "rid": f"{file_type}_{column_header}_bbmstheader",
+                "rid": "{}_{}_bbmstheader".format(file_type, column_header),
                 "title": column_header,
                 "description": description,
             }

@@ -37,8 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write the data files to disk
         if not self.lima_summary and not self.lima_counts:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.lima_summary)} reports")
-        log.info(f"Found {len(self.lima_counts)} samples")
+        log.info("Found {} reports".format(len(self.lima_summary)))
+        log.info("Found {} samples".format(len(self.lima_counts)))
 
         if self.lima_summary:
             self.write_data_file(self.lima_summary, "multiqc_lima_summary")

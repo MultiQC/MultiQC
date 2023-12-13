@@ -35,12 +35,12 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
         n = dict()
         n["groupreadsbyumi"] = self.parse_groupreadsbyumi()
         if n["groupreadsbyumi"] > 0:
-            log.info(f"Found {n['groupreadsbyumi']} groupreadsbyumi reports")
+            log.info("Found {} groupreadsbyumi reports".format(n["groupreadsbyumi"]))
 
         # ErrorRateByReadPoosition
         n["errorratebyreadposition"] = ErrorRateByReadPosition.parse_reports(self)
         if n["errorratebyreadposition"] > 0:
-            log.info(f"Found {n['errorratebyreadposition']} errorratebyreadposition reports")
+            log.info("Found {} errorratebyreadposition reports".format(n["errorratebyreadposition"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

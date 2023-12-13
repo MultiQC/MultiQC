@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = _parse_purple_qc(f)
             if data is not None:
                 if f["s_name"] in data_by_sample:
-                    log.debug(f"Duplicate PURPLE output prefix found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
 
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = _parse_purple_purity(f)
             if data is not None:
                 if f["s_name"] in data_by_sample:
-                    log.debug(f"Duplicate PURPLE output prefix found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate PURPLE output prefix found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="stats")
                 data_by_sample[f["s_name"]].update(data)
                 self.add_software_version(data["version"], f["s_name"])
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         data_by_sample = self.ignore_samples(data_by_sample)
         if not data_by_sample:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(data_by_sample)} reports")
+        log.info("Found {} reports".format(len(data_by_sample)))
 
         # Write data to file
         self.write_data_file(data_by_sample, "purple")

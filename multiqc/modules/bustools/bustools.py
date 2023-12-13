@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.prepare_data()
 
-        log.info(f"Found {len(self.bustools_data)} logs")
+        log.info("Found {} logs".format(len(self.bustools_data)))
         self.write_data_file(self.bustools_data, "multiqc_macs")
 
         self.bustools_general_stats()
@@ -56,8 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
         # now fill out the table(s) headers
         self.headers = {
             "numRecords": {
-                "title": f"{config.read_count_prefix} Bus Records",
-                "description": f"The number of Bus Records ({config.read_count_desc})",
+                "title": "{} Bus Records".format(config.read_count_prefix),
+                "description": "The number of Bus Records ({})".format(config.read_count_desc),
                 "scale": "BuGn",
                 "min": 0,
                 "shared_key": "read_count",
@@ -65,8 +65,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "numReads": {
-                "title": f"{config.read_count_prefix} Reads",
-                "description": f"Total number of reads ({config.read_count_desc})",
+                "title": "{} Reads".format(config.read_count_prefix),
+                "description": "Total number of reads ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "Greens",
                 "shared_key": "read_count",
@@ -94,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "numUMIs": {
-                "title": f"{config.read_count_prefix} Distinct UMIs",
+                "title": "{} Distinct UMIs".format(config.read_count_prefix),
                 "description": "Number of distinct Unique Molecular Identifiers (UMIs) ({})".format(
                     config.read_count_desc
                 ),
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "numBarcodeUMIs": {
-                "title": f"{config.read_count_prefix} Distinct barcode-UMI",
+                "title": "{} Distinct barcode-UMI".format(config.read_count_prefix),
                 "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({})".format(
                     config.read_count_desc
                 ),
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "gtRecords": {
-                "title": f"{config.read_count_prefix} 2xdepth records",
+                "title": "{} 2xdepth records".format(config.read_count_prefix),
                 "description": "Estimated number of new records at 2x sequencing depth ({})".format(
                     config.read_count_desc
                 ),
@@ -133,8 +133,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "numTargets": {
-                "title": f"{config.read_count_prefix} Distinct targets",
-                "description": f"Number of distinct targets detected ({config.read_count_desc})",
+                "title": "{} Distinct targets".format(config.read_count_prefix),
+                "description": "Number of distinct targets detected ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "BuGn",
                 "hidden": True,
@@ -151,8 +151,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "numSingleton": {
-                "title": f"{config.read_count_prefix} Singleton targets",
-                "description": f"Number of reads with singleton target ({config.read_count_desc})",
+                "title": "{} Singleton targets".format(config.read_count_prefix),
+                "description": "Number of reads with singleton target ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "Blues",
                 "hidden": True,
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "gtTargets": {
-                "title": f"{config.read_count_prefix} 2xdepth targets",
+                "title": "{} 2xdepth targets".format(config.read_count_prefix),
                 "description": "Estimated number of new targets at 2x sequencing depth ({})".format(
                     config.read_count_desc
                 ),
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "numReadsOnWhitelist": {
-                "title": f"{config.read_count_prefix} Whitelisted reads",
+                "title": "{} Whitelisted reads".format(config.read_count_prefix),
                 "description": "Number of reads with barcode in agreement with whitelist ({})".format(
                     config.read_count_desc
                 ),

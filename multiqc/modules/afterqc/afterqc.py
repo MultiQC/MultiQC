@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.afterqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.afterqc_data)} reports")
+        log.info("Found {} reports".format(len(self.afterqc_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f["f"])
         except Exception:
-            log.warning(f"Could not parse AfterQC JSON: '{f['fn']}'")
+            log.warning("Could not parse AfterQC JSON: '{}'".format(f["fn"]))
             return None
 
         # AfterQC changed the name of their summary key at some point
@@ -72,7 +72,9 @@ class MultiqcModule(BaseMultiqcModule):
         elif "afterqc_main_summary" in parsed_json:
             summaryk = "afterqc_main_summary"
         else:
-            log.warning(f"AfterQC JSON did not have a 'summary' or 'afterqc_main_summary' key, skipping: '{f['fn']}'")
+            log.warning(
+                "AfterQC JSON did not have a 'summary' or 'afterqc_main_summary' key, skipping: '{}'".format(f["fn"])
+            )
             return None
 
         s_name = f["s_name"]
@@ -104,16 +106,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "BuGn",
             },
             "good_reads": {
-                "title": f"{config.read_count_prefix} Good Reads",
-                "description": f"Good Reads ({config.read_count_desc})",
+                "title": "{} Good Reads".format(config.read_count_prefix),
+                "description": "Good Reads ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "scale": "GnBu",
                 "shared_key": "read_count",
             },
             "total_reads": {
-                "title": f"{config.read_count_prefix} Total Reads",
-                "description": f"Total Reads ({config.read_count_desc})",
+                "title": "{} Total Reads".format(config.read_count_prefix),
+                "description": "Total Reads ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "scale": "Blues",

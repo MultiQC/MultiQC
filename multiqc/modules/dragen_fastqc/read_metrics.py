@@ -32,11 +32,11 @@ class DragenReadMetrics(BaseMultiqcModule):
         max_non_zero = 0
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = f"{s_name}_{mate}"
+                r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = dict()
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
                 for qv in range(MAX_QV):
-                    metric = f"Q{qv} Reads"
+                    metric = "Q{0} Reads".format(qv)
                     count = group_data[metric]
                     if count > 0:
                         max_non_zero = max(qv, max_non_zero)
@@ -90,7 +90,7 @@ class DragenReadMetrics(BaseMultiqcModule):
         GROUP = "READ LENGTHS"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = f"{s_name}_{mate}"
+                r_name = "{}_{}".format(s_name, mate)
                 data[r_name] = dict()
 
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
@@ -111,13 +111,13 @@ class DragenReadMetrics(BaseMultiqcModule):
 
         if not multiple_lenths:
             lengths = "bp , ".join([str(line) for line in list(seq_lengths)])
-            desc = f"All samples have sequences within a single length bin ({lengths}bp)."
+            desc = "All samples have sequences within a single length bin ({}bp).".format(lengths)
             if len(seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="dragenqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
+                description='<div class="alert alert-info">{}</div>'.format(desc),
             )
         else:
             pconfig = {

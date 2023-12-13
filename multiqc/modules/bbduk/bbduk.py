@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bbduk_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.bbduk_data)} reports")
+        log.info("Found {} reports".format(len(self.bbduk_data)))
 
         # Write data to file
         self.write_data_file(self.bbduk_data, "bbduk")
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if matches:
                     self.add_data_source(f, s_name)
                     if s_name in self.bbduk_data:
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.bbduk_data[s_name] = dict()
 
                     self.bbduk_data[s_name]["Input reads"] = int(matches.group(1))
@@ -102,8 +102,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
             },
             "Total Removed bases": {
-                "title": f"Bases Removed ({config.base_count_prefix})",
-                "description": f"Total Bases removed ({config.base_count_desc})",
+                "title": "Bases Removed ({})".format(config.base_count_prefix),
+                "description": "Total Bases removed ({})".format(config.base_count_desc),
                 "scale": "Reds",
                 "shared_key": "base_count",
                 "modify": lambda x: x * config.base_count_multiplier,
@@ -116,16 +116,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
             },
             "Total Removed reads": {
-                "title": f"Reads Removed ({config.read_count_prefix})",
-                "description": f"Total Reads removed ({config.read_count_desc})",
+                "title": "Reads Removed ({})".format(config.read_count_prefix),
+                "description": "Total Reads removed ({})".format(config.read_count_desc),
                 "scale": "Reds",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "hidden": True,
             },
             "Input reads": {
-                "title": f"Total Input Reads ({config.read_count_prefix})",
-                "description": f"Total number of input reads to BBDuk ({config.read_count_desc})",
+                "title": "Total Input Reads ({})".format(config.read_count_prefix),
+                "description": "Total number of input reads to BBDuk ({})".format(config.read_count_desc),
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

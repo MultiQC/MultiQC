@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             cols = rows[1].split("\t")[1:]
 
             if f["s_name"] in self.optitype_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.optitype_data[f["s_name"]] = dict()
             for header, col in zip(headers, cols):
                 self.optitype_data[f["s_name"]][header] = col
@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.optitype_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.optitype_data)} reports")
+        log.info("Found {} reports".format(len(self.optitype_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available

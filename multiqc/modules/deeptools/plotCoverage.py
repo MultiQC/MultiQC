@@ -16,7 +16,7 @@ class plotCoverageMixin:
             parsed_data = self.parsePlotCoverageStdout(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageStdout:
-                    log.warning(f"Replacing duplicate sample {k}.")
+                    log.warning("Replacing duplicate sample {}.".format(k))
                 self.deeptools_plotCoverageStdout[k] = v
 
             if len(parsed_data) > 0:
@@ -27,7 +27,7 @@ class plotCoverageMixin:
             parsed_data = self.parsePlotCoverageOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageOutRawCounts:
-                    log.warning(f"Replacing duplicate sample {k}.")
+                    log.warning("Replacing duplicate sample {}.".format(k))
                 self.deeptools_plotCoverageOutRawCounts[k] = v
 
             if len(parsed_data) > 0:
@@ -117,7 +117,7 @@ class plotCoverageMixin:
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
-                log.warning(f"Replacing duplicate sample {s_name}.")
+                log.warning("Replacing duplicate sample {}.".format(s_name))
             d[s_name] = dict()
 
             try:

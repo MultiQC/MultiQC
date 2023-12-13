@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.mtnuc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.mtnuc_data)} reports")
+        log.info("Found {} reports".format(len(self.mtnuc_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.mtnuc_data, "multiqc_mtnucratio")
@@ -50,10 +50,10 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f["f"])
             if "metrics" not in parsed_json and "metadata" not in parsed_json:
-                log.warning(f"No MTNUCRATIO JSON: '{f['fn']}'")
+                log.warning("No MTNUCRATIO JSON: '{}'".format(f["fn"]))
                 return None
         except json.JSONDecodeError as e:
-            log.warning(f"Could not parse mtnucratio JSON: '{f['fn']}'")
+            log.warning("Could not parse mtnucratio JSON: '{}'".format(f["fn"]))
             log.debug(e)
             return None
 
@@ -99,16 +99,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGrn-rev",
             },
             "nucreads": {
-                "title": f"{config.read_count_prefix} Genome reads",
-                "description": f"Reads on the nuclear genome ({config.read_count_desc})",
+                "title": "{} Genome reads".format(config.read_count_prefix),
+                "description": "Reads on the nuclear genome ({})".format(config.read_count_desc),
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "BuPu",
                 "hidden": True,
             },
             "mtreads": {
-                "title": f"{config.read_count_prefix} MT genome reads",
-                "description": f"Reads on the mitochondrial genome ({config.read_count_desc})",
+                "title": "{} MT genome reads".format(config.read_count_prefix),
+                "description": "Reads on the mitochondrial genome ({})".format(config.read_count_desc),
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "OrRd",

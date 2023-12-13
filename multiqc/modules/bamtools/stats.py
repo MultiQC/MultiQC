@@ -49,7 +49,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.bamtools_stats_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="stats")
             self.bamtools_stats_data[f["s_name"]] = d
 

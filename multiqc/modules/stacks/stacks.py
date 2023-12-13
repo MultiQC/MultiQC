@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, section="sumstats")
                 num_files += 1
             except Exception as e:
-                log.error(f"Could not parse populations.sumstats_summary file in {f['s_name']}: {e}")
+                log.error("Could not parse populations.sumstats_summary file in {}: {}".format(f["s_name"], e))
 
         # Ignore samples
         cov_data = self.ignore_samples(cov_data)
@@ -172,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(cov_data) == 0 and len(sumstats_data) == 0 and len(distribs_loci) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {num_files} reports")
+        log.info("Found {} reports".format(num_files))
 
         # Write parsed report data to a file
         self.write_data_file(cov_data, "multiqc_stacks_cov")

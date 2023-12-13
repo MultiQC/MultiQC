@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {num_samples} reports")
+        log.info("Found {} reports".format(num_samples))
 
         self.kaiju_total_pct = dict()
         self.kaiju_sample_total_readcounts = dict()
@@ -147,14 +147,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers["% Assigned"] = {
             "title": "% Reads assigned",
-            "description": f"Percentage of reads assigned at {general_taxo_rank} rank",
+            "description": "Percentage of reads assigned at {} rank".format(general_taxo_rank),
             "min": 0,
             "max": 100,
             "suffix": "%",
             "scale": "RdYlGn",
         }
         headers["assigned"] = {
-            "title": f"{config.read_count_prefix} Reads assigned",
+            "title": "{} Reads assigned".format(config.read_count_prefix),
             "description": "Number of reads assigned ({})  at {} rank".format(
                 config.read_count_desc, general_taxo_rank
             ),
@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
             "data_labels": [
-                {"name": rank.capitalize(), "ylab": f"Number of Reads at {rank.capitalize()} rank"}
+                {"name": rank.capitalize(), "ylab": "Number of Reads at {} rank".format(rank.capitalize())}
                 for rank in rank_used
             ],
         }

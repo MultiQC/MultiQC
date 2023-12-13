@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {num_samples} samples")
+        log.info("Found {} samples".format(num_samples))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -114,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         max_chroms = getattr(config, "goleft_indexcov_config", {}).get("max_chroms", 50)
         if len(chroms) > max_chroms:
-            log.warning(f"Too many chromosomes found: {len(chroms)}, limiting to {max_chroms}")
+            log.warning("Too many chromosomes found: %s, limiting to %s" % (len(chroms), max_chroms))
             chroms = chroms[:max_chroms]
 
         pconfig = {

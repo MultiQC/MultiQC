@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.prinseqplusplus_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.prinseqplusplus_data)} reports")
+        log.info("Found {} reports".format(len(self.prinseqplusplus_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parsing Logs."""
         s_name = f["s_name"]
         if self.prinseqplusplus_data.get(s_name) is not None:
-            log.warn(f"Duplicate sample name found! Overwriting: {s_name}")
+            log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
 
         self.prinseqplusplus_data[s_name] = {}
         self.add_data_source(f, s_name=s_name)
@@ -86,8 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
             data,
             {
                 "prinseqplusplus_total": {
-                    "title": f"Filtered Reads ({config.read_count_prefix})",
-                    "description": f"Sum of filtered reads ({config.read_count_desc})",
+                    "title": "Filtered Reads ({})".format(config.read_count_prefix),
+                    "description": "Sum of filtered reads ({})".format(config.read_count_desc),
                     "scale": "Oranges",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
+            "suffix": "{} reads".format(config.read_count_prefix),
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }

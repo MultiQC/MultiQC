@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("snippy/snippy"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_data:
-                log.debug(f"Duplicate sample name found for snippy! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             data = self.parse_snippy_txt(f["f"])
             if data:
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("snippy/snippy-core"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_core_data:
-                log.debug(f"Duplicate sample name found for snippy-core! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found for snippy-core! Overwriting: {}".format(f["s_name"]))
             # Add the file data under the key filename
             self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
 
@@ -79,12 +79,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:
-            log.info(f"Found {len(self.snippy_data)} reports")
+            log.info("Found {} reports".format(len(self.snippy_data)))
             self.snippy_stats_table()
             self.snippy_report_section()
 
         if len(self.snippy_core_data) > 0:
-            log.info(f"Found {len(self.snippy_core_data)} snippy-core reports")
+            log.info("Found {} snippy-core reports".format(len(self.snippy_core_data)))
             self.snippy_core_stats_table()
             self.snippy_core_report_section()
 

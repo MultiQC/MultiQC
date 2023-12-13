@@ -36,11 +36,11 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
         # Call submodule functions
         n["count"] = self.parse_count_html()
         if n["count"] > 0:
-            log.info(f"Found {n['count']} Cell Ranger count reports")
+            log.info("Found {} Cell Ranger count reports".format(n["count"]))
 
         n["vdj"] = self.parse_vdj_html()
         if n["vdj"] > 0:
-            log.info(f"Found {n['vdj']} Cell Ranger VDJ reports")
+            log.info("Found {} Cell Ranger VDJ reports".format(n["vdj"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

@@ -41,19 +41,19 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         # Call submodule functions
         n["stats"] = self.parse_samtools_stats()
         if n["stats"] > 0:
-            log.info(f"Found {n['stats']} stats reports")
+            log.info("Found {} stats reports".format(n["stats"]))
 
         n["flagstat"] = self.parse_samtools_flagstats()
         if n["flagstat"] > 0:
-            log.info(f"Found {n['flagstat']} flagstat reports")
+            log.info("Found {} flagstat reports".format(n["flagstat"]))
 
         n["idxstats"] = self.parse_samtools_idxstats()
         if n["idxstats"] > 0:
-            log.info(f"Found {n['idxstats']} idxstats reports")
+            log.info("Found {} idxstats reports".format(n["idxstats"]))
 
         n["rmdup"] = self.parse_samtools_rmdup()
         if n["rmdup"] > 0:
-            log.info(f"Found {n['rmdup']} rmdup reports")
+            log.info("Found {} rmdup reports".format(n["rmdup"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

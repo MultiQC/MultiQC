@@ -57,7 +57,7 @@ def plot(data, pconfig=None):
                         continue
                 this_series = {"x": k["x"], "y": k["y"]}
                 try:
-                    this_series["name"] = f"{s_name}: {k['name']}"
+                    this_series["name"] = "{}: {}".format(s_name, k["name"])
                 except KeyError:
                     this_series["name"] = s_name
                 try:
@@ -128,17 +128,17 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
             except Exception:
                 name = k + 1
             try:
-                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
+                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
             except Exception:
-                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
+                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
             try:
-                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
+                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
             except Exception:
                 ymax = ""
             try:
-                xlab = f"data-xlab=\"{pconfig['data_labels'][k]['xlab']}\""
+                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
             except Exception:
-                xlab = f'data-xlab="{name}"' if name != k + 1 else ""
+                xlab = 'data-xlab="{}"'.format(name) if name != k + 1 else ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, xl=xlab, k=k
             )

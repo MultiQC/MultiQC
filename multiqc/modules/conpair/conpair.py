@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.conpair_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.conpair_data)} reports")
+        log.info("Found {} reports".format(len(self.conpair_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.conpair_data, "multiqc_conpair")
@@ -88,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) > 0:
             if f["s_name"] in self.conpair_data:
                 if _cp_type(self.conpair_data[f["s_name"]]) == _cp_type(parsed_data):
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             else:
                 self.conpair_data[f["s_name"]] = dict()
             self.add_data_source(f, section=_cp_type(parsed_data))

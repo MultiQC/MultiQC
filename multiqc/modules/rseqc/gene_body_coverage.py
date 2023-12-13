@@ -38,13 +38,13 @@ def parse_reports(self):
                     nrows += 1
                     s_name = self.clean_s_name(s[0], f)
                     if s_name in self.gene_body_cov_hist_counts:
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     self.add_data_source(f, s_name, section="gene_body_coverage")
                     self.gene_body_cov_hist_counts[s_name] = dict()
                     for k, var in enumerate(s[1:]):
                         self.gene_body_cov_hist_counts[s_name][int(keys[k])] = float(var)
             if nrows == 0:
-                log.warning(f"Empty geneBodyCoverage file found: {f['fn']}")
+                log.warning("Empty geneBodyCoverage file found: {}".format(f["fn"]))
 
         # geneBodyCoverage2.py
         #   AND
@@ -52,7 +52,7 @@ def parse_reports(self):
         # RSeQC < v2.4
         if f["f"].startswith("Total reads") or f["f"].startswith("percentile"):
             if f["s_name"] in self.gene_body_cov_hist_counts:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="gene_body_coverage")
             self.gene_body_cov_hist_counts[f["s_name"]] = dict()
             nrows = 0
@@ -70,7 +70,7 @@ def parse_reports(self):
                     pass
             if nrows == 0:
                 del self.gene_body_cov_hist_counts[f["s_name"]]
-                log.warning(f"Empty geneBodyCoverage file found: {f['fn']}")
+                log.warning("Empty geneBodyCoverage file found: {}".format(f["fn"]))
 
     # Filter to strip out ignored sample names
     self.gene_body_cov_hist_counts = self.ignore_samples(self.gene_body_cov_hist_counts)

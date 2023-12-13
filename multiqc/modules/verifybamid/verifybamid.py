@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # if there are duplicate sample names
                     if s_name in self.verifybamid_data:
                         # write this to log
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                     # add the sample as a key to the verifybamid_data dictionary and the dictionary of values as the value
                     self.verifybamid_data[s_name] = parsed_data[s_name]
 
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # print number of verifyBAMID reports found and parsed
-        log.info(f"Found {len(self.verifybamid_data)} reports")
+        log.info("Found {} reports".format(len(self.verifybamid_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -180,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuPu",
         }
         headers["#READS"] = {
-            "title": f"{config.read_count_prefix} Reads",
-            "description": f"Number of reads loaded from the BAM file ({config.read_count_desc})",
+            "title": "{} Reads".format(config.read_count_prefix),
+            "description": "Number of reads loaded from the BAM file ({})".format(config.read_count_desc),
             "format": "{:,.1f}",
             "modify": lambda x: x * config.read_count_multiplier if x != "NA" else x,
             "shared_key": "read_count",

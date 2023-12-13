@@ -21,7 +21,7 @@ class IdxstatsReportMixin:
             parsed_data = parse_single_report(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.samtools_idxstats:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="idxstats")
                 self.samtools_idxstats[f["s_name"]] = parsed_data
 
@@ -51,7 +51,7 @@ class IdxstatsReportMixin:
         # Cutoff, can be customised in config
         cutoff = float(getattr(config, "samtools_idxstats_fraction_cutoff", 0.001))
         if cutoff != 0.001:
-            log.info(f"Setting idxstats cutoff to: {cutoff * 100.0}%")
+            log.info("Setting idxstats cutoff to: {}%".format(cutoff * 100.0))
         for s_name in self.samtools_idxstats:
             for chrom in self.samtools_idxstats[s_name]:
                 chrs_mapped[chrom] += self.samtools_idxstats[s_name][chrom][0]
@@ -60,16 +60,16 @@ class IdxstatsReportMixin:
         req_reads = float(total_mapped) * cutoff
         chr_always = getattr(config, "samtools_idxstats_always", [])
         if len(chr_always) > 0:
-            log.info(f"Trying to include these chromosomes in idxstats: {', '.join(chr_always)}")
+            log.info("Trying to include these chromosomes in idxstats: {}".format(", ".join(chr_always)))
         chr_ignore = getattr(config, "samtools_idxstats_ignore", [])
         if len(chr_ignore) > 0:
-            log.info(f"Excluding these chromosomes from idxstats: {', '.join(chr_ignore)}")
+            log.info("Excluding these chromosomes from idxstats: {}".format(", ".join(chr_ignore)))
         xchr = getattr(config, "samtools_idxstats_xchr", False)
         if xchr:
-            log.info(f'Using "{xchr}" as X chromosome name')
+            log.info('Using "{}" as X chromosome name'.format(xchr))
         ychr = getattr(config, "samtools_idxstats_ychr", False)
         if ychr:
-            log.info(f'Using "{ychr}" as Y chromosome name')
+            log.info('Using "{}" as Y chromosome name'.format(ychr))
         # Go through again and collect all of the keys that have enough counts
         # Also get the X/Y counts if we find them
         for s_name in self.samtools_idxstats:
@@ -153,7 +153,7 @@ class IdxstatsReportMixin:
             name="Mapped reads per contig",
             anchor="samtools-idxstats",
             description="The <code>samtools idxstats</code> tool counts the number of mapped reads per chromosome / contig. "
-            + f"Chromosomes with &lt; {cutoff * 100}% of the total aligned reads are omitted from this plot.",
+            + "Chromosomes with &lt; {}% of the total aligned reads are omitted from this plot.".format(cutoff * 100),
             plot=linegraph.plot([pdata_norm, pdata_obs_exp, pdata], pconfig),
         )
 

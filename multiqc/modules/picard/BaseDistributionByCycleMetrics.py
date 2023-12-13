@@ -33,7 +33,7 @@ def parse_reports(module):
             """
             # set up the set of s_names
             if 2 in set(data_by_read_end):
-                s_names = {1: f"{s_name}_R1", 2: f"{s_name}_R2"}
+                s_names = {1: "%s_R1" % s_name, 2: "%s_R2" % s_name}
             else:
                 s_names = {1: s_name}
 

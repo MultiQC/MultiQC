@@ -64,10 +64,12 @@ class StatsReportMixin:
                             and k != "raw_total_sequences"
                             and parsed_data["raw_total_sequences"] > 0
                         ):
-                            parsed_data[f"{k}_percent"] = (parsed_data[k] / parsed_data["raw_total_sequences"]) * 100
+                            parsed_data["{}_percent".format(k)] = (
+                                parsed_data[k] / parsed_data["raw_total_sequences"]
+                            ) * 100
 
                 if f["s_name"] in self.samtools_stats:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f, section="stats")
                 self.samtools_stats[f["s_name"]] = parsed_data
 
@@ -93,16 +95,16 @@ class StatsReportMixin:
                 "modify": lambda x: x * 100.0,
             },
             "non-primary_alignments": {
-                "title": f"{config.read_count_prefix} Non-Primary",
-                "description": f"Non-primary alignments ({config.read_count_desc})",
+                "title": "{} Non-Primary".format(config.read_count_prefix),
+                "description": "Non-primary alignments ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
             },
             "reads_mapped": {
-                "title": f"{config.read_count_prefix} Reads Mapped",
-                "description": f"Reads Mapped in the bam file ({config.read_count_desc})",
+                "title": "{} Reads Mapped".format(config.read_count_prefix),
+                "description": "Reads Mapped in the bam file ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -136,8 +138,8 @@ class StatsReportMixin:
                 "hidden": True,
             },
             "raw_total_sequences": {
-                "title": f"{config.read_count_prefix} Total seqs",
-                "description": f"Total sequences in the bam file ({config.read_count_desc})",
+                "title": "{} Total seqs".format(config.read_count_prefix),
+                "description": "Total sequences in the bam file ({})".format(config.read_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",

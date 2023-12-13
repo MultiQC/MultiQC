@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.gffcompare_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.gffcompare_data)} reports")
+        log.info("Found {} reports".format(len(self.gffcompare_data)))
 
         # Add nothing to general statistics table
 

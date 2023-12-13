@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Stop if we didn't get any samples
         if len(self.vep_data) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.vep_data)} VEP summaries")
+        log.info("Found {} VEP summaries".format(len(self.vep_data)))
 
         # Write data to file
         self.write_data_file(self.vep_data, "vep")
@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def extract_vep_html_data(self, chart_title, html_content):
         """Function for finding and extracting VEP stats that were stored as javascript arrays"""
-        found_matches = re.findall(f"{chart_title}.*google.visualization.*;", html_content)
+        found_matches = re.findall("{}.*google.visualization.*;".format(chart_title), html_content)
         if len(found_matches) > 0:
             array_content = re.search(r"\[\[.*]]", found_matches[0])
             if array_content:
@@ -368,10 +368,10 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data[s_name] = self.vep_data[s_name][title]
         plot_cats = dict()
         htmlid = re.sub(r"\W+", "_", title).lower()
-        plotid = f"{htmlid}_plot"
+        plotid = "{}_plot".format(htmlid)
         plot_config = {
             "id": plotid,
-            "title": f"VEP: {title}",
+            "title": "VEP: {}".format(title),
             "ylab": "Number of variants",
         }
         if len(plot_data) == 0:

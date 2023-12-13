@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.clipandmerge_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.clipandmerge_data)} reports")
+        log.info("Found {} reports".format(len(self.clipandmerge_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.clipandmerge_data, "multiqc_clipandmerge")

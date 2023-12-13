@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
-                        plot_sname = f"{s_name} - {log_section}"
+                        plot_sname = "{} - {}".format(s_name, log_section)
                     self.cutadapt_length_counts[end][plot_sname] = dict()
                     self.cutadapt_length_exp[end][plot_sname] = dict()
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
@@ -322,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Trimmed Sequence Lengths{}".format("" if end == "default" else f" ({end}')"),
-                anchor=f"cutadapt_trimmed_sequences{'' if end == 'default' else f'_{end}'}",
+                anchor="cutadapt_trimmed_sequences{}".format("" if end == "default" else f"_{end}"),
                 description="This plot shows the number of reads with certain lengths of adapter trimmed{}.".format(
                     "" if end == "default" else f" for the {end}' end"
                 ),

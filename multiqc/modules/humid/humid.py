@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Got this far, data must be good
             if s_name in self.humid:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.humid[s_name] = d
             self.add_data_source(f, s_name)
 

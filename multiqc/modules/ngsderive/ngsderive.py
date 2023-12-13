@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
         if num_results_found == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {num_results_found} reports")
+        log.info("Found {} reports".format(num_results_found))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             sample_name = self.clean_s_name(row.get("File"), found_file)
             if sample_name in sample_dict:
-                log.debug(f"Duplicate sample name found! Overwriting: {sample_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
 
             sample_dict[sample_name] = row
             self.add_data_source(f=found_file, s_name=sample_name)

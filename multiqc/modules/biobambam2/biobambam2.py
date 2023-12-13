@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         n["bamsormadup"] = MarkDuplicates.parse_reports(self, "bamsormadup")
         if n["bamsormadup"] > 0:
-            log.info(f"Found {n['bamsormadup']} bamsormadup reports")
+            log.info("Found {} bamsormadup reports".format(n["bamsormadup"]))
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

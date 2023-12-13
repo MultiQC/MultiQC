@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bakta) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.bakta)} logs")
+        log.info("Found {} logs".format(len(self.bakta)))
 
         # Write parsed report data to a file
         self.write_data_file(self.bakta, "multiqc_bakta")

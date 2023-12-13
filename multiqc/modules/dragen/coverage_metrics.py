@@ -1378,7 +1378,7 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "format": base_format,
-                    "description": f"Total number ({config.base_count_desc}) of aligned bases.",
+                    "description": "Total number ({}) of aligned bases.".format(config.base_count_desc),
                     "title": config.base_count_prefix + " Aln bases",
                     "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
                 }
@@ -1388,7 +1388,7 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "format": read_format,
-                    "description": f"Total number ({config.read_count_desc}) of aligned reads.",
+                    "description": "Total number ({}) of aligned reads.".format(config.read_count_desc),
                     "title": config.read_count_prefix + " Aln reads",
                     "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
                 }
@@ -1402,7 +1402,7 @@ def create_coverage_headers_handler():
         REGION = metric_pattern_match["region"]
         region = improve_region(REGION)
         if entity == "bases":
-            description = f"Number ({config.base_count_desc}) of uniquely mapped bases to " + region
+            description = "Number ({}) of uniquely mapped bases to ".format(config.base_count_desc) + region
             configs = {
                 "min": 0,
                 "format": base_format,
@@ -1420,7 +1420,7 @@ def create_coverage_headers_handler():
             }
         elif entity == "reads":
             description = (
-                f"Number ({config.read_count_desc}) of uniquely mapped reads to "
+                "Number ({}) of uniquely mapped reads to ".format(config.read_count_desc)
                 + region
                 + ". DRAGEN V3.4 - V3.8:"
                 + " When region is the target BED, this metric is equivalent to and replaces"

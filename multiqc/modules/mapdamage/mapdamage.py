@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             return misincorporation_dict
         except Exception as e:
             print(e)
-            log.warning(f"Could not parse mapDamage misincorporation file: '{f['fn']}'")
+            log.warning("Could not parse mapDamage misincorporation file: '{}'".format(f["fn"]))
             return None
 
     ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             return length_distribution_dict
         except Exception as e:
             print(e)
-            log.warning(f"Could not parse mapDamage length distribution file: '{f['fn']}'")
+            log.warning("Could not parse mapDamage length distribution file: '{}'".format(f["fn"]))
             return None
 
     # Parse input files
@@ -172,20 +172,20 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {
-            f"mapdamage-{readend}1": {
-                "id": f"misinc-stats-1st-{readend}-{substitution}",
-                "title": f"{readend} {substitution} 1st base",
-                "description": f"{readend} 1st base substitution frequency for {substitution}",
+            "mapdamage-{}1".format(readend): {
+                "id": "misinc-stats-1st-{}-{}".format(readend, substitution),
+                "title": "{} {} 1st base".format(readend, substitution),
+                "description": "{} 1st base substitution frequency for {}".format(readend, substitution),
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": "YlGnBu",
                 "modify": lambda x: x * 100.0,
             },
-            f"mapdamage-{readend}2": {
-                "id": f"misinc-stats-2nd-{readend}-{substitution}",
-                "title": f"{readend} {substitution} 2nd base",
-                "description": f"{readend} 2nd base substitution frequency for {substitution}",
+            "mapdamage-{}2".format(readend): {
+                "id": "misinc-stats-2nd-{}-{}".format(readend, substitution),
+                "title": "{} {} 2nd base".format(readend, substitution),
+                "description": "{} 2nd base substitution frequency for {}".format(readend, substitution),
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -227,8 +227,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         config = {
-            "id": f"mapdamage-length-distribution-{orientation}",
-            "title": f"mapDamage: Read length distribution - {orientation} ",
+            "id": "mapdamage-length-distribution-{}".format(orientation),
+            "title": "mapDamage: Read length distribution - {} ".format(orientation),
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
             "xDecimals": False,

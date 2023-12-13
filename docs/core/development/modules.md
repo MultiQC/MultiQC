@@ -628,7 +628,7 @@ create log files _and_ print to `stdout` for example.
 
 ```python
 if f['s_name'] in self.bowtie_data:
-    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
 ```
 
 ### Printing to the sources file
@@ -837,8 +837,8 @@ that should be used to allow users to change the multiplier for read counts: `re
 `read_count_prefix` and `read_count_desc`. For example:
 
 ```python
-'title': f'{config.read_count_prefix} Reads',
-'description': f'Number of reads ({config.read_count_desc})',
+'title': '{} Reads'.format(config.read_count_prefix),
+'description': 'Number of reads ({})'.format(config.read_count_desc),
 'modify': lambda x: x * config.read_count_multiplier,
 ```
 

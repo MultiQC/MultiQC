@@ -26,11 +26,11 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
         n = dict()
         n["compare"] = self.parse_compare()
         if n["compare"] > 0:
-            log.info(f"Found {n['compare']} compare results")
+            log.info("Found {} compare results".format(n["compare"]))
 
         n["gather"] = self.parse_gather()
         if n["gather"] > 0:
-            log.info(f"Found {n['gather']} gather results")
+            log.info("Found {} gather results".format(n["gather"]))
 
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound

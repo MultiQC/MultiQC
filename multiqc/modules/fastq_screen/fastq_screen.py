@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_fqscreen(f)
             if parsed_data is not None:
                 if f["s_name"] in self.fq_screen_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f)
                 self.fq_screen_data[f["s_name"]] = parsed_data
 
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.fq_screen_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.fq_screen_data)} reports")
+        log.info("Found {} reports".format(len(self.fq_screen_data)))
 
         # Check whether we have a consistent number of organisms across all samples
         num_orgs = set([len(orgs) for orgs in self.fq_screen_data.values()])
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "one_hit_one_library": int((nohits_pct / 100.0) * float(parsed_data["total_reads"]))
             }
         else:
-            log.warning(f"Couldn't find number of reads with no hits for '{f['s_name']}'")
+            log.warning("Couldn't find number of reads with no hits for '{}'".format(f["s_name"]))
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
                     totals[s]["total_reads"] = self.fq_screen_data[s][org]
                     continue
                 try:
-                    k = f"{org} counts"
+                    k = "{} counts".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]["counts"]["one_hit_one_library"]
                     totals[s][k] += self.fq_screen_data[s][org]["counts"].get("multiple_hits_one_library", 0)
                     totals[s][k] += self.fq_screen_data[s][org]["counts"].get("one_hit_multiple_libraries", 0)
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
                 try:
-                    k = f"{org} percentage"
+                    k = "{} percentage".format(org)
                     totals[s][k] = self.fq_screen_data[s][org]["percentages"]["one_hit_one_library"]
                     totals[s][k] += self.fq_screen_data[s][org]["percentages"].get("multiple_hits_one_library", 0)
                     totals[s][k] += self.fq_screen_data[s][org]["percentages"].get("one_hit_multiple_libraries", 0)

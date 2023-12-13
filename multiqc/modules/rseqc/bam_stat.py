@@ -58,7 +58,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.bam_stat_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
             self.add_data_source(f, section="bam_stat")
             # Check if SE or PE
             if d["read_2"] != 0:

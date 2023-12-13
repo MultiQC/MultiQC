@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_theta2_report(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.theta2_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f)
                 self.theta2_data[f["s_name"]] = parsed_data
 
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.theta2_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.theta2_data)} reports")
+        log.info("Found {} reports".format(len(self.theta2_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data["proportion_germline"] = float(purities[0]) * 100.0
                 for i, v in enumerate(purities[1:]):
                     if i <= 5:
-                        parsed_data[f"proportion_tumour_{i + 1}"] = float(v) * 100.0
+                        parsed_data["proportion_tumour_{}".format(i + 1)] = float(v) * 100.0
                     else:
                         parsed_data["proportion_tumour_gt5"] = (float(v) * 100.0) + parsed_data.get(
                             "proportion_tumour_gt5", 0

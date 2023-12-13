@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(self.snpsplit_data) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.snpsplit_data)} reports")
+        log.info("Found {} reports".format(len(self.snpsplit_data)))
 
         self.write_data_file(self.snpsplit_data, "multiqc_snpsplit")
 
@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _save_parsed(self, parsed, f):
         s_name = self.clean_s_name(parsed[0], f)
         if s_name in self.snpsplit_data:
-            log.debug(f"Replacing duplicate sample {s_name}")
+            log.debug("Replacing duplicate sample {}".format(s_name))
         self.snpsplit_data[s_name] = parsed[1]
         self.add_data_source(f, s_name=s_name)
         self.add_software_version(parsed[1].get("version"), s_name)
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for prefix in ["PE_", "SE_", "HiC_"]:
                     if sk.startswith(prefix):
                         key = sk[len(prefix) :]
-                flat_key = f"{k.lower()}_{key}"
+                flat_key = "{}_{}".format(k.lower(), key)
                 flat_data[flat_key] = data[k][sk]
         input_fn = data["Meta"]["infile"]
         flat_data["version"] = data["Meta"]["version"]
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "SNP annotation",
                 "description": "Annotation file used for differentiating genomes",
                 "scale": False,
-                "modify": lambda x: f"<code>{x}</code>",
+                "modify": lambda x: "<code>{}</code>".format(x),
                 "hidden": True,
             },
             "tagging_percent_N_was_known_SNP": {

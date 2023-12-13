@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.samblaster_data, "multiqc_samblaster")
 
-        log.info(f"Found {len(self.samblaster_data)} reports")
+        log.info("Found {} reports".format(len(self.samblaster_data)))
 
         self.add_barplot()
 
@@ -122,6 +122,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data) > 0:
             if s_name in self.samblaster_data:
-                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
             self.add_data_source(f, s_name)
             self.samblaster_data[s_name] = data

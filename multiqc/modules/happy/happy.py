@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # print number of happy reports found and parsed
-        log.info(f"Found {len(self.happy_raw_sample_names)} reports")
+        log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -74,12 +74,12 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         if f["s_name"] in self.happy_raw_sample_names:
-            log.warning(f"Duplicate sample name found in {f['root']}! Overwriting: {f['s_name']}")
+            log.warning("Duplicate sample name found in {}! Overwriting: {}".format(f["root"], f["s_name"]))
         self.happy_raw_sample_names.add(f["s_name"])
 
         rdr = csv.DictReader(f["f"])
         for row in rdr:
-            row_id = f"{f['s_name']}_{row['Type']}_{row['Filter']}"
+            row_id = "{}_{}_{}".format(f["s_name"], row["Type"], row["Filter"])
             if row["Type"] == "INDEL":
                 if row_id not in self.happy_indel_data:
                     self.happy_indel_data[row_id] = {"sample_id": f["s_name"]}

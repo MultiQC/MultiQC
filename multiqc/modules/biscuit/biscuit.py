@@ -99,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse alignment reports
         for k in self.mdata:
-            for f in self.find_log_files(f"biscuit/{k}"):
+            for f in self.find_log_files("biscuit/{}".format(k)):
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")
@@ -109,9 +109,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name=s_name, section=k)
 
                 if s_name in self.mdata[k]:
-                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
 
-                self.mdata[k][s_name] = getattr(self, f"parse_logs_{k}")(f["f"], f["fn"])
+                self.mdata[k][s_name] = getattr(self, "parse_logs_{}".format(k))(f["f"], f["fn"])
 
         for k in self.mdata:
             self.mdata[k] = self.ignore_samples(self.mdata[k])
@@ -121,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
         if n_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {n_samples} samples")
+        log.info("Found {} samples".format(n_samples))
 
         # Basic stats table
         self.biscuit_stats_table()
@@ -136,8 +136,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Make report sections
         for k in self.mdata:
             if len(self.mdata[k]) > 0:
-                log.debug(f"Found {len(self.mdata[k])} {k} reports")
-                getattr(self, f"chart_{k}")()
+                log.debug("Found {} {} reports".format(len(self.mdata[k]), k))
+                getattr(self, "chart_{}".format(k))()
 
     def biscuit_stats_table(self):
         """
@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {}
 
         mapq = {}
@@ -429,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {"no_data_available": 1}
 
         data = {"percent": {}, "readcnt": {}}
@@ -469,8 +469,8 @@ class MultiqcModule(BaseMultiqcModule):
             "data_labels": [
                 {"name": "Percent of Reads", "ylab": "% of Mapped Reads"},
                 {
-                    "name": f"{config.read_count_desc.capitalize()} of Reads",
-                    "ylab": f"{config.read_count_desc.capitalize()} of Mapped Reads",
+                    "name": "{} of Reads".format(config.read_count_desc.capitalize()),
+                    "ylab": "{} of Mapped Reads".format(config.read_count_desc.capitalize()),
                 },
             ],
         }
@@ -839,7 +839,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return dict(zip([i for i in range(31)], [-1 for _ in range(31)]))
 
         dd = {}
@@ -1035,7 +1035,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {"no_data_available": 1}
 
         r1 = {"C": {}, "R": {}}
@@ -1150,7 +1150,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {"no_data_available": 1}
 
         data = {}
@@ -1158,7 +1158,7 @@ class MultiqcModule(BaseMultiqcModule):
             fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
-                log.debug(f"Found NaN in {fn}. Skipping.")
+                log.debug("Found NaN in {}. Skipping.".format(fn))
                 continue
 
             # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.
@@ -1252,7 +1252,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
+            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
             return {"no_data_available": 1}
 
         data = {}
@@ -1260,7 +1260,7 @@ class MultiqcModule(BaseMultiqcModule):
             fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
-                log.debug(f"Found NaN in {fn}. Skipping.")
+                log.debug("Found NaN in {}. Skipping.".format(fn))
                 continue
 
             # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.

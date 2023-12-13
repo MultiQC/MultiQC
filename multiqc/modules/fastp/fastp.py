@@ -35,14 +35,14 @@ class MultiqcModule(BaseMultiqcModule):
             if not s_name:
                 continue
             if s_name in data_by_sample:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             data_by_sample[s_name] = parsed_json
 
         # Filter to strip out ignored sample names
         data_by_sample = self.ignore_samples(data_by_sample)
         if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(data_by_sample)} reports")
+        log.info("Found {} reports".format(len(data_by_sample)))
 
         # Find and load any fastp reports
         self.fastp_data = dict()
@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse filtering_result
         try:
             for k in parsed_json["filtering_result"]:
-                self.fastp_data[s_name][f"filtering_result_{k}"] = float(parsed_json["filtering_result"][k])
+                self.fastp_data[s_name]["filtering_result_{}".format(k)] = float(parsed_json["filtering_result"][k])
         except KeyError:
             log.debug(f"fastp JSON did not have 'filtering_result' key: '{s_name}'")
 
@@ -230,7 +230,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse after_filtering
         try:
             for k in parsed_json["summary"]["after_filtering"]:
-                self.fastp_data[s_name][f"after_filtering_{k}"] = float(parsed_json["summary"]["after_filtering"][k])
+                self.fastp_data[s_name]["after_filtering_{}".format(k)] = float(
+                    parsed_json["summary"]["after_filtering"][k]
+                )
         except KeyError:
             log.debug(f"fastp JSON did not have a 'summary'-'after_filtering' keys: '{s_name}'")
 
@@ -254,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             for k in parsed_json["adapter_cutting"]:
                 try:
-                    self.fastp_data[s_name][f"adapter_cutting_{k}"] = float(parsed_json["adapter_cutting"][k])
+                    self.fastp_data[s_name]["adapter_cutting_{}".format(k)] = float(parsed_json["adapter_cutting"][k])
                 except (ValueError, TypeError):
                     pass
         except KeyError:
@@ -357,8 +359,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "after_filtering_q30_bases": {
-                "title": f"{config.base_count_prefix} Q30 bases",
-                "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
+                "title": "{} Q30 bases".format(config.base_count_prefix),
+                "description": "Bases > Q30 after filtering ({})".format(config.base_count_desc),
                 "min": 0,
                 "modify": lambda x: x * config.base_count_multiplier,
                 "scale": "GnBu",
@@ -366,8 +368,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "filtering_result_passed_filter_reads": {
-                "title": f"{config.read_count_prefix} Reads After Filtering",
-                "description": f"Total reads after filtering ({config.read_count_desc})",
+                "title": "{} Reads After Filtering".format(config.read_count_prefix),
+                "description": "Total reads after filtering ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "Blues",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -479,19 +481,19 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "read1_before_filtering": {
                 "name": "Read 1: Before filtering",
-                "ylab": f"R1 Before filtering: {label}",
+                "ylab": "R1 Before filtering: {}".format(label),
             },
             "read1_after_filtering": {
                 "name": "Read 1: After filtering",
-                "ylab": f"R1 After filtering: {label}",
+                "ylab": "R1 After filtering: {}".format(label),
             },
             "read2_before_filtering": {
                 "name": "Read 2: Before filtering",
-                "ylab": f"R2 Before filtering: {label}",
+                "ylab": "R2 Before filtering: {}".format(label),
             },
             "read2_after_filtering": {
                 "name": "Read 2: After filtering",
-                "ylab": f"R2 After filtering: {label}",
+                "ylab": "R2 After filtering: {}".format(label),
             },
         }
         for k in config:

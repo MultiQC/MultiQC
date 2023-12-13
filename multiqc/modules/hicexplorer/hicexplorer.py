@@ -27,11 +27,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # Parse the log file
                 parsed_data = self.parse_logs(f["f"])
                 # Build the sample ID
-                s_name = f"{f['root']}_{f['s_name']}_{parsed_data['File']}"
+                s_name = "{}_{}_{}".format(f["root"], f["s_name"], parsed_data["File"])
                 s_name = self.clean_s_name(s_name, f)
                 # Save results
                 if s_name in self.hicexplorer_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.hicexplorer_data[s_name] = parsed_data
                 self.add_data_source(f, s_name=s_name)
 
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hicexplorer_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.hicexplorer_data)} reports")
+        log.info("Found {} reports".format(len(self.hicexplorer_data)))
 
         self.write_data_file(self.hicexplorer_data, "multiqc_hicexplorer")
 
@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif "Sequenced reads" in self.hicexplorer_data[s_name]:
                 hicexplorer_versions.add("3.2")
 
-        log.debug(f"HiCExplorer versions: {', '.join(hicexplorer_versions)}")
+        log.debug("HiCExplorer versions: {}".format(", ".join(hicexplorer_versions)))
 
         # prepare the basic statistics for hicexplorer
         self.hicexplorer_basic_statistics()
@@ -283,8 +283,8 @@ class MultiqcModule(BaseMultiqcModule):
             data[s_name] = data_
         headers = {
             "Sequenced reads": {
-                "title": f"{config.read_count_prefix} Pairs",
-                "description": f"Total number of read pairs ({config.read_count_desc})",
+                "title": "{} Pairs".format(config.read_count_prefix),
+                "description": "Total number of read pairs ({})".format(config.read_count_desc),
                 "shared_key": "read_count",
             },
             "Hi-c contacts": {
@@ -310,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             max_distance_key: {
                 "title": "Max RE dist",
-                "description": f"{max_distance_key} (bp)",
+                "description": "{} (bp)".format(max_distance_key),
                 "format": "{:.0f}",
                 "suffix": " bp",
             },

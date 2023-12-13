@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning(f"Error loading file {f['fn']}")
+                logging.warning("Error loading file {}".format(f["fn"]))
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.dedup_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.dedup_data)} reports")
+        log.info("Found {} reports".format(len(self.dedup_data)))
 
         # Write parsed report data to a file
         self.write_data_file(self.dedup_data, "multiqc_dedup")
@@ -61,10 +61,10 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
             # Check for Keys existing
             if "metrics" not in parsed_json or "metadata" not in parsed_json:
-                log.debug(f"DeDup JSON missing essential keys - skipping sample: '{f['fn']}'")
+                log.debug("DeDup JSON missing essential keys - skipping sample: '{}'".format(f["fn"]))
                 return None
         except JSONDecodeError as e:
-            log.debug(f"Could not parse DeDup JSON: '{f['fn']}'")
+            log.debug("Could not parse DeDup JSON: '{}'".format(f["fn"]))
             log.debug(e)
             return None
 
@@ -132,16 +132,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f}",
             },
             "reads_removed": {
-                "title": f"{ancient_read_count_prefix} Reads Removed",
-                "description": f"Non-unique reads removed after deduplication ({ancient_read_count_desc})",
+                "title": "{} Reads Removed".format(ancient_read_count_prefix),
+                "description": "Non-unique reads removed after deduplication ({})".format(ancient_read_count_desc),
                 "modify": lambda x: x * ancient_read_count_multiplier,
                 "shared_key": "read_count",
                 "min": 0,
                 "hidden": True,
             },
             "mapped_after_dedup": {
-                "title": f"{ancient_read_count_prefix} Post-DeDup Mapped Reads",
-                "description": f"Unique mapping reads after deduplication ({ancient_read_count_desc})",
+                "title": "{} Post-DeDup Mapped Reads".format(ancient_read_count_prefix),
+                "description": "Unique mapping reads after deduplication ({})".format(ancient_read_count_desc),
                 "modify": lambda x: x * ancient_read_count_multiplier,
                 "shared_key": "read_count",
                 "min": 0,

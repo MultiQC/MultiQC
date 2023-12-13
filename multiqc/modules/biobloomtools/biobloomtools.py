@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_bbt(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.bbt_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
                 self.add_data_source(f)
                 self.bbt_data[f["s_name"]] = parsed_data
 
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bbt_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.bbt_data)} reports")
+        log.info("Found {} reports".format(len(self.bbt_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available

@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.motus_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.motus_data)} reports")
+        log.info("Found {} reports".format(len(self.motus_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
 
         if self.motus_data.get(s_name) is not None:
-            log.warning(f"Duplicate sample name found based on filename! Overwriting: {s_name}")
+            log.warning("Duplicate sample name found based on filename! Overwriting: {}".format(s_name))
 
         self.motus_data[s_name] = {}
         self.add_data_source(f, s_name=s_name)
@@ -85,45 +85,45 @@ class MultiqcModule(BaseMultiqcModule):
         """mOTUs read counts for general stats"""
         headers = {
             "Total number of reads": {
-                "title": f"Total Input Reads ({config.read_count_prefix})",
-                "description": f"Total number of input reads to mOTUs ({config.read_count_prefix})",
+                "title": "Total Input Reads ({})".format(config.read_count_prefix),
+                "description": "Total number of input reads to mOTUs ({})".format(config.read_count_prefix),
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Number of reads after filtering": {
-                "title": f"Total Mapped Reads ({config.read_count_prefix})",
-                "description": f"Total number of reads after mapping({config.read_count_prefix})",
+                "title": "Total Mapped Reads ({})".format(config.read_count_prefix),
+                "description": "Total number of reads after mapping({})".format(config.read_count_prefix),
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Total number of inserts": {
-                "title": f"Total Mapped Inserts ({config.read_count_prefix})",
-                "description": f"Total number of inserts mapped to a MGC ({config.read_count_prefix})",
+                "title": "Total Mapped Inserts ({})".format(config.read_count_prefix),
+                "description": "Total number of inserts mapped to a MGC ({})".format(config.read_count_prefix),
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Unique mappers": {
-                "title": f"Unique Mapped Inserts ({config.read_count_prefix})",
-                "description": f"Total number of inserts mapped to a single MGC ({config.read_count_prefix})",
+                "title": "Unique Mapped Inserts ({})".format(config.read_count_prefix),
+                "description": "Total number of inserts mapped to a single MGC ({})".format(config.read_count_prefix),
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "hidden": True,
             },
             "Multiple mappers": {
-                "title": f" Multi-mapped Inserts ({config.read_count_prefix})",
-                "description": f"Total number of inserts mapped to multiple MGCs ({config.read_count_prefix})",
+                "title": " Multi-mapped Inserts ({})".format(config.read_count_prefix),
+                "description": "Total number of inserts mapped to multiple MGCs ({})".format(config.read_count_prefix),
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "hidden": True,
             },
             "Ignored multiple mapper without unique hit": {
-                "title": f"Ignored Multi-mapped Inserts ({config.read_count_prefix})",
-                "description": f"Total number of ignored multi-MGC mapped reads ({config.read_count_prefix})",
+                "title": "Ignored Multi-mapped Inserts ({})".format(config.read_count_prefix),
+                "description": "Total number of ignored multi-MGC mapped reads ({})".format(config.read_count_prefix),
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         common = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
+            "suffix": "{} reads".format(config.read_count_prefix),
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }
@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
         common = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
+            "suffix": "{} reads".format(config.read_count_prefix),
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }

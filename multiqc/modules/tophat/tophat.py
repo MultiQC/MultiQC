@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = f["s_name"].split("align_summary.txt", 1)[0]
                 s_name = self.clean_s_name(s_name, f)
                 if s_name in self.tophat_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.tophat_data[s_name] = parsed_data
 
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.tophat_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.tophat_data)} reports")
+        log.info("Found {} reports".format(len(self.tophat_data)))
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -118,8 +118,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "aligned_not_multimapped_discordant": {
-                "title": f"{config.read_count_prefix} Aligned",
-                "description": f"Aligned reads, not multimapped or discordant ({config.read_count_desc})",
+                "title": "{} Aligned".format(config.read_count_prefix),
+                "description": "Aligned reads, not multimapped or discordant ({})".format(config.read_count_desc),
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,

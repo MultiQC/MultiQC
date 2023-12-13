@@ -85,11 +85,11 @@ class BaseMultiqcModule(object):
         if target is None:
             target = self.name
         if self.href is not None:
-            self.mname = f'<a href="{self.href}" target="_blank">{target}</a>'
+            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
         else:
             self.mname = target
         if self.href or self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.mname} {self.info}{self.doi_link}</p>{self.extra}"
+            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
 
         # Format the markdown strings
         if autoformat:
@@ -127,7 +127,7 @@ class BaseMultiqcModule(object):
                 if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
                     report.files[self.name].append({"fn": sf[0], "root": sf[1]})
             sp_key = self.name
-            logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
+            logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
             if len(report.files[self.name]) > 0:
                 logger.warning(logwarn)
             else:
@@ -200,8 +200,8 @@ class BaseMultiqcModule(object):
                             elif filecontents:
                                 f["f"] = fh.read()
                                 yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
-                    logger.debug("Couldn't open filehandle when returning file: {f['fn']}\n{e}")
+                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
+                    logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
                     f["f"] = None
             else:
                 yield f
@@ -224,22 +224,22 @@ class BaseMultiqcModule(object):
         if anchor is None:
             if name is not None:
                 nid = name.lower().strip().replace(" ", "-")
-                anchor = f"{self.anchor}-{nid}"
+                anchor = "{}-{}".format(self.anchor, nid)
             else:
                 sl = len(self.sections) + 1
-                anchor = f"{self.anchor}-section-{sl}"
+                anchor = "{}-section-{}".format(self.anchor, sl)
 
         # Append custom module anchor to the section if set
         mod_cust_config = getattr(self, "mod_cust_config", {})
         if "anchor" in mod_cust_config:
-            anchor = f"{mod_cust_config['anchor']}_{anchor}"
+            anchor = "{}_{}".format(mod_cust_config["anchor"], anchor)
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
-            logger.debug(f"Skipping section '{anchor}' because specified in user config")
+            logger.debug("Skipping section '{}' because specified in user config".format(anchor))
             return
 
         # See if we have a user comment in the config
@@ -378,7 +378,7 @@ class BaseMultiqcModule(object):
         # Prepend sample name with directory
         if config.prepend_dirs:
             sep = config.prepend_dirs_sep
-            root = root.lstrip(f".{os.sep}")
+            root = root.lstrip(".{}".format(os.sep))
             dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
@@ -387,7 +387,7 @@ class BaseMultiqcModule(object):
                 else:
                     dirs = dirs[:d_idx]
             if len(dirs) > 0:
-                s_name = f"{sep.join(dirs)}{sep}{s_name}"
+                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
@@ -417,9 +417,9 @@ class BaseMultiqcModule(object):
                     match = re.search(ext["pattern"], s_name)
                     s_name = match.group() if match else s_name
                 elif ext.get("type") is None:
-                    logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
+                    logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
                 else:
-                    logger.error(f"Unrecognised config.fn_clean_exts type: {ext.get('type')}")
+                    logger.error("Unrecognised config.fn_clean_exts type: {}".format(ext.get("type")))
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
@@ -459,7 +459,7 @@ class BaseMultiqcModule(object):
                         else:
                             s_name = s_name.replace(s_name_search, s_name_replace)
                 except re.error as e:
-                    logger.error(f"Error with sample name replacement regex: {e}")
+                    logger.error("Error with sample name replacement regex: {}".format(e))
 
         return s_name
 
@@ -539,7 +539,7 @@ class BaseMultiqcModule(object):
                 source = os.path.abspath(os.path.join(f["root"], f["fn"]))
             report.data_sources[module][section][s_name] = source
         except AttributeError:
-            logger.warning(f"Tried to add data source for {self.name}, but was missing fields data")
+            logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
 
     def add_software_version(self, version: str = None, sample: str = None, software_name: str = None):
         """Save software versions for module."""
@@ -562,7 +562,7 @@ class BaseMultiqcModule(object):
             software_name = self.name
 
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
-        # Otherwise, use raw string is used for version.
+        # Otherwise use raw string is used for version.
         # - https://peps.python.org/pep-0440/
         version = software_versions.parse_version(version)
 
@@ -585,13 +585,13 @@ class BaseMultiqcModule(object):
         # Append custom module anchor if set
         mod_cust_config = getattr(self, "mod_cust_config", {})
         if "anchor" in mod_cust_config:
-            fn = f"{fn}_{mod_cust_config['anchor']}"
+            fn = "{}_{}".format(fn, mod_cust_config["anchor"])
 
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
         while fn in report.saved_raw_data:
-            fn = f"{base_fn}_{i}"
+            fn = "{}_{}".format(base_fn, i)
             i += 1
 
         # Save the file

@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.seqyclean_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.seqyclean_data)} logs")
+        log.info("Found {} logs".format(len(self.seqyclean_data)))
 
         # Adding the bar plots
         self.add_section(

@@ -115,11 +115,11 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data["reads_artifact"] = record["stats"]["statsRNAType"][3]
                 parsed_data["reads_unknown"] = record["stats"]["statsRNAType"][4]
                 if s_name in self.summary_data:
-                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
                 self.add_data_source(f, s_name)
                 self.summary_data[s_name] = parsed_data
         else:
-            log.debug(f"No valid data {f['fn']} in miRTrace summary")
+            log.debug("No valid data {} in miRTrace summary".format(f["fn"]))
             return None
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "LENGTH":
-                    log.debug(f"No valid data {f['fn']} for read length distribution")
+                    log.debug("No valid data {} for read length distribution".format(f["fn"]))
                     return None
                 header = s[1:]
             else:
@@ -144,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
             for length in body:
                 parsed_data[length] = int(body[length][idx])
             if s_name in self.length_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.length_data[s_name] = parsed_data
 
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
             s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "CLADE":
-                    log.debug(f"No valid data {f['fn']} for contamination check")
+                    log.debug("No valid data {} for contamination check".format(f["fn"]))
                     return None
                 header = s[1:]
             else:
@@ -170,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             for clade in body:
                 parsed_data[clade] = int(body[clade][idx])
             if s_name in self.contamination_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.contamination_data[s_name] = parsed_data
 
@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT":
-                    log.debug(f"No valid data {f['fn']} for miRNA complexity")
+                    log.debug("No valid data {} for miRNA complexity".format(f["fn"]))
                     return None
                 header = s[1:]
             else:
@@ -196,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
             for depth in body:
                 parsed_data[depth] = int(body[depth][idx]) if body[depth][idx] else 0
             if s_name in self.complexity_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
             self.add_data_source(f, s_name)
             self.complexity_data[s_name] = parsed_data
 
