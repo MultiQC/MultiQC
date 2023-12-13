@@ -22,10 +22,11 @@ bamdst:
     - "*_alt"
     - "*_decoy"
     - "*_random"
-    - "chrUn*"
+    - "*_fix"
     - "HLA*"
-    - "chrM"
+    - "chrUn*"
     - "chrEBV"
+    - "chrM"
 ```
 
 Note that exclusion supersedes inclusion for the contig filters.
