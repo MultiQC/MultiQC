@@ -55,82 +55,86 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     readqc = self.ignore_samples(readqc)
 
-    if len(readqc) > 0:
-        # Convert numbers given in megabases to bases
-        readqc_keys["bases sequenced"] = ("Bases sequenced in total.", "")
-        for _, kv in readqc.items():
-            kv["bases sequenced"] = kv["bases sequenced (MB)"] * 1e6
-            kv.pop("bases sequenced (MB)")
+    if len(readqc) == 0:
+        return 0
 
-        # Add cluster count
-        readqc_keys["cluster count"] = ("Clusters sequenced in total.", "")
-        readqc_keys["paired-end"] = ("Whether input files were paired-end sequences.", "")
+    # Write to file
+    self.write_data_file(readqc, "multiqc_ngsbits_readqc")
 
-        # Improve table headers
-        readqc_keys_table = {key: {"title": key, "description": value[0]} for key, value in readqc_keys.items()}
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        readqc_keys_table["read count"].update(
-            {
-                "suffix": config.read_count_prefix,
-                "format": "{:,.2f}",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-                "scale": "Purples",
-                "placement": 10,
-            }
-        )
-        readqc_keys_table["cluster count"].update(
-            {
-                "suffix": config.read_count_prefix,
-                "format": "{:,.2f}",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "scale": "Purples",
-                "placement": 20,
-            }
-        )
-        readqc_keys_table["bases sequenced"].update(
-            {
-                "suffix": config.base_count_prefix,
-                "format": "{:,.2f}",
-                "modify": lambda x: x * config.base_count_multiplier,
-                "shared_key": "base_count",
-                "scale": "Blues",
-                "placement": 30,
-            }
-        )
-        readqc_keys_table["gc content %"].update(
-            {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Spectral", "placement": 40}
-        )
-        readqc_keys_table["Q20 read %"].update(
-            {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Reds", "placement": 50}
-        )
-        readqc_keys_table["Q30 base %"].update(
-            {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Oranges", "placement": 60}
-        )
-        readqc_keys_table["read length"].update(
-            {"suffix": "bp", "format": "{:,.0f}", "scale": "Greens", "placement": 70}
-        )
-        readqc_keys_table["no base call %"].update(
-            {"suffix": "%", "format": "{:,.2f}", "floor": 1, "scale": "BuGn", "placement": 80}
-        )
+    # Convert numbers given in megabases to bases
+    readqc_keys["bases sequenced"] = ("Bases sequenced in total.", "")
+    for _, kv in readqc.items():
+        kv["bases sequenced"] = kv["bases sequenced (MB)"] * 1e6
+        kv.pop("bases sequenced (MB)")
 
-        # Write to file
-        self.write_data_file(readqc, "multiqc_ngsbits_readqc")
+    # Add cluster count
+    readqc_keys["cluster count"] = ("Clusters sequenced in total.", "")
+    readqc_keys["paired-end"] = ("Whether input files were paired-end sequences.", "")
 
-        # overview table with all values
-        self.add_section(
-            name="ReadQC",
-            anchor="ngsbits-readqc",
-            description='<a href="https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md" target="_blank">ReadQC</a>'
-            " calculates QC metrics on unprocessed NGS reads.",
-            plot=table.plot(
-                readqc,
-                readqc_keys_table,
-                pconfig={
-                    "namespace": "ngsbits_readqc",
-                    "id": "ngsbits_readqc_table",
-                },
-            ),
-        )
+    # Improve table headers
+    readqc_keys_table = {key: {"title": key, "description": value[0]} for key, value in readqc_keys.items()}
+
+    readqc_keys_table["read count"].update(
+        {
+            "suffix": config.read_count_prefix,
+            "format": "{:,.2f}",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
+            "scale": "Purples",
+            "placement": 10,
+        }
+    )
+    readqc_keys_table["cluster count"].update(
+        {
+            "suffix": config.read_count_prefix,
+            "format": "{:,.2f}",
+            "modify": lambda x: x * config.read_count_multiplier,
+            "scale": "Purples",
+            "placement": 20,
+        }
+    )
+    readqc_keys_table["bases sequenced"].update(
+        {
+            "suffix": config.base_count_prefix,
+            "format": "{:,.2f}",
+            "modify": lambda x: x * config.base_count_multiplier,
+            "shared_key": "base_count",
+            "scale": "Blues",
+            "placement": 30,
+        }
+    )
+    readqc_keys_table["gc content %"].update(
+        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Spectral", "placement": 40}
+    )
+    readqc_keys_table["Q20 read %"].update(
+        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Reds", "placement": 50}
+    )
+    readqc_keys_table["Q30 base %"].update(
+        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Oranges", "placement": 60}
+    )
+    readqc_keys_table["read length"].update({"suffix": "bp", "format": "{:,.0f}", "scale": "Greens", "placement": 70})
+    readqc_keys_table["no base call %"].update(
+        {"suffix": "%", "format": "{:,.2f}", "floor": 1, "scale": "BuGn", "placement": 80}
+    )
+
+    # overview table with all values
+    self.add_section(
+        name="ReadQC",
+        anchor="ngsbits-readqc",
+        description='<a href="https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md" target="_blank">ReadQC</a>'
+        " calculates QC metrics on unprocessed NGS reads.",
+        plot=table.plot(
+            readqc,
+            readqc_keys_table,
+            pconfig={
+                "namespace": "ngsbits_readqc",
+                "id": "ngsbits_readqc_table",
+            },
+        ),
+    )
 
     return len(readqc)
