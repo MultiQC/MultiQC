@@ -15,6 +15,7 @@ checks = {
     "self.add_data_source": "self.find_log_files",
     "self.write_data_file": "self.find_log_files",
     "doi=": "super(MultiqcModule, self).__init__(",
+    "self.add_software_version": "self.find_log_files",
 }
 
 # Check that add_data_source() is called for each module

@@ -1,0 +1,72 @@
+name: Update CHANGELOG.md
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  update_changelog:
+    runs-on: ubuntu-latest
+    # Run if comment is on a PR with the main repo, and if it contains the magic keywords.
+    # Or run on PR creation, unless asked otherwise in the title.
+    if: |
+      github.repository_owner == 'ewels' && (
+        github.event_name == 'pull_request_target' ||
+        github.event.issue.pull_request && startsWith(github.event.comment.body, '@multiqc-bot changelog')
+      )
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+
+      # Action runs on the issue comment, so we don't get the PR by default.
+      # Use the GitHub CLI to check out the PR:
+      - name: Checkout Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            PR_NUMBER="${{ github.event.issue.number }}"
+          elif [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+          fi
+          gh pr checkout $PR_NUMBER
+
+      - uses: actions/setup-python@v3
+
+      - name: Install packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Update CHANGELOG.md from the PR title
+        env:
+          COMMENT: ${{ github.event.comment.body }}
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            export PR_NUMBER='${{ github.event.issue.number }}'
+            export PR_TITLE='${{ github.event.issue.title }}'
+          elif [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+            export PR_NUMBER='${{ github.event.pull_request.number }}'
+            export PR_TITLE='${{ github.event.pull_request.title }}'
+          fi
+          python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
+
+      - name: Check if CHANGELOG.md actually changed
+        run: |
+          git diff --exit-code ${GITHUB_WORKSPACE}/CHANGELOG.md || echo "changed=YES" >> $GITHUB_ENV
+          echo "File changed: ${{ env.changed }}"
+
+      - name: Commit and push changes
+        if: env.changed == 'YES'
+        run: |
+          git config user.name 'MultiQC Bot'
+          git config user.email 'multiqc-bot@seqera.io'
+          git config push.default upstream
+          git add ${GITHUB_WORKSPACE}/CHANGELOG.md
+          git status
+          git commit -m "[automated] Update CHANGELOG.md"
+          git push

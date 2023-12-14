@@ -87,6 +87,11 @@ data:
   sample_4: { x: 9, y: 12 }
 ```
 
+:::note
+This example YAML file is data only, and is not to be confused with a config file (though the two look very similar).
+See the docs [Data as part of MultiQC config](#data-as-part-of-multiqc-config) for more on that.
+:::
+
 The file format can also be JSON:
 
 ```json
@@ -155,7 +160,16 @@ Check [Tricky extras](#tricky-extras) for certain caveats about formatting heade
 If you are already using a MultiQC config file to add data to your report (for example,
 [titles / introductory text](../getting_started/config.md)), you can
 give data within this file too. This can be in any MultiQC config file (for example,
-passed on the command line with `-c my_yaml_file.yaml`). This is useful as you can
+passed on the command line with `-c my_yaml_file.yaml` or in your launch directory as
+`multiqc_config.yml` - see [Configuration](../getting_started/config.md)).
+
+:::note
+This is not to be confused with the YAML data files described in the above section,
+[MultiQC-specific data file](#multiqc-specific-data-file).
+For example, MultiQC config files will _not_ be found with `_mqc.yml` file extensions.
+:::
+
+This is useful as you can
 keep everything contained within a single file (including stuff unrelated to this
 specific _custom content_ feature of MultiQC).
 
@@ -393,7 +407,7 @@ Wherever you see `pconfig`, any key can be used within the above syntax.
 ## Tricky extras
 
 Because of the way this module works, there are a few specifics that can trip you up.
-Most of these should probably be fixed one day. Feel free to complain on gitter or submit a pull request!
+Most of these should probably be fixed one day. Feel free to ask for help on the [community forum](https://community.seqera.io/c/multiqc/6), or submit a pull request!
 I'll try to keep a list here to help the wary...
 
 ### Differences between Tables and General Stats
@@ -416,12 +430,15 @@ MultiQC has been developed to be as forgiving as possible and will handle lots o
 invalid or ignored configurations. This is useful for most users but can make life
 difficult when getting MultiQC to work with a new custom content format.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+To help with this, you can run MultiQC with the `--strict` flag, which will give
+explicit warnings about anything that is not optimally configured. For example:
 
 ```bash
-multiqc --lint test_data
+multiqc --strict test_data
 ```
+
+You can alternatively enable the strict mode by setting the environment variable
+`MULTIQC_STRICT`, or by setting it into the [config](http://multiqc.info/docs/#configuring-multiqc): `strict: true`.
 
 # Examples
 

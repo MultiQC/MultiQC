@@ -2,9 +2,8 @@
 
 
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the HOMER submodules
 from .findpeaks import FindPeaksReportMixin
@@ -31,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -53,15 +52,15 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
 
         n["findpeaks"] = self.parse_homer_findpeaks()
         if n["findpeaks"] > 0:
-            log.info("Found {} findPeaks reports".format(n["findpeaks"]))
+            log.info(f"Found {n['findpeaks']} findPeaks reports")
 
         n["tagDir"] = self.homer_tagdirectory()
         if n["tagDir"] > 0:
-            log.info("Found {} tagDir reports".format(n["tagDir"]))
+            log.info(f"Found {n['tagDir']} tagDir reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

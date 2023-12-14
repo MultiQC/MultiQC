@@ -17,7 +17,7 @@ letters = "abcdefghijklmnopqrstuvwxyz"
 def plot(data, headers=None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
-    :param headers: A list of Dicts / OrderedDicts with information
+    :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
                     max values etc.
     :return: HTML string
@@ -33,13 +33,13 @@ def plot(data, headers=None, pconfig=None):
             pconfig[k] = v
 
     # Make a datatable object
-    dt = table_object.datatable(data, headers, pconfig)
+    dt = table_object.DataTable(data, headers, pconfig)
 
     return make_plot(dt)
 
 
-def make_plot(dt):
-    bs_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
+def make_plot(dt: table_object.DataTable):
+    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
 
     # Sanitise plot ID and check for duplicates
     bs_id = report.save_htmlid(bs_id)
@@ -50,7 +50,7 @@ def make_plot(dt):
     dt.raw_vals = defaultdict(lambda: dict())
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
-            bcol = "rgb({})".format(header.get("colour", "204,204,204"))
+            bcol = f"rgb({header.get('colour', '204,204,204')})"
 
             categories.append(
                 {
@@ -100,7 +100,7 @@ def make_plot(dt):
 
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", "multiqc_{}".format(bs_id))
+        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{bs_id}")
         util_functions.write_data_file(dt.raw_vals, fn)
         report.saved_raw_data[fn] = dt.raw_vals
 

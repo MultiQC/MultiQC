@@ -2,6 +2,27 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.19
+    'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # jquery.tablesorter.min.js
+    'sha256-/C57+E7g4T7gJpkhM4cBNKuHqniEVV8thOcQDOUy640=' # multiqc/templates/default/assets/js/multiqc_plotting.js
+
+    # 1.18
+    'sha256-aY1YMeLr1IxkwxjBe0x60QzbuT4u5Mh/QC6brcAN9Do=' # multiqc/templates/default/assets/js/multiqc_tables.js
+
+    # 1.17
+    'sha256-krKzkLmKjisEgw0YGKglUFqLmEh6sK08Qw6xPmmo/10=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
+    'sha256-8k3VwupzY7v2YyNWjgl7LjJRpDHztn+213IxxMtlhGU=' # ////////////////////////////////////////////////// HighCharts Plotting Code/////
+    'sha256-F/Ns5XO/YJO5xM4MiEoOb0Oo02hP7aTlfRywlFde9G4=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
+    'sha256-lD87d8oI1kNPJlsmI02I4WwpZwxfpFZnvq5MdsR3yaE=' # // Return JS code required for plotting a single sample// RSeQC plot. Attempt to
+    'sha256-Nbg17DNbGUiybFNgr6wbIU1w5j833X0XIK/iycwTXDQ=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+    'sha256-Y19Ab/rDOuOgOuoftOFGSCo6C6kLjM/LSa2eQgrOCUM=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+
+    # 1.16
+    'sha256-wlLs2UDz7n3cvWqY0PTazlKGYhGTOPH77vsElgE7pFw=' # multiqc_fastqc.js
+    'sha256-GueuiCxuV8FbnCv7Txho8dTrz3HODU6GH40tvy5kMks=' # multiqc_dragen_fastqc.js
+    'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' # jszip.min.js
+    'sha256-TIAwTE0Bkh4IONwQfoLEBxyQjPi7q+Jr1Fs3+kiAYzY=' # multiqc_toolbox.js
+
     # v1.13
     'sha256-Yz8frRqxu+ckJJ0Haj9Ywhe/Siomzpq9D/Xe1WX1LrQ=' # multiqc_tables.js
     'sha256-SlWNKwqjhhmUI3hLXtLPzAl9rm5jXeeYgX1bGZ4S8D8=' # multiqc_dragen_fastqc.js

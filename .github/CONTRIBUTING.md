@@ -6,7 +6,7 @@ I try to manage the required tasks for MultiQC using GitHub issues, you probably
 
 However, don't be put off by this template - other more general issues and suggestions are welcome! Contributions to the code are even more welcome ;)
 
-> _If you need help using MultiQC then the best place to go is the Gitter chatroom where you can ask me questions directly: [https://gitter.im/ewels/MultiQC](https://gitter.im/ewels/MultiQC)_
+> _If you need help using MultiQC then the best place to go is the Seqera community forum where you can questions in the MultiQC category: [https://community.seqera.io](https://community.seqera.io/c/multiqc/6)_
 
 ## Contribution workflow
 
@@ -23,7 +23,7 @@ is as follows:
 
 If you're not used to this workflow with git, you can start with some [basic docs from GitHub](https://help.github.com/articles/fork-a-repo/).
 
-When it comes to MultiQC, please consult the [MultiQC documentation](http://multiqc.info/docs/) and don't hesitate to get in touch on [Gitter](https://gitter.im/ewels/MultiQC) for help and feedback.
+When it comes to MultiQC, please consult the [MultiQC documentation](http://multiqc.info/docs/) and don't hesitate to get in touch on the [community forums](https://community.seqera.io) for help and feedback.
 
 A few pointers to bear in mind:
 

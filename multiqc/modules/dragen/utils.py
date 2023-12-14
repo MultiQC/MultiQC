@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from multiqc import config
 
 read_format = "{:,.1f}"
@@ -45,10 +43,10 @@ class Metric:
 
 def make_headers(parsed_metric_ids, metrics):
     # Init general stats table
-    genstats_headers = OrderedDict()
+    genstats_headers = {}
 
     # Init headers for an own separate table
-    own_tabl_headers = OrderedDict()
+    own_tabl_headers = {}
 
     for metric in metrics:
         col = dict(
@@ -185,7 +183,7 @@ def order_headers(headers):
     else:
         return headers
 
-    output_headers = OrderedDict()
+    output_headers = {}
     for index in indexes:
         for metric in ordered_headers[index]:
             output_headers[metric[0]] = metric[1]
@@ -220,7 +218,7 @@ STD_TABLE_CONFIGS = [
 
 
 def clean_headers(headers):
-    cleaned_headers = OrderedDict()
+    cleaned_headers = {}
     for metric in headers:
         cleaned_headers[metric] = {
             config: val for config, val in headers[metric].items() if config in STD_TABLE_CONFIGS

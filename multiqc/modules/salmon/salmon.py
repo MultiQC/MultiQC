@@ -4,9 +4,8 @@
 import json
 import logging
 import os
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -31,6 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = os.path.basename(os.path.dirname(f["root"]))
             s_name = self.clean_s_name(s_name, f)
             self.salmon_meta[s_name] = json.loads(f["f"])
+            self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
@@ -39,12 +39,12 @@ class MultiqcModule(BaseMultiqcModule):
             if os.path.basename(f["root"]) == "libParams":
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
-                parsed = OrderedDict()
+                parsed = dict()
                 for i, v in enumerate(f["f"].split()):
                     parsed[i] = float(v)
                 if len(parsed) > 0:
                     if s_name in self.salmon_fld:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.salmon_fld[s_name] = parsed
 
@@ -53,31 +53,32 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_fld = self.ignore_samples(self.salmon_fld)
 
         if len(self.salmon_meta) == 0 and len(self.salmon_fld) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.salmon_meta) > 0:
-            log.info("Found {} meta reports".format(len(self.salmon_meta)))
+            log.info(f"Found {len(self.salmon_meta)} meta reports")
             self.write_data_file(self.salmon_meta, "multiqc_salmon")
         if len(self.salmon_fld) > 0:
-            log.info("Found {} fragment length distributions".format(len(self.salmon_fld)))
+            log.info(f"Found {len(self.salmon_fld)} fragment length distributions")
 
         # Add alignment rate to the general stats table
-        headers = OrderedDict()
-        headers["percent_mapped"] = {
-            "title": "% Aligned",
-            "description": "% Mapped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["num_mapped"] = {
-            "title": "M Aligned",
-            "description": "Mapped reads (millions)",
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: float(x) / 1000000,
-            "shared_key": "read_count",
+        headers = {
+            "percent_mapped": {
+                "title": "% Aligned",
+                "description": "% Mapped reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "num_mapped": {
+                "title": "M Aligned",
+                "description": "Mapped reads (millions)",
+                "min": 0,
+                "scale": "PuRd",
+                "modify": lambda x: float(x) / 1000000,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.salmon_meta, headers)
 
