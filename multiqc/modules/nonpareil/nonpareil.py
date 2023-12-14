@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config options
         self.plot_observed = getattr(config, "nonpareil", {}).get("plot_observed", True)
         self.plot_model = getattr(config, "nonpareil", {}).get("plot_model", True)
-        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
+        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion")
 
         # Read JSON file
         self.data_by_sample = dict()
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
             data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             # Calculate dispersion
             # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
-            disp_add = np.empty([])
+            disp_add = None
             if self.disp_type == "sd":
                 disp_add = np.array(data["y.sd"])
             elif self.disp_type == "ci95":
@@ -110,8 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif self.disp_type == "iq":
                 data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p75"])]
                 data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p25"])]
-
-            if disp_add.size > 0:
+            if disp_add is not None:
                 data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) + disp_add)]
                 data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) - disp_add)]
 
@@ -140,8 +139,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "R": {
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "Total raw sequences ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Total raw sequences ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
                 "scale": "GnBu",
@@ -150,8 +149,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "LR": {
-                "title": "{} Sequencing effort".format(config.base_count_prefix),
-                "description": "Total base pairs sequenced ({})".format(config.base_count_desc),
+                "title": f"{config.base_count_prefix} Sequencing effort",
+                "description": f"Total base pairs sequenced ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "Blues",
@@ -214,10 +213,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "LRstar": {
-                "title": "{} Sequencing effort for ideal coverage".format(config.base_count_prefix),
-                "description": "Projected sequencing effort for nearly complete coverage ({})".format(
-                    config.base_count_desc
-                ),
+                "title": f"{config.base_count_prefix} Sequencing effort for ideal coverage",
+                "description": f"Projected sequencing effort for nearly complete coverage ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "RdYlGn-rev",
