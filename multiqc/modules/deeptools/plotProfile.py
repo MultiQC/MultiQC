@@ -115,6 +115,7 @@ class plotProfileMixin:
         d = dict()
         bin_labels = []
         bins = []
+        converted_bin_labels = []
         for line in f["f"].splitlines():
             cols = line.rstrip().split("\t")
             if cols[0] == "bin labels":
@@ -148,6 +149,11 @@ class plotProfileMixin:
                     converted_bin_labels = bins
 
                 for i in bins:
-                    d[s_name].update({converted_bin_labels[i - 1]: float(cols[i + 1])})
+                    v = cols[i + 1]
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        v = None
+                    d[s_name].update({converted_bin_labels[i - 1]: v})
 
         return d, bin_labels, converted_bin_labels
