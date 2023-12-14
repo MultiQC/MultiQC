@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         # add the histogram to the report
         self.add_readlen_dist_plot()
 
-        log.info("Found {} reports".format(len(self.skewer_data)))
+        log.info(f"Found {len(self.skewer_data)} reports")
 
     def add_readlen_dist_plot(self):
         """Generate plot HTML for read length distribution plot."""
@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data["fq1"] is not None:
             s_name = self.clean_s_name(data["fq1"], f)
             if s_name in self.skewer_readlen_dist:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data["fq2"] is not None:
             s_name = self.clean_s_name(data["fq1"], f)
             if s_name in self.skewer_readlen_dist:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.add_skewer_data(s_name, data, f)
             self.skewer_readlen_dist[s_name] = readlen_dist
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
     def add_skewer_data(self, s_name, data, f):
         stats = ["r_processed", "r_short_filtered", "r_empty_filtered", "r_avail", "r_trimmed", "r_untrimmed"]
         if s_name in self.skewer_data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.skewer_data[s_name] = {}
         self.add_data_source(f, s_name)
         for k in stats:

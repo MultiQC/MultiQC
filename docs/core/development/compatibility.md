@@ -135,9 +135,9 @@ All fields are optional. If `name` is omitted then the end result will be the sa
 
 #### Updated number formatting
 
-A couple of minor updates to how numbers are handled in tables may affect your configs. Firstly, format strings looking like `{:.1f}` should now be `{:,.1f}` (note the extra comma). This enables customisable number formatting with separated thousand groups.
+A couple of minor updates to how numbers are handled in tables may affect your configs. Firstly, format strings looking like `{:.1f}` should now be `{:,.1f}` (note the extra comma). This enables customisable number formatting with separated thousand groups. For example, `{:,.2f}` will format `1234567.89` as `1,234,567.89`. For decimal numbers, use `{:,d}`.
 
-Secondly, any table columns reporting a read count should use new config options to allow user-configurable multipliers. For example, instead of this:
+Secondly, any table columns reporting a read and base counts should use new config options to allow user-configurable multipliers. For example, instead of this:
 
 ```python
 headers['read_counts'] = {
@@ -153,8 +153,8 @@ you should now use this:
 
 ```python
 headers['read_counts'] = {
-  'title': '{} Reads'.format(config.read_count_prefix),
-  'description': 'Total raw sequences ({})'.format(config.read_count_desc),
+  'title': f'{config.read_count_prefix} Reads',
+  'description': f'Total raw sequences ({config.read_count_desc})',
   'modify': lambda x: x * config.read_count_multiplier,
   'format': '{:,.2f} ' + config.read_count_prefix,
   'shared_key': 'read_count'
@@ -162,3 +162,15 @@ headers['read_counts'] = {
 ```
 
 Not as pretty, but allows users to view low depth coverage.
+
+Similarly, for base counts:
+
+```python
+headers['base_counts'] = {
+  'title': f'{config.base_count_prefix} Bases',
+  'description': f'Total raw bases ({config.base_count_desc})',
+  'modify': lambda x: x * config.base_count_multiplier,
+  'format': '{:,.2f} ' + config.base_count_prefix,
+  'shared_key': 'base_count'
+}
+```

@@ -248,14 +248,14 @@ def _general_stats_table(module, data):
             assert isinstance(covs, list)
             assert len(covs) > 0
             covs = [str(i) for i in covs]
-            log.debug("Custom picad coverage thresholds: {}".format(", ".join([i for i in covs])))
+            log.debug(f"Custom picad coverage thresholds: {', '.join([i for i in covs])}")
         except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
-            headers["PCT_TARGET_BASES_{}X".format(c)] = {
+            headers[f"PCT_TARGET_BASES_{c}X"] = {
                 "id": f"{module.anchor}_target_bases_{c}X",
-                "title": "Target Bases &ge; {}X".format(c),
-                "description": "Percent of target bases with coverage &ge; {}X".format(c),
+                "title": f"Target Bases &ge; {c}X",
+                "description": f"Percent of target bases with coverage &ge; {c}X",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -356,12 +356,12 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
                 headers[h]["suffix"] = "%"
 
             elif h.find("READS") > -1:
-                headers[h]["title"] = "{} {}".format(config.read_count_prefix, headers[h]["title"])
+                headers[h]["title"] = f"{config.read_count_prefix} {headers[h]['title']}"
                 headers[h]["modify"] = lambda x: x * config.read_count_multiplier
                 headers[h]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
-                headers[h]["title"] = "{} {}".format(config.base_count_prefix, headers[h]["title"])
+                headers[h]["title"] = f"{config.base_count_prefix} {headers[h]['title']}"
                 headers[h]["modify"] = lambda x: x * config.base_count_multiplier
                 headers[h]["shared_key"] = "base_count"
 

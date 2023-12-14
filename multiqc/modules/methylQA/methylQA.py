@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.methylqa_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.methylqa_data)))
+        log.info(f"Found {len(self.methylqa_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) > 0:
             if s_name in self.methylqa_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.methylqa_data[s_name] = parsed_data
 

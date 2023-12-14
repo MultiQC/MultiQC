@@ -39,7 +39,7 @@ def plot(data, headers=None, pconfig=None):
 
 
 def make_plot(dt: table_object.DataTable):
-    bs_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
+    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
 
     # Sanitise plot ID and check for duplicates
     bs_id = report.save_htmlid(bs_id)
@@ -50,7 +50,7 @@ def make_plot(dt: table_object.DataTable):
     dt.raw_vals = defaultdict(lambda: dict())
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
-            bcol = "rgb({})".format(header.get("colour", "204,204,204"))
+            bcol = f"rgb({header.get('colour', '204,204,204')})"
 
             categories.append(
                 {
@@ -100,7 +100,7 @@ def make_plot(dt: table_object.DataTable):
 
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", "multiqc_{}".format(bs_id))
+        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{bs_id}")
         util_functions.write_data_file(dt.raw_vals, fn)
         report.saved_raw_data[fn] = dt.raw_vals
 

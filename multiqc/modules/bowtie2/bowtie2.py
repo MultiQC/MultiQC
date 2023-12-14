@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bowtie2_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.bowtie2_data)))
+        log.info(f"Found {len(self.bowtie2_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -137,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
             btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", line)
             if btcmd:
                 s_name = self.clean_s_name(btcmd.group(1), f)
-                log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
+                log.debug(f"Found a bowtie2 command, updating sample name to '{s_name}'")
 
             # Total reads
             total = re.search(r"(\d+) reads; of these:", line)
@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Save half 'pairs' of mate counts
                 for k in ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]:
                     if k in parsed_data:
-                        parsed_data["{}_halved".format(k)] = float(parsed_data[k]) / 2.0
+                        parsed_data[f"{k}_halved"] = float(parsed_data[k]) / 2.0
 
                 # HiSAT2 has PE data doesn't have the mate-specific stats.
                 # To avoid missing unaligned counts in the barplot, fake the "_halved" key.
@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Save parsed data
                 if s_name in self.bowtie2_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.bowtie2_data[s_name] = parsed_data
                 # Reset in case we find more in this log file

@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any HiC-Pro summary reports
         self.hicpro_data = dict()
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
-            for f in self.find_log_files("hicpro/{}".format(k)):
+            for f in self.find_log_files(f"hicpro/{k}"):
                 self.parse_hicpro_stats(f, k)
 
         # Update current statistics
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.hicpro_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} HiC-Pro reports".format(len(self.hicpro_data)))
+        log.info(f"Found {len(self.hicpro_data)} HiC-Pro reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
             if not line.startswith("#"):
                 s = line.split("\t")
                 if s[0] in self.hicpro_data[s_name]:
-                    log.debug("Duplicated keys found! Overwriting: {}".format(s[0]))
+                    log.debug(f"Duplicated keys found! Overwriting: {s[0]}")
                 # Try to convert the extracted value to a number and store it in hicpro_data.
                 # try-block is used to prevent program crash, because there is no
                 # guarantee that the value (s[1]) can be always converted to integer.
@@ -184,8 +184,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "valid_interaction_rmdup": {
-                "title": "{} Valid Pairs Unique".format(config.read_count_prefix),
-                "description": "Number of valid pairs after duplicates removal ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Valid Pairs Unique",
+                "description": f"Number of valid pairs after duplicates removal ({config.read_count_desc})",
                 "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -201,8 +201,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "valid_interaction": {
-                "title": "{} Valid Pairs".format(config.read_count_prefix),
-                "description": "Number of valid pairs ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Valid Pairs",
+                "description": f"Number of valid pairs ({config.read_count_desc})",
                 "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -239,7 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "mapped_R2": {
                 "title": "Aligned [R2]",
-                "description": "Total number of aligned reads [R2] ({})".format(config.read_count_desc),
+                "description": f"Total number of aligned reads [R2] ({config.read_count_desc})",
                 "min": "0",
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -257,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "mapped_R1": {
                 "title": "Aligned [R1]",
-                "description": "Total number of aligned reads [R1] ({})".format(config.read_count_desc),
+                "description": f"Total number of aligned reads [R1] ({config.read_count_desc})",
                 "min": "0",
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -290,11 +290,11 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.hicpro_data:
             for r in [1, 2]:
                 try:
-                    data[r - 1]["{} [R{}]".format(s_name, r)] = {
-                        "Full_Alignments_Read": self.hicpro_data[s_name]["global_R{}".format(r)],
-                        "Trimmed_Alignments_Read": self.hicpro_data[s_name]["local_R{}".format(r)],
-                        "Failed_To_Align_Read": int(self.hicpro_data[s_name]["total_R{}".format(r)])
-                        - int(self.hicpro_data[s_name]["mapped_R{}".format(r)]),
+                    data[r - 1][f"{s_name} [R{r}]"] = {
+                        "Full_Alignments_Read": self.hicpro_data[s_name][f"global_R{r}"],
+                        "Trimmed_Alignments_Read": self.hicpro_data[s_name][f"local_R{r}"],
+                        "Failed_To_Align_Read": int(self.hicpro_data[s_name][f"total_R{r}"])
+                        - int(self.hicpro_data[s_name][f"mapped_R{r}"]),
                     }
                 except KeyError as e:
                     log.error(f"Missing expected plot key {e} in {s_name} Read {r}")
