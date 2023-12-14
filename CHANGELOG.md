@@ -24,6 +24,7 @@
 
 ### Module updates
 
+- **deepTools**: Handle missing data in plotProfile ([#2229](https://github.com/ewels/MultiQC/pull/2229))
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
 - **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: BamQC: fix for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
