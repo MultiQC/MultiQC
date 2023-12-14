@@ -77,12 +77,15 @@ table_cond_formatting_rules:
     pass:
       - s_eq: "pass"
       - s_eq: "true"
+      - s_eq: "ok"
+      - s_eq: "yes"
     warn:
       - s_eq: "warn"
       - s_eq: "unknown"
     fail:
       - s_eq: "fail"
       - s_eq: "false"
+      - s_eq: "no"
   # PURPLE module - QC Status column
   # TODO: Should update the table plotting code so that this can go in pconfig
   QCStatus:
