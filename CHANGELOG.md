@@ -18,6 +18,7 @@
 - Fastp: search pattern: look at content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
 - Bar graphs: add `sort_samples: false` config option, also do not sort `OrderedDict` data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 - Refactor: replace `.format()` calls with f-strings ([#2224](https://github.com/ewels/MultiQC/pull/2224))
+- New modiule: ngs-bits [2] ([#2231](https://github.com/ewels/MultiQC/pull/2231))
 
 ### New Modules
 
