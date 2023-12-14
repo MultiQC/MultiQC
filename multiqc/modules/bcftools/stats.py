@@ -229,7 +229,14 @@ class StatsReportMixin:
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers, {"namespace": "Stats"}),
+                    plot=table.plot(
+                        self.bcftools_stats,
+                        stats_headers,
+                        {
+                            "namespace": "Stats",
+                            "id": "bcftools-stats-table",
+                        },
+                    ),
                 )
 
             # Make bargraph plot of substitution types
