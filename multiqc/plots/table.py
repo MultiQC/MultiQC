@@ -235,6 +235,7 @@ def make_table(dt: table_object.DataTable):
                         if cmatches[cfck]:
                             badge_col = cfc[cfck]
                 if badge_col is not None:
+                    valstring = str(val)
                     valstring = f'<span class="badge" style="background-color:{badge_col}">{valstring}</span>'
 
                 # Categorical background colours supplied
