@@ -200,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             "consistent": {
                 "title": "Consistent Data?",
                 "description": "Is the data sufficient for accurate estimation?",
-                "modify": lambda x: True if x == 1 else False,
+                "modify": lambda x: "Yes" if x == 1 else "No",
                 "scale": False,
                 "hidden": True,
             },
