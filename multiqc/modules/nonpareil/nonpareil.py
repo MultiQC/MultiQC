@@ -80,6 +80,8 @@ class MultiqcModule(BaseMultiqcModule):
         # y.p25 Percentile 25 (1st quartile) of rarefied coverage.
         # y.p50 Percentile 50 (median) of rarefied coverage.
         # y.p75 Percentile 75 (3rd quartile) of rarefied coverage
+        if self.disp_type:
+            log.debug(f"Plotting dispersion for {self.disp_type}")
 
         for s_name, data in json_raw.items():
             # Convert base pairs to megabase pairs
@@ -88,31 +90,30 @@ class MultiqcModule(BaseMultiqcModule):
             # Convert fraction to percentage
             data["y.cov"] = [x * 100 for x in data["y.cov"]]
             data["y.model"] = [x * 100 for x in data["y.model"]]
+            data["y.sd"] = [x * 100 for x in data["y.sd"]]
+            data["y.p75"] = [x * 100 for x in data["y.p75"]]
+            data["y.p25"] = [x * 100 for x in data["y.p25"]]
             # Prepare plot data
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
             data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             # Calculate dispersion
             # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
-            disp_add = False
+            disp_add = np.empty([])
             if self.disp_type == "sd":
-                disp_add = data["y.sd"]
+                disp_add = np.array(data["y.sd"])
             elif self.disp_type == "ci95":
-                disp_add = list(np.array(data["y.sd"]) * 1.9)
+                disp_add = np.array(data["y.sd"]) * 1.9
             elif self.disp_type == "ci90":
-                disp_add = list(np.array(data["y.sd"]) * 1.64)
+                disp_add = np.array(data["y.sd"]) * 1.64
             elif self.disp_type == "ci50":
-                disp_add = list(np.array(data["y.sd"]) * 0.67)
+                disp_add = np.array(data["y.sd"]) * 0.67
             elif self.disp_type == "iq":
-                data[f"{self.disp_type}_upper"] = {x: y for x, y in zip(data["x.adj"], data["y.p75"] * 100)}
-                data[f"{self.disp_type}_lower"] = {x: y for x, y in zip(data["x.adj"], data["y.p25"] * 100)}
+                data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p75"])]
+                data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p25"])]
 
-            if disp_add:
-                data[f"{self.disp_type}_upper"] = {
-                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) + np.array(disp_add) * 100))
-                }
-                data[f"{self.disp_type}_lower"] = {
-                    x: y for x, y in zip(data["x.adj"], list(np.array(data["y.cov"]) - np.array(disp_add) * 100))
-                }
+            if disp_add.size > 0:
+                data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) + disp_add)]
+                data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) - disp_add)]
 
         return json_raw
 
@@ -219,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
-                "scale": "Blues",
+                "scale": "RdYlGn-rev",
                 "format": "{:,.2f} " + config.base_count_prefix,
                 "shared_key": "base_count",
             },
@@ -246,8 +247,19 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
+        esconfig = {
+            "dashStyle": "Dash",
+            "lineWidth": 2,
+            "color": "#000000",
+            "marker": {"enabled": False},
+            "enableMouseTracking": False,
+            "showInLegend": False,
+        }
+        # desc = " **The dashed black line shows theoretical GC content:** `{}`".format(theoretical_gc_name)
+
         data_plot = list()
         data_labels = list()
+        extra_series = list()
         for s_name, data in sorted(self.data_by_sample.items()):
             data_plot.append(dict())
             if self.plot_observed:
@@ -255,11 +267,12 @@ class MultiqcModule(BaseMultiqcModule):
             if self.plot_model:
                 data_plot[-1]["model"] = data["model"]
             if self.disp_type:
-                data_plot[-1][f"{self.disp_type}_upper"] = data[f"{self.disp_type}_upper"]
-                data_plot[-1][f"{self.disp_type}_lower"] = data[f"{self.disp_type}_lower"]
+                extra_series.append([dict(esconfig), dict(esconfig)])
+                extra_series[-1][0]["name"] = f"{self.disp_type} Upper"
+                extra_series[-1][0]["data"] = data["disp_upper"]
+                extra_series[-1][1]["name"] = f"{self.disp_type} Lower"
+                extra_series[-1][1]["data"] = data["disp_lower"]
             data_labels.append({"name": s_name})
-
-        log.debug(data_labels)
 
         pconfig = {
             "id": "nonpareil-redundancy-plot",
@@ -274,9 +287,9 @@ class MultiqcModule(BaseMultiqcModule):
             "yDecimals": True,
             "xLog": True,
             "tt_label": "{point.x:.2f} Mbps: {point.y:.2f}",
+            "extra_series": extra_series,
             "data_labels": data_labels,
         }
-        log.debug(pconfig)
 
         self.add_section(
             name="Redundancy levels",
