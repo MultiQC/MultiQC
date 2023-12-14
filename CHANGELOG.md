@@ -24,6 +24,7 @@
 ### Module updates
 
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
 - **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: BamQC: fix for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
 
