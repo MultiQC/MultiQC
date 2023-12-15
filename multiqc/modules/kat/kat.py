@@ -73,6 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         kat_config = {
             "namespace": "KAT",
+            "id": "kat-table",
         }
 
         # Basic Stats Table

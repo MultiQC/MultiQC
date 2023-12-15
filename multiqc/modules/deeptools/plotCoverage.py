@@ -72,7 +72,10 @@ class plotCoverageMixin:
                     "shared_key": "coverage",
                 },
             }
-            config = {"namespace": "deepTools plotCoverage"}
+            config = {
+                "namespace": "deepTools plotCoverage",
+                "id": "deeptools_coverage_metrics_table",
+            }
             self.add_section(
                 name="Coverage metrics",
                 anchor="deeptools_coverage_metrics",

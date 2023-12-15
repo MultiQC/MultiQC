@@ -53,7 +53,11 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             """,
-            plot=table.plot(self.happy_indel_data, self.gen_headers("_indel")),
+            plot=table.plot(
+                self.happy_indel_data,
+                self.gen_headers("_indel"),
+                pconfig={"id": "happy_indel_plot"},
+            ),
         )
 
         self.add_section(
@@ -65,7 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             """,
-            plot=table.plot(self.happy_snp_data, self.gen_headers("_snp")),
+            plot=table.plot(
+                self.happy_snp_data,
+                self.gen_headers("_snp"),
+                pconfig={"id": "happy_snp_plot"},
+            ),
         )
 
     def parse_file(self, f):

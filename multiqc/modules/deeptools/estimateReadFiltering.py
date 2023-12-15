@@ -124,7 +124,10 @@ class EstimateReadFilteringMixin:
                 "pct_Strand_Filtered": 100.0 * v["strand"] / float(v["total"]),
             }
 
-        config = {"namespace": "deepTools bamPEFragmentSize"}
+        config = {
+            "namespace": "deepTools bamPEFragmentSize",
+            "id": "deeptools_estimate_read_filtering_table",
+        }
         self.add_section(
             name="Filtering metrics",
             anchor="estimateReadFiltering",
