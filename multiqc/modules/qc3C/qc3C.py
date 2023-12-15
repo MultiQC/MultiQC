@@ -996,7 +996,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name, section=analysis_mode)
 
         except KeyError as ex:
-            log.error(
+            log.debug(
                 "The entry {} was not found in the qc3C JSON file '{}', skipping sample {}".format(
                     str(ex), os.path.join(f["root"], f["fn"]), f["s_name"]
                 )

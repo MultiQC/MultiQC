@@ -19,6 +19,7 @@
 - Bar graphs: add `sort_samples: false` config option, also do not sort `OrderedDict` data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 - Refactor: replace `.format()` calls with f-strings ([#2224](https://github.com/ewels/MultiQC/pull/2224))
 - GATK MarkDuplicates: more search patterns ([#2226](https://github.com/ewels/MultiQC/pull/2226))
+- Add missing table `id` in DRAGEN modules, require them in linting ([#2228](https://github.com/ewels/MultiQC/pull/2228))
 
 ### New Modules
 
