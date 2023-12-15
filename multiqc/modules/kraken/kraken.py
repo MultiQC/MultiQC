@@ -446,12 +446,11 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
         except KeyError:
-            pass
-            # Taxa rank not found in this sample
+            log.debug("Taxa rank not found, skipping Taxa duplication heatmap")
+            return
 
         i = 0
         counts_shown = {}
-
         showed_warning = False
         for classif, pct_sum in sorted_pct:
             i += 1
