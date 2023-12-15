@@ -102,14 +102,28 @@ class CellRangerCountMixin:
                 name="Count - Warnings",
                 anchor="cellranger-count-warnings",
                 description="Warnings encountered during the analysis",
-                plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
+                plot=table.plot(
+                    self.cellrangercount_warnings,
+                    self.count_warnings_headers,
+                    {
+                        "namespace": "Count",
+                        "id": "cellranger-count-warnings-table",
+                    },
+                ),
             )
 
         self.add_section(
             name="Count - Summary stats",
             anchor="cellranger-count-stats",
             description="Summary QC metrics from Cell Ranger count",
-            plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
+            plot=table.plot(
+                self.cellrangercount_data,
+                self.count_data_headers,
+                {
+                    "namespace": "Count",
+                    "id": "cellranger-count-stats-table",
+                },
+            ),
         )
 
         self.add_section(
@@ -148,7 +162,12 @@ class CellRangerCountMixin:
                 anchor="cellranger-antibody-stats",
                 description="Summary QC metrics from Cell Ranger count",
                 plot=table.plot(
-                    self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
+                    self.cellrangercount_antibody_data,
+                    self.antibody_data_headers,
+                    {
+                        "namespace": "Antibody",
+                        "id": "cellranger-antibody-stats-table",
+                    },
                 ),
             )
 

@@ -598,8 +598,12 @@ picard/insertsize:
   - contents: "picard.analysis.InsertSizeMetrics"
   - contents: "--algo InsertSizeMetricAlgo"
 picard/markdups:
+  - contents: "picard.sam.MarkDuplicates"
   - contents: "picard.sam.DuplicationMetrics"
+  - contents: "picard.sam.markduplicates.MarkDuplicates"
   - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
+  - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
   contents: "OxoGMetrics"
