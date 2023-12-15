@@ -319,7 +319,7 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         d["Failed_To_Align_Read"] = int(n_total) - int(n_mapped)
                     except ValueError:
-                        log.warning(
+                        log.debug(
                             f"Could not parse mapped_R{r}={n_mapped} or total_R{r}={n_total} "
                             f"as an integer number for sample {s_name}"
                         )
