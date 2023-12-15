@@ -1,7 +1,7 @@
 ---
-Name: Supernova
-URL: https://www.10xgenomics.com/
-Description: >
+name: Supernova
+url: https://www.10xgenomics.com/
+description: >
   Supernova is a de novo genome assembler for 10X Genomics linked-reads.
 ---
 

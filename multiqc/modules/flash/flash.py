@@ -2,15 +2,16 @@
 
 import logging
 import re
-from collections import OrderedDict
 import traceback
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialize log
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"\[FLASH\] FLASH v([\d\.]+) complete!"
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -31,40 +32,34 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btr507",
         )
 
+        flash_results = self.parse_flash()
+
+        hist_results = self.hist_results()
+
+        if not flash_results and not hist_results:
+            raise ModuleNoSamplesFound
+
+    def parse_flash(self):
         # Find all log files with flash msgs
-        self.flash_data = OrderedDict()
+        flash_data = {}
         for logfile in self.find_log_files("flash/log"):
-            self.flash_data.update(self.parse_flash_log(logfile))
+            flash_data.update(self.parse_flash_log(logfile))
             self.add_data_source(logfile)
 
-        # ignore sample names
-        self.flash_data = self.ignore_samples(self.flash_data)
+        # Ignore sample names
+        flash_data = self.ignore_samples(flash_data)
+        if not flash_data:
+            return 0
 
-        try:
-            if not self.flash_data:
-                raise UserWarning
-            log.info("Found %d log reports", len(self.flash_data))
+        log.info(f"Found {len(flash_data)} log reports")
 
-            self.stats_table(self.flash_data)
+        self.general_stats_table(flash_data)
+        self.add_section(
+            name="Read combination statistics", anchor="flash-bargraph", plot=self.summary_plot(flash_data)
+        )
 
-            self.add_section(
-                name="Read combination statistics", anchor="flash-bargraph", plot=self.summary_plot(self.flash_data)
-            )
-
-            self.write_data_file(self.flash_data, "multiqc_flash_combo_stats")
-
-        except UserWarning:
-            pass
-        except Exception as err:
-            log.error(err)
-            log.debug(traceback.format_exc())
-
-        ## parse histograms
-        self.flash_hist = self.hist_results()
-
-        # can't find any suitable logs
-        if not self.flash_data and not self.flash_hist:
-            raise UserWarning
+        self.write_data_file(flash_data, "multiqc_flash_combo_stats")
+        return len(flash_data)
 
     @staticmethod
     def split_log(logf):
@@ -103,8 +98,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_flash_log(self, logf):
         """parse flash logs"""
-        data = OrderedDict()
+        data = {}
         samplelogs = self.split_log(logf["f"])
+        version_match = re.search(VERSION_REGEX, logf["f"])
+
         for slog in samplelogs:
             try:
                 sample = dict()
@@ -113,6 +110,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name is None:
                     continue
                 sample["s_name"] = s_name
+
+                if version_match:
+                    self.add_software_version(version_match.group(1), s_name)
 
                 ## Log attributes ##
                 sample["totalpairs"] = self.get_field("Total pairs", slog)
@@ -126,35 +126,35 @@ class MultiqcModule(BaseMultiqcModule):
 
                 data[s_name] = sample
             except Exception as err:
-                log.warning("Error parsing record in {}. {}".format(logf["fn"], err))
+                log.warning(f"Error parsing record in {logf['fn']}. {err}")
                 log.debug(traceback.format_exc())
                 continue
         return data
 
-    def stats_table(self, data):
+    def general_stats_table(self, data):
         """Add percent combined to general stats table"""
-        headers = OrderedDict()
-        headers["combopairs"] = {
-            "title": "Combined pairs",
-            "description": "Num read pairs combined",
-            "shared_key": "read_count",
-            "hidden": True,
-            "scale": False,
-        }
-        headers["perccombo"] = {
-            "title": "% Combined",
-            "description": "% read pairs combined",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "PiYG",
+        headers = {
+            "combopairs": {
+                "title": "Combined pairs",
+                "description": "Num read pairs combined",
+                "shared_key": "read_count",
+                "hidden": True,
+                "scale": False,
+            },
+            "perccombo": {
+                "title": "% Combined",
+                "description": "% read pairs combined",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "PiYG",
+            },
         }
         self.general_stats_addcols(data, headers)
 
     @staticmethod
     def summary_plot(data):
         """Barplot of combined pairs"""
-        cats = OrderedDict()
         cats = {
             "combopairs": {"name": "Combined pairs", "color": "#191970"},
             "inniepairs": {"name": "Combined innie pairs", "color": "#191970"},
@@ -180,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
         nameddata = dict()
         data = dict()
         try:
-            for l in histf["f"].splitlines():
-                s = l.split()
+            for line in histf["f"].splitlines():
+                s = line.split()
                 if s:
                     if len(s) != 2:
                         raise RuntimeError(
@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def freqpoly_plot(data):
         """make freqpoly plot of merged read lengths"""
-        rel_data = OrderedDict()
+        rel_data = {}
         for key, val in data.items():
             tot = sum(val.values(), 0)
             rel_data[key] = {k: v / tot for k, v in val.items()}
@@ -256,28 +256,21 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hist_results(self):
         """process flash numeric histograms"""
-        self.hist_data = OrderedDict()
-        for histfile in self.find_log_files("flash/hist"):
-            self.hist_data.update(self.parse_hist_files(histfile))
+        hist_data = {}
+        for f in self.find_log_files("flash/hist"):
+            hist_data.update(self.parse_hist_files(f))
 
         # ignore sample names
-        self.hist_data = self.ignore_samples(self.hist_data)
+        hist_data = self.ignore_samples(hist_data)
+        if not hist_data:
+            return 0
 
-        try:
-            if not self.hist_data:
-                raise UserWarning
-            log.info("Found %d histogram reports", len(self.hist_data))
+        log.info("Found %d histogram reports", len(hist_data))
 
-            self.add_section(
-                name="Frequency polygons of merged read lengths",
-                anchor="flash-histogram",
-                description="This plot is made from the numerical histograms output by FLASh.",
-                plot=self.freqpoly_plot(self.hist_data),
-            )
-
-        except UserWarning:
-            pass
-        except Exception as err:
-            log.error(err)
-            log.debug(traceback.format_exc())
-        return len(self.hist_data)
+        self.add_section(
+            name="Frequency polygons of merged read lengths",
+            anchor="flash-histogram",
+            description="This plot is made from the numerical histograms output by FLASh.",
+            plot=self.freqpoly_plot(hist_data),
+        )
+        return len(hist_data)

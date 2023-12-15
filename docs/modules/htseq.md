@@ -1,7 +1,7 @@
 ---
-Name: HTSeq
-URL: http://www-huber.embl.de/HTSeq/doc/overview.html
-Description: >
+name: HTSeq
+url: http://www-huber.embl.de/HTSeq/doc/overview.html
+description: >
   HTSeq is a Python package that provides infrastructure to
   process data from high-throughput sequencing assays.
   HTSeq-count takes a file with aligned sequencing reads, plus

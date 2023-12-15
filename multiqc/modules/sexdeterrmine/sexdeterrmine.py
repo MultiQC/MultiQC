@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from SexdetErrmine """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import json
 
+import json
+import logging
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,7 +15,6 @@ class MultiqcModule(BaseMultiqcModule):
     """SexDeterrmine module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SexDetErrmine",
@@ -41,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.sexdet_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Save data output file
         self.write_data_file(self.sexdet_data, "multiqc_sexdeter_metrics")
@@ -59,8 +55,11 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse SexDeterrmine JSON: '{f['fn']}'")
             return
+
+        # Get the version
+        version = str(data["Metadata"]["version"])
 
         # Parse JSON data to a dict
         for s_name in data:
@@ -69,9 +68,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.sexdet_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
 
             self.add_data_source(f, s_clean)
+            self.add_software_version(version, s_clean)
             self.sexdet_data[s_clean] = dict()
 
             for k, v in data[s_name].items():
@@ -83,44 +83,49 @@ class MultiqcModule(BaseMultiqcModule):
     def addSummaryMetrics(self):
         """Take the parsed stats from SexDetErrmine and add it to the main plot"""
 
-        headers = OrderedDict()
-        headers["RateErrX"] = {
-            "title": "Err Rate X",
-            "description": "Rate of Error for Chr X",
-            "scale": "OrRd",
-            "hidden": True,
-            "shared_key": "snp_err_rate",
-        }
-        headers["RateErrY"] = {
-            "title": "Err Rate Y",
-            "description": "Rate of Error for Chr Y",
-            "scale": "OrRd",
-            "hidden": True,
-            "shared_key": "snp_err_rate",
-        }
-        headers["RateX"] = {
-            "title": "Rate X",
-            "description": "Number of positions on Chromosome X vs Autosomal positions.",
-            "scale": "PuBuGn",
-            "shared_key": "snp_count",
-        }
-        headers["RateY"] = {
-            "title": "Rate Y",
-            "description": "Number of positions on Chromosome Y vs Autosomal positions.",
-            "scale": "BuPu",
-            "shared_key": "snp_count",
+        headers = {
+            "RateErrX": {
+                "title": "Err Rate X",
+                "description": "Rate of Error for Chr X",
+                "scale": "OrRd",
+                "hidden": True,
+                "shared_key": "snp_err_rate",
+            },
+            "RateErrY": {
+                "title": "Err Rate Y",
+                "description": "Rate of Error for Chr Y",
+                "scale": "OrRd",
+                "hidden": True,
+                "shared_key": "snp_err_rate",
+            },
+            "RateX": {
+                "title": "Rate X",
+                "description": "Number of positions on Chromosome X vs Autosomal positions.",
+                "scale": "PuBuGn",
+                "shared_key": "snp_count",
+            },
+            "RateY": {
+                "title": "Rate Y",
+                "description": "Number of positions on Chromosome Y vs Autosomal positions.",
+                "scale": "BuPu",
+                "shared_key": "snp_count",
+            },
         }
 
         self.general_stats_addcols(self.sexdet_data, headers)
 
     def read_count_barplot(self):
         """Make a bar plot showing read counts on Autosomal, X and Y chr"""
-        cats = OrderedDict()
-        cats["NR Aut"] = {"name": "Autosomal Reads"}
-        cats["NrX"] = {"name": "Reads on X"}
-        cats["NrY"] = {"name": "Reads on Y"}
-
-        config = {"id": "sexdeterrmine-readcounts-plot", "title": "SexDetErrmine: Read Counts", "ylab": "# Reads"}
+        cats = {
+            "NR Aut": {"name": "Autosomal Reads"},
+            "NrX": {"name": "Reads on X"},
+            "NrY": {"name": "Reads on Y"},
+        }
+        config = {
+            "id": "sexdeterrmine-readcounts-plot",
+            "title": "SexDetErrmine: Read Counts",
+            "ylab": "# Reads",
+        }
 
         self.add_section(
             name="Read Counts",
@@ -131,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def snp_rate_scatterplot(self):
         """Make a scatter plot showing relative coverage on X and Y chr"""
-        data = OrderedDict()
+        data = {}
         for sample in self.sexdet_data:
             try:
                 data[sample] = {"x": self.sexdet_data[sample]["RateX"], "y": self.sexdet_data[sample]["RateY"]}
@@ -159,12 +164,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     def snp_count_barplot(self):
         """Make a bar plot showing read counts on Autosomal, X and Y chr"""
-        cats = OrderedDict()
-        cats["Snps Autosomal"] = {"name": "Autosomal SNPs"}
-        cats["XSnps"] = {"name": "SNPs on X"}
-        cats["YSnps"] = {"name": "SNPs on Y"}
+        cats = {
+            "Snps Autosomal": {"name": "Autosomal SNPs"},
+            "XSnps": {"name": "SNPs on X"},
+            "YSnps": {"name": "SNPs on Y"},
+        }
 
-        config = {"id": "sexdeterrmine-snps-plot", "title": "SexDetErrmine: SNP Counts", "ylab": "# Reads"}
+        config = {
+            "id": "sexdeterrmine-snps-plot",
+            "title": "SexDetErrmine: SNP Counts",
+            "ylab": "# Reads",
+        }
 
         self.add_section(
             name="SNP Counts",

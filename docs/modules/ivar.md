@@ -1,7 +1,7 @@
 ---
-Name: iVar
-URL: https://github.com/andersen-lab/ivar
-Description: Functions for viral amplicon-based sequencing.
+name: iVar
+url: https://github.com/andersen-lab/ivar
+description: Functions for viral amplicon-based sequencing.
 ---
 
 iVar is a computational package that contains functions broadly useful for viral amplicon-based sequencing.

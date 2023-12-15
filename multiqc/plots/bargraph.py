@@ -2,19 +2,20 @@
 
 """ MultiQC functions to plot a bargraph """
 
-from __future__ import print_function
+
 import base64
-from collections import OrderedDict
 import inspect
 import io
 import logging
+from collections import OrderedDict
+
 import math
 import os
 import random
 import re
 import sys
 
-from multiqc.utils import config, report, util_functions
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
+    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -49,11 +50,11 @@ def get_template_mod():
 
 def plot(data, cats=None, pconfig=None):
     """Plot a horizontal bar graph. Expects a 2D dict of sample
-    data. Also can take info about categories. There are quite a
+    data. Also, can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
                  Can supply a list of dicts and will have buttons to switch
-    :param cats: optional list, dict or OrderedDict with plot categories
+    :param cats: optional list or dict with plot categories
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
@@ -67,19 +68,19 @@ def plot(data, cats=None, pconfig=None):
             pconfig[k] = v
 
     # Validate config if linting
-    if config.lint:
+    if config.strict:
         # Get module name
         modname = ""
         callstack = inspect.stack()
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
             if k not in pconfig:
-                errmsg = "LINT: {}Bargraph pconfig was missing key '{}'".format(modname, k)
+                errmsg = f"LINT: {modname}Bargraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -91,26 +92,21 @@ def plot(data, cats=None, pconfig=None):
             report.lint_errors.append(errmsg)
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Make list of cats from different inputs
     if cats is None:
         cats = list()
-    elif type(cats) is not list:
+    elif not isinstance(cats, list):
         cats = [cats]
-    else:
-        try:  # Py2
-            if type(cats[0]) is str or type(cats[0]) is unicode:
-                cats = [cats]
-        except NameError:  # Py3
-            if type(cats[0]) is str:
-                cats = [cats]
+    elif cats and isinstance(cats[0], str):
+        cats = [cats]
     # Generate default categories if not supplied
     for idx in range(len(data)):
         try:
             cats[idx]
-        except (IndexError):
+        except IndexError:
             cats.append(list())
             for s in data[idx].keys():
                 for k in data[idx][s].keys():
@@ -119,8 +115,8 @@ def plot(data, cats=None, pconfig=None):
 
     # If we have cats in lists, turn them into dicts
     for idx, cat in enumerate(cats):
-        if type(cat) is list:
-            newcats = OrderedDict()
+        if isinstance(cat, list):
+            newcats = dict()
             for c in cat:
                 newcats[c] = {"name": c}
             cats[idx] = newcats
@@ -132,17 +128,21 @@ def plot(data, cats=None, pconfig=None):
     # Allow user to overwrite a given category config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
         for k, v in config.custom_plot_config[pconfig["id"]].items():
-            if k in cats[idx].keys():
-                for kk, vv in v.items():
-                    cats[idx][k][kk] = vv
+            for idx in range(len(cats)):
+                if k in cats[idx].keys():
+                    for kk, vv in v.items():
+                        cats[idx][k][kk] = vv
 
     # Parse the data into a chart friendly format
     plotsamples = list()
     plotdata = list()
     for idx, d in enumerate(data):
+        hc_samples = list(d.keys())
         if isinstance(d, OrderedDict):
-            hc_samples = list(d.keys())
-        else:
+            # Legacy: users assumed that passing an OrderedDict indicates that we
+            # want to keep the sample order https://github.com/ewels/MultiQC/issues/2204
+            pass
+        elif pconfig.get("sort_samples", True):
             hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
@@ -181,30 +181,46 @@ def plot(data, cats=None, pconfig=None):
         logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
+    # Add colors to the categories if not set. Since the "plot_defaults" scale is
+    # identical to default scale of the Highcharts JS library, this is not strictly
+    # needed. But it future proofs when we replace Highcharts with something else.
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    for si, sd in enumerate(plotdata):
+        for di, d in enumerate(sd):
+            d.setdefault("color", scale.get_colour(di, lighten=1))
+
     # Make a plot - custom, interactive or flat
-    try:
-        return get_template_mod().bargraph(plotdata, plotsamples, pconfig)
-    except (AttributeError, TypeError):
-        if config.plots_force_flat or (
-            not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
-        ):
-            try:
-                report.num_mpl_plots += 1
-                return matplotlib_bargraph(plotdata, plotsamples, pconfig)
-            except Exception as e:
-                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
-                logger.debug(e, exc_info=True)
-                return highcharts_bargraph(plotdata, plotsamples, pconfig)
-        else:
-            # Use MatPlotLib to generate static plots if requested
-            if config.export_plots:
-                try:
-                    matplotlib_bargraph(plotdata, plotsamples, pconfig)
-                except Exception as e:
-                    logger.error("############### Error making MatPlotLib figure! Plot not exported.")
-                    logger.debug(e, exc_info=True)
-            # Return HTML for HighCharts dynamic plot
+    mod = get_template_mod()
+    if "bargraph" in mod.__dict__ and callable(mod.bargraph):
+        try:
+            return mod.bargraph(plotdata, plotsamples, pconfig)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+    if config.plots_force_flat or (
+        not config.plots_force_interactive and len(plotsamples[0]) > config.plots_flat_numseries
+    ):
+        try:
+            report.num_mpl_plots += 1
+            return matplotlib_bargraph(plotdata, plotsamples, pconfig)
+        except Exception as e:
+            if config.strict:
+                raise
+            logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+            logger.debug(e, exc_info=True)
             return highcharts_bargraph(plotdata, plotsamples, pconfig)
+    else:
+        # Use MatPlotLib to generate static plots if requested
+        if config.export_plots:
+            try:
+                matplotlib_bargraph(plotdata, plotsamples, pconfig)
+            except Exception as e:
+                logger.error("############### Error making MatPlotLib figure! Plot not exported.")
+                logger.debug(e, exc_info=True)
+        # Return HTML for HighCharts dynamic plot
+        return highcharts_bargraph(plotdata, plotsamples, pconfig)
 
 
 def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
@@ -264,18 +280,18 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except Exception:
                 try:
                     name = pconfig["data_labels"][k]
-                except:
+                except Exception:
                     name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
+            except Exception:
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
+            except Exception:
                 ymax = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, k=k
@@ -324,9 +340,9 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]
-        except:
+        except Exception:
             name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
+        pid = f"mqc_{pconfig['id']}_{name}"
         pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
@@ -335,21 +351,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
-
-    # Same defaults as HighCharts for consistency
-    default_colors = [
-        "#7cb5ec",
-        "#434348",
-        "#90ed7d",
-        "#f7a35c",
-        "#8085e9",
-        "#f15c80",
-        "#e4d354",
-        "#2b908f",
-        "#f45b5b",
-        "#91e8e1",
-    ]
+    html += f"<div class=\"mqc_mplplot_plotgroup\" id=\"{pconfig['id']}\">"
 
     # Counts / Percentages Switch
     if pconfig.get("cpswitch") is not False and not config.simple_output:
@@ -365,9 +367,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
         html += '<div class="btn-group mpl_switch_group mqc_mplplot_bargraph_setcountspcnt"> \n\
             <button class="btn btn-default btn-sm {c_a} counts">{c_l}</button> \n\
             <button class="btn btn-default btn-sm {p_a} pcnt">{p_l}</button> \n\
-        </div> '.format(
-            c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label
-        )
+        </div> '.format(c_a=c_active, p_a=p_active, c_l=c_label, p_l=p_label)
         if len(plotdata) > 1:
             html += " &nbsp; &nbsp; "
 
@@ -379,7 +379,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]
-            except:
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -388,7 +388,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
     # Go through datasets creating plots
     for pidx, pdata in enumerate(plotdata):
-
         # Save plot data to file
         fdata = {}
         for d in pdata:
@@ -410,12 +409,11 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             pdata[idx]["data"] = [x if not math.isnan(x) else 0 for x in d["data"]]
 
         for plot_pct in plot_pcts:
-
             # Plot ID
             pid = pids[pidx]
             hide_plot = False
             if plot_pct is True:
-                pid = "{}_pc".format(pid)
+                pid = f"{pid}_pc"
                 if pconfig.get("cpswitch_c_active", True) is True:
                     hide_plot = True
             else:
@@ -457,7 +455,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 if len(values) < len(y_ind):
                     values.extend([0] * (len(y_ind) - len(values)))
                 if plot_pct is True:
-                    for (key, var) in enumerate(values):
+                    for key, var in enumerate(values):
                         s_total = s_totals[key]
                         if s_total == 0:
                             values[key] = 0
@@ -470,10 +468,6 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 else:
                     for i, p in enumerate(prevdata):
                         prevdata[i] += prev_values[i]
-                # Default colour index
-                cidx = idx
-                while cidx >= len(default_colors):
-                    cidx -= len(default_colors)
                 # Save the name of this series
                 dlabels.append(d["name"])
                 # Add the series of bars to the plot
@@ -482,7 +476,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     values,
                     bar_width,
                     left=prevdata,
-                    color=d.get("color", default_colors[cidx]),
+                    color=d["color"],
                     align="center",
                     linewidth=pconfig.get("borderWidth", 0),
                 )
@@ -502,7 +496,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                 # Add percent symbols
                 vals = axes.get_xticks()
                 axes.set_xticks(axes.get_xticks())
-                axes.set_xticklabels(["{:.0f}%".format(x) for x in vals])
+                axes.set_xticklabels([f"{x:.0f}%" for x in vals])
             else:
                 default_xlimits = axes.get_xlim()
                 axes.set_xlim((pconfig.get("ymin", default_xlimits[0]), pconfig.get("ymax", default_xlimits[1])))
@@ -517,7 +511,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
             axes.spines["top"].set_visible(False)
             axes.spines["bottom"].set_visible(False)
             axes.spines["left"].set_visible(False)
-            plt.gca().invert_yaxis()  # y axis is reverse sorted otherwise
+            plt.gca().invert_yaxis()  # y-axis is reverse sorted otherwise
 
             # Hide some labels if we have a lot of samples
             show_nth = max(1, math.ceil(len(pdata[0]["data"]) / 150))
@@ -550,7 +544,7 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
                     if not os.path.exists(plot_dir):
                         os.makedirs(plot_dir)
                     # Save the plot
-                    plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                    plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                     fig.savefig(plot_fn, format=fformat, bbox_extra_artists=(lgd,), bbox_inches="tight")
 
             # Output the figure to a base64 encoded string
@@ -565,8 +559,8 @@ def matplotlib_bargraph(plotdata, plotsamples, pconfig=None):
 
             # Link to the saved image
             else:
-                plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-                html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+                plot_relpath = os.path.join(config.plots_dir_name, "png", f"{pid}.png")
+                html += f'<div class="mqc_mplplot" id="{pid}"{hidediv}><img src="{plot_relpath}" /></div>'
 
             plt.close(fig)
 
