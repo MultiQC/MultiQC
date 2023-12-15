@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
                             data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
             except KeyError as e:
                 log.error(f"Missing expected key {e} in sample '{s_name}'")
-            except TypeError:
+            except (ValueError, TypeError):
                 pass
 
         # Filter to strip out ignored sample names
@@ -174,7 +174,9 @@ class MultiqcModule(BaseMultiqcModule):
             if not line.startswith("#"):
                 s = line.split("\t")
                 if s[0] in self.hicpro_data[s_name]:
-                    log.debug(f"Duplicated keys found! Overwriting: {s[0]}")
+                    log.debug(
+                        f"Duplicated key {s[0]} found in {f['root'] + '/' + f['fn']} for sample {s_name}, overwriting"
+                    )
                 # Try to convert the extracted value to a number and store it in hicpro_data.
                 # try-block is used to prevent program crash, because there is no
                 # guarantee that the value (s[1]) can be always converted to integer.
@@ -187,6 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # Otherwise just store the value as is.
                     except ValueError:
                         log.error(f"Could not parse value for key '{s[0]}' as a number in sample '{s_name}': '{s[1]}'")
+                        self.hicpro_data[s_name][s[0]] = s[1]
 
     def hicpro_stats_table(self):
         """Add HiC-Pro stats to the general stats table"""
@@ -336,6 +339,10 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(data, [keys, keys], config)
 
     def hicpro_pairing_chart(self):
@@ -357,6 +364,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
+
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
 
         return bargraph.plot(self.hicpro_data, keys, config)
 
@@ -384,6 +395,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Read Pairs",
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_contact_chart(self):
@@ -405,6 +420,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_as_chart(self):
@@ -423,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "Valid_pairs_from_alt_and_ref_genome_(1-2/2-1)": {
                 "color": "#a6611a",
-                "name": "Trans homologuous read pairs (1-2/2/1)",
+                "name": "Trans homologous read pairs (1-2/2/1)",
             },
             "Valid_pairs_with_both_unassigned_mated_(0-0)": {"color": "#cccccc", "name": "Unassigned read pairs"},
             "Valid_pairs_with_at_least_one_conflicting_mate_(3-)": {
@@ -432,14 +451,6 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        # check allele-specific analysis was run
-        num_samples = 0
-        for s_name in self.hicpro_data:
-            for k in keys:
-                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
-        if num_samples == 0:
-            return False
-
         # Config for the plot
         config = {
             "id": "hicpro_asan_plot",
@@ -447,6 +458,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Pairs",
             "cpswitch_counts_label": "Number of Pairs",
         }
+
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
 
         return bargraph.plot(self.hicpro_data, keys, config)
 
@@ -459,14 +474,6 @@ class MultiqcModule(BaseMultiqcModule):
             "valid_pairs_off_target": {"color": "#cccccc", "name": "Off-target valid pairs"},
         }
 
-        # Check capture info are available
-        num_samples = 0
-        for s_name in self.hicpro_data:
-            for k in keys:
-                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
-        if num_samples == 0:
-            return False
-
         # Config for the plot
         config = {
             "id": "hicpro_cap_plot",
@@ -474,5 +481,9 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Pairs",
             "cpswitch_counts_label": "Number of Pairs",
         }
+
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
 
         return bargraph.plot(self.hicpro_data, keys, config)
