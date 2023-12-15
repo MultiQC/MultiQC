@@ -902,7 +902,7 @@ def create_table_handlers():
                     + "\n\nPress the `Help` button for details."
                 )
                 anchor = "dragen-cov-metrics-own-section-" + re.sub(r"(\s|-|\.|_)+", "-", phenotype)
-                plots[phenotype]["config"]["id"] = anchor + "-table"
+                plots[phenotype]["config"]["id"] = f"{anchor}-table"
                 sections.append(
                     {
                         "name": make_section_name(phenotype),
