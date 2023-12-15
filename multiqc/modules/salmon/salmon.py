@@ -26,10 +26,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.salmon_meta = dict()
         for f in self.find_log_files("salmon/meta"):
             # Get the s_name from the parent directory
-            s_name = os.path.basename(os.path.dirname(f["root"]))
-            s_name = self.clean_s_name(s_name, f)
-            self.salmon_meta[s_name] = json.loads(f["f"])
-            self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
+            if os.path.basename(f["root"]) in ["aux_info", "aux"]:
+                s_name = os.path.basename(os.path.dirname(f["root"]))
+                s_name = self.clean_s_name(s_name, f)
+                self.salmon_meta[s_name] = json.loads(f["f"])
+                self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs
         self.salmon_fld = dict()
@@ -95,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "shared_key": "read_count",
                 },
                 "library_types": {
-                    "title": "Lib Types",
+                    "title": "Library types",
                     "description": "Library types",
                     "scale": False,
                     # Hide if all samples have the same value
