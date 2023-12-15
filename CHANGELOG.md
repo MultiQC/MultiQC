@@ -20,9 +20,11 @@
 - Refactor: replace `.format()` calls with f-strings ([#2224](https://github.com/ewels/MultiQC/pull/2224))
 - GATK MarkDuplicates: more search patterns ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - Add missing table `id` in DRAGEN modules, require them in linting ([#2228](https://github.com/ewels/MultiQC/pull/2228))
-- New module: ngs-bits [2] ([#2231](https://github.com/ewels/MultiQC/pull/2231))
 
 ### New Modules
+
+- [**ngs-bits**](https://github.com/imgag/ngs-bits) ([#2231](https://github.com/ewels/MultiQC/pull/2231))
+  - ngs-bits is a collection of short-read sequencing tools.
 
 ### Module updates
 
