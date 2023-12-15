@@ -16,7 +16,6 @@
 - Custom content plot: do not assume first row are samples ([#2208](https://github.com/ewels/MultiQC/pull/2208))
 - Bar graphs: add `sort_samples: false` config option, also do not sort `OrderedDict` data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 - Refactor: replace `.format()` calls with f-strings ([#2224](https://github.com/ewels/MultiQC/pull/2224))
-- GATK MarkDuplicates: more search patterns ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - Add missing table `id` in DRAGEN modules, require them in linting ([#2228](https://github.com/ewels/MultiQC/pull/2228))
 
 ### New Modules
@@ -25,6 +24,7 @@
 
 - **deepTools**: Handle missing data in plotProfile ([#2229](https://github.com/ewels/MultiQC/pull/2229))
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- **GATK**: add more search patterns for MarkDuplicates (including MarkDuplicatesSpark) ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
 - **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: BamQC: fix for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
