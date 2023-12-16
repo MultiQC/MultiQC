@@ -9,17 +9,15 @@
 - Upgrade the jQuery tablesorter plugin to v2 ([#1666](https://github.com/ewels/MultiQC/pull/1666))
 - Allow specifying default sort columns for tables with `defaultsort` ([#1667](https://github.com/ewels/MultiQC/pull/1667))
 - Create CODE_OF_CONDUCT.md ([#2195](https://github.com/ewels/MultiQC/pull/2195))
-- BCLConvert: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - Re-add `run()` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
 - When trying indexing lists/dicts while accessing config parameters, catch TypeError as well ([#2211](https://github.com/ewels/MultiQC/pull/2211))
 - Fix running `--no-report` ([#2212](https://github.com/ewels/MultiQC/pull/2212))
 - Add `.cram` to sample name cleaning defaults ([#2209](https://github.com/ewels/MultiQC/pull/2209))
 - Custom content plot: do not assume first row are samples ([#2208](https://github.com/ewels/MultiQC/pull/2208))
-- Fastp: search pattern: look at content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
 - Bar graphs: add `sort_samples: false` config option, also do not sort `OrderedDict` data ([#2210](https://github.com/ewels/MultiQC/pull/2210))
 - Refactor: replace `.format()` calls with f-strings ([#2224](https://github.com/ewels/MultiQC/pull/2224))
-- GATK MarkDuplicates: more search patterns ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - Add missing table `id` in DRAGEN modules, require them in linting ([#2228](https://github.com/ewels/MultiQC/pull/2228))
+- Changelog CI: fix detection of changed module ([#2234](https://github.com/ewels/MultiQC/pull/2234))
 
 ### New Modules
 
@@ -27,9 +25,13 @@
 
 - **deepTools**: Handle missing data in plotProfile ([#2229](https://github.com/ewels/MultiQC/pull/2229))
 - **GATK**: square the BaseRecalibrator scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- **GATK**: add more search patterns for MarkDuplicates (including MarkDuplicatesSpark) ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
 - **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: BamQC: fix for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
+- **Fastp**: search content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
+- **BCLConvert**: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
+- **Picard**: more search patterns for MarkDuplicates ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 
 ## [MultiQC v1.18](https://github.com/ewels/MultiQC/releases/tag/v1.18) - 2023-11-17
 
