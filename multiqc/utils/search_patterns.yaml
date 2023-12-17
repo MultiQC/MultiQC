@@ -740,6 +740,10 @@ rseqc/tin:
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: "lib_format_counts.json"
 salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
