@@ -32,6 +32,7 @@
 - **Fastp**: search content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
 - **BCLConvert**: fix mean quality, fix count-per-lane barplot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
 - **Picard**: more search patterns for MarkDuplicates ([#2226](https://github.com/ewels/MultiQC/pull/2226))
+- **Salmon**: add `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to the general stats table ([#1485](https://github.com/ewels/MultiQC/pull/1485))
 
 ## [MultiQC v1.18](https://github.com/ewels/MultiQC/releases/tag/v1.18) - 2023-11-17
 
