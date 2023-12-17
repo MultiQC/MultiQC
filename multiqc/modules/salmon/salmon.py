@@ -112,7 +112,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "CFR",
                     "description": "Compatible fragment ratio",
                     "min": 0.0,
-                    "max": 1.0,
+                    "max": 100.0,
+                    "modify": lambda x: x * 100.0,
+                    "suffix": "%",
                     "scale": "YlGn",
                 },
                 "strand_mapping_bias": {
