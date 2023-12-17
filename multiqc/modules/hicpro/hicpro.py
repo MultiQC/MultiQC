@@ -38,35 +38,35 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
             try:
-                if "total_R1" in data:
-                    if "valid_interaction" in data:
-                        if float(data["total_R1"]) > 0:
-                            data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
-                        if "valid_pairs_on_target" in data:
-                            data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(
-                                data["valid_pairs_on_target"]
+                if "valid_interaction" in data:
+                    if "valid_interaction_rmdup" in data:
+                        data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
+                        if float(data["valid_interaction"]) > 0:
+                            data["percent_duplicates"] = (
+                                float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
                             )
-                        if "valid_interaction_rmdup" in data:
-                            data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
-                            if float(data["valid_interaction"]) > 0:
-                                data["percent_duplicates"] = (
-                                    float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
-                                )
-                    if "Reported_pairs" in data:
-                        data["paired_reads"] = int(data["Reported_pairs"])
-                        if float(data["total_R1"]) > 0:
-                            data["percent_paired_reads"] = (
-                                float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
-                            )
-                    if "mapped_R1" in data:
-                        data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
-                        if float(data["total_R1"]) > 0:
-                            data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
-                if "total_R2" in data:
-                    if "mapped_R2" in data:
-                        data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
-                        if float(data["total_R2"]) > 0:
-                            data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
+                    if "valid_pairs_on_target" in data:
+                        data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(
+                            data["valid_pairs_on_target"]
+                        )
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
+
+                if "Reported_pairs" in data:
+                    data["paired_reads"] = int(data["Reported_pairs"])
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
+
+                if "mapped_R1" in data:
+                    data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
+
+                if "mapped_R2" in data:
+                    data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+                    if "total_R2" in data and float(data["total_R2"]) > 0:
+                        data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
+
             except KeyError as e:
                 log.error(f"Missing expected key {e} in sample '{s_name}'")
             except (ValueError, TypeError):
@@ -338,10 +338,6 @@ class MultiqcModule(BaseMultiqcModule):
                 {"name": "Read 2", "ylab": "# Reads: Read 2"},
             ],
         }
-
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
-            # No data found to build this plot
-            return
 
         return bargraph.plot(data, [keys, keys], config)
 
