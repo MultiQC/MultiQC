@@ -48,20 +48,22 @@ This checklist is for my own reference, as I forget the steps every time.
    - Upload to the website and push change to Git
 
 8. Commit and push version updates
-9. Make a new branch and run the rich-codex screenshots workflow on it manually
-10. PR / merge this branch into master
-11. Make sure that all tests are passing
-12. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
-13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-14. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
-15. Commit and push version bump
-16. Look for the automated release PR on `bioconda` and approve / merge
-
-- IMPORTANT: If any new dependencies added, need a manual PR to add them.
-- Do this quickly, as other people merge the automated PRs really quickly
-
-18. Tweet that new version is released
-19. Continue making more awesome :metal:
+9. Generate new rich-codex screenshots
+   - On github.com, make a new branch using the branch dropdown called `rich-codex` (or whatever).
+   - Go to _Actions_ and then [_Docs screenshots_](https://github.com/ewels/MultiQC/actions/workflows/screenshots.yml)
+   - Click _Run Workflow_ top right, and **select your new branch**
+   - Click Run. Wait for the action to complete.
+   - Make a PR from this branch to `master` and check that the new screenshot looks ok. Merge if so.
+10. Make sure that all tests are passing
+11. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
+12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
+13. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
+14. Commit and push version bump
+15. Look for the automated release PR on `bioconda` and approve / merge
+    - IMPORTANT: If any new dependencies added, need a manual PR to add them.
+    - Do this quickly, as other people merge the automated PRs really quickly
+16. Tweet that new version is released
+17. Continue making more awesome :metal:
 
 ## Appendix
 
