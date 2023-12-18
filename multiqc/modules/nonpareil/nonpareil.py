@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add versions
         for s_name, data in self.data_by_sample.items():
-            self.add_software_version(str(data["version"]), s_name)
+            self.add_software_version(str(data["nonpareil_version"]), s_name)
 
         # Add general stats
         self.nonpareil_general_stats_table()
@@ -113,6 +113,9 @@ class MultiqcModule(BaseMultiqcModule):
             if disp_add is not None:
                 data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) + disp_add)]
                 data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) - disp_add)]
+            # Add prefix to labels
+            for key in list(data.keys()):
+                data["nonpareil_" + key] = data.pop(key)
 
         return json_raw
 
@@ -121,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report"""
 
         headers = {
-            "R": {
+            "nonpareil_R": {
                 "title": f"{config.read_count_prefix} Reads",
                 "description": f"Total raw sequences ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -131,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "hidden": True,
             },
-            "LR": {
+            "nonpareil_LR": {
                 "title": f"{config.base_count_prefix} Seq. effort",
                 "description": f"Total base pairs sequenced ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
@@ -141,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "base_count",
                 "hidden": True,
             },
-            "kappa": {
+            "nonpareil_kappa": {
                 "title": "Redundancy",
                 "description": "Dataset redundancy",
                 "modify": lambda x: x * 100,
@@ -151,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn-rev",
                 "format": "{:,.2f}",
             },
-            "C": {
+            "nonpareil_C": {
                 "title": "Coverage",
                 "description": "Dataset coverage",
                 "modify": lambda x: x * 100,
@@ -161,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "format": "{:,.2f}",
             },
-            "diversity": {
+            "nonpareil_diversity": {
                 "title": "Diversity",
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
@@ -177,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table at the top of the report"""
 
         headers = {
-            "L": {
+            "nonpareil_L": {
                 "title": "Read Length",
                 "min": 0,
                 "suffix": " bps",
@@ -185,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.3f}",
                 "hidden": True,
             },
-            "AL": {
+            "nonpareil_AL": {
                 "title": "Adjusted read length",
                 "description": "Adjusted read length (if using kmers)",
                 "min": 0,
@@ -194,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.3f}",
                 "hidden": True,
             },
-            "R": {
+            "nonpareil_R": {
                 "title": f"{config.read_count_prefix} Reads",
                 "description": f"Total raw sequences ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -204,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "hidden": True,
             },
-            "LR": {
+            "nonpareil_LR": {
                 "title": f"{config.base_count_prefix} Seq. effort",
                 "description": f"Total base pairs sequenced ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
@@ -214,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "base_count",
                 "hidden": True,
             },
-            "overlap": {
+            "nonpareil_overlap": {
                 "title": "Read overlap",
                 "description": "Minimum read overlap",
                 "min": 0,
@@ -222,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
                 "format": "{:,.0f}",
             },
-            "log.sample": {
+            "nonpareil_log.sample": {
                 "title": "Log sampling",
                 "description": "Multiplier of the log-sampling (or zero if linear)",
                 "max": 1,
@@ -230,7 +233,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
                 "format": "{:,.2f}",
             },
-            "kappa": {
+            "nonpareil_kappa": {
                 "title": "Redundancy",
                 "description": "Dataset redundancy",
                 "modify": lambda x: x * 100,
@@ -240,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn-rev",
                 "format": "{:,.2f}",
             },
-            "C": {
+            "nonpareil_C": {
                 "title": "Coverage",
                 "description": "Dataset coverage",
                 "modify": lambda x: x * 100,
@@ -250,14 +253,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "format": "{:,.2f}",
             },
-            "consistent": {
+            "nonpareil_consistent": {
                 "title": "Consistent Data?",
                 "description": "Is the data sufficient for accurate estimation?",
                 "modify": lambda x: "Yes" if x == 1 else "No",
                 "scale": False,
                 "hidden": True,
             },
-            "star": {
+            "nonpareil_star": {
                 "title": "Ideal coverage",
                 "description": "Objective coverage in percentage; i.e., coverage value considered near-complete.",
                 "max": 100,
@@ -266,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": False,
                 "hidden": True,
             },
-            "LRstar": {
+            "nonpareil_LRstar": {
                 "title": f"{config.base_count_prefix} Ideal seq. effort",
                 "description": f"Projected sequencing effort for nearly complete coverage ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
@@ -275,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.2f} " + config.base_count_prefix,
                 "shared_key": "base_count",
             },
-            "modelR": {
+            "nonpareil_modelR": {
                 "title": "Model correlation",
                 "description": "Pearson R for the estimated model",
                 "max": 1,
@@ -284,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,.3f}",
                 "hidden": True,
             },
-            "diversity": {
+            "nonpareil_diversity": {
                 "title": "Diversity",
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
@@ -299,9 +302,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Redundancy levels",
+            name="Statistics",
             anchor="nonpareil-table",
-            description="Redundancy levels across samples.",
+            description="General statistics.",
             plot=table.plot(self.data_by_sample, headers, pconfig),
         )
 
@@ -330,15 +333,15 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, data in sorted(self.data_by_sample.items()):
             data_plot.append(dict())
             if self.plot_observed:
-                data_plot[-1]["observed"] = data["observed"]
+                data_plot[-1]["observed"] = data["nonpareil_observed"]
             if self.plot_model:
-                data_plot[-1]["model"] = data["model"]
+                data_plot[-1]["model"] = data["nonpareil_model"]
             if self.disp_type:
                 extra_series.append([dict(esconfig), dict(esconfig)])
                 extra_series[-1][0]["name"] = f"{self.disp_type} Upper"
-                extra_series[-1][0]["data"] = data["disp_upper"]
+                extra_series[-1][0]["data"] = data["nonpareil_disp_upper"]
                 extra_series[-1][1]["name"] = f"{self.disp_type} Lower"
-                extra_series[-1][1]["data"] = data["disp_lower"]
+                extra_series[-1][1]["data"] = data["nonpareil_disp_lower"]
             data_labels.append({"name": s_name})
 
         pconfig = {
