@@ -4,7 +4,7 @@
 
 ### MultiQC updates
 
-- Update repo name ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
+- Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 
 ### New modules
 
