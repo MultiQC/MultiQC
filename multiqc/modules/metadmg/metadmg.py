@@ -35,6 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.rank = getattr(config, "metadmg", {}).get("rank", "genus")
         self.n_taxa = getattr(config, "metadmg", {}).get("n_taxa", 20)
         self.sort_by = getattr(config, "metadmg", {}).get("sort_by", "nreads")
+        self.df_filter = getattr(config, "metadmg", {}).get("df_filter", "nreads > 5")
         self.index = getattr(config, "metadmg", {}).get("index", "name")
 
         # Read files
@@ -54,11 +55,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plots section
         self.barplot_section()
-        #self.dfitplot_section()
+        self.dfitplot_section()
 
     def metadmg_read_data(self):
-        metadmg_df = dict()
+        # Number of positions used
+        n_positions = list()
 
+        metadmg_df = dict()
         for f in self.find_log_files("metadmg/stat", filecontents=False):
             f["s_name"] = f["s_name"][:-5]
             # Read DF
@@ -82,13 +85,21 @@ class MultiqcModule(BaseMultiqcModule):
                 )
             )
             self.add_data_source(f, f["s_name"])
+            # Get number of positions used
+            n_positions.append(sum(metadmg_df[f["s_name"]].columns.str.startswith("fwdxConf")))
+        self.n_positions = max(n_positions)
+        log.debug(f"Plotting for the first {self.n_positions} bases.")
 
         metadmg_data = dict()
         for s_name, df in metadmg_df.items():
-            # Filter DF on rank
-            df = df[df["rank"] == self.rank].drop(columns="rank")
+            # Filter on rank (if available)
+            if "rank" in df.columns:
+                df = df[df["rank"] == self.rank].drop(columns="rank")
+            # Filter on number of reads (if available)
+            if self.df_filter:
+                df = df.query(self.df_filter)
             # Get first N taxa
-            df = df.head(n=self.n_taxa).set_index("name")
+            df = df.sort_values(by=self.sort_by, ascending=False).head(n=self.n_taxa).set_index("name")
 
             parsed_data = df.to_dict()
             if len(parsed_data) > 0:
@@ -117,14 +128,14 @@ class MultiqcModule(BaseMultiqcModule):
             data_plot.append({s_name: data[stat_type] for s_name, data in self.metadmg_data.items() if stat_type in data})
             data_labels.append({"name": stat_labels[stat_type]})
 
-        # Config for the plot
+        # Plot config
         pconfig = {
             "id": "metadmg_rank_plot",
             "hide_zero_cats": False,
             "title": "metaDMG: read statistics",
             "ylab": None,
             "use_legend": False,
-            "tt_decimals": 2,
+            "tt_decimals": 3,
             "tt_percentages": False,
             "data_labels": data_labels,
         }
@@ -140,9 +151,9 @@ class MultiqcModule(BaseMultiqcModule):
 	# Convert data
         data_plot = list()
         data_labels = list()
-        for s_name, data in sorted(self.metadmg_data.items()):
-            log.debug(data)
-            data_plot.append(data)
+        for s_name, s_data in sorted(self.metadmg_data.items()):
+            taxa = s_data[list(s_data.keys())[0]].keys()
+            data_plot.append({taxon: {pos: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions)} for taxon in taxa})
             data_labels.append({"name": s_name})
 
         # Config for the plot
