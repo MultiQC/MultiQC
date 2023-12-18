@@ -17,9 +17,9 @@ jobs:
 
       - name: Download test data
         run: |
-          wget https://github.com/ewels/MultiQC_TestData/archive/refs/heads/master.zip
+          wget https://github.com/MultiQC/test-data/archive/refs/heads/master.zip
           unzip master.zip
-          mv MultiQC_TestData-master/ test_data/
+          mv test-data-master/ test_data/
 
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1
