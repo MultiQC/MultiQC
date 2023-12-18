@@ -29,7 +29,7 @@
 - **GATK**: square the `BaseRecalibrator` scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
 - **HiC-Pro**: add missing search patterns and better handling of missing data ([#2233](https://github.com/ewels/MultiQC/pull/2233))
 - **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
-- **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
+- **Kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: fix `BamQC` for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
 - **Picard**: add more search patterns for `MarkDuplicates`, including `MarkDuplicatesSpark` ([#2226](https://github.com/ewels/MultiQC/pull/2226))
 - **Salmon**: add `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to the general stats table ([#1485](https://github.com/ewels/MultiQC/pull/1485))
