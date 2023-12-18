@@ -43,6 +43,9 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
 
+if "skip changelog" in pr_title.lower() or "no changelog" in pr_title.lower() or "bump version" in pr_title.lower():
+    sys.exit(0)
+
 
 def _run_cmd(cmd):
     print(cmd)
@@ -273,10 +276,9 @@ else:
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
 if not new_lines:
-    if "skip changelog" not in pr_title and "no changelog" not in pr_title:
-        new_lines = [
-            f"- {pr_title} {pr_link}\n",
-        ]
+    new_lines = [
+        f"- {pr_title} {pr_link}\n",
+    ]
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
