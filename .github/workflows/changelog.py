@@ -161,7 +161,7 @@ def _load_file_content_after_pr(path) -> str:
     _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
     with (workspace_path / path).open() as f:
         text = f.read()
-    _run_cmd(f"cd {workspace_path} && git checkout master")
+    _run_cmd(f"cd {workspace_path} && git checkout main")
     return text
 
 

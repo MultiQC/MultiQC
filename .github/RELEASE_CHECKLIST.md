@@ -53,7 +53,7 @@ This checklist is for my own reference, as I forget the steps every time.
    - Go to _Actions_ and then [_Docs screenshots_](https://github.com/MultiQC/MultiQC/actions/workflows/screenshots.yml)
    - Click _Run Workflow_ top right, and **select your new branch**
    - Click Run. Wait for the action to complete.
-   - Make a PR from this branch to `master` and check that the new screenshot looks ok. Merge if so.
+   - Make a PR from this branch to `main` and check that the new screenshot looks ok. Merge if so.
 10. Make sure that all tests are passing
 11. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
@@ -76,8 +76,8 @@ Instructions for complete rebuild of BioConda:
 ```bash
 # Update to latest bioconda
 cd ../bioconda-recipes
-git checkout master
-git pull upstream master
+git checkout main
+git pull upstream main
 git push
 git branch -D multiqc
 # Build new conda recipe from PyPI to automatically collect new dependencies

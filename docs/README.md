@@ -19,4 +19,4 @@ If you write a module which could be of use to others, it would be great to
 merge those changes back into the core MultiQC project.
 
 For instructions on how best to do this, please see the
-[contributing instructions](https://github.com/MultiQC/MultiQC/blob/master/.github/CONTRIBUTING.md).
+[contributing instructions](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md).

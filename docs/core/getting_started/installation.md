@@ -207,9 +207,9 @@ This will fetch the latest development code. To update to the latest changes, us
 `git` not installed? No problem - just download the flat files:
 
 ```bash
-curl -LOk https://github.com/MultiQC/MultiQC/archive/master.zip
-unzip master.zip
-cd MultiQC-master
+curl -LOk https://github.com/MultiQC/MultiQC/archive/main.zip
+unzip main.zip
+cd MultiQC-main
 pip install .
 ```
 

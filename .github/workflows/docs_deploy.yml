@@ -3,7 +3,7 @@ name: Docs - Netlify deploy
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - "docs/**"
       - ".github/workflows/docs_deploy.yml"

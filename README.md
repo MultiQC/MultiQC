@@ -107,7 +107,7 @@ Contributions and suggestions for new features are welcome, as are bug reports!
 Please create a new [issue](https://github.com/MultiQC/MultiQC/issues) for any
 of these, including example reports where possible.
 Pull-requests for fixes and additions are very welcome.
-Please see the [contributing notes](https://github.com/MultiQC/MultiQC/blob/master/.github/CONTRIBUTING.md) for more information about how the process works.
+Please see the [contributing notes](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md) for more information about how the process works.
 
 MultiQC has extensive [documentation](http://multiqc.info/docs/development/)
 describing how to write new modules, plugins and templates.
