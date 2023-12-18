@@ -27,6 +27,7 @@
 - **deepTools**: handle missing data in `plotProfile` ([#2229](https://github.com/ewels/MultiQC/pull/2229))
 - **Fastp**: search content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
 - **GATK**: square the `BaseRecalibrator` scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- **HiC-Pro**: add missing search patterns and better handling of missing data ([#2233](https://github.com/ewels/MultiQC/pull/2233))
 - **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
 - **kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
 - **QualiMap**: fix `BamQC` for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
