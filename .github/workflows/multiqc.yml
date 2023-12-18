@@ -25,7 +25,7 @@ jobs:
       single_module: ${{ steps.single_module.outputs.value }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dorny/paths-filter@v2
         id: filter
@@ -61,10 +61,10 @@ jobs:
 
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -76,7 +76,7 @@ jobs:
         run: pip install .
 
       - name: Download test data
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ewels/MultiQC_TestData
           path: test_data
@@ -155,7 +155,7 @@ jobs:
 
     steps:
       # Check out MultiQC code
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Set up Windows with C++ for numpy
       - name: Visual Studio Command Prompt tool
@@ -163,7 +163,7 @@ jobs:
 
       # Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
