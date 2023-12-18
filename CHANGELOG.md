@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
+- Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
 
 ### New modules
 
