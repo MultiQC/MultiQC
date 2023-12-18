@@ -8,16 +8,13 @@ description: How to install MultiQC on your system
 MultiQC is written in Python and can be installed in a number of ways.
 Which method you should use depends on how you're using MultiQC and how familiar you are with the Python ecosystem.
 
-:::info
+If you're new to software packaging, this page can be a little overwhelming.
+If in doubt, a general rule is:
 
-This page can be a little overwhelming. If in doubt:
+- _Running MultiQC in a pipeline?_ &nbsp; Use [Docker](#docker) or [Singularity](#singularity).
+- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip) or [Conda](#conda).
 
-- Running MultiQC in a pipeline? Use [Docker](#docker) or [Singularity](#singularity).
-- Running MultiQC locally? Use [Pip](#pip) or [Conda](#conda).
-
-:::
-
-:::tip{title="TL;DR;"}
+:::tip{title="Installation cheat sheet"}
 
 Know what you're doing with this kind of thing? Here's a quick reference:
 
@@ -131,7 +128,7 @@ conda config --set channel_priority strict
 :::warning
 
 In the past we used `-c bioconda` in the installation command, but this is no longer the correct usage.
-Doing so will likely cause weird stuff to happen (like only being able to install very old versions).
+Doing so will likely cause weird stuff to happen (such as only being able to install very old versions).
 
 :::
 
@@ -223,7 +220,7 @@ with required dependencies. To build MultiQC, run `nix build`.
 
 ### Docker
 
-A Docker container is provided on Docker Hub called `multiqc/multiqc`.
+A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/ewels/multiqc/).
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
@@ -249,9 +246,15 @@ You can also specify specific versions, eg: `multiqc/multiqc:1.20`.
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
 
-:::tip{title="Docker bash alias"}
+:::warning{title="Docker image name change"}
+The docker image used to be called `ewels/multiqc`.
+All releases prior to MultiQC v1.19 can be found at [ewels/multiqc](https://hub.docker.com/r/ewels/multiqc/)
+and everything from v1.20 onwards can be found at [multiqc/multiqc](https://hub.docker.com/r/multiqc/multiqc/).
+:::
 
-The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
+:::tip{title="Tip: Docker bash alias"}
+
+The docker command above is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
 alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc"
@@ -264,6 +267,30 @@ multiqc .
 ```
 
 :::
+
+:::note{title="Compute architectures"}
+
+These docker images are [multi-platform images](https://docs.docker.com/build/building/multi-platform/) – each build contains two digests, one for `linux/amd64` and one for `linux/arm64`.
+
+Generally, the Docker client should be clever enough to pull the digest appropriate for your local compute architecture.
+However, if you wish you can force it with the `--platform` flag.
+
+```bash
+docker pull --platform linux/arm64 multiqc/multiqc:latest
+```
+
+:::
+
+### GitHub Packages
+
+If you prefer, the Docker image above is also available from [GitHub packages](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
+Usage is identical, the only difference is that the URI has a `ghcr.io/` prefix:
+
+```bash
+docker pull ghcr.io/multiqc/multiqc
+```
+
+This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewels/multiqc`](https://github.com/users/ewels/packages/container/package/multiqc).
 
 ### Singularity
 
