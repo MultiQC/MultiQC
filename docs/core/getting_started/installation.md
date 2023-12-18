@@ -220,7 +220,7 @@ with required dependencies. To build MultiQC, run `nix build`.
 
 ### Docker
 
-A Docker container is provided on Docker Hub called `multiqc/multiqc`.
+A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/ewels/multiqc/).
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
@@ -252,9 +252,9 @@ All releases prior to MultiQC v1.19 can be found at [ewels/multiqc](https://hub.
 and everything from v1.20 onwards can be found at [multiqc/multiqc](https://hub.docker.com/r/multiqc/multiqc/).
 :::
 
-:::tip{title="Docker bash alias"}
+:::tip{title="Tip: Docker bash alias"}
 
-The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
+The docker command above is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
 alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc"
@@ -267,6 +267,30 @@ multiqc .
 ```
 
 :::
+
+:::note{title="Compute architectures"}
+
+These docker images are [multi-platform images](https://docs.docker.com/build/building/multi-platform/) – each build contains two digests, one for `linux/amd64` and one for `linux/arm64`.
+
+Generally, the Docker client should be clever enough to pull the digest appropriate for your local compute architecture.
+However, if you wish you can force it with the `--platform` flag.
+
+```bash
+docker pull --platform linux/arm64 multiqc/multiqc:latest
+```
+
+:::
+
+### GitHub Packages
+
+If you prefer, the Docker image above is also available from [GitHub packages](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
+Usage is identical, the only difference is that the URI has a `ghcr.io/` prefix:
+
+```bash
+docker pull ghcr.io/multiqc/multiqc
+```
+
+This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewels/multiqc`](https://github.com/users/ewels/packages/container/package/multiqc).
 
 ### Singularity
 
