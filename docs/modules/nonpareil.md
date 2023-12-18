@@ -10,12 +10,40 @@ the average coverage and predict the ammount of sequences that will be required
 to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
 
 Since Nonpareil main output has no model information, it is necessary to run its
-auxiliary `R` plot functions and save the `curves` object as a `JSON` file. For
-more info on how to generate this file, check `nonpareil` [snakemake plot wrapper](https://snakemake-wrappers.readthedocs.io/en/latest/wrappers/nonpareil/plot.html#code). Briefly, call function `export_curve()` on object `curves`:
+auxiliary `R` plot functions and save the `curves` object as a `JSON` file. Briefly,
+call function `export_curve()` on object `curves`:
 
 ```r
-y <- export_set(curves)
-write(y, "output.json")
+  base::library("jsonlite")
+  base::message("Exporting model as JSON")
+
+  export_curve <- function(object){
+    # Extract variables
+    n <- names(attributes(object))[c(1:12,21:29)]
+    x <- sapply(n, function(v) attr(object,v))
+    names(x) <- n
+    # Extract vectors
+    n <- names(attributes(object))[13:20]
+    y <- lapply(n, function(v) attr(object,v))
+    names(y) <- n
+    # Add model
+    # https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L330-L332
+    x_min <- 1e3
+    x_max <- signif(tail(attr(curves$np.curves[[1]],"x.adj"), n=1)*10, 1)
+    x.model <- exp(seq(log(x_min), log(x_max), length.out=1e3))
+    y.model <- predict(object, lr=x.model)
+
+    c(x, y, list(x.model=x.model), list(y.model=y.model))
+  }
+
+  export_set <- function(object){
+    y <- lapply(object$np.curves, "export_curve")
+    names(y) <- sapply(object$np.curves, function(n) n$label)
+    jsonlite::prettify(toJSON(y, auto_unbox=TRUE))
+  }
+
+  y <- export_set(curves)
+  write(y, "output.json")
 ```
 
 ### Module config options
