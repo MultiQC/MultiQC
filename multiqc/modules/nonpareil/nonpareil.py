@@ -8,7 +8,7 @@ from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
-from multiqc.plots import linegraph
+from multiqc.plots import table, linegraph
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add general stats
         self.nonpareil_general_stats_table()
-
+        # Add table
+        self.nonpareil_stats_table()
         # Add plots
         self.nonpareil_redundancy_plot()
 
@@ -116,6 +117,62 @@ class MultiqcModule(BaseMultiqcModule):
         return json_raw
 
     def nonpareil_general_stats_table(self):
+        """Take the parsed stats from the nonpareil report and add it to the
+        General Statistics table at the top of the report"""
+
+        headers = {
+            "R": {
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Total raw sequences ({config.read_count_desc})",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "min": 0,
+                "scale": "RdYlGn",
+                "format": "{:,.2f} " + config.read_count_prefix,
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "LR": {
+                "title": f"{config.base_count_prefix} Seq. effort",
+                "description": f"Total base pairs sequenced ({config.base_count_desc})",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "min": 0,
+                "scale": "Blues",
+                "format": "{:,.2f} " + config.base_count_prefix,
+                "shared_key": "base_count",
+                "hidden": True,
+            },
+            "kappa": {
+                "title": "Redundancy",
+                "description": "Dataset redundancy",
+                "modify": lambda x: x * 100,
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+                "format": "{:,.2f}",
+            },
+            "C": {
+                "title": "Coverage",
+                "description": "Dataset coverage",
+                "modify": lambda x: x * 100,
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+            },
+            "diversity": {
+                "title": "Diversity",
+                "description": "Dataset Nd index of sequence diversity",
+                "min": 0,
+                "scale": "GnBu-rev",
+                "format": "{:,.2f}",
+            },
+        }
+
+        self.general_stats_addcols(self.data_by_sample, headers)
+
+    def nonpareil_stats_table(self):
         """Take the parsed stats from the nonpareil report and add it to the
         General Statistics table at the top of the report"""
 
@@ -236,7 +293,17 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        self.general_stats_addcols(self.data_by_sample, headers)
+        pconfig = {
+            "id": "nonpareil-table",
+            "title": "Nonpareil: statistics",
+        }
+
+        self.add_section(
+            name="Redundancy levels",
+            anchor="nonpareil-table",
+            description="Redundancy levels across samples.",
+            plot=table.plot(self.data_by_sample, headers, pconfig),
+        )
 
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
