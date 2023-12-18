@@ -212,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "LRstar": {
-                "title": f"{config.base_count_prefix} Sequencing effort for ideal coverage",
+                "title": f"{config.base_count_prefix} ideal seq",
                 "description": f"Projected sequencing effort for nearly complete coverage ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
