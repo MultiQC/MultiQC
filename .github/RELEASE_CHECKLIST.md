@@ -50,12 +50,12 @@ This checklist is for my own reference, as I forget the steps every time.
 8. Commit and push version updates
 9. Generate new rich-codex screenshots
    - On github.com, make a new branch using the branch dropdown called `rich-codex` (or whatever).
-   - Go to _Actions_ and then [_Docs screenshots_](https://github.com/ewels/MultiQC/actions/workflows/screenshots.yml)
+   - Go to _Actions_ and then [_Docs screenshots_](https://github.com/MultiQC/MultiQC/actions/workflows/screenshots.yml)
    - Click _Run Workflow_ top right, and **select your new branch**
    - Click Run. Wait for the action to complete.
    - Make a PR from this branch to `master` and check that the new screenshot looks ok. Merge if so.
 10. Make sure that all tests are passing
-11. Make a [release](https://github.com/ewels/MultiQC/releases) on GitHub - paste changelog section.
+11. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
 13. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
 14. Commit and push version bump
@@ -88,7 +88,7 @@ conda skeleton pypi multiqc
 # Update with new release header - see https://goo.gl/ZfRnmj
 cd ../multiqc && code .
 # Get the sha256sum of the release
-curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
+curl -OL https://github.com/MultiQC/MultiQC/archive/v1.5.tar.gz
 shasum --algorithm 256 v1.5.tar.gz
 # Switch out download for GitHub release and remove all other cruft
 # commit changes

@@ -8,7 +8,7 @@ description: Troubleshooting difficulties
 Hopefully MultiQC will be easy to use and run without any hitches. If you have
 any problems, please do get in touch with the developer
 ([Phil Ewels](http://phil.ewels.co.uk)) by e-mail or by
-[submitting an issue](https://github.com/ewels/MultiQC/issues/new) on github.
+[submitting an issue](https://github.com/MultiQC/MultiQC/issues/new) on github.
 Before that, here are a few things previously encountered that may help...
 
 ## Not enough samples found
@@ -85,8 +85,8 @@ for the tool in question.
 There are a couple of things you can check here:
 
 1. Is the tool definitely
-   [supported by MultiQC](https://github.com/ewels/MultiQC)? If not, why
-   not [open an issue](https://github.com/ewels/MultiQC/issues/new) to
+   [supported by MultiQC](https://github.com/MultiQC/MultiQC)? If not, why
+   not [open an issue](https://github.com/MultiQC/MultiQC/issues/new) to
    request it!
 2. Did your bioinformatics tool definitely run properly? I've spent quite
    a bit of time debugging MultiQC modules only to realise that the output
@@ -99,7 +99,7 @@ There are a couple of things you can check here:
 If everything looks fine, then MultiQC probably needs extending to support
 your data. Tools have different versions, different parameters and different
 output formats that can confuse the parsing code.
-Please [open an issue](https://github.com/ewels/MultiQC/issues/new) with
+Please [open an issue](https://github.com/MultiQC/MultiQC/issues/new) with
 your log files and we can get it fixed.
 
 ## Error messages about mkl trial mode / licences

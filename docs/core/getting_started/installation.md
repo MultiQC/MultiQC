@@ -32,7 +32,7 @@ pip install multiqc
 <tr><td>Pip (dev version)</td><td>
 
 ```bash
-pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
 </td></tr>
@@ -151,7 +151,7 @@ Use the `--upgrade` flag to update to the latest version.
 If you would like the development version, the command is:
 
 ```bash
-pip install git+https://github.com/ewels/MultiQC.git
+pip install git+https://github.com/MultiQC/MultiQC.git
 ```
 
 To update the dev version between releases, use `--upgrade --force-reinstall`. This is needed as the version number isn't changing.
@@ -197,7 +197,7 @@ To report issues with a FreeBSD port, please submit a PR on the
 If you'd rather not use either of these tools, you can clone the code and install the code yourself:
 
 ```bash
-git clone https://github.com/ewels/MultiQC.git
+git clone https://github.com/MultiQC/MultiQC.git
 cd MultiQC
 pip install .
 ```
@@ -207,7 +207,7 @@ This will fetch the latest development code. To update to the latest changes, us
 `git` not installed? No problem - just download the flat files:
 
 ```bash
-curl -LOk https://github.com/ewels/MultiQC/archive/master.zip
+curl -LOk https://github.com/MultiQC/MultiQC/archive/master.zip
 unzip master.zip
 cd MultiQC-master
 pip install .
@@ -317,7 +317,7 @@ Currently you can't do a lot more than just running MultiQC.
 
 ### On the main Galaxy instance
 
-The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https://usegalaxy.org/) main Galaxy instance where you will find [MultiQC Galaxy tool](https://usegalaxy.org/?tool_id=toolshed.g2.bx.psu.edu%2Frepos%2Fengineson%2Fmultiqc%2Fmultiqc%2F1.0.0.0&version=1.0.0.0&__identifer=2sjdq8d9r3l) under the _NGS: QC and manipualtion_ tool panel section.
+The easiest and fast manner to use MultiQC is to use the [usegalaxy.org](https://usegalaxy.org/) main Galaxy instance where you will find [MultiQC Galaxy tool](https://usegalaxy.org/?tool_id=toolshed.g2.bx.psu.edu%2Frepos%2Fengineson%2Fmultiqc%2Fmultiqc%2F1.0.0.0&version=1.0.0.0&__identifer=2sjdq8d9r3l) under the _NGS: QC and manipualtion_ tool panel section.
 
 ### On your instance
 

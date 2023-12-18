@@ -25,12 +25,12 @@ jobs:
         run: python setup.py sdist bdist_wheel
 
       - name: Publish MultiQC to PyPI
-        if: github.repository == 'ewels/MultiQC'
+        if: github.repository == 'MultiQC/MultiQC'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
 #      - name: Tweet
-#        if: github.repository == 'ewels/MultiQC'
+#        if: github.repository == 'MultiQC/MultiQC'
 #        uses: snow-actions/tweet@v1.3.0
 #        with:
 #          status: |

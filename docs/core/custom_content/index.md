@@ -257,7 +257,7 @@ custom_data:
   example_files:
     file_format: "tsv"
     section_name: "Coverage Decay"
-    description: "This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration"
+    description: "This plot comes from files acommpanied by a multiqc_config.yaml file for configuration"
     plot_type: "linegraph"
     pconfig:
       id: "example_coverage_lineplot"

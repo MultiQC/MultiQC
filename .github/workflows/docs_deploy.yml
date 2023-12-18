@@ -15,7 +15,7 @@ jobs:
   deploy:
     name: "Request deployment"
     runs-on: ubuntu-latest
-    if: github.repository == 'ewels/MultiQC'
+    if: github.repository == 'MultiQC/MultiQC'
     steps:
       - name: Curl request
         run: curl -X POST -d {} ${{ secrets.NETLIFY_BUILD_HOOK }}

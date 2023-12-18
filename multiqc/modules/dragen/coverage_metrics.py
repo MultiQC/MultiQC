@@ -29,7 +29,7 @@ NAMESPACE = "Coverage"
 
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The following code section provides a clean and simple tool for setting configurations:
-https://github.com/ewels/MultiQC/blob/master/docs/plots.md#creating-a-table
+https://github.com/MultiQC/MultiQC/blob/master/docs/plots.md#creating-a-table
 
 The SINGLE_HEADER is used to define the common settings for all coverage headers.
 '''

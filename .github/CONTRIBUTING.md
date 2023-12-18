@@ -14,7 +14,7 @@ If you'd like to write some code for MultiQC, the standard workflow
 is as follows:
 
 1. Check that there isn't already an issue about your idea in the
-   [MultiQC issues](https://github.com/ewels/MultiQC/issues) to avoid
+   [MultiQC issues](https://github.com/MultiQC/MultiQC/issues) to avoid
    duplicating work.
    - Feel free to add a new issue here for the same reason.
 2. Fork the MultiQC repository to your GitHub account

@@ -43,7 +43,7 @@ setup(
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
     url="http://multiqc.info",
-    download_url=f"https://github.com/ewels/MultiQC/tarball/{dl_version}",
+    download_url=f"https://github.com/MultiQC/MultiQC/tarball/{dl_version}",
     license="GPLv3",
     packages=find_packages(),
     include_package_data=True,
