@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Update repo name ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
+
 ### New modules
 
 ### Module updates
