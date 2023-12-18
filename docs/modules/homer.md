@@ -12,7 +12,7 @@ of functional genomics sequencing data sets.
 
 The HOMER MultiQC module currently only parses output from the `findPeaks` tool.
 If you would like support to be added for other HOMER tools, please open a
-[new issue](https://github.com/ewels/MultiQC/issues/new) on the MultiQC GitHub page.
+[new issue](https://github.com/MultiQC/MultiQC/issues/new) on the MultiQC GitHub page.
 
 #### FindPeaks
 

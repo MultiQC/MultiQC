@@ -4,16 +4,16 @@ PR_TITLE, PR_NUMBER, GITHUB_WORKSPACE.
 
 Adds a line into the CHANGELOG.md:
 * If a PR title starts with "New module: ", checks that a single module is added,
- and appends an entry under the ""### New modules" section. 
+ and appends an entry under the ""### New modules" section.
 * If a single module was modified, checks that the PR starts with a name of the
  modified module (e.g. "FastQC: new stuff") and adds a line under "### Module updates".
 * All other change will go under the "### MultiQC updates" section.
 * If an entry for the PR is already added, will replace it.
 
 Other assumptions:
-- CHANGELOG.md has a running section for an ongoing "dev" version 
+- CHANGELOG.md has a running section for an ongoing "dev" version
 (i.e. titled "## MultiQC vX.Ydev").
-- Under that section, there are sections "### MultiQC updates", "### New modules" 
+- Under that section, there are sections "### MultiQC updates", "### New modules"
 and "### Module updates".
 - For module's info, checks the file multiqc/modules/<module_name>/<module_name>.py.
 """
@@ -26,7 +26,7 @@ from pathlib import Path
 
 import yaml
 
-REPO_URL = "https://github.com/ewels/MultiQC"
+REPO_URL = "https://github.com/MultiQC/MultiQC"
 MODULES_DIR = Path("multiqc/modules")
 
 # Assumes the environment is set by the GitHub action.
@@ -161,7 +161,7 @@ def _load_file_content_after_pr(path) -> str:
     _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
     with (workspace_path / path).open() as f:
         text = f.read()
-    _run_cmd(f"cd {workspace_path} && git checkout master")
+    _run_cmd(f"cd {workspace_path} && git checkout main")
     return text
 
 
@@ -329,7 +329,7 @@ while orig_lines:
         updated_lines.append(line)
 
         # Parse version from the line ## MultiQC v1.10dev or
-        # ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) ...
+        # ## [MultiQC v1.15](https://github.com/MultiQC/MultiQC/releases/tag/v1.15) ...
         if not (m := re.match(r".*MultiQC (v\d+\.\d+(dev)?).*", line)):
             print(f"Cannot parse version from line {line.strip()}.", file=sys.stderr)
             sys.exit(1)
