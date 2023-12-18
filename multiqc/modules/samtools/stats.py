@@ -17,7 +17,7 @@ HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
-    """Mixin class, loaded by main samtools MuliqcModule class."""
+    """Mixin class, loaded by main samtools MultiqcModule class."""
 
     def parse_samtools_stats(self):
         """Find Samtools stats logs and parse their data"""
@@ -235,10 +235,10 @@ class StatsReportMixin:
             Low alignment rates could indicate contamination of samples (e.g. adapter sequences),
             low sequencing quality or other artefacts. These can be further investigated in the
             sequence level QC (e.g. from FastQC).
-            
-            Reads mapped with MQ0 often indicate that the reads are ambiguously mapped to multiple 
+
+            Reads mapped with MQ0 often indicate that the reads are ambiguously mapped to multiple
             locations in the reference sequence. This can be due to repetitive regions in the genome,
-            the presence of alternative contigs in the reference, or due to reads that are too short 
+            the presence of alternative contigs in the reference, or due to reads that are too short
             to be uniquely mapped. These reads are often filtered out in downstream analyses.
             """,
             plot=alignment_chart(bedgraph_data),

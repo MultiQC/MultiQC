@@ -2,7 +2,7 @@ name: "MultiQC"
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - "docs/**"
       - "*.md"
@@ -78,7 +78,7 @@ jobs:
       - name: Download test data
         uses: actions/checkout@v4
         with:
-          repository: ewels/MultiQC_TestData
+          repository: MultiQC/test-data
           path: test_data
 
       # Run all of the tests!
@@ -179,10 +179,10 @@ jobs:
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: Download test data
         run: |
-          curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test_data.zip
           7z x test_data.zip -y -o"test_data"
-          dir test_data\MultiQC_TestData-master
+          dir test_data\test-data-main
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\test-data-main\data\modules\ --filename full_report.html

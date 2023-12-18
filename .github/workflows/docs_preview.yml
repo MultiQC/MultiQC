@@ -8,7 +8,7 @@ jobs:
   deploy:
     name: "Deploy preview"
     runs-on: ubuntu-latest
-    if: github.repository == 'ewels/MultiQC'
+    if: github.repository == 'MultiQC/MultiQC'
     defaults:
       run:
         working-directory: ./MultiQC_website
