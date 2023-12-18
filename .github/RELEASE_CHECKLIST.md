@@ -13,6 +13,7 @@ This checklist is for my own reference, as I forget the steps every time.
    ```
 
    - This removes the commit hash from the version number when MultiQC runs
+   - If still getting the commit hash in the version, check that the `venv` isn't in a subdirectory of the cloned MultiQC git repo
 
 6. Run using test data
    - Check for any command line or javascript errors
