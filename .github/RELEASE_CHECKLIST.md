@@ -25,7 +25,7 @@ This checklist is for my own reference, as I forget the steps every time.
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
      ```
 
-   - Install `NationalGenomicsInfrastructure/MultiQC_NGI`:
+   - Install `NationalGenomicsInfrastructure/MultiQC_NGI` - **NEEDS Python 3.11**:
 
      ```bash
      pip install git+https://github.com/NationalGenomicsInfrastructure/MultiQC_NGI@0.7.1
@@ -54,37 +54,49 @@ This checklist is for my own reference, as I forget the steps every time.
 13. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
 14. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
 15. Commit and push version bump
-16. Make a new release on `bioconda` (assuming new modules were added):
+16. Look for the automated release PR on `bioconda` and approve / merge
 
-    ```bash
-    # Update to latest bioconda
-    cd ../bioconda-recipes
-    git checkout master
-    git pull upstream master
-    git push
-    git branch -D multiqc
-    # Build new conda recipe from PyPI to automatically collect new dependencies
-    git checkout -b multiqc
-    # Do the conda skeleton to copy the dependencies
-    cd recipes && mkdir mqctemp && cd mqctemp && code .
-    conda skeleton pypi multiqc
-    # Update with new release header - see https://goo.gl/ZfRnmj
-    cd ../multiqc && code .
-    # Get the sha256sum of the release
-    curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
-    shasum --algorithm 256 v1.5.tar.gz
-    # Switch out download for GitHub release and remove all other cruft
-    # commit changes
-    cd ../../
-    git commit -am "MultiQC version 1.23 release"
-    # Test locally
-    docker pull bioconda/bioconda-utils-build-env
-    circleci build
-    # Push updates
-    git push -u origin multiqc
-    # Submit a Pull Request and merge
-    ```
+- IMPORTANT: If any new dependencies added, need a manual PR to add them.
+- Do this quickly, as other people merge the automated PRs really quickly
 
-17. Tell UPPMAX about the new version and ask for the module system to be updated.
 18. Tweet that new version is released
 19. Continue making more awesome :metal:
+
+## Appendix
+
+### Rebuilding BioConda recipe from scratch
+
+Instructions for complete rebuild of BioConda:
+
+<details>
+
+```bash
+# Update to latest bioconda
+cd ../bioconda-recipes
+git checkout master
+git pull upstream master
+git push
+git branch -D multiqc
+# Build new conda recipe from PyPI to automatically collect new dependencies
+git checkout -b multiqc
+# Do the conda skeleton to copy the dependencies
+cd recipes && mkdir mqctemp && cd mqctemp && code .
+conda skeleton pypi multiqc
+# Update with new release header - see https://goo.gl/ZfRnmj
+cd ../multiqc && code .
+# Get the sha256sum of the release
+curl -OL https://github.com/ewels/MultiQC/archive/v1.5.tar.gz
+shasum --algorithm 256 v1.5.tar.gz
+# Switch out download for GitHub release and remove all other cruft
+# commit changes
+cd ../../
+git commit -am "MultiQC version 1.23 release"
+# Test locally
+docker pull bioconda/bioconda-utils-build-env
+circleci build
+# Push updates
+git push -u origin multiqc
+# Submit a Pull Request and merge
+```
+
+</details>
