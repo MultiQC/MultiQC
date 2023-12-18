@@ -46,7 +46,7 @@ conda install multiqc
 <tr><td>Docker</td><td>
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 ```
 
 </td></tr>
@@ -223,13 +223,13 @@ with required dependencies. To build MultiQC, run `nix build`.
 
 ### Docker
 
-A Docker container is provided on Docker Hub called `ewels/multiqc`.
+A Docker container is provided on Docker Hub called `multiqc/multiqc`.
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 ```
 
 - `-t`: Runs docker with a pseudo-tty, for nice terminal colours
@@ -239,12 +239,12 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
 You can specify additional MultiQC parameters as normal at the end of the command:
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc . --title "My amazing report" -b "This was made with docker"
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc . --title "My amazing report" -b "This was made with docker"
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
-To use the most recent development code, use `ewels/multiqc:dev`.
-You can also specify specific versions, eg: `ewels/multiqc:1.14`.
+To use the most recent development code, use `multiqc/multiqc:dev`.
+You can also specify specific versions, eg: `multiqc/multiqc:1.20`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
@@ -254,7 +254,7 @@ For more help, look into [the Docker documentation](https://docs.docker.com/engi
 The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
-alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc"
+alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc"
 ```
 
 Once applied (first log out and in again) you can then just use the `multiqc` command instead:
@@ -267,16 +267,16 @@ multiqc .
 
 ### Singularity
 
-To build a singularity container image from the docker image, use the following command: _(change `1.14` to the current MultiQC version)_
+To build a singularity container image from the docker image, use the following command: _(change `1.20` to the current MultiQC version)_
 
 ```bash
-singularity build multiqc-1.14.sif docker://ewels/multiqc:1.14
+singularity build multiqc-1.20.sif docker://multiqc/multiqc:1.20
 ```
 
 Then, use `singularity run` to run the image with the normal MultiQC arguments:
 
 ```bash
-singularity run multiqc-1.14.sif my_results/ --title "Report made using Singularity"
+singularity run multiqc-1.20.sif my_results/ --title "Report made using Singularity"
 ```
 
 :::info{title="Import errors with Singularity"}

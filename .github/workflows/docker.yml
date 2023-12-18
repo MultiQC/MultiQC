@@ -47,7 +47,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ewels/multiqc:dev
+            multiqc/multiqc:dev
             ghcr.io/multiqc/multiqc:dev
 
       - name: Push release image
@@ -60,7 +60,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ewels/multiqc:${{ github.event.release.tag_name }}
-            ewels/multiqc:latest
+            multiqc/multiqc:${{ github.event.release.tag_name }}
+            multiqc/multiqc:latest
             ghcr.io/multiqc/multiqc:${{ github.event.release.tag_name }}
             ghcr.io/multiqc/multiqc:latest
