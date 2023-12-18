@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Config options
         self.plot_observed = getattr(config, "nonpareil", {}).get("plot_observed", True)
         self.plot_model = getattr(config, "nonpareil", {}).get("plot_model", True)
-        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion")
+        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
 
         # Read JSON file
         self.data_by_sample = dict()
@@ -142,13 +142,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": f"Total raw sequences ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
-                "scale": "GnBu",
+                "scale": "RdYlGn",
                 "format": "{:,.2f} " + config.read_count_prefix,
                 "shared_key": "read_count",
                 "hidden": True,
             },
             "LR": {
-                "title": f"{config.base_count_prefix} Sequencing effort",
+                "title": f"{config.base_count_prefix} Seq. effort",
                 "description": f"Total base pairs sequenced ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
@@ -162,7 +162,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Minimum read overlap",
                 "min": 0,
                 "suffix": " bps",
-                "scale": "Blues",
                 "hidden": True,
                 "format": "{:,.0f}",
             },
@@ -171,7 +170,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Multiplier of the log-sampling (or zero if linear)",
                 "max": 1,
                 "min": 0,
-                "scale": "BuGn",
                 "hidden": True,
                 "format": "{:,.2f}",
             },
@@ -212,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "LRstar": {
-                "title": f"{config.base_count_prefix} ideal seq",
+                "title": f"{config.base_count_prefix} Ideal seq. effort",
                 "description": f"Projected sequencing effort for nearly complete coverage ({config.base_count_desc})",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
@@ -233,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Diversity",
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
-                "scale": "RdYlGn",
+                "scale": "GnBu-rev",
                 "format": "{:,.2f}",
             },
         }
@@ -251,7 +249,13 @@ class MultiqcModule(BaseMultiqcModule):
             "enableMouseTracking": False,
             "showInLegend": False,
         }
-        # desc = " **The dashed black line shows theoretical GC content:** `{}`".format(theoretical_gc_name)
+        disp_desc = {
+            "sd": "standard deviation",
+            "ci95": "confidence interval at 95%",
+            "ci90": "confidence interval at 90%",
+            "ci50": "confidence interval at 50%",
+            "iq": "inter-quartile range",
+        }
 
         data_plot = list()
         data_labels = list()
@@ -290,6 +294,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Redundancy levels",
             anchor="nonpareil-redundancy",
-            description="Redundancy levels across samples.",
+            description="Redundancy levels across samples"
+            + (f"; dashed black lines show the {disp_desc[self.disp_type]}" if self.disp_type else "")
+            + ".",
             plot=linegraph.plot(data_plot, pconfig),
         )
