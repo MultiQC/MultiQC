@@ -8,16 +8,13 @@ description: How to install MultiQC on your system
 MultiQC is written in Python and can be installed in a number of ways.
 Which method you should use depends on how you're using MultiQC and how familiar you are with the Python ecosystem.
 
-:::info
+If you're new to software packaging, this page can be a little overwhelming.
+If in doubt, a general rule is:
 
-This page can be a little overwhelming. If in doubt:
+- _Running MultiQC in a pipeline?_ &nbsp; Use [Docker](#docker) or [Singularity](#singularity).
+- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip) or [Conda](#conda).
 
-- Running MultiQC in a pipeline? Use [Docker](#docker) or [Singularity](#singularity).
-- Running MultiQC locally? Use [Pip](#pip) or [Conda](#conda).
-
-:::
-
-:::tip{title="TL;DR;"}
+:::tip{title="Installation cheat sheet"}
 
 Know what you're doing with this kind of thing? Here's a quick reference:
 
@@ -131,7 +128,7 @@ conda config --set channel_priority strict
 :::warning
 
 In the past we used `-c bioconda` in the installation command, but this is no longer the correct usage.
-Doing so will likely cause weird stuff to happen (like only being able to install very old versions).
+Doing so will likely cause weird stuff to happen (such as only being able to install very old versions).
 
 :::
 
@@ -248,6 +245,12 @@ You can also specify specific versions, eg: `multiqc/multiqc:1.20`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
+
+:::warning{title="Docker image name change"}
+The docker image used to be called `ewels/multiqc`.
+All releases prior to MultiQC v1.19 can be found at [ewels/multiqc](https://hub.docker.com/r/ewels/multiqc/)
+and everything from v1.20 onwards can be found at [multiqc/multiqc](https://hub.docker.com/r/multiqc/multiqc/).
+:::
 
 :::tip{title="Docker bash alias"}
 
