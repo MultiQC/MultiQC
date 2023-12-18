@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
+
 ### New modules
 
 ### Module updates
