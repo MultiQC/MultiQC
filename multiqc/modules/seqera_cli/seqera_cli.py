@@ -110,14 +110,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Figure out the org/workspace and save as a separate field
         # Needed so that we can have it as a separate column in the table
-        for s_name, d in data_by_run.items():
+        for d in data_by_run.values():
             runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
-            m = runUrl_re.search(d["runUrl"])
-            if m:
-                org, workspace, run = m.groups()
-                d["org"] = org
-                d["workspace"] = workspace
-                d["org_workspace"] = f"{org}/{workspace}"
+            if d["runUrl"]:
+                m = runUrl_re.search(d["runUrl"])
+                if m:
+                    org, workspace, run = m.groups()
+                    d["org"] = org
+                    d["workspace"] = workspace
+                    d["org_workspace"] = f"{org}/{workspace}"
 
         # Filter to strip out ignored sample names
         data_by_run = self.ignore_samples(data_by_run)
@@ -206,11 +207,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         def format_runUrl(x):
             runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
-            m = runUrl_re.search(x)
-            if m:
-                org, workspace, run = m.groups()
-                return f'<a href="https://platform.seqera.io/orgs/{org}/workspaces/{workspace}/watch/{run}" style="white-space: nowrap;" target="_blank">{run}</a>'
-            return f'<a href="{x}" style="white-space: nowrap;" target="_blank">{x}</a>'
+            if x:
+                m = runUrl_re.search(x)
+                if m:
+                    org, workspace, run = m.groups()
+                    return f'<a href="https://platform.seqera.io/orgs/{org}/workspaces/{workspace}/watch/{run}" style="white-space: nowrap;" target="_blank">{run}</a>'
+            return str(x)
 
         headers = {
             "runUrl": {"title": "Run ID", "description": "Workflow run ID", "scale": False, "format": format_runUrl},
