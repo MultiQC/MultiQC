@@ -16,7 +16,7 @@ Custom content parsing is a little more restricted than standard modules. Specif
 - Plot customisation is more limited
 
 All plot types can be generated using custom content - see the
-[test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
+[test files](https://github.com/MultiQC/test-data/tree/main/data/custom_content)
 for examples of how data should be structured.
 
 :::note
@@ -147,7 +147,7 @@ description: 'This section is created using a custom HTML file'
 
 If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
 To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+[test data](https://github.com/MultiQC/test-data/tree/main/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
 :::note
@@ -257,7 +257,7 @@ custom_data:
   example_files:
     file_format: "tsv"
     section_name: "Coverage Decay"
-    description: "This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration"
+    description: "This plot comes from files acommpanied by a multiqc_config.yaml file for configuration"
     plot_type: "linegraph"
     pconfig:
       id: "example_coverage_lineplot"
@@ -294,7 +294,7 @@ custom_data:
 
 If no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+[test data](https://github.com/MultiQC/test-data/tree/main/data/custom_content/no_config)
 used to develop this code.
 
 # Configuration
@@ -446,7 +446,7 @@ Probably the best way to get to grips with Custom Content is to see some example
 The MultiQC automated testing runs with a bunch of different files, and I try to add to
 these all the time.
 
-You can see these examples here: <https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content>
+You can see these examples here: <https://github.com/MultiQC/test-data/tree/main/data/custom_content>
 
 For example, to see a file which generates a table in a report by itself, you can
-have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt)).
+have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_mqc.txt)).

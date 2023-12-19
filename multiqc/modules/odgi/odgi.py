@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.odgi_stats_map) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} report{}".format(len(self.odgi_stats_map), "s" if len(self.odgi_stats_map) > 1 else ""))
+        log.info(f"Found {len(self.odgi_stats_map)} report{'s' if len(self.odgi_stats_map) > 1 else ''}")
 
         # Write parsed report data to a file
         self.write_data_file(self.odgi_stats_map, "multiqc_odgi_stats")
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             data = yaml.load(f["f"], Loader=yaml.SafeLoader)
         except Exception as e:
-            log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
+            log.warning(f"Could not parse YAML for '{f}': \n  {e}")
             return
 
         # Flatten the data structure
@@ -121,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add the data to the main odgi_stats_map dict
         if s_name in self.odgi_stats_map:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.odgi_stats_map[s_name] = data_flat
 
     def odgi_stats_table(self):

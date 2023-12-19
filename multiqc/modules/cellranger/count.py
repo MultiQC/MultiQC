@@ -41,8 +41,8 @@ class CellRangerCountMixin:
 
         self.count_general_data_headers["reads"] = {
             "rid": "count_genstats_reads",
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
             "namespace": "Count",
@@ -53,8 +53,8 @@ class CellRangerCountMixin:
 
         self.count_data_headers["reads"] = {
             "rid": "count_data_reads",
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         self.count_data_headers = set_hidden_cols(
@@ -77,8 +77,8 @@ class CellRangerCountMixin:
         if self.cellrangercount_antibody_data:
             self.antibody_data_headers["reads"] = {
                 "rid": "antibody_data_reads",
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "Number of reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Number of reads ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
             }
             self.antibody_data_headers = set_hidden_cols(
@@ -102,14 +102,28 @@ class CellRangerCountMixin:
                 name="Count - Warnings",
                 anchor="cellranger-count-warnings",
                 description="Warnings encountered during the analysis",
-                plot=table.plot(self.cellrangercount_warnings, self.count_warnings_headers, {"namespace": "Count"}),
+                plot=table.plot(
+                    self.cellrangercount_warnings,
+                    self.count_warnings_headers,
+                    {
+                        "namespace": "Count",
+                        "id": "cellranger-count-warnings-table",
+                    },
+                ),
             )
 
         self.add_section(
             name="Count - Summary stats",
             anchor="cellranger-count-stats",
             description="Summary QC metrics from Cell Ranger count",
-            plot=table.plot(self.cellrangercount_data, self.count_data_headers, {"namespace": "Count"}),
+            plot=table.plot(
+                self.cellrangercount_data,
+                self.count_data_headers,
+                {
+                    "namespace": "Count",
+                    "id": "cellranger-count-stats-table",
+                },
+            ),
         )
 
         self.add_section(
@@ -148,7 +162,12 @@ class CellRangerCountMixin:
                 anchor="cellranger-antibody-stats",
                 description="Summary QC metrics from Cell Ranger count",
                 plot=table.plot(
-                    self.cellrangercount_antibody_data, self.antibody_data_headers, {"namespace": "Antibody"}
+                    self.cellrangercount_antibody_data,
+                    self.antibody_data_headers,
+                    {
+                        "namespace": "Antibody",
+                        "id": "cellranger-antibody-stats-table",
+                    },
                 ),
             )
 
@@ -188,7 +207,7 @@ class CellRangerCountMixin:
             if version_match:
                 self.add_software_version(version_match.group(1), s_name)
         except (KeyError, AssertionError):
-            log.debug("Unable to parse version for sample {}".format(s_name))
+            log.debug(f"Unable to parse version for sample {s_name}")
 
         data_general_stats = dict()
 
@@ -447,7 +466,7 @@ class CellRangerCountMixin:
             plots_data["antibody_counts"] = {s_name: combined_data}
 
         if s_name in self.cellrangercount_general_data:
-            log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+            log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
         self.add_data_source(f, s_name, module="cellranger", section="count")
         self.cellrangercount_data[s_name] = table
         if "antibody_tab" in summary:

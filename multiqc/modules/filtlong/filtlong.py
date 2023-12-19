@@ -48,13 +48,13 @@ class MultiqcModule(BaseMultiqcModule):
                 if f["s_name"] in self.filtlong_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 target_bases = line.lstrip().split(" ")[1]
-                # Remove . thousand separators - see ewels/MultiQC#1843
+                # Remove . thousand separators - see MultiQC/MultiQC#1843
                 target_bases = float(target_bases.replace(".", ""))
                 self.filtlong_data[f["s_name"]] = {"Target bases": target_bases}
 
             elif "keeping" in line and f["s_name"] in self.filtlong_data:
                 bases_kept = line.lstrip().split(" ")[1]
-                # Remove . thousand separators - see ewels/MultiQC#1843
+                # Remove . thousand separators - see MultiQC/MultiQC#1843
                 bases_kept = float(bases_kept.replace(".", ""))
                 self.filtlong_data[f["s_name"]]["Bases kept"] = bases_kept
 
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Filtlong General Stats Table"""
         headers = {
             "Target bases": {
-                "title": "Target bases ({})".format(config.read_count_prefix),
+                "title": f"Target bases ({config.read_count_prefix})",
                 "description": "Keep only the best reads up to this many total bases ({})".format(
                     config.read_count_desc
                 ),
@@ -74,8 +74,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "Bases kept": {
-                "title": "Bases kept ({})".format(config.read_count_prefix),
-                "description": "Bases kept ({})".format(config.read_count_desc),
+                "title": f"Bases kept ({config.read_count_prefix})",
+                "description": f"Bases kept ({config.read_count_desc})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

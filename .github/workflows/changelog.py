@@ -4,16 +4,16 @@ PR_TITLE, PR_NUMBER, GITHUB_WORKSPACE.
 
 Adds a line into the CHANGELOG.md:
 * If a PR title starts with "New module: ", checks that a single module is added,
- and appends an entry under the ""### New modules" section. 
+ and appends an entry under the ""### New modules" section.
 * If a single module was modified, checks that the PR starts with a name of the
  modified module (e.g. "FastQC: new stuff") and adds a line under "### Module updates".
 * All other change will go under the "### MultiQC updates" section.
 * If an entry for the PR is already added, will replace it.
 
 Other assumptions:
-- CHANGELOG.md has a running section for an ongoing "dev" version 
+- CHANGELOG.md has a running section for an ongoing "dev" version
 (i.e. titled "## MultiQC vX.Ydev").
-- Under that section, there are sections "### MultiQC updates", "### New modules" 
+- Under that section, there are sections "### MultiQC updates", "### New modules"
 and "### Module updates".
 - For module's info, checks the file multiqc/modules/<module_name>/<module_name>.py.
 """
@@ -23,11 +23,10 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Set
 
 import yaml
 
-REPO_URL = "https://github.com/ewels/MultiQC"
+REPO_URL = "https://github.com/MultiQC/MultiQC"
 MODULES_DIR = Path("multiqc/modules")
 
 # Assumes the environment is set by the GitHub action.
@@ -53,13 +52,17 @@ def _run_cmd(cmd):
     return result
 
 
-def _find_module_info(py_path: Path) -> dict[str]:
+def _find_module_info(mod_name: str) -> dict[str]:
     """
     Helper function to load module meta info. With current setup, can't really just
     import the module and call `mod.info`, as the module does the heavy work on
     initialization. But that's actually alright: we avoid installing and importing
     MultiQC and the action runs faster.
     """
+    py_path = workspace_path / MODULES_DIR / mod_name / f"{mod_name}.py"
+    if not py_path.exists():
+        return {}
+
     if py_path.name == "custom_content.py":
         return {"name": "Custom content", "anchor": "custom-content", "url": "", "info": ""}
 
@@ -136,19 +139,19 @@ def _diff_for_a_file(pr_number, path) -> str:
                 return "\n".join(diff)
 
 
-def _modules_added_by_pr(pr_number) -> list[Path]:
+def _modules_added_by_pr(pr_number) -> list[str]:
     """
     Returns paths to the modules added by the PR.
     """
-    mod_py_files = []
+    added_modules = []
     altered_files = _files_altered_by_pr(pr_number, {"added"})
     for path in altered_files:
         if path.name == "__init__.py" and str(path).startswith(f"{MODULES_DIR}/"):
-            mod_anchor = path.parent.name
-            if (mod_py := path.parent / f"{mod_anchor}.py") in altered_files:
-                if (mod_py := workspace_path / mod_py).exists():
-                    mod_py_files.append(mod_py)
-    return mod_py_files
+            mod_name = path.parent.name
+            if (mod_py := path.parent / f"{mod_name}.py") in altered_files:
+                if (workspace_path / mod_py).exists():
+                    added_modules.append(mod_name)
+    return added_modules
 
 
 def _load_file_content_after_pr(path) -> str:
@@ -158,17 +161,18 @@ def _load_file_content_after_pr(path) -> str:
     _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
     with (workspace_path / path).open() as f:
         text = f.read()
+    _run_cmd(f"cd {workspace_path} && git checkout main")
     return text
 
 
-def _modules_modified_by_pr(pr_number) -> Set[Path]:
+def _modules_modified_by_pr(pr_number) -> set[str]:
     """
     Returns paths to the "<module>.py" files of the altered modules.
     """
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
 
     # First, special case for search patterns.
-    modules_modified_in_search_patterns = set()
+    keys_modified_in_search_patterns = set()
     sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
     if sp_paths:
         sp_path = sp_paths[0]
@@ -183,34 +187,30 @@ def _modules_modified_by_pr(pr_number) -> Set[Path]:
         if old_text != new_text:
             old_data = yaml.safe_load(old_text)
             new_data = yaml.safe_load(new_text)
-            for new_mod in new_data:
+            for new_skey in new_data:
                 # Added module?
-                if new_mod not in old_data:
-                    modules_modified_in_search_patterns.add(new_mod)
-            for old_mod in old_data:
+                if new_skey not in old_data:
+                    keys_modified_in_search_patterns.add(new_skey)
+            for old_skey in old_data:
                 # Removed module?
-                if old_mod not in new_data:
-                    modules_modified_in_search_patterns.add(old_mod)
+                if old_skey not in new_data:
+                    keys_modified_in_search_patterns.add(old_skey)
                 # Modified module?
-                elif old_data.get(old_mod) != new_data.get(old_mod):
-                    modules_modified_in_search_patterns.add(old_mod)
+                elif old_data.get(old_skey) != new_data.get(old_skey):
+                    keys_modified_in_search_patterns.add(old_skey)
 
-    mod_py_files = set()
-    if modules_modified_in_search_patterns:
-        mod_name = modules_modified_in_search_patterns.pop()
-        mod_py = MODULES_DIR / mod_name / f"{mod_name}.py"
-        if (mod_py := workspace_path / mod_py).exists():
-            mod_py_files.add(mod_py)
+    mod_names = set()
+    if keys_modified_in_search_patterns:
+        mod_name = keys_modified_in_search_patterns.pop().split("/")[0]
+        mod_names.add(mod_name)
 
     # Now adding module-specific files
     for path in altered_files:
         if str(path).startswith(f"{MODULES_DIR}/"):
             mod_name = path.parent.name
-            mod_py = path.parent / f"{mod_name}.py"
-            if (mod_py := workspace_path / mod_py).exists():
-                mod_py_files.add(mod_py)
+            mod_names.add(mod_name)
 
-    return mod_py_files
+    return mod_names
 
 
 def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
@@ -220,15 +220,15 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     """
 
     if pr_title.lower().capitalize().startswith("New module: "):
-        mod_py_files = _modules_added_by_pr(pr_number)
-        if len(mod_py_files) == 0:
+        added_modules = _modules_added_by_pr(pr_number)
+        if len(added_modules) == 0:
             raise RuntimeError(
                 f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
             )
-        if len(mod_py_files) > 1:
-            RuntimeError(f"Found multiple added modules: {mod_py_files}")
+        if len(added_modules) > 1:
+            RuntimeError(f"Found multiple added modules: {added_modules}")
         else:
-            mod_info = _find_module_info(mod_py_files[0])
+            mod_info = _find_module_info(added_modules[0])
             proper_pr_title = f"New module: {mod_info['name']}"
             if pr_title != proper_pr_title:
                 try:
@@ -242,9 +242,9 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
 
     # Check what modules were changed by the PR, and if the title starts with one
     # of the names of the changed modules, assume it's a module update.
-    modified_mod_py_files = _modules_modified_by_pr(pr_number)
-    if len(modified_mod_py_files) == 1:
-        mod_info = _find_module_info(modified_mod_py_files.pop())
+    modified_modules = _modules_modified_by_pr(pr_number)
+    if len(modified_modules) == 1:
+        mod_info = _find_module_info(modified_modules.pop())
         if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
             return "### Module updates", mod_info
 
@@ -329,7 +329,7 @@ while orig_lines:
         updated_lines.append(line)
 
         # Parse version from the line ## MultiQC v1.10dev or
-        # ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) ...
+        # ## [MultiQC v1.15](https://github.com/MultiQC/MultiQC/releases/tag/v1.15) ...
         if not (m := re.match(r".*MultiQC (v\d+\.\d+(dev)?).*", line)):
             print(f"Cannot parse version from line {line.strip()}.", file=sys.stderr)
             sys.exit(1)

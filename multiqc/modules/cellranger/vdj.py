@@ -38,8 +38,8 @@ class CellRangerVdjMixin:
             self.cellrangervdj_plots_data[k] = self.ignore_samples(self.cellrangervdj_plots_data[k])
 
         self.vdj_general_data_headers["reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
             "namespace": "VDJ",
@@ -56,8 +56,8 @@ class CellRangerVdjMixin:
         )
 
         self.vdj_mapping_headers["reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         self.vdj_mapping_headers = set_hidden_cols(
@@ -110,21 +110,42 @@ class CellRangerVdjMixin:
                     name="VDJ - Warnings",
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "VDJ"}),
+                    plot=table.plot(
+                        self.cellrangervdj_warnings,
+                        self.vdj_warnings_headers,
+                        {
+                            "namespace": "VDJ",
+                            "id": "cellranger-vdj-warnings-table",
+                        },
+                    ),
                 )
 
             self.add_section(
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "VDJ"}),
+                plot=table.plot(
+                    self.cellrangervdj_mapping,
+                    self.vdj_mapping_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-stats-table",
+                    },
+                ),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
-                plot=table.plot(self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "VDJ"}),
+                plot=table.plot(
+                    self.cellrangervdj_annotations,
+                    self.vdj_annotations_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-annot-table",
+                    },
+                ),
             )
 
             self.add_section(
@@ -158,7 +179,7 @@ class CellRangerVdjMixin:
             if version_match:
                 self.add_software_version(version_match.group(1), s_name)
         except (KeyError, AssertionError):
-            log.debug("Unable to parse version for sample {}".format(s_name))
+            log.debug(f"Unable to parse version for sample {s_name}")
 
         data_general_stats = dict()
 
@@ -307,7 +328,7 @@ class CellRangerVdjMixin:
 
         if len(data) > 0:
             if s_name in self.cellrangervdj_general_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name, module="cellranger", section="count")
             self.cellrangervdj_mapping[s_name] = data
             self.cellrangervdj_general_data[s_name] = data_general_stats

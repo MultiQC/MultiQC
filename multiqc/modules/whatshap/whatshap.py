@@ -436,5 +436,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="WhatsHap statistics",
             anchor="whatshap-table",
-            plot=table.plot(general, stats_headers),
+            plot=table.plot(
+                general,
+                stats_headers,
+                {
+                    "namespace": "WhatsHap",
+                    "id": "whatshap-stats-table",
+                },
+            ),
         )

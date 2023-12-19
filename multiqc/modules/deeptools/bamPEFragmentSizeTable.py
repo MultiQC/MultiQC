@@ -16,7 +16,7 @@ class bamPEFragmentSizeTableMixin:
             parsed_data = self.parseBamPEFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSize:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_bamPEFragmentSize[k] = v
 
             if len(parsed_data) > 0:
@@ -86,7 +86,10 @@ class bamPEFragmentSizeTableMixin:
                 "shared_key": "read_length",
             },
         }
-        config = {"namespace": "deepTools bamPEFragmentSize"}
+        config = {
+            "namespace": "deepTools bamPEFragmentSize",
+            "id": "deeptools_readlengths_table",
+        }
         self.add_section(
             name="Read length metrics",
             anchor="deeptools_readlengths",
@@ -154,6 +157,10 @@ class bamPEFragmentSizeTableMixin:
                 PE = True
                 break
         if PE:
+            config = {
+                "namespace": "deepTools bamPEFragmentSize",
+                "id": "deeptools_fragmentlengths_table",
+            }
             self.add_section(
                 name="Fragment length metrics",
                 anchor="deeptools_fragmentlengths",
@@ -238,7 +245,7 @@ class bamPEFragmentSizeTableMixin:
                     if idx == 0:
                         s_name = self.clean_s_name(cols[0], f)
                         if s_name in d:
-                            log.debug("Replacing duplicate sample {}.".format(s_name))
+                            log.debug(f"Replacing duplicate sample {s_name}.")
                         d[s_name] = dict()
                     else:
                         if idx < 19 and cols[1] == "0":

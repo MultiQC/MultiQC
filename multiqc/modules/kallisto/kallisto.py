@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kallisto_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.kallisto_data)))
+        log.info(f"Found {len(self.kallisto_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 if "quantifying the abundances" in line:
                     if s_name in self.kallisto_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.kallisto_data[s_name] = {
                         "total_reads": total_reads,
@@ -110,8 +110,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
             },
             "pseudoaligned_reads": {
-                "title": "{} Aligned".format(config.read_count_prefix),
-                "description": "Pseudoaligned reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Aligned",
+                "description": f"Pseudoaligned reads ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuRd",
                 "modify": lambda x: x * config.read_count_multiplier,

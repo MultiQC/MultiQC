@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kraken_raw_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.kraken_raw_data)))
+        log.info(f"Found {len(self.kraken_raw_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one = "% {}".format(top_taxa[0])
+            top_one = f"% {top_taxa[0]}"
             headers["pct_top_one"] = {
                 "title": top_one,
                 "description": "Percentage of reads that were the top {} over all samples - {}".format(
@@ -446,12 +446,11 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
         except KeyError:
-            pass
-            # Taxa rank not found in this sample
+            log.debug("Taxa rank not found, skipping Taxa duplication heatmap")
+            return
 
         i = 0
         counts_shown = {}
-
         showed_warning = False
         for classif, pct_sum in sorted_pct:
             i += 1

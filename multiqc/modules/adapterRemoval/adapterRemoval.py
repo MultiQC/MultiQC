@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.adapter_removal_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.adapter_removal_data)))
+        log.info(f"Found {len(self.adapter_removal_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.adapter_removal_data, "multiqc_adapter_removal")
@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # biological/technical relevance is not clear -> skip
         if self.__read_type == "single" and self.__collapsed:
-            log.warning("Case single-end and collapse is not " "implemented -> File %s skipped" % self.s_name)
+            log.warning(f"Case single-end and collapse is not implemented -> File {self.s_name} skipped")
             raise ModuleNoSamplesFound
 
     def set_trim_stat(self, trim_data):
@@ -278,8 +278,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "percent_aligned",
             },
             "aligned_total": {
-                "title": "{} Reads Trimmed".format(config.read_count_prefix),
-                "description": "Total trimmed reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Reads Trimmed",
+                "description": f"Total trimmed reads ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
                 "scale": "PuBu",
