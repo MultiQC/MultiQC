@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Name of the repository",
                 "scale": "Accent",
                 "modify": lambda x: repositories.index(x),
-                "format": lambda x: f'<a href="{repositories[x]}">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
+                "format": lambda x: f'<a href="{repositories[x]}" style="white-space: nowrap;">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
             },
             "revision": {
                 "title": "Version",
