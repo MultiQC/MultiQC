@@ -18,7 +18,7 @@ On December 18th 2023, just after the v1.19 release of MultiQC, the GitHub repo 
   - Default branch `master` was renamed to `main`
 - Docker images renamed:
   - DockerHub: `ewels/multiqc` became `multiqc/multiqc`
-  - GitHub Packages: `ghcr.io/ewels/multiqc` became `ghcr.io/ewels/multiqc`
+  - GitHub Packages: `ghcr.io/ewels/multiqc` became `ghcr.io/multiqc/multiqc`
 
 ### GitHub repository name change
 
