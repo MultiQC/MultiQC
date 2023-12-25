@@ -1,7 +1,7 @@
 ---
-Name: pairtools
-URL: https://pairtools.readthedocs.io
-Description: >
+name: pairtools
+url: https://pairtools.readthedocs.io
+description: >
     pairtools is a simple and fast command-line framework to process sequencing data from a Hi-C experiment.
 ---
 

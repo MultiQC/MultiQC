@@ -3,29 +3,24 @@
 """ MultiQC module to parse stats output from pairtools """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, linegraph, heatmap
+from multiqc.plots import bargraph, linegraph
 from multiqc.utils import report
 from multiqc import config
-
-from pathlib import Path
 
 import os
 import yaml
 import numpy as np
 from copy import copy
 from random import choice
-from itertools import combinations_with_replacement, zip_longest
+from itertools import zip_longest
 
 from .utils import (
     read_stats_from_file,
-    contact_areas_genomewide,
     genomic_dist_human_str,
     edges_to_intervals,
     cumsums_to_rangesums,
-    total_coverage,
 )
 
 
@@ -49,11 +44,11 @@ class MultiqcModule(BaseMultiqcModule):
             " pairtools can handle pairs of short-reads aligned to a reference genome,"
             " extract 3C-specific information and perform common tasks, such as sorting,"
             " filtering and deduplication.",
-            doi="10.5281/zenodo.1490831",
+            doi="10.5281/zenodo.1490830",
         )
 
         # Find and load any pairtools stats summary files:
-        self.pairtools_stats = dict()
+        self.pairtools_stats = {}
         for f in self.find_log_files("pairtools", filehandles=True):
             s_name = f["s_name"]
             self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
@@ -77,16 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
         with open(os.path.join(os.path.dirname(__file__), "assets", "params", "params.yml"), "r") as fp:
             self.params = yaml.safe_load(fp)
 
-        #############################################
-        #############################################
-        # should add several cross-sample checks
-        #############################################
-        #############################################
+        # check for consistency across samples:
         # e.g. check if all sets of distances are identical,
         # by comparing them all to the last one: (s_name, sorted_dists)
         cis_dists_mismatch = False
-        chromsizes_provided = True
-        chromsizes_mismatch = False
         if len(self.pairtools_stats) > 1:
             random_sample = choice(list(self.pairtools_stats))
             # check if cis-ranges are same across samples
@@ -100,15 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
                         f"Samples {s_name} and {random_sample} have different sets of cis-ranges,\n"
                         "pairs by cis range will not be reported !"
                     )
-            # check if chromsizes are the same across samples
-            random_chromsizes = self.pairtools_stats[random_sample]["chromsizes"]
-            for s_name in self.pairtools_stats:
-                if not self.pairtools_stats[s_name]["chromsizes"]:
-                    chromsizes_provided = False
-                elif self.pairtools_stats[s_name]["chromsizes"] != random_chromsizes:
-                    chromsizes_mismatch = True
-                    chromsizes_provided = False
-                    log.warning(f"Samples {s_name} and {random_sample} have different sets of chromsizes.")
 
         # determine max total reads for general stats:
         self.max_total_reads = 0
@@ -119,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Report sections
         self.add_section(
-            name="Pairs alignment status",
+            name="Pairs by alignment status",
             anchor="pair-types",
             description="Number of pairs classified according to their alignment status,"
             " including uniquely mapped (UU), unmapped (NN), duplicated (DD), and others.",
@@ -130,31 +110,30 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Pre-filtered pairs grouped by genomic separations",
+            name="Pre-filtered pairs by genomic location",
             anchor="cis-ranges-trans",
-            description="Distribution of pre-filtered pairs (UU, UR and RU) by genomic"
+            description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
             " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
-            helptext="""Pre-filtered read pairs might still include artifacts:
-            Short-range cis-pairs (<1kb) are typically enriched in technical artifacts (self-circles, dangling-ends, etc).
-            High fraction of trans interactions typically suggests increased noise levels""",
+            helptext="""
+            Samples can have different distributions of pairs by genomic locations for various biological
+            and technical differences. Biological examples: cell-cycle differences,
+            differentitation stages difference, mutations affecting genome organization, etc.
+            Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
+            Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
+            Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
             plot=self.pairs_by_cisrange_trans(),
         )
 
-        if not chromsizes_provided:
-            nochromsizes_warning = """**Warning! There are no chromosome sizes detected in the stats files, therefore
-            interaction frequencies are presented without normalization (i.e. raw log-binned counts)**"""
-        else:
-            nochromsizes_warning = ""
         self.add_section(
-            name="Frequency of interactions as a function of genomic separation",
+            name="Pre-filtered pairs as a function of genomic separation - in detail",
             anchor="scalings-plots",
-            description="Frequency of interactions (pre-filtered pairs) as a function"
-            ' of genomic separation, known as "scaling plots", P(s).'
-            " Click on an individual curve to reveal P(s) for different"
-            " read pair orientations." + nochromsizes_warning,
-            helptext="""Short-range cis-pairs are typically enriched in technical artifacts.
+            description="Number of interactions (pre-filtered pairs) as a function"
+            " of genomic separation, log-binned."
+            " Click on an individual curve to reveal information for different"
+            " read pair orientations.",
+            helptext="""Short-range cis-pairs are typically enriched in ligations artifacts.
             Frequency of interactions for read pairs of different orientations
-            ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these technical artifacts.
+            ++,+-,-+ and -- (FF, FR, RF, RR) provide insight into these artifacts.
             For example, dangling-ends manifest themselves as FR-pairs, while self-circles - RF.
             Thus enrichment of FR/RF pairs at a given genomic separation can hint at the level
             of contamination.""",
@@ -164,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Fraction of read pairs by strand orientation",
             anchor="read-orientation",
-            description="Number of interactions (pre-filtered pairs) reported for every type"
+            description="Number of pre-filtered pairs reported for every type"
             " of read pair orientation. Numbers are reported for different"
             " ranges of genomic separation and combined.",
             helptext="""Short-range cis-pairs are typically enriched in technical artifacts.
@@ -175,17 +154,6 @@ class MultiqcModule(BaseMultiqcModule):
             of contamination.""",
             plot=self.pairs_by_strand_orientation(),
         )
-
-        if chromsizes_provided:
-            self.add_section(
-                name="Pre-filtered pairs grouped by chromosomes",
-                anchor="pairs-by-chroms",
-                description="Number of pre-filtered interactions (pairs) within a single chromosome"
-                " or for a pair of chromosomes.",
-                helptext="""Numbers of pairs are normalized by the total number of pre-filtered pairs per sample.
-                Number are reported only for chromosomes/pairs that have >1% of pre-filtered pairs.""",
-                plot=self.coverage_by_chrom(),
-            )
 
     def parse_pairtools_stats(self, f):
         """
@@ -205,14 +173,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Construct a data structure for the plot: { sample: {ptype : count} }
         # and keep track of the observed pair types - for nice visuals:
-        ptypes_dict = dict()
+        ptypes_dict = {}
         observed_ptypes = set()
         for s_name in self.pairtools_stats:
             ptypes_dict[s_name] = copy(self.pairtools_stats[s_name][ptypes_field])
             observed_ptypes |= set(ptypes_dict[s_name])
 
         # display common pairtypes first with pre-defined colors and order :
-        ptypes_anotated = OrderedDict()
+        ptypes_anotated = {}
         for common_ptype, ptype_color in self.params["pairtypes_colors"].items():
             if common_ptype in observed_ptypes:
                 ptypes_anotated[common_ptype] = {"color": ptype_color, "name": common_ptype}
@@ -244,8 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # Construct a data structure for the plot
-        cis_rangecounts_dict = dict()
-        cis_distances_dict = dict()
+        cis_rangecounts_dict = {}
+        cis_distances_dict = {}
         for s_name in self.pairtools_stats:
             sample_stats = self.pairtools_stats[s_name]
             sorted_dists = sample_stats["cis_dist"]["dists"]  # edges of distance ranges
@@ -282,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
         data_dict = {s: dict(zip(range_names, c)) for s, c in cis_rangecounts_dict.items()}
 
         # color distance ranges with nice pre-defined colors (as many as possible):
-        key_dict = OrderedDict()
+        key_dict = {}
         for color, dist_range in zip_longest(self.params["cis_range_colors"], range_names):
             key_dict[dist_range] = {"name": dist_range}
             if color:
@@ -309,11 +277,11 @@ class MultiqcModule(BaseMultiqcModule):
         dist_ranges = edges_to_intervals(self.params["pairs_distance_edges"])
 
         # Construct a data structure for the plot
-        _data = dict()
+        _data = {}
         for key in dist_ranges:
-            _data[key] = dict()
+            _data[key] = {}
             for s_name in self.pairtools_stats:
-                _data[key][s_name] = dict()
+                _data[key][s_name] = {}
 
         for s_name in self.pairtools_stats:
             # extract scalings data structure per sample:
@@ -353,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # annotate read orientations with nice colors:
-        keys_annotated = OrderedDict()
+        keys_annotated = {}
         for key in orientation_keys:
             name = self.params["pairs_orientation_names"][key]
             color = self.params["pairs_orientation_colors"][key]
@@ -393,13 +361,6 @@ class MultiqcModule(BaseMultiqcModule):
             for po, po_name in porient_names.items():
                 _summary[po_name] = np.asarray(sample_dist_freq[po]).astype(float)
 
-            if self.pairtools_stats[s_name]["chromsizes"]:
-                # normalize contacts by distance with the theoretical # of pairs in a range
-                sizes = np.fromiter(self.pairtools_stats[s_name]["chromsizes"].values(), dtype=float)
-                _areas = contact_areas_genomewide(_dist_bins, scaffold_sizes=sizes)
-                for cat in data_cats:
-                    _summary[cat] = _summary[cat] / _areas
-
             # assign geometric mean distance to every distance interval
             _dist_bins_geom = np.sqrt(_dist_bins[:-1] * _dist_bins[1:])
             # fill in the data for XY-line plotting
@@ -409,8 +370,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "broom_plot",
-            "title": "Pairs by distance and by read orientation",
+            "title": "pairtools: Pairs by distance and orientation",
             "xlab": "Genomic separation (bp)",
+            "ylab": "number of pairs",
             "xLog": True,
             "yLog": True,
             "data_labels": [
@@ -425,51 +387,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         return linegraph.plot([_data[cat] for cat in data_cats], pconfig=pconfig)
 
-    # coverage per chromosome per sample - a heatmap
-    def coverage_by_chrom(self):
-        """
-        number of pairs by chromosome pairs
-        """
-
-        _report_field = "chrom_freq"
-
-        the_data = []
-        for s_name in self.pairtools_stats:
-            # output not more than 100 chroms, sorted on size ...
-            if len(self.pairtools_stats[s_name]["chromsizes"]):
-                all_chroms = list(self.pairtools_stats[s_name]["chromsizes"])
-                sizes = list(self.pairtools_stats[s_name]["chromsizes"].values())
-            else:
-                # returning empty
-                return heatmap.plot([])
-            # show first 100 chroms only ...
-            cov_chroms = all_chroms[:100]
-            chrom_sizes = sizes[:100]
-
-            tot_contact = self.pairtools_stats[s_name]["total_nodups"] / self.max_total_reads
-            coverage = total_coverage(self.pairtools_stats[s_name]["chrom_freq"], cov_chroms)
-            # normalize coverage by chromsizes and total nodup interaction per sample
-            coverage = [c / (s * tot_contact) for c, s in zip(coverage, sizes)]
-
-            # [ [ _data[s][k] for k in xcats ] for s in ycats ]
-            the_data.append(coverage)
-
-        pconfig = {
-            "square": False,
-            "xcats_samples": False,
-            "ycats_samples": True,
-        }
-
-        return heatmap.plot(
-            the_data,
-            xcats=cov_chroms,
-            ycats=list(self.pairtools_stats),
-            pconfig=pconfig,
-        )
 
     def pairtools_general_stats(self):
         """Add columns to General Statistics table"""
-        headers = OrderedDict()
+        headers = {}
         headers["total"] = {
             "title": f"{config.read_count_prefix} read pairs",
             "description": f"Total read pairs ({config.read_count_desc})",
