@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from RSeQC tin.py
 http://rseqc.sourceforge.net/#tin-py """
 
-from collections import OrderedDict
-import logging
 import csv
+import logging
 
-from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,8 +19,8 @@ def parse_reports(self):
         try:
             reader = csv.DictReader(f["f"], delimiter="\t")
             contents = next(reader)
-        except csv.Error:
-            log.error(f"Could not parse file '{f['fn']}'")
+        except (csv.Error, StopIteration) as e:
+            log.error(f"Could not parse file '{f['fn']}': {e}")
             continue
 
         s_name = self.clean_s_name(contents["Bam_file"], f)
@@ -33,6 +29,10 @@ def parse_reports(self):
 
         # Add file to multiqc_sources.txt
         self.add_data_source(f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, s_name)
 
     # Filter to strip out ignored sample names
     self.tin_data = self.ignore_samples(self.tin_data)

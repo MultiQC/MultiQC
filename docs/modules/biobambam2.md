@@ -1,7 +1,7 @@
 ---
-Name: biobambam2
-URL: https://github.com/gt1/biobambam2
-Description: >
+name: biobambam2
+url: https://github.com/gt1/biobambam2
+description: >
   biobambam2 contains tools for processing BAM files for early stage alignment file processing
 ---
 

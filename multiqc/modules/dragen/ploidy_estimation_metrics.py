@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-from __future__ import print_function
+import logging
+from collections import defaultdict
 
-import re
-from collections import OrderedDict, defaultdict
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
@@ -20,10 +16,11 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/ploidy_estimation_metrics"):
             data = parse_ploidy_estimation_metrics_file(f)
-            if f["s_name"] in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
-            data_by_sample[f["s_name"]] = data
+            s_name = f["s_name"]
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="ploidy_estimation_metrics")
+            data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -33,11 +30,16 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(data_by_sample, "dragen_ploidy")
 
-        headers = OrderedDict()
-        headers["Ploidy estimation"] = {
-            "title": "Sex",
-            "description": "Sex chromosome ploidy estimation (XX, XY, X0, 00, etc.)",
-            "scale": "Set3",
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        headers = {
+            "Ploidy estimation": {
+                "title": "Sex",
+                "description": "Sex chromosome ploidy estimation (XX, XY, X0, 00, etc.)",
+                "scale": "Set3",
+            }
         }
         self.general_stats_addcols(data_by_sample, headers, namespace=NAMESPACE)
         return data_by_sample.keys()
@@ -54,8 +56,6 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Y median / Autosomal median,0.00
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
-
-    f["s_name"] = re.search(r"(.*)\.ploidy_estimation_metrics.csv", f["fn"]).group(1)
 
     data = defaultdict(dict)
 

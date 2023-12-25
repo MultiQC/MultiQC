@@ -44,10 +44,28 @@ var brewer_scales = [
 $(function () {
   if ($(".mqc_table").length > 0) {
     // Enable tablesorter on MultiQC tables
-    var strip_non_numeric = function (node) {
-      return node.innerText.replace(/[^\d.-]/g, "");
+    let get_sort_val = function (node) {
+      // if val is defined, use it
+      if (node.getAttribute("val") !== null) {
+        let val = node.getAttribute("val");
+        let floatVal = parseFloat(val);
+        if (!isNaN(floatVal)) {
+          return val; // expected to return a string
+        }
+        return val;
+      }
+
+      const text = node.innerText;
+
+      // If first char is a digit, strip non-numeric
+      // This is to handle cases of e.g. 300X and 9.0X.
+      if (text.length > 0 && text[0].match(/\d/)) {
+        return text.replace(/[^\d.]/g, "");
+      }
+
+      return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: strip_non_numeric });
+    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {

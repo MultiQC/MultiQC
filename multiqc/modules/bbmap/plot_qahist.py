@@ -10,9 +10,6 @@ def plot_qahist(samples, file_type, **plot_args):
     samples = bbmap.MultiqcModule.mod_data[file_type]
     """
 
-    sumy = sum([int(samples[sample]["data"][x][0]) for sample in samples for x in samples[sample]["data"]])
-
-    cutoff = sumy * 0.999
     all_x = set()
     for item in sorted(chain(*[samples[sample]["data"].items() for sample in samples])):
         # Skip plotting values for this x if missing columns.
@@ -45,9 +42,7 @@ def plot_qahist(samples, file_type, **plot_args):
     for column_type in columns_to_plot:
         plot_data.append(
             {
-                sample
-                + "."
-                + column_name: {
+                sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples

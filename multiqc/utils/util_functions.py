@@ -2,17 +2,17 @@
 
 """ MultiQC Utility functions, used in a variety of places. """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import io
 import json
 import os
-import yaml
-import time
 import shutil
 import sys
+import time
 
-from multiqc import config
+import yaml
+
+from . import config
 
 
 def robust_rmtree(path, logger=None, max_retries=10):
@@ -28,12 +28,12 @@ def robust_rmtree(path, logger=None, max_retries=10):
             return
         except OSError:
             if logger:
-                logger.info("Unable to remove path: {}".format(path))
-                logger.info("Retrying after {} seconds".format(i ** 2))
+                logger.info(f"Unable to remove path: {path}")
+                logger.info(f"Retrying after {i**2} seconds")
             else:
-                print("Unable to remove path: {}".format(path), file=sys.stderr)
-                print("Retrying after {} seconds".format(i ** 2), file=sys.stderr)
-            time.sleep(i ** 2)
+                print(f"Unable to remove path: {path}", file=sys.stderr)
+                print(f"Retrying after {i**2} seconds", file=sys.stderr)
+            time.sleep(i**2)
 
     # Final attempt, pass any Exceptions up to caller.
     shutil.rmtree(path)
@@ -50,11 +50,9 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
     :return: None"""
 
     if config.data_dir is not None:
-
-        # Add relevant file extension to filename
+        # Get data format from config
         if data_format is None:
             data_format = config.data_format
-        fn = "{}.{}".format(fn, config.data_format_extensions[data_format])
 
         # JSON encoder class to handle lambda functions
         class MQCJSONEncoder(json.JSONEncoder):
@@ -62,11 +60,44 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 if callable(obj):
                     try:
                         return obj(1)
-                    except:
+                    except Exception:
                         return None
                 return json.JSONEncoder.default(self, obj)
 
-        # Save file
+        # Some metrics can't be coerced to tab-separated output, test and handle exceptions
+        if data_format not in ["json", "yaml"]:
+            # attempt to reshape data to tsv
+            try:
+                # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+                headers = []
+                for d in data.values():
+                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
+                        continue
+                    for h in d.keys():
+                        if h not in headers:
+                            headers.append(h)
+                if sort_cols:
+                    headers = sorted(headers)
+
+                headers_str = [str(item) for item in headers]
+                # Add Sample header in to first element
+                headers_str.insert(0, "Sample")
+
+                # Get the rows
+                rows = ["\t".join(headers_str)]
+                for sn in sorted(data.keys()):
+                    # Make a list starting with the sample name, then each field in order of the header cols
+                    line = [str(sn)] + [str(data[sn].get(h, "")) for h in headers]
+                    rows.append("\t".join(line))
+
+                body = "\n".join(rows)
+
+            except Exception:
+                data_format = "yaml"
+                config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
+
+        # Add relevant file extension to filename, save file.
+        fn = f"{fn}.{config.data_format_extensions[data_format]}"
         with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
             if data_format == "json":
                 jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
@@ -75,30 +106,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 yaml.dump(data, f, default_flow_style=False)
             else:
                 # Default - tab separated output
-                # Heatmaps and other odd things might break this, so skip if so
-                # TODO: leaves an empty file, should clean this up
-                if type(data) is not dict and type(data) is not OrderedDict:
-                    return
-                # Convert keys to strings
-                data = {str(k): v for k, v in data.items()}
-                # Get all headers
-                h = ["Sample"]
-                for sn in sorted(data.keys()):
-                    for k in data[sn].keys():
-                        if type(data[sn][k]) is not dict and k not in h:
-                            h.append(str(k))
-                if sort_cols:
-                    h = sorted(h)
-
-                # Get the rows
-                rows = ["\t".join(h)]
-                for sn in sorted(data.keys()):
-                    # Make a list starting with the sample name, then each field in order of the header cols
-                    l = [str(sn)] + [str(data[sn].get(k, "")) for k in h[1:]]
-                    rows.append("\t".join(l))
-
-                body = "\n".join(rows)
-
                 print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
@@ -119,7 +126,38 @@ def view_all_tags(ctx, param, value):
                 avail_tags[t] = []
             avail_tags[t].append(mod_key)
     for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print(" - {}:".format(t))
+        print(f" - {t}:")
         for ttgs in avail_tags[t]:
-            print("   - {}".format(ttgs))
+            print(f"   - {ttgs}")
     ctx.exit()
+
+
+def force_term_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None
+
+
+def strtobool(val) -> bool:
+    """
+    Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
+    The deprecation recommendation is to re-implement the function https://peps.python.org/pep-0632/
+
+    ------------------------------------------------------------
+
+    Convert a string representation of truth to true (1) or false (0).
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    """
+    val = val.lower()
+    if val in ("y", "yes", "t", "true", "on", "1"):
+        return True
+    elif val in ("n", "no", "f", "false", "off", "0"):
+        return False
+    else:
+        raise ValueError(f"invalid truth value {val!r}")

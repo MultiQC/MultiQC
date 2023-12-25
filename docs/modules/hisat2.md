@@ -1,7 +1,7 @@
 ---
-Name: HISAT2
-URL: https://ccb.jhu.edu/software/hisat2/
-Description: >
+name: HISAT2
+url: https://ccb.jhu.edu/software/hisat2/
+description: >
   HISAT2 is a fast and sensitive alignment program for mapping NGS reads
   (both DNA and RNA) to reference genomes.
 ---
@@ -19,7 +19,7 @@ Note that running HISAT2 without this option (and older versions)
 gives log output identical to Bowtie2. These logs are indistinguishable
 and summary statistics will appear in MultiQC reports labelled as Bowtie2.
 See GitHub issues on the [HISAT2 repository](https://github.com/infphilo/hisat2/issues/48)
-and the [MultiQC repository](https://github.com/ewels/MultiQC/issues/221)
+and the [MultiQC repository](https://github.com/MultiQC/MultiQC/issues/221)
 for more information.
 
 HISAT2 does not report the input file names in the log, so MultiQC

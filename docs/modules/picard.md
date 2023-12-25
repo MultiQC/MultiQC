@@ -1,7 +1,7 @@
 ---
-Name: Picard
-URL: http://broadinstitute.github.io/picard/
-Description: >
+name: Picard
+url: http://broadinstitute.github.io/picard/
+description: >
   Picard is a set of Java command line tools for manipulating high-throughput
   sequencing data.
 ---
@@ -34,7 +34,7 @@ Supported commands:
 - `VariantCallingMetrics`
 - `WgsMetrics`
 
-#### Coverage Levels
+### Coverage Levels
 
 It's possible to customise the HsMetrics _"Target Bases 30X"_ coverage and
 WgsMetrics _"Fraction of Bases over 30X"_ that are
@@ -59,7 +59,7 @@ picard_config:
     - 50
 ```
 
-#### CrosscheckFingerprints
+### CrosscheckFingerprints
 
 In addition to adding a table of results, a `Crosschecks All Expected` column will be added to the General Statistics. If all comparisons for a sample were `Expected`, then the value of the field will be `True` and green. If not it will be `False` and Red.
 
@@ -79,7 +79,7 @@ The column names will be normalized, ex `LOD_SCORE -> Lod score`.
 
 Note that if `CALCULATE_TUMOR_AWARE_RESULTS` was set to true on the CLI for any of the CrosscheckFingerprints result files, then the `LOD_SCORE_TUMOR_NORMAL` and `LOD_SCORE_NORMAL_TUMOR` will be displayed.
 
-#### HsMetrics
+### HsMetrics
 
 Note that the _Target Region Coverage_ plot is generated using the `PCT_TARGET_BASES_` table columns from the HsMetrics output (not immediately obvious when looking at the log files).
 
@@ -100,7 +100,17 @@ picard_config:
 Only values listed in `HsMetrics_table_cols` will be included in the table.
 Anything listed in `HsMetrics_table_cols_hidden` will be hidden by default.
 
-#### InsertSizeMetrics
+A similar config is available for customising the HsMetrics columns in the General Stats table:
+
+```yaml
+picard_config:
+  HsMetrics_genstats_table_cols:
+    - NEAR_BAIT_BASES
+  HsMetrics_genstats_table_cols_hidden:
+    - MAX_TARGET_COVERAGE
+```
+
+### InsertSizeMetrics
 
 By default, the insert size plot is smoothed to contain a maximum of 500 data points per sample.
 This is to prevent the MultiQC report from being very large with big datasets.
@@ -119,7 +129,7 @@ picard_config:
   insertsize_xmax: 10000
 ```
 
-#### MarkDuplicates
+### MarkDuplicates
 
 If a `BAM` file contains multiple read groups, Picard MarkDuplicates generates a report
 with multiple metric lines, one for each "library".
@@ -141,7 +151,7 @@ This prevents the merge and recalculation and appends the library name to the sa
 This behaviour is present in MultiQC since version 1.9. Before this, only the metrics from the
 first library were taken and all others were ignored.
 
-#### ValidateSamFile Search Pattern
+### ValidateSamFile Search Pattern
 
 Generally, Picard adds identifiable content to the output of function calls. This is not the case for ValidateSamFile. In order to identify logs the MultiQC Picard submodule `ValidateSamFile` will search for filenames that contain 'validatesamfile' or 'ValidateSamFile'. One can customise the used search pattern by overwriting the `picard/sam_file_validation` pattern in your MultiQC config. For example:
 
@@ -151,7 +161,7 @@ sp:
     fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 ```
 
-#### WgsMetrics
+### WgsMetrics
 
 The coverage histogram from Picard typically shows a normal distribution with a very long tail.
 To make the plot easier to view, by default the module plots the line up to 99% of the data.
@@ -192,3 +202,26 @@ picard_config:
 This will omit that section from the report entirely, and also skip parsing the histogram data.
 By specifying this option you may speed up the run time for MultiQC with these types of files
 significantly.
+
+### Sample names
+
+MultiQC supports outputs from multiple runs of a Picard tool merged together into one
+file. In order to handle multiple sample data in on file correctly, MultiQC needed
+to take the sample name elsewhere rather than the file name. For this reason, MultiQC
+attempts to parse the command line recorded in the output header. For example, an
+output from the `GcBias` tool contains a header line like this:
+
+```
+# net.sf.picard.analysis.CollectGcBiasMetrics REFERENCE_SEQUENCE=/reference/genome.fa
+INPUT=/alignments/P0001_101/P0001_101.bam OUTPUT=P0001_101.collectGcBias.txt ...
+```
+
+MultiQC would extract the BAM file name that goes after `INPUT=` and take `P0001_101`
+as a sample name. If MultiQC fails to parse the command line for any reason, it will
+fall back to using the file name. It is also possible to force using the file names
+as sample names by enabling the following config option:
+
+```yaml
+picard_config:
+  s_name_filenames: true
+```

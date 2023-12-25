@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC submodule to parse output from deepTools bamPEFragmentSize for read length distribution """
 
 import logging
@@ -18,10 +16,14 @@ class bamPEFragmentSizeDistributionMixin:
             parsed_data = self.parseBamPEFDistributionFile(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_bamPEFragmentSizeDistribution:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_bamPEFragmentSizeDistribution[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="bamPEFragmentSizeDistribution")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_bamPEFragmentSizeDistribution = self.ignore_samples(self.deeptools_bamPEFragmentSizeDistribution)
 

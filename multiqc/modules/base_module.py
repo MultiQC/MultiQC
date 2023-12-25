@@ -1,21 +1,25 @@
-#!/usr/bin/env python
-
 """ MultiQC modules base class, contains helper functions """
+from typing import List, Union, Optional
 
-from __future__ import print_function
-from collections import OrderedDict
-import io
 import fnmatch
+import io
+import itertools
 import logging
-import markdown
 import mimetypes
 import os
 import re
 import textwrap
+from collections import defaultdict
 
-from multiqc.utils import report, config, util_functions
+import markdown
+
+from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
+
+
+class ModuleNoSamplesFound(Exception):
+    """Module checked all input files but couldn't find any data to use"""
 
 
 class BaseMultiqcModule(object):
@@ -30,9 +34,8 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=[],
+        doi=None,
     ):
-
         # Custom options from user config that can overwrite base module values
         mod_cust_config = getattr(self, "mod_cust_config", {})
         self.name = mod_cust_config.get("name", name)
@@ -42,7 +45,10 @@ class BaseMultiqcModule(object):
         self.info = mod_cust_config.get("info", info)
         self.comment = mod_cust_config.get("comment", comment)
         self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", doi)
+        self.doi = mod_cust_config.get("doi", (doi or []))
+
+        # List of software version(s) for module. Don't append directly, use add_software_version()
+        self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: mod_cust_config.get("custom_config", {})})
@@ -62,8 +68,9 @@ class BaseMultiqcModule(object):
         if self.extra is None:
             self.extra = ""
         self.doi_link = ""
-        if type(self.doi) is str:
+        if isinstance(self.doi, str):
             self.doi = [self.doi]
+        self.doi = [i for i in self.doi if i != ""]
         if len(self.doi) > 0:
             doi_links = []
             for doi in self.doi:
@@ -78,11 +85,11 @@ class BaseMultiqcModule(object):
         if target is None:
             target = self.name
         if self.href is not None:
-            self.mname = '<a href="{}" target="_blank">{}</a>'.format(self.href, target)
+            self.mname = f'<a href="{self.href}" target="_blank">{target}</a>'
         else:
             self.mname = target
         if self.href or self.info or self.extra or self.doi_link:
-            self.intro = "<p>{} {}{}</p>{}".format(self.mname, self.info, self.doi_link, self.extra)
+            self.intro = f"<p>{self.mname} {self.info}{self.doi_link}</p>{self.extra}"
 
         # Format the markdown strings
         if autoformat:
@@ -108,6 +115,10 @@ class BaseMultiqcModule(object):
         # Allows modules to be called multiple times with different sets of files
         path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
         path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
+        if isinstance(path_filters, str):
+            path_filters = [path_filters]
+        if isinstance(path_filters_exclude, str):
+            path_filters_exclude = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -116,7 +127,7 @@ class BaseMultiqcModule(object):
                 if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
                     report.files[self.name].append({"fn": sf[0], "root": sf[1]})
             sp_key = self.name
-            logwarn = "Depreciation Warning: {} - Please use new style for find_log_files()".format(self.name)
+            logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
             if len(report.files[self.name]) > 0:
                 logger.warning(logwarn)
             else:
@@ -131,28 +142,41 @@ class BaseMultiqcModule(object):
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
-                exlusion_hits = (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude)
+                # Try both the given path and also the path prefixed with the analysis dirs
+                exlusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    *(
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            for pfe in path_filters_exclude
+                        )
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if any(exlusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it matched the path_filters_exclude for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
                     continue
 
             # Filter out files based on inclusion patterns
             if path_filters and len(path_filters) > 0:
-                inclusion_hits = (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters)
+                # Try both the given path and also the path prefixed with the analyis dirs
+                inclusion_hits = itertools.chain(
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    *(
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        for analysis_dir in config.analysis_dir
+                    ),
+                )
                 if not any(inclusion_hits):
                     logger.debug(
-                        "{} - Skipping '{}' as it didn't match the path_filters for '{}'".format(
-                            sp_key, f["fn"], self.name
-                        )
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        "{} - Selecting '{}' as it matched the path_filters for '{}'".format(sp_key, f["fn"], self.name)
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
                     )
 
             # Make a sample name from the filename
@@ -176,10 +200,9 @@ class BaseMultiqcModule(object):
                             elif filecontents:
                                 f["f"] = fh.read()
                                 yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-                    if config.report_readerrors:
-                        logger.debug("Couldn't open filehandle when returning file: {}\n{}".format(f["fn"], e))
-                        f["f"] = None
+                except (IOError, OSError, ValueError, UnicodeDecodeError):
+                    logger.debug("Couldn't open filehandle when returning file: {f['fn']}\n{e}")
+                    f["f"] = None
             else:
                 yield f
 
@@ -201,22 +224,22 @@ class BaseMultiqcModule(object):
         if anchor is None:
             if name is not None:
                 nid = name.lower().strip().replace(" ", "-")
-                anchor = "{}-{}".format(self.anchor, nid)
+                anchor = f"{self.anchor}-{nid}"
             else:
                 sl = len(self.sections) + 1
-                anchor = "{}-section-{}".format(self.anchor, sl)
+                anchor = f"{self.anchor}-section-{sl}"
 
         # Append custom module anchor to the section if set
         mod_cust_config = getattr(self, "mod_cust_config", {})
         if "anchor" in mod_cust_config:
-            anchor = "{}_{}".format(mod_cust_config["anchor"], anchor)
+            anchor = f"{mod_cust_config['anchor']}_{anchor}"
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
-            logger.debug("Skipping section '{}' because specified in user config".format(anchor))
+            logger.debug(f"Skipping section '{anchor}' because specified in user config")
             return
 
         # See if we have a user comment in the config
@@ -258,14 +281,64 @@ class BaseMultiqcModule(object):
             }
         )
 
-    def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
-        """Helper function to take a long file name and strip it
-        back to a clean sample name. Somewhat arbitrary.
-        :param s_name: The sample name to clean
+    @staticmethod
+    def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
+        """
+        Try trimming r1 and r2 as paired FASTQ file names.
+        """
+        # Try trimming the conventional illumina suffix with a tail 001 ending. Refs:
+        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/NamingConvention_FASTQ-files-swBS.htm
+        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text=10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
+        cleaned_r1 = re.sub(r"_R1_\d{3}$", "", r1)
+        cleaned_r2 = re.sub(r"_R2_\d{3}$", "", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        # Try removing _R1 and _R2 from the middle.
+        cleaned_r1 = re.sub(r"_R1_", "_", r1)
+        cleaned_r2 = re.sub(r"_R2_", "_", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        # Try trimming other variations from the end (-R1, _r1, _1, .1, etc).
+        cleaned_r1 = re.sub(r"([_.-][rR]?1)?$", "", r1)
+        cleaned_r2 = re.sub(r"([_.-][rR]?2)?$", "", r2)
+        if cleaned_r1 == cleaned_r2:  # trimmed successfully
+            return cleaned_r1
+
+        return None
+
+    def clean_s_name(self, s_name: Union[str, List[str]], f=None, root=None, filename=None, seach_pattern_key=None):
+        """
+        Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
+        :param s_name: The sample name(s) to clean.
         :param root: The directory path that this file is within
         :config.prepend_dirs: boolean, whether to prepend dir name to s_name
         :return: The cleaned sample name, ready to be used
         """
+        if isinstance(s_name, list):
+            if len(s_name) == 0:
+                raise ValueError("Empty list of sample names passed to clean_s_name()")
+
+            # Extract a sample name from a list of file names (for example, FASTQ pairs).
+            # Each name is cleaned separately first:
+            clean_names = [
+                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                for sn in s_name
+            ]
+            if len(set(clean_names)) == 1:
+                # All the same, returning the first one.
+                return clean_names[0]
+
+            if len(clean_names) == 2:
+                # Checking if it's a FASTQ pair.
+                fastq_s_name = self._clean_fastq_pair(*clean_names)
+                if fastq_s_name is not None:
+                    return fastq_s_name
+
+            # Couldn't clean as FASTQ. Just concatenating the clean names.
+            return "_".join(clean_names)
+
         s_name_original = s_name
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
@@ -305,7 +378,7 @@ class BaseMultiqcModule(object):
         # Prepend sample name with directory
         if config.prepend_dirs:
             sep = config.prepend_dirs_sep
-            root = root.lstrip(".{}".format(os.sep))
+            root = root.lstrip(f".{os.sep}")
             dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
@@ -314,20 +387,20 @@ class BaseMultiqcModule(object):
                 else:
                     dirs = dirs[:d_idx]
             if len(dirs) > 0:
-                s_name = "{}{}{}".format(sep.join(dirs), sep, s_name)
+                s_name = f"{sep.join(dirs)}{sep}{s_name}"
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
             for ext in config.fn_clean_exts:
                 # Check if this config is limited to a module
                 if "module" in ext:
-                    if type(ext["module"]) is str:
+                    if isinstance(ext["module"], str):
                         ext["module"] = [ext["module"]]
                     if not any([m == self.anchor for m in ext["module"]]):
                         continue
 
                 # Go through different filter types
-                if type(ext) is str:
+                if isinstance(ext, str):
                     ext = {"type": "truncate", "pattern": ext}
                 if ext.get("type") == "truncate":
                     s_name = s_name.split(ext["pattern"], 1)[0]
@@ -344,9 +417,9 @@ class BaseMultiqcModule(object):
                     match = re.search(ext["pattern"], s_name)
                     s_name = match.group() if match else s_name
                 elif ext.get("type") is None:
-                    logger.error('config.fn_clean_exts config was missing "type" key: {}'.format(ext))
+                    logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
-                    logger.error("Unrecognised config.fn_clean_exts type: {}".format(ext.get("type")))
+                    logger.error(f"Unrecognised config.fn_clean_exts type: {ext.get('type')}")
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
                 if s_name.endswith(chrs):
@@ -386,16 +459,14 @@ class BaseMultiqcModule(object):
                         else:
                             s_name = s_name.replace(s_name_search, s_name_replace)
                 except re.error as e:
-                    logger.error("Error with sample name replacement regex: {}".format(e))
+                    logger.error(f"Error with sample name replacement regex: {e}")
 
         return s_name
 
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if isinstance(data, OrderedDict):
-                newdata = OrderedDict()
-            elif isinstance(data, dict):
+            if isinstance(data, dict):
                 newdata = dict()
             else:
                 return data
@@ -418,16 +489,17 @@ class BaseMultiqcModule(object):
         in required config variables if not supplied.
         :param data: A dict with the data. First key should be sample name,
                      then the data key, then the data.
-        :param headers: Dict / OrderedDict with information for the headers,
+        :param headers: Dict with information for the headers,
                         such as colour scales, min and max values etc.
                         See docs/writing_python.md for more information.
+        :param namespace: Append to the module name in the table column description.
+                          Can be e.g. a submodule name.
         :return: None
         """
         if headers is None:
             headers = {}
-        # Use the module namespace as the name if not supplied
-        if namespace is None:
-            namespace = self.name
+        # Deepish copy of headers so that we can modify it in place
+        headers = {k: v.copy() for k, v in headers.items()}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -436,15 +508,18 @@ class BaseMultiqcModule(object):
                 hs.update(d.keys())
             hs = list(hs)
             hs.sort()
-            headers = OrderedDict()
+            headers = dict()
             for k in hs:
                 headers[k] = dict()
 
         # Add the module name to the description if not already done
         keys = headers.keys()
         for k in keys:
-            if "namespace" not in headers[k]:
-                headers[k]["namespace"] = namespace
+            # Prepend the namespace displayed in the table with the module name
+            namespace = headers[k].get("namespace", namespace)
+            headers[k]["namespace"] = self.name
+            if namespace:
+                headers[k]["namespace"] = self.name + ": " + namespace
             if "description" not in headers[k]:
                 headers[k]["description"] = headers[k].get("title", k)
 
@@ -464,7 +539,44 @@ class BaseMultiqcModule(object):
                 source = os.path.abspath(os.path.join(f["root"], f["fn"]))
             report.data_sources[module][section][s_name] = source
         except AttributeError:
-            logger.warning("Tried to add data source for {}, but was missing fields data".format(self.name))
+            logger.warning(f"Tried to add data source for {self.name}, but was missing fields data")
+
+    def add_software_version(self, version: str = None, sample: str = None, software_name: str = None):
+        """Save software versions for module."""
+        # Don't add if version is None. This allows every module to call this function
+        # even those without a version to add. This is useful to check that all modules
+        # are calling this function.
+        if version is None:
+            return
+
+        # Don't add if version detection is disabled
+        if config.disable_version_detection:
+            return
+
+        # Don't add if sample is ignored
+        if sample is not None and self.is_ignore_sample(sample):
+            return
+
+        # Use module name as software name if not specified
+        if software_name is None:
+            software_name = self.name
+
+        # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
+        # Otherwise, use raw string is used for version.
+        # - https://peps.python.org/pep-0440/
+        version = software_versions.parse_version(version)
+
+        if version in self.versions[software_name]:
+            return
+
+        self.versions[software_name].append(version)
+
+        # Sort version in order newest --> oldest
+        self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
+
+        # Update version list for report section.
+        group_name = self.name
+        report.software_versions[group_name][software_name] = self.versions[software_name]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects
@@ -473,13 +585,13 @@ class BaseMultiqcModule(object):
         # Append custom module anchor if set
         mod_cust_config = getattr(self, "mod_cust_config", {})
         if "anchor" in mod_cust_config:
-            fn = "{}_{}".format(fn, mod_cust_config["anchor"])
+            fn = f"{fn}_{mod_cust_config['anchor']}"
 
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
         base_fn = fn
         while fn in report.saved_raw_data:
-            fn = "{}_{}".format(base_fn, i)
+            fn = f"{base_fn}_{i}"
             i += 1
 
         # Save the file
