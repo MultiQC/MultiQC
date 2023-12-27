@@ -383,10 +383,10 @@ happy:
 htseq:
   contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
-pairtools:
-  contents: 'total_single_sided_mapped'
-  num_lines: 20
-  contents: 'pair_types'
+pairtools_stats:
+  contents:
+    - "total_single_sided_mapped"
+    - "pair_types"
   num_lines: 20
 hicexplorer:
   contents: "Min rest. site distance"

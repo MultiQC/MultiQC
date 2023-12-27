@@ -5,6 +5,7 @@
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 from multiqc.utils import report
 from multiqc import config
@@ -39,13 +40,17 @@ class MultiqcModule(BaseMultiqcModule):
             name="pairtools",
             anchor="pairtools",
             href="https://github.com/mirnylab/pairtools",
-            info="pairtools is a command-line framework for processing sequencing data"
-            " generated with Chromatin Conformation Capture based experiments:"
-            " pairtools can handle pairs of short-reads aligned to a reference genome,"
-            " extract 3C-specific information and perform common tasks, such as sorting,"
-            " filtering and deduplication.",
-            doi="10.5281/zenodo.1490830",
+            info="""pairtools is a command-line framework for processing sequencing data
+            generated with Chromatin Conformation Capture based experiments:
+            pairtools can handle pairs of short-reads aligned to a reference genome,
+            extract 3C-specific information and perform common tasks, such as sorting,
+            filtering and deduplication.""",
+            doi=["10.5281/zenodo.1490830", "10.1101/2023.02.13.528389"],
         )
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Find and load any pairtools stats summary files:
         self.pairtools_stats = {}
@@ -57,9 +62,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
 
         if len(self.pairtools_stats) == 0:
-            raise UserWarning("No reports to use.")
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.pairtools_stats)} reports")
+
+        # Write parsed report data to a file
+        self.write_data_file(self.pairtools_stats, "multiqc_pairtools")
 
         # Add to self.js to be included in template
         self.js = {
@@ -104,8 +112,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="Number of pairs classified according to their alignment status,"
             " including uniquely mapped (UU), unmapped (NN), duplicated (DD), and others.",
             helptext="""For further details check
-                        <a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > pairtools</a>
-                        documentation.""",
+            <a href=\"https://pairtools.readthedocs.io/en/latest/formats.html#pair-types\" > pairtools</a>
+            documentation.""",
             plot=self.pair_types_chart(),
         )
 
