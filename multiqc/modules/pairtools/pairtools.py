@@ -57,6 +57,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("pairtools", filehandles=True):
             s_name = f["s_name"]
             self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
+            # Add file to multiqc_sources.txt
+            self.add_data_source(f, s_name=s_name)
+
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
