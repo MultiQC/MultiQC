@@ -384,9 +384,8 @@ htseq:
   contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
 pairtools:
-  - contents: "total_single_sided_mapped"
-    contents: "pair_types"
-    num_lines: 20
+  contents_re: "total_single_sided_mapped\\t(\\d+)"
+  num_lines: 10
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096

@@ -33,7 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
     stats produced by pairtools."""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="pairtools",
@@ -58,7 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
             # Add file to multiqc_sources.txt
             self.add_data_source(f, s_name=s_name)
-
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -397,7 +395,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return linegraph.plot([_data[cat] for cat in data_cats], pconfig=pconfig)
-
 
     def pairtools_general_stats(self):
         """Add columns to General Statistics table"""
