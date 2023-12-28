@@ -278,12 +278,6 @@ class MultiqcModule(BaseMultiqcModule):
             cluster_length = int(read_length_r1) + int(read_length_r2)
         return {"run_id": run_id, "cluster_length": cluster_length}
 
-    def _find_log_files_and_sort(self, search_pattern, sort_field):
-        logs = list()
-        for m in self.find_log_files(search_pattern):
-            logs.append(m)
-        return sorted(logs, key=lambda i: i[sort_field])  # sort on root directory
-
     def _collate_log_files(self):
         # This function returns a list of self.find_log_files('bclconvert/demux') dicts,
         # with the run_id added on, sorted by root directory
