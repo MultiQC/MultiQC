@@ -1040,9 +1040,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data.values()]) < 1:
-            plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(
-                len(data)
-            )
+            plot_html = f'<div class="alert alert-info">{len(data)} samples had less than 1% of reads made up of overrepresented sequences</div>'
         else:
             # Split by Read 1/2, Raw/Trimmed
             data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
@@ -1332,7 +1330,7 @@ class MultiqcModule(BaseMultiqcModule):
             for i in range(len(data)):
                 read_num = math.ceil((i + 2) / 2)
                 read_type = "(trimmed)" if i % 2 else "(raw)"
-                pconfig["data_labels"].append({"name": "Read {} {}".format(read_num, read_type)})
+                pconfig["data_labels"].append({"name": f"Read {read_num} {read_type}"})
         return data, pconfig
 
 
@@ -1344,7 +1342,7 @@ def _split_data_by_group(s_groups, data: Dict[str, Dict]):
     first list item. The second of each group in the second and so on.
     """
     gdata: List[Dict[str, Dict]] = list()
-    for n in range(max(len(k) for k in s_groups.values())):
+    for n in range(max(len(group_s_names) for group_s_names in s_groups.values())):
         gdata.append(dict())
     for s_names in s_groups.values():
         for idx, s_name in enumerate(s_names):
