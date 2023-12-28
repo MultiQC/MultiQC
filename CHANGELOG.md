@@ -10,8 +10,8 @@
 
 ### New modules
 
-- [**pairtools**](https://github.com/open2c/pairtools)
-  * pairtools - command-line framework to process sequencing data from a Hi-C experiment
+- [**pairtools**](https://github.com/open2c/pairtools) ([#1148](https://github.com/MultiQC/MultiQC/pull/1148))
+  - pairtools - command-line framework to process sequencing data from a Hi-C experiment
 
 ### Module updates
 
@@ -493,8 +493,6 @@ for more information.
 
 ### New Modules
 
-
-=======
 - [**CheckQC**](https://github.com/Molmed/checkQC)
   - A program designed to check a set of quality criteria against an Illumina runfolder
 - [**pbmarkdup**](https://github.com/PacificBiosciences/pbmarkdup)
@@ -512,7 +510,6 @@ for more information.
   - Added mean coverage [#1566](https://github.com/ewels/MultiQC/issues/1566)
 - **NanoStat**
   - Recognize FASTA and FastQ report flavors ([#1547](https://github.com/ewels/MultiQC/issues/1547))
->>>>>>> upstream/main
 
 ### Module updates
 
