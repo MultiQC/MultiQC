@@ -1290,20 +1290,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=heatmap.plot(data, list(status_cats.values()), s_names, pconfig),
         )
 
-    def avg_bp_from_range(self, bp):
-        """Helper function - FastQC often gives base pair ranges (eg. 10-15)
-        which are not helpful when plotting. This returns the average from such
-        ranges as an int, which is helpful. If not a range, just returns the int"""
-
-        try:
-            if "-" in bp:
-                maxlen = float(bp.split("-", 1)[1])
-                minlen = float(bp.split("-", 1)[0])
-                bp = ((maxlen - minlen) / 2) + minlen
-        except TypeError:
-            pass
-        return int(bp)
-
     def get_status_cols(self, section):
         """Helper function - returns a list of colours according to the FastQC
         status of this module for each sample."""
@@ -1348,3 +1334,20 @@ def _split_data_by_group(s_groups, data: Dict[str, Dict]):
         for idx, s_name in enumerate(s_names):
             gdata[idx][s_name] = data[s_name]
     return gdata
+
+
+def avg_bp_from_range(bp: str) -> int:
+    """
+    Helper function - FastQC often gives base pair ranges (e.g. 10-15)
+    which are not helpful when plotting. This returns the average from such
+    ranges as an int, which is helpful. If not a range, just returns the int
+    """
+
+    try:
+        if "-" in bp:
+            maxlen = float(bp.split("-", 1)[1])
+            minlen = float(bp.split("-", 1)[0])
+            bp = ((maxlen - minlen) / 2) + minlen
+    except TypeError:
+        pass
+    return int(bp)
