@@ -7,7 +7,6 @@ import logging
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.base_module import ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.utils import report
 from multiqc import config
 
 import os
@@ -120,20 +119,21 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.pair_types_chart(),
         )
 
-        self.add_section(
-            name="Pre-filtered pairs by genomic location",
-            anchor="cis-ranges-trans",
-            description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
-            " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
-            helptext="""
-            Samples can have different distributions of pairs by genomic locations for various biological
-            and technical differences. Biological examples: cell-cycle differences,
-            differentitation stages difference, mutations affecting genome organization, etc.
-            Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
-            Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
-            Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
-            plot=self.pairs_by_cisrange_trans(),
-        )
+        if not cis_dists_mismatch:
+            self.add_section(
+                name="Pre-filtered pairs by genomic location",
+                anchor="cis-ranges-trans",
+                description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
+                " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
+                helptext="""
+                Samples can have different distributions of pairs by genomic locations for various biological
+                and technical differences. Biological examples: cell-cycle differences,
+                differentitation stages difference, mutations affecting genome organization, etc.
+                Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
+                Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
+                Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
+                plot=self.pairs_by_cisrange_trans(),
+            )
 
         self.add_section(
             name="Pre-filtered pairs as a function of genomic separation - in detail",

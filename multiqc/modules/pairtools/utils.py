@@ -135,10 +135,10 @@ def read_stats_from_file(file_handle):
     stat_from_file["dist_bins"] = _dist_bins
 
     # line by line parsing
-    for l in file_handle:
-        fields = l.strip().split(_SEP)
+    for _line in file_handle:
+        fields = _line.strip().split(_SEP)
         # skip empty or commented lines
-        if l.startswith("#") or (len(fields) == 0):
+        if _line.startswith("#") or (len(fields) == 0):
             continue
         # raise exception is it does not look like TAB-separated key,value:
         elif len(fields) != 2:
