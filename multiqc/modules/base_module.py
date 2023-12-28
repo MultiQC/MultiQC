@@ -314,18 +314,21 @@ class BaseMultiqcModule(object):
         f=None,
         root=None,
         filename=None,
-        seach_pattern_key=None,
-        patterns: Optional[List[Dict[str, Union[str, List[str]]]]] = None,
-        trim_patterns: Optional[List[str]] = None,
+        search_pattern_key=None,
+        fn_clean_exts: Optional[List[Dict[str, Union[str, List[str]]]]] = None,
+        fn_clean_trim: Optional[List[str]] = None,
         prepend_dirs: Optional[bool] = None,
     ):
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
         :param s_name: The sample name(s) to clean.
-        :param root: The directory path that this file is within
-        :patterns: patterns to use for cleaning (default: config.fn_clean_exts)
-        :trim_patterns: patterns to use for trimming (default: config.fn_clean_trim)
-        :prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
+        :param f: the file dict from find_log_files() that this file is within
+        :param root: the directory path that this file is within
+        :param filename: the base name of the file
+        :param search_pattern_key: the search pattern key that this file matched
+        :param fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
+        :param fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
+        :param prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
         :return: The cleaned sample name, ready to be used
         """
         if isinstance(s_name, list):
@@ -335,7 +338,16 @@ class BaseMultiqcModule(object):
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                self.clean_s_name(
+                    sn,
+                    f=f,
+                    root=root,
+                    filename=filename,
+                    search_pattern_key=search_pattern_key,
+                    fn_clean_exts=fn_clean_exts,
+                    fn_clean_trim=fn_clean_trim,
+                    prepend_dirs=prepend_dirs,
+                )
                 for sn in s_name
             ]
             if len(set(clean_names)) == 1:
@@ -364,8 +376,8 @@ class BaseMultiqcModule(object):
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
-            if "sp_key" in f and seach_pattern_key is None:
-                seach_pattern_key = f["sp_key"]
+            if "sp_key" in f and search_pattern_key is None:
+                search_pattern_key = f["sp_key"]
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
@@ -373,8 +385,8 @@ class BaseMultiqcModule(object):
             config.use_filename_as_sample_name is True
             or (
                 isinstance(config.use_filename_as_sample_name, list)
-                and seach_pattern_key is not None
-                and seach_pattern_key in config.use_filename_as_sample_name
+                and search_pattern_key is not None
+                and search_pattern_key in config.use_filename_as_sample_name
             )
         ):
             s_name = filename
@@ -386,14 +398,14 @@ class BaseMultiqcModule(object):
         # Set root to empty string if not known
         if root is None:
             root = ""
-        if patterns is None:
-            patterns = config.fn_clean_exts
-        if trim_patterns is None:
-            trim_patterns = config.fn_clean_trim
+        if fn_clean_exts is None:
+            fn_clean_exts = config.fn_clean_exts
+        if fn_clean_trim is None:
+            fn_clean_trim = config.fn_clean_trim
         if prepend_dirs is None:
             prepend_dirs = config.prepend_dirs
         # Prepend sample name with directory
-        if config.prepend_dirs:
+        if prepend_dirs:
             sep = config.prepend_dirs_sep
             root = root.lstrip(f".{os.sep}")
             dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
@@ -408,7 +420,11 @@ class BaseMultiqcModule(object):
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            for ext in patterns:
+            for ext in fn_clean_exts:
+                # Go through different filter types
+                if isinstance(ext, str):
+                    ext = {"type": "truncate", "pattern": ext}
+
                 # Check if this config is limited to a module
                 if "module" in ext:
                     if isinstance(ext["module"], str):
@@ -416,9 +432,6 @@ class BaseMultiqcModule(object):
                     if not any([m == self.anchor for m in ext["module"]]):
                         continue
 
-                # Go through different filter types
-                if isinstance(ext, str):
-                    ext = {"type": "truncate", "pattern": ext}
                 if ext.get("type") == "truncate":
                     s_name = s_name.split(ext["pattern"], 1)[0]
                 elif ext.get("type") in ("remove", "replace"):
@@ -437,8 +450,9 @@ class BaseMultiqcModule(object):
                     logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
                     logger.error(f"Unrecognised sample name cleaning pattern: {ext.get('type')}")
+
             # Trim off characters at the end of names
-            for characters in trim_patterns:
+            for characters in fn_clean_trim:
                 if s_name.endswith(characters):
                     s_name = s_name[: -len(characters)]
                 if s_name.startswith(characters):
@@ -498,7 +512,7 @@ class BaseMultiqcModule(object):
         # Go through the samples
         sample_groups = dict()
         for s_name in sorted(samples):
-            g_name = self.clean_s_name(s_name, patterns=c_patterns, trim_patterns=[], prepend_dirs=False)
+            g_name = self.clean_s_name(s_name, fn_clean_exts=c_patterns, fn_clean_trim=[], prepend_dirs=False)
             if g_name not in sample_groups:
                 sample_groups[g_name] = []
             sample_groups[g_name].append(s_name)
