@@ -8,6 +8,7 @@
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
 - Seqera CLI: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
 - Fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
+- BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 
 ### New modules
 
