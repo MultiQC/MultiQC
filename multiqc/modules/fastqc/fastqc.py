@@ -261,11 +261,9 @@ class MultiqcModule(BaseMultiqcModule):
             if data[s_name]["total_sequences"] == 0:
                 log.warning(f"Sample had zero reads: '{s_name}'")
 
-            try:
+            if "total_deduplicated_percentage" in bs:
                 # Older versions of FastQC don't have this
                 data[s_name]["percent_duplicates"] = 100 - bs["total_deduplicated_percentage"]
-            except KeyError:
-                pass
 
             # Add count of fail statuses
             num_statuses = 0
@@ -274,52 +272,48 @@ class MultiqcModule(BaseMultiqcModule):
                 num_statuses += 1
                 if s == "fail":
                     num_fails += 1
-            try:
+            if num_statuses > 0:
                 data[s_name]["percent_fails"] = (float(num_fails) / float(num_statuses)) * 100.0
-            except KeyError:
-                # If we had no reads then we have no sample in data
-                pass
 
         # Merge Read 1 + Read 2 data
         gdata = dict()
         merged_samples = False
         for g_name, s_names in self.fastqc_pair_groups.items():
+            if len(s_names) == 0:
+                continue
             if len(s_names) == 1:
                 gdata[s_names[0]] = data[s_names[0]]
-            else:
-                merged_samples = True
-                t_seqs = sum([data[s_name]["total_sequences"] for s_name in s_names])
-                avg_len = sum(
+                continue
+            merged_samples = True
+            t_seqs = sum([data[s_name]["total_sequences"] for s_name in s_names])
+            gdata[g_name] = {}
+            gdata[g_name]["total_sequences"] = t_seqs / len(s_names)
+            if t_seqs > 0:
+                gdata[g_name]["avg_sequence_length"] = sum(
                     [
                         float(data[s_name]["avg_sequence_length"]) * float(data[s_name]["total_sequences"])
                         for s_name in s_names
                     ]
                 ) / float(t_seqs)
-                percent_gc = sum(
+                gdata[g_name]["percent_gc"] = sum(
                     [float(data[s_name]["percent_gc"]) * float(data[s_name]["total_sequences"]) for s_name in s_names]
                 ) / float(t_seqs)
-                gdata[g_name] = {
-                    "total_sequences": float(t_seqs) / float(len(s_names)),
-                    "avg_sequence_length": avg_len,
-                    "percent_gc": percent_gc,
-                }
-                try:
+                if all("percent_duplicates" in data[s_name] for s_name in s_names):
                     gdata[g_name]["percent_duplicates"] = sum(
                         [
                             float(data[s_name]["percent_duplicates"]) * float(data[s_name]["total_sequences"])
                             for s_name in s_names
                         ]
                     ) / float(t_seqs)
-                except KeyError:
-                    pass
-                # Add count of fail statuses
-                num_statuses = 0
-                num_fails = 0
-                for s_name in s_names:
-                    for s in self.fastqc_data[s_name]["statuses"].values():
-                        num_statuses += 1
-                        if s == "fail":
-                            num_fails += 1
+            # Add count of fail statuses
+            num_statuses = 0
+            num_fails = 0
+            for s_name in s_names:
+                for s in self.fastqc_data[s_name]["statuses"].values():
+                    num_statuses += 1
+                    if s == "fail":
+                        num_fails += 1
+            if num_statuses > 0:
                 gdata[g_name]["percent_fails"] = (float(num_fails) / float(num_statuses)) * 100.0
 
         # Take only the trimmed data for the General Stats Table
@@ -443,9 +437,6 @@ class MultiqcModule(BaseMultiqcModule):
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
                 has_total = True
 
-        # Split by Read 1/2, Raw/Trimmed
-        pdata, pconfig = self.split_fastqc_data_by_group(pdata, pconfig)
-
         # Configure the cats and config according to what we found
         pcats = list()
         duptext = ""
@@ -457,6 +448,10 @@ class MultiqcModule(BaseMultiqcModule):
         if has_total and not has_dups:
             pconfig["use_legend"] = False
             pconfig["cpswitch"] = False
+
+        # Split by Read 1/2, Raw/Trimmed
+        pdata, pconfig = self.split_fastqc_data_by_group(pdata, pconfig)
+        pcats = [pcats for _ in range(len(pdata))]
 
         # Add the report section
         self.add_section(
@@ -1043,6 +1038,7 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             # Split by Read 1/2, Raw/Trimmed
             data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+            cats = [cats for _ in range(len(data))]
 
             plot_html = bargraph.plot(data, cats, pconfig)
 

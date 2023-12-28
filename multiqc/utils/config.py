@@ -2,7 +2,7 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import inspect
 
@@ -136,6 +136,7 @@ versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
 custom_content: Dict
+sample_merge_groups: Dict[str, List[Union[str, Dict[str, str]]]]
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
 fn_clean_exts: List
