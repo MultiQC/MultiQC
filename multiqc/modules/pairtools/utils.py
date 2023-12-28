@@ -2,8 +2,10 @@ import re
 import numpy as np
 from operator import itemgetter
 
+
 class ParseError(Exception):
     pass
+
 
 def genomic_dist_human_str(dist_in_bp):
     """
@@ -21,6 +23,7 @@ def genomic_dist_human_str(dist_in_bp):
     else:
         return ""
 
+
 def edges_to_intervals(edges):
     """
     turn an array of internal edges into an array of
@@ -30,6 +33,7 @@ def edges_to_intervals(edges):
     _edges = np.r_[0, edges, None]
     zippend_edges = zip(_edges[:-1], _edges[1:])
     return list(zippend_edges)
+
 
 def cumsums_to_rangesums(cumsums, total):
     """
@@ -41,6 +45,7 @@ def cumsums_to_rangesums(cumsums, total):
     """
     _cumcsums = np.r_[total, cumsums, 0]
     return list(_cumcsums[:-1] - _cumcsums[1:])
+
 
 def read_stats_from_file(file_handle):
     """
@@ -114,12 +119,7 @@ def read_stats_from_file(file_handle):
     stat_from_file["dedup"] = {}
 
     # currently we consider following cis distance ranges for the cumulative counts:
-    # cis_1kb+
-    # cis_2kb+
-    # cis_4kb+
-    # cis_10kb+
-    # cis_20kb+
-    # cis_40kb+
+    # cis_1kb+, cis_2kb+, cis_4kb+, cis_10kb+, cis_20kb+, cis_40kb+
     # we will store such values in a list of (dist_key, cumcount_val)
     stat_from_file["cis_dist"] = []
     cis_dist_pattern = r"cis_(\d+)kb\+"
@@ -159,7 +159,7 @@ def read_stats_from_file(file_handle):
             parsed_key_fields = _key_tmp.split(_KEY_SEP)
             # (A) key is not nested
             if len(parsed_key_fields) == 1:
-                key, = parsed_key_fields
+                (key,) = parsed_key_fields
                 # check if key matches "cis_dist_pattern"
                 key_match = re.fullmatch(cis_dist_pattern, key)
                 # extract 'dist' from key-regexp, store as [(dist,count)]
@@ -182,7 +182,7 @@ def read_stats_from_file(file_handle):
                     # assert there is only one element in parsed_key_fields left
                     # 'pair_types' and 'dedup' treated the same
                     try:
-                        sub_key, = parsed_key_fields
+                        (sub_key,) = parsed_key_fields
                         stat_from_file[root_key][sub_key] = value
                     except ValueError as e:
                         raise ParseError(f"{invalid_file_msg}{root_key} section implies 1 extra identifier") from e
