@@ -43,7 +43,17 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
 
-if "skip changelog" in pr_title.lower() or "no changelog" in pr_title.lower() or "bump version" in pr_title.lower():
+if any(
+    line in pr_title.lower()
+    for line in [
+        "skip changelog",
+        "skip change log",
+        "no changelog",
+        "no change log",
+        "bump version",
+    ]
+):
+    print("Skipping changelog update")
     sys.exit(0)
 
 
