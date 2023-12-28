@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -54,15 +53,12 @@ class MultiqcModule(BaseMultiqcModule):
                     # if there are duplicate sample names
                     if s_name in self.verifybamid_data:
                         # write this to log
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     # add the sample as a key to the verifybamid_data dictionary and the dictionary of values as the value
                     self.verifybamid_data[s_name] = parsed_data[s_name]
-                # add data source to multiqc_sources.txt
-                self.add_data_source(f, s_name)
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
+                    # add data source to multiqc_sources.txt
+                    self.add_data_source(f, s_name)
 
         # Filter to strip out ignored sample names as per config.yaml
         self.verifybamid_data = self.ignore_samples(self.verifybamid_data)
@@ -71,7 +67,11 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # print number of verifyBAMID reports found and parsed
-        log.info("Found {} reports".format(len(self.verifybamid_data)))
+        log.info(f"Found {len(self.verifybamid_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.verifybamid_data, "multiqc_verifybamid")
@@ -89,9 +89,9 @@ class MultiqcModule(BaseMultiqcModule):
         # set a empty variable which denotes if the headers have been read
         headers = None
         # for each line in the file
-        for l in f["f"].splitlines():
+        for line in f["f"].splitlines():
             # split the line on tab
-            s = l.split("\t")
+            s = line.split("\t")
             # if we haven't already read the header line
             if headers is None:
                 # assign this list to headers variable
@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report"""
 
         # create a dictionary to hold the columns to add to the general stats table
-        headers = OrderedDict()
+        headers = dict()
         # available columns are:
         # SEQ_ID RG  CHIP_ID #SNPS   #READS  AVG_DP  FREEMIX FREELK1 FREELK0 FREE_RH FREE_RA CHIPMIX CHIPLK1 CHIPLK0 CHIP_RH CHIP_RA DPREF   RDPHET  RDPALT
         # see https://genome.sph.umich.edu/wiki/VerifyBamID#Interpreting_output_files
@@ -163,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # create an ordered dictionary to preserve the order of columns
-        headers = OrderedDict()
+        headers = dict()
         # add each column and the title and description (taken from verifyBAMID website)
         headers["RG"] = {
             "title": "Read Group",
@@ -180,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "BuPu",
         }
         headers["#READS"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads loaded from the BAM file ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads loaded from the BAM file ({config.read_count_desc})",
             "format": "{:,.1f}",
             "modify": lambda x: x * config.read_count_multiplier if x != "NA" else x,
             "shared_key": "read_count",

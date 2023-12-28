@@ -45,7 +45,7 @@ class BaseRecalibratorMixin:
             rt_type = determine_recal_table_type(parsed_data)
             if len(parsed_data) > 0:
                 if f["s_name"] in samples_kept[rt_type]:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 samples_kept[rt_type].add(f["s_name"])
 
                 self.add_data_source(f, section="base_recalibrator")
@@ -60,7 +60,7 @@ class BaseRecalibratorMixin:
         n_reports_found = sum([len(samples_kept[rt_type]) for rt_type in recal_table_type])
 
         if n_reports_found > 0:
-            log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
+            log.info(f"Found {n_reports_found} BaseRecalibrator reports")
 
             # Write data to file
             self.write_data_file(self.gatk_base_recalibrator, "gatk_base_recalibrator")
@@ -106,12 +106,8 @@ class BaseRecalibratorMixin:
             sample_data.append(pct_data)
 
             # Build data label configs for this data type
-            data_labels.append(
-                {"name": "{} Count".format(rt_type_name.capitalize().replace("_", "-")), "ylab": "Count"}
-            )
-            data_labels.append(
-                {"name": "{} Percent".format(rt_type_name.capitalize().replace("_", "-")), "ylab": "Percent"}
-            )
+            data_labels.append({"name": f"{rt_type_name.capitalize().replace('_', '-')} Count", "ylab": "Count"})
+            data_labels.append({"name": f"{rt_type_name.capitalize().replace('_', '-')} Percent", "ylab": "Percent"})
 
         plot = linegraph.plot(
             sample_data,
@@ -176,6 +172,7 @@ class BaseRecalibratorMixin:
 
             # Build data label configs for this data type
             data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
+
         plot = scatter.plot(
             sample_data,
             pconfig={
@@ -185,6 +182,9 @@ class BaseRecalibratorMixin:
                 "ylab": "Empirical quality score",
                 "xDecimals": False,
                 "data_labels": data_labels,
+                "xmin": 0,
+                "ymin": 0,
+                "square": True,
             },
         )
 

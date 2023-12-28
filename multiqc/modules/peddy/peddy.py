@@ -3,7 +3,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
@@ -51,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # parse peddy CSV files
         for pattern in ["het_check", "ped_check", "sex_check"]:
-            sp_key = "peddy/{}".format(pattern)
+            sp_key = f"peddy/{pattern}"
             for f in self.find_log_files(sp_key):
                 # some columns have the same name in het_check and sex_check (median_depth)
                 # pass pattern to parse_peddy_csv so the column names can include pattern to
@@ -80,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.peddy_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.peddy_data)))
+        log.info(f"Found {len(self.peddy_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.peddy_data, "multiqc_peddy")
@@ -99,12 +98,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.peddy_sex_check_plot()
 
-    def parse_peddy_summary(self, f):
+    @staticmethod
+    def parse_peddy_summary(f):
         """Go through log file looking for peddy output"""
         parsed_data = dict()
         headers = None
-        for l in f["f"].splitlines():
-            s = l.split("\t")
+        for line in f["f"].splitlines():
+            s = line.split("\t")
             if headers is None:
                 s[0] = s[0].lstrip("#")
                 headers = s
@@ -125,8 +125,8 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = dict()
         headers = None
         s_name_idx = None
-        for l in f["f"].splitlines():
-            s = l.split(",")
+        for line in f["f"].splitlines():
+            s = line.split(",")
             if headers is None:
                 headers = s
                 try:
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
                     try:
                         s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
                     except ValueError:
-                        log.warning("Could not find sample name in Peddy output: {}".format(f["fn"]))
+                        log.warning(f"Could not find sample name in Peddy output: {f['fn']}")
                         return None
             else:
                 s_name = "-".join([s[idx] for idx in s_name_idx])
@@ -161,27 +161,28 @@ class MultiqcModule(BaseMultiqcModule):
 
         family_ids = [x.get("family_id") for x in self.peddy_data.values()]
 
-        headers = OrderedDict()
-        headers["family_id"] = {
-            "title": "Family ID",
-            "hidden": True if all([v == family_ids[0] for v in family_ids]) else False,
+        headers = {
+            "family_id": {
+                "title": "Family ID",
+                "hidden": True if all([v == family_ids[0] for v in family_ids]) else False,
+            },
+            "ancestry-prediction": {
+                "title": "Ancestry",
+                "description": "Ancestry Prediction",
+            },
+            "ancestry-prob_het_check": {
+                "title": "P(Ancestry)",
+                "description": "Probability predicted ancestry is correct.",
+            },
+            "sex_het_ratio": {
+                "title": "Sex / Het Ratio",
+            },
+            "error_sex_check": {
+                "title": "Correct Sex",
+                "description": "Displays False if error in sample sex prediction",
+            },
+            "predicted_sex_sex_check": {"title": "Sex", "description": "Predicted sex"},
         }
-        headers["ancestry-prediction"] = {
-            "title": "Ancestry",
-            "description": "Ancestry Prediction",
-        }
-        headers["ancestry-prob_het_check"] = {
-            "title": "P(Ancestry)",
-            "description": "Probability predicted ancestry is correct.",
-        }
-        headers["sex_het_ratio"] = {
-            "title": "Sex / Het Ratio",
-        }
-        headers["error_sex_check"] = {
-            "title": "Correct Sex",
-            "description": "Displays False if error in sample sex prediction",
-        }
-        headers["predicted_sex_sex_check"] = {"title": "Sex", "description": "Predicted sex"}
         self.general_stats_addcols(self.peddy_data, headers)
 
     def peddy_pca_plot(self):
@@ -192,16 +193,9 @@ class MultiqcModule(BaseMultiqcModule):
             "AFR": "rgb(92,200,99,1)",
             "EUR": "rgb(253,231,37,1)",
         }
-        background_ancestry_colors = {
-            "SAS": "rgb(68,1,81,0.1)",
-            "EAS": "rgb(59,81,139,0.1)",
-            "AMR": "rgb(33,144,141,0.1)",
-            "AFR": "rgb(92,200,99,0.1)",
-            "EUR": "rgb(253,231,37,0.1)",
-        }
         default_color = "#000000"
         default_background_color = "rgb(211,211,211,0.05)"
-        data = OrderedDict()
+        data = {}
 
         # plot the background data first, so it doesn't hide the actual data points
         d = self.peddy_data.pop("background_pca", {})

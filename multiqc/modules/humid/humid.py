@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from Lima """
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
+        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HUMID",
             anchor="humid",
@@ -36,6 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.humid)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.humid, "multiqc_humid")
 
         self.add_general_stats()
@@ -46,10 +50,6 @@ class MultiqcModule(BaseMultiqcModule):
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             s_name = self.clean_s_name(f["root"], f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
 
             # Read the statistics from file
             d = {}
@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Got this far, data must be good
             if s_name in self.humid:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.humid[s_name] = d
             self.add_data_source(f, s_name)
 
@@ -83,21 +83,23 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the number of unique reads (=clusters) to the general statistics
         # report
         data = {k: {"uniq": v["clusters"]} for k, v in self.humid.items()}
-        headers = OrderedDict()
-        headers["uniq"] = {
-            "title": f"{config.read_count_prefix} Unique",
-            "description": f"Number of unique reads after UMI deduplication ({config.read_count_desc})",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
+        headers = {
+            "uniq": {
+                "title": f"{config.read_count_prefix} Unique",
+                "description": f"Number of unique reads after UMI deduplication ({config.read_count_desc})",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            }
         }
         self.general_stats_addcols(data, headers)
 
     def add_humid_section(self):
         # The values we want to plot (add to the total number of reads)
-        cats = OrderedDict()
-        cats["clusters"] = {"name": "Unique reads"}
-        cats["duplicates"] = {"name": "Duplicate reads"}
-        cats["filtered"] = {"name": "Filtered reads"}
+        cats = {
+            "clusters": {"name": "Unique reads"},
+            "duplicates": {"name": "Duplicate reads"},
+            "filtered": {"name": "Filtered reads"},
+        }
 
         # Bargraph configuration
         config = {

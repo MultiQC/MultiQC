@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph
 
@@ -18,7 +18,7 @@ class DragenCoverageHist(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="wgs_fine_hist")
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
             # Superfluous function call to confirm that it is used in this module

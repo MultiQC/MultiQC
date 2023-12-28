@@ -3,7 +3,6 @@
 
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
@@ -35,10 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("mapdamage", filehandles=True):
             self.parse_logs(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.threepGtoAfreq_data = self.ignore_samples(self.threepGtoAfreq_data)
         self.fivepCtoTfreq_data = self.ignore_samples(self.fivepCtoTfreq_data)
@@ -53,6 +48,10 @@ class MultiqcModule(BaseMultiqcModule):
             and len(self.lgdist_rv_data) == 0
         ):
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         ## No need to run self.write_data_file as all the data imported is already in a TSV format and can be (almost) directly used for plotting.
 
@@ -116,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             return misincorporation_dict
         except Exception as e:
             print(e)
-            log.warning("Could not parse mapDamage misincorporation file: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse mapDamage misincorporation file: '{f['fn']}'")
             return None
 
     ## Parse length distribution file into a dict with 2 keys ('lendist_fw' and 'lendist_rv') and 1 value each (dict of {length : count})
@@ -140,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
             return length_distribution_dict
         except Exception as e:
             print(e)
-            log.warning("Could not parse mapDamage length distribution file: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse mapDamage length distribution file: '{f['fn']}'")
             return None
 
     # Parse input files
@@ -172,32 +171,32 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the mapDamage and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["mapdamage-{}1".format(readend)] = {
-            "id": "misinc-stats-1st-{}-{}".format(readend, substitution),
-            "title": "{} {} 1st base".format(readend, substitution),
-            "description": "{} 1st base substitution frequency for {}".format(readend, substitution),
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGnBu",
-            "modify": lambda x: x * 100.0,
-        }
-        headers["mapdamage-{}2".format(readend)] = {
-            "id": "misinc-stats-2nd-{}-{}".format(readend, substitution),
-            "title": "{} {} 2nd base".format(readend, substitution),
-            "description": "{} 2nd base substitution frequency for {}".format(readend, substitution),
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "BuGn",
-            "hidden": True,
-            "modify": lambda x: x * 100.0,
+        headers = {
+            f"mapdamage-{readend}1": {
+                "id": f"misinc-stats-1st-{readend}-{substitution}",
+                "title": f"{readend} {substitution} 1st base",
+                "description": f"{readend} 1st base substitution frequency for {substitution}",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGnBu",
+                "modify": lambda x: x * 100.0,
+            },
+            f"mapdamage-{readend}2": {
+                "id": f"misinc-stats-2nd-{readend}-{substitution}",
+                "title": f"{readend} {substitution} 2nd base",
+                "description": f"{readend} 2nd base substitution frequency for {substitution}",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "BuGn",
+                "hidden": True,
+                "modify": lambda x: x * 100.0,
+            },
         }
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
-        data = OrderedDict()
         dict_to_add = dict()
 
         for key in dict_to_plot.keys():
@@ -228,8 +227,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         config = {
-            "id": "mapdamage-length-distribution-{}".format(orientation),
-            "title": "mapDamage: Read length distribution - {} ".format(orientation),
+            "id": f"mapdamage-length-distribution-{orientation}",
+            "title": f"mapDamage: Read length distribution - {orientation} ",
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
             "xDecimals": False,

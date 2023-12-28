@@ -3,11 +3,10 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, linegraph, table
+from multiqc.plots import bargraph, linegraph, beeswarm
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -100,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Find and parse alignment reports
         for k in self.mdata:
-            for f in self.find_log_files("biscuit/{}".format(k)):
+            for f in self.find_log_files(f"biscuit/{k}"):
                 s_name = f["fn"]
                 for suffix in file_suffixes:
                     s_name = s_name.replace(suffix, "")
@@ -110,13 +109,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name=s_name, section=k)
 
                 if s_name in self.mdata[k]:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-                self.mdata[k][s_name] = getattr(self, "parse_logs_{}".format(k))(f["f"], f["fn"])
-
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
+                self.mdata[k][s_name] = getattr(self, f"parse_logs_{k}")(f["f"], f["fn"])
 
         for k in self.mdata:
             self.mdata[k] = self.ignore_samples(self.mdata[k])
@@ -126,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
         if n_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(n_samples))
+        log.info(f"Found {n_samples} samples")
 
         # Basic stats table
         self.biscuit_stats_table()
@@ -134,11 +129,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.mdata, "biscuit")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Make report sections
         for k in self.mdata:
             if len(self.mdata[k]) > 0:
-                log.debug("Found {} {} reports".format(len(self.mdata[k]), k))
-                getattr(self, "chart_{}".format(k))()
+                log.debug(f"Found {len(self.mdata[k])} {k} reports")
+                getattr(self, f"chart_{k}")()
 
     def biscuit_stats_table(self):
         """
@@ -155,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(dd) > 0:
                 pd[s_name] = {"aligned": dd["frc_align"]}
 
-        # Caclulate % duplicated
+        # Calculate % duplicated
         for s_name, dd in self.mdata["dup_report"].items():
             if s_name not in pd:
                 pd[s_name] = {}
@@ -164,23 +163,24 @@ class MultiqcModule(BaseMultiqcModule):
             if "q40" in dd and dd["q40"] != -1:
                 pd[s_name]["dup_q40"] = dd["q40"]
 
-        pheader = OrderedDict()
-        pheader["dup_q40"] = {
-            "title": "Dup. % for Q40 Reads",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "YlOrBr",
-            "hidden": True,
-        }
-        pheader["dup_all"] = {"title": "Dup. % for All Reads", "min": 0, "max": 100, "suffix": "%", "scale": "Reds"}
-        pheader["aligned"] = {
-            "title": "% Aligned",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlGn",
-            "format": "{:,.2f}",
+        pheader = {
+            "dup_q40": {
+                "title": "Dup. % for Q40 Reads",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlOrBr",
+                "hidden": True,
+            },
+            "dup_all": {"title": "Dup. % for All Reads", "min": 0, "max": 100, "suffix": "%", "scale": "Reds"},
+            "aligned": {
+                "title": "% Aligned",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "format": "{:,.2f}",
+            },
         }
 
         self.general_stats_addcols(pd, pheader)
@@ -188,7 +188,8 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     #####  General Mapping Information #####
     ########################################
-    def parse_logs_align_mapq(self, f, fn):
+    @staticmethod
+    def parse_logs_align_mapq(f, fn):
         """
         Parse _mapq_table.txt
         Inputs:
@@ -201,12 +202,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return {}
 
         mapq = {}
-        for l in file_data:
-            s = l.split()
+        for line in file_data:
+            s = line.split()
             mapq[s[0]] = s[1]  # mapq[MAPQ] = number of reads
 
         data = {
@@ -218,7 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
         if len(mapq) > 0:
             total = sum([int(cnt) for _, cnt in mapq.items() if _ != "unmapped"])
-            cnts = [0 for _ in range(61)]
             for mq, cnt in mapq.items():
                 if mq == "unmapped":
                     data["not_align"] += int(cnt)
@@ -260,10 +260,11 @@ class MultiqcModule(BaseMultiqcModule):
             if len(dd) > 0:
                 pd[s_name] = {"opt_align": dd["opt_align"], "sub_align": dd["sub_align"], "not_align": dd["not_align"]}
 
-        pheader = OrderedDict()
-        pheader["opt_align"] = {"color": "#1f78b4", "name": "Optimally Aligned Reads"}
-        pheader["sub_align"] = {"color": "#a6cee3", "name": "Suboptimally Aligned Reads"}
-        pheader["not_align"] = {"color": "#b2df8a", "name": "Unaligned Reads"}
+        pheader = {
+            "opt_align": {"color": "#1f78b4", "name": "Optimally Aligned Reads"},
+            "sub_align": {"color": "#a6cee3", "name": "Suboptimally Aligned Reads"},
+            "not_align": {"color": "#b2df8a", "name": "Unaligned Reads"},
+        }
 
         pconfig = {
             "id": "biscuit-mapping-overview-plot",
@@ -379,15 +380,12 @@ class MultiqcModule(BaseMultiqcModule):
             if len(dd["read2"]) > 0:
                 pd2[s_name] = dd["read2"]
 
-        pheader = OrderedDict(
-            [
-                ("ff", {"color": "#F53855", "name": "ff: Watson-Aligned, Watson-Bisulfite Conversion"}),
-                ("fr", {"color": "#E37B40", "name": "fr: Watson-Aligned, Crick-Bisulfite Conversion"}),
-                ("rf", {"color": "#46B29D", "name": "rf: Crick-Aligned, Watson-Bisulfite Conversion"}),
-                ("rr", {"color": "#324D5C", "name": "rr: Crick-Aligned, Crick-Bisulfite Conversion"}),
-            ]
-        )
-
+        pheader = {
+            "ff": {"color": "#F53855", "name": "ff: Watson-Aligned, Watson-Bisulfite Conversion"},
+            "fr": {"color": "#E37B40", "name": "fr: Watson-Aligned, Crick-Bisulfite Conversion"},
+            "rf": {"color": "#46B29D", "name": "rf: Crick-Aligned, Watson-Bisulfite Conversion"},
+            "rr": {"color": "#324D5C", "name": "rr: Crick-Aligned, Crick-Bisulfite Conversion"},
+        }
         pconfig = {
             "id": "biscuit_strands",
             "title": "BISCUIT: Mapping Strand Distribution",
@@ -417,7 +415,8 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     ####       Insert Size Report       ####
     ########################################
-    def parse_logs_align_isize(self, f, fn):
+    @staticmethod
+    def parse_logs_align_isize(f, fn):
         """
         Parse _isize_table.txt
         Inputs:
@@ -430,12 +429,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return {"no_data_available": 1}
 
         data = {"percent": {}, "readcnt": {}}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             data["percent"][int(fields[0])] = 100.0 * float(fields[1])
             data["readcnt"][int(fields[0])] = float(fields[2])
 
@@ -470,8 +469,8 @@ class MultiqcModule(BaseMultiqcModule):
             "data_labels": [
                 {"name": "Percent of Reads", "ylab": "% of Mapped Reads"},
                 {
-                    "name": "{} of Reads".format(config.read_count_desc.capitalize()),
-                    "ylab": "{} of Mapped Reads".format(config.read_count_desc.capitalize()),
+                    "name": f"{config.read_count_desc.capitalize()} of Reads",
+                    "ylab": f"{config.read_count_desc.capitalize()} of Mapped Reads",
                 },
             ],
         }
@@ -496,7 +495,8 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     ####        Duplicate Report        ####
     ########################################
-    def parse_logs_dup_report(self, f, fn):
+    @staticmethod
+    def parse_logs_dup_report(f, fn):
         """
         Parses _dup_report.txt
         Inputs:
@@ -538,8 +538,9 @@ class MultiqcModule(BaseMultiqcModule):
             if "q40" in dd and dd["q40"] != -1:
                 pd2[s_name] = {"dup_rate": dd["q40"]}
 
-        pheader = OrderedDict([("dup_rate", {"color": "#a50f15", "name": "Duplicate Rate"})])
-
+        pheader = {
+            "dup_rate": {"color": "#a50f15", "name": "Duplicate Rate"},
+        }
         pconfig = {
             "id": "biscuit_dup_report",
             "cpswitch": False,
@@ -571,7 +572,8 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     ####      Depths and Uniformity     ####
     ########################################
-    def parse_logs_qc_cv(self, f, fn):
+    @staticmethod
+    def parse_logs_qc_cv(f, fn):
         """
         Parses _cv_table.txt
         Inputs:
@@ -597,7 +599,7 @@ class MultiqcModule(BaseMultiqcModule):
             "q40_cpg_topgc",
         ]
         for t in targets:
-            m = re.search("{}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)".format(t), f, re.MULTILINE)
+            m = re.search(rf"{t}\t([\d\.]+)\t([\d\.]+)\t([\d\.]+)", f, re.MULTILINE)
             if m is not None:
                 data[t] = {"mu": float(m.group(1)), "sigma": float(m.group(2)), "cv": float(m.group(3))}
             else:
@@ -629,9 +631,9 @@ class MultiqcModule(BaseMultiqcModule):
             ("q40_cpg_topgc", "q_c_t"),
         ]
 
-        pd = OrderedDict()
+        pd = dict()
         for s_name, dd in self.mdata["qc_cv"].items():
-            data = OrderedDict()
+            data = dict()
             for cat, key in cats:
                 if cat in dd:
                     if dd[cat]["mu"] != -1:
@@ -643,146 +645,149 @@ class MultiqcModule(BaseMultiqcModule):
         shared_mean = {"min": 0, "format": "{:,3f}", "minRange": 10}
         shared_cofv = {"min": 0, "format": "{:,3f}", "minRange": 50}
 
-        pheader = OrderedDict()
-        pheader["mu_a_b"] = dict(
-            shared_mean, **{"title": "All Genome Mean", "description": "Mean Sequencing Depth for All Reads"}
-        )
-        pheader["mu_q_b"] = dict(
-            shared_mean, **{"title": "Q40 Genome Mean", "description": "Mean Sequencing Depth for Q40 Reads"}
-        )
-        pheader["mu_a_b_b"] = dict(
-            shared_mean,
-            **{
-                "title": "Low GC All Gen. Mean",
-                "description": "Mean Sequencing Depth for All Reads in Low GC-Content Regions",
-            },
-        )
-        pheader["mu_q_b_b"] = dict(
-            shared_mean,
-            **{
-                "title": "Low GC Q40 Gen. Mean",
-                "description": "Mean Sequencing Depth for Q40 Reads in Low GC-Content Regions",
-            },
-        )
-        pheader["mu_a_b_t"] = dict(
-            shared_mean,
-            **{
-                "title": "High GC All Gen. Mean",
-                "description": "Mean Sequencing Depth for All Reads in High GC-Content Regions",
-            },
-        )
-        pheader["mu_q_b_t"] = dict(
-            shared_mean,
-            **{
-                "title": "High GC Q40 Gen. Mean",
-                "description": "Mean Sequencing Depth for Q40 Reads in High GC-Content Regions",
-            },
-        )
-        pheader["cv_a_b"] = dict(
-            shared_cofv, **{"title": "All Genome CoV", "description": "Sequencing Depth CoV for All Reads"}
-        )
-        pheader["cv_q_b"] = dict(
-            shared_cofv, **{"title": "Q40 Genome CoV", "description": "Sequencing Depth CoV for Q40 Reads"}
-        )
-        pheader["cv_a_b_b"] = dict(
-            shared_cofv,
-            **{
-                "title": "Low GC All Gen. CoV",
-                "description": "Sequencing Depth CoV for All Reads in Low GC-Content Regions",
-            },
-        )
-        pheader["cv_q_b_b"] = dict(
-            shared_cofv,
-            **{
-                "title": "Low GC Q40 Gen. CoV",
-                "description": "Sequencing Depth CoV for Q40 Reads in Low GC-Content Regions",
-            },
-        )
-        pheader["cv_a_b_t"] = dict(
-            shared_cofv,
-            **{
-                "title": "High GC All Gen. CoV",
-                "description": "Sequencing Depth CoV for All Reads in High GC-Content Regions",
-            },
-        )
-        pheader["cv_q_b_t"] = dict(
-            shared_cofv,
-            **{
-                "title": "High GC Q40 Gen. CoV",
-                "description": "Sequencing Depth CoV for Q40 Reads in High GC-Content Regions",
-            },
-        )
-
-        pheader["mu_a_c"] = dict(
-            shared_mean, **{"title": "All CpGs Mean", "description": "Mean Sequencing Depth for All CpGs"}
-        )
-        pheader["mu_q_c"] = dict(
-            shared_mean, **{"title": "Q40 CpGs Mean", "description": "Mean Sequencing Depth for Q40 CpGs"}
-        )
-        pheader["mu_a_c_b"] = dict(
-            shared_mean,
-            **{
-                "title": "Low GC All CpGs Mean",
-                "description": "Mean Sequencing Depth for All CpGs in Low GC-Content Regions",
-            },
-        )
-        pheader["mu_q_c_b"] = dict(
-            shared_mean,
-            **{
-                "title": "Low GC Q40 CpGs Mean",
-                "description": "Mean Sequencing Depth for Q40 CpGs in Low GC-Content Regions",
-            },
-        )
-        pheader["mu_a_c_t"] = dict(
-            shared_mean,
-            **{
-                "title": "High GC All CpGs Mean",
-                "description": "Mean Sequencing Depth for All CpGs in High GC-Content Regions",
-            },
-        )
-        pheader["mu_q_c_t"] = dict(
-            shared_mean,
-            **{
-                "title": "High GC Q40 CpGs Mean",
-                "description": "Mean Sequencing Depth for Q40 CpGs in High GC-Content Regions",
-            },
-        )
-        pheader["cv_a_c"] = dict(
-            shared_cofv, **{"title": "All CpGs CoV", "description": "Sequencing Depth CoV for All CpGs"}
-        )
-        pheader["cv_q_c"] = dict(
-            shared_cofv, **{"title": "Q40 CpGs CoV", "description": "Sequencing Depth CoV for Q40 CpGs"}
-        )
-        pheader["cv_a_c_b"] = dict(
-            shared_cofv,
-            **{
-                "title": "Low GC All CpGs CoV",
-                "description": "Sequencing Depth CoV for All CpGs in Low GC-Content Regions",
-            },
-        )
-        pheader["cv_q_c_b"] = dict(
-            shared_cofv,
-            **{
-                "title": "Low GC Q40 CpGs CoV",
-                "description": "Sequencing Depth CoV for Q40 CpGs in Low GC-Content Regions",
-            },
-        )
-        pheader["cv_a_c_t"] = dict(
-            shared_cofv,
-            **{
-                "title": "High GC All CpGs CoV",
-                "description": "Sequencing Depth CoV for All CpGs in High GC-Content Regions",
-            },
-        )
-        pheader["cv_q_c_t"] = dict(
-            shared_cofv,
-            **{
-                "title": "High GC Q40 CpGs CoV",
-                "description": "Sequencing Depth CoV for Q40 CpGs in High GC-Content Regions",
-            },
-        )
-
-        pconfig = {"id": "biscuit_seq_depth", "table_title": "BISCUIT: Sequencing Depth", "sortRows": False}
+        pheader = {
+            "mu_a_b": dict(
+                shared_mean, **{"title": "All Genome Mean", "description": "Mean Sequencing Depth for All Reads"}
+            ),
+            "mu_q_b": dict(
+                shared_mean, **{"title": "Q40 Genome Mean", "description": "Mean Sequencing Depth for Q40 Reads"}
+            ),
+            "mu_a_b_b": dict(
+                shared_mean,
+                **{
+                    "title": "Low GC All Gen. Mean",
+                    "description": "Mean Sequencing Depth for All Reads in Low GC-Content Regions",
+                },
+            ),
+            "mu_q_b_b": dict(
+                shared_mean,
+                **{
+                    "title": "Low GC Q40 Gen. Mean",
+                    "description": "Mean Sequencing Depth for Q40 Reads in Low GC-Content Regions",
+                },
+            ),
+            "mu_a_b_t": dict(
+                shared_mean,
+                **{
+                    "title": "High GC All Gen. Mean",
+                    "description": "Mean Sequencing Depth for All Reads in High GC-Content Regions",
+                },
+            ),
+            "mu_q_b_t": dict(
+                shared_mean,
+                **{
+                    "title": "High GC Q40 Gen. Mean",
+                    "description": "Mean Sequencing Depth for Q40 Reads in High GC-Content Regions",
+                },
+            ),
+            "cv_a_b": dict(
+                shared_cofv, **{"title": "All Genome CoV", "description": "Sequencing Depth CoV for All Reads"}
+            ),
+            "cv_q_b": dict(
+                shared_cofv, **{"title": "Q40 Genome CoV", "description": "Sequencing Depth CoV for Q40 Reads"}
+            ),
+            "cv_a_b_b": dict(
+                shared_cofv,
+                **{
+                    "title": "Low GC All Gen. CoV",
+                    "description": "Sequencing Depth CoV for All Reads in Low GC-Content Regions",
+                },
+            ),
+            "cv_q_b_b": dict(
+                shared_cofv,
+                **{
+                    "title": "Low GC Q40 Gen. CoV",
+                    "description": "Sequencing Depth CoV for Q40 Reads in Low GC-Content Regions",
+                },
+            ),
+            "cv_a_b_t": dict(
+                shared_cofv,
+                **{
+                    "title": "High GC All Gen. CoV",
+                    "description": "Sequencing Depth CoV for All Reads in High GC-Content Regions",
+                },
+            ),
+            "cv_q_b_t": dict(
+                shared_cofv,
+                **{
+                    "title": "High GC Q40 Gen. CoV",
+                    "description": "Sequencing Depth CoV for Q40 Reads in High GC-Content Regions",
+                },
+            ),
+            "mu_a_c": dict(
+                shared_mean, **{"title": "All CpGs Mean", "description": "Mean Sequencing Depth for All CpGs"}
+            ),
+            "mu_q_c": dict(
+                shared_mean, **{"title": "Q40 CpGs Mean", "description": "Mean Sequencing Depth for Q40 CpGs"}
+            ),
+            "mu_a_c_b": dict(
+                shared_mean,
+                **{
+                    "title": "Low GC All CpGs Mean",
+                    "description": "Mean Sequencing Depth for All CpGs in Low GC-Content Regions",
+                },
+            ),
+            "mu_q_c_b": dict(
+                shared_mean,
+                **{
+                    "title": "Low GC Q40 CpGs Mean",
+                    "description": "Mean Sequencing Depth for Q40 CpGs in Low GC-Content Regions",
+                },
+            ),
+            "mu_a_c_t": dict(
+                shared_mean,
+                **{
+                    "title": "High GC All CpGs Mean",
+                    "description": "Mean Sequencing Depth for All CpGs in High GC-Content Regions",
+                },
+            ),
+            "mu_q_c_t": dict(
+                shared_mean,
+                **{
+                    "title": "High GC Q40 CpGs Mean",
+                    "description": "Mean Sequencing Depth for Q40 CpGs in High GC-Content Regions",
+                },
+            ),
+            "cv_a_c": dict(
+                shared_cofv, **{"title": "All CpGs CoV", "description": "Sequencing Depth CoV for All CpGs"}
+            ),
+            "cv_q_c": dict(
+                shared_cofv, **{"title": "Q40 CpGs CoV", "description": "Sequencing Depth CoV for Q40 CpGs"}
+            ),
+            "cv_a_c_b": dict(
+                shared_cofv,
+                **{
+                    "title": "Low GC All CpGs CoV",
+                    "description": "Sequencing Depth CoV for All CpGs in Low GC-Content Regions",
+                },
+            ),
+            "cv_q_c_b": dict(
+                shared_cofv,
+                **{
+                    "title": "Low GC Q40 CpGs CoV",
+                    "description": "Sequencing Depth CoV for Q40 CpGs in Low GC-Content Regions",
+                },
+            ),
+            "cv_a_c_t": dict(
+                shared_cofv,
+                **{
+                    "title": "High GC All CpGs CoV",
+                    "description": "Sequencing Depth CoV for All CpGs in High GC-Content Regions",
+                },
+            ),
+            "cv_q_c_t": dict(
+                shared_cofv,
+                **{
+                    "title": "High GC Q40 CpGs CoV",
+                    "description": "Sequencing Depth CoV for Q40 CpGs in High GC-Content Regions",
+                },
+            ),
+        }
+        pconfig = {
+            "id": "biscuit_seq_depth",
+            "table_title": "BISCUIT: Sequencing Depth",
+            "sortRows": False,
+        }
 
         if len(pd) > 0:
             self.add_section(
@@ -809,7 +814,8 @@ class MultiqcModule(BaseMultiqcModule):
     ########################################
     #### Base Coverage and CpG Coverage ####
     ########################################
-    def parse_logs_covdist_all_base(self, f, fn):
+    @staticmethod
+    def parse_logs_covdist_all_base(f, fn):
         """
         Parses _covdist_all_base_botgc_table.txt
                _covdist_all_base_table.txt
@@ -833,12 +839,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return dict(zip([i for i in range(31)], [-1 for _ in range(31)]))
 
         dd = {}
-        for l in file_data:
-            fields = l.split()
+        for line in file_data:
+            fields = line.split()
             dd[int(float(fields[0]))] = int(float(fields[1]))
 
         covs = sorted([k for k in dd])[:31]
@@ -1029,13 +1035,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return {"no_data_available": 1}
 
         r1 = {"C": {}, "R": {}}
         r2 = {"C": {}, "R": {}}
-        for l in file_data:
-            fields = l.strip().split("\t")
+        for line in file_data:
+            fields = line.strip().split("\t")
 
             if fields[0] not in ["1", "2"] or fields[2] not in ["C", "R"]:
                 return {}
@@ -1044,12 +1050,12 @@ class MultiqcModule(BaseMultiqcModule):
             elif fields[0] == "2":
                 r2[fields[2]][int(fields[1])] = int(fields[3])
 
-        r1rate = OrderedDict()
+        r1rate = dict()
         for k in sorted(r1["C"].keys()):
             if k in r1["R"]:
                 r1rate[k] = 100.0 * float(r1["R"][k]) / (r1["R"][k] + r1["C"][k])
 
-        r2rate = OrderedDict()
+        r2rate = dict()
         for k in sorted(r2["C"].keys()):
             if k in r2["R"]:
                 r2rate[k] = 100.0 * float(r2["R"][k]) / (r2["R"][k] + r2["C"][k])
@@ -1144,15 +1150,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return {"no_data_available": 1}
 
         data = {}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
-                log.debug("Found NaN in {}. Skipping.".format(fn))
+                log.debug(f"Found NaN in {fn}. Skipping.")
                 continue
 
             # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.
@@ -1187,23 +1193,18 @@ class MultiqcModule(BaseMultiqcModule):
             if "no_data_available" not in dd.keys():
                 pdata_bybase[s_name] = dd
 
-        pheader_byread = OrderedDict(
-            [
-                ("rca", {"color": "#D81B60", "name": "CpA Retention"}),
-                ("rcc", {"color": "#1E88E5", "name": "CpC Retention"}),
-                ("rcg", {"color": "#A0522D", "name": "CpG Retention"}),
-                ("rct", {"color": "#004D40", "name": "CpT Retention"}),
-            ]
-        )
-        pheader_bybase = OrderedDict(
-            [
-                ("bca", {"color": "#D81B60", "name": "CpA Retention"}),
-                ("bcc", {"color": "#1E88E5", "name": "CpC Retention"}),
-                ("bcg", {"color": "#A0522D", "name": "CpG Retention"}),
-                ("bct", {"color": "#004D40", "name": "CpT Retention"}),
-            ]
-        )
-
+        pheader_byread = {
+            "rca": {"color": "#D81B60", "name": "CpA Retention"},
+            "rcc": {"color": "#1E88E5", "name": "CpC Retention"},
+            "rcg": {"color": "#A0522D", "name": "CpG Retention"},
+            "rct": {"color": "#004D40", "name": "CpT Retention"},
+        }
+        pheader_bybase = {
+            "bca": {"color": "#D81B60", "name": "CpA Retention"},
+            "bcc": {"color": "#1E88E5", "name": "CpC Retention"},
+            "bcg": {"color": "#A0522D", "name": "CpG Retention"},
+            "bct": {"color": "#004D40", "name": "CpT Retention"},
+        }
         pconfig = {
             "id": "biscuit_retention",
             "cpswitch": False,
@@ -1251,15 +1252,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Handle missing data
         if len(file_data) == 0:
-            log.debug("No data available in {}. Will not fill corresponding entries.".format(fn))
+            log.debug(f"No data available in {fn}. Will not fill corresponding entries.")
             return {"no_data_available": 1}
 
         data = {}
-        for l in file_data:
-            fields = l.split("\t")
+        for line in file_data:
+            fields = line.split("\t")
             # Skip rows that have NaNs as something went wrong in processing
             if "nan" in fields:
-                log.debug("Found NaN in {}. Skipping.".format(fn))
+                log.debug(f"Found NaN in {fn}. Skipping.")
                 continue
 
             # BISCUIT returns -1 if insufficient data. Only fill fields with value >= 0.

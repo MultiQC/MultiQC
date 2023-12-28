@@ -1,9 +1,9 @@
 import copy
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import boxplot, linegraph
 
 from .util import average_from_range, sortPosQualTableKeys
@@ -37,12 +37,12 @@ class DragenBaseMetrics(BaseMultiqcModule):
     def positional_quality_range_plot(self):
         """Box plot image showing range of quality scores at each position"""
 
-        data = OrderedDict()
+        data = dict()
         data_labels = []
         GROUP = "POSITIONAL QUALITY"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = defaultdict(float)
                 data_labels.append({"name": r_name})
 
@@ -56,8 +56,8 @@ class DragenBaseMetrics(BaseMultiqcModule):
 
                     try:
                         data[r_name][pos][quantile] = qv
-                    except:
-                        data[r_name][pos] = OrderedDict()
+                    except Exception:
+                        data[r_name][pos] = {}
                         data[r_name][pos][quantile] = qv
 
         pconfig = {
@@ -115,7 +115,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                     counts[base][pos] = int(value)
                     totals[pos] += int(value)
 
-                # Use the the count and averages to recompute total QVs
+                # Use the count and averages to recompute total QVs
                 qv_sums = defaultdict(int)
                 for base, pos_data in counts.items():
                     for pos, count in pos_data.items():
@@ -127,7 +127,7 @@ class DragenBaseMetrics(BaseMultiqcModule):
                             qv_sums[pos] += int(round(count * avgs[base][pos]))
 
                 # Compute the positional, base-agnostic mean QV
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
                 for pos, qv_sum in qv_sums.items():
                     total = totals[pos]

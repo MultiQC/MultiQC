@@ -3,7 +3,6 @@ http://bamtools.sourceforge.net/#bam-stat-py """
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.plots import beeswarm
 
@@ -50,64 +49,68 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.bamtools_stats_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f, section="stats")
             self.bamtools_stats_data[f["s_name"]] = d
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
     # Filter to strip out ignored sample names
     self.bamtools_stats_data = self.ignore_samples(self.bamtools_stats_data)
 
-    if len(self.bamtools_stats_data) > 0:
-        # Write to file
-        self.write_data_file(self.bamtools_stats_data, "multiqc_bamtools_stats")
+    if len(self.bamtools_stats_data) == 0:
+        return 0
 
-        # Add to general stats table
-        self.general_stats_headers["duplicates_pct"] = {
-            "title": "% Duplicates",
-            "description": "% Duplicate Reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        self.general_stats_headers["mapped_reads_pct"] = {
-            "title": "% Mapped",
-            "description": "% Mapped Reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-        }
-        for s_name in self.bamtools_stats_data:
-            if s_name not in self.general_stats_data:
-                self.general_stats_data[s_name] = dict()
-            self.general_stats_data[s_name].update(self.bamtools_stats_data[s_name])
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
-        # Make dot plot of counts
-        keys = OrderedDict()
-        defaults = {"min": 0, "max": 100, "decimalPlaces": 2, "suffix": "%"}
-        num_defaults = {"min": 0, "modify": lambda x: float(x) / 1000000.0, "decimalPlaces": 2}
+    # Write to file
+    self.write_data_file(self.bamtools_stats_data, "multiqc_bamtools_stats")
 
-        keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
-        keys["mapped_reads_pct"] = dict(defaults, **{"title": "Mapped reads"})
-        keys["forward_strand_pct"] = dict(defaults, **{"title": "Forward strand"})
-        keys["reverse_strand_pct"] = dict(defaults, **{"title": "Reverse strand"})
-        keys["failed_qc_pct"] = dict(defaults, **{"title": "Failed QC"})
-        keys["duplicates_pct"] = dict(defaults, **{"title": "Duplicates"})
-        keys["paired_end_pct"] = dict(defaults, **{"title": "Paired-end", "description": "Paired-end reads"})
-        keys["proper_pairs_pct"] = dict(defaults, **{"title": "Proper-pairs"})
-        keys["both_mapped_pct"] = dict(defaults, **{"title": "Both mapped", "description": "Both pairs mapped"})
-        keys["bt_read_1"] = dict(num_defaults, **{"title": "Read 1", "description": "Read 1 (millions)"})
-        keys["bt_read_2"] = dict(num_defaults, **{"title": "Read 2", "description": "Read 2 (millions)"})
-        keys["singletons_pct"] = dict(defaults, **{"title": "Singletons"})
+    # Add to general stats table
+    self.general_stats_headers["duplicates_pct"] = {
+        "title": "% Duplicates",
+        "description": "% Duplicate Reads",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "OrRd",
+    }
+    self.general_stats_headers["mapped_reads_pct"] = {
+        "title": "% Mapped",
+        "description": "% Mapped Reads",
+        "max": 100,
+        "min": 0,
+        "suffix": "%",
+        "scale": "RdYlGn",
+    }
+    for s_name in self.bamtools_stats_data:
+        if s_name not in self.general_stats_data:
+            self.general_stats_data[s_name] = dict()
+        self.general_stats_data[s_name].update(self.bamtools_stats_data[s_name])
 
-        self.add_section(
-            name="Bamtools Stats", anchor="bamtools-stats", plot=beeswarm.plot(self.bamtools_stats_data, keys)
-        )
+    # Make dot plot of counts
+    keys = {}
+    defaults = {"min": 0, "max": 100, "decimalPlaces": 2, "suffix": "%"}
+    num_defaults = {"min": 0, "modify": lambda x: float(x) / 1000000.0, "decimalPlaces": 2}
+
+    keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
+    keys["mapped_reads_pct"] = dict(defaults, **{"title": "Mapped reads"})
+    keys["forward_strand_pct"] = dict(defaults, **{"title": "Forward strand"})
+    keys["reverse_strand_pct"] = dict(defaults, **{"title": "Reverse strand"})
+    keys["failed_qc_pct"] = dict(defaults, **{"title": "Failed QC"})
+    keys["duplicates_pct"] = dict(defaults, **{"title": "Duplicates"})
+    keys["paired_end_pct"] = dict(defaults, **{"title": "Paired-end", "description": "Paired-end reads"})
+    keys["proper_pairs_pct"] = dict(defaults, **{"title": "Proper-pairs"})
+    keys["both_mapped_pct"] = dict(defaults, **{"title": "Both mapped", "description": "Both pairs mapped"})
+    keys["bt_read_1"] = dict(num_defaults, **{"title": "Read 1", "description": "Read 1 (millions)"})
+    keys["bt_read_2"] = dict(num_defaults, **{"title": "Read 2", "description": "Read 2 (millions)"})
+    keys["singletons_pct"] = dict(defaults, **{"title": "Singletons"})
+
+    self.add_section(
+        name="Bamtools Stats",
+        anchor="bamtools-stats",
+        plot=beeswarm.plot(self.bamtools_stats_data, keys, pconfig={"id": "bamtools-stats-plot"}),
+    )
 
     # Return number of samples found
     return len(self.bamtools_stats_data)

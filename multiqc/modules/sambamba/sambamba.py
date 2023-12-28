@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -30,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -38,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
         n["markdup"] = self.parse_sambamba_markdup()
 
         if n["markdup"] > 0:
-            log.info("Found {} sambamba markdup reports".format(n["markdup"]))
+            log.info(f"Found {n['markdup']} sambamba markdup reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

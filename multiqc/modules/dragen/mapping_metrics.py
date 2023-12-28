@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -27,7 +27,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate DRAGEN output prefix found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="mapping_metrics")
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
             for phenotype, phenotype_d in data_by_readgroup.items():
@@ -109,7 +109,14 @@ class DragenMappingMetics(BaseMultiqcModule):
             Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                data_by_rg,
+                own_tabl_headers,
+                pconfig={
+                    "id": "dragen-mapping-metrics-table",
+                    "namespace": NAMESPACE,
+                },
+            ),
         )
 
         # Skip adding the barplot if it's not informative, such as if all
@@ -151,9 +158,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
@@ -168,9 +173,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data.get(rrna_filtered_reads_key, 0)
                 if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
                 else 0
-            ) != data.get(
-                "Total reads in RG", 0
-            ):
+            ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)

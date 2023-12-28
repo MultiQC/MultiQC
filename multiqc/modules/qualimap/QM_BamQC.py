@@ -4,7 +4,6 @@
 import logging
 import math
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph
@@ -20,10 +19,6 @@ def parse_reports(self):
     self.qualimap_bamqc_genome_results = dict()
     for f in self.find_log_files("qualimap/bamqc/genome_results"):
         parse_genome_results(self, f)
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None, f["s_name"])
 
     self.qualimap_bamqc_genome_results = self.ignore_samples(self.qualimap_bamqc_genome_results)
     if len(self.qualimap_bamqc_genome_results) > 0:
@@ -59,16 +54,20 @@ def parse_reports(self):
     if num_parsed == 0:
         return 0
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     try:
         covs = config.qualimap_config["general_stats_coverage"]
-        assert type(covs) == list
+        assert isinstance(covs, list)
         assert len(covs) > 0
         covs = [str(i) for i in covs]
-        log.debug("Custom Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+        log.debug(f"Custom Qualimap thresholds: {', '.join([i for i in covs])}")
     except (AttributeError, TypeError, AssertionError):
         covs = [1, 5, 10, 30, 50]
         covs = [str(i) for i in covs]
-        log.debug("Using default Qualimap thresholds: {}".format(", ".join([i for i in covs])))
+        log.debug(f"Using default Qualimap thresholds: {', '.join([i for i in covs])}")
     self.covs = covs
 
     # Make the plots for the report
@@ -120,7 +119,7 @@ def parse_genome_results(self, f):
             for k, r in regexes.get(section, {}).items():
                 r_search = re.search(r, line)
                 if r_search:
-                    if "\d" in r:
+                    if r"\d" in r:
                         try:
                             d[k] = float(r_search.group(1).replace(",", ""))
                         except ValueError:
@@ -130,54 +129,57 @@ def parse_genome_results(self, f):
 
     # Check we have an input filename
     if "bam_file" not in d:
-        log.debug("Couldn't find an input filename in genome_results file {}".format(f["fn"]))
+        log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
         return None
 
     # Get a nice sample name
     s_name = self.clean_s_name(d["bam_file"], f)
 
+    if "general_error_rate" in d:
+        d["general_error_rate"] = d["general_error_rate"] * 100.0
+    if "mapped_reads" in d and "total_reads" in d and d["total_reads"] > 0:
+        d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
+    if "regions_mapped_reads" in d and "mapped_reads" in d and d["mapped_reads"] > 0:
+        d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
+
     # Add to general stats table & calculate a nice % aligned
-    try:
-        self.general_stats_data[s_name]["total_reads"] = d["total_reads"]
-        self.general_stats_data[s_name]["mapped_reads"] = d["mapped_reads"]
-        self.general_stats_data[s_name]["general_error_rate"] = d["general_error_rate"] * 100.0
-        self.general_stats_data[s_name]["mean_coverage"] = d["mean_coverage"]
-        self.general_stats_data[s_name]["regions_size"] = d["regions_size"]
-        self.general_stats_data[s_name]["regions_mapped_reads"] = d["regions_mapped_reads"]
-        try:
-            d["percentage_aligned"] = (d["mapped_reads"] / d["total_reads"]) * 100.0
-            self.general_stats_data[s_name]["percentage_aligned"] = d["percentage_aligned"]
-            d["percentage_aligned_on_target"] = (d["regions_mapped_reads"] / d["mapped_reads"]) * 100.0
-            self.general_stats_data[s_name]["percentage_aligned_on_target"] = d["percentage_aligned_on_target"]
-        except ZeroDivisionError:
-            pass
-    except KeyError:
-        pass
+    for k in [
+        "total_reads",
+        "mapped_reads",
+        "general_error_rate",
+        "mean_coverage",
+        "regions_size",
+        "regions_mapped_reads",
+        "percentage_aligned",
+        "percentage_aligned_on_target",
+    ]:
+        if k in d:
+            self.general_stats_data[s_name][k] = d[k]
 
     # Save results
     if s_name in self.qualimap_bamqc_genome_results:
-        log.debug("Duplicate genome results sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate genome results sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_genome_results[s_name] = d
     self.add_data_source(f, s_name=s_name, section="genome_results")
 
 
 def parse_coverage(self, f):
     """Parse the contents of the Qualimap BamQC Coverage Histogram file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/coverage_histogram.txt
     s_name = self.get_s_name(f)
 
     d = dict()
-    for l in f["f"]:
-        if l.startswith("#"):
+    for line in f["f"]:
+        if line.startswith("#"):
             continue
-        coverage, count = l.split(None, 1)
+        coverage, count = line.split(None, 1)
         coverage = int(round(float(coverage)))
         count = float(count)
         d[coverage] = count
 
     if len(d) == 0:
-        log.debug("Couldn't parse contents of coverage histogram file {}".format(f["fn"]))
+        log.debug(f"Couldn't parse contents of coverage histogram file {f['fn']}")
         return None
 
     # Find median without importing anything to do it for us
@@ -194,28 +196,25 @@ def parse_coverage(self, f):
     self.general_stats_data[s_name]["median_coverage"] = median_coverage
     # Save results
     if s_name in self.qualimap_bamqc_coverage_hist:
-        log.debug("Duplicate coverage histogram sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate coverage histogram sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_coverage_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section="coverage_histogram")
 
 
 def parse_insert_size(self, f):
     """Parse the contents of the Qualimap BamQC Insert Size Histogram file"""
-    # Get the sample name from the parent parent directory
+    # Get the sample name from the parent directory
     # Typical path: <sample name>/raw_data_qualimapReport/insert_size_histogram.txt
     s_name = self.get_s_name(f)
 
     d = dict()
-    zero_insertsize = 0
-    for l in f["f"]:
-        if l.startswith("#"):
+    for line in f["f"]:
+        if line.startswith("#"):
             continue
-        insertsize, count = l.split(None, 1)
+        insertsize, count = line.split(None, 1)
         insertsize = int(round(float(insertsize)))
         count = float(count) / 1000000
-        if insertsize == 0:
-            zero_insertsize = count
-        else:
+        if insertsize != 0:
             d[insertsize] = count
 
     # Find median without importing anything to do it for us
@@ -232,7 +231,7 @@ def parse_insert_size(self, f):
 
     # Save results
     if s_name in self.qualimap_bamqc_insert_size_hist:
-        log.debug("Duplicate insert size histogram sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate insert size histogram sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_insert_size_hist[s_name] = d
     self.add_data_source(f, s_name=s_name, section="insert_size_histogram")
 
@@ -247,13 +246,13 @@ def parse_gc_dist(self, f):
     reference_species = None
     reference_d = dict()
     avg_gc = 0
-    for l in f["f"]:
-        if l.startswith("#"):
-            sections = l.strip("\n").split("\t", 3)
+    for line in f["f"]:
+        if line.startswith("#"):
+            sections = line.strip("\n").split("\t", 3)
             if len(sections) > 2:
                 reference_species = sections[2]
             continue
-        sections = l.strip("\n").split("\t", 3)
+        sections = line.strip("\n").split("\t", 3)
         gc = int(round(float(sections[0])))
         content = float(sections[1])
         avg_gc += gc * content
@@ -267,7 +266,7 @@ def parse_gc_dist(self, f):
 
     # Save results
     if s_name in self.qualimap_bamqc_gc_content_dist:
-        log.debug("Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {}".format(s_name))
+        log.debug(f"Duplicate Mapped Reads GC content distribution sample name found! Overwriting: {s_name}")
     self.qualimap_bamqc_gc_content_dist[s_name] = d
     if reference_species and reference_species not in self.qualimap_bamqc_gc_by_species:
         self.qualimap_bamqc_gc_by_species[reference_species] = reference_d
@@ -372,9 +371,9 @@ def report_sections(self):
             # Add requested coverage levels to the General Statistics table
             for c in self.covs:
                 if int(c) in rates_within_threshs[s_name]:
-                    self.general_stats_data[s_name]["{}_x_pc".format(c)] = rates_within_threshs[s_name][int(c)]
+                    self.general_stats_data[s_name][f"{c}_x_pc"] = rates_within_threshs[s_name][int(c)]
                 else:
-                    self.general_stats_data[s_name]["{}_x_pc".format(c)] = 0
+                    self.general_stats_data[s_name][f"{c}_x_pc"] = 0
 
         # Section 1 - BamQC Coverage Histogram
         self.add_section(
@@ -546,8 +545,8 @@ def report_sections(self):
 def general_stats_headers(self):
     try:
         hidecovs = config.qualimap_config["general_stats_coverage_hidden"]
-        assert type(hidecovs) == list
-        log.debug("Hiding Qualimap thresholds: {}".format(", ".join([i for i in hidecovs])))
+        assert isinstance(hidecovs, list)
+        log.debug(f"Hiding Qualimap thresholds: {', '.join([i for i in hidecovs])}")
     except (AttributeError, TypeError, KeyError, AssertionError):
         hidecovs = [1, 5, 10, 50]
     hidecovs = [str(i) for i in hidecovs]
@@ -569,9 +568,9 @@ def general_stats_headers(self):
         "format": "{:,.0f}",
     }
     for c in self.covs:
-        self.general_stats_headers["{}_x_pc".format(c)] = {
-            "title": "&ge; {}X".format(c),
-            "description": "Fraction of genome with at least {}X coverage".format(c),
+        self.general_stats_headers[f"{c}_x_pc"] = {
+            "title": f"&ge; {c}X",
+            "description": f"Fraction of genome with at least {c}X coverage",
             "max": 100,
             "min": 0,
             "suffix": "%",
@@ -601,15 +600,15 @@ def general_stats_headers(self):
         "scale": "YlGn",
     }
     self.general_stats_headers["regions_size"] = {
-        "title": "{} Region size".format(config.read_count_prefix),
+        "title": f"{config.read_count_prefix} Region size",
         "description": "Size of target region",
         "suffix": " bp",
         "scale": "PuBuGn",
         "hidden": True,
     }
     self.general_stats_headers["regions_mapped_reads"] = {
-        "title": "{} On target".format(config.read_count_prefix),
-        "description": "Number of mapped reads on target region ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} On target",
+        "description": f"Number of mapped reads on target region ({config.read_count_desc})",
         "scale": "RdYlGn",
         "shared_key": "read_count",
         "hidden": True,
@@ -633,15 +632,15 @@ def general_stats_headers(self):
         "scale": "YlGn",
     }
     self.general_stats_headers["mapped_reads"] = {
-        "title": "{} Aligned".format(config.read_count_prefix),
-        "description": "Number of mapped reads ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} Aligned",
+        "description": f"Number of mapped reads ({config.read_count_desc})",
         "scale": "RdYlGn",
         "shared_key": "read_count",
         "hidden": True,
     }
     self.general_stats_headers["total_reads"] = {
-        "title": "{} Total reads".format(config.read_count_prefix),
-        "description": "Number of reads ({})".format(config.read_count_desc),
+        "title": f"{config.read_count_prefix} Total reads",
+        "description": f"Number of reads ({config.read_count_desc})",
         "scale": "Blues",
         "shared_key": "read_count",
         "hidden": True,
@@ -649,8 +648,8 @@ def general_stats_headers(self):
 
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
-    bases_within_threshs = OrderedDict((depth, 0) for depth in depth_thresholds)
-    rates_within_threshs = OrderedDict((depth, None) for depth in depth_thresholds)
+    bases_within_threshs = {depth: 0 for depth in depth_thresholds}
+    rates_within_threshs = {depth: None for depth in depth_thresholds}
 
     dt = sorted(depth_thresholds, reverse=True)
     c = 0

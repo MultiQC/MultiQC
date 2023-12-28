@@ -2,10 +2,8 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -36,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.diamond_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.diamond_data)))
+        log.info(f"Found {len(self.diamond_data)} reports")
 
         # Write parsed report data to file
         self.write_data_file(self.diamond_data, "diamond")
@@ -45,33 +43,34 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(self, f):
         """Parsing logs"""
         s_name = self.clean_s_name(f["root"], f)
-        for l in f["f"]:
+        for line in f["f"]:
             # Try to get the sample name from --out, otherwise --query, fallback to directory name
-            if "diamond blastx" in l and "--out" in l:
-                s_name = l.split("--out ")[1].split(" ")[0]
+            if "diamond blastx" in line and "--out" in line:
+                s_name = line.split("--out ")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
-            elif "diamond blastx" in l and "--query" in l:
-                s_name = l.split("--query ")[1].split(" ")[0]
+            elif "diamond blastx" in line and "--query" in line:
+                s_name = line.split("--query ")[1].split(" ")[0]
                 s_name = self.clean_s_name(s_name, f)
 
             # Get version
-            version_match = re.search(VERSION_REGEX, l)
+            version_match = re.search(VERSION_REGEX, line)
             if version_match:
                 self.add_software_version(version_match.group(1), s_name)
 
-            if "queries aligned" in l:
+            if "queries aligned" in line:
                 self.add_data_source(f)
                 if s_name in self.diamond_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
-                self.diamond_data[s_name] = {"queries_aligned": int(l.split(" ")[0])}
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                self.diamond_data[s_name] = {"queries_aligned": int(line.split(" ")[0])}
 
     def diamond_general_stats(self):
         """Diamond General Stats Table"""
-        headers = OrderedDict()
-        headers["queries_aligned"] = {
-            "title": "Queries aligned",
-            "description": "number of queries aligned",
-            "scale": "YlGn",
-            "format": "{:,.0f}",
+        headers = {
+            "queries_aligned": {
+                "title": "Queries aligned",
+                "description": "number of queries aligned",
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.diamond_data, headers)

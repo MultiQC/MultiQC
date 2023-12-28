@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 import numpy as np
 
@@ -38,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             if f["s_name"] in sample_data_raw:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
             if sample_data_is_bases:
                 bases_data[f["s_name"]] = sample_data_raw
@@ -47,19 +46,20 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         bases_data = self.ignore_samples(bases_data)
         reads_data = self.ignore_samples(reads_data)
         all_data = {**bases_data, **reads_data}
         if not all_data:
             raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         if bases_data and reads_data:
             log.warning("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports. Will build two separate plots")
-        log.info("Found {} reports".format(len(all_data)))
+        log.info(f"Found {len(all_data)} reports")
         # Write data to file
         self.write_data_file(all_data, "preseq")
 
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
         real_counts_file_name = None
         for f in self.find_log_files("preseq/real_counts"):
             if real_counts_file_raw is not None:
-                log.warning("Multiple Preseq real counts files found, now using {}".format(f["fn"]))
+                log.warning(f"Multiple Preseq real counts files found, now using {f['fn']}")
             real_counts_file_raw = f["f"]
             real_counts_file_name = f["fn"]
 
@@ -198,11 +198,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 if cols[2].isdigit():
                                     real_counts_unique[sn] = int(cols[2])
             except IOError as e:
-                log.error("Error loading real counts file {}: {}".format(real_counts_file_name, str(e)))
+                log.error(f"Error loading real counts file {real_counts_file_name}: {str(e)}")
             else:
-                log.debug(
-                    "Found {} matching sets of counts from {}".format(len(real_counts_total), real_counts_file_name)
-                )
+                log.debug(f"Found {len(real_counts_total)} matching sets of counts from {real_counts_file_name}")
 
         return real_counts_total, real_counts_unique
 
@@ -221,12 +219,12 @@ def _parse_preseq_logs(f):
     elif header.startswith("total_reads	distinct_reads"):
         pass
     else:
-        log.debug("First line of preseq file {} did not look right".format(f["fn"]))
+        log.debug(f"First line of preseq file {f['fn']} did not look right")
         return None, None
 
     data = dict()
-    for l in lines:
-        s = l.split()
+    for line in lines:
+        s = line.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
         if float(s[1]) == 0 and float(s[0]) > 0:
             continue
@@ -239,9 +237,7 @@ def _modify_raw_data(sample_data, is_basepairs):
     """Modify counts or base pairs according to `read_count_multiplier`
     or `base_count_multiplier`.
     """
-    return OrderedDict(
-        (_modify_raw_val(x, is_basepairs), _modify_raw_val(y, is_basepairs)) for x, y in sample_data.items()
-    )
+    return {_modify_raw_val(x, is_basepairs): _modify_raw_val(y, is_basepairs) for x, y in sample_data.items()}
 
 
 def _modify_raw_val(val, is_basepairs):
@@ -258,9 +254,7 @@ def _counts_to_coverages(sample_data, counts_in_1x):
     if not counts_in_1x:
         return {None: None}
 
-    return OrderedDict(
-        (_count_to_coverage(x, counts_in_1x), _count_to_coverage(y, counts_in_1x)) for x, y in sample_data.items()
-    )
+    return {_count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x) for x, y in sample_data.items()}
 
 
 def _count_to_coverage(val, counts_in_1x):
@@ -268,7 +262,7 @@ def _count_to_coverage(val, counts_in_1x):
 
 
 def _get_counts_in_1x(data_is_basepairs):
-    """Read read length and genome size from the config and calculate
+    """Read length and genome size from the config and calculate
     the approximate number of counts (or base pairs) in 1x of depth
     """
     read_length = float(getattr(config, "preseq", {}).get("read_length", 0))

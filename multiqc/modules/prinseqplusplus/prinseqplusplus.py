@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -26,16 +25,16 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("prinseqplusplus", filehandles=True):
             self.parse_logs(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         self.prinseqplusplus_data = self.ignore_samples(self.prinseqplusplus_data)
 
         if len(self.prinseqplusplus_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.prinseqplusplus_data)))
+        log.info(f"Found {len(self.prinseqplusplus_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write data to file
         self.write_data_file(self.prinseqplusplus_data, "prinseqplusplus")
@@ -47,36 +46,35 @@ class MultiqcModule(BaseMultiqcModule):
         """Parsing Logs."""
         s_name = f["s_name"]
         if self.prinseqplusplus_data.get(s_name) is not None:
-            log.warn("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.warn(f"Duplicate sample name found! Overwriting: {s_name}")
 
         self.prinseqplusplus_data[s_name] = {}
         self.add_data_source(f, s_name=s_name)
 
-        for l in f["f"]:
-            ## Find line after loading reads, and remove suffixes for sample name
-
-            if "-min_len" in l:
-                self.prinseqplusplus_data[s_name]["min_len"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-max_len" in l:
-                self.prinseqplusplus_data[s_name]["max_len"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-min_cg" in l:  ## This seems to be a typo in the log file of PRINSEQ++, should be gc
-                self.prinseqplusplus_data[s_name]["min_gc"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-max_cg" in l:
-                self.prinseqplusplus_data[s_name]["max_gc"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-min_qual_score" in l:
-                self.prinseqplusplus_data[s_name]["min_qual_score"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-min_qual_mean" in l:
-                self.prinseqplusplus_data[s_name]["min_qual_mean"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-ns_max_n" in l:
-                self.prinseqplusplus_data[s_name]["ns_max_n"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-noiupac" in l:
-                self.prinseqplusplus_data[s_name]["noiupac"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-derep" in l:
-                self.prinseqplusplus_data[s_name]["derep"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-lc_entropy" in l:
-                self.prinseqplusplus_data[s_name]["lc_entropy"] = int(l.lstrip().rstrip().split(" ")[0])
-            elif "-lc_dust" in l:
-                self.prinseqplusplus_data[s_name]["lc_dust"] = int(l.lstrip().rstrip().split(" ")[0])
+        for line in f["f"]:
+            # Find line after loading reads, and remove suffixes for sample name
+            if "-min_len" in line:
+                self.prinseqplusplus_data[s_name]["min_len"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-max_len" in line:
+                self.prinseqplusplus_data[s_name]["max_len"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-min_cg" in line:  ## This seems to be a typo in the log file of PRINSEQ++, should be gc
+                self.prinseqplusplus_data[s_name]["min_gc"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-max_cg" in line:
+                self.prinseqplusplus_data[s_name]["max_gc"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-min_qual_score" in line:
+                self.prinseqplusplus_data[s_name]["min_qual_score"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-min_qual_mean" in line:
+                self.prinseqplusplus_data[s_name]["min_qual_mean"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-ns_max_n" in line:
+                self.prinseqplusplus_data[s_name]["ns_max_n"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-noiupac" in line:
+                self.prinseqplusplus_data[s_name]["noiupac"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-derep" in line:
+                self.prinseqplusplus_data[s_name]["derep"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-lc_entropy" in line:
+                self.prinseqplusplus_data[s_name]["lc_entropy"] = int(line.lstrip().rstrip().split(" ")[0])
+            elif "-lc_dust" in line:
+                self.prinseqplusplus_data[s_name]["lc_dust"] = int(line.lstrip().rstrip().split(" ")[0])
 
     def prinseqplusplus_general_stats(self):
         """PRINSEQ++ General Stats Table"""
@@ -88,8 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
             data,
             {
                 "prinseqplusplus_total": {
-                    "title": "Filtered Reads ({})".format(config.read_count_prefix),
-                    "description": "Sum of filtered reads ({})".format(config.read_count_desc),
+                    "title": f"Filtered Reads ({config.read_count_prefix})",
+                    "description": f"Sum of filtered reads ({config.read_count_desc})",
                     "scale": "Oranges",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
@@ -105,23 +103,23 @@ class MultiqcModule(BaseMultiqcModule):
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": "{} reads".format(config.read_count_prefix),
+            "suffix": f"{config.read_count_prefix} reads",
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }
-        headers = OrderedDict()
-        headers["min_len"] = dict(reads, title="min_len")
-        headers["max_len"] = dict(reads, title="max_len")
-        headers["min_gc"] = dict(reads, title="min_gc")
-        headers["max_gc"] = dict(reads, title="max_gc")
-        headers["lc_entropy"] = dict(reads, title="lc_entropy")
-        headers["min_qual_score"] = dict(reads, title="min_qual_score")
-        headers["min_qual_mean"] = dict(reads, title="min_qual_mean")
-        headers["ns_max_n"] = dict(reads, title="ns_max_n")
-        headers["noiupac"] = dict(reads, title="noiupac")
-        headers["derep"] = dict(reads, title="derep")
-        headers["lc_entropy"] = dict(reads, title="lc_entropy")
-        headers["lc_dust"] = dict(reads, title="lc_dust")
+        headers = {
+            "min_len": dict(reads, title="min_len"),
+            "max_len": dict(reads, title="max_len"),
+            "min_gc": dict(reads, title="min_gc"),
+            "max_gc": dict(reads, title="max_gc"),
+            "lc_entropy": dict(reads, title="lc_entropy"),
+            "min_qual_score": dict(reads, title="min_qual_score"),
+            "min_qual_mean": dict(reads, title="min_qual_mean"),
+            "ns_max_n": dict(reads, title="ns_max_n"),
+            "noiupac": dict(reads, title="noiupac"),
+            "derep": dict(reads, title="derep"),
+            "lc_dust": dict(reads, title="lc_dust"),
+        }
 
         self.add_section(
             name="Filtered Reads",

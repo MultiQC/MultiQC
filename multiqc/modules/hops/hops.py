@@ -3,10 +3,10 @@
 
 import json
 import logging
+from json import JSONDecodeError
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
-from multiqc.utils import config
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning("Error loading file {}".format(f["fn"]))
+                logging.warning(f"Error loading file {f['fn']}")
 
             # Superfluous function call to confirm that it is used in this module
             # Replace None with actual version if it is available
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.hops_data, "hops")
 
-        log.info("Found {} samples".format(len(self.hops_data)))
+        log.info(f"Found {len(self.hops_data)} samples")
 
         # This type of data isn't 'summarise-able' for general stats, so
         # skipping straight to heatmap. We also won't write data file to the
@@ -56,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             parsed_json = json.load(f["f"])
         except JSONDecodeError as e:
-            log.debug("Could not parse HOPS JSON: '{}'".format(f["fn"]))
+            log.debug(f"Could not parse HOPS JSON: '{f['fn']}'")
             log.debug(e)
             return None
 
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s in parsed_json:
             s_name = self.clean_s_name(s, f)
             if s_name in self.hops_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name=s_name)
             self.hops_data[s_name] = {}
             for t in parsed_json[s]:
@@ -72,8 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hops_heatmap(self):
         """Heatmap showing all statuses for every sample"""
-        heatmap_numbers = {"none": 1, "edit_only": 2, "damage_only": 3, "edit_and_damage": 4}
-
         samples = []
         for s in self.hops_data:
             samples.append(s)

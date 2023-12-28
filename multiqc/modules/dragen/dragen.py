@@ -74,11 +74,11 @@ class MultiqcModule(
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        self.collect_overall_mean_cov_data()
+        overall_mean_cov_data = self.collect_overall_mean_cov_data()
         # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
         # This data will be used by in the DragenCoverageMetrics.
 
-        samples_found |= self.add_coverage_metrics()
+        samples_found |= self.add_coverage_metrics(overall_mean_cov_data)
         # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
 
         samples_found |= self.add_coverage_hist()
@@ -116,4 +116,4 @@ class MultiqcModule(
 
         if len(samples_found) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(samples_found)))
+        log.info(f"Found {len(samples_found)} reports")

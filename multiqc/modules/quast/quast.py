@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.total_number_contigs_suffix = qconfig.get("total_number_contigs_suffix", "K")
 
         # Find and load any QUAST reports
-        self.quast_data = dict()
+        self.quast_data = {}
         for f in self.find_log_files("quast"):
             self.parse_quast_log(f)
 
@@ -51,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.quast_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.quast_data)))
+        log.info(f"Found {len(self.quast_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.quast_data, "multiqc_quast")
@@ -99,13 +98,13 @@ class MultiqcModule(BaseMultiqcModule):
         s_names = [self.clean_s_name(s_name, f) for s_name in s_names]
         for s_name in s_names[1:]:
             if s_name in self.quast_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.quast_data[s_name] = dict()
 
         # Parse remaining stats for each sample
-        for l in lines[1:]:
-            s = l.split("\t")
+        for line in lines[1:]:
+            s = line.split("\t")
             k = s[0]
             for i, v in enumerate(s[1:]):
                 s_name = s_names[i + 1]
@@ -115,10 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
                     partial = partials.group(2)
                     try:
                         self.quast_data[s_name][k] = float(whole)
-                        self.quast_data[s_name]["{}_partial".format(k)] = float(partial)
+                        self.quast_data[s_name][f"{k}_partial"] = float(partial)
                     except ValueError:
                         self.quast_data[s_name][k] = whole
-                        self.quast_data[s_name]["{}_partial".format(k)] = partial
+                        self.quast_data[s_name][f"{k}_partial"] = partial
                 else:
                     try:
                         self.quast_data[s_name][k] = float(v)
@@ -129,131 +128,129 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the QUAST report and add some to the
         General Statistics table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["N50"] = {
-            "title": "N50 ({})".format(self.contig_length_suffix),
-            "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-        headers["Total length"] = {
-            "title": "Assembly Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly ({}).".format(self.total_length_suffix),
-            "min": 0,
-            "suffix": self.total_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.total_length_multiplier,
+        headers = {
+            "N50": {
+                "title": f"N50 ({self.contig_length_suffix})",
+                "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly (kilo base pairs)",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "Total length": {
+                "title": f"Assembly Length ({self.total_length_suffix})",
+                "description": f"The total number of bases in the assembly ({self.total_length_suffix}).",
+                "min": 0,
+                "suffix": self.total_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.total_length_multiplier,
+            },
         }
         self.general_stats_addcols(self.quast_data, headers)
 
     def quast_table(self):
         """Write some more statistics about the assemblies in a table."""
-        headers = OrderedDict()
-
-        headers["N50"] = {
-            "title": "N50 ({})".format(self.contig_length_suffix),
-            "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
+        headers = {
+            "N50": {
+                "title": f"N50 ({self.contig_length_suffix})",
+                "description": "N50 is the contig length such that using longer or equal length contigs produces half (50%) of the bases of the assembly.",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "N75": {
+                "title": f"N75 ({self.contig_length_suffix})",
+                "description": "N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "RdYlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "L50": {
+                "title": f"L50 ({self.total_number_contigs_suffix})" if self.total_number_contigs_suffix else "L50",
+                "description": "L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.",
+                "min": 0,
+                "suffix": self.total_number_contigs_suffix,
+                "scale": "RdYlGn-rev",
+                "modify": lambda x: x * self.total_number_contigs_multiplier,
+            },
+            "L75": {
+                "title": f"L75 ({self.total_number_contigs_suffix})" if self.total_number_contigs_suffix else "L75",
+                "description": "L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.",
+                "min": 0,
+                "suffix": self.total_number_contigs_suffix,
+                "scale": "RdYlGn-rev",
+                "modify": lambda x: x * self.total_number_contigs_multiplier,
+            },
+            "Largest contig": {
+                "title": f"Largest contig ({self.contig_length_suffix})",
+                "description": "The size of the largest contig of the assembly",
+                "min": 0,
+                "suffix": self.contig_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.contig_length_multiplier,
+            },
+            "Total length": {
+                "title": f"Length ({self.total_length_suffix})",
+                "description": "The total number of bases in the assembly.",
+                "min": 0,
+                "suffix": self.total_length_suffix,
+                "scale": "YlGn",
+                "modify": lambda x: x * self.total_length_multiplier,
+            },
+            "# misassemblies": {
+                "title": "Misassemblies",
+                "description": "The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).",
+                "scale": "RdYlGn-rev",
+                "format": "{,:.0f}",
+            },
+            "# mismatches per 100 kbp": {
+                "title": "Mismatches/100kbp",
+                "description": "The number of mismatches per 100 kbp",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+            "# indels per 100 kbp": {
+                "title": "Indels/100kbp",
+                "description": "The number of indels per 100 kbp",
+                "scale": "YlOrRd",
+                "format": "{:,.2f}",
+            },
+            "# genes": {
+                "title": "Genes",
+                "description": "# Genes",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "# genes_partial": {
+                "title": "Genes (Partial)",
+                "description": "# Genes (Partial)",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "# predicted genes (unique)": {
+                "title": "Genes",
+                "description": "# Predicted Genes (Unique)",
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+                "shared_key": "gene_count",
+            },
+            "Genome fraction (%)": {
+                "title": "Genome Fraction",
+                "description": "The total number of aligned bases in the reference, divided by the genome size.",
+                "max": 100,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
         }
 
-        headers["N75"] = {
-            "title": "N75 ({})".format(self.contig_length_suffix),
-            "description": "N75 is the contig length such that using longer or equal length contigs produces 75% of the bases of the assembly",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "RdYlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-
-        headers["L50"] = {
-            "title": "L50 ({})".format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else "L50",
-            "description": "L50 is the number of contigs larger than N50, i.e. the minimum number of contigs comprising 50% of the total assembly length.",
-            "min": 0,
-            "suffix": self.total_number_contigs_suffix,
-            "scale": "RdYlGn-rev",
-            "modify": lambda x: x * self.total_number_contigs_multiplier,
-        }
-
-        headers["L75"] = {
-            "title": "L75 ({})".format(self.total_number_contigs_suffix) if self.total_number_contigs_suffix else "L75",
-            "description": "L75 is the number of contigs larger than N75, i.e. the minimum number of contigs comprising 75% of the total assembly length.",
-            "min": 0,
-            "suffix": self.total_number_contigs_suffix,
-            "scale": "RdYlGn-rev",
-            "modify": lambda x: x * self.total_number_contigs_multiplier,
-        }
-        headers["Largest contig"] = {
-            "title": "Largest contig ({})".format(self.contig_length_suffix),
-            "description": "The size of the largest contig of the assembly",
-            "min": 0,
-            "suffix": self.contig_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.contig_length_multiplier,
-        }
-
-        headers["Total length"] = {
-            "title": "Length ({})".format(self.total_length_suffix),
-            "description": "The total number of bases in the assembly.",
-            "min": 0,
-            "suffix": self.total_length_suffix,
-            "scale": "YlGn",
-            "modify": lambda x: x * self.total_length_multiplier,
-        }
-
-        headers["# misassemblies"] = {
-            "title": "Misassemblies",
-            "description": "The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).",
-            "scale": "RdYlGn-rev",
-            "format": "{,:.0f}",
-        }
-        headers["# mismatches per 100 kbp"] = {
-            "title": "Mismatches/100kbp",
-            "description": "The number of mismatches per 100 kbp",
-            "scale": "YlOrRd",
-            "format": "{:,.2f}",
-        }
-        headers["# indels per 100 kbp"] = {
-            "title": "Indels/100kbp",
-            "description": "The number of indels per 100 kbp",
-            "scale": "YlOrRd",
-            "format": "{:,.2f}",
-        }
-        headers["# genes"] = {
-            "title": "Genes",
-            "description": "# Genes",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["# genes_partial"] = {
-            "title": "Genes (Partial)",
-            "description": "# Genes (Partial)",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["# predicted genes (unique)"] = {
-            "title": "Genes",
-            "description": "# Predicted Genes (Unique)",
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
-            "shared_key": "gene_count",
-        }
-        headers["Genome fraction (%)"] = {
-            "title": "Genome Fraction",
-            "description": "The total number of aligned bases in the reference, divided by the genome size.",
-            "max": 100,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
         config = {
             "id": "quast_table",
             "min": 0,
+            "namespace": "QUAST",
         }
         return table.plot(self.quast_data, headers, config)
 
@@ -322,13 +319,13 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             highest_threshold = thresholds[-1]
-            highest_cat = (highest_threshold, ">= {} bp".format(highest_threshold))  # tuple (key-for-sorting, label)
+            highest_cat = (highest_threshold, f">= {highest_threshold} bp")  # tuple (key-for-sorting, label)
             all_categories.append(highest_cat)
             plot_data = {highest_cat[1]: d[data_key.format(highest_threshold)]}
 
             # converting >=T1, >=T2,.. into 0-T1, T1-T2,..
             for low, high in zip(thresholds[:-1], thresholds[1:]):
-                cat = (low, "{}-{} bp".format(low, high))
+                cat = (low, f"{low}-{high} bp")
                 all_categories.append(cat)
                 plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]
 

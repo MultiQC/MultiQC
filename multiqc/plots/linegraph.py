@@ -10,7 +10,6 @@ import os
 import random
 import re
 import sys
-from collections import OrderedDict
 
 from multiqc.utils import config, mqc_colour, report, util_functions
 
@@ -23,7 +22,7 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
+    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -62,23 +61,23 @@ def plot(data, pconfig=None):
             pconfig[k] = v
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
     # Validate config if linting
-    if config.lint:
+    if config.strict:
         # Get module name
         modname = ""
         callstack = inspect.stack()
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
             if k not in pconfig:
-                errmsg = "LINT: {}Linegraph pconfig was missing key '{}'".format(modname, k)
+                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -93,7 +92,7 @@ def plot(data, pconfig=None):
     if pconfig.get("smooth_points", None) is not None:
         sumcounts = pconfig.get("smooth_points_sumcounts", True)
         for i, d in enumerate(data):
-            if type(sumcounts) is list:
+            if isinstance(sumcounts, list):
                 sumc = sumcounts[i]
             else:
                 sumc = sumcounts
@@ -107,12 +106,12 @@ def plot(data, pconfig=None):
     if pconfig.get("ylab") is None:
         try:
             pconfig["ylab"] = pconfig["data_labels"][0]["ylab"]
-        except (KeyError, IndexError):
+        except Exception:
             pass
     if pconfig.get("xlab") is None:
         try:
             pconfig["xlab"] = pconfig["data_labels"][0]["xlab"]
-        except (KeyError, IndexError):
+        except Exception:
             pass
 
     # Generate the data dict structure expected by HighCharts series
@@ -123,15 +122,15 @@ def plot(data, pconfig=None):
         for s in sorted(d.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config = pconfig.copy()
-            if (
-                "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
+            if "data_labels" in pconfig and isinstance(
+                pconfig["data_labels"][data_index], dict
             ):  # if not a dict: only dataset name is provided
                 series_config.update(pconfig["data_labels"][data_index])
 
             pairs = list()
             maxval = 0
             if "categories" in series_config:
-                if "categories" not in pconfig or type(pconfig["categories"]) is not list:
+                if "categories" not in pconfig or not isinstance(pconfig["categories"], list):
                     pconfig["categories"] = list()
                 # Add any new categories
                 for k in d[s].keys():
@@ -194,7 +193,7 @@ def plot(data, pconfig=None):
                 this_series = {"name": s, "data": pairs}
                 try:
                     this_series["color"] = series_config["colors"][s]
-                except:
+                except Exception:
                     pass
                 thisplotdata.append(this_series)
         plotdata.append(thisplotdata)
@@ -203,14 +202,14 @@ def plot(data, pconfig=None):
     try:
         if pconfig.get("extra_series"):
             extra_series = pconfig["extra_series"]
-            if type(pconfig["extra_series"]) == dict:
+            if isinstance(pconfig["extra_series"], dict):
                 extra_series = [[pconfig["extra_series"]]]
-            elif type(pconfig["extra_series"]) == list and type(pconfig["extra_series"][0]) == dict:
+            elif isinstance(pconfig["extra_series"], list) and isinstance(pconfig["extra_series"][0], dict):
                 extra_series = [pconfig["extra_series"]]
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except (KeyError, IndexError):
+    except Exception:
         pass
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
@@ -222,25 +221,33 @@ def plot(data, pconfig=None):
             d.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - template custom, or interactive or flat
-    try:
-        return get_template_mod().linegraph(plotdata, pconfig)
-    except (AttributeError, TypeError):
-        if config.plots_force_flat or (
-            not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
-        ):
-            try:
-                report.num_mpl_plots += 1
-                return matplotlib_linegraph(plotdata, pconfig)
-            except Exception as e:
-                logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
-                logger.debug(e, exc_info=True)
-                return highcharts_linegraph(plotdata, pconfig)
-        else:
-            # Use MatPlotLib to generate static plots if requested
-            if config.export_plots:
-                matplotlib_linegraph(plotdata, pconfig)
-            # Return HTML for HighCharts dynamic plot
+    mod = get_template_mod()
+    if "linegraph" in mod.__dict__ and callable(mod.linegraph):
+        try:
+            return mod.linegraph(plotdata, pconfig)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+    if config.plots_force_flat or (
+        not config.plots_force_interactive and plotdata and len(plotdata[0]) > config.plots_flat_numseries
+    ):
+        try:
+            report.num_mpl_plots += 1
+            return matplotlib_linegraph(plotdata, pconfig)
+        except Exception as e:
+            if config.strict:
+                raise
+            logger.error("############### Error making MatPlotLib figure! Falling back to HighCharts.")
+            logger.debug(e, exc_info=True)
             return highcharts_linegraph(plotdata, pconfig)
+    else:
+        # Use MatPlotLib to generate static plots if requested
+        if config.export_plots:
+            matplotlib_linegraph(plotdata, pconfig)
+        # Return HTML for HighCharts dynamic plot
+        return highcharts_linegraph(plotdata, pconfig)
 
 
 def highcharts_linegraph(plotdata, pconfig=None):
@@ -289,19 +296,19 @@ def highcharts_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except Exception:
                 name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
+            except Exception:
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
+                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
+            except Exception:
                 ymax = ""
             try:
-                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except:
+                xlab = f"data-xlab=\"{pconfig['data_labels'][k]['xlab']}\""
+            except Exception:
                 xlab = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, x=xlab, k=k
@@ -342,9 +349,9 @@ def matplotlib_linegraph(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except:
+        except Exception:
             name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
+        pid = f"mqc_{pconfig['id']}_{name}"
         pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
@@ -353,7 +360,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
+    html += f"<div class=\"mqc_mplplot_plotgroup\" id=\"{pconfig['id']}\">"
 
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
@@ -363,7 +370,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -377,26 +384,26 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Save plot data to file
         if pconfig.get("save_data_file", True):
-            fdata = OrderedDict()
+            fdata = dict()
             lastcats = None
             sharedcats = True
             for d in pdata:
-                fdata[d["name"]] = OrderedDict()
+                fdata[d["name"]] = dict()
 
                 # Check to see if all categories are the same
-                if len(d["data"]) > 0 and type(d["data"][0]) is list:
+                if len(d["data"]) > 0 and isinstance(d["data"][0], list):
                     if lastcats is None:
                         lastcats = [x[0] for x in d["data"]]
                     elif lastcats != [x[0] for x in d["data"]]:
                         sharedcats = False
 
                 for i, x in enumerate(d["data"]):
-                    if type(x) is list:
-                        fdata[d["name"]][str(x[0])] = x[1]
+                    if isinstance(x, list):
+                        fdata[d["name"]][x[0]] = x[1]
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x
-                        except (KeyError, IndexError):
+                        except Exception:
                             fdata[d["name"]][str(i)] = x
 
             # Custom tsv output if the x-axis varies
@@ -404,10 +411,10 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 fout = ""
                 for d in pdata:
                     fout += "\t" + "\t".join([str(x[0]) for x in d["data"]])
-                    fout += "\n{}\t".format(d["name"])
+                    fout += f"\n{d['name']}\t"
                     fout += "\t".join([str(x[1]) for x in d["data"]])
                     fout += "\n"
-                with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
+                with io.open(os.path.join(config.data_dir, f"{pid}.txt"), "w", encoding="utf-8") as f:
                     print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
             else:
                 util_functions.write_data_file(fdata, pid)
@@ -445,6 +452,12 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 # Categorical data on x axis
                 axes.plot(d["data"], label=d["name"], color=d["color"], linewidth=1, marker=None)
 
+        # Log scale
+        if pconfig.get("xLog", False):
+            axes.set_xscale("log")
+        if pconfig.get("yLog", False):
+            axes.set_yscale("log")
+
         # Tidy up axes
         axes.tick_params(
             labelsize=pconfig.get("labelSize", 8), direction="out", left=False, right=False, top=False, bottom=False
@@ -455,7 +468,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific y label
         try:
             axes.set_ylabel(pconfig["data_labels"][pidx]["ylab"])
-        except:
+        except Exception:
             pass
 
         # Axis limits
@@ -477,7 +490,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except:
+        except Exception:
             pass
 
         default_xlimits = axes.get_xlim()
@@ -492,7 +505,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         elif "xCeiling" in pconfig:
             xmax = min(pconfig["xCeiling"], default_xlimits[1])
         if (xmax - xmin) < pconfig.get("xMinRange", 0):
-            xmax = xmin + pconfig["xMinRange"]
+            xmax = xmin + pconfig.get("xMinRange", 0)
         axes.set_xlim((xmin, xmax))
 
         # Plot title
@@ -569,7 +582,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 if not os.path.exists(plot_dir):
                     os.makedirs(plot_dir)
                 # Save the plot
-                plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                 fig.savefig(plot_fn, format=fformat, bbox_inches="tight")
 
         # Output the figure to a base64 encoded string
@@ -584,8 +597,8 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+            plot_relpath = os.path.join(config.plots_dir_name, "png", f"{pid}.png")
+            html += f'<div class="mqc_mplplot" id="{pid}"{hidediv}><img src="{plot_relpath}" /></div>'
 
         plt.close(fig)
 
@@ -628,7 +641,7 @@ def smooth_line_data(data, numpoints, sumcounts=True):
 
         binsize = (len(d) - 1) / (numpoints - 1)
         first_element_indices = [round(binsize * i) for i in range(numpoints)]
-        smoothed_d = OrderedDict(xy for i, xy in enumerate(d.items()) if i in first_element_indices)
+        smoothed_d = {x: y for i, (x, y) in enumerate(d.items()) if i in first_element_indices}
         smoothed_data[s_name] = smoothed_d
 
     return smoothed_data

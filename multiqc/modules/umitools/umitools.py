@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -38,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
                 f["s_name"] = self.clean_s_name(input_fname, f)
                 # Log a warning if the log file matches an existing sample name
                 if f["s_name"] in self.umitools_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 # Store the data in the overall data dictionary
                 self.umitools_data[f["s_name"]] = data
                 # Add the log file information to the multiqc_sources.txt
@@ -54,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Log the number of reports found
-        log.info("Found {} reports".format(len(self.umitools_data)))
+        log.info(f"Found {len(self.umitools_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.umitools_data, "multiqc_umitools")
@@ -137,22 +136,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the umitools report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["output_reads"] = {
-            "title": "{} Unique Reads".format(config.read_count_prefix),
-            "description": "Reads remaining after deduplication ({})".format(config.read_count_desc),
-            "min": 0,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-            "scale": "PuRd",
-        }
-        headers["percent_passing_dedup"] = {
-            "title": "% Pass Dedup",
-            "description": "% processed reads that passed deduplication",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
+        headers = {
+            "output_reads": {
+                "title": f"{config.read_count_prefix} Unique Reads",
+                "description": f"Reads remaining after deduplication ({config.read_count_desc})",
+                "min": 0,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "shared_key": "read_count",
+                "scale": "PuRd",
+            },
+            "percent_passing_dedup": {
+                "title": "% Pass Dedup",
+                "description": "% processed reads that passed deduplication",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
         }
         self.general_stats_addcols(self.umitools_data, headers)
 
@@ -160,9 +160,10 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate a plot the read deduplication rates for the main report"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["output_reads"] = {"color": "#7fc97f", "name": "Reads remaining"}
-        keys["removed_reads"] = {"color": "#fdc086", "name": "Reads removed"}
+        keys = {
+            "output_reads": {"color": "#7fc97f", "name": "Reads remaining"},
+            "removed_reads": {"color": "#fdc086", "name": "Reads removed"},
+        }
 
         # Config for the plot
         config = {
@@ -177,41 +178,42 @@ class MultiqcModule(BaseMultiqcModule):
     def umitools_umi_stats_swarm(self):
         """Generate a swarmplot of umi stats for the main report"""
 
-        headers = OrderedDict()
-        headers["positions_deduplicated"] = {
-            "title": "Positions Dedup",
-            "description": "Total number of positions deduplicated",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Greens",
-        }
-        headers["total_umis"] = {
-            "title": "Total UMIs",
-            "description": "Total UMIs found in sample",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Blues",
-        }
-        headers["unique_umis"] = {
-            "title": "Unique UMIs",
-            "description": "Unique UMIs found in sample",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Purples",
-        }
-        headers["mean_umi_per_pos"] = {
-            "title": "Mean #UMI",
-            "description": "Mean number of unique UMIs per position",
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "Reds",
-        }
-        headers["max_umi_per_pos"] = {
-            "title": "Max #UMI",
-            "description": "Max number of unique UMIs per position",
-            "min": 0,
-            "format": "{:,.0f}",
-            "scale": "Oranges",
+        headers = {
+            "positions_deduplicated": {
+                "title": "Positions Dedup",
+                "description": "Total number of positions deduplicated",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "Greens",
+            },
+            "total_umis": {
+                "title": "Total UMIs",
+                "description": "Total UMIs found in sample",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "Blues",
+            },
+            "unique_umis": {
+                "title": "Unique UMIs",
+                "description": "Unique UMIs found in sample",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "Purples",
+            },
+            "mean_umi_per_pos": {
+                "title": "Mean #UMI",
+                "description": "Mean number of unique UMIs per position",
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "Reds",
+            },
+            "max_umi_per_pos": {
+                "title": "Max #UMI",
+                "description": "Max number of unique UMIs per position",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "Oranges",
+            },
         }
 
         # Config for the table

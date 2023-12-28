@@ -4,7 +4,6 @@
 import json
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_fqscreen(f)
             if parsed_data is not None:
                 if f["s_name"] in self.fq_screen_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f)
                 self.fq_screen_data[f["s_name"]] = parsed_data
 
@@ -47,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.fq_screen_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.fq_screen_data)))
+        log.info(f"Found {len(self.fq_screen_data)} reports")
 
         # Check whether we have a consistent number of organisms across all samples
         num_orgs = set([len(orgs) for orgs in self.fq_screen_data.values()])
@@ -73,22 +72,22 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_fqscreen(self, f):
         """Parse the FastQ Screen output into a 3D dict"""
-        parsed_data = OrderedDict()
+        parsed_data = {}
         nohits_pct = None
         headers = None
         bs_headers = None
-        for l in f["f"]:
+        for line in f["f"]:
             # Skip comment lines
-            if l.startswith("#"):
-                version_match = re.search(VERSION_REGEX, l)
+            if line.startswith("#"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), f["s_name"])
                 continue
-            if l.startswith("%Hit_no_genomes:") or l.startswith("%Hit_no_libraries:"):
-                nohits_pct = float(l.split(":", 1)[1])
+            if line.startswith("%Hit_no_genomes:") or line.startswith("%Hit_no_libraries:"):
+                nohits_pct = float(line.split(":", 1)[1])
                 parsed_data["No hits"] = {"percentages": {"one_hit_one_library": nohits_pct}}
             else:
-                s = l.strip().split("\t")
+                s = line.strip().split("\t")
 
                 # Regular FastQ Screen table section
                 if len(s) == 12:
@@ -136,21 +135,21 @@ class MultiqcModule(BaseMultiqcModule):
                 "one_hit_one_library": int((nohits_pct / 100.0) * float(parsed_data["total_reads"]))
             }
         else:
-            log.warning("Couldn't find number of reads with no hits for '{}'".format(f["s_name"]))
+            log.warning(f"Couldn't find number of reads with no hits for '{f['s_name']}'")
 
         self.num_orgs = max(len(parsed_data), self.num_orgs)
         return parsed_data
 
     def parse_csv(self):
-        totals = OrderedDict()
+        totals = dict()
         for s in sorted(self.fq_screen_data.keys()):
-            totals[s] = OrderedDict()
+            totals[s] = dict()
             for org in self.fq_screen_data[s]:
                 if org == "total_reads":
                     totals[s]["total_reads"] = self.fq_screen_data[s][org]
                     continue
                 try:
-                    k = "{} counts".format(org)
+                    k = f"{org} counts"
                     totals[s][k] = self.fq_screen_data[s][org]["counts"]["one_hit_one_library"]
                     totals[s][k] += self.fq_screen_data[s][org]["counts"].get("multiple_hits_one_library", 0)
                     totals[s][k] += self.fq_screen_data[s][org]["counts"].get("one_hit_multiple_libraries", 0)
@@ -158,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
                 try:
-                    k = "{} percentage".format(org)
+                    k = f"{org} percentage"
                     totals[s][k] = self.fq_screen_data[s][org]["percentages"]["one_hit_one_library"]
                     totals[s][k] += self.fq_screen_data[s][org]["percentages"].get("multiple_hits_one_library", 0)
                     totals[s][k] += self.fq_screen_data[s][org]["percentages"].get("one_hit_multiple_libraries", 0)
@@ -176,11 +175,12 @@ class MultiqcModule(BaseMultiqcModule):
         categories = list()
         getCats = True
         data = list()
-        p_types = OrderedDict()
-        p_types["multiple_hits_multiple_libraries"] = {"col": "#7f0000", "name": "Multiple Hits, Multiple Genomes"}
-        p_types["one_hit_multiple_libraries"] = {"col": "#ff0000", "name": "One Hit, Multiple Genomes"}
-        p_types["multiple_hits_one_library"] = {"col": "#00007f", "name": "Multiple Hits, One Genome"}
-        p_types["one_hit_one_library"] = {"col": "#0000ff", "name": "One Hit, One Genome"}
+        p_types = {
+            "multiple_hits_multiple_libraries": {"col": "#7f0000", "name": "Multiple Hits, Multiple Genomes"},
+            "one_hit_multiple_libraries": {"col": "#ff0000", "name": "One Hit, Multiple Genomes"},
+            "multiple_hits_one_library": {"col": "#00007f", "name": "Multiple Hits, One Genome"},
+            "one_hit_one_library": {"col": "#0000ff", "name": "One Hit, One Genome"},
+        }
         for k, t in p_types.items():
             first = True
             for s in sorted(self.fq_screen_data.keys()):
@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         org_counts = {}
         for s_name in sorted(self.fq_screen_data):
-            data[s_name] = OrderedDict()
+            data[s_name] = dict()
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
                 if org == "total_reads":
@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["Multiple Genomes"] = self.fq_screen_data[s_name]["total_reads"] - sum_alignments
 
         # Sort the categories by the total read counts
-        cats = OrderedDict()
+        cats = dict()
         for org in sorted(org_counts, key=org_counts.get, reverse=True):
             if org not in cats and org != "No hits":
                 cats[org] = {"name": org}
@@ -320,17 +320,18 @@ class MultiqcModule(BaseMultiqcModule):
             "data_labels": [],
         }
 
-        cats = OrderedDict()
-        cats["original_top_strand"] = {"name": "Original top strand", "color": "#80cdc1"}
-        cats["complementary_to_original_top_strand"] = {
-            "name": "Complementary to original top strand",
-            "color": "#018571",
+        cats = {
+            "original_top_strand": {"name": "Original top strand", "color": "#80cdc1"},
+            "complementary_to_original_top_strand": {
+                "name": "Complementary to original top strand",
+                "color": "#018571",
+            },
+            "complementary_to_original_bottom_strand": {
+                "name": "Complementary to original bottom strand",
+                "color": "#a6611a",
+            },
+            "original_bottom_strand": {"name": "Original bottom strand", "color": "#dfc27d"},
         }
-        cats["complementary_to_original_bottom_strand"] = {
-            "name": "Complementary to original bottom strand",
-            "color": "#a6611a",
-        }
-        cats["original_bottom_strand"] = {"name": "Original bottom strand", "color": "#dfc27d"}
 
         # Pull out the data that we want
         pdata_unsorted = {}

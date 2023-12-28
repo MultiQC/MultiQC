@@ -5,11 +5,10 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, heatmap
+from multiqc.plots import heatmap
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -32,10 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ivar/trim", filehandles=True):
             self.parse_ivar(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.ivar_data = self.ignore_samples(self.ivar_data)
         self.ivar_primers = self.ignore_samples(self.ivar_primers)
@@ -46,7 +41,11 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Log number of reports
-        log.info("Found {} reports".format(num_samples))
+        log.info(f"Found {num_samples} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.ivar_data, "multiqc_ivar_summary")
@@ -73,22 +72,22 @@ class MultiqcModule(BaseMultiqcModule):
         }
         primer_regex = re.compile(r"^(.*)(?:\t+)(\d+$)")
         parsed_data = dict()
-        primers = OrderedDict()
-        for l in f["f"]:
+        primers = dict()
+        for line in f["f"]:
             # Search count regexes for stats
             for k, count_regex in count_regexes.items():
-                count_match = count_regex.search(l)
+                count_match = count_regex.search(line)
                 if count_match:
                     parsed_data[k] = int(count_match.group(1))
 
             # Try to match the primer regex
-            primer_match = primer_regex.search(l)
+            primer_match = primer_regex.search(line)
             if primer_match:
                 primers[primer_match.group(1)] = int(primer_match.group(2))
 
         if parsed_data is not None and len(parsed_data) > 0:
             if f["s_name"] in self.ivar_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ivar_data[f["s_name"]] = parsed_data
             self.add_data_source(f, section="trimming")
 
@@ -101,44 +100,45 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the iVAR report and add it to the
         basic stats table"""
 
-        headers = OrderedDict()
-        headers["reads_too_short_after_trimming"] = {
-            "title": "{} Too short".format(config.read_count_prefix),
-            "description": "Number of reads too short (<30bp) after primer trimming ({})".format(
-                config.read_count_desc
-            ),
-            "scale": "OrRd",
-            "shared_key": "read_counts",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["reads_outside_primer_region"] = {
-            "title": "{} Outside primer".format(config.read_count_prefix),
-            "description": "Number of reads outside the primer region ({})".format(config.read_count_desc),
-            "scale": "YlOrBr",
-            "shared_key": "read_counts",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["trimmed_reads"] = {
-            "title": "{} Primer trimmed".format(config.read_count_prefix),
-            "description": "Total number of reads where primer trimming was performed. ({})".format(
-                config.read_count_desc
-            ),
-            "scale": "Purples",
-            "shared_key": "read_counts",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["mapped_reads"] = {
-            "title": "{} Mapped".format(config.read_count_prefix),
-            "description": "Total number of mapped reads in iVar input. ({})".format(config.read_count_desc),
-            "scale": "PuBu",
-            "shared_key": "read_counts",
-            "modify": lambda x: x * config.read_count_multiplier,
+        headers = {
+            "reads_too_short_after_trimming": {
+                "title": f"{config.read_count_prefix} Too short",
+                "description": "Number of reads too short (<30bp) after primer trimming ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "OrRd",
+                "shared_key": "read_counts",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "reads_outside_primer_region": {
+                "title": f"{config.read_count_prefix} Outside primer",
+                "description": f"Number of reads outside the primer region ({config.read_count_desc})",
+                "scale": "YlOrBr",
+                "shared_key": "read_counts",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "trimmed_reads": {
+                "title": f"{config.read_count_prefix} Primer trimmed",
+                "description": "Total number of reads where primer trimming was performed. ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "Purples",
+                "shared_key": "read_counts",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "mapped_reads": {
+                "title": f"{config.read_count_prefix} Mapped",
+                "description": f"Total number of mapped reads in iVar input. ({config.read_count_desc})",
+                "scale": "PuBu",
+                "shared_key": "read_counts",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
         }
         self.general_stats_addcols(self.ivar_data, headers)
 
     def primer_heatmap(self):
         """Heatmap showing information on each primer found for every sample"""
-        # Top level dict contains sample IDs + OrderedDict(primer, counts)
+        # Top level dict contains sample IDs + dict(primer, counts)
 
         final_data = list()
         final_xcats = list()

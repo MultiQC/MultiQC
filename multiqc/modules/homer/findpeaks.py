@@ -2,7 +2,6 @@
 
 import logging
 import os
-from collections import OrderedDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -16,36 +15,43 @@ class FindPeaksReportMixin:
         for f in self.find_log_files("homer/findpeaks", filehandles=True):
             self.parse_findPeaks(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.homer_findpeaks = self.ignore_samples(self.homer_findpeaks)
+        if not self.homer_findpeaks:
+            return 0
 
-        if len(self.homer_findpeaks) > 0:
-            # Write parsed report data to a file
-            self.write_data_file(self.homer_findpeaks, "multiqc_homer_findpeaks")
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
-            # General Stats Table
-            stats_headers = OrderedDict()
-            stats_headers["approximate_ip_efficiency"] = {
+        # Write parsed report data to a file
+        self.write_data_file(self.homer_findpeaks, "multiqc_homer_findpeaks")
+
+        # General Stats Table
+        stats_headers = {
+            "approximate_ip_efficiency": {
                 "title": "% Efficiency",
                 "description": "Approximate IP efficiency",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
                 "scale": "RdYlGn",
-            }
-            stats_headers["total_peaks"] = {"title": "Total Peaks", "min": 0, "format": "{:,.0f}", "scale": "GnBu"}
-            stats_headers["expected_tags_per_peak"] = {
+            },
+            "total_peaks": {
+                "title": "Total Peaks",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "GnBu",
+            },
+            "expected_tags_per_peak": {
                 "title": "Tags/Peak",
                 "description": "Expected tags per peak",
                 "min": 0,
                 "format": "{:,.0f}",
                 "scale": "PuRd",
-            }
-            self.general_stats_addcols(self.homer_findpeaks, stats_headers, "findpeaks")
+            },
+        }
+        self.general_stats_addcols(self.homer_findpeaks, stats_headers, "findpeaks")
 
         return len(self.homer_findpeaks)
 
@@ -53,12 +59,12 @@ class FindPeaksReportMixin:
         """Parse HOMER findPeaks file headers."""
         parsed_data = dict()
         s_name = f["s_name"]
-        for l in f["f"]:
+        for line in f["f"]:
             # Start of data
-            if l.strip() and not l.strip().startswith("#"):
+            if line.strip() and not line.strip().startswith("#"):
                 break
             # Automatically parse header lines by = symbol
-            s = l[2:].split("=")
+            s = line[2:].split("=")
             if len(s) > 1:
                 k = s[0].strip().replace(" ", "_").lower()
                 v = s[1].strip().replace("%", "")
@@ -71,6 +77,6 @@ class FindPeaksReportMixin:
 
         if len(parsed_data) > 0:
             if s_name in self.homer_findpeaks:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name, section="findPeaks")
             self.homer_findpeaks[s_name] = parsed_data

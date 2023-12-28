@@ -760,6 +760,27 @@ table_columns_visible:
 Note that you can set these values to `True` to show columns that would otherwise be hidden
 by default.
 
+It can also be done for other module-specific tables in the report, where instead of
+the _Group_, you'd need to specify the table ID. To get the table ID, click
+_Configure Columns_ above the table, and look for the first line above the table contents.
+It should say something like "Uncheck the tick box ... Table ID: `quast_table`".
+
+For example, to hide the _# misassemblies_ column in the _Assembly Statistics_ table
+from QUAST, you would use the following config:
+
+```yaml
+table_columns_visible:
+  quast_table:
+    "# misassemblies": false
+```
+
+Or you can pass the column ID directly:
+
+```yaml
+table_columns_visible:
+  "# misassemblies": false
+```
+
 ### Column order
 
 In the same way, you can force a column to appear at the start or end of the table, or
@@ -795,6 +816,9 @@ table_columns_name:
   FastQC:
     percent_gc: "Percent of bases that are GC"
 ```
+
+It will also work for module-specific tables by using the table ID instead of the module name, and specifying the column ID directly.
+See the [Hiding columns](#hiding-columns) section above for more details.
 
 ### Conditional formatting
 

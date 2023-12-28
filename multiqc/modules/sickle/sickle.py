@@ -2,7 +2,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -27,13 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_logs(f["f"])
             if len(parsed_data):
                 if f["s_name"] in self.sickle_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.sickle_data[f["s_name"]] = parsed_data
                 self.add_data_source(f)
-
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, f["s_name"])
 
         self.sickle_data = self.ignore_samples(self.sickle_data)
 
@@ -41,12 +36,17 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.sickle_data) == 0:
             raise ModuleNoSamplesFound
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.sickle_data, "multiqc_sickle")
 
         self.sickle_general_stats_table()
         self.read_count_plot()
 
-    def parse_logs(self, f):
+    @staticmethod
+    def parse_logs(f):
         """Parse the Sickle standard output"""
         regexes = [
             # Paired-end
@@ -59,11 +59,10 @@ class MultiqcModule(BaseMultiqcModule):
             ["reads_single_discarded", re.compile("FastQ records discarded: ([\d,]+)")],
         ]
         data = {}
-        for l in f.splitlines():
-            s = l.split(":")
-            # Search regexes for overview stats# Search regexes for overview stats
+        for line in f.splitlines():
+            # Search regexes for overview stats
             for k, regex in regexes:
-                match = regex.search(l)
+                match = regex.search(line)
                 if match:
                     data[k] = int(match.group(1).replace(",", ""))
 
@@ -86,20 +85,21 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the sickle report and add
         number of kept reads into the generam stats table"""
 
-        headers = {}
-        headers["percentage_discarded"] = {
-            "title": "% Reads discarded",
-            "description": "Percentage of reads discarded",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        headers["reads_total_kept"] = {
-            "title": "{} Reads kept".format(config.read_count_prefix),
-            "description": "Number of reads kept ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "scale": "BuGn",
+        headers = {
+            "percentage_discarded": {
+                "title": "% Reads discarded",
+                "description": "Percentage of reads discarded",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "reads_total_kept": {
+                "title": f"{config.read_count_prefix} Reads kept",
+                "description": f"Number of reads kept ({config.read_count_desc})",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "scale": "BuGn",
+            },
         }
         self.general_stats_addcols(self.sickle_data, headers)
 
@@ -111,11 +111,12 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
         }
-        pcats = OrderedDict()
-        pcats["reads_paired_kept"] = {"name": "Paired reads kept", "color": "#1f78b4"}
-        pcats["reads_single_kept"] = {"name": "Single reads kept", "color": "#a6cee3"}
-        pcats["reads_paired_discarded"] = {"name": "Paired reads discarded", "color": "#ff7f00"}
-        pcats["reads_single_discarded"] = {"name": "Single reads discarded", "color": "#fdae61"}
+        pcats = {
+            "reads_paired_kept": {"name": "Paired reads kept", "color": "#1f78b4"},
+            "reads_single_kept": {"name": "Single reads kept", "color": "#a6cee3"},
+            "reads_paired_discarded": {"name": "Paired reads discarded", "color": "#ff7f00"},
+            "reads_single_discarded": {"name": "Single reads discarded", "color": "#fdae61"},
+        }
 
         self.add_section(
             name="Sequence counts",

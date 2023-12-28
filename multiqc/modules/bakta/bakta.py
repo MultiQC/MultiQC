@@ -2,11 +2,9 @@
 
 
 import logging
-from collections import OrderedDict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -35,34 +33,35 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.bakta) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.bakta)))
+        log.info(f"Found {len(self.bakta)} logs")
 
         # Write parsed report data to a file
         self.write_data_file(self.bakta, "multiqc_bakta")
 
         # Add most important Bakta annotation stats to general table
-        headers = OrderedDict()
-        headers["Count"] = {
-            "title": "# contigs",
-            "description": "Number of contigs",
-            "min": 0,
-            "scale": "Blues",
-            "format": "{:,d}",
-        }
-        headers["Length"] = {
-            "title": "# bases",
-            "description": "Total number of bases in the contigs",
-            "min": 0,
-            "scale": "YlGn",
-            "format": "{:,d}",
-        }
-        headers["CDSs"] = {
-            "title": "# CDS",
-            "description": "Number of found CDS",
-            "min": 0,
-            "scale": "YlGnBu",
-            "format": "{:,d}",
-            "shared_key": "gene_count",
+        headers = {
+            "Count": {
+                "title": "# contigs",
+                "description": "Number of contigs",
+                "min": 0,
+                "scale": "Blues",
+                "format": "{:,d}",
+            },
+            "Length": {
+                "title": "# bases",
+                "description": "Total number of bases in the contigs",
+                "min": 0,
+                "scale": "YlGn",
+                "format": "{:,d}",
+            },
+            "CDSs": {
+                "title": "# CDS",
+                "description": "Number of found CDS",
+                "min": 0,
+                "scale": "YlGnBu",
+                "format": "{:,d}",
+                "shared_key": "gene_count",
+            },
         }
         self.general_stats_addcols(self.bakta, headers)
 

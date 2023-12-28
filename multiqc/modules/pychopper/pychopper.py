@@ -2,10 +2,9 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph
+from multiqc.plots import bargraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -35,10 +34,6 @@ class MultiqcModule(BaseMultiqcModule):
                 self.pychopper_data[sample][category][name] = float(value)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, sample)
-
         # Filter to strip out ignored sample names
         self.pychopper_data = self.ignore_samples(self.pychopper_data)
 
@@ -46,7 +41,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pychopper_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.pychopper_data)))
+        log.info(f"Found {len(self.pychopper_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add to general statistics table:
         # Percentage of full length transcripts
@@ -57,13 +56,14 @@ class MultiqcModule(BaseMultiqcModule):
             ftp = c["Primers_found"] * 100 / (c["Primers_found"] + c["Rescue"] + c["Unusable"])
             data_general_stats[sample]["ftp"] = ftp
 
-        headers = OrderedDict()
-        headers["ftp"] = {
-            "title": "Full-Length cDNA",
-            "description": "Percentage of full length cDNA reads with correct primers at both ends",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
+        headers = {
+            "ftp": {
+                "title": "Full-Length cDNA",
+                "description": "Percentage of full length cDNA reads with correct primers at both ends",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            }
         }
 
         self.general_stats_addcols(data_general_stats, headers)

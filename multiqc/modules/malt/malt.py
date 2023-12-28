@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -41,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.malt_data, "malt")
 
-        log.info("Found {} reports".format(len(self.malt_data)))
+        log.info(f"Found {len(self.malt_data)} reports")
 
         self.malt_general_stats()
         self.mappability_barplot()
@@ -65,12 +64,12 @@ class MultiqcModule(BaseMultiqcModule):
                 if version_match:
                     version = version_match.group(1)
 
-            if line.startswith("+++++ Aligning file:") and reading == False:
+            if line.startswith("+++++ Aligning file:") and reading is False:
                 reading = True
                 s_name = line.split()[-1]
                 s_name = self.clean_s_name(s_name, f)
                 if s_name in self.malt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
                 if version is not None:
@@ -111,9 +110,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         Mappability = (Total reads / Num. of queries) * 100
         """
-        cats = OrderedDict()
-        cats["Total reads"] = {"name": "Mapped reads"}
-        cats["Non mapped"] = {"name": "Non Mapped reads"}
+        cats = {
+            "Total reads": {"name": "Mapped reads"},
+            "Non mapped": {"name": "Non Mapped reads"},
+        }
         config = {
             "id": "malt-mappability-plot",
             "title": "MALT: Metagenomic Mappability",
@@ -146,41 +146,42 @@ class MultiqcModule(BaseMultiqcModule):
 
     def malt_general_stats(self):
         """MALT General Statistics table"""
-        headers = OrderedDict()
-        headers["Taxonomic assignment success"] = {
-            "title": "% Tax assigned",
-            "description": "Percentage of mapped reads assigned to a taxonomic node",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["Assig. Taxonomy"] = {
-            "title": "{} Tax assigned".format(config.read_count_prefix),
-            "description": "Number of reads assigned to a Taxonomic node ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Mappability"] = {
-            "title": "% Metagenomic Mapped",
-            "description": "Percentage of mapped reads",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["Total reads"] = {
-            "title": "{} Mapped".format(config.read_count_prefix),
-            "description": "Number of mapped reads ({})".format(config.read_count_desc),
-            "scale": "PuBu",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["Num. of queries"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads in sample ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
+        headers = {
+            "Taxonomic assignment success": {
+                "title": "% Tax assigned",
+                "description": "Percentage of mapped reads assigned to a taxonomic node",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "Assig. Taxonomy": {
+                "title": f"{config.read_count_prefix} Tax assigned",
+                "description": f"Number of reads assigned to a Taxonomic node ({config.read_count_desc})",
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "Mappability": {
+                "title": "% Metagenomic Mapped",
+                "description": "Percentage of mapped reads",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "Total reads": {
+                "title": f"{config.read_count_prefix} Mapped",
+                "description": f"Number of mapped reads ({config.read_count_desc})",
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "Num. of queries": {
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Number of reads in sample ({config.read_count_desc})",
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
         }
         self.general_stats_addcols(self.malt_data, headers)

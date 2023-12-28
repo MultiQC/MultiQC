@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import beeswarm
@@ -21,39 +20,41 @@ class FlagstatReportMixin:
             parsed_data = parse_single_report(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.samtools_flagstat:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="flagstat")
                 self.samtools_flagstat[f["s_name"]] = parsed_data
-
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, f["s_name"])
 
         # Filter to strip out ignored sample names
         self.samtools_flagstat = self.ignore_samples(self.samtools_flagstat)
 
-        if len(self.samtools_flagstat) > 0:
-            # Write parsed report data to a file (restructure first)
-            self.write_data_file(self.samtools_flagstat, "multiqc_samtools_flagstat")
+        if len(self.samtools_flagstat) == 0:
+            return 0
 
-            # General Stats Table
-            flagstats_headers = OrderedDict()
-            flagstats_headers["flagstat_total"] = {
-                "title": "{} Reads".format(config.read_count_prefix),
-                "description": "Total reads in the bam file ({})".format(config.read_count_desc),
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        # Write parsed report data to a file (restructure first)
+        self.write_data_file(self.samtools_flagstat, "multiqc_samtools_flagstat")
+
+        # General Stats Table
+        flagstats_headers = {
+            "flagstat_total": {
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Total reads in the bam file ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "hidden": True,
-            }
-            flagstats_headers["mapped_passed"] = {
-                "title": "{} Reads Mapped".format(config.read_count_prefix),
-                "description": "Reads Mapped in the bam file ({})".format(config.read_count_desc),
+            },
+            "mapped_passed": {
+                "title": f"{config.read_count_prefix} Reads Mapped",
+                "description": f"Reads Mapped in the bam file ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-            }
-            flagstats_headers["mapped_passed_pct"] = {
+            },
+            "mapped_passed_pct": {
                 "title": "% Reads Mapped",
                 "description": "% Reads Mapped in the bam file",
                 "min": 0,
@@ -61,48 +62,49 @@ class FlagstatReportMixin:
                 "suffix": "%",
                 "scale": "RdYlGn",
                 "hidden": True,
-            }
-            self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
+            },
+        }
+        self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
 
-            # Make dot plot of counts
-            keys = OrderedDict()
-            reads = {
-                "min": 0,
-                "modify": lambda x: float(x) * config.read_count_multiplier,
-                "suffix": "{} reads".format(config.read_count_prefix),
-                "decimalPlaces": 2,
-                "shared_key": "read_count",
-            }
-            keys["flagstat_total"] = dict(reads, title="Total Reads")
-            keys["total_passed"] = dict(reads, title="Total Passed QC")
-            keys["mapped_passed"] = dict(reads, title="Mapped")
+        # Make dot plot of counts
+        keys = {}
+        reads = {
+            "min": 0,
+            "modify": lambda x: float(x) * config.read_count_multiplier,
+            "suffix": f"{config.read_count_prefix} reads",
+            "decimalPlaces": 2,
+            "shared_key": "read_count",
+        }
+        keys["flagstat_total"] = dict(reads, title="Total Reads")
+        keys["total_passed"] = dict(reads, title="Total Passed QC")
+        keys["mapped_passed"] = dict(reads, title="Mapped")
 
-            if any(v.get("secondary_passed") for v in self.samtools_flagstat.values()):
-                keys["secondary_passed"] = dict(reads, title="Secondary Alignments")
+        if any(v.get("secondary_passed") for v in self.samtools_flagstat.values()):
+            keys["secondary_passed"] = dict(reads, title="Secondary Alignments")
 
-            if any(v.get("supplementary_passed") for v in self.samtools_flagstat.values()):
-                keys["supplementary_passed"] = dict(reads, title="Supplementary Alignments")
+        if any(v.get("supplementary_passed") for v in self.samtools_flagstat.values()):
+            keys["supplementary_passed"] = dict(reads, title="Supplementary Alignments")
 
-            keys["duplicates_passed"] = dict(reads, title="Duplicates")
-            keys["paired in sequencing_passed"] = dict(reads, title="Paired in Sequencing")
-            keys["properly paired_passed"] = dict(reads, title="Properly Paired")
-            keys["with itself and mate mapped_passed"] = dict(
-                reads, title="Self and mate mapped", description="Reads with itself and mate mapped"
-            )
-            keys["singletons_passed"] = dict(reads, title="Singletons")
-            keys["with mate mapped to a different chr_passed"] = dict(
-                reads, title="Mate mapped to diff chr", description="Mate mapped to different chromosome"
-            )
-            keys["with mate mapped to a different chr (mapQ >= 5)_passed"] = dict(
-                reads, title="Diff chr (mapQ >= 5)", description="Mate mapped to different chromosome (mapQ >= 5)"
-            )
+        keys["duplicates_passed"] = dict(reads, title="Duplicates")
+        keys["paired in sequencing_passed"] = dict(reads, title="Paired in Sequencing")
+        keys["properly paired_passed"] = dict(reads, title="Properly Paired")
+        keys["with itself and mate mapped_passed"] = dict(
+            reads, title="Self and mate mapped", description="Reads with itself and mate mapped"
+        )
+        keys["singletons_passed"] = dict(reads, title="Singletons")
+        keys["with mate mapped to a different chr_passed"] = dict(
+            reads, title="Mate mapped to diff chr", description="Mate mapped to different chromosome"
+        )
+        keys["with mate mapped to a different chr (mapQ >= 5)_passed"] = dict(
+            reads, title="Diff chr (mapQ >= 5)", description="Mate mapped to different chromosome (mapQ >= 5)"
+        )
 
-            self.add_section(
-                name="Samtools Flagstat",
-                anchor="samtools-flagstat",
-                description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
-                plot=beeswarm.plot(self.samtools_flagstat, keys, {"id": "samtools-flagstat-dp"}),
-            )
+        self.add_section(
+            name="Samtools Flagstat",
+            anchor="samtools-flagstat",
+            description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
+            plot=beeswarm.plot(self.samtools_flagstat, keys, {"id": "samtools-flagstat-dp"}),
+        )
 
         # Return the number of logs that were found
         return len(self.samtools_flagstat)
@@ -140,7 +142,7 @@ def parse_single_report(file_obj):
         if r_search:
             for i, j in enumerate(re_groups):
                 try:
-                    key = "{}_{}".format(k, j)
+                    key = f"{k}_{j}"
                     val = r_search.group(i + 1).strip("% ")
                     parsed_data[key] = float(val) if ("." in val) else int(val)
                 except IndexError:

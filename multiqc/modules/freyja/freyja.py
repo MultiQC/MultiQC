@@ -3,7 +3,6 @@
 """ MultiQC module to parse output from Freyja """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -38,6 +37,11 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.freyja_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.freyja_data, "multiqc_freyja")
 
         top_lineages_dict = {}
@@ -87,30 +91,27 @@ class MultiqcModule(BaseMultiqcModule):
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
             if s_name in self.freyja_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.freyja_data[s_name] = d
             self.add_data_source(f, s_name)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
-
     def general_stats_cols(self, top_lineages_dict, all_lineages):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
-        headers = OrderedDict()
-        headers["Top_lineage_freyja"] = {
-            "title": "Top lineage",
-            "description": "The most abundant lineage in the sample",
-            "bgcols": {x: self.scale.get_colour(i) for i, x in enumerate(all_lineages)},
-        }
-        headers["Top_lineage_freyja_percentage"] = {
-            "title": "Top lineage %",
-            "description": "The percentage of the most abundant lineage in the sample",
-            "max": 100,
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * 100,
-            "suffix": "%",
+        headers = {
+            "Top_lineage_freyja": {
+                "title": "Top lineage",
+                "description": "The most abundant lineage in the sample",
+                "bgcols": {x: self.scale.get_colour(i) for i, x in enumerate(all_lineages)},
+            },
+            "Top_lineage_freyja_percentage": {
+                "title": "Top lineage %",
+                "description": "The percentage of the most abundant lineage in the sample",
+                "max": 100,
+                "min": 0,
+                "scale": "Blues",
+                "modify": lambda x: x * 100,
+                "suffix": "%",
+            },
         }
 
         self.general_stats_addcols(top_lineages_dict, headers)

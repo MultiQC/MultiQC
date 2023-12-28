@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -28,10 +27,6 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("rna_seqc/metrics_v1", filehandles=True):
             self.parse_metrics_rnaseqc_v1(f)
             self.add_data_source(f, section="v1")
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Parse metrics from RNA-SeQC v2
         for f in self.find_log_files("rna_seqc/metrics_v2", filehandles=True):
@@ -71,7 +66,11 @@ class MultiqcModule(BaseMultiqcModule):
         if num_found == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(num_found))
+        log.info(f"Found {num_found} samples")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write metrics to a file
         self.write_data_file(self.rna_seqc_metrics, "multiqc_rna_seqc")
@@ -89,8 +88,8 @@ class MultiqcModule(BaseMultiqcModule):
         Parse the metrics.tsv file from RNA-SeQC version 1.x
         """
         headers = None
-        for l in f["f"]:
-            s = l.strip().split("\t")
+        for line in f["f"]:
+            s = line.strip().split("\t")
             if headers is None:
                 headers = s
             else:
@@ -102,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except ValueError:
                         data[h] = s[idx]
                 if s_name in self.rna_seqc_metrics:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.rna_seqc_metrics[s_name] = data
 
     def parse_metrics_rnaseqc_v2(self, f):
@@ -111,8 +110,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
         data = {}
         s_name = f["s_name"]
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             if s[0] == "Sample":
                 s_name = self.clean_s_name(s[1], f)
             if s[0] == "Total Reads":
@@ -125,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s[0]] = s[1].strip()
 
         if s_name in self.rna_seqc_metrics:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.rna_seqc_metrics[s_name] = data
 
     def parse_coverage(self, f):
@@ -133,8 +132,8 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         s_names = None
         j = 1
-        for l in f["f"].splitlines():
-            s = l.strip().split("\t")
+        for line in f["f"].splitlines():
+            s = line.strip().split("\t")
             if s_names is None:
                 s_names = [self.clean_s_name(s_name, f) for s_name in s]
                 for s_name in s_names:
@@ -154,8 +153,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse RNA-SeQC correlation matrices"""
         s_names = None
         data = list()
-        for l in f["f"].splitlines():
-            s = l.strip().split("\t")
+        for line in f["f"].splitlines():
+            s = line.strip().split("\t")
             if s_names is None:
                 s_names = [x for x in s if x != ""]
             else:
@@ -181,31 +180,32 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Add key metrics to the general stats table
         """
-        headers = OrderedDict()
-        headers["Expression Profiling Efficiency"] = {
-            "title": "% Expression Efficiency",
-            "description": "Ratio of exonic reads to total reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "modify": lambda x: float(x) * 100.0,
-        }
-        headers["Genes Detected"] = {
-            "title": "# Genes",
-            "description": "Number of genes detected with at least 5 reads",
-            "min": 0,
-            "scale": "Bu",
-            "format": "{:,.0f}",
-        }
-        headers["rRNA rate"] = {
-            "title": "% rRNA Alignment",
-            "description": "Ribosomal RNA reads per total reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "Reds",
-            "modify": lambda x: float(x) * 100.0,
+        headers = {
+            "Expression Profiling Efficiency": {
+                "title": "% Expression Efficiency",
+                "description": "Ratio of exonic reads to total reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+                "modify": lambda x: float(x) * 100.0,
+            },
+            "Genes Detected": {
+                "title": "# Genes",
+                "description": "Number of genes detected with at least 5 reads",
+                "min": 0,
+                "scale": "Bu",
+                "format": "{:,.0f}",
+            },
+            "rRNA rate": {
+                "title": "% rRNA Alignment",
+                "description": "Ribosomal RNA reads per total reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Reds",
+                "modify": lambda x: float(x) * 100.0,
+            },
         }
         self.general_stats_addcols(self.rna_seqc_metrics, headers)
 
@@ -213,10 +213,11 @@ class MultiqcModule(BaseMultiqcModule):
         """Plot a bargraph showing the Transcript-associated reads"""
 
         # Plot bar graph of groups
-        keys = OrderedDict()
-        keys["Exonic Rate"] = {"name": "Exonic", "color": "#2f7ed8"}
-        keys["Intronic Rate"] = {"name": "Intronic", "color": "#8bbc21"}
-        keys["Intergenic Rate"] = {"name": "Intergenic", "color": "#0d233a"}
+        keys = {
+            "Exonic Rate": {"name": "Exonic", "color": "#2f7ed8"},
+            "Intronic Rate": {"name": "Intronic", "color": "#8bbc21"},
+            "Intergenic Rate": {"name": "Intergenic", "color": "#0d233a"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -256,10 +257,10 @@ class MultiqcModule(BaseMultiqcModule):
         if data is not None:
             pconfig = {
                 "id": "rna_seqc_correlation_heatmap",
-                "title": "RNA-SeQC: {} Sample Correlation".format(corr_type),
+                "title": f"RNA-SeQC: {corr_type} Sample Correlation",
             }
             self.add_section(
-                name="{} Correlation".format(corr_type),
+                name=f"{corr_type} Correlation",
                 anchor="rseqc-rna_seqc_correlation",
                 plot=heatmap.plot(data[1], data[0], data[0], pconfig),
             )
@@ -345,14 +346,18 @@ class MultiqcModule(BaseMultiqcModule):
             "rRNA Reads",
             "Unique Mapping, Vendor QC Passed Reads",
         ]
-        keys = OrderedDict()
+        keys = dict()
         for col in columns:
-            keys[col] = {"title": col, "shared_key": "read_count", "suffix": config.read_count_prefix}
+            keys[col] = {
+                "title": col,
+                "shared_key": "read_count",
+                "suffix": config.read_count_prefix,
+            }
 
         self.add_section(
             name="Read Counts",
             anchor="rna_seqc_bam_stat",
-            description="Number of reads ({}) falling into different categories.".format(config.read_count_desc),
+            description=f"Number of reads ({config.read_count_desc}) falling into different categories.",
             helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
             plot=beeswarm.plot(self.rna_seqc_metrics, keys, pconfig),
         )

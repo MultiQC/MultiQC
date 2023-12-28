@@ -1,8 +1,7 @@
 import json
 import logging
-import operator
 import os
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from itertools import islice
 
 from multiqc import config
@@ -69,10 +68,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Add section for counts by lane
-        cats = OrderedDict()
-        cats["perfect"] = {"name": "Perfect Index Reads"}
-        cats["imperfect"] = {"name": "Mismatched Index Reads"}
-        cats["undetermined"] = {"name": "Undetermined Reads"}
+        cats = {
+            "perfect": {"name": "Perfect Index Reads"},
+            "imperfect": {"name": "Mismatched Index Reads"},
+            "undetermined": {"name": "Undetermined Reads"},
+        }
         self.add_section(
             name="Clusters by lane",
             anchor="bcl2fastq-bylane",
@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             content = json.loads(f["f"])
         except ValueError:
-            log.warning("Could not parse file as json: {}".format(f["fn"]))
+            log.warning(f"Could not parse file as json: {f['fn']}")
             return
 
         # Clean / prepend directories to sample names
@@ -154,12 +154,10 @@ class MultiqcModule(BaseMultiqcModule):
             self.bcl2fastq_data[runId] = dict()
         run_data = self.bcl2fastq_data[runId]
         for conversionResult in content.get("ConversionResults", []):
-            l = conversionResult["LaneNumber"]
-            lane = "L{}".format(conversionResult["LaneNumber"])
+            lane_num = conversionResult["LaneNumber"]
+            lane = f"L{conversionResult['LaneNumber']}"
             if lane in run_data:
-                log.debug(
-                    "Duplicate runId/lane combination found! Overwriting: {}".format(self.prepend_runid(runId, lane))
-                )
+                log.debug(f"Duplicate runId/lane combination found! Overwriting: {self.prepend_runid(runId, lane)}")
             run_data[lane] = {
                 "total": 0,
                 "total_yield": 0,
@@ -174,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add undetermined barcodes
             unknown_barcode = dict()
             for lane_data in content.get("UnknownBarcodes", list()):
-                if lane_data["Lane"] == l:
+                if lane_data["Lane"] == lane_num:
                     unknown_barcode = lane_data["Barcodes"]
                     break
             run_data[lane]["unknown_barcodes"] = unknown_barcode
@@ -183,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if demuxResult["SampleName"] == demuxResult["SampleId"]:
                     sample = demuxResult["SampleName"]
                 else:
-                    sample = "{}-{}".format(demuxResult["SampleId"], demuxResult["SampleName"])
+                    sample = f"{demuxResult['SampleId']}-{demuxResult['SampleName']}"
                 sample = self.clean_s_name(sample, f)
                 if sample in run_data[lane]["samples"]:
                     log.debug(
@@ -202,9 +200,9 @@ class MultiqcModule(BaseMultiqcModule):
                 # simplify the population of dictionaries
                 lsample = run_data[lane]["samples"][sample]
                 for r in range(1, 5):
-                    lsample["R{}_yield".format(r)] = 0
-                    lsample["R{}_Q30".format(r)] = 0
-                    lsample["R{}_trimmed_bases".format(r)] = 0
+                    lsample[f"R{r}_yield"] = 0
+                    lsample[f"R{r}_Q30"] = 0
+                    lsample[f"R{r}_trimmed_bases"] = 0
                 rlane["total"] += demuxResult["NumberReads"]
                 rlane["total_yield"] += demuxResult["Yield"]
                 lsample["total"] += demuxResult["NumberReads"]
@@ -218,19 +216,15 @@ class MultiqcModule(BaseMultiqcModule):
                     rlane["qscore_sum"] += readMetric["QualityScoreSum"]
                     lsample["yieldQ30"] += readMetric["YieldQ30"]
                     lsample["qscore_sum"] += readMetric["QualityScoreSum"]
-                    lsample["R{}_yield".format(r)] += readMetric["Yield"]
-                    lsample["R{}_Q30".format(r)] += readMetric["YieldQ30"]
-                    lsample["R{}_trimmed_bases".format(r)] += readMetric["TrimmedBases"]
+                    lsample[f"R{r}_yield"] += readMetric["Yield"]
+                    lsample[f"R{r}_Q30"] += readMetric["YieldQ30"]
+                    lsample[f"R{r}_trimmed_bases"] += readMetric["TrimmedBases"]
                 # Remove unpopulated read keys
                 for r in range(1, 5):
-                    if (
-                        not lsample["R{}_yield".format(r)]
-                        and not lsample["R{}_Q30".format(r)]
-                        and not lsample["R{}_trimmed_bases".format(r)]
-                    ):
-                        lsample.pop("R{}_yield".format(r))
-                        lsample.pop("R{}_Q30".format(r))
-                        lsample.pop("R{}_trimmed_bases".format(r))
+                    if not lsample[f"R{r}_yield"] and not lsample[f"R{r}_Q30"] and not lsample[f"R{r}_trimmed_bases"]:
+                        lsample.pop(f"R{r}_yield")
+                        lsample.pop(f"R{r}_Q30")
+                        lsample.pop(f"R{r}_trimmed_bases")
             undeterminedYieldQ30 = 0
             undeterminedQscoreSum = 0
             undeterminedTrimmedBases = 0
@@ -291,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "percent_Q30": lane["percent_Q30"],
                     "percent_perfectIndex": lane["percent_perfectIndex"],
                     "mean_qscore": lane["mean_qscore"],
-                    "unknown_barcodes": self.get_unknown_barcodes(lane["unknown_barcodes"]),
+                    "unknown_barcodes": lane["unknown_barcodes"],
                 }
                 for sample_id, sample in lane["samples"].items():
                     if sample_id not in self.bcl2fastq_bysample:
@@ -303,9 +297,9 @@ class MultiqcModule(BaseMultiqcModule):
                             "qscore_sum": 0,
                         }
                         for r in range(1, 5):
-                            self.bcl2fastq_bysample[sample_id]["R{}_yield".format(r)] = 0
-                            self.bcl2fastq_bysample[sample_id]["R{}_Q30".format(r)] = 0
-                            self.bcl2fastq_bysample[sample_id]["R{}_trimmed_bases".format(r)] = 0
+                            self.bcl2fastq_bysample[sample_id][f"R{r}_yield"] = 0
+                            self.bcl2fastq_bysample[sample_id][f"R{r}_Q30"] = 0
+                            self.bcl2fastq_bysample[sample_id][f"R{r}_trimmed_bases"] = 0
                     s = self.bcl2fastq_bysample[sample_id]
                     s["total"] += sample["total"]
                     s["total_yield"] += sample["total_yield"]
@@ -315,9 +309,9 @@ class MultiqcModule(BaseMultiqcModule):
                     # Undetermined samples did not have R1 and R2 information
                     for r in range(1, 5):
                         try:
-                            s["R{}_yield".format(r)] += sample["R{}_yield".format(r)]
-                            s["R{}_Q30".format(r)] += sample["R{}_Q30".format(r)]
-                            s["R{}_trimmed_bases".format(r)] += sample["R{}_trimmed_bases".format(r)]
+                            s[f"R{r}_yield"] += sample[f"R{r}_yield"]
+                            s[f"R{r}_Q30"] += sample[f"R{r}_Q30"]
+                            s[f"R{r}_trimmed_bases"] += sample[f"R{r}_trimmed_bases"]
                         except KeyError:
                             pass
                     try:
@@ -341,27 +335,15 @@ class MultiqcModule(BaseMultiqcModule):
                     for r in range(1, 5):
                         try:
                             if (
-                                not self.bcl2fastq_bysample[sample_id]["R{}_yield".format(r)]
-                                and not self.bcl2fastq_bysample[sample_id]["R{}_Q30".format(r)]
-                                and not self.bcl2fastq_bysample[sample_id]["R{}_trimmed_bases".format(r)]
+                                not self.bcl2fastq_bysample[sample_id][f"R{r}_yield"]
+                                and not self.bcl2fastq_bysample[sample_id][f"R{r}_Q30"]
+                                and not self.bcl2fastq_bysample[sample_id][f"R{r}_trimmed_bases"]
                             ):
-                                self.bcl2fastq_bysample[sample_id].pop("R{}_yield".format(r))
-                                self.bcl2fastq_bysample[sample_id].pop("R{}_Q30".format(r))
-                                self.bcl2fastq_bysample[sample_id].pop("R{}_trimmed_bases".format(r))
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_yield")
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_Q30")
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_trimmed_bases")
                         except KeyError:
                             pass
-
-    def get_unknown_barcodes(self, lane_unknown_barcode):
-        """Python 2.* dictionaries are not sorted.
-        This function return an `OrderedDict` sorted by barcode count.
-        """
-        try:
-            sorted_barcodes = OrderedDict(
-                sorted(lane_unknown_barcode.items(), key=operator.itemgetter(1), reverse=True)
-            )
-        except AttributeError:
-            sorted_barcodes = None
-        return sorted_barcodes
 
     def add_general_stats(self):
         data = dict()
@@ -378,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
             try:
-                perfect_percent = "{0:.1f}".format(float(100.0 * sample["perfectIndex"] / sample["total"]))
+                perfect_percent = f"{float(100.0 * sample['perfectIndex'] / sample['total']):.1f}"
             except ZeroDivisionError:
                 perfect_percent = "0.0"
 
@@ -389,31 +371,32 @@ class MultiqcModule(BaseMultiqcModule):
             }
             for r in range(1, 5):
                 try:
-                    data[sample_id]["percent_R{}_Q30".format(r)] = percent_R_Q30[r]
-                    data[sample_id]["R{}_trimmed_bases".format(r)] = sample["R{}_trimmed_bases".format(r)]
+                    data[sample_id][f"percent_R{r}_Q30"] = percent_R_Q30[r]
+                    data[sample_id][f"R{r}_trimmed_bases"] = sample[f"R{r}_trimmed_bases"]
                 except KeyError:
                     pass
 
-        headers = OrderedDict()
-        headers["total"] = {
-            "title": "{} Clusters".format(config.read_count_prefix),
-            "description": "Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})".format(
-                config.read_count_desc
-            ),
-            "scale": "Blues",
-            "shared_key": "read_count",
-        }
-        headers["yieldQ30"] = {
-            "title": "Yield ({}) &ge; Q30".format(config.base_count_prefix),
-            "description": "Number of bases with a Phred score of 30 or higher ({})".format(config.base_count_desc),
-            "scale": "Greens",
-            "shared_key": "base_count",
+        headers = {
+            "total": {
+                "title": f"{config.read_count_prefix} Clusters",
+                "description": "Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})".format(
+                    config.read_count_desc
+                ),
+                "scale": "Blues",
+                "shared_key": "read_count",
+            },
+            "yieldQ30": {
+                "title": f"Yield ({config.base_count_prefix}) &ge; Q30",
+                "description": f"Number of bases with a Phred score of 30 or higher ({config.base_count_desc})",
+                "scale": "Greens",
+                "shared_key": "base_count",
+            },
         }
         # If no data for a column, header will be automatically ignored
         for r in range(1, 5):
-            headers["percent_R{}_Q30".format(r)] = {
-                "title": "% R{} Yield &ge; Q30".format(r),
-                "description": "Percent of bases in R{} with a Phred score of 30 or higher".format(r),
+            headers[f"percent_R{r}_Q30"] = {
+                "title": f"% R{r} Yield &ge; Q30",
+                "description": f"Percent of bases in R{r} with a Phred score of 30 or higher",
                 "scale": "RdYlGn",
                 "max": 100,
                 "min": 0,
@@ -432,14 +415,14 @@ class MultiqcModule(BaseMultiqcModule):
             hideCol = True
             for s in data:
                 try:
-                    if data[s]["R{}_trimmed_bases".format(r)] > 0:
+                    if data[s][f"R{r}_trimmed_bases"] > 0:
                         hideCol = False
                 except KeyError:
                     pass
             try:
-                headers["R{}_trimmed_bases".format(r)] = {
-                    "title": "{} R{} trimmed".format(config.base_count_prefix, r),
-                    "description": "Number of bases trimmed ({})".format(config.base_count_desc),
+                headers[f"R{r}_trimmed_bases"] = {
+                    "title": f"{config.base_count_prefix} R{r} trimmed",
+                    "description": f"Number of bases trimmed ({config.base_count_desc})",
                     "scale": "RdYlBu",
                     "modify": lambda x: x * 0.000001,
                     "hidden": hideCol,
@@ -450,40 +433,41 @@ class MultiqcModule(BaseMultiqcModule):
 
     def lane_stats_table(self):
         """Return a table with overview stats for each bcl2fastq lane for a single flow cell"""
-        headers = OrderedDict()
-        headers["total_yield"] = {
-            "title": "{} Total Yield".format(config.base_count_prefix),
-            "description": "Number of bases ({})".format(config.base_count_desc),
-            "scale": "Greens",
-            "shared_key": "base_count",
-        }
-        headers["total"] = {
-            "title": "{} Total Clusters".format(config.read_count_prefix),
-            "description": "Total number of clusters for this lane ({})".format(config.read_count_desc),
-            "scale": "Blues",
-            "shared_key": "read_count",
-        }
-        headers["percent_Q30"] = {
-            "title": "% bases &ge; Q30",
-            "description": "Percentage of bases with greater than or equal to Q30 quality score",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-        }
-        headers["mean_qscore"] = {
-            "title": "Mean Quality",
-            "description": "Average phred qualty score",
-            "min": 0,
-            "scale": "Spectral",
-        }
-        headers["percent_perfectIndex"] = {
-            "title": "% Perfect Index",
-            "description": "Percent of reads with perfect index (0 mismatches)",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": "%",
+        headers = {
+            "total_yield": {
+                "title": f"{config.base_count_prefix} Total Yield",
+                "description": f"Number of bases ({config.base_count_desc})",
+                "scale": "Greens",
+                "shared_key": "base_count",
+            },
+            "total": {
+                "title": f"{config.read_count_prefix} Total Clusters",
+                "description": f"Total number of clusters for this lane ({config.read_count_desc})",
+                "scale": "Blues",
+                "shared_key": "read_count",
+            },
+            "percent_Q30": {
+                "title": "% bases &ge; Q30",
+                "description": "Percentage of bases with greater than or equal to Q30 quality score",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+            },
+            "mean_qscore": {
+                "title": "Mean Quality",
+                "description": "Average phred qualty score",
+                "min": 0,
+                "scale": "Spectral",
+            },
+            "percent_perfectIndex": {
+                "title": "% Perfect Index",
+                "description": "Percent of reads with perfect index (0 mismatches)",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+                "suffix": "%",
+            },
         }
         table_config = {
             "namespace": "bcl2fastq",
@@ -494,10 +478,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return table.plot(self.bcl2fastq_bylane, headers, table_config)
 
-    def prepend_runid(self, runId, rest):
+    @staticmethod
+    def prepend_runid(runId, rest):
         return str(runId) + " - " + str(rest)
 
-    def get_bar_data_from_counts(self, counts):
+    @staticmethod
+    def get_bar_data_from_counts(counts):
         bar_data = {}
         for key, value in counts.items():
             bar_data[key] = {
@@ -508,7 +494,8 @@ class MultiqcModule(BaseMultiqcModule):
                 bar_data[key]["undetermined"] = value["undetermined"]
         return bar_data
 
-    def get_bar_data_from_undetermined(self, flowcells):
+    @staticmethod
+    def get_bar_data_from_undetermined(flowcells):
         """Get data to plot for undetermined barcodes."""
         bar_data = defaultdict(dict)
         # get undetermined barcodes for each lanes
@@ -519,6 +506,4 @@ class MultiqcModule(BaseMultiqcModule):
             except AttributeError:
                 pass
 
-        # sort results
-        bar_data = OrderedDict(sorted(bar_data.items(), key=lambda x: sum(x[1].values()), reverse=True))
-        return OrderedDict((key, value) for key, value in islice(bar_data.items(), 20))
+        return {key: value for key, value in islice(bar_data.items(), 20)}

@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from pycoQC """
 
 import logging
-from collections import OrderedDict
 
 import yaml
 
@@ -26,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.pycoqc_data = {}
         for f in self.find_log_files("pycoqc"):
             if f["s_name"] in self.pycoqc_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
             data = self.load_data(f["f"])
             # Function can return None if YAML parsing failed
             if data:
@@ -40,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.pycoqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.pycoqc_data)))
+        log.info(f"Found {len(self.pycoqc_data)} reports")
 
         # Write data to file
         self.write_data_file(self.pycoqc_data, "pycoqc")
@@ -63,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             return yaml.load(f, Loader=yaml.SafeLoader)
         except Exception as e:
-            log.warning("Could not parse YAML for '{}': \n  {}".format(f, e))
+            log.warning(f"Could not parse YAML for '{f}': \n  {e}")
             return None
 
     def parse_data(self):
@@ -130,101 +129,103 @@ class MultiqcModule(BaseMultiqcModule):
         self.quality_plot_data = [qual_plot_pass, qual_plot_all]
 
     def make_general_stats(self):
-        general_stats_headers = OrderedDict()
-        general_stats_headers["passed_median_read_length"] = {
-            "title": "Read Length - Pass (bp)",
-            "description": "Median Read Length - passing reads (base pairs)",
-            "scale": "BuPu",
-            "shared_key": "median_read_len",
-            "format": "{:,.0f}",
-        }
-        general_stats_headers["all_median_read_length"] = {
-            "title": "Read Length - All (bp)",
-            "description": "Median Read Length - all reads (base pairs)",
-            "scale": "BuPu",
-            "shared_key": "median_read_len",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        general_stats_headers["passed_reads"] = {
-            "title": "{} Reads - Pass".format(config.long_read_count_prefix),
-            "description": "Number of reads - passing reads ({})".format(config.long_read_count_desc),
-            "scale": "BuGn",
-            "modify": lambda x: x * config.long_read_count_multiplier,
-            "shared_key": "long_read_count",
-        }
-        general_stats_headers["all_reads"] = {
-            "title": "{} Reads - All".format(config.long_read_count_prefix),
-            "description": "Number of reads - all reads ({})".format(config.long_read_count_desc),
-            "scale": "BuGn",
-            "modify": lambda x: x * config.long_read_count_multiplier,
-            "shared_key": "long_read_count",
-            "hidden": True,
-        }
-        general_stats_headers["passed_bases"] = {
-            "title": "{} Bases - Pass".format(config.base_count_prefix),
-            "description": "Number of bases - passing reads ({} of base pairs)".format(config.base_count_desc),
-            "scale": "OrRd",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
-        }
-        general_stats_headers["all_bases"] = {
-            "title": "{} Bases - All".format(config.base_count_prefix),
-            "description": "Number of bases - all reads ({} of base pairs)".format(config.base_count_desc),
-            "scale": "OrRd",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
-            "hidden": True,
+        general_stats_headers = {
+            "passed_median_read_length": {
+                "title": "Read Length - Pass (bp)",
+                "description": "Median Read Length - passing reads (base pairs)",
+                "scale": "BuPu",
+                "shared_key": "median_read_len",
+                "format": "{:,.0f}",
+            },
+            "all_median_read_length": {
+                "title": "Read Length - All (bp)",
+                "description": "Median Read Length - all reads (base pairs)",
+                "scale": "BuPu",
+                "shared_key": "median_read_len",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "passed_reads": {
+                "title": f"{config.long_read_count_prefix} Reads - Pass",
+                "description": f"Number of reads - passing reads ({config.long_read_count_desc})",
+                "scale": "BuGn",
+                "modify": lambda x: x * config.long_read_count_multiplier,
+                "shared_key": "long_read_count",
+            },
+            "all_reads": {
+                "title": f"{config.long_read_count_prefix} Reads - All",
+                "description": f"Number of reads - all reads ({config.long_read_count_desc})",
+                "scale": "BuGn",
+                "modify": lambda x: x * config.long_read_count_multiplier,
+                "shared_key": "long_read_count",
+                "hidden": True,
+            },
+            "passed_bases": {
+                "title": f"{config.base_count_prefix} Bases - Pass",
+                "description": f"Number of bases - passing reads ({config.base_count_desc} of base pairs)",
+                "scale": "OrRd",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
+            },
+            "all_bases": {
+                "title": f"{config.base_count_prefix} Bases - All",
+                "description": f"Number of bases - all reads ({config.base_count_desc} of base pairs)",
+                "scale": "OrRd",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
+                "hidden": True,
+            },
         }
 
         self.general_stats_addcols(self.table_data, general_stats_headers)
 
     def make_pycoqc_table(self):
-        pycoqc_table_headers = OrderedDict()
-        pycoqc_table_headers["passed_n50"] = {
-            "title": "N50 - Pass (bp)",
-            "description": "N50 - passing reads (base pairs)",
-            "scale": "BuGn",
-            "shared_key": "n50",
-            "format": "{:,.0f}",
-        }
-        pycoqc_table_headers["all_n50"] = {
-            "title": "N50 - All (bp)",
-            "description": "N50 - all reads (base pairs)",
-            "scale": "BuGn",
-            "shared_key": "n50",
-            "format": "{:,.0f}",
-        }
-        pycoqc_table_headers["passed_median_phred_score"] = {
-            "title": "Median read qual - Pass",
-            "description": "Median PHRED quality score - passing reads",
-            "scale": "PuRd",
-            "shared_key": "phred",
-        }
-        pycoqc_table_headers["all_median_phred_score"] = {
-            "title": "Median read qual - All",
-            "description": "Median PHRED quality score - all reads",
-            "scale": "PuRd",
-            "shared_key": "phred",
-        }
-        pycoqc_table_headers["passed_channels"] = {
-            "title": "Active Channels - Pass",
-            "description": "Number of active channels - passing reads",
-            "scale": "OrRd",
-            "shared_key": "channels",
-            "format": "{:,.0f}",
-        }
-        pycoqc_table_headers["all_channels"] = {
-            "title": "Active Channels - All",
-            "description": "Number of active channels - all reads",
-            "scale": "OrRd",
-            "shared_key": "channels",
-            "format": "{:,.0f}",
-        }
-        pycoqc_table_headers["all_run_duration"] = {
-            "title": "Run duration (h)",
-            "description": "Run duration (hours)",
-            "scale": "PuBuGn",
+        pycoqc_table_headers = {
+            "passed_n50": {
+                "title": "N50 - Pass (bp)",
+                "description": "N50 - passing reads (base pairs)",
+                "scale": "BuGn",
+                "shared_key": "n50",
+                "format": "{:,.0f}",
+            },
+            "all_n50": {
+                "title": "N50 - All (bp)",
+                "description": "N50 - all reads (base pairs)",
+                "scale": "BuGn",
+                "shared_key": "n50",
+                "format": "{:,.0f}",
+            },
+            "passed_median_phred_score": {
+                "title": "Median read qual - Pass",
+                "description": "Median PHRED quality score - passing reads",
+                "scale": "PuRd",
+                "shared_key": "phred",
+            },
+            "all_median_phred_score": {
+                "title": "Median read qual - All",
+                "description": "Median PHRED quality score - all reads",
+                "scale": "PuRd",
+                "shared_key": "phred",
+            },
+            "passed_channels": {
+                "title": "Active Channels - Pass",
+                "description": "Number of active channels - passing reads",
+                "scale": "OrRd",
+                "shared_key": "channels",
+                "format": "{:,.0f}",
+            },
+            "all_channels": {
+                "title": "Active Channels - All",
+                "description": "Number of active channels - all reads",
+                "scale": "OrRd",
+                "shared_key": "channels",
+                "format": "{:,.0f}",
+            },
+            "all_run_duration": {
+                "title": "Run duration (h)",
+                "description": "Run duration (hours)",
+                "scale": "PuBuGn",
+            },
         }
 
         pycoqc_table_config = {"id": "pycoqc_stats_table", "namespace": "pycoQC"}
@@ -251,12 +252,14 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Two sets of categories for the two datasets
-        read_cats = OrderedDict()
-        read_cats["passed_reads"] = {"name": "Passed Reads"}
-        read_cats["non_passed_reads"] = {"name": "Failed Reads"}
-        base_cats = OrderedDict()
-        base_cats["passed_bases"] = {"name": "Passed Bases"}
-        base_cats["non_passed_bases"] = {"name": "Failed Bases"}
+        read_cats = {
+            "passed_reads": {"name": "Passed Reads"},
+            "non_passed_reads": {"name": "Failed Reads"},
+        }
+        base_cats = {
+            "passed_bases": {"name": "Passed Bases"},
+            "non_passed_bases": {"name": "Failed Bases"},
+        }
 
         # Make the plot
         bargraph_plot = bargraph.plot([self.reads_data, self.bases_data], [read_cats, base_cats], read_bar_config)

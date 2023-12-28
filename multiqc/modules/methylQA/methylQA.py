@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
@@ -32,17 +31,17 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("methylQA"):
             self.parse_methylqa_logs(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.methylqa_data = self.ignore_samples(self.methylqa_data)
 
         if len(self.methylqa_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.methylqa_data)))
+        log.info(f"Found {len(self.methylqa_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.methylqa_data, "multiqc_methylQA")
@@ -86,23 +85,23 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse the coverage histogram
         hist = False
-        for l in f["f"].split(os.linesep):
+        for line in f["f"].split(os.linesep):
             if hist is not False:
                 try:
-                    s = l.split()
+                    s = line.split()
                     hist["counts"][s[0]] = int(s[1])
                     hist["percentages"][s[0]] = float(s[2])
                 except IndexError:
                     break
-            if re.search(r"Times covered\s+Count\s+Percent\s+", l):
-                hist = {"counts": OrderedDict(), "percentages": OrderedDict()}
+            if re.search(r"Times covered\s+Count\s+Percent\s+", line):
+                hist = {"counts": dict(), "percentages": dict()}
         if hist is not False and len(hist) > 0:
             self.methylqa_coverage_counts[s_name] = hist["counts"]
             self.methylqa_coverage_percentages[s_name] = hist["percentages"]
 
         if len(parsed_data) > 0:
             if s_name in self.methylqa_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.methylqa_data[s_name] = parsed_data
 
@@ -110,8 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the methylQA report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["coverage"] = {"title": "Fold Coverage", "min": 0, "suffix": "X", "scale": "YlGn"}
+        headers = {"coverage": {"title": "Fold Coverage", "min": 0, "suffix": "X", "scale": "YlGn"}}
         self.general_stats_addcols(self.methylqa_data, headers)
 
     def methylqa_alignment_plot(self):
