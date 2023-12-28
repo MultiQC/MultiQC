@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
         # we sort by the avg of the range, which is effectively
         # sorting ranges in asc order assuming no overlap
         sequence_length_distributions = self.fastqc_data[s_name].get("sequence_length_distribution", [])
-        sequence_length_distributions.sort(key=lambda d: self.avg_bp_from_range(d["length"]))
+        sequence_length_distributions.sort(key=lambda d: _avg_bp_from_range(d["length"]))
 
         # Calculate the average sequence length (Basic Statistics gives a range)
         length_reads = 0
@@ -229,13 +229,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for d in sequence_length_distributions:
             length_reads += d["count"]
-            length_bp += d["count"] * self.avg_bp_from_range(d["length"])
+            length_bp += d["count"] * _avg_bp_from_range(d["length"])
 
             if median is None and length_reads >= total_count / 2:
                 # if the distribution-entry is a range, we use the average of the range.
                 # this isn't technically correct, because we can't know what the distribution
                 # is within that range. Probably good enough though.
-                median = self.avg_bp_from_range(d["length"])
+                median = _avg_bp_from_range(d["length"])
 
         if total_count > 0:
             self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
@@ -489,7 +489,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d["mean"]
+                    _avg_bp_from_range(d["base"]): d["mean"]
                     for d in self.fastqc_data[s_name]["per_base_sequence_quality"]
                 }
             except KeyError:
@@ -594,7 +594,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in sorted(self.fastqc_data.keys()):
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
+                    _avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
                 }
             except KeyError:
                 # FastQC module was skipped - move on to the next sample
@@ -787,7 +787,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             _In a normal random library you would expect to see a roughly normal distribution
             of GC content where the central peak corresponds to the overall GC content of
-            the underlying genome. Since we don't know the the GC content of the genome the
+            the underlying genome. Since we don't know the GC content of the genome the
             modal GC content is calculated from the observed data and used to build a
             reference distribution._
 
@@ -808,8 +808,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d["n-count"]
-                    for d in self.fastqc_data[s_name]["per_base_n_content"]
+                    _avg_bp_from_range(d["base"]): d["n-count"] for d in self.fastqc_data[s_name]["per_base_n_content"]
                 }
             except KeyError:
                 pass
@@ -867,7 +866,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["length"]): d["count"]
+                    _avg_bp_from_range(d["length"]): d["count"]
                     for d in self.fastqc_data[s_name]["sequence_length_distribution"]
                 }
                 avg_seq_lengths.update(data[s_name].keys())
@@ -1153,7 +1152,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 for adapters in self.fastqc_data[s_name]["adapter_content"]:
-                    pos = self.avg_bp_from_range(adapters["position"])
+                    pos = _avg_bp_from_range(adapters["position"])
                     for adapter_name, percent in adapters.items():
                         k = f"{s_name} - {adapter_name}"
                         if adapter_name != "position":
@@ -1336,7 +1335,7 @@ def _split_data_by_group(s_groups, data: Dict[str, Dict]):
     return gdata
 
 
-def avg_bp_from_range(bp: str) -> int:
+def _avg_bp_from_range(bp: str) -> int:
     """
     Helper function - FastQC often gives base pair ranges (e.g. 10-15)
     which are not helpful when plotting. This returns the average from such
