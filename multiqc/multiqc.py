@@ -785,11 +785,11 @@ def run(
             class CustomTraceback:
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     sys_tb = sys.exc_info()
-                    issue_url = "https://github.com/ewels/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
+                    issue_url = "https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
                         this_module, sys_tb[0].__name__
                     )
                     yield (
-                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/ewels/MultiQC/issues[/link][/] \n"
+                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/MultiQC/MultiQC/issues[/link][/] \n"
                         "[bold underline]Please attach a file that triggers the error.[/] The last file found was: [green]{}[/]\n".format(
                             issue_url, report.last_found_file
                         )

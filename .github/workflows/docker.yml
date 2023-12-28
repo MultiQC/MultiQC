@@ -2,18 +2,18 @@ name: Publish Docker image
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   release:
     types: [published]
 
 jobs:
   push_to_registry:
-    if: github.repository == 'ewels/MultiQC'
+    if: github.repository == 'MultiQC/MultiQC'
     name: Build + Push Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # https://github.com/docker/setup-qemu-action
       - name: Set up QEMU
@@ -47,8 +47,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ewels/multiqc:dev
-            ghcr.io/ewels/multiqc:dev
+            multiqc/multiqc:dev
+            ghcr.io/multiqc/multiqc:dev
 
       - name: Push release image
         uses: docker/build-push-action@v3
@@ -60,7 +60,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ewels/multiqc:${{ github.event.release.tag_name }}
-            ewels/multiqc:latest
-            ghcr.io/ewels/multiqc:${{ github.event.release.tag_name }}
-            ghcr.io/ewels/multiqc:latest
+            multiqc/multiqc:${{ github.event.release.tag_name }}
+            multiqc/multiqc:latest
+            ghcr.io/multiqc/multiqc:${{ github.event.release.tag_name }}
+            ghcr.io/multiqc/multiqc:latest

@@ -47,7 +47,7 @@ multiqc --version
 ```
 
 ```txt
-multiqc, version 1.14
+multiqc, version 1.20
 ```
 
 ## Get some example data
@@ -81,7 +81,7 @@ multiqc .
 ```
 
 ```txt
-  /// MultiQC 🔍 | v1.14
+  /// MultiQC 🔍 | v1.20
 
 |           multiqc | Search path : /demo/data
 |         searching | ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 121/121

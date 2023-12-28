@@ -193,7 +193,7 @@ def order_headers(headers):
 
 
 # STD_TABLE_CONFIGS contains all standard table configurations from:
-# https://github.com/ewels/MultiQC/blob/master/docs/plots.md#creating-a-table
+# https://github.com/MultiQC/MultiQC/blob/main/docs/plots.md#creating-a-table
 STD_TABLE_CONFIGS = [
     "namespace",
     "title",
