@@ -7,6 +7,7 @@ from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
+from .markdup import MarkdupReportMixin
 from .rmdup import RmdupReportMixin
 
 # Import the Samtools submodules
@@ -16,7 +17,14 @@ from .stats import StatsReportMixin
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, IdxstatsReportMixin, RmdupReportMixin):
+class MultiqcModule(
+    BaseMultiqcModule,
+    StatsReportMixin,
+    FlagstatReportMixin,
+    IdxstatsReportMixin,
+    RmdupReportMixin,
+    MarkdupReportMixin,
+):
     """Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -54,6 +62,10 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, Id
         n["rmdup"] = self.parse_samtools_rmdup()
         if n["rmdup"] > 0:
             log.info(f"Found {n['rmdup']} rmdup reports")
+
+        n["markdup"] = self.parse_samtools_markdup()
+        if n["markdup"] > 0:
+            log.info(f"Found {n['markdup']} markdup reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
