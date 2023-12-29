@@ -317,7 +317,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Take only the trimmed data for the General Stats Table
         trimmed_samples = False
-        for merged_name, s_names in self.regroup_by_merged_name(self.trimming_groups).items():
+        trimming_groups = self.group_samples(list(gdata.keys()), "trimming")
+        for merged_name, s_names in self.regroup_by_merged_name(trimming_groups).items():
             if len(s_names) > 1:
                 # We expect these groups to contain trimmed and not trimmed.
                 # The non-trimmed sample names will be the same as the group,

@@ -537,6 +537,9 @@ class BaseMultiqcModule(object):
                 s_name = trimmed_name
 
             else:
+                default_labels = [
+                    label for label, fn_clean_exts in config.sample_merge_groups[criteria].items() if not fn_clean_exts
+                ]
                 for label, fn_clean_exts in config.sample_merge_groups[criteria].items():
                     if fn_clean_exts:
                         trimmed_name = self.clean_s_name(
@@ -545,8 +548,8 @@ class BaseMultiqcModule(object):
                         if trimmed_name != s_name:
                             labels.append(label)
                             s_name = trimmed_name
-                    else:
-                        labels.append(label)
+                if not labels and default_labels:
+                    labels = default_labels
 
         return s_name + "".join(skipped_suffixes), (" ".join(labels) if labels else None)
 
@@ -607,7 +610,7 @@ class BaseMultiqcModule(object):
         {}
         """
         result = defaultdict(list)
-        for s_name in samples:
+        for s_name in sorted(samples):
             trimmed_name, label = self.extract_groups(s_name, grouping_criteria)
             if not label:
                 continue

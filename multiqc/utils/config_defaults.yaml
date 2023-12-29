@@ -174,7 +174,7 @@ custom_content:
 # Search patterns for grouping samples within a report.
 # In order, to handle cases like SAMPLE_1.trimmed.fq.gz
 sample_merge_groups:
-  trimmed:
+  trimming:
     Raw:
     Trimmed:
       - "_trimmed"
