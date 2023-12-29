@@ -89,12 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.fastqc_data)} reports")
 
-        # Get the sample groups for PE data / trimmed data
-        samples = list(self.fastqc_data.keys())
-        self.pair_groups = self.group_samples(samples, "read_pairs")
-        self.trimming_groups = self.group_samples(samples, "trimming")
-        self.trimming_and_pair_groups = self.group_samples(samples, ["trimming", "read_pairs"])
-
         # Write the summary stats to a file
         data = dict()
         for s_name in self.fastqc_data:
@@ -131,6 +125,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.intro += '<script type="text/javascript">load_fastqc_passfails();</script>'
+
+        # Get the sample groups for PE data / trimmed data
+        self.trimming_groups = self.group_samples(self.fastqc_data.keys(), "trimming", key_by="label")
+        self.trimming_and_pe_groups = self.group_samples(self.fastqc_data.keys(), ["trimming", "read_pairs"])
 
         # Now add each section in order
         self.read_count_plot()
@@ -276,8 +274,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Merge Read 1 + Read 2 data
         gdata = dict()
         merged_samples = False
-
-        for g_name, s_names in self.regroup_by_merged_name(self.pair_groups).items():
+        for g_name, s_names in self.group_samples(
+            list(data.keys()),
+            grouping_criteria="read_pairs",
+            key_by="merged_name",
+        ).items():
             if len(s_names) == 0:
                 continue
             if len(s_names) == 1:
@@ -317,8 +318,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Take only the trimmed data for the General Stats Table
         trimmed_samples = False
-        trimming_groups = self.group_samples(list(gdata.keys()), "trimming")
-        for merged_name, s_names in self.regroup_by_merged_name(trimming_groups).items():
+        for merged_name, s_names in self.group_samples(
+            list(gdata.keys()),
+            grouping_criteria="trimming",
+            key_by="merged_name",
+        ).items():
             if len(s_names) > 1:
                 # We expect these groups to contain trimmed and not trimmed.
                 # The non-trimmed sample names will be the same as the group,
@@ -450,8 +454,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["cpswitch"] = False
 
         # Split by Read 1/2, Raw/Trimmed
-        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-        pdata, pconfig = self.split_fastqc_data_by_group(samples_by_label, pdata, pconfig)
+        pdata, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, pdata, pconfig)
         pcats = [pcats for _ in range(len(pdata))]
 
         # Add the report section
@@ -511,8 +514,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Sequence Quality Histograms",
@@ -566,8 +568,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Per Sequence Quality Scores",
@@ -834,8 +835,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Per Base N Content",
@@ -900,8 +900,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }
             # Split by Read 1/2, Raw/Trimmed
-            samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-            data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+            data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
             self.add_section(
                 name="Sequence Length Distribution",
@@ -949,8 +948,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Sequence Duplication Levels",
@@ -1043,8 +1041,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = f'<div class="alert alert-info">{len(data)} samples had less than 1% of reads made up of overrepresented sequences</div>'
         else:
             # Split by Read 1/2, Raw/Trimmed
-            samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
-            data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
+            data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
             cats = [cats for _ in range(len(data))]
 
             plot_html = bargraph.plot(data, cats, pconfig)
@@ -1308,7 +1305,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig: Optional[Dict] = None,
     ) -> Tuple[List[Dict[str, Dict]], Optional[Dict]]:
         """
-        Split into Read 1 and Read 2 / Raw and Trimmed
+        Split plot data into multiple datasets, corresponding to the sample groups.
         """
         pconfig = pconfig or {}
         pconfig["data_labels"] = list()

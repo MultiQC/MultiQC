@@ -148,7 +148,7 @@ custom_content:
   order: []
 
 # Search patterns for grouping samples within a report.
-# In order, to handle cases like SAMPLE_1.trimmed.fq.gz
+# Listed in order to handle cases like SAMPLE_R1.trimmed.fq.gz
 sample_merge_groups:
   trimming:
     Trimmed:
@@ -158,12 +158,12 @@ sample_merge_groups:
   read_pairs:
     Read 1:
       - type: regex
-        pattern: "_R1_"
+        pattern: "_R1"
       - type: regex
         pattern: "[_.-][rR]?1$"
     Read 2:
       - type: regex
-        pattern: "_R2_"
+        pattern: "_R2"
       - type: regex
         pattern: "[_.-][rR]?2$"
     Unpaired:

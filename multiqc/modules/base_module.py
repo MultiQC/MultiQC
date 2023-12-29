@@ -1,5 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
-from typing import List, Union, Optional, Dict, Tuple, Literal
+from typing import List, Union, Optional, Dict, Tuple, Literal, Iterable
 
 import fnmatch
 import io
@@ -519,7 +519,7 @@ class BaseMultiqcModule(object):
         "S1": "Trimmed Read 1"
         >>> self.groups_for_sample("S1.trimmed", ["trimming", "read_pairs"])
         "S1": "Trimmed"
-        >>> self.groups_for_sample("S1_1", ["trimming", "read_pairs")
+        >>> self.groups_for_sample("S1_1", ["trimming", "read_pairs"])
         "S1": "Read 1"
         >>> self.groups_for_sample("S1", ["non_existing_criteria"])
         "S1", None
@@ -529,7 +529,8 @@ class BaseMultiqcModule(object):
 
         skipped_suffixes = []
         label_by_grouping = dict()
-        for grouping, groups in config.sample_merge_groups.items():
+        groupings = config.sample_merge_groups or dict()
+        for grouping, groups in groupings.items():
             if grouping not in grouping_criteria:
                 # Just trimming all found patterns and recording them to add them back after
                 all_exts = []
@@ -556,24 +557,23 @@ class BaseMultiqcModule(object):
             # Sample didn't match any group, so using the default labels from each groupping to represent the
             # sample somehow.
             for grouping in label_by_grouping.keys():
-                _dls = [
-                    label for label, fn_clean_exts in config.sample_merge_groups[grouping].items() if not fn_clean_exts
-                ]
+                _dls = [label for label, fn_clean_exts in groupings[grouping].items() if not fn_clean_exts]
                 if _dls:
                     if len(_dls) > 1:
                         logger.error(f"Multiple default labels found for '{grouping}': {_dls}, taking the first one")
                     label_by_grouping[grouping] = _dls[0]
 
-        label = " ".join([label for label in label_by_grouping.values() if label is not None])
+        labels = [label for label in label_by_grouping.values() if label is not None]
+        label = " ".join(labels) if labels else None
 
         return s_name + "".join(skipped_suffixes), label
 
     def group_samples(
         self,
-        samples: List[str],
+        samples: Iterable[str],
         grouping_criteria: Union[str, List[str]],
         key_by: Literal["label", "merged_name"] = "label",
-    ) -> Dict[str, List[Tuple[str, str]]]:
+    ) -> Dict[str, List[str]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
@@ -583,71 +583,54 @@ class BaseMultiqcModule(object):
         :return: a dict where the keys are group labels, and the values are lists of tuples,
             of cleaned basenames according to the cleaning rules and the original sample names
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs")
-        {"Read 1": [("S1", "S1_R1_001"), ("S1.trimmed", "S1_R1_001.trimmed"), ("S2", "S2_R1")],
-         "Read 2": [("S1", "S1_R2_001")]}
+        {"Read 1": ["S1_R1_001", "S1_R1_001.trimmed", "S2_R1"],
+         "Read 2": ["S1_R2_001"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs", key_by="merged_name")
+        {"S1": ["S1_R1_001", "S1_R2_001"],
+         "S1.trimmed: ["S1_R1_001.trimmed"],
+         "S2": ["S2_R1"]}
+
         >>> self.group_samples(["S1_R1", "S1"], "read_pairs")
-        {"Raw": [("S1", "S1")],
-         "Read 1": [("S1", "S1_R1")]}
+        {None: ["S1"], "Read 1": ["S1_R1"]}
+
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
-        {None: [("S1_R1_001", "S1_R1_001"), ("S1_R2_001", "S1_R2_001"), ("S2_R1", "S2_R1")],
-         "Trimmed": [("S1_R1_001", "S1_R1_001.trimmed")]}
+        {"Raw": ["S1_R1_001", "S1_R2_001", "S2_R1"],
+         "Trimmed": ["S1_R1_001.trimmed"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming", key_by="merged_name")
+        {"S1_R1_001": ["S1_R1_001", "S1_R1_001.trimmed"],
+         "S1_R2_001": ["S1_R2_001"],
+         "S2_R1: ["S2_R1"]}
+
         >>> self.group_samples(["S1_R1_001", "S2_R1"], "trimming")
-        {None: [("S1_R1_001", "S1_R1_001"), ("S2_R1", "S2_R1")]}
+        {"Raw": ["S1_R1_001", "S2_R1"]}
+
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], ["trimming", "read_pairs"])
-        {"Read 1": [("S1", "S1_R1_001"), ("S2", "S2_R1")],
-         "Trimmed Read 1": [("S1", "S1_R1_001.trimmed")],
-         "Read 2": [("S1", "S1_R2_001")]}
+        {"Read 1": ["S1_R1_001", "S2_R1"],
+         "Trimmed Read 1": ["S1_R1_001.trimmed"],
+         "Read 2": ["S1_R2_001"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], ["trimming", "read_pairs"], key_by="merged_name")
+        {"S1_001": ["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed"],
+         "S2": ["S2_R1"]}
+
         >>> self.group_samples(["S1", "S2"], "non_existing_criteria")
-        {None: [("S1", "S1"), ("S2", "S2")]}
+        {None: ["S1", "S2"]}
         """
         groups = defaultdict(list)
         for s_name in sorted(samples):
-            trimmed_name, labels = self.groups_for_sample(s_name, grouping_criteria)
-            groups[labels].append((trimmed_name, s_name))
+            trimmed_name, label = self.groups_for_sample(s_name, grouping_criteria)
+            groups[label].append((trimmed_name, s_name))
 
         regrouped = defaultdict(list)
         if key_by == "label":
-            for label, samples in groups.items():
-                for trimmed_name, s_name in samples:
-                    label = label or config.sample_merge_groups
+            for label, tuples in groups.items():
+                for merged_name, s_name in tuples:
                     regrouped[label].append(s_name)
         else:
-            for label, samples in groups.items():
-                for trimmed_name, s_name in samples:
-                    regrouped[trimmed_name].append(s_name)
+            for label, tuples in groups.items():
+                for merged_name, s_name in tuples:
+                    regrouped[merged_name].append(s_name)
 
-        return groups
-
-    @staticmethod
-    def regroup_by_merged_name(group: Dict[str, List[Tuple[str, str]]]) -> Dict[str, List[str]]:
-        """
-        Regroup into a dictionary keyed by the trimmed group name, with the values being the original sample names.
-        Useful to merge internal data.
-        >>> BaseMultiqcModule.regroup_by_merged_name({"Read 1": [("S1", "S1_R1_001"), ("S1.trimmed", "S1_R1_001.trimmed"), ("S2", "S2_R1")], "Read 2": [("S1", "S1_R2_001")]})
-        {"S1": [("S1_R1_001", "S1_R2_001"], "S1.trimmed: ["S1_R1_001.trimmed"], "S2": ["S2_R1"]}
-        >>> BaseMultiqcModule.regroup_by_merged_name({"Raw": [("S1_R1_001", "S1_R1_001"), ("S1_R2_001", "S1_R2_001"), ("S2_R1", "S2_R1")], "Trimmed": [("S1_R1_001", "S1_R1_001.trimmed")]})
-        {"S1_R1_001": ["S1_R1_001", "S1_R1_001.trimmed"], "S1_R2_001": ["S1_R2_001"], "S2_R1: ["S2_R1"]}
-        >>> BaseMultiqcModule.regroup_by_merged_name({"Raw Read 1": [("S1", "S1_R1_001"), ("S2", "S2_R1")], "Raw Read 2": [("S1", "S1_R2_001")], "Trimmed Read 1": [("S1", "S1_R1_001.trimmed")]})
-        {"S1": ["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed"], "S2": ["S2_R1"]}
-        """
-        result = defaultdict(list)
-        for label, samples in group.items():
-            for trimmed_name, s_name in samples:
-                result[trimmed_name].append(s_name)
-        return result
-
-    @staticmethod
-    def regroup_by_label(group: Dict[str, List[Tuple[str, str]]]) -> Dict[str, List[str]]:
-        """
-        Regroup into a dictionary keyed by group label.
-        >>> BaseMultiqcModule.regroup_by_label({"Read 1": [("S1", "S1_R1_001"), ("S1.trimmed", "S1_R1_001.trimmed"), ("S2", "S2_R1")], "Read 2": [("S1", "S1_R2_001")]})
-        {"Read 1": ["S1_R1_001", "S1_R1_001.trimmed", "S2_R1"], "Read 2": ["S1_R2_001"]}}
-        """
-        result = defaultdict(list)
-        for label, samples in group.items():
-            for trimmed_name, s_name in samples:
-                result[label].append(s_name)
-        return result
+        return regrouped
 
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
