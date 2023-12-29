@@ -508,7 +508,7 @@ class BaseMultiqcModule(object):
         >>> self.extract_groups("S1", "read_pairs")
         "S1", None
         >>> self.extract_groups("S1", "trimming")
-        "S1": "Raw"
+        "S1": None
         >>> self.extract_groups("S1_1.trimmed", "trimming")
         "S1_R1": "Trimmed"
         >>> self.extract_groups("S1_1.trimmed", ["trimming", "read_pairs"])
@@ -566,23 +566,24 @@ class BaseMultiqcModule(object):
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs")
         {"Read 1": [("S1", "S1_R1_001"), ("S1.trimmed", "S1_R1_001.trimmed"), ("S2", "S2_R1")],
          "Read 2": [("S1", "S1_R2_001")]}
+        >>> self.group_samples(["S1_R1", "S1"], "read_pairs")
+        {None: [("S1", "S1")],
+         "Read 1": [("S1", "S1_R1")]}
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
-        {"Raw": [("S1_R1_001", "S1_R1_001"), ("S1_R2_001", "S1_R2_001"), ("S2_R1", "S2_R1")],
+        {None: [("S1_R1_001", "S1_R1_001"), ("S1_R2_001", "S1_R2_001"), ("S2_R1", "S2_R1")],
          "Trimmed": [("S1_R1_001", "S1_R1_001.trimmed")]}
         >>> self.group_samples(["S1_R1_001", "S2_R1"], "trimming")
-        {"Raw": [("S1_R1_001", "S1_R1_001"), ("S2_R1", "S2_R1")]}
+        {None: [("S1_R1_001", "S1_R1_001"), ("S2_R1", "S2_R1")]}
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], ["trimming", "read_pairs"])
-        {"Raw Read 1": [("S1", "S1_R1_001"), ("S2", "S2_R1")],
-         "Raw Read 2": [("S1", "S1_R2_001")],
-         "Trimmed Read 1": [("S1", "S1_R1_001.trimmed")]}
+        {"Read 1": [("S1", "S1_R1_001"), ("S2", "S2_R1")],
+         "Trimmed Read 1": [("S1", "S1_R1_001.trimmed")],
+         "Read 2": [("S1", "S1_R2_001")]}
         >>> self.group_samples(["S1", "S2"], "non_existing_criteria")
-        {}
+        {None: [("S1", "S1"), ("S2", "S2")]}
         """
         result = defaultdict(list)
         for s_name in sorted(samples):
             trimmed_name, label = self.extract_groups(s_name, grouping_criteria)
-            if not label:
-                continue
             result[label].append((trimmed_name, s_name))
         return result
 

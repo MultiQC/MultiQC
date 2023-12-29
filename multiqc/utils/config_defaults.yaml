@@ -151,7 +151,6 @@ custom_content:
 # In order, to handle cases like SAMPLE_1.trimmed.fq.gz
 sample_merge_groups:
   trimming:
-    Raw:
     Trimmed:
       - "_trimmed"
       - ".trimmed"
