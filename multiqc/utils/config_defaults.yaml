@@ -154,6 +154,7 @@ sample_merge_groups:
     Trimmed:
       - "_trimmed"
       - ".trimmed"
+    Raw:
   read_pairs:
     Read 1:
       - type: regex
@@ -165,6 +166,7 @@ sample_merge_groups:
         pattern: "_R2_"
       - type: regex
         pattern: "[_.-][rR]?2$"
+    Unpaired:
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
