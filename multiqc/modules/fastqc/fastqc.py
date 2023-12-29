@@ -1320,34 +1320,7 @@ class MultiqcModule(BaseMultiqcModule):
             for sample in samples:
                 gdata[-1][sample] = data[sample]
 
-        # # Special case - 2 classes could be R1/R2 or Raw/Trimmed
-        # if len(data) == 2:
-        #     if len(self.fastqc_pair_groups) < len(self.fastqc_trimmed_groups):
-        #         pconfig["data_labels"] = [{"name": "Read 1"}, {"name": "Read 2"}]
-        #     else:
-        #         pconfig["data_labels"] = [{"name": "Raw"}, {"name": "Trimmed"}]
-        # else:
-        #     for i in range(len(data)):
-        #         read_num = math.ceil((i + 2) / 2)
-        #         read_type = "(trimmed)" if i % 2 else "(raw)"
-        #         pconfig["data_labels"].append({"name": f"Read {read_num} {read_type}"})
         return gdata, pconfig
-
-
-# def _split_data_by_group(groups, data: Dict[str, Dict]) -> List[Dict[str, Dict]]:
-#     """
-#     Takes output from self.group_samples along with a regular MultiQC data structure
-#     (dict where each key is a sample name) and returns the data organised into lists.
-#     Sample names are sorted and the first member of each group is returned in the
-#     first list item. The second of each group in the second and so on.
-#     """
-#     gdata: List[Dict[str, Dict]] = list()
-#     for n in range(max(len(group_s_names) for group_s_names in groups.values())):
-#         gdata.append(dict())
-#     for s_names in groups.values():
-#         for idx, s_name in enumerate(s_names):
-#             gdata[idx][s_name] = data[s_name]
-#     return gdata
 
 
 def _avg_bp_from_range(bp: str) -> int:
