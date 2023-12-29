@@ -147,23 +147,67 @@ export_plot_formats:
 custom_content:
   order: []
 
-# Search patterns for grouping samples within a report
+#def group_samples(self, samples: List[str], group: str) -> Dict[str, List[str]]:
+#    """
+#    Takes a list of sample names and groups according to a named
+#    set of patterns defined in the config
+#    :param samples: sample names
+#    :param group: name of the grouping patterns from the config
+#    :return: a dict where the keys are the cleaned basename for
+#            each group, containing a list of the original sample names
+#            that are members.
+#    """
+#    # Get the cleaning patterns
+#    c_patterns = config.sample_merge_groups.get(group)
+#    if c_patterns is None:
+#        logger.warning(f"self.group_samples() group not found: '{group}'")
+#        return {s_name: [s_name] for s_name in samples}
+#    # Go through the samples
+#    sample_groups = dict()
+#    for s_name in sorted(samples):
+#        g_name = self.clean_s_name(s_name, fn_clean_exts=c_patterns, fn_clean_trim=[], prepend_dirs=False)
+#        if g_name not in sample_groups:
+#            sample_groups[g_name] = []
+#        sample_groups[g_name].append(s_name)
+#    return sample_groups
+
+# Search patterns for grouping samples within a report.
+# In order, to handle cases like SAMPLE_1.trimmed.fq.gz
 sample_merge_groups:
+  trimmed:
+    Raw:
+    Trimmed:
+      - "_trimmed"
+      - ".trimmed"
   read_pairs:
-    - type: regex
-      pattern: "_[12]$"
-    - type: regex
-      pattern: '_R[12][\._\-]'
-  pre_post_trimming:
-    - "_trimmed"
-    - ".trimmed"
-  trimmed_read_pairs:
-    - type: regex
-      pattern: "_[12]$"
-    - type: regex
-      pattern: '_R[12][\._\-]'
-    - "_trimmed"
-    - ".trimmed"
+    Read 1:
+      - type: regex
+        pattern: "_R1_"
+      - type: regex
+        pattern: "[_.-][rR]?1$"
+    Read 2:
+      - type: regex
+        pattern: "_R2_"
+      - type: regex
+        pattern: "[_.-][rR]?2$"
+
+## Search patterns for grouping samples within a report
+#sample_merge_groups:
+#  read_pairs:
+#    - type: regex
+#      pattern: "_[12]$"
+#    - type: regex
+#      pattern: '_R[12][\._\-]'
+#  pre_post_trimming:
+#    - "_trimmed"
+#    - ".trimmed"
+#  trimmed_read_pairs:
+#    - type: regex
+#      pattern: "_[12]$"
+#    - type: regex
+#      pattern: '_R[12][\._\-]'
+#    - "_trimmed"
+#    - ".trimmed"
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
@@ -252,7 +296,6 @@ fn_clean_exts:
   - "_SummaryStatistics"
   - ".purple.purity"
   - ".purple.qc"
-  - ".trim"
   - ".bowtie2"
   - ".mkD"
   - ".highfreq"

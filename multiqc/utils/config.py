@@ -136,7 +136,7 @@ versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
 custom_content: Dict
-sample_merge_groups: Dict[str, List[Union[str, Dict[str, str]]]]
+sample_merge_groups: Dict[str, Dict[str, List[Union[str, Dict[str, str]]]]]
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
 fn_clean_exts: List

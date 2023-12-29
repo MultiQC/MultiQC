@@ -17,7 +17,7 @@ import os
 import re
 import zipfile
 from collections import Counter
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -85,17 +85,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
-
-        # Get the sample groups for PE data / trimmed data
-        self.fastqc_pair_groups = self.group_samples(list(self.fastqc_data.keys()), "read_pairs")
-        self.fastqc_trimmed_pair_groups = self.group_samples(list(self.fastqc_pair_groups), "pre_post_trimming")
-        self.fastqc_trimmed_groups = self.group_samples(list(self.fastqc_data.keys()), "pre_post_trimming")
-        self.fastqc_trimmed_pairs = self.group_samples(list(self.fastqc_data.keys()), "trimmed_read_pairs")
-
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
-
         log.info(f"Found {len(self.fastqc_data)} reports")
+
+        # Get the sample groups for PE data / trimmed data
+        samples = list(self.fastqc_data.keys())
+        self.pair_groups = self.group_samples(samples, "read_pairs")
+        self.trimming_groups = self.group_samples(samples, "trimming")
+        self.trimming_and_pair_groups = self.group_samples(samples, ["trimming", "read_pairs"])
 
         # Write the summary stats to a file
         data = dict()
@@ -278,7 +276,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Merge Read 1 + Read 2 data
         gdata = dict()
         merged_samples = False
-        for g_name, s_names in self.fastqc_pair_groups.items():
+
+        for g_name, s_names in self.regroup_by_merged_name(self.pair_groups).items():
             if len(s_names) == 0:
                 continue
             if len(s_names) == 1:
@@ -318,22 +317,22 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Take only the trimmed data for the General Stats Table
         trimmed_samples = False
-        for g_name, s_names in self.fastqc_trimmed_pair_groups.items():
+        for merged_name, s_names in self.regroup_by_merged_name(self.trimming_groups).items():
             if len(s_names) > 1:
                 # We expect these groups to contain trimmed and not trimmed.
                 # The non-trimmed sample names will be the same as the group,
                 # so we keep the one that's different.
-                s_names_trimmed = [s for s in s_names if s != g_name]
+                s_names_trimmed = [s for s in s_names if s != merged_name]
                 # Only continue if we have one result as expected
                 if len(s_names_trimmed) == 1:
                     trimmed_samples = True
                     # Save this data temporarily
-                    rowdata = gdata[s_names_trimmed[0]]
+                    tmp_data = gdata[s_names_trimmed[0]]
                     # Remove the whole group from general stats
                     for s_name in s_names:
                         del gdata[s_name]
                     # Add our chosen row back again
-                    gdata[g_name] = rowdata
+                    gdata[merged_name] = tmp_data
 
         # Are sequence lengths interesting?
         median_seq_lengths = [x["median_sequence_length"] for x in data.values()]
@@ -450,7 +449,8 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["cpswitch"] = False
 
         # Split by Read 1/2, Raw/Trimmed
-        pdata, pconfig = self.split_fastqc_data_by_group(pdata, pconfig)
+        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+        pdata, pconfig = self.split_fastqc_data_by_group(samples_by_label, pdata, pconfig)
         pcats = [pcats for _ in range(len(pdata))]
 
         # Add the report section
@@ -510,7 +510,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
 
         self.add_section(
             name="Sequence Quality Histograms",
@@ -564,7 +565,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
 
         self.add_section(
             name="Per Sequence Quality Scores",
@@ -831,7 +833,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
 
         self.add_section(
             name="Per Base N Content",
@@ -896,7 +899,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }
             # Split by Read 1/2, Raw/Trimmed
-            data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+            samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+            data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
 
             self.add_section(
                 name="Sequence Length Distribution",
@@ -944,7 +948,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+        samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+        data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
 
         self.add_section(
             name="Sequence Duplication Levels",
@@ -1037,7 +1042,8 @@ class MultiqcModule(BaseMultiqcModule):
             plot_html = f'<div class="alert alert-info">{len(data)} samples had less than 1% of reads made up of overrepresented sequences</div>'
         else:
             # Split by Read 1/2, Raw/Trimmed
-            data, pconfig = self.split_fastqc_data_by_group(data, pconfig)
+            samples_by_label = self.regroup_by_label(self.trimming_and_pair_groups)
+            data, pconfig = self.split_fastqc_data_by_group(samples_by_label, data, pconfig)
             cats = [cats for _ in range(len(data))]
 
             plot_html = bargraph.plot(data, cats, pconfig)
@@ -1294,41 +1300,53 @@ class MultiqcModule(BaseMultiqcModule):
             colours[s_name] = self.status_colours[status]
         return colours
 
-    def split_fastqc_data_by_group(self, data: Dict[str, Dict], pconfig=None):
+    @staticmethod
+    def split_fastqc_data_by_group(
+        samples_by_label: Dict[str, List[str]],
+        data: Dict[str, Dict],
+        pconfig: Optional[Dict] = None,
+    ) -> Tuple[List[Dict[str, Dict]], Optional[Dict]]:
         """
         Split into Read 1 and Read 2 / Raw and Trimmed
         """
         pconfig = pconfig or {}
-        data = _split_data_by_group(self.fastqc_trimmed_pairs, data)
         pconfig["data_labels"] = list()
-        # Special case - 2 classes could be R1/R2 or Raw/Trimmed
-        if len(data) == 2:
-            if len(self.fastqc_pair_groups) < len(self.fastqc_trimmed_groups):
-                pconfig["data_labels"] = [{"name": "Read 1"}, {"name": "Read 2"}]
-            else:
-                pconfig["data_labels"] = [{"name": "Raw"}, {"name": "Trimmed"}]
-        else:
-            for i in range(len(data)):
-                read_num = math.ceil((i + 2) / 2)
-                read_type = "(trimmed)" if i % 2 else "(raw)"
-                pconfig["data_labels"].append({"name": f"Read {read_num} {read_type}"})
-        return data, pconfig
+        gdata: List[Dict[str, Dict]] = []
+
+        for label, samples in samples_by_label.items():
+            pconfig["data_labels"].append({"name": label})
+            gdata.append(dict())
+            for sample in samples:
+                gdata[-1][sample] = data[sample]
+
+        # # Special case - 2 classes could be R1/R2 or Raw/Trimmed
+        # if len(data) == 2:
+        #     if len(self.fastqc_pair_groups) < len(self.fastqc_trimmed_groups):
+        #         pconfig["data_labels"] = [{"name": "Read 1"}, {"name": "Read 2"}]
+        #     else:
+        #         pconfig["data_labels"] = [{"name": "Raw"}, {"name": "Trimmed"}]
+        # else:
+        #     for i in range(len(data)):
+        #         read_num = math.ceil((i + 2) / 2)
+        #         read_type = "(trimmed)" if i % 2 else "(raw)"
+        #         pconfig["data_labels"].append({"name": f"Read {read_num} {read_type}"})
+        return gdata, pconfig
 
 
-def _split_data_by_group(s_groups, data: Dict[str, Dict]):
-    """
-    Takes output from self.group_samples along with a regular MultiQC data structure
-    (dict where each key is a sample name) and returns the data organised into lists.
-    Sample names are sorted and the first member of each group is returned in the
-    first list item. The second of each group in the second and so on.
-    """
-    gdata: List[Dict[str, Dict]] = list()
-    for n in range(max(len(group_s_names) for group_s_names in s_groups.values())):
-        gdata.append(dict())
-    for s_names in s_groups.values():
-        for idx, s_name in enumerate(s_names):
-            gdata[idx][s_name] = data[s_name]
-    return gdata
+# def _split_data_by_group(groups, data: Dict[str, Dict]) -> List[Dict[str, Dict]]:
+#     """
+#     Takes output from self.group_samples along with a regular MultiQC data structure
+#     (dict where each key is a sample name) and returns the data organised into lists.
+#     Sample names are sorted and the first member of each group is returned in the
+#     first list item. The second of each group in the second and so on.
+#     """
+#     gdata: List[Dict[str, Dict]] = list()
+#     for n in range(max(len(group_s_names) for group_s_names in groups.values())):
+#         gdata.append(dict())
+#     for s_names in groups.values():
+#         for idx, s_name in enumerate(s_names):
+#             gdata[idx][s_name] = data[s_name]
+#     return gdata
 
 
 def _avg_bp_from_range(bp: str) -> int:
