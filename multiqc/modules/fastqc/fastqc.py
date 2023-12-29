@@ -1315,7 +1315,8 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["data_labels"].append({"name": label})
             gdata.append(dict())
             for sample in samples:
-                gdata[-1][sample] = data[sample]
+                if sample in data:
+                    gdata[-1][sample] = data[sample]
 
         return gdata, pconfig
 
