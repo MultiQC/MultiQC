@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse stats output from pairtools """
 
 import logging
@@ -11,17 +9,9 @@ from multiqc import config
 
 import os
 import yaml
-import numpy as np
-from copy import copy
-from random import choice
 from itertools import zip_longest
 
-from .utils import (
-    read_stats_from_file,
-    genomic_dist_human_str,
-    edges_to_intervals,
-    cumsums_to_rangesums,
-)
+from .utils import read_stats_from_file
 
 
 # Initialise the logger
@@ -80,29 +70,6 @@ class MultiqcModule(BaseMultiqcModule):
         with open(os.path.join(os.path.dirname(__file__), "assets", "params", "params.yml"), "r") as fp:
             self.params = yaml.safe_load(fp)
 
-        # check for consistency across samples:
-        # e.g. check if all sets of distances are identical,
-        # by comparing them all to the last one: (s_name, sorted_dists)
-        cis_dists_mismatch = False
-        if len(self.pairtools_stats) > 1:
-            random_sample = choice(list(self.pairtools_stats))
-            # check if cis-ranges are same across samples
-            random_dists = self.pairtools_stats[random_sample]["cis_dist"]["dists"]
-            for s_name in self.pairtools_stats:
-                # check is cis_dists (e.g. cis_10kb+) have identical dists across samples
-                # it is [1, 2, 4, 10, 20, 40] as of now in pairtools
-                if self.pairtools_stats[s_name]["cis_dist"]["dists"] != random_dists:
-                    cis_dists_mismatch = True
-                    log.warning(
-                        f"Samples {s_name} and {random_sample} have different sets of cis-ranges,\n"
-                        "pairs by cis range will not be reported !"
-                    )
-
-        # determine max total reads for general stats:
-        self.max_total_reads = 0
-        for s_name in self.pairtools_stats:
-            self.max_total_reads = max(self.max_total_reads, self.pairtools_stats[s_name]["total"])
-
         self.pairtools_general_stats()
 
         # Report sections
@@ -117,21 +84,20 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.pair_types_chart(),
         )
 
-        if not cis_dists_mismatch:
-            self.add_section(
-                name="Pre-filtered pairs by genomic location",
-                anchor="cis-ranges-trans",
-                description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
-                " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
-                helptext="""
-                Samples can have different distributions of pairs by genomic locations for various biological
-                and technical differences. Biological examples: cell-cycle differences,
-                differentitation stages difference, mutations affecting genome organization, etc.
-                Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
-                Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
-                Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
-                plot=self.pairs_by_cisrange_trans(),
-            )
+        self.add_section(
+            name="Pre-filtered pairs by genomic location",
+            anchor="cis-ranges-trans",
+            description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
+            " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
+            helptext="""
+            Samples can have different distributions of pairs by genomic locations for various biological
+            and technical differences. Biological examples: cell-cycle differences,
+            differentitation stages difference, mutations affecting genome organization, etc.
+            Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
+            Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
+            Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
+            plot=self.pairs_by_cisrange_trans(),
+        )
 
         self.add_section(
             name="Pre-filtered pairs as a function of genomic separation - in detail",
@@ -176,94 +142,77 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Generate the pair types report: a stacked bargraph
         with the number of reads per pair type displayed
-        in a pre-defined orders and a set of colors.
+        in a pre-defined order and coloring.
         """
-        ptypes_field = "pair_types"
 
         # Construct a data structure for the plot: { sample: {ptype : count} }
-        # and keep track of the observed pair types - for nice visuals:
-        ptypes_dict = {}
-        observed_ptypes = set()
-        for s_name in self.pairtools_stats:
-            ptypes_dict[s_name] = copy(self.pairtools_stats[s_name][ptypes_field])
-            observed_ptypes |= set(ptypes_dict[s_name])
+        # and keep track of the observed pair types - for consistent visuals:
+        data_dict = {}
+        _observed_ptypes = set()
+        for _sample_name, _sample_data in self.pairtools_stats.items():
+            if (_sample_data_dict := _sample_data["pair_types"]) is None:
+                return None  # if any of samples is None -> None
+            else:
+                data_dict[_sample_name] = _sample_data_dict
+                _observed_ptypes |= set(_sample_data_dict)
 
         # display common pairtypes first with pre-defined colors and order :
         ptypes_anotated = {}
-        for common_ptype, ptype_color in self.params["pairtypes_colors"].items():
-            if common_ptype in observed_ptypes:
-                ptypes_anotated[common_ptype] = {"color": ptype_color, "name": common_ptype}
-                observed_ptypes.discard(common_ptype)
-        # display remaining pairtypes second with automatic colors :
-        for rare_ptype in observed_ptypes:
-            ptypes_anotated[common_ptype] = {"name": rare_ptype}
+        for _ptype, ptype_color in self.params["pairtypes_colors"].items():
+            if _ptype in _observed_ptypes:
+                ptypes_anotated[_ptype] = {"color": ptype_color, "name": _ptype}
+            else:
+                # display remaining pairtypes second with automatic colors :
+                ptypes_anotated[_ptype] = {"name": _ptype}
 
         # config for the pairtype barplot :
         config = {
-            "id": ptypes_field,
+            "id": "pair_types",
             "title": "pairtools: pair types report",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
 
         # multiqc interactive plotting call :
-        return bargraph.plot(ptypes_dict, ptypes_anotated, pconfig=config)
+        return bargraph.plot(data_dict, ptypes_anotated, pconfig=config)
 
     def pairs_by_cisrange_trans(self):
         """
         cis-pairs split into several ranges
         of genomic separation, and trans-category.
 
-        Several important assumptions made here:
-         - provided counts are cumulative
-         - "distance" intervals are "oppen", e.g. (1kb+,5kb+,...)
-         - genomic "distances" are in kb
+        Here we extract relevant sub-dict "cis_dist" for
+        each sample, make sure there are no None-s and
+        dist_names are the same across all samples.
         """
 
-        # Construct a data structure for the plot
-        cis_rangecounts_dict = {}
-        cis_distances_dict = {}
-        for s_name in self.pairtools_stats:
-            sample_stats = self.pairtools_stats[s_name]
-            sorted_dists = sample_stats["cis_dist"]["dists"]  # edges of distance ranges
-            cumcounts = sample_stats["cis_dist"]["counts"]  # cumulative counts
-            rangecounts = cumsums_to_rangesums(cumcounts, sample_stats["cis"])
-            rangecounts.append(sample_stats["trans"])
-            cis_rangecounts_dict[s_name] = rangecounts
-            cis_distances_dict[s_name] = sorted_dists
-
-        # check if all sets of distances are identical,
-        # by comparing them all to the last one: (s_name, sorted_dists)
-        for _s, _d in cis_distances_dict.items():
-            if _d != sorted_dists:
-                log.warning(
-                    f"Samples {s_name} and {_s} have different sets of cis-ranges,\n"
-                    "pairs by cis range will not be reported !"
+        data_dict = {}
+        _dist_categ_set = set()
+        for _sample_name, _sample_data in self.pairtools_stats.items():
+            if (_sample_data_dict := _sample_data["cis_dist"]) is None:
+                return None  # if any of samples is None -> None
+            else:
+                data_dict[_sample_name] = _sample_data_dict
+                # make sure all dist_categories are identical
+                _dist_categ_set |= set(
+                    [
+                        tuple(_sample_data_dict),
+                    ]
                 )
-                # it is [1, 2, 4, 10, 20, 40] as of now in pairtools, but will it stay like that ?
-                # return bargraph.plot({}, {}, )  # returning empty barplot
-                return None
+                if len(_dist_categ_set) > 1:
+                    return None
 
-        # generate nice distance ranges for printing :
-        range_names = []
-        for start, end in edges_to_intervals(sorted_dists):
-            if start == 0:  # shortest cis range
-                range_names.append(f"cis: <{end}kb")
-            elif end is None:  # longest cis range
-                range_names.append(f"cis: >{start}kb")
-            else:  # all in betweens
-                range_names.append(f"cis: {start}-{end}kb")
-        # trans pairs (ultimate long range):
-        range_names.append("trans")
-        # now zip counts and range names together for plotting:
-        data_dict = {s: dict(zip(range_names, c)) for s, c in cis_rangecounts_dict.items()}
+        # extract uniq distance categories
+        (uniq_dist_categories,) = _dist_categ_set
 
-        # color distance ranges with nice pre-defined colors (as many as possible):
+        # assign colors to distance ranges (as many as possible):
         key_dict = {}
-        for color, dist_range in zip_longest(self.params["cis_range_colors"], range_names):
-            key_dict[dist_range] = {"name": dist_range}
+        for color, _cat_name in zip_longest(self.params["cis_range_colors"], uniq_dist_categories):
+            key_dict[_cat_name] = {"name": _cat_name}
             if color:
-                key_dict[dist_range]["color"] = color
+                key_dict[_cat_name]["color"] = color
+            if _cat_name == "trans":
+                key_dict[_cat_name]["color"] = "#1035AC"  # dark-ish blue
 
         # Config for the plot
         config = {
@@ -281,44 +230,26 @@ class MultiqcModule(BaseMultiqcModule):
         number of cis-pairs with genomic separation
         """
 
-        dist_freq_field = "dist_freq"
-        orientation_keys = ["++", "-+", "+-", "--"]
-        dist_ranges = edges_to_intervals(self.params["pairs_distance_edges"])
-
-        # Construct a data structure for the plot
-        _data = {}
-        for key in dist_ranges:
-            _data[key] = {}
-            for s_name in self.pairtools_stats:
-                _data[key][s_name] = {}
-
-        for s_name in self.pairtools_stats:
-            # extract scalings data structure per sample:
-            sample_bins = self.pairtools_stats[s_name]["dist_bins"]
-            sample_dist_freq = self.pairtools_stats[s_name][dist_freq_field]
-            # given a set of fixed distance ranges extract FF,RR,FR,RF:
-            for start, end in dist_ranges:
-                # determine start index, according to "dist_bins"
-                start_idx = np.searchsorted(sample_bins, start) if start else 0
-                # determine end index, according to "dist_bins"
-                end_idx = np.searchsorted(sample_bins, end) if end is not None else None
-                # calculate ratios of FF FR RF RR ...
-                for orient in orientation_keys:
-                    # slice of the scaling for a given range of distances:
-                    sliced_data = sample_dist_freq[orient][start_idx:end_idx]
-                    _data[(start, end)][s_name][orient] = np.sum(sliced_data.astype(float))
-
-        # generate pretty labels for ranges of genomic separation
-        data_labels = []
-        for start, end in dist_ranges:
-            start_str = genomic_dist_human_str(start)
-            end_str = genomic_dist_human_str(end)
-            if start == 0:
-                data_labels.append(f"<{end_str}")
-            elif end is None:
-                data_labels.append(f">{start_str}")
+        # traverse sample_data to extract dist_categories
+        _dist_categories = None
+        for _sample_name, _sample_data in self.pairtools_stats.items():
+            if (_sample_data_dict := _sample_data["pairs_by_strand"]) is None:
+                return None  # if any of samples is None -> None
             else:
-                data_labels.append(f"{start_str}-{end_str}")
+                # extract distance categories that should be identical across sample
+                _dist_categories = list(_sample_data_dict.keys())
+
+        # initialize data_dict - with distance categories as the outter layer
+        if _dist_categories is None:
+            return None
+        else:
+            data_dict = {_cat: {} for _cat in _dist_categories}
+
+        # traverse sample_data again to reorder data for plotting
+        for _sample_name, _sample_data in self.pairtools_stats.items():
+            _sample_data_dict = _sample_data["pairs_by_strand"]
+            for _cat, _innermost_dict in _sample_data_dict.items():
+                data_dict[_cat][_sample_name] = _innermost_dict
 
         # Config for the plot
         config = {
@@ -326,19 +257,19 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "pairtools: cis pairs broken into ranges and read orintations",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "data_labels": data_labels,
+            "data_labels": list(data_dict.keys()),
         }
 
         # annotate read orientations with nice colors:
         keys_annotated = {}
-        for key in orientation_keys:
+        for key in ["++", "-+", "+-", "--"]:
             name = self.params["pairs_orientation_names"][key]
             color = self.params["pairs_orientation_colors"][key]
             keys_annotated[key] = {"color": color, "name": name}
 
         return bargraph.plot(
-            [_data[_d] for _d in dist_ranges],
-            [keys_annotated for _d in dist_ranges],
+            [data_dict[_dist] for _dist in _dist_categories],
+            [keys_annotated for _dist in _dist_categories],
             pconfig=config,
         )
 
@@ -348,34 +279,18 @@ class MultiqcModule(BaseMultiqcModule):
         # dist_freq/56234133-100000000/-+
         """
 
-        dist_freq_field = "dist_freq"
-        data_cats = ["avg", "FF", "FR", "RR", "RF"]
-        # extract pair orientations types - as they'll be used here many times
-        porient_names = self.params["pairs_orientation_names"]
+        _strand_categories = ["all", "++", "+-", "--", "-+"]
+        # initialize data_dict - with distance categories as the outter layer
+        data_dict = {_cat: {} for _cat in _strand_categories}
 
-        # Initialize a data structure for the plot
-        _data = {cat: {} for cat in data_cats}
-
-        for s_name in self.pairtools_stats:
-            for cat in data_cats:
-                _data[cat][s_name] = {}
-            # pre-calculate geom-mean of dist-bins for P(s):
-            _dist_bins = np.asarray(self.pairtools_stats[s_name]["dist_bins"])
-            # extract contacts by distance ranges and orientation types
-            sample_dist_freq = self.pairtools_stats[s_name][dist_freq_field]
-
-            # contacts by orientation and distance, and their average summary,
-            _summary = {}
-            _summary["avg"] = np.sum([sample_dist_freq[po] for po in porient_names], axis=0).astype(float)
-            for po, po_name in porient_names.items():
-                _summary[po_name] = np.asarray(sample_dist_freq[po]).astype(float)
-
-            # assign geometric mean distance to every distance interval
-            _dist_bins_geom = np.sqrt(_dist_bins[:-1] * _dist_bins[1:])
-            # fill in the data for XY-line plotting
-            # i.e. dict by samples of dicts by dist (X), of (normalized) counts (Y):
-            for cat in data_cats:
-                _data[cat][s_name] = dict(zip(_dist_bins_geom[1:-1], _summary[cat][1:]))
+        # traverse sample_data to extract dist_categories
+        for _sample_name, _sample_data in self.pairtools_stats.items():
+            if (_sample_data_dict := _sample_data["dist_freq"]) is None:
+                return None  # if any of samples is None -> None
+            else:
+                # reorder data in _sample_data_dict to extract strand_category on top:
+                for _cat in _strand_categories:
+                    data_dict[_cat][_sample_name] = _sample_data_dict[_cat]
 
         pconfig = {
             "id": "broom_plot",
@@ -394,7 +309,7 @@ class MultiqcModule(BaseMultiqcModule):
             "click_func": "single_scaling",  # activate custom JS when individual curve clicked
         }
 
-        return linegraph.plot([_data[cat] for cat in data_cats], pconfig=pconfig)
+        return linegraph.plot([data_dict[_cat] for _cat in _strand_categories], pconfig=pconfig)
 
     def pairtools_general_stats(self):
         """Add columns to General Statistics table"""

@@ -206,7 +206,8 @@ def read_stats_from_file(
                         dist = geometric_mean(start, end)
                         _index = bisect(dist_edges, dist) - 1
                         pairs_by_dist_orient[pair_orientation][_index] += _value
-                        dist_freq_orient[pair_orientation].append((dist, _value))
+                        if dist > 0:
+                            dist_freq_orient[pair_orientation].append((dist, _value))
                     else:
                         continue
                 # (c) skip all other keys
@@ -234,6 +235,10 @@ def read_stats_from_file(
     # the rest of stats are based on nodups:
     stat_from_file["frac_cis"] = stat_from_file["cis"] / stat_from_file["total_nodups"] * 100.0
 
+    # 'pair_types':
+    if not stat_from_file["pair_types"]:
+        stat_from_file["pair_types"] = None
+
     # 'cis_dist'
     if len(cis_dist_list) > 0:
         sorted_dists, cumcounts = zip(*sorted(cis_dist_list, key=itemgetter(0)))
@@ -250,7 +255,7 @@ def read_stats_from_file(
         # store as interval_name -> count dict, ready for plotting:
         stat_from_file["cis_dist"] = dict(zip(interval_names, counts))
     else:
-        stat_from_file["cis_dist"] = None  # (?)
+        stat_from_file["cis_dist"] = None
 
     # 'dist_freq'
     # make sure we have identical number of dist/counts per orientation and it is > 0
@@ -267,7 +272,7 @@ def read_stats_from_file(
         # sum all "pair_orientations_required"
         stat_from_file["dist_freq"]["all"] = dict(zip(dists, counts_all_orientations))
     else:
-        stat_from_file["dist_freq"] = None  # (?)
+        stat_from_file["dist_freq"] = None
 
     # "pairs_by_strand" - assuming dist_freq worked out only !
     if stat_from_file["dist_freq"] is not None:
@@ -281,6 +286,6 @@ def read_stats_from_file(
                     _po: pairs_by_dist_orient[_po][_index] for _po in pair_orientations_required
                 }
     else:
-        stat_from_file["pairs_by_strand"] = None  # (?)
+        stat_from_file["pairs_by_strand"] = None
 
     return stat_from_file
