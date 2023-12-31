@@ -5,10 +5,6 @@ from math import sqrt
 from operator import add
 
 
-class ParseError(Exception):
-    pass
-
-
 def humanize_genomic_dist(dist, units=1):
     """
     turn genomic distance (in basepairs) into
@@ -126,7 +122,10 @@ def read_stats_from_file(
 
     This function will attempt to parse .stats file, filling out
     output dictionary stat_from_file.
-    It will raise ParseError if .stats is not compliant.
+
+    It'll return None is one of the flat_keys_required is missing
+    And it'll has None as a value for some of the internal saections
+    if there are some parsing issues or inconsistencies.
 
     Parameters
     ----------
@@ -134,7 +133,7 @@ def read_stats_from_file(
 
     Returns
     -------
-    stat_from_file : dict
+    stat_from_file : dict | None
         dictionary with stats valued parsed from .stats
     """
 
@@ -153,10 +152,6 @@ def read_stats_from_file(
     for _po in pair_orientations_required:
         dist_freq_orient[_po] = []
         pairs_by_dist_orient[_po] = [0 for i in dist_edges]
-    # [(0, 100), (100, 500), (500, 1000), (1000, 2000), (2000, 5000), (5000, 10000), (10000, 15000), (15000, 20000), (20000, None),]
-
-    # common error message for ParseError
-    invalid_file_msg = f"{file_handle.name} is not a valid stats file: "
 
     # line by line parsing
     for _line in file_handle:
@@ -222,7 +217,7 @@ def read_stats_from_file(
     # we have to have ALL of the required flat fields
     for k in flat_keys_required:
         if k not in stat_from_file:
-            raise ParseError(f"{invalid_file_msg}required field {k} is missing.")
+            return None  # complete failure - entire sample is broken
 
     # calculation several ratios/fractions based on required fields for general stats table:
     stat_from_file["frac_unmapped"] = stat_from_file["total_unmapped"] / stat_from_file["total"] * 100.0

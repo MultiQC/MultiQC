@@ -6,11 +6,11 @@ pairtypes_colors:
   RU: "#b2df8a" # Pale green (walks-policy mask)
   UR: "#a6cee3" # Pale blue (walks-policy mask)
   WW: "#1f78b4" # Blue
-  DD: "#fff900" # Yellow
+  DD: "#e31a1c" # Red (duplicates should scream !)
   MU: "#ff7f00" # Orange
   MR: "#fdbf6f" # Pale orange (walks-policy mask)
   mu: "#fdbf6f" # Pale orange (walks-policy all)
-  MM: "#e31a1c" # Red
+  MM: "#fff900" # Yellow
   mm: "#fb9a99" # Pale red (walks-policy all)
   NM: "#b15928" # Brown
   nm: "#ffff99" # Pale brown (yellow-ish) (walks-policy all)
@@ -40,5 +40,3 @@ pairs_orientation_colors:
   "-+": "#377eb8"
   "+-": "#4daf4a"
   "--": "#984ea3"
-# distance edges for reporting # if pairs by orientation
-pairs_distance_edges: [0, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000]

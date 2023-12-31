@@ -113,7 +113,7 @@ function single_scaling(e) {
       hc.series[i - 1].setData(mqc_plots[scaling_plot_id]["datasets"][i][k]["data"], false);
     }
     var current_name = get_current_name(mqc_plots[scaling_plot_id]["datasets"][1][k]["name"]);
-    var ptitle = "frequency of interactions: " + current_name;
+    var ptitle = "pairtools: Pairs by distance and orientation " + current_name;
     hc.setTitle({ text: ptitle });
     hc.redraw({ duration: 200 });
   });
@@ -126,7 +126,7 @@ function single_scaling(e) {
     },
     colors: ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3"],
     title: {
-      text: "frequency of interaction for " + this.series.name,
+      text: "pairtools: Pairs by distance and orientation " + this.series.name,
       x: 30, // fudge to center over plot area rather than whole plot
     },
     xAxis: {
@@ -136,7 +136,7 @@ function single_scaling(e) {
     },
     yAxis: {
       type: "logarithmic",
-      title: { text: "frequency of interactions" },
+      title: { text: "number of pairs" },
       allowDecimal: true,
     },
     legend: {

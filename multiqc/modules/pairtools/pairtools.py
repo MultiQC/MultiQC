@@ -10,7 +10,6 @@ from multiqc import config
 import os
 import yaml
 from itertools import zip_longest
-
 from .utils import read_stats_from_file
 
 
@@ -44,9 +43,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.pairtools_stats = {}
         for f in self.find_log_files("pairtools", filehandles=True):
             s_name = f["s_name"]
-            self.pairtools_stats[s_name] = self.parse_pairtools_stats(f)
-            # Add file to multiqc_sources.txt
-            self.add_data_source(f, s_name=s_name)
+            if (_sample_report := self.parse_pairtools_stats(f)) is None:
+                log.warning(f"{s_name} is missing important metrics will not be reported !")
+                continue
+            else:
+                self.pairtools_stats[s_name] = _sample_report
+                # Add file to multiqc_sources.txt
+                self.add_data_source(f, s_name=s_name)
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -85,14 +88,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Pre-filtered pairs by genomic location",
+            name="Pre-filtered pairs by genomic location (overview)",
             anchor="cis-ranges-trans",
-            description="Distribution of pre-filtered pairs (mapping uniquely and resued) by genomic"
+            description="Distribution of pre-filtered pairs (mapping uniquely and rescued) by genomic"
             " separation for <it>cis-</it>pairs and <it>trans-</it>pairs.",
             helptext="""
             Samples can have different distributions of pairs by genomic locations for various biological
-            and technical differences. Biological examples: cell-cycle differences,
-            differentitation stages difference, mutations affecting genome organization, etc.
+            and technical reasons. Biological examples: cell-cycle stages, differentitation stages difference,
+            mutations affecting genome organization, etc.
             Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
             Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
             Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
@@ -100,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.add_section(
-            name="Pre-filtered pairs as a function of genomic separation - in detail",
+            name="Pre-filtered pairs as a function of genomic separation (in detail)",
             anchor="scalings-plots",
             description="Number of interactions (pre-filtered pairs) as a function"
             " of genomic separation, log-binned."
@@ -300,11 +303,11 @@ class MultiqcModule(BaseMultiqcModule):
             "xLog": True,
             "yLog": True,
             "data_labels": [
-                {"name": "P(s)", "ylab": "frequency of interactions"},
-                {"name": "FF", "ylab": "frequency of interactions"},
-                {"name": "FR", "ylab": "frequency of interactions"},
-                {"name": "RF", "ylab": "frequency of interactions"},
-                {"name": "RR", "ylab": "frequency of interactions"},
+                {"name": "P(s)", "ylab": "number of pairs"},
+                {"name": "FF", "ylab": "number of pairs"},
+                {"name": "FR", "ylab": "number of pairs"},
+                {"name": "RF", "ylab": "number of pairs"},
+                {"name": "RR", "ylab": "number of pairs"},
             ],
             "click_func": "single_scaling",  # activate custom JS when individual curve clicked
         }
@@ -319,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": f"Total read pairs ({config.read_count_desc})",
             "min": 0,
             "modify": lambda x: x * config.read_count_multiplier,
-            "scale": "Blues",
+            "scale": "BuPu",
         }
         headers["frac_unmapped"] = {
             "title": "% unmapped",
@@ -327,7 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "OrRd",
+            "scale": "YlOrRd",
         }
         headers["frac_single_sided_mapped"] = {
             "title": "% single-side mapped",
@@ -335,7 +338,7 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "YlGn",
+            "scale": "RdPu",
         }
         headers["frac_mapped"] = {
             "title": "% both-side mapped",
@@ -351,9 +354,17 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "OrRd",
+            "scale": "RdYlGn",
         }
-        headers["cis_percent"] = {
+        headers["total_nodups"] = {
+            "title": f"{config.read_count_prefix} unique read pairs",
+            "description": f"Mapped pairs after deduplication ({config.read_count_desc})",
+            "min": 0,
+            "modify": lambda x: x * config.read_count_multiplier,
+            "scale": "BuPu",
+        }
+
+        headers["frac_cis"] = {
             "title": "% cis",
             "description": "% of cis-pairs (w.r.t mapped)",
             "max": 100,
@@ -361,4 +372,4 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
             "scale": "YlGn",
         }
-        self.general_stats_addcols(self.pairtools_stats, headers, "pairtools")
+        self.general_stats_addcols(self.pairtools_stats, headers)
