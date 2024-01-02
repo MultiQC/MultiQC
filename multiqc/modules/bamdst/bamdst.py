@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Split a line like "## Files : example/test1.bam example/test2.bam "
                 # Cannot split by spaces because the file names can contain spaces as well
                 path_line = line.split(":")[1].strip().replace(".bam", "<EXT>").replace(".cram", "<EXT>")
-                names = [self.clean_s_name(sn) for sn in path_line.split("<EXT>") if sn]
+                names = [self.clean_s_name(sn.strip()) for sn in path_line.split("<EXT>") if sn if sn.strip() != "-"]
                 if names:
                     f["s_name"] = "-".join(names)  # concatenating file names
                 continue
