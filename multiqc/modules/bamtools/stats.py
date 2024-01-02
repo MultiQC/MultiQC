@@ -106,7 +106,11 @@ def parse_reports(self):
     keys["bt_read_2"] = dict(num_defaults, **{"title": "Read 2", "description": "Read 2 (millions)"})
     keys["singletons_pct"] = dict(defaults, **{"title": "Singletons"})
 
-    self.add_section(name="Bamtools Stats", anchor="bamtools-stats", plot=beeswarm.plot(self.bamtools_stats_data, keys))
+    self.add_section(
+        name="Bamtools Stats",
+        anchor="bamtools-stats",
+        plot=beeswarm.plot(self.bamtools_stats_data, keys, pconfig={"id": "bamtools-stats-plot"}),
+    )
 
     # Return number of samples found
     return len(self.bamtools_stats_data)

@@ -70,6 +70,10 @@ class DragenScRnaMetrics(BaseMultiqcModule):
                     for sample_name, metric in data_by_sample.items()
                 },
                 table_headers,
+                pconfig={
+                    "namespace": "Single-Cell RNA Metrics",
+                    "id": "dragen-sc-rna-metrics-table",
+                },
             ),
         )
 

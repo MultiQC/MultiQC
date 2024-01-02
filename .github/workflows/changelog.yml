@@ -11,13 +11,13 @@ jobs:
     # Run if comment is on a PR with the main repo, and if it contains the magic keywords.
     # Or run on PR creation, unless asked otherwise in the title.
     if: |
-      github.repository_owner == 'ewels' && (
+      github.repository_owner == 'MultiQC' && (
         github.event_name == 'pull_request_target' ||
         github.event.issue.pull_request && startsWith(github.event.comment.body, '@multiqc-bot changelog')
       )
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
 
@@ -34,7 +34,7 @@ jobs:
           fi
           gh pr checkout $PR_NUMBER
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Install packages
         run: |

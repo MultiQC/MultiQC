@@ -23,8 +23,8 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.19dev"
-dl_version = "master" if "dev" in version else f"v{version}"
+version = "1.20dev"
+dl_version = "main" if "dev" in version else f"v{version}"
 
 print(
     f"""-----------------------------------
@@ -43,7 +43,7 @@ setup(
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
     url="http://multiqc.info",
-    download_url=f"https://github.com/ewels/MultiQC/tarball/{dl_version}",
+    download_url=f"https://github.com/MultiQC/MultiQC/tarball/{dl_version}",
     license="GPLv3",
     packages=find_packages(),
     include_package_data=True,

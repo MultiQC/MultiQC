@@ -13,7 +13,7 @@ easy to create new report templates that fit your needs.
 
 If your template could be of use to others, it would be great if you
 could add it to the main MultiQC package. You can do this by creating a
-fork of the [MultiQC GitHub repository](https://github.com/ewels/MultiQC),
+fork of the [MultiQC GitHub repository](https://github.com/MultiQC/MultiQC),
 adding your template and then creating a pull request to merge your changes
 back to the main repository.
 

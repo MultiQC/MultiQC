@@ -116,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Summary table",
             anchor=f"{self.anchor}-summary-table-section",
-            plot=table.plot(table_data, detail_headers),
+            plot=table.plot(table_data, detail_headers, {"id": f"{self.anchor}-summary-table"}),
         )
 
     def _build_plot(self):

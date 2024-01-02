@@ -25,7 +25,7 @@ A very large number of Bioinformatics tools are supported by MultiQC. Please see
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://multiqc.info/docs/custom_content/).
 
 More modules are being written all of the time. Please suggest any ideas as a new
-[issue](https://github.com/ewels/MultiQC/issues) _(please include example log files)_.
+[issue](https://github.com/MultiQC/MultiQC/issues) _(please include example log files)_.
 
 ## Installation
 
@@ -46,7 +46,7 @@ conda install multiqc
 If you would like the development version from GitHub instead, you can install it with `pip`:
 
 ```bash
-pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
 MultiQC is also available via Docker and Singularity images, Galaxy wrappers, and
@@ -104,10 +104,10 @@ Please consider citing MultiQC if you use it in your analysis.
 ## Contributions & Support
 
 Contributions and suggestions for new features are welcome, as are bug reports!
-Please create a new [issue](https://github.com/ewels/MultiQC/issues) for any
+Please create a new [issue](https://github.com/MultiQC/MultiQC/issues) for any
 of these, including example reports where possible.
 Pull-requests for fixes and additions are very welcome.
-Please see the [contributing notes](https://github.com/ewels/MultiQC/blob/master/.github/CONTRIBUTING.md) for more information about how the process works.
+Please see the [contributing notes](https://github.com/MultiQC/MultiQC/blob/main/.github/CONTRIBUTING.md) for more information about how the process works.
 
 MultiQC has extensive [documentation](http://multiqc.info/docs/development/)
 describing how to write new modules, plugins and templates.
@@ -121,6 +121,6 @@ MultiQC is developed and maintained by Phil Ewels ([@ewels](https://github.com/e
 It was originally written at the [National Genomics Infrastructure](https://ngisweden.scilifelab.se/), part of [SciLifeLab](https://www.scilifelab.se/) in Sweden.
 
 A huge thank you to all code contributors - there are a lot of you!
-See the [Contributors Graph](https://github.com/ewels/MultiQC/graphs/contributors) for details.
+See the [Contributors Graph](https://github.com/MultiQC/MultiQC/graphs/contributors) for details.
 
 MultiQC is released under the GPL v3 or later licence.

@@ -86,7 +86,10 @@ class bamPEFragmentSizeTableMixin:
                 "shared_key": "read_length",
             },
         }
-        config = {"namespace": "deepTools bamPEFragmentSize"}
+        config = {
+            "namespace": "deepTools bamPEFragmentSize",
+            "id": "deeptools_readlengths_table",
+        }
         self.add_section(
             name="Read length metrics",
             anchor="deeptools_readlengths",
@@ -154,6 +157,10 @@ class bamPEFragmentSizeTableMixin:
                 PE = True
                 break
         if PE:
+            config = {
+                "namespace": "deepTools bamPEFragmentSize",
+                "id": "deeptools_fragmentlengths_table",
+            }
             self.add_section(
                 name="Fragment length metrics",
                 anchor="deeptools_fragmentlengths",
