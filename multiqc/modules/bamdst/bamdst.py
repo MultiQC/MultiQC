@@ -5,13 +5,12 @@ import logging
 from collections import defaultdict
 from typing import Dict, Union
 import csv
+import math
 import os
 import fnmatch
 
-import math
-
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, linegraph, bargraph
+from multiqc.plots import table, bargraph, linegraph
 from multiqc.utils import config
 
 # Initialise the logger
@@ -98,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_chromosome_by_sample, "multiqc_bamdst_chromosomes")
 
         self.build_tables(data_by_sample)
-        self._build_per_chrom_plot(self._filter_contigs(data_by_chromosome_by_sample))
+        self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
     def _parse_coverage_report(self, f: Dict) -> Dict:
         """
@@ -322,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
                 filtered_data_by_chrom_by_sample = data_by_chrom_by_sample
                 log.warning(
                     f"All contigs would be filtered out by the cutoff of "
-                    f"{self.cfg['perchrom_fraction_cutoff']}%. Consider changing th cut-off. "
+                    f"{self.cfg['perchrom_fraction_cutoff']}%. Consider changing the cut-off. "
                     f"Keeping all contigs."
                 )
             data_by_chrom_by_sample = filtered_data_by_chrom_by_sample
@@ -338,18 +337,32 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, data_by_chrom in data_by_chrom_by_sample.items():
             data_by_chrom_by_sample[s_name] = dict(sorted(data_by_chrom.items(), key=lambda x: _chrom_key(x[0])))
 
-        # Extracting two metrics to plot: average depth and coverage percentage
-        depth_by_chrom_by_sample = defaultdict(dict)
-        cov_by_chrom_by_sample = defaultdict(dict)
-        for s_name, data_by_chrom in data_by_chrom_by_sample.items():
-            for chrom, d in data_by_chrom.items():
-                depth_by_chrom_by_sample[s_name][chrom] = d["Avg depth"]
-                cov_by_chrom_by_sample[s_name][chrom] = d["Coverage%"]
+        # Filter contigs
+        filt_data_by_chrom_by_sample = self._filter_contigs(data_by_chrom_by_sample)
+        contigs = set.union(*[set(d.keys()) for d in data_by_chrom_by_sample.values()])
+        filt_contigs = set.union(*[set(d.keys()) for d in filt_data_by_chrom_by_sample.values()])
+        if contigs == filt_contigs or len(filt_contigs) == 0:
+            datasets = [data_by_chrom_by_sample]
+            data_labels = None
+        else:
+            datasets = [filt_data_by_chrom_by_sample, data_by_chrom_by_sample]
+            data_labels = ["Main contigs", "All contigs"]
 
-        num_chroms = max([len(by_chrom.keys()) for by_chrom in data_by_chrom_by_sample.values()])
+        depth_datasets = []
+        cov_datasets = []
+        for dataset in datasets:
+            # Extracting two metrics to plot: average depth and coverage percentage
+            depth_datasets.append(defaultdict(dict))
+            cov_datasets.append(defaultdict(dict))
+            for s_name, data_by_chrom in dataset.items():
+                for chrom, d in data_by_chrom.items():
+                    depth_datasets[-1][s_name][chrom] = d["Avg depth"]
+                    cov_datasets[-1][s_name][chrom] = d["Coverage%"]
+
+        num_chroms = max([len(by_chrom.keys()) for by_chrom in depth_datasets[0].values()])
         if num_chroms > 1:
             perchrom_depth_plot = linegraph.plot(
-                depth_by_chrom_by_sample,
+                depth_datasets,
                 {
                     "id": "bamdst-depth-per-contig-plot",
                     "title": "Bamdst: average depth per contig",
@@ -362,10 +375,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "logswitch": True,
                     "hide_zero_cats": False,
                     "ymin": 0,
+                    "data_labels": data_labels,
                 },
             )
             perchrom_cov_plot = linegraph.plot(
-                cov_by_chrom_by_sample,
+                cov_datasets,
                 {
                     "id": "bamdst-cov-per-contig-plot",
                     "title": "Bamdst: coverage percentage of each contig",
@@ -379,11 +393,12 @@ class MultiqcModule(BaseMultiqcModule):
                     "hide_zero_cats": False,
                     "ymax": 100,
                     "ymin": 0,
+                    "data_labels": data_labels,
                 },
             )
         else:
             perchrom_depth_plot = bargraph.plot(
-                depth_by_chrom_by_sample,
+                depth_datasets,
                 pconfig={
                     "id": "bamdst-depth-per-contig-plot",
                     "title": "Bamdst: average depth",
@@ -392,10 +407,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_suffix": "x",
                     "hide_zero_cats": False,
                     "ymin": 0,
+                    "data_labels": data_labels,
                 },
             )
             perchrom_cov_plot = bargraph.plot(
-                depth_by_chrom_by_sample,
+                cov_datasets,
                 pconfig={
                     "id": "bamdst-cov-per-contig-plot",
                     "title": "Bamdst: coverage percentage",
@@ -405,6 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "hide_zero_cats": False,
                     "ymax": 100,
                     "ymin": 0,
+                    "data_labels": data_labels,
                 },
             )
 
