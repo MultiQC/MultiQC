@@ -174,7 +174,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
-                "hidden": True,
             },
             "[Total] Fraction of Mapped Reads": {
                 "title": "Mapped",
@@ -184,7 +183,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100.0,
                 "suffix": "%",
                 "modify": lambda x: x * 100.0,
-                "hidden": True,
             },
             "[Target] Target Reads": {
                 "title": f"Target reads ({config.read_count_prefix})",
@@ -192,7 +190,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
-                "hidden": True,
             },
             "[Target] Fraction of Target Reads in all reads": {
                 "title": "% in all",
@@ -202,7 +199,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100.0,
                 "suffix": "%",
                 "modify": lambda x: x * 100.0,
-                "hidden": True,
             },
             "[Target] Fraction of Target Reads in mapped reads": {
                 "title": "% in mapped",
@@ -212,7 +208,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100.0,
                 "suffix": "%",
                 "modify": lambda x: x * 100.0,
-                "hidden": True,
             },
             "[Target] Average depth": {
                 "title": "Avg depth",
@@ -228,7 +223,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,d}",
                 "suffix": "&nbsp;bp",
                 "scale": "Greys",
-                "hidden": True,
             },
         }
 
@@ -247,19 +241,24 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:.2f}",
                 "scale": "RdYlGn",
                 "modify": lambda x: x * 100.0,
-                "hidden": short != ">0x",
             }
 
-        self.general_stats_addcols(data_by_sample, headers)
-
-        # Separate table with all metrics visible
-        for k, v in headers.items():
-            v["hidden"] = False
         self.add_section(
             name="Coverage metrics",
             anchor="bamdst-coverage",
             plot=table.plot(data_by_sample, headers),
         )
+
+        genstats_headers = {
+            k: v
+            for k, v in headers.items()
+            if k
+            in [
+                "[Target] Average depth",
+                "[Target] Coverage (>0x)",
+            ]
+        }
+        self.general_stats_addcols(data_by_sample, genstats_headers)
 
     def _filter_contigs(self, data_by_chrom_by_sample):
         # Filter contigs based on include/exclude patterns
