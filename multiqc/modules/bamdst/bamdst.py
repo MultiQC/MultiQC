@@ -246,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Coverage metrics",
             anchor="bamdst-coverage",
-            plot=table.plot(data_by_sample, headers),
+            plot=table.plot(data_by_sample, headers, pconfig={"id": "bamdst-coverage-table"}),
         )
 
         genstats_headers = {
@@ -362,7 +362,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_chroms > 1:
             perchrom_depth_plot = linegraph.plot(
                 depth_datasets,
-                {
+                pconfig={
                     "id": "bamdst-depth-per-contig-plot",
                     "title": "Bamdst: average depth per contig",
                     "xlab": "Region",
@@ -379,7 +379,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             perchrom_cov_plot = linegraph.plot(
                 cov_datasets,
-                {
+                pconfig={
                     "id": "bamdst-cov-per-contig-plot",
                     "title": "Bamdst: coverage percentage of each contig",
                     "xlab": "Region",
