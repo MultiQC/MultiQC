@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kat_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.kat_data)))
+        log.info(f"Found {len(self.kat_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -73,6 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         kat_config = {
             "namespace": "KAT",
+            "id": "kat-table",
         }
 
         # Basic Stats Table

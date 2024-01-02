@@ -231,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Summary table",
             anchor="xenome-summary-table",
-            plot=table.plot(table_data, detail_headers),
+            plot=table.plot(table_data, detail_headers, pconfig={"id": "xenome-table"}),
         )
 
     def _xenome_stats_plot(self):

@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_found == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(num_found))
+        log.info(f"Found {num_found} samples")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                     except ValueError:
                         data[h] = s[idx]
                 if s_name in self.rna_seqc_metrics:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.rna_seqc_metrics[s_name] = data
 
     def parse_metrics_rnaseqc_v2(self, f):
@@ -124,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s[0]] = s[1].strip()
 
         if s_name in self.rna_seqc_metrics:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.rna_seqc_metrics[s_name] = data
 
     def parse_coverage(self, f):
@@ -257,10 +257,10 @@ class MultiqcModule(BaseMultiqcModule):
         if data is not None:
             pconfig = {
                 "id": "rna_seqc_correlation_heatmap",
-                "title": "RNA-SeQC: {} Sample Correlation".format(corr_type),
+                "title": f"RNA-SeQC: {corr_type} Sample Correlation",
             }
             self.add_section(
-                name="{} Correlation".format(corr_type),
+                name=f"{corr_type} Correlation",
                 anchor="rseqc-rna_seqc_correlation",
                 plot=heatmap.plot(data[1], data[0], data[0], pconfig),
             )
@@ -357,7 +357,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Read Counts",
             anchor="rna_seqc_bam_stat",
-            description="Number of reads ({}) falling into different categories.".format(config.read_count_desc),
+            description=f"Number of reads ({config.read_count_desc}) falling into different categories.",
             helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
             plot=beeswarm.plot(self.rna_seqc_metrics, keys, pconfig),
         )

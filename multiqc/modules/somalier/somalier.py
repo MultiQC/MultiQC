@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for s_name_raw in parsed_data:
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for s_name_raw in parsed_data:
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data.keys():
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
 
@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.somalier_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.somalier_data)))
+        log.info(f"Found {len(self.somalier_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     s_name_idx = [headers.index("sample_a"), headers.index("sample_b")]
                 except ValueError:
-                    log.warning("Could not find sample name in somalier output: {}".format(f["fn"]))
+                    log.warning(f"Could not find sample name in somalier output: {f['fn']}")
                     return None
             else:
                 s_name = "*".join([s[idx] for idx in s_name_idx])  # not safe to hard code, but works
@@ -215,16 +215,14 @@ class MultiqcModule(BaseMultiqcModule):
                     if s_name in self.somalier_data.keys():
                         intersect_keys = parsed_data[s_name_raw].keys() & self.somalier_data.keys()
                         if len(intersect_keys) > 0:
-                            log.debug(
-                                "Duplicate sample name found! Overwriting: {} : {}".format(s_name, intersect_keys)
-                            )
+                            log.debug(f"Duplicate sample name found! Overwriting: {s_name} : {intersect_keys}")
                     self.add_data_source(f, s_name)
                     try:
                         self.somalier_data[s_name].update(parsed_data[s_name_raw])
                     except KeyError:
                         self.somalier_data[s_name] = parsed_data[s_name_raw]
         else:
-            log.warning("Detected empty file: {}".format(f["fn"]))
+            log.warning(f"Detected empty file: {f['fn']}")
 
     def somalier_stats_table(self):
         """Add data to somalier stats table
@@ -269,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ancestry": {"title": "Ancestry", "description": "Most probable ancestry background", "scale": False},
             "p_ancestry": {
                 "title": "P(Ancestry)",
-                "description": "Ancestry probablitty",
+                "description": "Ancestry probability",
                 "max": 1,
                 "min": 0,
                 "scale": "RdYlGn",

@@ -104,7 +104,7 @@ def plot(data, pconfig=None):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except (KeyError, IndexError):
+    except Exception:
         pass
 
     # Make a plot
@@ -145,20 +145,20 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except (IndexError, KeyError):
+            except Exception:
                 name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except (IndexError, KeyError):
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
+            except Exception:
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except (IndexError, KeyError):
+                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
+            except Exception:
                 ymax = ""
             try:
-                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except (IndexError, KeyError):
-                xlab = 'data-xlab="{}"'.format(name) if name != k + 1 else ""
+                xlab = f"data-xlab=\"{pconfig['data_labels'][k]['xlab']}\""
+            except Exception:
+                xlab = f'data-xlab="{name}"' if name != k + 1 else ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
                 a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, xl=xlab, k=k
             )

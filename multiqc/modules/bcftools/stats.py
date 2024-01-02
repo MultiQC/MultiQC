@@ -71,7 +71,7 @@ class StatsReportMixin:
                     s_name = self.clean_s_name(s[2], f)
                     s_names.append(s_name)
                     if s_name in self.bcftools_stats:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name, section="stats")
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
@@ -112,7 +112,7 @@ class StatsReportMixin:
                     if change not in types:
                         change = ">".join(rc[n] for n in change.split(">"))
 
-                    field = "substitution_type_{}".format(change)
+                    field = f"substitution_type_{change}"
                     value = float(s[3].strip())
                     if field not in self.bcftools_stats[s_name]:
                         self.bcftools_stats[s_name][field] = 0
@@ -229,13 +229,20 @@ class StatsReportMixin:
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers, {"namespace": "Stats"}),
+                    plot=table.plot(
+                        self.bcftools_stats,
+                        stats_headers,
+                        {
+                            "namespace": "Stats",
+                            "id": "bcftools-stats-table",
+                        },
+                    ),
                 )
 
             # Make bargraph plot of substitution types
             keys = {}
             for t in types:
-                keys["substitution_type_{}".format(t)] = {"name": t}
+                keys[f"substitution_type_{t}"] = {"name": t}
             pconfig = {
                 "id": "bcftools-stats-subtypes",
                 "title": "Bcftools Stats: Substitutions",

@@ -2,7 +2,7 @@ name: "MultiQC"
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - "docs/**"
       - "*.md"
@@ -25,7 +25,7 @@ jobs:
       single_module: ${{ steps.single_module.outputs.value }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dorny/paths-filter@v2
         id: filter
@@ -61,10 +61,10 @@ jobs:
 
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -76,9 +76,9 @@ jobs:
         run: pip install .
 
       - name: Download test data
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          repository: ewels/MultiQC_TestData
+          repository: MultiQC/test-data
           path: test_data
 
       # Run all of the tests!
@@ -123,6 +123,16 @@ jobs:
           cd test_data
           multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
 
+      - name: No report
+        if: matrix.python-version == env.latest_python
+        run: |
+          cd test_data
+          multiqc -m star data/modules/star --no-report -n no-report
+          if [[ -f no-report.html ]]; then
+            echo "Running with the --no-report flag should not produce an HTML" >&2
+            exit 1
+          fi
+
       - name: Empty directory (confirm no report)
         if: matrix.python-version == env.latest_python
         run: |
@@ -145,7 +155,7 @@ jobs:
 
     steps:
       # Check out MultiQC code
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Set up Windows with C++ for numpy
       - name: Visual Studio Command Prompt tool
@@ -153,7 +163,7 @@ jobs:
 
       # Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -169,10 +179,10 @@ jobs:
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: Download test data
         run: |
-          curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test_data.zip
           7z x test_data.zip -y -o"test_data"
-          dir test_data\MultiQC_TestData-master
+          dir test_data\test-data-main
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\test-data-main\data\modules\ --filename full_report.html

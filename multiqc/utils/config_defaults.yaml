@@ -162,6 +162,7 @@ fn_clean_exts:
   - ".fastq"
   - ".fq"
   - ".bam"
+  - ".cram"
   - ".sam"
   - ".sra"
   - ".vcf"

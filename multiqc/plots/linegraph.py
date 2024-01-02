@@ -23,7 +23,7 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
+    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -73,12 +73,12 @@ def plot(data, pconfig=None):
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
             if k not in pconfig:
-                errmsg = "LINT: {}Linegraph pconfig was missing key '{}'".format(modname, k)
+                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -102,12 +102,12 @@ def plot(data, pconfig=None):
     if pconfig.get("ylab") is None:
         try:
             pconfig["ylab"] = pconfig["data_labels"][0]["ylab"]
-        except (KeyError, IndexError):
+        except Exception:
             pass
     if pconfig.get("xlab") is None:
         try:
             pconfig["xlab"] = pconfig["data_labels"][0]["xlab"]
-        except (KeyError, IndexError):
+        except Exception:
             pass
 
     # Generate the data dict structure expected by HighCharts series
@@ -205,7 +205,7 @@ def plot(data, pconfig=None):
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except (KeyError, IndexError):
+    except Exception:
         pass
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
@@ -295,15 +295,15 @@ def highcharts_linegraph(plotdata, pconfig=None):
             except Exception:
                 name = k + 1
             try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
+                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
             except Exception:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
+                ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
+                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
             except Exception:
                 ymax = ""
             try:
-                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
+                xlab = f"data-xlab=\"{pconfig['data_labels'][k]['xlab']}\""
             except Exception:
                 xlab = ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {x} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
@@ -347,7 +347,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
             name = pconfig["data_labels"][k]["name"]
         except Exception:
             name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
+        pid = f"mqc_{pconfig['id']}_{name}"
         pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
@@ -356,7 +356,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
+    html += f"<div class=\"mqc_mplplot_plotgroup\" id=\"{pconfig['id']}\">"
 
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
@@ -399,7 +399,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                     else:
                         try:
                             fdata[d["name"]][pconfig["categories"][i]] = x
-                        except (KeyError, IndexError):
+                        except Exception:
                             fdata[d["name"]][str(i)] = x
 
             # Custom tsv output if the x-axis varies
@@ -407,10 +407,10 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 fout = ""
                 for d in pdata:
                     fout += "\t" + "\t".join([str(x[0]) for x in d["data"]])
-                    fout += "\n{}\t".format(d["name"])
+                    fout += f"\n{d['name']}\t"
                     fout += "\t".join([str(x[1]) for x in d["data"]])
                     fout += "\n"
-                with io.open(os.path.join(config.data_dir, "{}.txt".format(pid)), "w", encoding="utf-8") as f:
+                with io.open(os.path.join(config.data_dir, f"{pid}.txt"), "w", encoding="utf-8") as f:
                     print(fout.encode("utf-8", "ignore").decode("utf-8"), file=f)
             else:
                 util_functions.write_data_file(fdata, pid)
@@ -578,7 +578,7 @@ def matplotlib_linegraph(plotdata, pconfig=None):
                 if not os.path.exists(plot_dir):
                     os.makedirs(plot_dir)
                 # Save the plot
-                plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                 fig.savefig(plot_fn, format=fformat, bbox_inches="tight")
 
         # Output the figure to a base64 encoded string
@@ -593,8 +593,8 @@ def matplotlib_linegraph(plotdata, pconfig=None):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+            plot_relpath = os.path.join(config.plots_dir_name, "png", f"{pid}.png")
+            html += f'<div class="mqc_mplplot" id="{pid}"{hidediv}><img src="{plot_relpath}" /></div>'
 
         plt.close(fig)
 

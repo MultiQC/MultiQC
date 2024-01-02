@@ -348,6 +348,7 @@ def _generate_detailed_table(data):
 
     table_config = {
         "table_title": "Picard: SAM/BAM File Validation",
+        "id": "picard_validatesamfile_table",
     }
 
     return table.plot(data=data, headers=headers, pconfig=table_config)

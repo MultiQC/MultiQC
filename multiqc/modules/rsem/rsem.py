@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.rsem_mapped_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.rsem_mapped_data)))
+        log.info(f"Found {len(self.rsem_mapped_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -102,16 +102,16 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             assert data["Unique"] + data["Multi"] == data["Alignable"]
         except AssertionError:
-            log.warning("Unique + Multimapping read counts != alignable reads! '{}'".format(f["fn"]))
+            log.warning(f"Unique + Multimapping read counts != alignable reads! '{f['fn']}'")
             return None
         except KeyError:
-            log.warning("Error parsing RSEM counts file '{}'".format(f["fn"]))
+            log.warning(f"Error parsing RSEM counts file '{f['fn']}'")
             return None
 
         # Save parsed data
         if len(data) > 0:
             if f["s_name"] in self.rsem_mapped_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.rsem_mapped_data[f["s_name"]] = data
             self.add_data_source(f)
         if len(multimapping_hist) > 0:
@@ -122,8 +122,8 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
         headers = {
             "alignable_percent": {
-                "title": "% Alignable, {}".format(config.read_count_prefix),
-                "description": "% Alignable reads, {}".format(config.read_count_desc),
+                "title": f"% Alignable, {config.read_count_prefix}",
+                "description": f"% Alignable reads, {config.read_count_desc}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
