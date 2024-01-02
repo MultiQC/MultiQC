@@ -10,6 +10,21 @@ The MultiQC module reads data from two types of Bamdst logs:
 - `coverage.report`: used to build a table with coverage statistics. The sample name is read from this file.
 - `chromosomes.report`: if this file is found in the same directory as the file above, additionally a per-contig coverage plot will be generated.
 
+Note that for the sample names, the module will attempt to use the input BAM name
+in the header in the `coverage.report` file:
+
+```
+## The file was created by bamdst
+## Version : 1.0.9
+## Files : ST0217_Lg.bam
+...
+```
+
+However, if the tool was run in a piped manner, the file name will be just `-` or `/dev/stdin`,
+and instead MultiQC will fall back to using the log file name `coverage.report`.
+Make sure to run MultiQC with `--dirs` if use have multiple samples run in this way,
+otherwise MultiQC will only report the first found sample under the name `coverage`.
+
 For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
 
 For example, you could add the following to your MultiQC config file:
