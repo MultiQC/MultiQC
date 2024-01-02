@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import logging
 from collections import defaultdict
@@ -46,12 +47,16 @@ class ScatterPlot(Plot):
         ]
 
         self.categories = pconfig.get("categories", [])
-        self.default_marker = {
-            "size": 10,
-            "line": {"width": 1},
-            "opacity": 1,
-            "color": "rgba(124, 181, 236, .5)",
-        }
+
+        self.trace_params = dict(
+            textfont=dict(size=8),
+            marker=dict(
+                size=10,
+                line=dict(width=1),
+                opacity=1,
+                color="rgba(124, 181, 236, .5)",
+            ),
+        )
 
         self.layout.height = self.layout.height or 600
         # Make a tooltip always show on hover over nearest point on plot
@@ -61,7 +66,6 @@ class ScatterPlot(Plot):
         """Serialise the plot data to pick up in JavaScript"""
         d = super().dump_for_javascript()
         d["categories"] = self.categories
-        d["default_marker"] = self.default_marker
         return d
 
     def create_figure(
@@ -160,17 +164,22 @@ class ScatterPlot(Plot):
                     show_in_legend = True
                     name = label
 
-            marker = self.default_marker.copy()
+            params = copy.deepcopy(self.trace_params)
+            marker = params["marker"]
             if color:
                 marker["color"] = color
-            if n_annotated > 0:
-                marker["line"]["width"] = 0  # Remove the borders that clutter the annotations
-            elif "marker_line_width" in element:
+            if "marker_line_width" in element:
                 marker["line"]["width"] = element["marker_line_width"]
+            if n_annotated > 0:
+                # Reduce opacity of the borders that clutter the annotations:
+                marker["line"]["color"] = "rgba(0, 0, 0, .2)"
             if "marker_size" in element:
-                marker["size"] = element["marker_size"]
+                params["marker"]["size"] = element["marker_size"]
             if "opacity" in element:
-                marker["opacity"] = element["opacity"]
+                params["marker"]["opacity"] = element["opacity"]
+
+            if annotation:
+                params["mode"] = "markers+text"
 
             fig.add_trace(
                 go.Scatter(
@@ -178,10 +187,8 @@ class ScatterPlot(Plot):
                     y=[element["y"]],
                     name=name,
                     text=annotation,
-                    textfont=dict(size=8),
-                    mode="markers+text" if annotation else "markers",
-                    marker=marker,
                     showlegend=show_in_legend,
+                    **params,
                 )
             )
         fig.layout.height += len(in_legend) * 5  # extra space for legend

@@ -80,6 +80,7 @@ class LinePlot(Plot):
                 min([fig.layout.xaxis.range[0] for fig in dev_figs]),
                 max([fig.layout.xaxis.range[1] for fig in dev_figs]),
             ]
+
             self.layout.shapes = [
                 dict(
                     type="rect",
@@ -111,6 +112,16 @@ class LinePlot(Plot):
                 )
                 for band in self.pconfig.get("xPlotBands", [])
             ]
+
+        self.trace_params = dict(
+            mode="lines+markers",
+            line=dict(width=0.6),
+            marker=dict(size=4),
+        )
+        if config.lineplot_style == "lines":
+            self.trace_params = dict(
+                mode="lines",
+            )
 
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
@@ -151,14 +162,16 @@ class LinePlot(Plot):
                     x=xs,
                     y=ys,
                     name=line["name"],
-                    mode="lines+markers",
-                    line=dict(
-                        width=0.6,
-                    ),
-                    marker=dict(
-                        size=4,
-                        color=line.get("color"),
-                    ),
+                    marker_color=line.get("color"),
+                    **self.trace_params,
+                    # mode="lines+markers",
+                    # line=dict(
+                    #     width=0.6,
+                    # ),
+                    # marker=dict(
+                    #     size=4,
+                    #     color=line.get("color"),
+                    # ),
                 )
             )
         return fig

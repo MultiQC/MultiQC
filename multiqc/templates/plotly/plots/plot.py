@@ -107,6 +107,7 @@ class Plot(ABC):
                 ds.ylab = dl.get("ylab") or ds.label or None
                 ds.xlab = dl.get("xlab") or None
 
+        self.trace_params = dict()
         self.layout = go.Layout(
             title=dict(
                 text=self.pconfig.get("title"),
@@ -301,6 +302,7 @@ class Plot(ABC):
             "id": self.id,
             "plot_type": self.plot_type.value,
             "layout": self.layout.to_plotly_json(),
+            "trace_params": self.trace_params,
             "datasets": [d.dump_for_javascript() for d in self.datasets],
             # TODO: save figures to JSON, not datasets?
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],

@@ -97,6 +97,13 @@ class BarPlot(Plot):
             )
         )
 
+        self.trace_params = dict(
+            orientation="h",
+            marker=dict(
+                line=dict(width=0),
+            ),
+        )
+
         # Expand data with zeroes if there are fewer values than samples
         for dataset in self.datasets:
             for cat in dataset.cats:
@@ -150,11 +157,7 @@ class BarPlot(Plot):
                     y=dataset.samples,
                     x=data,
                     name=cat["name"],
-                    orientation="h",
-                    marker=dict(
-                        color=cat.get("color"),
-                        line=dict(width=0),
-                    ),
+                    **self.trace_params,
                 ),
             )
         return fig

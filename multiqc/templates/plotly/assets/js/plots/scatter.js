@@ -2,7 +2,6 @@ class ScatterPlot extends Plot {
   constructor(data) {
     super(data);
     this.categories = data.categories;
-    this.default_marker = data.default_marker;
   }
 
   activeDatasetSize() {
@@ -33,8 +32,7 @@ class ScatterPlot extends Plot {
       let x = point.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
-      // Shallow copy of default marker
-      let marker = Object.assign({}, this.default_marker);
+      let marker = Object.assign({}, this.trace_params.marker);
       marker.size = point["marker_size"] ?? marker.size;
       marker.line = {
         width: point["marker_line_width"] ?? marker.line.width,
@@ -48,7 +46,7 @@ class ScatterPlot extends Plot {
         x: [x],
         y: [point.y],
         name: point.name,
-        mode: "markers",
+        ...this.trace_params,
         marker: marker,
         // hovertemplate: pconfig["tt_label"]
       };

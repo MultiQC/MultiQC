@@ -27,40 +27,23 @@ class BarPlot extends Plot {
     return cats.map((cat) => {
       let data = this.p_active ? cat.data_pct : cat.data;
       data = data.filter((_, si) => !samplesSettings[si].hidden);
-      let highlightColors = filteredSettings.map((s) =>
-        s.highlight && s.highlight !== "#cccccc" ? s.highlight : null,
-      );
-      let highlightWidths = filteredSettings.map((s) => (s.highlight && s.highlight !== "#cccccc" ? 2 : 0));
+
+      let marker = Object.assign({}, this.trace_params.marker);
+      marker.color = cat.color;
+      marker.line = {
+        // Remove grey from highlights:
+        color: filteredSettings.map((s) => (s.highlight && s.highlight !== "#cccccc" ? s.highlight : null)),
+        width: filteredSettings.map((s) => (s.highlight && s.highlight !== "#cccccc" ? 2 : marker.line.width)),
+      };
 
       return {
         type: "bar",
         x: data,
         y: samples,
         name: cat.name,
-        orientation: "h",
-        marker: {
-          color: cat.color,
-          line: {
-            // Remove grey from highlights, as we don't need to remove default coloring of background samples
-            color: highlightColors,
-            width: highlightWidths,
-          },
-        },
+        ...this.trace_params,
+        marker: marker,
       };
     });
   }
-
-  // // TODO: perhaps use it or Plotly.react
-  // reloadWithNewData() {
-  //   // Updates plot given new underlying data
-  //   let cats = this.datasets[this.active_dataset_idx].cats;
-  //   let samples = this.datasets[this.active_dataset_idx].samples;
-  //   let samplesSettings = applyToolboxSettings(samples);
-  //
-  //   let x = cats.map((cat) => {
-  //     let data = this.p_active ? cat.data_pct : cat.data;
-  //     data.filter((_, si) => !samplesSettings[si].hidden);
-  //   });
-  //   Plotly.restyle(this.target, "x", x);
-  // };
 }

@@ -20,6 +20,7 @@ class Plot {
     this.target = dump.id;
     this.plot_type = dump.plot_type;
     this.layout = dump.layout;
+    this.trace_params = dump.trace_params;
     this.datasets = dump.datasets;
     this.config = dump.config;
     // To make sure we only render plot once

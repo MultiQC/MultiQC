@@ -93,6 +93,7 @@ plots_force_flat: bool
 plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
+lineplot_style: str
 collapse_tables: bool
 max_table_rows: int
 table_columns_visible: Dict
