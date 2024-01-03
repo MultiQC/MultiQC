@@ -319,29 +319,29 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {}
         headers["total"] = {
             "title": f"{config.read_count_prefix} read pairs",
-            "description": f"Total read pairs ({config.read_count_desc})",
+            "description": f"Total read pairs before mapping ({config.read_count_desc})",
             "min": 0,
             "modify": lambda x: x * config.read_count_multiplier,
-            "scale": "BuPu",
+            "scale": "Greys",
         }
         headers["frac_unmapped"] = {
             "title": "% unmapped",
             "description": "% of pairs (w.r.t. total) with both sides unmapped",
-            "max": 100,
+            "max": 50,
             "min": 0,
             "suffix": "%",
-            "scale": "YlOrRd",
+            "scale": "PuRd",
         }
         headers["frac_single_sided_mapped"] = {
-            "title": "% single-side mapped",
+            "title": "% one-sided",
             "description": "% of pairs (w.r.t. total) with one side mapped",
-            "max": 100,
+            "max": 50,
             "min": 0,
             "suffix": "%",
-            "scale": "RdPu",
+            "scale": "Purples",
         }
         headers["frac_mapped"] = {
-            "title": "% both-side mapped",
+            "title": "% two-sided",
             "description": "% of pairs (w.r.t. total) with both sides mapped",
             "max": 100,
             "min": 0,
@@ -351,17 +351,17 @@ class MultiqcModule(BaseMultiqcModule):
         headers["frac_dups"] = {
             "title": "% duplicated",
             "description": "% of duplicated pairs (w.r.t. mapped)",
-            "max": 100,
+            "max": 50,
             "min": 0,
             "suffix": "%",
-            "scale": "RdYlGn",
+            "scale": "YlOrRd",
         }
         headers["total_nodups"] = {
-            "title": f"{config.read_count_prefix} unique read pairs",
+            "title": f"{config.read_count_prefix} unique pairs",
             "description": f"Mapped pairs after deduplication ({config.read_count_desc})",
             "min": 0,
             "modify": lambda x: x * config.read_count_multiplier,
-            "scale": "BuPu",
+            "scale": "Greys",
         }
 
         headers["frac_cis"] = {
@@ -370,6 +370,6 @@ class MultiqcModule(BaseMultiqcModule):
             "max": 100,
             "min": 0,
             "suffix": "%",
-            "scale": "YlGn",
+            "scale": "PuOr-rev",
         }
         self.general_stats_addcols(self.pairtools_stats, headers)
