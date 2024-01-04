@@ -2,7 +2,7 @@ import dataclasses
 import io
 import logging
 import os
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import plotly.graph_objects as go
 
@@ -50,28 +50,12 @@ class LinePlot(Plot):
 
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
-        # A tooltip will show numbers for all lines crossing this vertical line
-        # self.layout.hovermode = "x"
-        # Default precision for floating numbers is too high - allowing to override it
-        if "tt_decimals" in pconfig:
-            self.layout.yaxis.hoverformat = f".{pconfig['tt_decimals']}f"
-        # self.tt_label: str = pconfig.get("tt_label", f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}")
-        if "tt_label" in pconfig:
-            tt_label = pconfig["tt_label"].replace("{point.x", "%{x").replace("{point.y", "%{y")
-        else:
-            tt_label = "%{x}: %{y}"
-            # if "tt_decimals" in pconfig:
-            #     tt_label = tt_label.replace("y", f"y,.{pconfig['tt_decimals']}f")
-            tt_label += pconfig.get("tt_suffix", "")
 
-        self.trace_params = dict(
-            mode="lines+markers",
+        self.trace_params.update(
+            mode="lines" if config.lineplot_style == "lines" else "lines+markers",
             line=dict(width=0.6),
-            hovertemplate="<b>%{text}</b><br>" + tt_label + "<extra></extra>",
             marker=dict(size=4),
         )
-        if config.lineplot_style == "lines":
-            self.trace_params = dict(mode="lines")
 
         if self.flat and self.datasets:
             self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
@@ -124,6 +108,11 @@ class LinePlot(Plot):
                 )
                 for band in self.pconfig.get("xPlotBands", [])
             ]
+
+    @staticmethod
+    def tt_label() -> Optional[str]:
+        """Default tooltip label"""
+        return "%{x}: %{y}"
 
     def axis_controlled_by_switches(self) -> List[str]:
         """

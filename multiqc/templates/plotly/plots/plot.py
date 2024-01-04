@@ -1,9 +1,3 @@
-# from abc import ABC, abstractmethod
-# from typing import Dict, List
-#
-# import plotly.graph_objects as go
-#
-# from multiqc.utils import config, report
 import base64
 import dataclasses
 import io
@@ -70,8 +64,8 @@ class Plot(ABC):
         self.flat = config.plots_force_flat or (
             not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
         )
-
         self.pconfig = pconfig
+        self.trace_params = dict()
 
         # Counts / Percentages / Log10 switch
         self.add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
@@ -107,7 +101,29 @@ class Plot(ABC):
                 ds.ylab = dl.get("ylab") or ds.label or None
                 ds.xlab = dl.get("xlab") or None
 
-        self.trace_params = dict()
+        # Format on-hover tooltips
+        tt_label = self.tt_label()
+        if "tt_label" in self.pconfig:
+            tt_label = self.pconfig["tt_label"]
+            replace_d = {
+                "{point.x": "%{x",
+                "{point.y": "%{y",
+                "<strong>": "<b>",
+                "</strong>": "</b>",
+                "<br/>": "<br>",
+            }
+            for k, v in replace_d.items():
+                tt_label = tt_label.replace(k, v)
+        elif tt_label:
+            tt_label += self.pconfig.get("tt_suffix", "")
+        if tt_label:
+            self.trace_params["hovertemplate"] = "<b>%{text}</b><br>" + tt_label + "<extra></extra>"
+
+        height = self.pconfig.get("height", 600)
+        width = self.pconfig.get("width")
+        if self.pconfig.get("square"):
+            width = height
+
         self.layout = go.Layout(
             title=dict(
                 text=self.pconfig.get("title"),
@@ -129,9 +145,11 @@ class Plot(ABC):
                 title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
                 range=[self.pconfig.get("ymin"), self.pconfig.get("ymax", self.pconfig.get("yCeiling"))],
+                # Default precision for floating numbers is too high - allowing to override it
+                hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
             ),
-            height=self.pconfig.get("height", 600),
-            width=self.pconfig.get("width"),
+            height=height,
+            width=width,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="Black", family="Lucida Grande"),
@@ -169,6 +187,11 @@ class Plot(ABC):
         switch buttons, e.g. ["yaxis"]
         """
         return []
+
+    @staticmethod
+    def tt_label() -> Optional[str]:
+        """Default tooltip label"""
+        return None
 
     def __repr__(self):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
@@ -324,6 +347,7 @@ class Plot(ABC):
             "config": {
                 "p_active": self.p_active,
                 "l_active": self.l_active,
+                "square": self.pconfig.get("square"),
             },
         }
 

@@ -38,6 +38,9 @@ class Plot {
 
   resize(newHeight) {
     Plotly.relayout(this.target, { height: newHeight });
+    if (this.config.square) {
+      Plotly.relayout(this.target, { width: newHeight });
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import copy
 import dataclasses
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 import numpy as np
 from plotly import graph_objects as go
@@ -48,9 +48,8 @@ class ScatterPlot(Plot):
 
         self.categories = pconfig.get("categories", [])
 
-        self.trace_params = dict(
+        self.trace_params.update(
             textfont=dict(size=8),
-            hovertemplate="<b>%{text}</b><br><b>X</b>: %{x}<br><b>Y</b>: %{y}<extra></extra>",
             marker=dict(
                 size=10,
                 line=dict(width=1),
@@ -62,6 +61,11 @@ class ScatterPlot(Plot):
         self.layout.height = self.layout.height or 600
         # Make a tooltip always show on hover over nearest point on plot
         self.layout.hoverdistance = -1
+
+    @staticmethod
+    def tt_label() -> Optional[str]:
+        """Default tooltip label"""
+        return "<b>X</b>: %{x}<br><b>Y</b>: %{y}>"
 
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
