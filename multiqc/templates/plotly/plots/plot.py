@@ -168,12 +168,12 @@ class Plot(ABC):
             ),
             showlegend=self.flat,
             legend=dict(
+                traceorder="normal",
                 orientation="h",
                 yanchor="top",
-                y=-0.2,
+                y=-0.3,
                 xanchor="center",
                 x=0.5,
-                traceorder="normal",
             ),
         )
         if self.add_log_tab and self.l_active:

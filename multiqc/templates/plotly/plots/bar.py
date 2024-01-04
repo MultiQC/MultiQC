@@ -66,13 +66,22 @@ class BarPlot(Plot):
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
-        if not self.layout.height:
-            MIN_PLOT_HEIGHT = 500
-            MAX_PLOT_HEIGHT = 2560
-            height = max_n_samples * 10
-            height = max(MIN_PLOT_HEIGHT, height)
-            height = min(MAX_PLOT_HEIGHT, height)
-            self.layout.height = height
+        MIN_PLOT_HEIGHT = 300
+        MAX_PLOT_HEIGHT = 2560
+        px_per_sample = 50
+        if max_n_samples > 5:
+            px_per_sample = 35
+        if max_n_samples > 10:
+            px_per_sample = 25
+        if max_n_samples > 20:
+            px_per_sample = 15
+        if max_n_samples > 30:
+            px_per_sample = 10
+        height = max_n_samples * px_per_sample
+        height = max(MIN_PLOT_HEIGHT, height)
+        height = min(MAX_PLOT_HEIGHT, height)
+        height += 50  # extra space for legend
+        self.layout.height = height
 
         # swap x and y axes: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
         self.layout.update(
@@ -91,6 +100,7 @@ class BarPlot(Plot):
                 ),
                 xaxis=dict(
                     title=dict(text=self.layout.yaxis.title.text),
+                    range=[0, self.layout.xaxis.range[1]],
                 ),
             )
         )
@@ -132,7 +142,8 @@ class BarPlot(Plot):
             for dataset in self.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
 
-    def axis_controlled_by_switches(self) -> List[str]:
+    @staticmethod
+    def axis_controlled_by_switches() -> List[str]:
         """
         Return a list of axis names that are controlled by the log10 scale and percentage
         switch buttons
