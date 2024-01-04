@@ -137,7 +137,11 @@ class Plot(ABC):
             font=dict(color="Black", family="Lucida Grande"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
-            margin=dict(pad=10),  # pad sample names a bit
+            margin=dict(
+                pad=10,  # pad sample names in a bar graph a bit
+                t=50,  # more compact title
+                r=10,  # remove excessive whitespace on the right
+            ),
             hoverlabel=dict(namelength=-1),  # do not crop sample names in hover labels
             modebar=dict(
                 bgcolor="rgba(0, 0, 0, 0)",

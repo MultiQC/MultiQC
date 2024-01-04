@@ -376,8 +376,9 @@ function renderPlot(target) {
 
   func(target, plot.buildTraces(), plot.layout, {
     responsive: true,
-    displayModeBar: true,
     displaylogo: false,
+    displayModeBar: true,
+    toImageButtonOptions: { filename: target },
     modeBarButtonsToRemove: [
       "lasso2d",
       "autoScale2d",
