@@ -859,7 +859,7 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 
 The following scales are available:
 
-![color brewer](https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/cbrewer_scales.png)
+![color brewer](../../../docs/images/cbrewer_scales.png)
 
 For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
 

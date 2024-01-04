@@ -79,7 +79,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/report_proj_info.png)
+![report project info](../../../docs/images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
@@ -723,11 +723,11 @@ The first key is the table ID, the second is the header ID for the column you wa
 :::tip
 The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
 
-![Table: configure columns button](https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/table_configure_columns.png)
+![Table: configure columns button](../../../docs/images/table_configure_columns.png)
 
 The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
 
-![Table: configure columns button](https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/table_header_ids.png)
+![Table: configure columns button](../../../docs/images/table_header_ids.png)
 :::
 
 ### Hiding columns

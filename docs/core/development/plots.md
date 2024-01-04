@@ -546,7 +546,7 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 
 The following scales are available:
 
-![color brewer](https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/cbrewer_scales.png)
+![color brewer](../../../docs/images/cbrewer_scales.png)
 
 ### Custom cell background colours
 
