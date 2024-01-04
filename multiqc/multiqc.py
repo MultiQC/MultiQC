@@ -476,14 +476,15 @@ def run(
             "update your command line and/or configs."
         )
         strict = True
-    if os.environ.get("MULTIQC_STRICT"):
-        strict = True
     if strict:
         config.strict = True
         config.lint = True  # Deprecated since v1.17
         strict_helpers.run_tests()
     if development:
         config.development = True
+        config.export_plots = True
+        if "png" not in config.export_plot_formats:
+            config.export_plot_formats.append("png")
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:

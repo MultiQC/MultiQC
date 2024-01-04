@@ -50,6 +50,7 @@ class ScatterPlot(Plot):
 
         self.trace_params = dict(
             textfont=dict(size=8),
+            hovertemplate="<b>%{text}</b><br><b>X</b>: %{x}<br><b>Y</b>: %{y}<extra></extra>",
             marker=dict(
                 size=10,
                 line=dict(width=1),
@@ -78,14 +79,6 @@ class ScatterPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-
-        # import json
-        #
-        # with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
-        #     f.write(json.dumps(layout.to_plotly_json()))
-        # with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
-        #     f.write(json.dumps(dataset.data))
-
         fig = go.Figure(layout=layout)
 
         MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
@@ -170,23 +163,22 @@ class ScatterPlot(Plot):
                 marker["color"] = color
             if "marker_line_width" in element:
                 marker["line"]["width"] = element["marker_line_width"]
-            if n_annotated > 0:
-                # Reduce opacity of the borders that clutter the annotations:
-                marker["line"]["color"] = "rgba(0, 0, 0, .2)"
             if "marker_size" in element:
-                params["marker"]["size"] = element["marker_size"]
+                marker["size"] = element["marker_size"]
             if "opacity" in element:
-                params["marker"]["opacity"] = element["opacity"]
+                marker["opacity"] = element["opacity"]
 
             if annotation:
                 params["mode"] = "markers+text"
+            if n_annotated > 0:  # Reduce opacity of the borders that clutter the annotations:
+                marker["line"]["color"] = "rgba(0, 0, 0, .2)"
 
             fig.add_trace(
                 go.Scatter(
                     x=[x],
                     y=[element["y"]],
                     name=name,
-                    text=annotation,
+                    text=[annotation or name],
                     showlegend=show_in_legend,
                     **params,
                 )

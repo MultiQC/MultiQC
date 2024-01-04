@@ -32,23 +32,22 @@ class ScatterPlot extends Plot {
       let x = point.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
-      let marker = Object.assign({}, this.trace_params.marker);
-      marker.size = point["marker_size"] ?? marker.size;
-      marker.line = {
-        width: point["marker_line_width"] ?? marker.line.width,
+      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      params.marker.size = point["marker_size"] ?? params.marker.size;
+      params.marker.line = {
+        width: point["marker_line_width"] ?? params.marker.line.width,
       };
-      marker.opacity = point["opacity"] ?? marker.opacity;
-      marker.color = point["color"] ?? marker.color;
-      if (highlighted.length > 0) marker.color = point.highlight ?? "#cccccc";
+      params.marker.opacity = point["opacity"] ?? params.marker.opacity;
+      params.marker.color = point["color"] ?? params.marker.color;
+      if (highlighted.length > 0) params.marker.color = point.highlight ?? "#cccccc";
 
       return {
         type: "scatter",
         x: [x],
         y: [point.y],
         name: point.name,
-        ...this.trace_params,
-        marker: marker,
-        // hovertemplate: pconfig["tt_label"]
+        text: [point.annotation ?? point.name],
+        ...params,
       };
     });
   }

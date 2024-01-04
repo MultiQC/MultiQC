@@ -64,18 +64,17 @@ class LinePlot extends Plot {
         y = line.data;
       }
 
-      let marker = Object.assign({}, this.trace_params.marker);
-      if (highlighted.length > 0) marker.color = line.highlight ?? "#cccccc";
-      else marker.color = line.color;
+      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
+      else params.marker.color = line.color;
 
       return {
         type: "scatter",
         x: x,
         y: y,
         name: line.name,
-        ...this.trace_params,
-        marker: marker,
-        // hovertemplate: pconfig["tt_label"]
+        text: x.map(() => line.name),
+        ...params,
       };
     });
   }

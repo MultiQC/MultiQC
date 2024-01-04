@@ -23,6 +23,7 @@ class Plot {
     this.trace_params = dump.trace_params;
     this.datasets = dump.datasets;
     this.config = dump.config;
+    this.axis_controlled_by_switches = dump.axis_controlled_by_switches;
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles
@@ -125,7 +126,9 @@ $(function () {
     mqc_plots[target].l_active = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    Plotly.relayout(target, "xaxis.type", mqc_plots[target].l_active ? "log" : "linear");
+    mqc_plots[target].axis_controlled_by_switches.map((axis) => {
+      Plotly.relayout(target, axis + ".type", mqc_plots[target].l_active ? "log" : "linear");
+    });
   });
 
   // Switch data source
@@ -367,7 +370,9 @@ function renderPlot(target) {
 
   // Apply toggle states
   plot.layout.xaxis.tickformat = plot.p_active ? ".0%" : "";
-  plot.layout.xaxis.type = plot.l_active ? "log" : null;
+  plot.axis_controlled_by_switches.map((axis) => {
+    plot.layout[axis].type = plot.l_active ? "log" : "linear";
+  });
 
   func(target, plot.buildTraces(), plot.layout, {
     responsive: true,

@@ -339,6 +339,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Values",
             "xDecimals": False,
             "ymin": 0,
+            "xmin": 0,
         }
 
         return linegraph.plot(self.snpeff_qualities, pconfig)

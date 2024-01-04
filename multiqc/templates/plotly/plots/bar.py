@@ -1,4 +1,5 @@
 """Plotly bargraph functionality."""
+import copy
 import dataclasses
 import logging
 from typing import Dict, List
@@ -76,32 +77,27 @@ class BarPlot(Plot):
         # swap x and y axes: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
         self.layout.update(
             dict(
+                showlegend=True,
                 barmode=pconfig.get("stacking", "stack" if self.p_active else "relative"),
                 hovermode="y unified",
-                xaxis_title_text=self.layout.xaxis.title.text,
-                yaxis_title_text=self.layout.yaxis.title.text,
+                # xaxis_title_text=self.layout.xaxis.title.text,
+                # yaxis_title_text=self.layout.yaxis.title.text,
                 yaxis=dict(
                     showgrid=False,
                     categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
                     automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
                     nticks=max(len(ds.samples) for ds in self.datasets),
-                    # range=[None, None],
                 ),
-                # the barplot is sort tof "transposed" and y corresponds to the horizontal axis
                 xaxis=dict(
-                    title=dict(
-                        text=self.layout.yaxis.title.text,
-                    )
+                    title=dict(text=self.layout.yaxis.title.text),
                 ),
             )
         )
 
         self.trace_params = dict(
             orientation="h",
-            marker=dict(
-                line=dict(width=0),
-            ),
+            marker=dict(line=dict(width=0)),
         )
 
         # Expand data with zeroes if there are fewer values than samples
@@ -136,6 +132,13 @@ class BarPlot(Plot):
             for dataset in self.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
 
+    def axis_controlled_by_switches(self) -> List[str]:
+        """
+        Return a list of axis names that are controlled by the log10 scale and percentage
+        switch buttons
+        """
+        return ["xaxis"]
+
     def create_figure(
         self,
         layout: go.Layout,
@@ -152,12 +155,18 @@ class BarPlot(Plot):
             if is_pct:
                 data = cat["data_pct"]
 
+            params = copy.deepcopy(self.trace_params)
+            marker = params["marker"]
+            color = cat.get("color")
+            if color:
+                marker["color"] = color
+
             fig.add_trace(
                 go.Bar(
                     y=dataset.samples,
                     x=data,
                     name=cat["name"],
-                    **self.trace_params,
+                    **params,
                 ),
             )
         return fig

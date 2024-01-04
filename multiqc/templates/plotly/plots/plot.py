@@ -121,7 +121,6 @@ class Plot(ABC):
                 title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
-                type=("log" if self.l_active else "linear") if self.add_log_tab else None,
                 tickformat=".0%" if self.p_active and self.add_pct_tab else None,
             ),
             yaxis=dict(
@@ -155,6 +154,17 @@ class Plot(ABC):
                 traceorder="normal",
             ),
         )
+        if self.add_log_tab and self.l_active:
+            for axis in self.axis_controlled_by_switches():
+                self.layout[axis].type = "log"
+
+    @staticmethod
+    def axis_controlled_by_switches() -> List[str]:
+        """
+        Return a list of axis names that are controlled by the log10 scale and percentage
+        switch buttons, e.g. ["yaxis"]
+        """
+        return []
 
     def __repr__(self):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
@@ -303,6 +313,7 @@ class Plot(ABC):
             "plot_type": self.plot_type.value,
             "layout": self.layout.to_plotly_json(),
             "trace_params": self.trace_params,
+            "axis_controlled_by_switches": self.axis_controlled_by_switches(),
             "datasets": [d.dump_for_javascript() for d in self.datasets],
             # TODO: save figures to JSON, not datasets?
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
@@ -330,20 +341,10 @@ class Plot(ABC):
         Create a Plotly Figure object.
         """
         layout = go.Layout(**self.layout.to_plotly_json())  # make a copy
-        if is_pct:
-            layout.update(
-                {
-                    "xaxis.tickformat": ".0%",
-                    # "xaxis.title.text": self.p_label,
-                }
-            )
-        if is_log:
-            layout.update(
-                {
-                    "xaxis.type": "log",
-                    # "xaxis.title.text": layout.xaxis.title.text + " " + self.l_label
-                }
-            )
+        for axis in self.axis_controlled_by_switches():
+            layout[axis].type = "log" if is_log else "linear"
+            if is_pct:
+                layout[axis].tickformat = ".0%"
         return self.create_figure(layout, dataset, is_log, is_pct)
 
     @staticmethod
@@ -365,23 +366,22 @@ class Plot(ABC):
         # Save the plot to the data directory if export is requested
         if config.export_plots:
             for file_ext in config.export_plot_formats:
-                # Make the directory if it doesn't already exist
-                plot_dir = Path(config.plots_dir) / file_ext
-                if not plot_dir.exists():
-                    plot_dir.mkdir(parents=True, exist_ok=True)
-                # Save the plot
-                plot_fn = Path(plot_dir) / f"{uid}.{file_ext}"
+                plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
+                plot_fn.parent.mkdir(parents=True, exist_ok=True)
                 fig.write_image(plot_fn, **write_kwargs)
 
         # Now writing the PNGs for the HTML
         write_kwargs["format"] = "png"
 
-        # Output the figure to a base64 encoded string
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_buffer.close()
-        img_src = f"data:image/png;base64,{b64_img}"
+        if config.development:
+            img_src = Path(config.plots_dir_name) / "png" / f"{uid}.png"
+        else:
+            # Output the figure to a base64 encoded string
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+            img_buffer.close()
+            img_src = f"data:image/png;base64,{b64_img}"
 
         # Should this plot be hidden on report load?
         hiding = "" if active else ' style="display:none;"'

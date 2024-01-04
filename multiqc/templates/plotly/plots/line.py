@@ -4,7 +4,6 @@ import logging
 import os
 from typing import Dict, List, Union
 
-import math
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
@@ -56,11 +55,24 @@ class LinePlot(Plot):
         # Default precision for floating numbers is too high - allowing to override it
         if "tt_decimals" in pconfig:
             self.layout.yaxis.hoverformat = f".{pconfig['tt_decimals']}f"
-        # self.tt_suffix: str = pconfig.get("tt_suffix", "")
-        # self.tt_label: str = pconfig.get(
-        #     "tt_label",
-        #     f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}"
-        # )
+        # self.tt_label: str = pconfig.get("tt_label", f"%{{x}}: %{{y:,.{self.tt_decimals}f}}{self.tt_suffix}")
+        if "tt_label" in pconfig:
+            tt_label = pconfig["tt_label"].replace("{point.x", "%{x").replace("{point.y", "%{y")
+        else:
+            tt_label = "%{x}: %{y}"
+            # if "tt_decimals" in pconfig:
+            #     tt_label = tt_label.replace("y", f"y,.{pconfig['tt_decimals']}f")
+            tt_label += pconfig.get("tt_suffix", "")
+
+        self.trace_params = dict(
+            mode="lines+markers",
+            line=dict(width=0.6),
+            hovertemplate="<b>%{text}</b><br>" + tt_label + "<extra></extra>",
+            marker=dict(size=4),
+        )
+        if config.lineplot_style == "lines":
+            self.trace_params = dict(mode="lines")
+
         if self.flat and self.datasets:
             self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
 
@@ -113,15 +125,12 @@ class LinePlot(Plot):
                 for band in self.pconfig.get("xPlotBands", [])
             ]
 
-        self.trace_params = dict(
-            mode="lines+markers",
-            line=dict(width=0.6),
-            marker=dict(size=4),
-        )
-        if config.lineplot_style == "lines":
-            self.trace_params = dict(
-                mode="lines",
-            )
+    def axis_controlled_by_switches(self) -> List[str]:
+        """
+        Return a list of axis names that are controlled by the log10 scale and percentage
+        switch buttons
+        """
+        return ["yaxis"]
 
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
@@ -133,19 +142,6 @@ class LinePlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-
-        import json
-
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
-            f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-lines.json", "w") as f:
-            f.write(json.dumps(dataset.lines))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-pconfig.json", "w") as f:
-            f.write(json.dumps(self.pconfig))
-
-        if self.id == "fastqc_per_base_n_content_plot":
-            print()
-
         fig = go.Figure(layout=layout)
         for line in dataset.lines:
             if len(line["data"]) > 0 and isinstance(line["data"][0], list):
@@ -154,24 +150,15 @@ class LinePlot(Plot):
             else:
                 xs = [x for x in range(len(line["data"]))]
                 ys = line["data"]
-            if is_log:
-                ys = [math.log10(y) if y else 0 for y in ys]
 
             fig.add_trace(
                 go.Scatter(
                     x=xs,
                     y=ys,
                     name=line["name"],
+                    text=[line["name"]] * len(xs),
                     marker_color=line.get("color"),
                     **self.trace_params,
-                    # mode="lines+markers",
-                    # line=dict(
-                    #     width=0.6,
-                    # ),
-                    # marker=dict(
-                    #     size=4,
-                    #     color=line.get("color"),
-                    # ),
                 )
             )
         return fig
