@@ -105,7 +105,7 @@ class Plot(ABC):
         tt_label = self.tt_label()
         if "tt_label" in self.pconfig:
             tt_label = self.pconfig["tt_label"]
-            replace_d = {
+            replace_d = {  # Convert HighCharts format to Plotly format
                 "{point.x": "%{x",
                 "{point.y": "%{y",
                 "<strong>": "<b>",
