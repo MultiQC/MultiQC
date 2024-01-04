@@ -3,10 +3,11 @@
 
 import logging
 import re
-from collections import OrderedDict
-from distutils.version import StrictVersion
+import shlex
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from packaging import version
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -49,9 +50,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
 
         if len(self.cutadapt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.cutadapt_data)))
+        log.info(f"Found {len(self.cutadapt_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
@@ -70,31 +71,31 @@ class MultiqcModule(BaseMultiqcModule):
         fh = f["f"]
         regexes = {
             "1.7": {
-                "bp_processed": "Total basepairs processed:\s*([\d,]+) bp",
-                "bp_written": "Total written \(filtered\):\s*([\d,]+) bp",
-                "quality_trimmed": "Quality-trimmed:\s*([\d,]+) bp",
-                "r_processed": "Total reads processed:\s*([\d,]+)",
-                "pairs_processed": "Total read pairs processed:\s*([\d,]+)",
-                "r_with_adapters": "Reads with adapters:\s*([\d,]+)",
-                "r1_with_adapters": "Read 1 with adapter:\s*([\d,]+)",
-                "r2_with_adapters": "Read 2 with adapter:\s*([\d,]+)",
-                "r_too_short": "Reads that were too short:\s*([\d,]+)",
-                "pairs_too_short": "Pairs that were too short:\s*([\d,]+)",
-                "r_too_long": "Reads that were too long:\s*([\d,]+)",
-                "pairs_too_long": "Pairs that were too long:\s*([\d,]+)",
-                "r_too_many_N": "Reads with too many N:\s*([\d,]+)",
-                "pairs_too_many_N": "Pairs with too many N:\s*([\d,]+)",
-                "r_written": "Reads written \(passing filters\):\s*([\d,]+)",
-                "pairs_written": "Pairs written \(passing filters\):\s*([\d,]+)",
+                "bp_processed": r"Total basepairs processed:\s*([\d,]+) bp",
+                "bp_written": r"Total written \(filtered\):\s*([\d,]+) bp",
+                "quality_trimmed": r"Quality-trimmed:\s*([\d,]+) bp",
+                "r_processed": r"Total reads processed:\s*([\d,]+)",
+                "pairs_processed": r"Total read pairs processed:\s*([\d,]+)",
+                "r_with_adapters": r"Reads with adapters:\s*([\d,]+)",
+                "r1_with_adapters": r"Read 1 with adapter:\s*([\d,]+)",
+                "r2_with_adapters": r"Read 2 with adapter:\s*([\d,]+)",
+                "r_too_short": r"Reads that were too short:\s*([\d,]+)",
+                "pairs_too_short": r"Pairs that were too short:\s*([\d,]+)",
+                "r_too_long": r"Reads that were too long:\s*([\d,]+)",
+                "pairs_too_long": r"Pairs that were too long:\s*([\d,]+)",
+                "r_too_many_N": r"Reads with too many N:\s*([\d,]+)",
+                "pairs_too_many_N": r"Pairs with too many N:\s*([\d,]+)",
+                "r_written": r"Reads written \(passing filters\):\s*([\d,]+)",
+                "pairs_written": r"Pairs written \(passing filters\):\s*([\d,]+)",
             },
             "1.6": {
-                "r_processed": "Processed reads:\s*([\d,]+)",
-                "bp_processed": "Processed bases:\s*([\d,]+) bp",
-                "r_trimmed": "Trimmed reads:\s*([\d,]+)",
-                "quality_trimmed": "Quality-trimmed:\s*([\d,]+) bp",
-                "bp_trimmed": "Trimmed bases:\s*([\d,]+) bp",
-                "too_short": "Too short reads:\s*([\d,]+)",
-                "too_long": "Too long reads:\s*([\d,]+)",
+                "r_processed": r"Processed reads:\s*([\d,]+)",
+                "bp_processed": r"Processed bases:\s*([\d,]+) bp",
+                "r_trimmed": r"Trimmed reads:\s*([\d,]+)",
+                "quality_trimmed": r"Quality-trimmed:\s*([\d,]+) bp",
+                "bp_trimmed": r"Trimmed bases:\s*([\d,]+) bp",
+                "too_short": r"Too short reads:\s*([\d,]+)",
+                "too_long": r"Too long reads:\s*([\d,]+)",
             },
         }
         s_name = None
@@ -102,83 +103,94 @@ class MultiqcModule(BaseMultiqcModule):
         cutadapt_version = None
         parsing_version = "1.7"
         log_section = None
-        for l in fh:
+        for line in fh:
             # New log starting
-            if "This is cutadapt" in l or "cutadapt version" in l:
+            if "This is cutadapt" in line or "cutadapt version" in line:
                 s_name = None
                 end = "default"
                 cutadapt_version = None
-                c_version = re.match(r"This is cutadapt ([\d\.]+)", l)
+                c_version = re.match(r"This is cutadapt ([\d\.]+)", line)
                 if c_version:
                     cutadapt_version = c_version.group(1)
                     try:
-                        assert StrictVersion(c_version.group(1)) <= StrictVersion("1.6")
+                        assert version.parse(c_version.group(1)) <= version.parse("1.6")
                         parsing_version = "1.6"
-                    except:
+                    except Exception:
                         parsing_version = "1.7"
-                c_version_old = re.match(r"cutadapt version ([\d\.]+)", l)
+                c_version_old = re.match(r"cutadapt version ([\d\.]+)", line)
                 if c_version_old:
                     cutadapt_version = c_version_old.group(1)
                     # The pattern "cutadapt version XX" is only pre-1.6
                     parsing_version = "1.6"
             # Get sample name from end of command line params
-            if l.startswith("Command line parameters"):
-                for cli in reversed(l.split()):
-                    if not cli.startswith("-"):
-                        s_name = cli
-                        break
-                # Manage case where sample name is '-' (reading from stdin)
-                if s_name == "-":
-                    s_name = f["s_name"]
+            cl_pref = "Command line parameters: "
+            if line.startswith(cl_pref):
+                input_fqs = []
+                args = shlex.split(line[len(cl_pref) :])
+                for i, x in enumerate(args):
+                    if (
+                        not x.startswith("-")
+                        and x.endswith((".fastq", ".fq", ".gz", ".dat"))
+                        and (i == 0 or args[i - 1] not in ["-o", "-p", "--output", "--paired-output"])
+                    ):
+                        input_fqs.append(x)
+                if input_fqs:
+                    s_name = self.clean_s_name(input_fqs, f)
                 else:
-                    s_name = self.clean_s_name(s_name, f)
+                    # Manage case where sample name is '-' (reading from stdin)
+                    s_name = f["s_name"]
+
                 if s_name in self.cutadapt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.cutadapt_data[s_name] = dict()
                 if cutadapt_version:
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
             if s_name is not None:
+                # Add version info to module
+                if cutadapt_version is not None:
+                    self.add_software_version(cutadapt_version, s_name)
+
                 self.add_data_source(f, s_name)
 
                 # Search regexes for overview stats
                 for k, r in regexes[parsing_version].items():
-                    match = re.search(r, l)
+                    match = re.search(r, line)
                     if match:
                         self.cutadapt_data[s_name][k] = int(match.group(1).replace(",", ""))
 
                 # Starting a new section
-                if "===" in l:
-                    log_section = l.strip().strip("=").strip()
+                if "===" in line:
+                    log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search("Type: regular (\d)'", l)
+                end_regex = re.search(r"Type: regular (\d)'", line)
                 if end_regex:
                     end = end_regex.group(1)
 
-                if "Overview of removed sequences" in l:
-                    if "' end" in l:
-                        res = re.search("(\d)' end", l)
+                if "Overview of removed sequences" in line:
+                    if "' end" in line:
+                        res = re.search(r"(\d)' end", line)
                         end = res.group(1)
 
-                    # Initilise dictionaries for length data if not already done
+                    # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
                         self.cutadapt_length_counts[end] = dict()
                         self.cutadapt_length_exp[end] = dict()
                         self.cutadapt_length_obsexp[end] = dict()
 
                 # Histogram showing lengths trimmed
-                if "length" in l and "count" in l and "expect" in l:
+                if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
-                        plot_sname = "{} - {}".format(s_name, log_section)
+                        plot_sname = f"{s_name} - {log_section}"
                     self.cutadapt_length_counts[end][plot_sname] = dict()
                     self.cutadapt_length_exp[end][plot_sname] = dict()
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
 
                     # Nested loop to read this section while the regex matches
-                    for l in fh:
-                        r_seqs = re.search("^(\d+)\s+(\d+)\s+([\d\.]+)", l)
+                    for line2 in fh:
+                        r_seqs = re.search(r"^(\d+)\s+(\d+)\s+([\d\.]+)", line2)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
                             self.cutadapt_length_counts[end][plot_sname][a_len] = int(r_seqs.group(2))
@@ -204,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                     (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                 ) * 100
             # Add missing filtering categories for pre-1.7 logs
-            if StrictVersion(d["cutadapt_version"]) > StrictVersion("1.6"):
+            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
                 if "r_processed" in d:
                     r_filtered_unexplained = (
                         d["r_processed"]
@@ -235,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
         ):
             log.error("Something went wrong...")
             log.debug("Keys in trimmed length data differed")
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         if len(self.cutadapt_length_counts["default"]) == 0:
             self.cutadapt_length_counts.pop("default")
@@ -248,14 +260,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report"""
 
-        headers = {}
-        headers["percent_trimmed"] = {
-            "title": "% BP Trimmed",
-            "description": "% Total Base Pairs trimmed",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlBu-rev",
+        headers = {
+            "percent_trimmed": {
+                "title": "% BP Trimmed",
+                "description": "% Total Base Pairs trimmed",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlBu-rev",
+            }
         }
         self.general_stats_addcols(self.cutadapt_data, headers)
 
@@ -268,17 +281,18 @@ class MultiqcModule(BaseMultiqcModule):
         # of SE and PE data then this means quite a lot of categories.
         # Usually, only a single data type is used though - in that case
         # any categories with 0 across all samples will be ignored.
-        cats = OrderedDict()
-        cats["pairs_written"] = {"name": "Pairs passing filters"}
-        cats["r_written"] = {"name": "Reads passing filters"}
-        cats["pairs_too_short"] = {"name": "Pairs that were too short"}
-        cats["r_too_short"] = {"name": "Reads that were too short"}
-        cats["pairs_too_long"] = {"name": "Pairs that were too long"}
-        cats["r_too_long"] = {"name": "Reads that were too long"}
-        cats["pairs_too_many_N"] = {"name": "Pairs with too many N"}
-        cats["r_too_many_N"] = {"name": "Reads with too many N"}
-        cats["pairs_filtered_unexplained"] = {"name": "Filtered pairs (uncategorised)"}
-        cats["r_filtered_unexplained"] = {"name": "Filtered reads (uncategorised)"}
+        cats = {
+            "pairs_written": {"name": "Pairs passing filters"},
+            "r_written": {"name": "Reads passing filters"},
+            "pairs_too_short": {"name": "Pairs that were too short"},
+            "r_too_short": {"name": "Reads that were too short"},
+            "pairs_too_long": {"name": "Pairs that were too long"},
+            "r_too_long": {"name": "Reads that were too long"},
+            "pairs_too_many_N": {"name": "Pairs with too many N"},
+            "r_too_many_N": {"name": "Reads with too many N"},
+            "pairs_filtered_unexplained": {"name": "Filtered pairs (uncategorised)"},
+            "r_filtered_unexplained": {"name": "Filtered reads (uncategorised)"},
+        }
 
         self.add_section(
             name="Filtered Reads",
@@ -308,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Trimmed Sequence Lengths{}".format("" if end == "default" else f" ({end}')"),
-                anchor="cutadapt_trimmed_sequences{}".format("" if end == "default" else f"_{end}"),
+                anchor=f"cutadapt_trimmed_sequences{'' if end == 'default' else f'_{end}'}",
                 description="This plot shows the number of reads with certain lengths of adapter trimmed{}.".format(
                     "" if end == "default" else f" for the {end}' end"
                 ),

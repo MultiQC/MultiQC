@@ -1,11 +1,11 @@
 import logging
 import re
-from collections import OrderedDict
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"sambamba ([\d\.]+)"
 
 
 class SambambaMarkdupMixin:
@@ -23,7 +23,7 @@ class SambambaMarkdupMixin:
 
         for f in self.find_log_files("sambamba/markdup"):
             if f["s_name"] in self.markdup_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
 
             # parse sambamba output by sample name
             parsed = self.parse_markdup_stats(f)
@@ -33,12 +33,17 @@ class SambambaMarkdupMixin:
             # filter away samples if MultiQC user does not want them
             self.markdup_data = self.ignore_samples(self.markdup_data)
 
+            # add sambamba version to software table
+            version_match = re.search(VERSION_REGEX, f["f"])
+            if version_match:
+                self.add_software_version(version_match.group(1), f["s_name"])
+
             # add results to multiqc_sources.txt
             self.add_data_source(f)
 
             # warn user if duplicate samples found
             if f["s_name"] in self.markdup_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
         if len(self.markdup_data) == 0:
             return 0
@@ -78,7 +83,7 @@ class SambambaMarkdupMixin:
             if m:
                 d[key] = int(m[1])
         if len(d) != len(regexes):
-            log.debug("Could not find all markdup fields for '{}' - skipping".format(f["fn"]))
+            log.debug(f"Could not find all markdup fields for '{f['fn']}' - skipping")
             return None
 
         # Calculate duplicate rate
@@ -89,7 +94,7 @@ class SambambaMarkdupMixin:
             ) * 100.0
         except ZeroDivisionError:
             d["duplicate_rate"] = 0
-            log.debug("Sambamba Markdup: zero division error for '{}'".format(f["fn"]))
+            log.debug(f"Sambamba Markdup: zero division error for '{f['fn']}'")
 
         # Calculate some read counts from pairs - Paired End
         if d["sorted_end_pairs"] > 0:
@@ -130,12 +135,12 @@ class SambambaMarkdupMixin:
         """
 
         # plot these categories, but not duplicate rate.
-        cats = OrderedDict()
-        cats["total_sorted_paired_end_reads"] = {"name": "Total Sorted Paired End Reads"}
-        cats["total_single_end_reads"] = {"name": "Total Single End Reads"}
-        cats["total_single_unmatched_reads"] = {"name": "Total Single Unmatched Reads"}
-        cats["duplicate_reads"] = {"name": "Total Duplicate Reads"}
-
+        cats = {
+            "total_sorted_paired_end_reads": {"name": "Total Sorted Paired End Reads"},
+            "total_single_end_reads": {"name": "Total Single End Reads"},
+            "total_single_unmatched_reads": {"name": "Total Single Unmatched Reads"},
+            "duplicate_reads": {"name": "Total Duplicate Reads"},
+        }
         config = {
             "id": "SambambaMarkdupBargraph",
             "title": "Sambamba Markdup: Duplicate Counts",

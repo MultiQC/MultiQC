@@ -2,9 +2,8 @@
 
 import json
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, beeswarm, table
 
 # Initialise the logger
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Stop execution of the data if no anglerfish data is found.
         if len(self.anglerfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.anglerfish_data)} reports")
 
@@ -57,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the JSON output from Anglerfish and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-        except:
+        except Exception:
             file = f["fn"]
             log.warning(f"Could not parse Anglerfish JSON: '{file}'")
             return
@@ -66,6 +65,9 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         self.add_data_source(f, s_name)
         self.anglerfish_data[s_name] = {}
+
+        # Add version info
+        self.add_software_version(parsed_json["anglerfish_version"], s_name)
 
         # Parse Sample Stats
         ## Index for each sample and their reads in order to iterate without knowing sample names
@@ -130,39 +132,39 @@ class MultiqcModule(BaseMultiqcModule):
             except ZeroDivisionError:
                 log.debug(f"No library in general stats table generated from Anglerfish json: {s_name}")
 
-        headers = OrderedDict()
-        headers["library"] = {
-            "title": "% Library",
-            "description": "Fraction within library.",
-            "max": 100,
-            "min": 0,
-            "scale": "PuBu-rev",
-            "suffix": " %",
+        headers = {
+            "library": {
+                "title": "% Library",
+                "description": "Fraction within library.",
+                "max": 100,
+                "min": 0,
+                "scale": "PuBu-rev",
+                "suffix": " %",
+            },
+            "#reads": {
+                "title": "# Reads",
+                "description": "Total number of reads",
+                "min": 0,
+                "scale": "PuOr",
+                "format": "{:.0f}",
+            },
+            "mean_read_len": {
+                "title": "Read Length",
+                "description": "Mean read length",
+                "min": 0,
+                "scale": "RdYlGn",
+                "suffix": " bp",
+            },
+            "std_read_len": {
+                "title": "Length StdDev",
+                "description": "Standard deviation of the read lengths",
+                "min": 0,
+                "scale": "RdPu",
+                "suffix": " bp",
+            },
         }
 
-        headers["#reads"] = {
-            "title": "# Reads",
-            "description": "Total number of reads",
-            "min": 0,
-            "scale": "PuOr",
-            "format": "{:.0f}",
-        }
-        headers["mean_read_len"] = {
-            "title": "Read  Length",
-            "description": "Mean read length",
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": " bp",
-        }
-        headers["std_read_len"] = {
-            "title": "Length StdDev",
-            "description": "Standard deviation of the read lengths",
-            "min": 0,
-            "scale": "RdPu",
-            "suffix": " bp",
-        }
-
-        self.general_stats_addcols(data, headers, "anglerfish")
+        self.general_stats_addcols(data, headers)
 
     def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.
@@ -182,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"std_read_len_{i}"
                     ]
             else:
-                # For non existing sample stat and faulty sample stat
+                # For non-existing sample stat and faulty sample stat
                 log.debug(f"Missing Sample Stat Data in Anglerfish json: {s_name}")
         if len(data) == 0:
             return
@@ -192,7 +194,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Anglerfish: Read Lengths Summary",
         }
         # Plot table if less than 10 samples exist, beeswarm if more
-        p = ""
         if total_samples < 10:
             p = table.plot(data, None, config)
         else:

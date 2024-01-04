@@ -16,10 +16,14 @@ class plotCorrelationMixin:
             parsed_data, samples = self.parsePlotCorrelationData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCorrelationData:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotCorrelationData[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotCorrelation")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotCorrelationData = self.ignore_samples(self.deeptools_plotCorrelationData)
 

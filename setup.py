@@ -23,8 +23,8 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.16dev"
-dl_version = "master" if "dev" in version else "v{}".format(version)
+version = "1.20dev"
+dl_version = "main" if "dev" in version else f"v{version}"
 
 print(
     f"""-----------------------------------
@@ -43,7 +43,7 @@ setup(
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
     url="http://multiqc.info",
-    download_url="https://github.com/ewels/MultiQC/tarball/{}".format(dl_version),
+    download_url=f"https://github.com/MultiQC/MultiQC/tarball/{dl_version}",
     license="GPLv3",
     packages=find_packages(),
     include_package_data=True,
@@ -56,13 +56,16 @@ setup(
         "coloredlogs",
         "future>0.14.0",
         "jinja2>=3.0.0",
-        "lzstring",
         "markdown",
+        "packaging",
         "pyyaml>=4",
         "requests",
         "rich>=10",
         "rich-click",
         "spectra>=0.0.10",
+        "importlib-metadata",
+        "humanize",
+        "pyaml-env",
     ],
     entry_points={
         "console_scripts": [
@@ -72,6 +75,7 @@ setup(
             "adapterRemoval = multiqc.modules.adapterRemoval:MultiqcModule",
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
+            "bakta = multiqc.modules.bakta:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
@@ -84,6 +88,7 @@ setup(
             "bismark = multiqc.modules.bismark:MultiqcModule",
             "bowtie1 = multiqc.modules.bowtie1:MultiqcModule",
             "bowtie2 = multiqc.modules.bowtie2:MultiqcModule",
+            "bracken = multiqc.modules.bracken:MultiqcModule",
             "busco = multiqc.modules.busco:MultiqcModule",
             "bustools = multiqc.modules.bustools:MultiqcModule",
             "ccs = multiqc.modules.ccs:MultiqcModule",
@@ -110,6 +115,7 @@ setup(
             "flash = multiqc.modules.flash:MultiqcModule",
             "flexbar = multiqc.modules.flexbar:MultiqcModule",
             "filtlong = multiqc.modules.filtlong:MultiqcModule",
+            "freyja = multiqc.modules.freyja:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
@@ -138,6 +144,7 @@ setup(
             "longranger = multiqc.modules.longranger:MultiqcModule",
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
+            "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
@@ -171,12 +178,12 @@ setup(
             "rockhopper = multiqc.modules.rockhopper:MultiqcModule",
             "rsem = multiqc.modules.rsem:MultiqcModule",
             "rseqc = multiqc.modules.rseqc:MultiqcModule",
+            "seqera_cli = multiqc.modules.seqera_cli:MultiqcModule",
             "salmon = multiqc.modules.salmon:MultiqcModule",
             "sambamba = multiqc.modules.sambamba:MultiqcModule",
             "samblaster = multiqc.modules.samblaster:MultiqcModule",
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",
-            "sentieon = multiqc.modules.sentieon:MultiqcModule",
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
@@ -188,18 +195,22 @@ setup(
             "somalier = multiqc.modules.somalier:MultiqcModule",
             "sortmerna = multiqc.modules.sortmerna:MultiqcModule",
             "spaceranger = multiqc.modules.spaceranger:MultiqcModule",
+            "sourmash = multiqc.modules.sourmash:MultiqcModule",
             "stacks = multiqc.modules.stacks:MultiqcModule",
             "star = multiqc.modules.star:MultiqcModule",
             "supernova = multiqc.modules.supernova:MultiqcModule",
             "theta2 = multiqc.modules.theta2:MultiqcModule",
             "tophat = multiqc.modules.tophat:MultiqcModule",
             "trimmomatic = multiqc.modules.trimmomatic:MultiqcModule",
+            "truvari = multiqc.modules.truvari:MultiqcModule",
             "umitools = multiqc.modules.umitools:MultiqcModule",
             "varscan2 = multiqc.modules.varscan2:MultiqcModule",
             "vcftools = multiqc.modules.vcftools:MultiqcModule",
             "vep = multiqc.modules.vep:MultiqcModule",
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
             "whatshap = multiqc.modules.whatshap:MultiqcModule",
+            "xenome = multiqc.modules.xenome:MultiqcModule",
+            "xengsort = multiqc.modules.xengsort:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",

@@ -2,13 +2,13 @@
 
 
 import logging
-from collections import OrderedDict
 
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -29,35 +29,45 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Preseq reports
-        data_is_bases = None
-        data = dict()
+        reads_data = dict()
+        bases_data = dict()
         for f in self.find_log_files("preseq"):
             sample_data_raw, sample_data_is_bases = _parse_preseq_logs(f)
             if sample_data_raw is None:
                 continue
 
             if f["s_name"] in sample_data_raw:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
-            if data_is_bases is not None and sample_data_is_bases != data_is_bases:
-                log.error("Preseq: mixed 'TOTAL_READS' and 'TOTAL_BASES' reports")
-                raise UserWarning
-            data_is_bases = sample_data_is_bases
+            if sample_data_is_bases:
+                bases_data[f["s_name"]] = sample_data_raw
+            else:
+                reads_data[f["s_name"]] = sample_data_raw
 
-            data[f["s_name"]] = sample_data_raw
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
-        data = self.ignore_samples(data)
-        if len(data) == 0:
-            raise UserWarning
-        log.info("Found {} reports".format(len(data)))
+        bases_data = self.ignore_samples(bases_data)
+        reads_data = self.ignore_samples(reads_data)
+        all_data = {**bases_data, **reads_data}
+        if not all_data:
+            raise ModuleNoSamplesFound
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        if bases_data and reads_data:
+            log.warning("Mixed 'TOTAL_READS' and 'TOTAL_BASES' reports. Will build two separate plots")
+        log.info(f"Found {len(all_data)} reports")
         # Write data to file
-        self.write_data_file(data, "preseq")
+        self.write_data_file(all_data, "preseq")
 
-        # Preseq plot
-        self._make_preseq_length_trimmed_plot(data, data_is_bases)
+        # Preseq plot. If mixed logs are found, build two separate plots.
+        if bases_data:
+            self._make_preseq_length_trimmed_plot(bases_data, True)
+        if reads_data:
+            self._make_preseq_length_trimmed_plot(reads_data, False)
 
     def _make_preseq_length_trimmed_plot(self, data_raw, is_basepairs):
         """Generate the preseq plot.
@@ -100,9 +110,11 @@ class MultiqcModule(BaseMultiqcModule):
             is_basepairs, max_y_cov, x_axis, y_axis
         )
 
+        name = "Complexity curve"
         description = ""
+        section_id = "preseq_plot"
         pconfig = {
-            "id": "preseq_plot",
+            "id": "preseq_complexity_plot",
             "title": "Preseq: Complexity curve",
             "xlab": x_axis_name,
             "ylab": y_axis_name,
@@ -113,13 +125,20 @@ class MultiqcModule(BaseMultiqcModule):
             "yLabelFormat": y_lbl,
             "extra_series": [],
         }
+        if not is_basepairs:
+            pconfig["title"] += " (molecule count)"
+            pconfig["id"] += "_molecules"
+            name += " (molecule count)"
+            section_id += "_molecules"
 
         # Parse the real counts if we have them
         real_cnts_all, real_cnts_unq = self._parse_real_counts(data.keys())
         real_vals_all, real_vals_unq = _prep_real_counts(
             real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis
         )
-        pconfig["extra_series"].extend(_real_counts_to_plot_series(data, real_vals_unq, real_vals_all))
+        pconfig["extra_series"].extend(
+            _real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_lbl, y_lbl, y_tt_lbl)
+        )
         if real_vals_unq:
             description += "<p>Points show read count versus deduplicated read counts (externally calculated).</p>"
         elif real_vals_all:
@@ -135,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if data[max_sn][x] > max_y and x > real_vals_all.get(max_sn, 0) and x > real_vals_unq.get(max_sn, 0):
                     break
             pconfig["xmax"] = max_x
-            description += "<p>Note that the x axis is trimmed at the point where all the datasets \
+            description += "<p>Note that the x-axis is trimmed at the point where all the datasets \
                 show 80% of their maximum y-value, to avoid ridiculous scales.</p>"
 
         # Plot perfect library as dashed line
@@ -151,16 +170,14 @@ class MultiqcModule(BaseMultiqcModule):
             }
         )
 
-        self.add_section(
-            name="Complexity curve", description=description, anchor="preseq-plot", plot=linegraph.plot(data, pconfig)
-        )
+        self.add_section(name=name, description=description, anchor=section_id, plot=linegraph.plot(data, pconfig))
 
     def _parse_real_counts(self, sample_names):
         real_counts_file_raw = None
         real_counts_file_name = None
         for f in self.find_log_files("preseq/real_counts"):
             if real_counts_file_raw is not None:
-                log.warning("Multiple Preseq real counts files found, now using {}".format(f["fn"]))
+                log.warning(f"Multiple Preseq real counts files found, now using {f['fn']}")
             real_counts_file_raw = f["f"]
             real_counts_file_name = f["fn"]
 
@@ -181,11 +198,9 @@ class MultiqcModule(BaseMultiqcModule):
                                 if cols[2].isdigit():
                                     real_counts_unique[sn] = int(cols[2])
             except IOError as e:
-                log.error("Error loading real counts file {}: {}".format(real_counts_file_name, str(e)))
+                log.error(f"Error loading real counts file {real_counts_file_name}: {str(e)}")
             else:
-                log.debug(
-                    "Found {} matching sets of counts from {}".format(len(real_counts_total), real_counts_file_name)
-                )
+                log.debug(f"Found {len(real_counts_total)} matching sets of counts from {real_counts_file_name}")
 
         return real_counts_total, real_counts_unique
 
@@ -204,12 +219,12 @@ def _parse_preseq_logs(f):
     elif header.startswith("total_reads	distinct_reads"):
         pass
     else:
-        log.debug("First line of preseq file {} did not look right".format(f["fn"]))
+        log.debug(f"First line of preseq file {f['fn']} did not look right")
         return None, None
 
     data = dict()
-    for l in lines:
-        s = l.split()
+    for line in lines:
+        s = line.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
         if float(s[1]) == 0 and float(s[0]) > 0:
             continue
@@ -222,9 +237,7 @@ def _modify_raw_data(sample_data, is_basepairs):
     """Modify counts or base pairs according to `read_count_multiplier`
     or `base_count_multiplier`.
     """
-    return OrderedDict(
-        (_modify_raw_val(x, is_basepairs), _modify_raw_val(y, is_basepairs)) for x, y in sample_data.items()
-    )
+    return {_modify_raw_val(x, is_basepairs): _modify_raw_val(y, is_basepairs) for x, y in sample_data.items()}
 
 
 def _modify_raw_val(val, is_basepairs):
@@ -241,9 +254,7 @@ def _counts_to_coverages(sample_data, counts_in_1x):
     if not counts_in_1x:
         return {None: None}
 
-    return OrderedDict(
-        (_count_to_coverage(x, counts_in_1x), _count_to_coverage(y, counts_in_1x)) for x, y in sample_data.items()
-    )
+    return {_count_to_coverage(x, counts_in_1x): _count_to_coverage(y, counts_in_1x) for x, y in sample_data.items()}
 
 
 def _count_to_coverage(val, counts_in_1x):
@@ -251,7 +262,7 @@ def _count_to_coverage(val, counts_in_1x):
 
 
 def _get_counts_in_1x(data_is_basepairs):
-    """Read read length and genome size from the config and calculate
+    """Read length and genome size from the config and calculate
     the approximate number of counts (or base pairs) in 1x of depth
     """
     read_length = float(getattr(config, "preseq", {}).get("read_length", 0))
@@ -345,57 +356,43 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample):
+def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, y_tt_lbl):
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+
     series = []
-    if xs_by_sample:
-        # Same defaults as HighCharts for consistency
-        default_colors = [
-            "#7cb5ec",
-            "#434348",
-            "#90ed7d",
-            "#f7a35c",
-            "#8085e9",
-            "#f15c80",
-            "#e4d354",
-            "#2b908f",
-            "#f45b5b",
-            "#91e8e1",
-        ]
-        for si, sn in enumerate(sorted(data.keys())):
-            if sn in xs_by_sample:
-                x = float(xs_by_sample[sn])
-                point = {
-                    "color": default_colors[si % len(default_colors)],
-                    "showInLegend": False,
-                    "marker": {
-                        "enabled": True,
-                        "symbol": "diamond",
-                        "lineColor": "black",
-                        "lineWidth": 1,
-                    },
-                }
-                if sn in yx_by_sample:
-                    y = float(yx_by_sample[sn])
-                    point["data"] = [[x, y]]
-                    point["name"] = sn + ": actual read count vs. deduplicated read count (externally calculated)"
-                    series.append(point)
-                    log.debug("Found real counts for {} - Total: {}, Unique: {}".format(sn, x, y))
+    for si, sn in enumerate(sorted(data.keys())):
+        if sn in xs_by_sample:
+            x = float(xs_by_sample[sn])
+            point = {
+                "color": scale.get_colour(si),
+                "showInLegend": False,
+                "marker": {
+                    "enabled": True,
+                    "symbol": "diamond",
+                    "lineColor": "black",
+                    "lineWidth": 1,
+                },
+            }
+            if sn in yx_by_sample:
+                y = float(yx_by_sample[sn])
+                point["data"] = [[x, y]]
+                point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
+                series.append(point)
+                y = y_tt_lbl.replace("point.y", "y").format(y=y)
+                log.debug(f"Real counts for {sn}: {x_lbl.format(value=x)}, ({y})")
+            else:
+                xs = sorted(data[sn].keys())
+                ys = sorted(data[sn].values())
+                if x > max(xs):
+                    log.warning(
+                        f"Total reads for {sn} ({x_lbl.format(value=x)}) > max preseq value ({x_lbl.format(value=max(xs))}): "
+                        "skipping this point"
+                    )
                 else:
-                    xs = sorted(data[sn].keys())
-                    ys = sorted(data[sn].values())
-                    if x > max(xs):
-                        log.warning(
-                            "Total reads for {} ({}) > max preseq value ({}) - "
-                            "skipping this point..".format(sn, x, max(xs))
-                        )
-                    else:
-                        interp_y = np.interp(x, xs, ys)
-                        point["data"] = [[x, interp_y]]
-                        point["name"] = sn + ": actual read count (externally calculated)"
-                        series.append(point)
-                        log.debug(
-                            "Found real count for {} - Total: {:.2f} (preseq unique reads: {:.2f})".format(
-                                sn, x, interp_y
-                            )
-                        )
+                    interp_y = np.interp(x, xs, ys)
+                    point["data"] = [[x, interp_y]]
+                    point["name"] = sn + ": actual read count (externally calculated)"
+                    series.append(point)
+                    y = y_tt_lbl.replace("point.y", "y").format(y=interp_y)
+                    log.debug(f"Real count for {sn}: {x_lbl.format(value=x)} ({y})")
     return series

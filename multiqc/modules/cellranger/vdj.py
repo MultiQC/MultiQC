@@ -2,12 +2,11 @@
 
 import json
 import logging
-from collections import OrderedDict
+import re
 
 from multiqc import config
+from multiqc.modules.cellranger.utils import set_hidden_cols, update_dict, parse_bcknee_data, clean_title_case
 from multiqc.plots import linegraph, table
-
-from ._utils import *
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,10 +22,10 @@ class CellRangerVdjMixin:
         self.cellrangervdj_warnings = dict()
         self.cellrangervdj_plots_conf = {"bc": dict(), "genes": dict()}
         self.cellrangervdj_plots_data = {"bc": dict(), "genes": dict()}
-        self.vdj_general_data_headers = OrderedDict()
-        self.vdj_mapping_headers = OrderedDict()
-        self.vdj_annotations_headers = OrderedDict()
-        self.vdj_warnings_headers = OrderedDict()
+        self.vdj_general_data_headers = dict()
+        self.vdj_mapping_headers = dict()
+        self.vdj_annotations_headers = dict()
+        self.vdj_warnings_headers = dict()
 
         for f in self.find_log_files("cellranger/vdj_html", filehandles=True):
             self.parse_vdj_report(f)
@@ -39,11 +38,11 @@ class CellRangerVdjMixin:
             self.cellrangervdj_plots_data[k] = self.ignore_samples(self.cellrangervdj_plots_data[k])
 
         self.vdj_general_data_headers["reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
-            "namespace": "Cell Ranger VDJ",
+            "namespace": "VDJ",
         }
         self.vdj_general_data_headers = set_hidden_cols(
             self.vdj_general_data_headers,
@@ -57,8 +56,8 @@ class CellRangerVdjMixin:
         )
 
         self.vdj_mapping_headers["reads"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
         }
         self.vdj_mapping_headers = set_hidden_cols(
@@ -93,6 +92,12 @@ class CellRangerVdjMixin:
             return 0
 
         else:
+            for k in self.vdj_general_data_headers.keys():
+                self.vdj_general_data_headers[k]["title"] = f"{self.vdj_general_data_headers[k]['title']} (VDJ)"
+                self.vdj_general_data_headers[k][
+                    "description"
+                ] = f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
             # Write parsed report data to a file
@@ -106,7 +111,12 @@ class CellRangerVdjMixin:
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
                     plot=table.plot(
-                        self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "Cell Ranger VDJ"}
+                        self.cellrangervdj_warnings,
+                        self.vdj_warnings_headers,
+                        {
+                            "namespace": "VDJ",
+                            "id": "cellranger-vdj-warnings-table",
+                        },
                     ),
                 )
 
@@ -114,7 +124,14 @@ class CellRangerVdjMixin:
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "Cell Ranger VDJ"}),
+                plot=table.plot(
+                    self.cellrangervdj_mapping,
+                    self.vdj_mapping_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-stats-table",
+                    },
+                ),
             )
 
             self.add_section(
@@ -122,7 +139,12 @@ class CellRangerVdjMixin:
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
                 plot=table.plot(
-                    self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "Cell Ranger VDJ"}
+                    self.cellrangervdj_annotations,
+                    self.vdj_annotations_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-annot-table",
+                    },
                 ),
             )
 
@@ -148,7 +170,17 @@ class CellRangerVdjMixin:
                 break
 
         s_name = self.clean_s_name(mydict["sample"]["id"], f)
-        data = dict()
+
+        # Extract software version
+        try:
+            version_pair = mydict["summary_tab"]["pipeline_info_table"]["rows"][-1]
+            assert version_pair[0] == "Pipeline Version"
+            version_match = re.search(r"cellranger-([\d\.]+)", version_pair[1])
+            if version_match:
+                self.add_software_version(version_match.group(1), s_name)
+        except (KeyError, AssertionError):
+            log.debug(f"Unable to parse version for sample {s_name}")
+
         data_general_stats = dict()
 
         # Store general stats from cells and sequencing tables
@@ -296,7 +328,7 @@ class CellRangerVdjMixin:
 
         if len(data) > 0:
             if s_name in self.cellrangervdj_general_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             self.add_data_source(f, s_name, module="cellranger", section="count")
             self.cellrangervdj_mapping[s_name] = data
             self.cellrangervdj_general_data[s_name] = data_general_stats

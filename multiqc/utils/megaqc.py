@@ -21,7 +21,7 @@ class MQCJSONEncoder(json.JSONEncoder):
         if callable(obj):
             try:
                 return obj(1)
-            except:
+            except Exception:
                 return None
         return json.JSONEncoder.default(self, obj)
 
@@ -54,20 +54,22 @@ def multiqc_dump_json(report):
     for s in export_vars:
         for k in export_vars[s]:
             try:
+                d = None
                 if s == "config":
-                    d = {"{}_{}".format(s, k): getattr(config, k)}
+                    d = {f"{s}_{k}": getattr(config, k)}
                 elif s == "report":
-                    d = {"{}_{}".format(s, k): getattr(report, k)}
-                json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
-                exported_data.update(d)
+                    d = {f"{s}_{k}": getattr(report, k)}
+                if d:
+                    json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
+                    exported_data.update(d)
             except (TypeError, KeyError, AttributeError):
-                log.warning("Couldn't export data key '{}.{}'".format(s, k))
+                log.warning(f"Couldn't export data key '{s}.{k}'")
         # Get the absolute paths of analysis directories
         exported_data["config_analysis_dir_abs"] = list()
         for d in exported_data.get("config_analysis_dir", []):
             try:
                 exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
-            except:
+            except Exception:
                 pass
     return exported_data
 
@@ -87,26 +89,26 @@ def multiqc_api_post(exported_data):
     request_body = sio_obj.getvalue()
 
     log.debug("Sending data to MegaQC")
-    log.debug("MegaQC URL: {}".format(config.megaqc_url))
+    log.debug(f"MegaQC URL: {config.megaqc_url}")
     try:
         r = requests.post(config.megaqc_url, headers=headers, data=request_body, timeout=config.megaqc_timeout)
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as e:
-        log.error("Timed out when sending data: {}".format(e))
+        log.error(f"Timed out when sending data: {e}")
     except requests.exceptions.ConnectionError:
-        log.error("Couldn't connect to MegaQC URL {}".format(config.megaqc_url))
+        log.error(f"Couldn't connect to MegaQC URL {config.megaqc_url}")
     except Exception as e:
-        log.error("Error sending data: {}".format(e))
+        log.error(f"Error sending data: {e}")
     else:
         try:
             api_r = json.loads(r.text)
-        except Exception as e:
-            log.error("Error: JSON response could not be parsed (status code: {})".format(r.status_code))
+        except Exception:
+            log.error(f"Error: JSON response could not be parsed (status code: {r.status_code})")
             return None
         if r.status_code == 200:
             if api_r["success"]:
-                log.info("{}".format(api_r["message"]))
+                log.info(f"{api_r['message']}")
             else:
-                log.error("Error - {}".format(api_r["message"]))
+                log.error(f"Error - {api_r['message']}")
         else:
             if r.status_code == 403:
                 if config.megaqc_access_token is not None:
@@ -114,5 +116,5 @@ def multiqc_api_post(exported_data):
                 else:
                     log.error("Error 403: Authentication error, megaqc_access_token is required")
             else:
-                log.debug("MegaQC API status code was {}".format(r.status_code))
-                log.error("Error - {}".format(api_r.get("message", "Unknown problem")))
+                log.debug(f"MegaQC API status code was {r.status_code}")
+                log.error(f"Error - {api_r.get('message', 'Unknown problem')}")

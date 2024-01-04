@@ -1,13 +1,16 @@
 """ MultiQC submodule to parse output from Bcftools stats """
 
 import logging
-from collections import OrderedDict
+import re
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# This file was produced by bcftools stats \(([\d\.]+)"
+HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 class StatsReportMixin:
@@ -41,13 +44,34 @@ class StatsReportMixin:
         for f in self.find_log_files("bcftools/stats"):
             s_names = list()
             for line in f["f"].splitlines():
+                # Get version number from file contents
+                if line.startswith("# This file was produced by bcftools stats"):
+                    # Look for BCFtools version
+                    version_match = re.search(VERSION_REGEX, line)
+                    if version_match is None:
+                        continue
+
+                    # Add BCFtools version
+                    bcftools_version = version_match.group(1)
+                    self.add_software_version(bcftools_version, f["s_name"])
+
+                    # Look for HTSlib version
+                    htslib_version_match = re.search(HTSLIB_REGEX, line)
+                    if htslib_version_match is None:
+                        continue
+
+                    # Add HTSlib version if different from BCFtools version
+                    htslib_version = htslib_version_match.group(1)
+                    if htslib_version != bcftools_version:
+                        self.add_software_version(htslib_version, f["s_name"], "HTSlib")
+
                 s = line.split("\t")
                 # Get the sample names - one per 'set'
                 if s[0] == "ID":
                     s_name = self.clean_s_name(s[2], f)
                     s_names.append(s_name)
                     if s_name in self.bcftools_stats:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name, section="stats")
                     self.bcftools_stats[s_name] = dict()
                     self.bcftools_stats_indels[s_name] = dict()
@@ -59,7 +83,7 @@ class StatsReportMixin:
                     self.bcftools_stats_vqc_transi[s_name] = dict()
                     self.bcftools_stats_vqc_transv[s_name] = dict()
                     self.bcftools_stats_vqc_indels[s_name] = dict()
-                    depth_data[s_name] = OrderedDict()
+                    depth_data[s_name] = {}
                     self.bcftools_stats_indels[s_name][0] = None  # Avoid joining line across missing 0
 
                 # Parse key stats
@@ -74,10 +98,10 @@ class StatsReportMixin:
                 if s[0] == "TSTV" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["ts", "tv", "tstv", "ts_1st_ALT", "tv_1st_ALT", "tstv_1st_ALT"]
-                    for i, f in enumerate(fields):
+                    for i, field in enumerate(fields):
                         value = float(s[i + 2].strip())
 
-                        self.bcftools_stats[s_name][f] = value
+                        self.bcftools_stats[s_name][field] = value
 
                 # Parse substitution types
                 if s[0] == "ST" and len(s_names) > 0:
@@ -88,7 +112,7 @@ class StatsReportMixin:
                     if change not in types:
                         change = ">".join(rc[n] for n in change.split(">"))
 
-                    field = "substitution_type_{}".format(change)
+                    field = f"substitution_type_{change}"
                     value = float(s[3].strip())
                     if field not in self.bcftools_stats[s_name]:
                         self.bcftools_stats[s_name][field] = 0
@@ -105,8 +129,8 @@ class StatsReportMixin:
                 if s[0] == "PSC" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
                     fields = ["variations_hom", "variations_het"]
-                    for i, f in enumerate(fields):
-                        self.bcftools_stats[s_name][f] = int(s[i + 4].strip())
+                    for i, field in enumerate(fields):
+                        self.bcftools_stats[s_name][field] = int(s[i + 4].strip())
 
                 # Per-sample variant stats
                 if s[0] == "PSC" and len(s_names) > 0:
@@ -200,18 +224,25 @@ class StatsReportMixin:
             # Stats Table
             stats_headers = self.bcftools_stats_genstats_headers()
             if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Bcftools Stats")
+                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
             if getattr(config, "bcftools", {}).get("write_separate_table", False):
                 self.add_section(
                     name="Bcftools Stats",
                     anchor="bcftools-stats_stats",
-                    plot=table.plot(self.bcftools_stats, stats_headers),
+                    plot=table.plot(
+                        self.bcftools_stats,
+                        stats_headers,
+                        {
+                            "namespace": "Stats",
+                            "id": "bcftools-stats-table",
+                        },
+                    ),
                 )
 
             # Make bargraph plot of substitution types
-            keys = OrderedDict()
+            keys = {}
             for t in types:
-                keys["substitution_type_{}".format(t)] = {"name": t}
+                keys[f"substitution_type_{t}"] = {"name": t}
             pconfig = {
                 "id": "bcftools-stats-subtypes",
                 "title": "Bcftools Stats: Substitutions",
@@ -359,50 +390,52 @@ class StatsReportMixin:
         # Return the number of logs that were found
         return len(self.bcftools_stats)
 
-    def bcftools_stats_genstats_headers(self):
+    @staticmethod
+    def bcftools_stats_genstats_headers():
         """Add key statistics to the General Stats table"""
-        stats_headers = OrderedDict()
-        stats_headers["number_of_records"] = {
-            "title": "Vars",
-            "description": "Variations total",
-            "min": 0,
-            "format": "{:,.0f}",
-        }
-        stats_headers["variations_hom"] = {
-            "title": "Hom",
-            "description": "Variations homozygous",
-            "min": 0,
-            "format": "{:,.0f}",
-        }
-        stats_headers["variations_het"] = {
-            "title": "Het",
-            "description": "Variations heterozygous",
-            "min": 0,
-            "format": "{:,.0f}",
-        }
-        stats_headers["number_of_SNPs"] = {
-            "title": "SNP",
-            "description": "Variation SNPs",
-            "min": 0,
-            "format": "{:,.0f}",
-        }
-        stats_headers["number_of_indels"] = {
-            "title": "Indel",
-            "description": "Variation Insertions/Deletions",
-            "min": 0,
-            "format": "{:,.0f}",
-        }
-        stats_headers["tstv"] = {
-            "title": "Ts/Tv",
-            "description": "Variant SNP transition / transversion ratio",
-            "min": 0,
-            "format": "{:,.2f}",
-        }
-        stats_headers["number_of_MNPs"] = {
-            "title": "MNP",
-            "description": "Variation multinucleotide polymorphisms",
-            "min": 0,
-            "format": "{:,.0f}",
-            "hidden": True,
+        stats_headers = {
+            "number_of_records": {
+                "title": "Vars",
+                "description": "Variations total",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
+            "variations_hom": {
+                "title": "Hom",
+                "description": "Variations homozygous",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
+            "variations_het": {
+                "title": "Het",
+                "description": "Variations heterozygous",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
+            "number_of_SNPs": {
+                "title": "SNP",
+                "description": "Variation SNPs",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
+            "number_of_indels": {
+                "title": "Indel",
+                "description": "Variation Insertions/Deletions",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
+            "tstv": {
+                "title": "Ts/Tv",
+                "description": "Variant SNP transition / transversion ratio",
+                "min": 0,
+                "format": "{:,.2f}",
+            },
+            "number_of_MNPs": {
+                "title": "MNP",
+                "description": "Variation multinucleotide polymorphisms",
+                "min": 0,
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         return stats_headers

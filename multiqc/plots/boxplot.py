@@ -7,6 +7,7 @@ import io
 import logging
 import os
 import random
+import sys
 
 from multiqc.utils import config, report
 
@@ -19,7 +20,7 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    logger.debug("Using matplotlib version {}".format(matplotlib.__version__))
+    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
 except Exception as e:
     # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
     # The lack of the library will be handled when plots are attempted
@@ -96,9 +97,9 @@ def matplotlib_boxplot(plotdata, pconfig=None):
     for k in range(len(plotdata)):
         try:
             name = pconfig["data_labels"][k]["name"]
-        except:
+        except Exception:
             name = k + 1
-        pid = "mqc_{}_{}".format(pconfig["id"], name)
+        pid = f"mqc_{pconfig['id']}_{name}"
         pid = report.save_htmlid(pid, skiplint=True)
         pids.append(pid)
 
@@ -107,7 +108,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
         + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
     )
-    html += '<div class="mqc_mplplot_plotgroup" id="{}">'.format(pconfig["id"])
+    html += f"<div class=\"mqc_mplplot_plotgroup\" id=\"{pconfig['id']}\">"
 
     # Buttons to cycle through different datasets
     if len(plotdata) > 1 and not config.simple_output:
@@ -117,7 +118,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
             active = "active" if k == 0 else ""
             try:
                 name = pconfig["data_labels"][k]["name"]
-            except:
+            except Exception:
                 name = k + 1
             html += '<button class="btn btn-default btn-sm {a}" data-target="#{pid}">{n}</button>\n'.format(
                 a=active, pid=pid, n=name
@@ -135,7 +136,6 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         plt.xticks(rotation=90)
 
         # Go through data series
-        n_boxes = len(pdata)
         mock_ds = mock_dataset(pdata)
         box = axes.boxplot(mock_ds, whis=[0, 100], patch_artist=True)
 
@@ -161,7 +161,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         # Dataset specific ymax
         try:
             axes.set_ylim((ymin, pconfig["data_labels"][pidx]["ymax"]))
-        except:
+        except Exception:
             pass
 
         default_xlimits = axes.get_xlim()
@@ -176,13 +176,13 @@ def matplotlib_boxplot(plotdata, pconfig=None):
         elif "xCeiling" in pconfig:
             xmax = min(pconfig["xCeiling"], default_xlimits[1])
         if (xmax - xmin) < pconfig.get("xMinRange", 0):
-            xmax = xmin + pconfig["xMinRange"]
+            xmax = xmin + pconfig.get("xMinRange", 0)
         axes.set_xlim((xmin, xmax))
 
         # Plot title
         if "title" in pconfig:
             if len(plotdata) > 1:
-                title = "{} for {}".format(pconfig["title"], pname)
+                title = f"{pconfig['title']} for {pname}"
             else:
                 title = pconfig["title"]
             plt.text(0.5, 1.05, title, horizontalalignment="center", fontsize=16, transform=axes.transAxes)
@@ -259,7 +259,7 @@ def matplotlib_boxplot(plotdata, pconfig=None):
                 if not os.path.exists(plot_dir):
                     os.makedirs(plot_dir)
                 # Save the plot
-                plot_fn = os.path.join(plot_dir, "{}.{}".format(pid, fformat))
+                plot_fn = os.path.join(plot_dir, f"{pid}.{fformat}")
                 fig.savefig(plot_fn, format=fformat, bbox_inches="tight")
 
         # Output the figure to a base64 encoded string
@@ -274,8 +274,8 @@ def matplotlib_boxplot(plotdata, pconfig=None):
 
         # Save to a file and link <img>
         else:
-            plot_relpath = os.path.join(config.plots_dir_name, "png", "{}.png".format(pid))
-            html += '<div class="mqc_mplplot" id="{}"{}><img src="{}" /></div>'.format(pid, hidediv, plot_relpath)
+            plot_relpath = os.path.join(config.plots_dir_name, "png", f"{pid}.png")
+            html += f'<div class="mqc_mplplot" id="{pid}"{hidediv}><img src="{plot_relpath}" /></div>'
 
         plt.close(fig)
 
