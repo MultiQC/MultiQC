@@ -34,7 +34,7 @@ def parse_reports(module):
     expected_header = list(DESC.keys())
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/quality_yield_metrics", filehandles=True):
+    for f in module.find_log_files("picard/quality_yield_metrics", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
 
