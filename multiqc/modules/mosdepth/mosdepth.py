@@ -134,7 +134,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # assume it will override the information collected for "total":
                 if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                    genstats[s_name]["mean_coverage"] = mean
+                    genstats[s_name][""] = mean
+                    genstats[s_name]["min_coverage"] = min_cov
+                    genstats[s_name]["max_coverage"] = max_cov
+                    genstats[s_name]["n_bases"] = bases
+                    genstats[s_name]["length"] = length
                     self.add_data_source(f, s_name=s_name, section="summary")
 
         # Filter out any samples from --ignore-samples
@@ -320,13 +324,41 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
-        # Add mean coverage to General Stats
-        genstats_headers["mean_coverage"] = {
-            "title": "Mean Cov.",
-            "description": "Mean coverage",
-            "min": 0,
-            "suffix": "X",
-            "scale": "BuPu",
+        # Add mosdepth summary to General Stats
+        genstats_headers = {
+            "mean_coverage": {
+                "title": "Mean Cov.",
+                "description": "Mean coverage",
+                "min": 0,
+                "suffix": "X",
+                "scale": "BuPu",
+            },
+            "min_coverage": {
+                "title": "Min Cov.",
+                "description": "Minimum coverage",
+                "min": 0,
+                "suffix": "X",
+                "scale": "BuPu",
+            },
+            "max_coverage": {
+                "title": "Max Cov.",
+                "description": "Maximum coverage",
+                "min": 0,
+                "suffix": "X",
+                "scale": "BuPu",
+            },
+            "n_bases": {
+                "title": "Total Bases",
+                "description": "Total number of bases",
+                "min": 0,
+                "scale": "BuPu",
+            },
+            "length": {
+                "title": "Length",
+                "description": "Total length of genome",
+                "min": 0,
+                "scale": "BuPu",
+            },
         }
         self.general_stats_addcols(genstats, genstats_headers)
 

@@ -14,6 +14,7 @@
 ### New modules
 
 ### Module updates
+- Mosdepth include additional statistics in general stats table
 
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
 
