@@ -148,6 +148,11 @@ class SpaceRangerCountMixin:
         assert summary is not None, "Couldn't find JSON summary data in HTML report."
 
         s_name = self.clean_s_name(summary["sample"]["id"], f)
+        software = next(
+            iter(x[1] for x in summary["summary_tab"]["pipeline_info_table"]["rows"] if x[0] == "Pipeline Version")
+        )
+        software_name, software_version = software.split("-")
+        self.add_software_version(version=software_version, software_name=software_name)
 
         # List of data collated from different tables in cellranger reports.
         # This is a list of Tuples (metric name, value)
