@@ -7,7 +7,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import linegraph, table
 
-from ._utils import parse_bcknee_data, set_hidden_cols, transform_data, update_dict
+from ._utils import set_hidden_cols, transform_data, update_dict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
