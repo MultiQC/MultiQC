@@ -137,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
                     genstats[s_name]["mean_coverage"] = mean
                     genstats[s_name]["min_coverage"] = min_cov
                     genstats[s_name]["max_coverage"] = max_cov
-                    genstats[s_name]["n_bases"] = bases
+                    genstats[s_name]["coverage_bases"] = bases
                     genstats[s_name]["length"] = length
                     self.add_data_source(f, s_name=s_name, section="summary")
 
@@ -345,7 +345,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "scale": "BuPu",
             },
-            "depth_bases": {
+            "coverage_bases": {
                 "title": "Total Coverage Bases",
                 "description": "Total coverage of bases",
                 "min": 0,
