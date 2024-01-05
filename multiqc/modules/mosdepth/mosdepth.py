@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # assume it will override the information collected for "total":
                 if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                    genstats[s_name][""] = mean
+                    genstats[s_name]["mean_coverage"] = mean
                     genstats[s_name]["min_coverage"] = min_cov
                     genstats[s_name]["max_coverage"] = max_cov
                     genstats[s_name]["n_bases"] = bases
