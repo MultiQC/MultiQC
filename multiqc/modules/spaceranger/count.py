@@ -151,12 +151,12 @@ class SpaceRangerCountMixin:
 
         assert summary is not None, "Couldn't find JSON summary data in HTML report."
 
-        s_name = self.clean_s_name(summary["sample"]["id"], f)
+        sample_name = self.clean_s_name(summary["sample"]["id"], f)
         software = next(
             iter(x[1] for x in summary["summary_tab"]["pipeline_info_table"]["rows"] if x[0] == "Pipeline Version")
         )
         software_name, software_version = software.split("-")
-        self.add_software_version(version=software_version, software_name=software_name)
+        self.add_software_version(version=software_version, sample=sample_name, software_name=software_name)
 
         # List of data collated from different tables in cellranger reports.
         # This is a list of Tuples (metric name, value)
@@ -277,7 +277,7 @@ class SpaceRangerCountMixin:
                 "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
             }
             plots_data["saturation"] = {
-                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+                sample_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
             }
         except KeyError:
             pass
@@ -297,7 +297,7 @@ class SpaceRangerCountMixin:
                 "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
             }
             plots_data["genes"] = {
-                s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])
+                sample_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])
             }
         except KeyError:
             pass
@@ -317,18 +317,20 @@ class SpaceRangerCountMixin:
                 "helptext": summary["analysis_tab"]["gdna"]["gems"]["help"]["data"][2][1][0]
                 + "\n\nThis summary graphic in the MultiQC report only shows the estimated mean baseline level of unspliced probe counts.",
             }
-            plots_data["genomic_dna"] = {s_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])}
+            plots_data["genomic_dna"] = {
+                sample_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])
+            }
         except KeyError:
             pass
 
         if len(data) > 0:
-            if s_name in self.spacerangercount_general_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-            self.add_data_source(f, s_name, module="spaceranger", section="count")
-            self.spacerangercount_data[s_name] = data
-            self.spacerangercount_general_data[s_name] = data_general_stats
+            if sample_name in self.spacerangercount_general_data:
+                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], sample_name))
+            self.add_data_source(f, sample_name, module="spaceranger", section="count")
+            self.spacerangercount_data[sample_name] = data
+            self.spacerangercount_general_data[sample_name] = data_general_stats
             if len(warnings) > 0:
-                self.spacerangercount_warnings[s_name] = warnings
+                self.spacerangercount_warnings[sample_name] = warnings
             self.spacerangercount_plots_conf = plots
             for k in plots_data.keys():
                 if k not in self.spacerangercount_plots_data.keys():
