@@ -18,10 +18,13 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix, int_cols=()
             col_data = col_data.replace(",", "").replace("%", "")
 
             # Convert to float when possible
-            try:
-                col_data = float(col_data)
-            except ValueError:
-                col_data = col_data
+            if col_data == "None":
+                col_data = None
+            else:
+                try:
+                    col_data = float(col_data)
+                except ValueError:
+                    pass
 
             col_id = col_map[col_name]
             table[col_id] = col_data
