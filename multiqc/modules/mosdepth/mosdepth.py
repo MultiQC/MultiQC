@@ -339,6 +339,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "X",
                 "scale": "BuPu",
+                "hidden": True
             },
             "max_coverage": {
                 "title": "Max Cov.",
@@ -352,12 +353,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total number of bases",
                 "min": 0,
                 "scale": "BuPu",
+                "hidden": True
             },
             "length": {
                 "title": "Length",
                 "description": "Total length of genome",
                 "min": 0,
                 "scale": "BuPu",
+                "hidden": True
             },
         }
         self.general_stats_addcols(genstats, genstats_headers)

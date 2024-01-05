@@ -10,12 +10,11 @@
 - Fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
-- Add additional mosdepth summaries to General Stats ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
+- Mosdep: Add additional summaries to general stats ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
 
 ### New modules
 
 ### Module updates
-- Mosdepth include additional statistics in general stats table
 
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
 
