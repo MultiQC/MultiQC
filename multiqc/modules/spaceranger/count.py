@@ -82,7 +82,9 @@ class SpaceRangerCountMixin:
                     anchor="spaceranger-count-warnings",
                     description="Warnings encountered during the analysis",
                     plot=table.plot(
-                        self.spacerangercount_warnings, self.count_warnings_headers, {"namespace": "Space Ranger Count"}
+                        self.spacerangercount_warnings,
+                        self.count_warnings_headers,
+                        {"namespace": "Space Ranger Count", "id": "spaceranger-count-warnings"},
                     ),
                 )
 
@@ -91,7 +93,9 @@ class SpaceRangerCountMixin:
                 anchor="spaceranger-count-stats",
                 description="Summary QC metrics from Space Ranger count",
                 plot=table.plot(
-                    self.spacerangercount_data, self.count_data_headers, {"namespace": "Space Ranger Count"}
+                    self.spacerangercount_data,
+                    self.count_data_headers,
+                    {"namespace": "Space Ranger Count", "id": "spaceranger-count-stats"},
                 ),
             )
 
