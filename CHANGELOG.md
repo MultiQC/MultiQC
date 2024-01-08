@@ -16,6 +16,12 @@
 
 ### Module updates
 
+- **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
+- **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
+- **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
+- **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
+
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
 
 ### MultiQC updates
