@@ -20,6 +20,7 @@ import time
 import traceback
 from urllib.request import urlopen
 
+import datetime
 import jinja2
 import rich
 import rich_click as click
@@ -36,13 +37,34 @@ logger = config.logger
 
 OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
 
+
+def choose_emoji():
+    """Choose an emoji to use in the report header."""
+    # NB: We haven't parsed the config yet, so this is impossible to override :/
+    if config.easter_eggs:
+        today = datetime.date.today()
+        today = datetime.date(2024, 1, 3)
+        emojis = {
+            "bottle_with_popping_cork": (1, 1, 1, 5),
+            # "hatching_chick": (),,
+            "jack-o-lantern": (10, 31, 5, 0),
+            "santa": (12, 25, 0, 0),
+            "christmas_tree": (12, 25, 7, 7),
+        }
+        for emoji, date_window in emojis.items():
+            special_date = datetime.date(today.year, date_window[0], date_window[1])
+            date_range_start = special_date - datetime.timedelta(days=date_window[2])
+            date_range_end = special_date + datetime.timedelta(days=date_window[3])
+            if today >= date_range_start and today <= date_range_end:
+                return emoji
+    return "mag"
+
+
 # Configuration for rich-click CLI help
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-click.rich_click.HEADER_TEXT = (
-    f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}"
-)
+click.rich_click.HEADER_TEXT = f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :{choose_emoji()}: [dim]| v{config.version}"
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
