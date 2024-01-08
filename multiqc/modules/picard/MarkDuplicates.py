@@ -12,7 +12,7 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(module, sp_key="markdups"):
+def parse_reports(module, sp_key="picard/markdups"):
     """
     Find Picard MarkDuplicates reports and parse their data.
     Note that this function is also used by the biobambam2 module, that's why
@@ -68,7 +68,7 @@ def parse_reports(module, sp_key="markdups"):
             return False
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/{sp_key}", filehandles=True):
+    for f in module.find_log_files(sp_key, filehandles=True):
         s_name = f["s_name"]
         parsed_lists = defaultdict(list)
         keys = None
