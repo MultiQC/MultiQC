@@ -177,10 +177,10 @@ def choose_emoji():
         "santa": (12, 25, 0, 0),  # Christmas Day
         "christmas_tree": (12, 25, 7, 7),  # Christmas
     }
-    for emoji, date_window in emojis.items():
-        special_date = datetime.date(today.year, date_window[0], date_window[1])
-        date_range_start = special_date - datetime.timedelta(days=date_window[2])
-        date_range_end = special_date + datetime.timedelta(days=date_window[3])
-        if today >= date_range_start and today <= date_range_end:
+    for emoji, (month, day, days_before, days_after) in emojis.items():
+        special_date = datetime.date(today.year, month, day)
+        date_range_start = special_date - datetime.timedelta(days=days_before)
+        date_range_end = special_date + datetime.timedelta(days=days_after)
+        if date_range_start <= today <= date_range_end:
             return emoji
     return "mag"
