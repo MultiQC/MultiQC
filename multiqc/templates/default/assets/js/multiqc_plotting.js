@@ -169,6 +169,13 @@ $(function () {
           .yAxis[0].setExtremes(null, ymax);
       }
     }
+    // Switch sample group
+    if (action == "set_group") {
+      // Get list of samples associated with this group
+      // Only show these samples if the button is active, but hide all these samples if the group is not active
+      var samples = $(this).data("samples");
+      plot_graph(target);
+    }
   });
 
   // Make HighCharts divs height-draggable

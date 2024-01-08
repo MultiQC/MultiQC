@@ -298,6 +298,19 @@ def highcharts_bargraph(plotdata, plotsamples=None, pconfig=None):
             )
         html += "</div>\n\n"
 
+    sample_groups = pconfig.get("sample_groups", [])
+    if isinstance(sample_groups, str):
+        sample_groups = [sample_groups]
+    if len(sample_groups) > 0:
+        # Add a button to hide all samples but those that satisfy the criteria
+        html += '<div class="btn-group hc_switch_group">\n'
+        for i, (group, s_names) in enumerate(sample_groups):
+            active = "active" if i == 0 else ""
+            html += '<button class="btn btn-default btn-sm {a}" data-action="set_group" data-showsamples="{group}" data-target="{id}">{group}</button>\n'.format(
+                a=active, id=pconfig["id"], group=group
+            )
+        html += "</div>\n\n"
+
     # Plot HTML
     html += """<div class="hc-plot-wrapper"{height}>
         <div id="{id}" class="hc-plot not_rendered hc-bar-plot"><small>loading..</small></div>

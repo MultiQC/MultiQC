@@ -127,7 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro += '<script type="text/javascript">load_fastqc_passfails();</script>'
 
         # Get the sample groups for PE data / trimmed data
-        self.trimming_groups = self.group_samples(self.fastqc_data.keys(), "trimming", key_by="label")
+        self.trimming_groups = self.group_samples(self.fastqc_data.keys(), "trimming")
+        self.pe_groups = self.group_samples(self.fastqc_data.keys(), "read_pairs")
         self.trimming_and_pe_groups = self.group_samples(self.fastqc_data.keys(), ["trimming", "read_pairs"])
 
         # Now add each section in order
@@ -453,9 +454,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["use_legend"] = False
             pconfig["cpswitch"] = False
 
-        # Split by Read 1/2, Raw/Trimmed
-        pdata, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, pdata, pconfig)
-        pcats = [pcats for _ in range(len(pdata))]
+        pconfig["sample_groups"] = self.trimming_groups, self.pe_groups
 
         # Add the report section
         self.add_section(
