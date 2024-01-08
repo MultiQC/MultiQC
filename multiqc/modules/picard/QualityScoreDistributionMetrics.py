@@ -18,7 +18,7 @@ def parse_reports(self):
     formats = [int, int]
     all_data = read_histogram(
         self,
-        f"{self.anchor}/quality_score_distribution",
+        "picard/quality_score_distribution",
         headers,
         formats,
         picard_tool="QualityScoreDistribution",
