@@ -22,13 +22,14 @@ class PlotType(Enum):
     """
 
     LINE = "xy_line"
+    VIOLIN = "violin"
     BAR = "bar_graph"
     SCATTER = "scatter"
     HEATMAP = "heatmap"
 
 
 @dataclasses.dataclass
-class Dataset(ABC):
+class BaseDataset(ABC):
     """
     Structured version of dataset config dictionary
     """
@@ -41,7 +42,7 @@ class Dataset(ABC):
 
     def dump_for_javascript(self) -> Dict:
         """Only dump data added in subclasses. No need to pass all attributes to the dataset"""
-        return {k: v for k, v in self.__dict__.items() if k not in Dataset.__annotations__.keys()}
+        return {k: v for k, v in self.__dict__.items() if k not in BaseDataset.__annotations__.keys()}
 
 
 class Plot(ABC):
@@ -74,8 +75,8 @@ class Plot(ABC):
         self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
         # Per-dataset configurations
-        self.datasets: List[Dataset] = [
-            Dataset(
+        self.datasets: List[BaseDataset] = [
+            BaseDataset(
                 label=str(i + 1),
                 uid=self.id,
                 xlab=None,
@@ -352,19 +353,19 @@ class Plot(ABC):
         }
 
     @abstractmethod
-    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, dataset: BaseDataset, is_log=False, is_pct=False):
         """
         To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
         pass
 
     @abstractmethod
-    def save_data_file(self, data: Dataset) -> None:
+    def save_data_file(self, data: BaseDataset) -> None:
         """
         Save dataset to disk.
         """
 
-    def _make_fig(self, dataset: Dataset, is_log=False, is_pct=False) -> go.Figure:
+    def _make_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> go.Figure:
         """
         Create a Plotly Figure object.
         """

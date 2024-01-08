@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Optional
 
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
@@ -31,9 +31,7 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
 
 
 @dataclasses.dataclass
-class LineDataset(Dataset):
-    """Bar dataset should also carry the list of samples"""
-
+class Dataset(BaseDataset):
     lines: List[Dict]
 
 
@@ -42,8 +40,8 @@ class LinePlot(Plot):
         super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[LineDataset] = [
-            LineDataset(**d.__dict__, lines=lines) for d, lines in zip(self.datasets, lists_of_lines)
+        self.datasets: List[Dataset] = [
+            Dataset(**d.__dict__, lines=lines) for d, lines in zip(self.datasets, lists_of_lines)
         ]
 
         self.categories: List[str] = pconfig.get("categories", [])
@@ -127,7 +125,7 @@ class LinePlot(Plot):
         d["categories"] = self.categories
         return d
 
-    def create_figure(self, layout: go.Layout, dataset: LineDataset, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """
         Create a Plotly figure for a dataset
         """
@@ -152,7 +150,7 @@ class LinePlot(Plot):
             )
         return fig
 
-    def save_data_file(self, dataset: LineDataset) -> None:
+    def save_data_file(self, dataset: Dataset) -> None:
         fdata = dict()
         last_cats = None
         shared_cats = True

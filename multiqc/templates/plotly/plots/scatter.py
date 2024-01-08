@@ -7,7 +7,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +31,7 @@ def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
 
 
 @dataclasses.dataclass
-class ScatterDataset(Dataset):
-    """Bar dataset should also carry the list of samples"""
-
+class Dataset(BaseDataset):
     points: List[PointT]
 
 
@@ -42,8 +40,8 @@ class ScatterPlot(Plot):
         super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[ScatterDataset] = [
-            ScatterDataset(**d.__dict__, points=points) for d, points in zip(self.datasets, points_lists)
+        self.datasets: List[Dataset] = [
+            Dataset(**d.__dict__, points=points) for d, points in zip(self.datasets, points_lists)
         ]
 
         self.categories = pconfig.get("categories", [])
@@ -76,7 +74,7 @@ class ScatterPlot(Plot):
     def create_figure(
         self,
         layout: go.Layout,
-        dataset: ScatterDataset,
+        dataset: Dataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
@@ -190,5 +188,5 @@ class ScatterPlot(Plot):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: BaseDataset) -> None:
         pass

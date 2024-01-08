@@ -7,7 +7,7 @@ from typing import Dict, List
 import math
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -42,9 +42,7 @@ def plot(
 
 
 @dataclasses.dataclass
-class BarDataset(Dataset):
-    """Bar dataset should also carry the list of samples"""
-
+class Dataset(BaseDataset):
     cats: List[Dict]
     samples: List[str]
 
@@ -61,8 +59,8 @@ class BarPlot(Plot):
             raise ValueError("Number of datasets and samples lists do not match")
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[BarDataset] = [
-            BarDataset(**d.__dict__, cats=cats, samples=samples)
+        self.datasets: List[Dataset] = [
+            Dataset(**d.__dict__, cats=cats, samples=samples)
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
@@ -153,7 +151,7 @@ class BarPlot(Plot):
     def create_figure(
         self,
         layout: go.Layout,
-        dataset: BarDataset,
+        dataset: Dataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
@@ -182,7 +180,7 @@ class BarPlot(Plot):
             )
         return fig
 
-    def save_data_file(self, dataset: BarDataset) -> None:
+    def save_data_file(self, dataset: Dataset) -> None:
         fdata = {}
         for cat in dataset.cats:
             for d_idx, d_val in enumerate(cat["data"]):

@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Union
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, Dataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +33,7 @@ def plot(
 
 
 @dataclasses.dataclass
-class HeatmapDataset(Dataset):
-    """Bar dataset should also carry the list of samples"""
-
+class Dataset(BaseDataset):
     rows: List[List[ElemT]]
     xcats: List[str]
     ycats: List[str]
@@ -52,9 +50,7 @@ class HeatmapPlot(Plot):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[HeatmapDataset] = [
-            HeatmapDataset(**self.datasets[0].__dict__, rows=rows, xcats=xcats, ycats=ycats)
-        ]
+        self.datasets: List[Dataset] = [Dataset(**self.datasets[0].__dict__, rows=rows, xcats=xcats, ycats=ycats)]
 
         self.square = self.pconfig.get("square", True)  # Keep heatmap cells square
 
@@ -197,7 +193,7 @@ class HeatmapPlot(Plot):
     def create_figure(
         self,
         layout: go.Layout,
-        dataset: HeatmapDataset,
+        dataset: Dataset,
         is_log=False,
         is_pct=False,
     ) -> go.Figure:
@@ -227,5 +223,5 @@ class HeatmapPlot(Plot):
             layout=layout,
         )
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: BaseDataset) -> None:
         pass

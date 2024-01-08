@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+
+
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
+
 def plot(data, headers=None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
@@ -31,6 +43,23 @@ def plot(data, headers=None, pconfig=None):
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
         for k, v in config.custom_plot_config[pconfig["id"]].items():
             pconfig[k] = v
+
+    # Given one dataset - turn it into a list
+    if not isinstance(data, list):
+        data = [data]
+    if not isinstance(headers, list):
+        headers = [headers]
+
+    # Make a plot - template custom, or interactive or flat
+    mod = get_template_mod()
+    if "beeswarm" in mod.__dict__ and callable(mod.beeswarm):
+        try:
+            return mod.beeswarm(data, headers, pconfig)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
 
     # Make a datatable object
     dt = table_object.DataTable(data, headers, pconfig)
