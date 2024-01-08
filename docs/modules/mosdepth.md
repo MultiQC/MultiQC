@@ -90,8 +90,7 @@ This will then print a debug log message (use `multiqc -v`) for each excluded co
 This is disabled by default as there can be very many in some cases.
 
 Besides the `{prefix}.mosdepth.global.dist.txt` and `{prefix}.mosdepth.region.dist.txt`
-files, the `{prefix}.mosdepth.summary.txt` file is used to get the mean coverage for the
-General Stats table.
+files, the `{prefix}.mosdepth.summary.txt` file is used for the General Stats table.
 
 The module also plots an X/Y relative chromosome coverage per sample. By default, it finds chromosome named X/Y or chrX/chrY, but that can be customised:
 
