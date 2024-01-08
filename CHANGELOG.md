@@ -16,6 +16,8 @@
 
 ### Module updates
 
+- **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
+
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
 
 ### MultiQC updates
