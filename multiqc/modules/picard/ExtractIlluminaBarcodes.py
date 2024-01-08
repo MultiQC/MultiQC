@@ -16,7 +16,7 @@ def parse_reports(module):
     data_by_lane = defaultdict(dict)
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/extractilluminabarcodes", filehandles=True):
+    for f in module.find_log_files("picard/extractilluminabarcodes", filehandles=True):
         # Sample name from input file name by default
         lane = f["s_name"]
         keys = None

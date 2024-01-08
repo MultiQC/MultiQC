@@ -17,7 +17,7 @@ def parse_reports(self):
     formats = [int, float]
     all_data = read_histogram(
         self,
-        f"{self.anchor}/quality_by_cycle",
+        "picard/quality_by_cycle",
         headers,
         formats,
         picard_tool="MeanQualityByCycle",
