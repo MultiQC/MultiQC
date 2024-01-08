@@ -134,11 +134,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # assume it will override the information collected for "total":
                 if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                    genstats[s_name]["mean_coverage"] = mean
-                    genstats[s_name]["min_coverage"] = min_cov
-                    genstats[s_name]["max_coverage"] = max_cov
-                    genstats[s_name]["coverage_bases"] = bases
-                    genstats[s_name]["length"] = length
+                    genstats[s_name]["mean_coverage"] = float(mean)
+                    genstats[s_name]["min_coverage"] = float(min_cov)
+                    genstats[s_name]["max_coverage"] = float(max_cov)
+                    genstats[s_name]["coverage_bases"] = int(bases)
+                    genstats[s_name]["length"] = int(length)
                     self.add_data_source(f, s_name=s_name, section="summary")
 
         # Filter out any samples from --ignore-samples
@@ -344,19 +344,22 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Maximum coverage",
                 "min": 0,
                 "scale": "BuPu",
+                "hidden": True,
             },
             "coverage_bases": {
-                "title": "Total Coverage Bases",
-                "description": "Total coverage of bases",
+                "title": f"{config.base_count_prefix} Total Coverage Bases",
+                "description": f"Total coverage of bases ({config.base_count_desc})",
                 "min": 0,
-                "scale": "BuPu",
+                "shared_key": "base_count",
+                "scale": "Greens",
                 "hidden": True,
             },
             "length": {
-                "title": "Length",
-                "description": "Total length of genome",
+                "title": "Genome length",
+                "description": "Total length of the genome",
                 "min": 0,
-                "scale": "BuPu",
+                "scale": "Greys",
+                "format": "{:,d}",
                 "hidden": True,
             },
         }
