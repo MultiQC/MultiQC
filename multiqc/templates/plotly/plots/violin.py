@@ -30,6 +30,7 @@ def plot(data: List[Dict[str, MetricsT]], headers: List[Dict], pconfig: Dict) ->
 class Dataset(BaseDataset):
     data_by_metric: Dict[str, MetricsT]
     header_by_metric: Dict[str, Dict[str, Union[str, int, float]]]
+    samples: List[str]
 
 
 class ViolinPlot(Plot):
@@ -41,8 +42,13 @@ class ViolinPlot(Plot):
     ):
         super().__init__(PlotType.VIOLIN, pconfig, len(list_of_data_by_sample))
 
+        c_scale = mqc_colour.mqc_colour_scale("plot_defaults")
+
         # Extend each dataset object with a list of samples
-        for idx, (data_by_sample, header_by_metric) in enumerate(zip(list_of_data_by_sample, list_of_header_by_metric)):
+        datasets: List[Dataset] = []
+        for ds, data_by_sample, header_by_metric in zip(
+            self.datasets, list_of_data_by_sample, list_of_header_by_metric
+        ):
             header_by_metric = {
                 m: {k: v for k, v in header.items() if isinstance(v, (str, int, float))}
                 for m, header in header_by_metric.items()
@@ -57,22 +63,32 @@ class ViolinPlot(Plot):
                         data_by_metric[metric] = {}
                     data_by_metric[metric][sample] = value
 
-            for metric, data in data_by_metric.items():
-                xmin = header_by_metric[metric].get("min")
-                header_by_metric[metric]["tozero"] = xmin == 0
+            for i, (metric, header) in enumerate(header_by_metric.items()):
+                data = data_by_metric[metric]
+                xmin = header.get("min")
                 if xmin is None:
                     xmin = min(data.values())
                     xmin -= xmin * 0.05
-                header_by_metric[metric]["min"] = xmin
                 xmax = header_by_metric[metric].get("max")
                 if xmax is None:
                     xmax = max(data.values())
                     xmax += xmax * 0.05
-                header_by_metric[metric]["max"] = xmax
+                header_by_metric[metric]["xaxis"] = {
+                    "rangemode": "tozero" if xmin == 0 else "normal",
+                    "range": [xmin, xmax],
+                }
+                header_by_metric[metric]["color"] = c_scale.get_colour(i, lighten=0.5)
 
-            self.datasets[idx] = Dataset(
-                *self.datasets[idx].__dict__, data_by_metric=data_by_metric, header_by_metric=header_by_metric
+            datasets.append(
+                Dataset(
+                    *ds.__dict__,
+                    data_by_metric=data_by_metric,
+                    header_by_metric=header_by_metric,
+                    samples=list(data_by_sample.keys()),
+                )
             )
+
+        self.datasets = datasets
 
         self.categories: List[str] = pconfig.get("categories", [])
 
@@ -83,11 +99,31 @@ class ViolinPlot(Plot):
             jitter=0.5,
             points="all",
             pointpos=0,
+            line={"width": 0},
+            marker={"color": "black"},
         )
 
-        self.layout.height = 70 * max(len(ds.header_by_metric) for ds in self.datasets)
-        self.layout.margin = dict(pad=0)
-        self.layout.violingap = 0
+        num_rows = max(len(ds.header_by_metric) for ds in self.datasets)
+
+        self.layout.update(
+            height=70 * max(len(ds.header_by_metric) for ds in self.datasets),
+            margin=dict(pad=0, t=10, b=30),
+            violingap=0,
+            grid=dict(
+                rows=num_rows,
+                columns=1,
+                # pattern="independent",
+                roworder="top to bottom",
+                ygap=0.4,
+                subplots=[[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(num_rows)],
+            ),
+            xaxis=dict(
+                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+            ),
+            yaxis=dict(
+                automargin=True,
+            ),
+        )
 
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""

@@ -1,4 +1,8 @@
 class ViolinPlot extends Plot {
+  constructor(dump) {
+    super(dump);
+  }
+
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     return this.datasets[this.active_dataset_idx].data_by_metric.length; // no samples in a dataset
@@ -8,39 +12,63 @@ class ViolinPlot extends Plot {
   buildTraces() {
     let data_by_metric = this.datasets[this.active_dataset_idx].data_by_metric;
     let header_by_metric = this.datasets[this.active_dataset_idx].header_by_metric;
+    let samples = this.datasets[this.active_dataset_idx].samples;
     if (data_by_metric.length === 0) return [];
 
-    this.layout.grid = {
-      rows: Object.keys(data_by_metric).length,
-      columns: 1,
-      pattern: "independent",
-      roworder: "top to bottom",
-      ygap: 0.3,
-    };
-
     let layout = this.layout;
-    layout.margin.l = 160;
-    layout.margin.pad = 20;
 
-    return Object.keys(data_by_metric).map((metric, idx) => {
+    return Object.keys(header_by_metric).map((metric, idx) => {
       let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
 
-      let akey = "xaxis" + (idx === 0 ? "" : idx + 1);
-      let axis = layout[akey] ?? {};
-      axis.rangemode = header_by_metric[metric]["tozero"] ? "tozero" : "normal";
-      axis.range = [header_by_metric[metric]["min"], header_by_metric[metric]["max"]];
-      layout[akey] = axis;
+      let key = idx === 0 ? "" : idx + 1;
+      layout["xaxis" + key] = Object.assign(
+        JSON.parse(JSON.stringify(layout.xaxis)),
+        header_by_metric[metric]["xaxis"],
+      );
+      layout["yaxis" + key] = JSON.parse(JSON.stringify(layout.yaxis));
+
+      let sampleIds = [];
+      Object.keys(data_by_metric[metric]).map((sample) => {
+        sampleIds.push(samples.indexOf(sample));
+      });
 
       return {
         type: "violin",
         x: Object.values(data_by_metric[metric]),
-        name: header_by_metric[metric].title,
+        name: header_by_metric[metric].title + "  ",
         text: Object.keys(data_by_metric[metric]), // sample names
-        xaxis: "x" + idx,
-        yaxis: "y" + idx,
-        range: [0, 100],
+        customdata: sampleIds,
+        fillcolor: header_by_metric[metric].color,
+        xaxis: "x" + key,
+        yaxis: "y" + key,
         ...params,
+        hoveron: "points",
       };
+    });
+  }
+
+  afterPlotCreated() {
+    let target = this.target;
+    let plot = document.getElementById(target);
+
+    let metrics = Object.keys(this.datasets[this.active_dataset_idx].header_by_metric);
+
+    plot.on("plotly_hover", function (e) {
+      let point = e.points[0];
+      let pointNum = point.pointNumber;
+
+      console.log("hovered", point, pointNum);
+
+      let allPointsToHover = metrics.map((metric, curveNum) => {
+        return { curveNumber: curveNum, pointNumber: pointNum };
+      });
+      let allAxisToHover = metrics.map((metric, curveNum) => {
+        let key = curveNum === 0 ? "" : curveNum + 1;
+        return "x" + key + "y" + key;
+      });
+
+      console.log("triggering hover of points", allPointsToHover, allAxisToHover);
+      Plotly.Fx.hover(target, allPointsToHover, allAxisToHover);
     });
   }
 }

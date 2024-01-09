@@ -42,6 +42,14 @@ class Plot {
       Plotly.relayout(this.target, { width: newHeight });
     }
   }
+
+  buildTraces() {
+    throw new Error("buildTraces() not implemented");
+  }
+
+  afterPlotCreated() {
+    // Do nothing
+  }
 }
 
 function initPlot(dump) {
@@ -394,6 +402,8 @@ function renderPlot(target) {
       "resetScale2d",
     ],
   });
+
+  plot.afterPlotCreated(target);
 }
 
 // Highlight text with a fadeout background colour highlight
