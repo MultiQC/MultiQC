@@ -1131,9 +1131,19 @@ def run(
                 if fdir is None:
                     fdir = ""
                 path = os.path.join(fdir, name)
-                path_dev = os.path.splitext(path)[0] + "_dev" + os.path.splitext(path)[1]
-                if os.path.exists(path_dev):
-                    path = path_dev
+
+                dev_path = os.path.join(template_mod.template_dir, name)
+                if os.path.exists(dev_path):
+                    fdir = template_mod.template_dir
+                    name = dev_path
+                    path = dev_path
+                if config.development and name.endswith(".js"):
+                    if path.endswith(".min.js"):
+                        full_name = re.sub(r"\.min\.js$", ".js", name)
+                        if os.path.exists(os.path.join(fdir, full_name)):
+                            name = full_name
+                    return f'</script><script type="text/javascript" src="{name}">'
+
                 if b64:
                     with io.open(path, "rb") as f:
                         return base64.b64encode(f.read()).decode("utf-8")
