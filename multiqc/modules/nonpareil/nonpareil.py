@@ -86,16 +86,19 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, data in json_raw.items():
             # Convert base pairs to megabase pairs
             data["x.adj"] = [(1e-6 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
-            data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
+            if data["has.model"]:
+                data["x.model"] = [x / 1000 / 1000 for x in data["x.model"]]
             # Convert fraction to percentage
             data["y.cov"] = [x * 100 for x in data["y.cov"]]
-            data["y.model"] = [x * 100 for x in data["y.model"]]
+            if data["has.model"]:
+                data["y.model"] = [x * 100 for x in data["y.model"]]
             data["y.sd"] = [x * 100 for x in data["y.sd"]]
             data["y.p75"] = [x * 100 for x in data["y.p75"]]
             data["y.p25"] = [x * 100 for x in data["y.p25"]]
             # Prepare plot data
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
-            data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
+            if data["has.model"]:
+                data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             # Calculate dispersion
             # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
             disp_add = None
