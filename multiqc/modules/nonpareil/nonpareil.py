@@ -105,6 +105,14 @@ class MultiqcModule(BaseMultiqcModule):
             data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
             if data["has.model"]:
                 data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
+            else:
+                modelR = data["modelR"]
+                assert isinstance(modelR, list) and length(modelR) == 0, "there is no model, but modelR is not empty"
+                data["modelR"] = NA
+                LRstar = data["LRstar"]
+                assert isinstance(LRstar, list) and length(LRstar) == 0, "there is no model, but LRstar is not empty"
+                data["LRstar"] = NA
+
             # Calculate dispersion
             # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
             disp_add = None
@@ -275,6 +283,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
+                "scale": False,
+                "hidden": True,
+            },
+            "nonpareil_has.model": {
+                "title": "Model available?",
+                "description": "Was model estimated?",
+                "modify": lambda x: "Yes" if x else "No",
                 "scale": False,
                 "hidden": True,
             },
