@@ -1,11 +1,8 @@
 class ViolinPlot extends Plot {
-  constructor(dump) {
-    super(dump);
-  }
-
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    return this.datasets[this.active_dataset_idx]["data_by_metric"].length; // no samples in a dataset
+    if (this.datasets[this.active_dataset_idx]["samples"].length === 0) return 0; // no samples in a dataset
+    return this.datasets[this.active_dataset_idx]["header_by_metric"].length; // no metrics in a dataset
   }
 
   // Constructs and returns traces for the Plotly plot
@@ -16,36 +13,45 @@ class ViolinPlot extends Plot {
     let sampleColors = this.datasets[this.active_dataset_idx]["sample_colors"];
     let layout = this.layout;
 
-    let violins = Object.keys(headerByMetric).map((metric, idx) => {
-      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
-      let axisKey = idx === 0 ? "" : idx + 1;
+    let samples = this.datasets[this.active_dataset_idx]["samples"];
+    let sampleSettings = applyToolboxSettings(samples);
+    if (sampleSettings == null) return; // All series are hidden, do not render the graph.
 
-      // set layouts for each violin
+    let filteredDataByMetric = [];
+    Object.entries(dataByMetric).map(([metric, valueBySample]) => {
+      filteredDataByMetric[metric] = {};
+      Object.entries(valueBySample).map(([sample, value]) => {
+        if (!sampleSettings[samples.indexOf(sample)].hidden) {
+          filteredDataByMetric[metric][sample] = value;
+        }
+      });
+    });
+    dataByMetric = filteredDataByMetric;
+
+    let violins = [];
+    Object.keys(dataByMetric).map((metric, metricIdx) => {
+      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+
+      // Set layouts for each violin individually
       layout["xaxis" + axisKey] = Object.assign(
         JSON.parse(JSON.stringify(layout.xaxis)),
         headerByMetric[metric]["xaxis"],
       );
       layout["yaxis" + axisKey] = JSON.parse(JSON.stringify(layout.yaxis));
 
-      return {
+      let valueBySample = dataByMetric[metric];
+      violins.push({
         type: "violin",
-        x: Object.values(dataByMetric[metric]),
+        x: Object.values(valueBySample),
         name: headerByMetric[metric].title + "  ",
-        text: Object.keys(dataByMetric[metric]), // sample names
+        text: Object.keys(valueBySample), // sample names
         xaxis: "x" + axisKey,
         yaxis: "y" + axisKey,
         ...params,
-      };
+      });
     });
 
-    // Add scatter plots on top of violins to show individual points
-    // Plotly supports showing points automatically with `points="all"`,
-    // however, it's problematic to give each sample individual color,
-    // and set up hover events to highlight all points for a sample. So as
-    // a workaround, we add a separate scatter plot. One thing to solve later
-    // would be to be able to only show outliers, not all points, as the violin
-    // plot can do that automatically, and we lose this functionality here.
-    // ---
     // We want to select points on all violins belonging to this specific sample.
     // Points are rendered each as a separate trace, so we need to collect
     // each trace (curve) number for each point by sample.
@@ -54,9 +60,10 @@ class ViolinPlot extends Plot {
     let currentCurveNumber = violins.length;
     let curveNumbersBySample = {};
     let curveAxisBySample = {};
-    Object.keys(headerByMetric).map((metric, metricIdx) => {
+    Object.keys(dataByMetric).map((metric, metricIdx) => {
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-      Object.entries(dataByMetric[metric]).map(([sample, value]) => {
+      let valueBySample = dataByMetric[metric];
+      Object.keys(valueBySample).map((sample) => {
         if (!curveNumbersBySample[sample]) {
           curveNumbersBySample[sample] = [];
           curveAxisBySample[sample] = [];
@@ -66,24 +73,40 @@ class ViolinPlot extends Plot {
       });
     });
 
+    // Add scatter plots on top of violins to show individual points
+    // Plotly supports showing points automatically with `points="all"`,
+    // however, it's problematic to give each sample individual color,
+    // and set up hover events to highlight all points for a sample. So as
+    // a workaround, we add a separate scatter plot. One thing to solve later
+    // would be to be able to only show outliers, not all points, as the violin
+    // plot can do that automatically, and we lose this functionality here.
     let points = [];
-    Object.keys(headerByMetric).map((metric, idx) => {
+
+    let highlighting = sampleSettings.filter((s) => s.highlight).length > 0;
+
+    Object.keys(dataByMetric).map((metric, idx) => {
       let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
       let axisKey = idx === 0 ? "" : idx + 1;
 
       Object.entries(dataByMetric[metric]).map(([sample, value]) => {
-        let sampleColor = sampleColors[sample];
+        let sampleData = sampleSettings[samples.indexOf(sample)];
+
+        let color = sampleColors[sample];
+        if (highlighting) color = sampleData.highlight ?? "#cccccc";
+        if (sampleData.highlight) {
+          console.log("highlighted");
+        }
+
         let sampleTrace = {
           type: "scatter",
           mode: "markers",
           x: [value],
           y: [headerByMetric[metric].title + "  "],
-          text: [sample],
+          text: [sampleData.name ?? sample],
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,
-          marker: {
-            color: sampleColor,
-          },
+          highlighted: sampleData.highlight !== null,
+          marker: { color: color, size: sampleData.highlight !== null ? 10 : 6 },
           showlegend: false,
           hovertemplate: params["hovertemplate"],
           customdata: { curveNumbers: curveNumbersBySample[sample], curveAxis: curveAxisBySample[sample] },
@@ -92,17 +115,21 @@ class ViolinPlot extends Plot {
         points.push(sampleTrace);
       });
     });
+
+    // Reorder points so highlighted points are on top
+    // let highlighted = points.filter((trace) => trace.highlighted);
+    // let nonHighlighted = points.filter((trace) => !trace.highlighted);
+    // points = nonHighlighted.concat(highlighted);
+
     return violins.concat(points);
   }
 
   afterPlotCreated(target) {
     let plot = document.getElementById(target);
 
-    // let layout = this.layout;
-    // let headerByMetric = this.datasets[this.active_dataset_idx]["header_by_metric"];
-
     plot
       .on("plotly_hover", function (eventdata) {
+        if (!eventdata.points) return;
         let point = eventdata.points[0];
         if (point.data.type === "scatter") {
           let curveNumbers = point.data.customdata["curveNumbers"];
@@ -117,7 +144,8 @@ class ViolinPlot extends Plot {
           Plotly.restyle(target, update, curveNumbers);
         }
       })
-      .on("plotly_unhover", function () {
+      .on("plotly_unhover", function (eventdata) {
+        // TODO: only change the marker size back if the point is not highlighted
         Plotly.restyle(target, {
           "marker.size": 6,
         });
