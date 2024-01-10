@@ -83,6 +83,12 @@ class MultiqcModule(BaseMultiqcModule):
         if self.disp_type:
             log.debug(f"Plotting dispersion for {self.disp_type}")
 
+        # Rename samples, if label available
+        for s_name in list(json_raw.keys()):
+            s_label = json_raw[s_name].get("label")
+            if s_label:
+                json_raw[s_label] = json_raw.pop(s_name)
+
         for s_name, data in json_raw.items():
             # Convert base pairs to megabase pairs
             data["x.adj"] = [(1e-6 if x == 0 else x) / 1000 / 1000 for x in data["x.adj"]]
