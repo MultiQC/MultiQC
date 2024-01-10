@@ -85,6 +85,7 @@ class ViolinPlot extends Plot {
             color: sampleColor,
           },
           showlegend: false,
+          hovertemplate: params["hovertemplate"],
           customdata: { curveNumbers: curveNumbersBySample[sample], curveAxis: curveAxisBySample[sample] },
           ...params,
         };
@@ -96,19 +97,30 @@ class ViolinPlot extends Plot {
 
   afterPlotCreated(target) {
     let plot = document.getElementById(target);
-    plot.on("plotly_hover", function (eventdata) {
-      let point = eventdata.points[0];
-      if (point.data.type === "scatter") {
-        let curveNumbers = point.data.customdata["curveNumbers"];
-        let curveAxis = point.data.customdata["curveAxis"];
-        console.log("plotly_click", point, curveNumbers, curveAxis);
-        console.log("plotly_click: triggering hover of points", curveNumbers, curveAxis);
-        let points = curveNumbers.map((curveNum) => {
-          return { curveNumber: curveNum, pointNumber: 0 };
+
+    // let layout = this.layout;
+    // let headerByMetric = this.datasets[this.active_dataset_idx]["header_by_metric"];
+
+    plot
+      .on("plotly_hover", function (eventdata) {
+        let point = eventdata.points[0];
+        if (point.data.type === "scatter") {
+          let curveNumbers = point.data.customdata["curveNumbers"];
+          // let curveAxis = point.data.customdata["curveAxis"];
+          // let points = curveNumbers.map((curveNum) => {
+          //   return { curveNumber: curveNum, pointNumber: 0 };
+          // });
+          // Plotly.Fx.hover(target, points, curveAxis);
+          let update = {
+            "marker.size": 10,
+          };
+          Plotly.restyle(target, update, curveNumbers);
+        }
+      })
+      .on("plotly_unhover", function () {
+        Plotly.restyle(target, {
+          "marker.size": 6,
         });
-        Plotly.Fx.hover(target, points, curveAxis);
-      }
-      console.log("plotly_click: finished");
-    });
+      });
   }
 }

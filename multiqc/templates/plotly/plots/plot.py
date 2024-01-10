@@ -118,7 +118,7 @@ class Plot(ABC):
         elif tt_label:
             tt_label += self.pconfig.get("tt_suffix", "")
         if tt_label:
-            self.trace_params["hovertemplate"] = "<b>%{text}</b><br>" + tt_label + "<extra></extra>"
+            self.trace_params["hovertemplate"] = "<b>%{text}</b>" + tt_label + "<extra></extra>"
 
         height = self.pconfig.get("height", 600)
         width = self.pconfig.get("width")
@@ -161,7 +161,9 @@ class Plot(ABC):
                 t=50,  # more compact title
                 r=10,  # remove excessive whitespace on the right
             ),
-            hoverlabel=dict(namelength=-1),  # do not crop sample names in hover labels
+            hoverlabel=dict(
+                namelength=-1,  # do not crop sample names inside hover label <extra></extra>
+            ),
             modebar=dict(
                 bgcolor="rgba(0, 0, 0, 0)",
                 color="rgba(0, 0, 0, 0.5)",

@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union
 import copy
 
 import plotly.graph_objects as go
@@ -105,6 +105,11 @@ class ViolinPlot(Plot):
             # points="all",
             line={"width": 0},
             fillcolor="rgba(0,0,0,0.1)",
+            # The hover information is useful, but the formatting is ugly and not
+            # configurable as far as I can see. Also, it's not possible to disable it,
+            # so setting it to "points" as we don't show points, so it's effectively
+            # disabling it.
+            hoveron="points",
         )
 
         num_rows = max(len(ds.header_by_metric) for ds in self.datasets)
@@ -128,16 +133,15 @@ class ViolinPlot(Plot):
             ),
         )
 
+    @staticmethod
+    def tt_label() -> str:
+        return ": %{x}"
+
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
         d["categories"] = self.categories
         return d
-
-    @staticmethod
-    def tt_label() -> Optional[str]:
-        """Default tooltip label"""
-        return "%{x}: %{y}"
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """
@@ -176,6 +180,7 @@ class ViolinPlot(Plot):
                         xaxis=f"x{i + 1}",
                         yaxis=f"y{i + 1}",
                         showlegend=False,
+                        hovertemplate=self.trace_params["hovertemplate"],
                     ),
                 )
         return fig

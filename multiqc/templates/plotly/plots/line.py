@@ -110,7 +110,7 @@ class LinePlot(Plot):
     @staticmethod
     def tt_label() -> Optional[str]:
         """Default tooltip label"""
-        return "%{x}: %{y}"
+        return "<br>%{x}: %{y}"
 
     def axis_controlled_by_switches(self) -> List[str]:
         """
