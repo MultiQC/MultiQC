@@ -1,9 +1,9 @@
 import dataclasses
 import logging
 from typing import Dict, List, Union, Optional
+import copy
 
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import mqc_colour
@@ -30,7 +30,8 @@ def plot(data: List[Dict[str, MetricsT]], headers: List[Dict], pconfig: Dict) ->
 class Dataset(BaseDataset):
     data_by_metric: Dict[str, MetricsT]
     header_by_metric: Dict[str, Dict[str, Union[str, int, float]]]
-    samples: List[str]
+    samples: List[str]  # list of all samples in this dataset
+    sample_colors: Dict[str, str]  # a color matching each sample
 
 
 class ViolinPlot(Plot):
@@ -77,14 +78,17 @@ class ViolinPlot(Plot):
                     "rangemode": "tozero" if xmin == 0 else "normal",
                     "range": [xmin, xmax],
                 }
-                header_by_metric[metric]["color"] = c_scale.get_colour(i, lighten=0.5)
+                header_by_metric[metric]["color"] = "rgba(0,0,0,0.5)"
 
+            all_samples = list(data_by_sample.keys())
+            sample_colors = {sn: c_scale.get_colour(i, lighten=1) for i, sn in enumerate(all_samples)}
             datasets.append(
                 Dataset(
                     *ds.__dict__,
                     data_by_metric=data_by_metric,
                     header_by_metric=header_by_metric,
-                    samples=list(data_by_sample.keys()),
+                    samples=all_samples,
+                    sample_colors=sample_colors,
                 )
             )
 
@@ -96,11 +100,11 @@ class ViolinPlot(Plot):
             orientation="h",
             box={"visible": False},
             meanline={"visible": True},
-            jitter=0.5,
-            points="all",
-            pointpos=0,
+            # jitter=0.5,
+            # pointpos=0,
+            # points="all",
             line={"width": 0},
-            marker={"color": "black"},
+            fillcolor="rgba(0,0,0,0.1)",
         )
 
         num_rows = max(len(ds.header_by_metric) for ds in self.datasets)
@@ -112,7 +116,6 @@ class ViolinPlot(Plot):
             grid=dict(
                 rows=num_rows,
                 columns=1,
-                # pattern="independent",
                 roworder="top to bottom",
                 ygap=0.4,
                 subplots=[[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(num_rows)],
@@ -140,33 +143,41 @@ class ViolinPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-        c_scale = mqc_colour.mqc_colour_scale("plot_defaults")
+        for i, header in enumerate(dataset.header_by_metric.values()):
+            layout[f"xaxis{i + 1}"] = copy.deepcopy(layout["xaxis"])
+            layout[f"xaxis{i + 1}"].update(header["xaxis"])
+            layout[f"yaxis{i + 1}"] = copy.deepcopy(layout["yaxis"])
+
+        layout.showlegend = False
         fig = go.Figure(layout=layout)
-        fig = make_subplots(
-            len(dataset.data_by_metric),
-            1,
-            figure=fig,
-            vertical_spacing=0.5 / len(dataset.data_by_metric),
-        )
-        for idx, (metric, data) in enumerate(dataset.data_by_metric.items()):
+
+        for i, (metric, header) in enumerate(dataset.header_by_metric.items()):
+            data = dataset.data_by_metric[metric]
             fig.add_trace(
                 go.Violin(
                     x=list(data.values()),
-                    name=dataset.header_by_metric[metric].get("title", metric),
+                    name=header.get("title", metric) + "  ",
                     text=list(data.keys()),
-                    marker={"color": c_scale.get_colour(idx, lighten=1)},
+                    xaxis=f"x{i + 1}",
+                    yaxis=f"y{i + 1}",
                     **self.trace_params,
                 ),
-                row=idx + 1,
-                col=1,
             )
-            fig.update_xaxes(
-                range=[dataset.header_by_metric[metric]["min"], dataset.header_by_metric[metric]["max"]],
-                rangemode="tozero" if dataset.header_by_metric[metric]["tozero"] else "normal",
-                row=idx + 1,
-                col=1,
-            )
-
+            for j, (sample, value) in enumerate(data.items()):
+                fig.add_trace(
+                    go.Scatter(
+                        x=[value],
+                        y=[header.get("title", metric) + "  "],
+                        text=[sample],
+                        mode="markers",
+                        marker=dict(
+                            color=dataset.sample_colors[sample],
+                        ),
+                        xaxis=f"x{i + 1}",
+                        yaxis=f"y{i + 1}",
+                        showlegend=False,
+                    ),
+                )
         return fig
 
     def save_data_file(self, data: BaseDataset) -> None:

@@ -160,7 +160,7 @@ class ScatterPlot(Plot):
                     name = label
 
             params = copy.deepcopy(self.trace_params)
-            marker = params["marker"]
+            marker = params.pop("marker")
             if color:
                 marker["color"] = color
             if "marker_line_width" in element:
@@ -182,6 +182,7 @@ class ScatterPlot(Plot):
                     name=name,
                     text=[annotation or name],
                     showlegend=show_in_legend,
+                    marker=marker,
                     **params,
                 )
             )
