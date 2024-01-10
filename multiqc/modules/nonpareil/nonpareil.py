@@ -107,10 +107,10 @@ class MultiqcModule(BaseMultiqcModule):
                 data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
             else:
                 modelR = data["modelR"]
-                assert isinstance(modelR, list) and length(modelR) == 0, "there is no model, but modelR is not empty"
+                assert isinstance(modelR, list) and len(modelR) == 0, "there is no model, but modelR is not empty"
                 data["modelR"] = NA
                 LRstar = data["LRstar"]
-                assert isinstance(LRstar, list) and length(LRstar) == 0, "there is no model, but LRstar is not empty"
+                assert isinstance(LRstar, list) and len(LRstar) == 0, "there is no model, but LRstar is not empty"
                 data["LRstar"] = NA
 
             # Calculate dispersion
