@@ -108,10 +108,10 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 modelR = data["modelR"]
                 assert isinstance(modelR, list) and len(modelR) == 0, "there is no model, but modelR is not empty"
-                data["modelR"] = NA
+                data["modelR"] = np.nan
                 LRstar = data["LRstar"]
                 assert isinstance(LRstar, list) and len(LRstar) == 0, "there is no model, but LRstar is not empty"
-                data["LRstar"] = NA
+                data["LRstar"] = np.nan
 
             # Calculate dispersion
             # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
@@ -358,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
             data_plot.append(dict())
             if self.plot_observed:
                 data_plot[-1]["observed"] = data["nonpareil_observed"]
-            if self.plot_model:
+            if self.plot_model and data["nonpareil_has.model"]:
                 data_plot[-1]["model"] = data["nonpareil_model"]
             if self.disp_type:
                 extra_series.append([dict(esconfig), dict(esconfig)])
