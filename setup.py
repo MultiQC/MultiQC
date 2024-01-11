@@ -157,6 +157,7 @@ setup(
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
+            "pairtools = multiqc.modules.pairtools:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
             "pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",

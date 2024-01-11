@@ -1,0 +1,42 @@
+---
+# colors for the most common types of pairs
+pairtypes_colors:
+  UU: "#33a02c" # Green
+  uu: "#b2df8a" # Pale green (walks-policy all)
+  RU: "#b2df8a" # Pale green (walks-policy mask)
+  UR: "#a6cee3" # Pale blue (walks-policy mask)
+  WW: "#1f78b4" # Blue
+  DD: "#e31a1c" # Red (duplicates should scream !)
+  MU: "#ff7f00" # Orange
+  MR: "#fdbf6f" # Pale orange (walks-policy mask)
+  mu: "#fdbf6f" # Pale orange (walks-policy all)
+  MM: "#fff900" # Yellow
+  mm: "#fb9a99" # Pale red (walks-policy all)
+  NM: "#b15928" # Brown
+  nm: "#ffff99" # Pale brown (yellow-ish) (walks-policy all)
+  NU: "#6a3d9a" # Violet
+  NR: "#cab2d6" # Pale violet (walks-policy mask)
+  nu: "#cab2d6" # Pale violet (walks-policy all)
+  NN: "#9e0090" # Magenta
+  nn: "#ff7ff3" # Pale magenta (walks-policy all)
+  XX: "#000000"
+# colors for reporting interactions in ranges of genomic separation (cis)
+cis_range_colors: # replace with a pallet later
+  - "#8c2d04" # short-range cis
+  - "#cc4c02"
+  - "#ec7014"
+  - "#fe9929"
+  - "#fec44f"
+  - "#fee391"
+  - "#ffffd4" #long-range cis
+# colors and "names" for reporting pairs by orientation
+pairs_orientation_names:
+  "++": "FF"
+  "-+": "RF"
+  "+-": "FR"
+  "--": "RR"
+pairs_orientation_colors:
+  "++": "#e41a1c"
+  "-+": "#377eb8"
+  "+-": "#4daf4a"
+  "--": "#984ea3"

@@ -15,6 +15,9 @@
 
 ### New modules
 
+- [**pairtools**](https://github.com/open2c/pairtools) ([#1148](https://github.com/MultiQC/MultiQC/pull/1148))
+  - pairtools - command-line framework to process sequencing data from a Hi-C experiment
+
 ### Module updates
 
 - **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
