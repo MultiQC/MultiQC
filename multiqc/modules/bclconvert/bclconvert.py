@@ -692,10 +692,12 @@ class MultiqcModule(BaseMultiqcModule):
         headers["index"] = {
             "title": "Index",
             "description": "Sample index",
+            "scale": False,
         }
         headers["sample_project"] = {
             "title": "Project",
             "description": "Sample project",
+            "scale": False,
         }
 
         # Table config
