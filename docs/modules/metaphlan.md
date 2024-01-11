@@ -17,6 +17,8 @@ A bar graph is generated that shows the relative abundance for each sample that
 fall into the top-10 categories for each taxa rank. The top categories are calculated
 by summing the relative abundances across all samples.
 
+Any species under the Additional Species column are ignored when making the graphs.
+
 The number of top categories to plot can be customized in the config file:
 
 ```yaml

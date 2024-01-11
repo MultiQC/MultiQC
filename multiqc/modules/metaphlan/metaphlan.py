@@ -1,19 +1,14 @@
-""" MultiQC modules base class, contains helper functions """
+""" MultiQC module to parse output from MetaPhlAn """
 
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
-
-
-class ModuleNoSamplesFound(Exception):
-    """Module checked all input files but couldn't find any data to use"""
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -27,6 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://github.com/biobakery/MetaPhlAn",
         info="is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.",
         doi="10.1038/s41587-023-01688-w",
+        sp_key="metaphlan",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -36,19 +32,20 @@ class MultiqcModule(BaseMultiqcModule):
             doi=doi,
         )
         # Custom options from user config that can overwrite base module values
-        self.t_ranks = OrderedDict()
-        self.t_ranks["s"] = "Species"
-        self.t_ranks["g"] = "Genus"
-        self.t_ranks["f"] = "Family"
-        self.t_ranks["o"] = "Order"
-        self.t_ranks["c"] = "Class"
-        self.t_ranks["p"] = "Phylum"
-        self.t_ranks["k"] = "Kingdom"
+        self.t_ranks = {
+            "s": "Species",
+            "g": "Genus",
+            "f": "Family",
+            "o": "Order",
+            "c": "Class",
+            "p": "Phylum",
+            "k": "Kingdom",
+        }
 
         self.top_n = getattr(config, "metaphlan", {}).get("top_n", 10)
 
         self.metaphlan_raw_data = dict()
-        for f in self.find_log_files(self.anchor, filehandles=True):
+        for f in self.find_log_files(sp_key, filehandles=True):
             f["f"].seek(0)
             self.parse_logs(f)
 
@@ -90,6 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         regex_last_taxid = re.compile(r"\|(\d+)\t")
         regex_last_tax_rank = re.compile(r"\|([kpcofgs])\_\_(\w+)\t")
         regex_tax_unclass = re.compile(r"\|([kpcofgs])\_\_(\w+)\_(unclassified)\t")
+        regex_comments = re.compile(r"\#")
         data = []
         for line in f["f"]:
             match = regex_last_tax_rank.search(line)
@@ -97,6 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             match_per = regex_rel_abundance.search(line)
             match_first = regex_kingdom_level.search(line)
             match_unclassified = regex_tax_unclass.search(line)
+            match_comments = regex_comments.search(line)
             if match_first:
                 # Matches the first row (kingdom)
                 row = {
@@ -121,6 +120,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "rel_abundance": float(match_per.group(1)),
                 }
                 data.append(row)
+            elif match_comments:
+                continue
             else:
                 log.debug(f"{f['s_name']}: Could not parse line: {line}")
         self.metaphlan_raw_data[f["s_name"]] = data
@@ -166,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # Column headers
-        headers = OrderedDict()
+        headers = dict()
 
         top_one_hkey = None
 
@@ -212,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
         found_rank_codes = set()
 
         for rank_code in self.t_ranks:
-            rank_cats = OrderedDict()
+            rank_cats = dict()
             rank_data = dict()
 
             # Loop through the summed tax percentages to get the top-N across all samples

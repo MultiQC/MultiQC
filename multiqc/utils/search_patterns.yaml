@@ -494,7 +494,7 @@ mapdamage:
   - fn: "lgdistribution.txt"
 metaphlan:
   fn: "*.txt"
-  contents: "metaphlan"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
 methylQA:
   fn: "*.report"
   shared: true
