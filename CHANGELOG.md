@@ -11,6 +11,7 @@
 - BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
+- Module for metaphlan ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
 - BCLConvert: Add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
 
 ### New modules
