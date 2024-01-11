@@ -403,7 +403,7 @@ function renderPlot(target) {
     ],
   });
 
-  plot.afterPlotCreated(target);
+  plot.afterPlotCreated();
 }
 
 // Highlight text with a fadeout background colour highlight

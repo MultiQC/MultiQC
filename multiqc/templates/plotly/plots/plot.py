@@ -177,6 +177,7 @@ class Plot(ABC):
                 y=-0.3,
                 xanchor="center",
                 x=0.5,
+                yref="paper",
             ),
         )
         if self.add_log_tab and self.l_active:

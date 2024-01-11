@@ -98,14 +98,18 @@ class ViolinPlot(Plot):
 
         self.trace_params.update(
             orientation="h",
-            box={"visible": False},
+            box={"visible": True},
             meanline={"visible": True},
-            jitter=0.5,
-            pointpos=0,
-            points="all",
+            # jitter=0.5,
+            # pointpos=0,
+            # points="all",
             fillcolor="rgba(0,0,0,0.1)",
             line={"width": 0},
-            marker={"color": "rgba(0,0,0,1)"},
+            marker={"color": "rgb(55,126,184)", "size": 4},
+            # The hover information is useful, but the formatting is ugly and not
+            # configurable as far as I can see. Also, it's not possible to disable it,
+            # so setting it to "points" as we don't show points, so it's effectively
+            # disabling it.
             hoveron="points",
         )
 
@@ -128,6 +132,9 @@ class ViolinPlot(Plot):
             yaxis=dict(
                 automargin=True,
             ),
+            # hoverlabel=dict(
+            #     bgcolor="rgb(141,203,255)",
+            # ),
         )
 
     @staticmethod
@@ -164,6 +171,22 @@ class ViolinPlot(Plot):
                     **self.trace_params,
                 ),
             )
+            for j, (sample, value) in enumerate(data.items()):
+                fig.add_trace(
+                    go.Scatter(
+                        x=[value],
+                        y=[header.get("title", metric) + "  "],
+                        text=[sample],
+                        mode="markers",
+                        marker=dict(
+                            color=dataset.sample_colors[sample],
+                        ),
+                        xaxis=f"x{i + 1}",
+                        yaxis=f"y{i + 1}",
+                        showlegend=False,
+                        hovertemplate=self.trace_params["hovertemplate"],
+                    ),
+                )
         return fig
 
     def save_data_file(self, data: BaseDataset) -> None:

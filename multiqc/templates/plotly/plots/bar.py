@@ -76,8 +76,9 @@ class BarPlot(Plot):
         if max_n_samples > 30:
             px_per_sample = 10
         height = max_n_samples * px_per_sample
-        height = max(MIN_PLOT_HEIGHT, height)
         height = min(MAX_PLOT_HEIGHT, height)
+        height = max(MIN_PLOT_HEIGHT, height)
+
         height += 50  # extra space for legend
         self.layout.height = height
 
@@ -94,7 +95,6 @@ class BarPlot(Plot):
                     categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
                     automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
-                    nticks=max(len(ds.samples) for ds in self.datasets),
                 ),
                 xaxis=dict(
                     title=dict(text=self.layout.yaxis.title.text),

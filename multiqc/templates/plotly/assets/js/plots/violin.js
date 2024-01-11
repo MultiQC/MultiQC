@@ -1,16 +1,16 @@
 class ViolinPlot extends Plot {
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    if (this.datasets[this.active_dataset_idx]["samples"].length === 0) return 0; // no samples in a dataset
-    return this.datasets[this.active_dataset_idx]["header_by_metric"].length; // no metrics in a dataset
+    return this.datasets[this.active_dataset_idx]["samples"].length;
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataByMetric = this.datasets[this.active_dataset_idx]["data_by_metric"];
-    if (dataByMetric.length === 0) return [];
+    if (Object.keys(dataByMetric).length === 0) return [];
     let headerByMetric = this.datasets[this.active_dataset_idx]["header_by_metric"];
     let layout = this.layout;
+    const trace_params = this.trace_params;
 
     let samples = this.datasets[this.active_dataset_idx]["samples"];
     let sampleSettings = applyToolboxSettings(samples);
@@ -29,25 +29,29 @@ class ViolinPlot extends Plot {
 
     let violins = [];
     Object.keys(dataByMetric).map((metric, metricIdx) => {
-      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      let params = JSON.parse(JSON.stringify(trace_params)); // deep copy
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+
+      let valueBySample = dataByMetric[metric];
+      violins.push({
+        type: "violin",
+        x: Object.values(valueBySample),
+        name: metricIdx, // headerByMetric[metric].title + "  ",
+        text: Object.keys(valueBySample), // sample names
+        xaxis: "x" + axisKey,
+        yaxis: "y" + axisKey,
+        ...params,
+      });
 
       // Set layouts for each violin individually
       layout["xaxis" + axisKey] = Object.assign(
         JSON.parse(JSON.stringify(layout.xaxis)),
         headerByMetric[metric]["xaxis"],
       );
-      layout["yaxis" + axisKey] = JSON.parse(JSON.stringify(layout.yaxis));
-
-      let valueBySample = dataByMetric[metric];
-      violins.push({
-        type: "violin",
-        x: Object.values(valueBySample),
-        name: headerByMetric[metric].title + "  ",
-        text: Object.keys(valueBySample), // sample names
-        xaxis: "x" + axisKey,
-        yaxis: "y" + axisKey,
-        ...params,
+      layout["yaxis" + axisKey] = Object.assign(JSON.parse(JSON.stringify(layout.yaxis)), {
+        tickmode: "array",
+        tickvals: [metricIdx],
+        ticktext: [headerByMetric[metric].title + "  "],
       });
     });
 
@@ -83,24 +87,21 @@ class ViolinPlot extends Plot {
 
     let highlighting = sampleSettings.filter((s) => s.highlight).length > 0;
 
-    Object.keys(dataByMetric).map((metric, idx) => {
-      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
-      let axisKey = idx === 0 ? "" : idx + 1;
+    Object.keys(dataByMetric).map((metric, metricIdx) => {
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
 
       Object.entries(dataByMetric[metric]).map(([sample, value]) => {
         let sampleData = sampleSettings[samples.indexOf(sample)];
+        let params = JSON.parse(JSON.stringify(trace_params)); // deep copy
 
-        let color = "rgb(55,126,184)";
+        let color = trace_params["marker"]["color"];
         if (highlighting) color = sampleData.highlight ?? "#cccccc";
-        if (sampleData.highlight) {
-          console.log("highlighted");
-        }
 
         let sampleTrace = {
           type: "scatter",
           mode: "markers",
           x: [value],
-          y: [headerByMetric[metric].title + "  "],
+          y: [metricIdx + Math.random() * 0.3 - 0.3 / 2], // add vertical jitter
           text: [sampleData.name ?? sample],
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,
@@ -114,16 +115,12 @@ class ViolinPlot extends Plot {
         points.push(sampleTrace);
       });
     });
-
-    // Reorder points so highlighted points are on top
-    // let highlighted = points.filter((trace) => trace.highlighted);
-    // let nonHighlighted = points.filter((trace) => !trace.highlighted);
-    // points = nonHighlighted.concat(highlighted);
-
     return violins.concat(points);
   }
 
-  afterPlotCreated(target) {
+  afterPlotCreated() {
+    let target = this.target;
+    let trace_params = this.trace_params; // deep copy
     let plot = document.getElementById(target);
 
     plot
@@ -131,14 +128,17 @@ class ViolinPlot extends Plot {
         if (!eventdata.points) return;
         let point = eventdata.points[0];
         if (point.data.type === "scatter") {
+          console.log("hover", point);
           let curveNumbers = point.data.customdata["curveNumbers"];
           // let curveAxis = point.data.customdata["curveAxis"];
           // let points = curveNumbers.map((curveNum) => {
           //   return { curveNumber: curveNum, pointNumber: 0 };
           // });
           // Plotly.Fx.hover(target, points, curveAxis);
+          console.log("Updating curveNumbers", curveNumbers);
           let update = {
             "marker.size": 10,
+            "marker.color": "rgb(55,126,184)",
             "marker.line.color": "black",
             "marker.line.width": 1,
           };
@@ -146,13 +146,18 @@ class ViolinPlot extends Plot {
         }
       })
       .on("plotly_unhover", function (eventdata) {
-        // TODO: only change the marker size back if the point is not highlighted
-        let color = "rgb(55,126,184)";
-        Plotly.restyle(target, {
-          "marker.size": 6,
-          "marker.line.color": color,
-          "marker.line.width": 0,
-        });
+        if (!eventdata.points) return;
+        let point = eventdata.points[0];
+        let marker = JSON.parse(JSON.stringify(trace_params["marker"]));
+        if (point.data.type === "scatter") {
+          let curveNumbers = point.data.customdata["curveNumbers"];
+          console.log("unhover", point);
+          // TODO: only change the marker size back if the point is not highlighted
+          let update = {
+            marker: marker,
+          };
+          Plotly.restyle(target, update, curveNumbers);
+        }
       });
   }
 }
