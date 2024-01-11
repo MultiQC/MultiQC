@@ -48,6 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files(sp_key, filehandles=True):
             f["f"].seek(0)
             self.parse_logs(f)
+            self.add_data_source(f)
 
         self.metaphlan_raw_data = self.ignore_samples(self.metaphlan_raw_data)
 
@@ -64,6 +65,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_cols()
         self.top_taxa_barplot()
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
     def parse_logs(self, f):
         """
