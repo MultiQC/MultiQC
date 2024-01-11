@@ -389,8 +389,12 @@ class MultiqcModule(BaseMultiqcModule):
                     sample["_calculated_yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
-                    sample["sample_project"] = str(row["Sample_Project"])
                     sample["index"] = str(row["Index"])
+                    try:
+                        # Not all demux files have Sample_Project column
+                        sample["sample_project"] = str(row["Sample_Project"])
+                    except KeyError:
+                        pass
 
                     # columns only present pre v3.9.3, after they moved to quality_metrics
                     sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
@@ -531,7 +535,11 @@ class MultiqcModule(BaseMultiqcModule):
                     s["cluster_length"] = lane["cluster_length"]
                     s["_quality_score_sum"] += sample["_quality_score_sum"] or sample["_calculated_quality_score_sum"]
                     s["index"] = sample["index"]
-                    s["sample_project"] = sample["sample_project"]
+                    try:
+                        # Not all demux files have Sample_Project column
+                        s["sample_project"] = sample["sample_project"]
+                    except KeyError:
+                        pass
 
                     if not self._get_genome_size():
                         s["depth"] = "NA"
@@ -594,10 +602,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "one_mismatch_pecent": one_mismatch_pecent,
                 "mean_quality": sample["mean_quality"],
                 "index": sample["index"],
-                "sample_project": sample["sample_project"],
             }
             if sample["depth"] != "NA":
                 depth_available = True
+            # Not all demux files have Sample_Project column
+            if "sample_project" in sample:
+                sample_stats_data[sample_id]["sample_project"] = sample["sample_project"]
 
         headers = {}
         if depth_available:
