@@ -126,11 +126,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.intro += '<script type="text/javascript">load_fastqc_passfails();</script>'
 
-        # Get the sample groups for PE data / trimmed data
-        self.trimming_groups = self.group_samples(self.fastqc_data.keys(), "trimming")
-        self.pe_groups = self.group_samples(self.fastqc_data.keys(), "read_pairs")
-        self.trimming_and_pe_groups = self.group_samples(self.fastqc_data.keys(), ["trimming", "read_pairs"])
-
         # Now add each section in order
         self.read_count_plot()
         self.sequence_quality_plot()
@@ -454,8 +449,6 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["use_legend"] = False
             pconfig["cpswitch"] = False
 
-        pconfig["sample_groups"] = self.trimming_groups, self.pe_groups
-
         # Add the report section
         self.add_section(
             name="Sequence Counts",
@@ -512,9 +505,6 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
-
         self.add_section(
             name="Sequence Quality Histograms",
             anchor="fastqc_per_base_sequence_quality",
@@ -565,9 +555,6 @@ class MultiqcModule(BaseMultiqcModule):
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
         }
-
-        # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Per Sequence Quality Scores",
@@ -833,9 +820,6 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
-
         self.add_section(
             name="Per Base N Content",
             anchor="fastqc_per_base_n_content",
@@ -898,8 +882,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "colors": self.get_status_cols("sequence_length_distribution"),
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }
-            # Split by Read 1/2, Raw/Trimmed
-            data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
             self.add_section(
                 name="Sequence Length Distribution",
@@ -945,9 +927,6 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 2,
             "tt_suffix": "%",
         }
-
-        # Split by Read 1/2, Raw/Trimmed
-        data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
 
         self.add_section(
             name="Sequence Duplication Levels",
@@ -1039,10 +1018,6 @@ class MultiqcModule(BaseMultiqcModule):
         if max([x["total_overrepresented"] for x in data.values()]) < 1:
             plot_html = f'<div class="alert alert-info">{len(data)} samples had less than 1% of reads made up of overrepresented sequences</div>'
         else:
-            # Split by Read 1/2, Raw/Trimmed
-            data, pconfig = self.split_fastqc_data_by_group(self.trimming_and_pe_groups, data, pconfig)
-            cats = [cats for _ in range(len(data))]
-
             plot_html = bargraph.plot(data, cats, pconfig)
 
         self.add_section(

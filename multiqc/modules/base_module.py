@@ -529,7 +529,7 @@ class BaseMultiqcModule(object):
 
         skipped_suffixes = []
         label_by_grouping = dict()
-        groupings = config.sample_merge_groups or dict()
+        groupings = getattr(config, "sample_merge_groups", {})
         for grouping, groups in groupings.items():
             if grouping not in grouping_criteria:
                 # Just trimming all found patterns and recording them to add them back after
