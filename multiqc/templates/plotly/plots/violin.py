@@ -78,7 +78,7 @@ class ViolinPlot(Plot):
                     "rangemode": "tozero" if xmin == 0 else "normal",
                     "range": [xmin, xmax],
                 }
-                header_by_metric[metric]["color"] = "rgba(0,0,0,0.5)"
+                # header_by_metric[metric]["color"] = "rgba(0,0,0,0.5)"
 
             all_samples = list(data_by_sample.keys())
             sample_colors = {sn: c_scale.get_colour(i, lighten=1) for i, sn in enumerate(all_samples)}
@@ -100,15 +100,12 @@ class ViolinPlot(Plot):
             orientation="h",
             box={"visible": False},
             meanline={"visible": True},
-            # jitter=0.5,
-            # pointpos=0,
-            # points="all",
-            line={"width": 0},
+            jitter=0.5,
+            pointpos=0,
+            points="all",
             fillcolor="rgba(0,0,0,0.1)",
-            # The hover information is useful, but the formatting is ugly and not
-            # configurable as far as I can see. Also, it's not possible to disable it,
-            # so setting it to "points" as we don't show points, so it's effectively
-            # disabling it.
+            line={"width": 0},
+            marker={"color": "rgba(0,0,0,1)"},
             hoveron="points",
         )
 
@@ -167,22 +164,6 @@ class ViolinPlot(Plot):
                     **self.trace_params,
                 ),
             )
-            for j, (sample, value) in enumerate(data.items()):
-                fig.add_trace(
-                    go.Scatter(
-                        x=[value],
-                        y=[header.get("title", metric) + "  "],
-                        text=[sample],
-                        mode="markers",
-                        marker=dict(
-                            color=dataset.sample_colors[sample],
-                        ),
-                        xaxis=f"x{i + 1}",
-                        yaxis=f"y{i + 1}",
-                        showlegend=False,
-                        hovertemplate=self.trace_params["hovertemplate"],
-                    ),
-                )
         return fig
 
     def save_data_file(self, data: BaseDataset) -> None:

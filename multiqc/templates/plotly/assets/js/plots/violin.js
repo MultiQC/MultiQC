@@ -10,7 +10,6 @@ class ViolinPlot extends Plot {
     let dataByMetric = this.datasets[this.active_dataset_idx]["data_by_metric"];
     if (dataByMetric.length === 0) return [];
     let headerByMetric = this.datasets[this.active_dataset_idx]["header_by_metric"];
-    let sampleColors = this.datasets[this.active_dataset_idx]["sample_colors"];
     let layout = this.layout;
 
     let samples = this.datasets[this.active_dataset_idx]["samples"];
@@ -91,7 +90,7 @@ class ViolinPlot extends Plot {
       Object.entries(dataByMetric[metric]).map(([sample, value]) => {
         let sampleData = sampleSettings[samples.indexOf(sample)];
 
-        let color = sampleColors[sample];
+        let color = "rgb(55,126,184)";
         if (highlighting) color = sampleData.highlight ?? "#cccccc";
         if (sampleData.highlight) {
           console.log("highlighted");
@@ -140,14 +139,19 @@ class ViolinPlot extends Plot {
           // Plotly.Fx.hover(target, points, curveAxis);
           let update = {
             "marker.size": 10,
+            "marker.line.color": "black",
+            "marker.line.width": 1,
           };
           Plotly.restyle(target, update, curveNumbers);
         }
       })
       .on("plotly_unhover", function (eventdata) {
         // TODO: only change the marker size back if the point is not highlighted
+        let color = "rgb(55,126,184)";
         Plotly.restyle(target, {
           "marker.size": 6,
+          "marker.line.color": color,
+          "marker.line.width": 0,
         });
       });
   }
