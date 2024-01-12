@@ -78,8 +78,6 @@ class BarPlot(Plot):
         height = max_n_samples * px_per_sample
         height = min(MAX_PLOT_HEIGHT, height)
         height = max(MIN_PLOT_HEIGHT, height)
-
-        height += 50  # extra space for legend
         self.layout.height = height
 
         # swap x and y axes: the bar plot is "transposed", so yaxis corresponds to the horizontal axis

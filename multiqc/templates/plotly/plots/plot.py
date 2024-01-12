@@ -109,6 +109,7 @@ class Plot(ABC):
             replace_d = {  # Convert HighCharts format to Plotly format
                 "{point.x": "%{x",
                 "{point.y": "%{y",
+                "{point.category}": "%{x}",
                 "<strong>": "<b>",
                 "</strong>": "</b>",
                 "<br/>": "<br>",
@@ -170,15 +171,6 @@ class Plot(ABC):
                 activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=self.flat,
-            legend=dict(
-                traceorder="normal",
-                orientation="h",
-                yanchor="top",
-                y=-0.3,
-                xanchor="center",
-                x=0.5,
-                yref="paper",
-            ),
         )
         if self.add_log_tab and self.l_active:
             for axis in self.axis_controlled_by_switches():

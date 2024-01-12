@@ -51,7 +51,7 @@ class LinePlot(Plot):
 
         self.trace_params.update(
             mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-            line=dict(width=0.6),
+            line=dict(width=2 if config.lineplot_style == "lines" else 0.6),
             marker=dict(size=4),
         )
 

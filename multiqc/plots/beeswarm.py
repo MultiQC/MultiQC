@@ -5,6 +5,7 @@
 import logging
 import random
 from collections import defaultdict
+from typing import List, Dict, Optional
 
 from multiqc.plots import table_object
 from multiqc.utils import config, report, util_functions
@@ -26,7 +27,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, headers=None, pconfig=None):
+def plot(data: List[Dict], headers: Optional[List[Dict]] = None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
@@ -50,17 +51,6 @@ def plot(data, headers=None, pconfig=None):
     if not isinstance(headers, list):
         headers = [headers]
 
-    # Make a plot - template custom, or interactive or flat
-    mod = get_template_mod()
-    if "beeswarm" in mod.__dict__ and callable(mod.beeswarm):
-        try:
-            return mod.beeswarm(data, headers, pconfig)
-        except:  # noqa: E722
-            if config.strict:
-                # Crash quickly in the strict mode. This can be helpful for interactive
-                # debugging of modules
-                raise
-
     # Make a datatable object
     dt = table_object.DataTable(data, headers, pconfig)
 
@@ -68,10 +58,19 @@ def plot(data, headers=None, pconfig=None):
 
 
 def make_plot(dt: table_object.DataTable):
-    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
-
-    # Sanitise plot ID and check for duplicates
-    bs_id = report.save_htmlid(bs_id)
+    """
+    Make a plot - template custom, or interactive or flat
+    """
+    mod = get_template_mod()
+    if "beeswarm" in mod.__dict__ and callable(mod.beeswarm):
+        # noinspection PyBroadException
+        try:
+            return mod.beeswarm(dt)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
 
     categories = []
     s_names = []
@@ -114,6 +113,11 @@ def make_plot(dt: table_object.DataTable):
     if len(s_names) == 0:
         logger.warning("Tried to make beeswarm plot, but had no data")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
+
+    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
+
+    # Sanitise plot ID and check for duplicates
+    bs_id = report.save_htmlid(bs_id)
 
     # Plot HTML
     html = """<div class="hc-plot-wrapper"{height}>

@@ -77,11 +77,11 @@ $(function () {
   should_render.each(function () {
     let target = $(this).attr("id");
     // Only one point per dataset, so multiply limit by arbitrary number.
-    let max_num = mqc_config["num_datasets_plot_limit"] * 50;
+    let maxNum = mqc_config["num_datasets_plot_limit"] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.activeDatasetSize() > max_num) {
+      if (plot.activeDatasetSize() > maxNum) {
         $("#" + target)
           .addClass("not_rendered gt_max_num_ds")
           .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');

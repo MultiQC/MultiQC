@@ -1,98 +1,143 @@
 import dataclasses
 import logging
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 import copy
 
+import numpy as np
 import plotly.graph_objects as go
 
+from multiqc.plots.table_object import DataTable
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
 
-# {"metric1": 0.1, "metric2": "v2"...}
-MetricsT = Dict[str, Union[float, int, str]]
-
-
-def plot(data: List[Dict[str, MetricsT]], headers: List[Dict], pconfig: Dict) -> str:
+def plot(dt: DataTable) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    p = ViolinPlot(pconfig, data, headers)
+    values_by_metric = dict()
+    samples_by_metric = dict()
+    headers_by_metric = dict()
+
+    for idx, (_data_by_sample, _headers_by_metric) in enumerate(zip(dt.data, dt.headers)):
+        for sample, data in _data_by_sample.items():
+            for metric, value in data.items():
+                if metric not in _headers_by_metric:
+                    continue
+                if metric not in values_by_metric:
+                    values_by_metric[metric] = []
+                if metric not in samples_by_metric:
+                    samples_by_metric[metric] = []
+                samples_by_metric[metric].append(sample)
+                values_by_metric[metric].append(value)
+
+        for metric, header in _headers_by_metric.items():
+            color = header.get("colour")
+            if color == "55,126,184":  # default blue
+                color = None
+            headers_by_metric[metric] = {
+                "namespace": header["namespace"],
+                "title": header["title"],
+                "description": header["description"],
+                "max": header.get("max"),
+                "min": header.get("min"),
+                "suffix": header.get("suffix", ""),
+                "color": color,
+            }
+
+    p = ViolinPlot(
+        [values_by_metric],
+        [samples_by_metric],
+        [headers_by_metric],
+        dt.pconfig,
+    )
 
     from multiqc.utils import report
 
     return p.add_to_report(report)
 
 
+THRESHOLD_BEFORE_OUTLIERS = 100
+NUMBER_OF_OUTLIERS = 50
+
+
 @dataclasses.dataclass
 class Dataset(BaseDataset):
-    data_by_metric: Dict[str, MetricsT]
-    header_by_metric: Dict[str, Dict[str, Union[str, int, float]]]
-    samples: List[str]  # list of all samples in this dataset
-    sample_colors: Dict[str, str]  # a color matching each sample
+    values_by_metric: Dict[str, Union[List[int], List[float], List[str]]]
+    samples_by_metric: Dict[str, List[str]]
+    headers_by_metric: Dict[str, Dict[str, Any]]
+    outlier_indices_by_metric: Dict[str, List[int]]
+    all_samples: List[str]  # list of all samples in this dataset
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        values_by_metric: Dict[str, Union[List[int], List[float], List[str]]],
+        samples_by_metric: Dict[str, List[str]],
+        headers_by_metric: Dict[str, Dict[str, Any]],
+    ) -> "Dataset":
+        outlier_indices_by_metric: Dict[str, List[int]] = dict()
+        all_samples = set()
+        for i, metric in enumerate(headers_by_metric):
+            header = headers_by_metric[metric]
+            values = values_by_metric[metric]
+            samples = samples_by_metric[metric]
+
+            all_samples.update(set(samples))
+
+            xmin = header.get("min")
+            if xmin is None:
+                xmin = min(values)
+                xmin -= xmin * 0.05
+            xmax = header.get("max")
+            if xmax is None:
+                xmax = max(values)
+                xmax += xmax * 0.05
+            header["xaxis"] = {
+                "rangemode": "tozero" if xmin == 0 else "normal",
+                "range": [xmin, xmax],
+            }
+
+            if len(values) > THRESHOLD_BEFORE_OUTLIERS:
+                logger.warning(
+                    f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
+                    f"This may be too many to display clearly, so showing "
+                    f"only {NUMBER_OF_OUTLIERS} most outlying points for each violin."
+                )
+                outlier_indices = find_outliers(values, NUMBER_OF_OUTLIERS)
+                outlier_indices_by_metric[metric] = outlier_indices
+                logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
+
+        return Dataset(
+            **dataset.__dict__,
+            values_by_metric=values_by_metric,
+            samples_by_metric=samples_by_metric,
+            headers_by_metric=headers_by_metric,
+            outlier_indices_by_metric=outlier_indices_by_metric,
+            all_samples=list(all_samples),
+        )
 
 
 class ViolinPlot(Plot):
     def __init__(
         self,
+        list_of_values_by_metric: List[Dict[str, List[Union[List[int], List[float], List[str]]]]],
+        list_of_samples_by_metric: List[Dict[str, List[str]]],
+        list_of_headers_by_metric: List[Dict[str, Dict]],
         pconfig: Dict,
-        list_of_data_by_sample: List[Dict[str, MetricsT]],
-        list_of_header_by_metric: List[Dict],
     ):
-        super().__init__(PlotType.VIOLIN, pconfig, len(list_of_data_by_sample))
+        super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_metric))
 
-        c_scale = mqc_colour.mqc_colour_scale("plot_defaults")
-
-        # Extend each dataset object with a list of samples
-        datasets: List[Dataset] = []
-        for ds, data_by_sample, header_by_metric in zip(
-            self.datasets, list_of_data_by_sample, list_of_header_by_metric
-        ):
-            header_by_metric = {
-                m: {k: v for k, v in header.items() if isinstance(v, (str, int, float))}
-                for m, header in header_by_metric.items()
-            }
-
-            data_by_metric = {}
-            for sample, metrics in data_by_sample.items():
-                for metric, value in list(metrics.items()):
-                    if metric not in header_by_metric:
-                        continue
-                    if metric not in data_by_metric:
-                        data_by_metric[metric] = {}
-                    data_by_metric[metric][sample] = value
-
-            for i, (metric, header) in enumerate(header_by_metric.items()):
-                data = data_by_metric[metric]
-                xmin = header.get("min")
-                if xmin is None:
-                    xmin = min(data.values())
-                    xmin -= xmin * 0.05
-                xmax = header_by_metric[metric].get("max")
-                if xmax is None:
-                    xmax = max(data.values())
-                    xmax += xmax * 0.05
-                header_by_metric[metric]["xaxis"] = {
-                    "rangemode": "tozero" if xmin == 0 else "normal",
-                    "range": [xmin, xmax],
-                }
-                # header_by_metric[metric]["color"] = "rgba(0,0,0,0.5)"
-
-            all_samples = list(data_by_sample.keys())
-            sample_colors = {sn: c_scale.get_colour(i, lighten=1) for i, sn in enumerate(all_samples)}
-            datasets.append(
-                Dataset(
-                    *ds.__dict__,
-                    data_by_metric=data_by_metric,
-                    header_by_metric=header_by_metric,
-                    samples=all_samples,
-                    sample_colors=sample_colors,
-                )
+        self.datasets: List[Dataset] = [
+            Dataset.create(ds, values_by_metric, samples_by_metric, headers_by_metric)
+            for ds, values_by_metric, samples_by_metric, headers_by_metric in zip(
+                self.datasets,
+                list_of_values_by_metric,
+                list_of_samples_by_metric,
+                list_of_headers_by_metric,
             )
-
-        self.datasets = datasets
+        ]
 
         self.categories: List[str] = pconfig.get("categories", [])
 
@@ -100,9 +145,6 @@ class ViolinPlot(Plot):
             orientation="h",
             box={"visible": True},
             meanline={"visible": True},
-            # jitter=0.5,
-            # pointpos=0,
-            # points="all",
             fillcolor="rgba(0,0,0,0.1)",
             line={"width": 0},
             marker={"color": "rgb(55,126,184)", "size": 4},
@@ -113,10 +155,10 @@ class ViolinPlot(Plot):
             hoveron="points",
         )
 
-        num_rows = max(len(ds.header_by_metric) for ds in self.datasets)
+        num_rows = max(len(ds.values_by_metric) for ds in self.datasets)
 
         self.layout.update(
-            height=70 * max(len(ds.header_by_metric) for ds in self.datasets),
+            height=70 * max(len(ds.values_by_metric) for ds in self.datasets),
             margin=dict(pad=0, t=10, b=30),
             violingap=0,
             grid=dict(
@@ -151,7 +193,7 @@ class ViolinPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-        for i, header in enumerate(dataset.header_by_metric.values()):
+        for i, header in enumerate(dataset.headers_by_metric):
             layout[f"xaxis{i + 1}"] = copy.deepcopy(layout["xaxis"])
             layout[f"xaxis{i + 1}"].update(header["xaxis"])
             layout[f"yaxis{i + 1}"] = copy.deepcopy(layout["yaxis"])
@@ -159,28 +201,30 @@ class ViolinPlot(Plot):
         layout.showlegend = False
         fig = go.Figure(layout=layout)
 
-        for i, (metric, header) in enumerate(dataset.header_by_metric.items()):
-            data = dataset.data_by_metric[metric]
+        for i, metric in enumerate(dataset.headers_by_metric):
+            header = dataset.headers_by_metric[metric]
+            values = dataset.values_by_metric[metric]
+            samples = dataset.samples_by_metric[metric]
+            params = copy.deepcopy(self.trace_params)
+            if header.get("color"):
+                params["fillcolor"] = f"rgba({header['color']},0.5)"
             fig.add_trace(
                 go.Violin(
-                    x=list(data.values()),
-                    name=header.get("title", metric) + "  ",
-                    text=list(data.keys()),
+                    x=values,
+                    name=header["title"] + "  ",
+                    text=samples,
                     xaxis=f"x{i + 1}",
                     yaxis=f"y{i + 1}",
-                    **self.trace_params,
+                    **params,
                 ),
             )
-            for j, (sample, value) in enumerate(data.items()):
+            for j, (sample, value) in enumerate(zip(samples, values)):
                 fig.add_trace(
                     go.Scatter(
                         x=[value],
-                        y=[header.get("title", metric) + "  "],
+                        y=[header["title"] + "  "],
                         text=[sample],
                         mode="markers",
-                        marker=dict(
-                            color=dataset.sample_colors[sample],
-                        ),
                         xaxis=f"x{i + 1}",
                         yaxis=f"y{i + 1}",
                         showlegend=False,
@@ -191,3 +235,30 @@ class ViolinPlot(Plot):
 
     def save_data_file(self, data: BaseDataset) -> None:
         pass
+
+
+def find_outliers(points: Union[List[int], List[float]], n: int) -> List[int]:
+    """
+    Find `n` outliers in a list of points, return indices in the input list
+    """
+    # 1. Calculate Z-scores
+    values = np.array(points)
+    std = np.std(values)
+    if std == 0:
+        logger.warning(f"All {len(points)} points have the same values, just returning first {n} points")
+        return points[:n]
+
+    z_scores = np.abs((values - np.mean(values)) / std)
+
+    # 2. Find a reasonable threshold so there are not too many outliers
+    threshold = 1.0
+    while threshold <= 6.0:
+        n_outliers = np.count_nonzero((z_scores > threshold) | (z_scores > threshold))
+        logger.debug(f"Outlier threshold: {threshold}, outliers: {n_outliers}")
+        if n_outliers <= n:
+            break
+        # If there are too many outliers, we increase the threshold until we have less than 10
+        threshold += 0.2
+
+    # 3. Get indices out outliers in values array
+    return np.where(z_scores > threshold)[0].tolist()
