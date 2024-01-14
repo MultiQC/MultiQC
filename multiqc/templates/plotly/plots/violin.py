@@ -102,7 +102,8 @@ class Dataset(BaseDataset):
                     f"This may be too many to display clearly, so showing "
                     f"only outliers in each violin."
                 )
-                outlier_indices = find_outliers(values)
+
+                outlier_indices = find_outliers(values + [xmin, xmax])[:-2]
                 outlier_indices_by_metric[metric] = outlier_indices
                 logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
                 show_only_outliers = True
@@ -145,7 +146,6 @@ class ViolinPlot(Plot):
             box={"visible": True},
             meanline={"visible": True},
             fillcolor="rgba(0,0,0,0.1)",
-            line={"width": 0},  # Disable the border (still have the fill color)
             points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
@@ -153,6 +153,14 @@ class ViolinPlot(Plot):
             # disabling it.
             hoveron="points",
         )
+
+        self.scatter_trace_params = {
+            "mode": "markers",
+            "marker": {"size": 4, "color": "rgba(0,0,0,1)"},
+            "showlegend": False,
+            "hovertemplate": self.trace_params["hovertemplate"],
+            "hoverlabel": {"bgcolor": "white"},
+        }
 
         num_rows = max(len(ds.values_by_metric) for ds in self.datasets)
 
@@ -196,6 +204,7 @@ class ViolinPlot(Plot):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
         d["categories"] = self.categories
+        d["scatter_trace_params"] = self.scatter_trace_params
         return d
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
@@ -233,11 +242,10 @@ class ViolinPlot(Plot):
                         x=[value],
                         y=[header["title"] + "  "],
                         text=[sample],
-                        mode="markers",
                         xaxis=f"x{i + 1}",
                         yaxis=f"y{i + 1}",
                         showlegend=False,
-                        hovertemplate=self.trace_params["hovertemplate"],
+                        **self.scatter_trace_params,
                     ),
                 )
         return fig
@@ -246,7 +254,11 @@ class ViolinPlot(Plot):
         pass
 
 
-def find_outliers(values: Union[List[int], List[float]], n: Optional[int] = None, z_cutoff: float = 3.0) -> List[int]:
+def find_outliers(
+    values: Union[List[int], List[float]],
+    n: Optional[int] = None,
+    z_cutoff: float = 2.0,
+) -> List[int]:
     """
     If `n` is defined, find `n` most outlying points in a list.
     Otherwise, find outliers with a Z-score above `z_cutoff`.
@@ -262,8 +274,8 @@ def find_outliers(values: Union[List[int], List[float]], n: Optional[int] = None
     mean = np.mean(values)
     std_dev = np.std(values)
     if std_dev == 0:
-        logger.warning(f"All {len(values)} points have the same values, just returning the first point")
-        return [0]
+        logger.warning(f"All {len(values)} points have the same values")
+        return []
 
     # Calculate Z-scores (measures of "outlyingness")
     z_scores = np.abs((values - mean) / std_dev)

@@ -76,21 +76,13 @@ $(function () {
   // Render plots on page load
   should_render.each(function () {
     let target = $(this).attr("id");
-    // Only one point per dataset, so multiply limit by arbitrary number.
-    let maxNum = mqc_config["num_datasets_plot_limit"] * 50;
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
       let plot = mqc_plots[target];
-      if (plot.activeDatasetSize() > maxNum) {
-        $("#" + target)
-          .addClass("not_rendered gt_max_num_ds")
-          .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
-      } else {
-        renderPlot(target);
-        if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
-          // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-          $(".mqc_loading_warning").hide();
-      }
+      renderPlot(target);
+      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
+        // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+        $(".mqc_loading_warning").hide();
     }, 50);
   });
 
