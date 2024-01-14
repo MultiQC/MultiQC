@@ -1,4 +1,9 @@
 class ViolinPlot extends Plot {
+  constructor(dump) {
+    super(dump);
+    this.hovered_points = {};
+  }
+
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     return this.datasets[this.active_dataset_idx]["all_samples"].length;
@@ -106,6 +111,12 @@ class ViolinPlot extends Plot {
 
     let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
 
+    let seed = 1;
+    function random() {
+      // Math.random does not have a seed, so we use this
+      let x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
     let scatters = [];
     // Add scatter plots on top of violins to show individual points
     // Plotly supports showing points automatically with `points="all"`,
@@ -139,7 +150,7 @@ class ViolinPlot extends Plot {
           type: "scatter",
           mode: "markers",
           x: [value],
-          y: [metricIdx + Math.random() * jitter - jitter / 2], // add vertical jitter
+          y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
           text: [state.name ?? sample],
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,
@@ -156,35 +167,16 @@ class ViolinPlot extends Plot {
     return traces;
   }
 
-  // getMarkerStyle(highlighted) {
-  //   return {
-  //     color: color,
-  //     size: settings.highlight !== null ? 10 : 4,
-  //     line: { width: 0 },
-  //   };
-  // }
-
   afterPlotCreated() {
     let target = this.target;
     let trace_params = this.trace_params; // deep copy
     let plot = document.getElementById(target);
+    let hovered = this.hovered;
 
     plot
       .on("plotly_hover", function (eventdata) {
-        console.log("hover");
         if (!eventdata.points) return;
         let point = eventdata.points[0];
-        // if (point.data.type === "violin") {
-        //   console.log("hover violin", point);
-        //
-        //   let curveNumbers = point.data.customdata["curveNumbers"][point.pointNumber];
-        //   let curveAxes = point.data.customdata["curveAxis"][point.pointNumber];
-        //   let points = curveNumbers.map((curveNum) => {
-        //     return { curveNumber: curveNum, pointNumber: 0 };
-        //   });
-        //   Plotly.Fx.hover(target, points, curveAxes);
-        // }
-
         if (point.data.type === "scatter") {
           let update = {
             "marker.size": 10,
@@ -192,7 +184,9 @@ class ViolinPlot extends Plot {
             "marker.line.color": "black",
             "marker.line.width": 2,
           };
+          console.log("hover: enter restyle", point.curveNumber, point.pointNumber);
           Plotly.restyle(target, update, point.data.customdata["curveNumbers"]);
+          console.log("hover: exit restyle", point.curveNumber, point.pointNumber);
 
           // let curveNumbers = point.data.customdata["curveNumbers"];
           // let curveAxis = point.data.customdata["curveAxis"];
@@ -203,14 +197,15 @@ class ViolinPlot extends Plot {
         }
       })
       .on("plotly_unhover", function (eventdata) {
-        console.log("unhover");
         if (!eventdata.points) return;
         let point = eventdata.points[0];
         if (point.data.type === "scatter") {
           let curveNumbers = point.data.customdata["curveNumbers"];
           let marker = JSON.parse(JSON.stringify(point.data.customdata["defaultMarker"]));
           let update = { marker: marker };
+          // console.log("unhover: enter restyle", point.curveNumber, point.pointNumber);
           Plotly.restyle(target, update, curveNumbers);
+          // console.log("unhover: exit restyle", point.curveNumber, point.pointNumber);
         }
       });
   }
