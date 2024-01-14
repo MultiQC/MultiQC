@@ -142,6 +142,7 @@ class ViolinPlot extends Plot {
           yaxis: "y" + axisKey,
           showlegend: false,
           hovertemplate: params["hovertemplate"],
+          hoverlabel: { bgcolor: "white" },
           customdata: customData,
           marker: JSON.parse(JSON.stringify(customData.defaultMarker)),
           ...params,
