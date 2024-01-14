@@ -34,8 +34,6 @@ def plot(dt: DataTable) -> str:
 
         for metric, header in _headers_by_metric.items():
             color = header.get("colour")
-            if color == "55,126,184":  # default blue
-                color = None
             headers_by_metric[metric] = {
                 "namespace": header["namespace"],
                 "title": header["title"],
@@ -69,6 +67,7 @@ class Dataset(BaseDataset):
     headers_by_metric: Dict[str, Dict[str, Any]]
     outlier_indices_by_metric: Dict[str, List[int]]
     all_samples: List[str]  # list of all samples in this dataset
+    show_only_outliers: False
 
     @staticmethod
     def create(
@@ -79,6 +78,7 @@ class Dataset(BaseDataset):
     ) -> "Dataset":
         outlier_indices_by_metric: Dict[str, List[int]] = dict()
         all_samples = set()
+        show_only_outliers = False
         for i, metric in enumerate(headers_by_metric):
             header = headers_by_metric[metric]
             values = values_by_metric[metric]
@@ -108,6 +108,7 @@ class Dataset(BaseDataset):
                 outlier_indices = find_outliers(values, NUMBER_OF_OUTLIERS)
                 outlier_indices_by_metric[metric] = outlier_indices
                 logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
+                show_only_outliers = True
 
         return Dataset(
             **dataset.__dict__,
@@ -116,10 +117,16 @@ class Dataset(BaseDataset):
             headers_by_metric=headers_by_metric,
             outlier_indices_by_metric=outlier_indices_by_metric,
             all_samples=list(all_samples),
+            show_only_outliers=show_only_outliers,
         )
 
 
 class ViolinPlot(Plot):
+    DEFAULT_MARKER = {
+        "color": "rgb(0,0,0,0.5)",  # "rgb(55,126,184)"
+        "size": 4,
+    }
+
     def __init__(
         self,
         list_of_values_by_metric: List[Dict[str, List[Union[List[int], List[float], List[str]]]]],
@@ -146,8 +153,8 @@ class ViolinPlot(Plot):
             box={"visible": True},
             meanline={"visible": True},
             fillcolor="rgba(0,0,0,0.1)",
-            line={"width": 0},
-            marker={"color": "rgb(55,126,184)", "size": 4},
+            line={"width": 0},  # Disable the border (still have the fill color)
+            points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
             # so setting it to "points" as we don't show points, so it's effectively
@@ -178,6 +185,16 @@ class ViolinPlot(Plot):
             #     bgcolor="rgb(141,203,255)",
             # ),
         )
+
+    def add_to_report(self, report) -> str:
+        show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
+        warning = ""
+        if show_only_outliers:
+            warning = (
+                f'<p class="text-muted">Separate points are shown only for the {NUMBER_OF_OUTLIERS} '
+                f"most extreme values.</p>"
+            )
+        return warning + super().add_to_report(report)
 
     @staticmethod
     def tt_label() -> str:
@@ -237,28 +254,25 @@ class ViolinPlot(Plot):
         pass
 
 
-def find_outliers(points: Union[List[int], List[float]], n: int) -> List[int]:
+def find_outliers(values: Union[List[int], List[float]], n: int) -> List[int]:
     """
     Find `n` outliers in a list of points, return indices in the input list
     """
-    # 1. Calculate Z-scores
-    values = np.array(points)
-    std = np.std(values)
-    if std == 0:
-        logger.warning(f"All {len(points)} points have the same values, just returning first {n} points")
-        return points[:n]
+    if len(values) == 0 or n <= 0:
+        return []
 
-    z_scores = np.abs((values - np.mean(values)) / std)
+    values = np.array(values)
 
-    # 2. Find a reasonable threshold so there are not too many outliers
-    threshold = 1.0
-    while threshold <= 6.0:
-        n_outliers = np.count_nonzero((z_scores > threshold) | (z_scores > threshold))
-        logger.debug(f"Outlier threshold: {threshold}, outliers: {n_outliers}")
-        if n_outliers <= n:
-            break
-        # If there are too many outliers, we increase the threshold until we have less than 10
-        threshold += 0.2
+    # Calculate the mean and standard deviation
+    mean = np.mean(values)
+    std_dev = np.std(values)
+    if std_dev == 0:
+        logger.warning(f"All {len(values)} points have the same values, just returning the first point")
+        return [0]
 
-    # 3. Get indices out outliers in values array
-    return np.where(z_scores > threshold)[0].tolist()
+    # Calculate Z-scores (measures of "outlyingness")
+    z_scores = np.abs((values - mean) / std_dev)
+
+    # Get indices of the top N outliers
+    outliers_indices = np.argsort(z_scores)[-n:]
+    return outliers_indices.tolist()

@@ -35,7 +35,7 @@ class ViolinPlot extends Plot {
     valuesByMetric = filteredValuesByMetric;
     samplesByMetric = filteredSamplesByMetric;
 
-    let violins = [];
+    let traces = [];
     Object.keys(valuesByMetric).map((metric, metricIdx) => {
       let params = JSON.parse(JSON.stringify(trace_params)); // deep copy
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
@@ -44,9 +44,7 @@ class ViolinPlot extends Plot {
       let samples = samplesByMetric[metric];
       let header = headersByMetric[metric];
 
-      if (header["color"] !== null) params["fillcolor"] = "rgba(" + header["color"] + ",0.5)";
-
-      violins.push({
+      traces.push({
         type: "violin",
         x: values,
         name: metricIdx, // headerByMetric[metric].title + "  ",
@@ -63,6 +61,11 @@ class ViolinPlot extends Plot {
         tickvals: [metricIdx],
         ticktext: [header.title + "  "],
       });
+
+      if (header["color"] !== null) {
+        let color = "rgba(" + header["color"] + ",1)";
+        layout["yaxis" + axisKey]["tickfont"] = { color: color };
+      }
     });
 
     // We want to select points on all violins belonging to this specific sample.
@@ -115,7 +118,7 @@ class ViolinPlot extends Plot {
         let settings = sampleSettings[allSamples.indexOf(sample)];
         let params = JSON.parse(JSON.stringify(trace_params)); // deep copy
 
-        let color = trace_params["marker"]["color"];
+        let color = "black"; // trace_params["marker"]["color"];
         if (highlighting) color = settings.highlight ?? "#cccccc";
 
         const jitter = 0.5;
@@ -128,7 +131,11 @@ class ViolinPlot extends Plot {
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,
           highlighted: settings.highlight !== null,
-          marker: { color: color, size: settings.highlight !== null ? 10 : 6 },
+          marker: {
+            color: color,
+            size: settings.highlight !== null ? 10 : 4,
+            line: { width: 0 },
+          },
           showlegend: false,
           hovertemplate: params["hovertemplate"],
           customdata: { curveNumbers: curveNumbersBySample[sample], curveAxis: curveAxisBySample[sample] },
@@ -136,7 +143,8 @@ class ViolinPlot extends Plot {
         });
       });
     });
-    return violins.concat(scatters);
+    traces = traces.concat(scatters);
+    return traces;
   }
 
   afterPlotCreated() {
@@ -159,8 +167,6 @@ class ViolinPlot extends Plot {
       // }
 
       if (point.data.type === "scatter") {
-        console.log("hover scatter", point);
-
         // let update = {
         //   "marker.size": 10,
         //   "marker.color": "rgb(55,126,184)",
