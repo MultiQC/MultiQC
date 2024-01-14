@@ -54,12 +54,15 @@ class ViolinPlot extends Plot {
         ...params,
       });
 
+      let title = header.title + "  ";
+      if (header["namespace"] !== null) title = header["namespace"] + "  <br>" + title;
+
       // Set layouts for each violin individually
       layout["xaxis" + axisKey] = Object.assign(JSON.parse(JSON.stringify(layout.xaxis)), header["xaxis"]);
       layout["yaxis" + axisKey] = Object.assign(JSON.parse(JSON.stringify(layout.yaxis)), {
         tickmode: "array",
         tickvals: [metricIdx],
-        ticktext: [header.title + "  "],
+        ticktext: [title],
       });
 
       if (header["color"] !== null) {
