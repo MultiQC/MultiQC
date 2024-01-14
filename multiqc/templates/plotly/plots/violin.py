@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union, Any, Optional
 import copy
 
 import numpy as np
@@ -57,7 +57,7 @@ def plot(dt: DataTable) -> str:
 
 
 THRESHOLD_BEFORE_OUTLIERS = 50
-NUMBER_OF_OUTLIERS = 20
+# NUMBER_OF_OUTLIERS = 20
 
 
 @dataclasses.dataclass
@@ -100,9 +100,9 @@ class Dataset(BaseDataset):
                 logger.warning(
                     f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
                     f"This may be too many to display clearly, so showing "
-                    f"only {NUMBER_OF_OUTLIERS} most outlying points for each violin."
+                    f"only outliers in each violin."
                 )
-                outlier_indices = find_outliers(values, NUMBER_OF_OUTLIERS)
+                outlier_indices = find_outliers(values)
                 outlier_indices_by_metric[metric] = outlier_indices
                 logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
                 show_only_outliers = True
@@ -184,8 +184,7 @@ class ViolinPlot(Plot):
         if show_only_outliers:
             warning = (
                 f'<p class="text-muted">The number of points is above {THRESHOLD_BEFORE_OUTLIERS}, '
-                f"so for efficiency, separate points are shown only for the {NUMBER_OF_OUTLIERS} "
-                f"most extreme values.</p>"
+                f"so for efficiency, separate points are shown only for outliers.</p>"
             )
         return warning + super().add_to_report(report)
 
@@ -247,11 +246,14 @@ class ViolinPlot(Plot):
         pass
 
 
-def find_outliers(values: Union[List[int], List[float]], n: int) -> List[int]:
+def find_outliers(values: Union[List[int], List[float]], n: Optional[int] = None, z_cutoff: float = 3.0) -> List[int]:
     """
-    Find `n` outliers in a list of points, return indices in the input list
+    If `n` is defined, find `n` most outlying points in a list.
+    Otherwise, find outliers with a Z-score above `z_cutoff`.
+
+    Return indices in the input list.
     """
-    if len(values) == 0 or n <= 0:
+    if len(values) == 0 or (n is not None and n <= 0):
         return []
 
     values = np.array(values)
@@ -267,5 +269,8 @@ def find_outliers(values: Union[List[int], List[float]], n: int) -> List[int]:
     z_scores = np.abs((values - mean) / std_dev)
 
     # Get indices of the top N outliers
-    outliers_indices = np.argsort(z_scores)[-n:]
-    return outliers_indices.tolist()
+    if n:
+        outliers_indices = np.argsort(z_scores)[-n:]
+        return outliers_indices.tolist()
+    else:
+        return np.where(z_scores > z_cutoff)[0].tolist()
