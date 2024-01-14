@@ -56,8 +56,8 @@ def plot(dt: DataTable) -> str:
     return p.add_to_report(report)
 
 
-THRESHOLD_BEFORE_OUTLIERS = 100
-NUMBER_OF_OUTLIERS = 50
+THRESHOLD_BEFORE_OUTLIERS = 50
+NUMBER_OF_OUTLIERS = 20
 
 
 @dataclasses.dataclass
@@ -89,15 +89,12 @@ class Dataset(BaseDataset):
             xmin = header.get("min")
             if xmin is None:
                 xmin = min(values)
-                xmin -= xmin * 0.05
             xmax = header.get("max")
             if xmax is None:
                 xmax = max(values)
-                xmax += xmax * 0.05
-            header["xaxis"] = {
-                "rangemode": "tozero" if xmin == 0 else "normal",
-                "range": [xmin, xmax],
-            }
+            xmin -= (xmax - xmin) * 0.005
+            xmax += (xmax - xmin) * 0.005
+            header["xaxis"] = {"range": [xmin, xmax]}
 
             if len(values) > THRESHOLD_BEFORE_OUTLIERS:
                 logger.warning(
@@ -186,7 +183,8 @@ class ViolinPlot(Plot):
         warning = ""
         if show_only_outliers:
             warning = (
-                f'<p class="text-muted">Separate points are shown only for the {NUMBER_OF_OUTLIERS} '
+                f'<p class="text-muted">The number of points is above {THRESHOLD_BEFORE_OUTLIERS}, '
+                f"so for efficiency, separate points are shown only for the {NUMBER_OF_OUTLIERS} "
                 f"most extreme values.</p>"
             )
         return warning + super().add_to_report(report)
