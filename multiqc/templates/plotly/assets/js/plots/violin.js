@@ -101,7 +101,7 @@ class ViolinPlot extends Plot {
       scatterDataByMetric.push(scatterValues);
     });
 
-    let highlighting = sampleSettings.filter((s) => s.highlight).length > 0;
+    let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
 
     let scatters = [];
     // Add scatter plots on top of violins to show individual points
@@ -115,11 +115,21 @@ class ViolinPlot extends Plot {
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
 
       sampleValues.map(([sample, value]) => {
-        let settings = sampleSettings[allSamples.indexOf(sample)];
+        let state = sampleSettings[allSamples.indexOf(sample)];
         let params = JSON.parse(JSON.stringify(trace_params)); // deep copy
 
         let color = "black"; // trace_params["marker"]["color"];
-        if (highlighting) color = settings.highlight ?? "#cccccc";
+        if (highlightingEnabled) color = state.highlight ?? "#cccccc";
+
+        let customData = {
+          curveNumbers: curveNumbersBySample[sample],
+          curveAxis: curveAxisBySample[sample],
+          defaultMarker: {
+            color: color,
+            size: state.highlight !== null ? 10 : 4,
+            line: {},
+          },
+        };
 
         const jitter = 0.5;
         scatters.push({
@@ -127,18 +137,13 @@ class ViolinPlot extends Plot {
           mode: "markers",
           x: [value],
           y: [metricIdx + Math.random() * jitter - jitter / 2], // add vertical jitter
-          text: [settings.name ?? sample],
+          text: [state.name ?? sample],
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,
-          highlighted: settings.highlight !== null,
-          marker: {
-            color: color,
-            size: settings.highlight !== null ? 10 : 4,
-            line: { width: 0 },
-          },
           showlegend: false,
           hovertemplate: params["hovertemplate"],
-          customdata: { curveNumbers: curveNumbersBySample[sample], curveAxis: curveAxisBySample[sample] },
+          customdata: customData,
+          marker: JSON.parse(JSON.stringify(customData.defaultMarker)),
           ...params,
         });
       });
@@ -147,54 +152,62 @@ class ViolinPlot extends Plot {
     return traces;
   }
 
+  // getMarkerStyle(highlighted) {
+  //   return {
+  //     color: color,
+  //     size: settings.highlight !== null ? 10 : 4,
+  //     line: { width: 0 },
+  //   };
+  // }
+
   afterPlotCreated() {
     let target = this.target;
     let trace_params = this.trace_params; // deep copy
     let plot = document.getElementById(target);
 
-    plot.on("plotly_hover", function (eventdata) {
-      if (!eventdata.points) return;
-      let point = eventdata.points[0];
-      // if (point.data.type === "violin") {
-      //   console.log("hover violin", point);
-      //
-      //   let curveNumbers = point.data.customdata["curveNumbers"][point.pointNumber];
-      //   let curveAxes = point.data.customdata["curveAxis"][point.pointNumber];
-      //   let points = curveNumbers.map((curveNum) => {
-      //     return { curveNumber: curveNum, pointNumber: 0 };
-      //   });
-      //   Plotly.Fx.hover(target, points, curveAxes);
-      // }
+    plot
+      .on("plotly_hover", function (eventdata) {
+        console.log("hover");
+        if (!eventdata.points) return;
+        let point = eventdata.points[0];
+        // if (point.data.type === "violin") {
+        //   console.log("hover violin", point);
+        //
+        //   let curveNumbers = point.data.customdata["curveNumbers"][point.pointNumber];
+        //   let curveAxes = point.data.customdata["curveAxis"][point.pointNumber];
+        //   let points = curveNumbers.map((curveNum) => {
+        //     return { curveNumber: curveNum, pointNumber: 0 };
+        //   });
+        //   Plotly.Fx.hover(target, points, curveAxes);
+        // }
 
-      if (point.data.type === "scatter") {
-        // let update = {
-        //   "marker.size": 10,
-        //   "marker.color": "rgb(55,126,184)",
-        //   "marker.line.color": "black",
-        //   "marker.line.width": 1,
-        // };
+        if (point.data.type === "scatter") {
+          let update = {
+            "marker.size": 10,
+            "marker.color": "rgb(98,192,248)",
+            "marker.line.color": "black",
+            "marker.line.width": 2,
+          };
+          Plotly.restyle(target, update, point.data.customdata["curveNumbers"]);
 
-        let curveNumbers = point.data.customdata["curveNumbers"];
-        let curveAxis = point.data.customdata["curveAxis"];
-        let points = curveNumbers.map((curveNum) => {
-          return { curveNumber: curveNum, pointNumber: 0 };
-        });
-        Plotly.Fx.hover(target, points, curveAxis);
-      }
-    });
-    // .on("plotly_unhover", function (eventdata) {
-    //   if (!eventdata.points) return;
-    //   let point = eventdata.points[0];
-    //   if (point.data.type === "scatter") {
-    //     let marker = JSON.parse(JSON.stringify(trace_params["marker"]));
-    //     let curveNumbers = point.data.customdata["curveNumbers"];
-    //     console.log("unhover", point);
-    //     // TODO: only change the marker size back if the point is not highlighted
-    //     let update = {
-    //       marker: marker,
-    //     };
-    //     Plotly.restyle(target, update, curveNumbers);
-    //   }
-    // });
+          // let curveNumbers = point.data.customdata["curveNumbers"];
+          // let curveAxis = point.data.customdata["curveAxis"];
+          // let points = curveNumbers.map((curveNum) => {
+          //   return { curveNumber: curveNum, pointNumber: 0 };
+          // });
+          // Plotly.Fx.hover(target, points, curveAxis);
+        }
+      })
+      .on("plotly_unhover", function (eventdata) {
+        console.log("unhover");
+        if (!eventdata.points) return;
+        let point = eventdata.points[0];
+        if (point.data.type === "scatter") {
+          let curveNumbers = point.data.customdata["curveNumbers"];
+          let marker = JSON.parse(JSON.stringify(point.data.customdata["defaultMarker"]));
+          let update = { marker: marker };
+          Plotly.restyle(target, update, curveNumbers);
+        }
+      });
   }
 }

@@ -122,11 +122,6 @@ class Dataset(BaseDataset):
 
 
 class ViolinPlot(Plot):
-    DEFAULT_MARKER = {
-        "color": "rgb(0,0,0,0.5)",  # "rgb(55,126,184)"
-        "size": 4,
-    }
-
     def __init__(
         self,
         list_of_values_by_metric: List[Dict[str, List[Union[List[int], List[float], List[str]]]]],
