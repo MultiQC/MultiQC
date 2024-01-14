@@ -183,7 +183,7 @@ class ViolinPlot(Plot):
         warning = ""
         if show_only_outliers:
             warning = (
-                f'<p class="text-muted">The number of points is above {THRESHOLD_BEFORE_OUTLIERS}, '
+                f'<p class="text-muted">The number of samples is above {THRESHOLD_BEFORE_OUTLIERS}, '
                 f"so for efficiency, separate points are shown only for outliers.</p>"
             )
         return warning + super().add_to_report(report)
