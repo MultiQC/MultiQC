@@ -2,44 +2,6 @@
 // MultiQC Table code
 ////////////////////////////////////////////////
 
-var brewer_scales = [
-  "YlOrRd",
-  "YlOrBr",
-  "YlGnBu",
-  "YlGn",
-  "Reds",
-  "RdPu",
-  "Purples",
-  "PuRd",
-  "PuBuGn",
-  "PuBu",
-  "OrRd",
-  "Oranges",
-  "Greys",
-  "Greens",
-  "GnBu",
-  "BuPu",
-  "BuGn",
-  "Blues",
-  "Set3",
-  "Set2",
-  "Set1",
-  "Pastel2",
-  "Pastel1",
-  "Paired",
-  "Dark2",
-  "Accent",
-  "Spectral",
-  "RdYlGn",
-  "RdYlBu",
-  "RdGy",
-  "RdBu",
-  "PuOr",
-  "PRGn",
-  "PiYG",
-  "BrBG",
-];
-
 // Execute when page load has finished loading
 $(function () {
   if ($(".mqc_table").length > 0) {
@@ -372,7 +334,45 @@ $(function () {
         }
       });
       if (Object.keys(mqc_plots["tableScatterPlot"]["datasets"][0]).length > 0) {
-        if (plot_scatter_plot("tableScatterPlot") == false) {
+        let target = "tableScatterPlot";
+        let traces = mqc_plots["tableScatterPlot"]["datasets"][0].map(function (point) {
+          return {
+            type: "scatter",
+            x: [point.x],
+            y: [point.y],
+            name: point.name,
+            text: [point.name],
+          };
+        });
+        let layout = {
+          title: plot_title,
+          xaxis: {
+            title: col1_name,
+            range: [col1_min, col1_max],
+          },
+          yaxis: {
+            title: col2_name,
+            range: [col2_min, col2_max],
+          },
+        };
+        let config = {
+          responsive: true,
+          displaylogo: false,
+          displayModeBar: true,
+          toImageButtonOptions: { filename: target },
+          modeBarButtonsToRemove: [
+            "lasso2d",
+            "autoScale2d",
+            "pan2d",
+            "select2d",
+            "zoom2d",
+            "zoomIn2d",
+            "zoomOut2d",
+            "resetScale2d",
+          ],
+        };
+        let plot = Plotly.newPlot(target, traces, layout, config);
+        if (!plot) {
           $("#tableScatterPlot").html("<small>Error: Something went wrong when plotting the scatter plot.</small>");
           $("#tableScatterPlot").addClass("not_rendered");
         } else {
