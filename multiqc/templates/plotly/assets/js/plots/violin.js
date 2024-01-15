@@ -179,7 +179,6 @@ class ViolinPlot extends Plot {
 
   afterPlotCreated() {
     let target = this.target;
-    const scatterTraceParams = this.scatter_trace_params;
     let plot = document.getElementById(target);
 
     plot
@@ -201,9 +200,9 @@ class ViolinPlot extends Plot {
               "marker.line.width": 2,
             };
           }
-          console.log("hover: enter restyle", point.curveNumber, point.pointNumber);
+          // console.log("hover: enter restyle", point.curveNumber, point.pointNumber);
           Plotly.restyle(target, update, point.data.customdata["curveNumbers"]);
-          console.log("hover: exit restyle", point.curveNumber, point.pointNumber);
+          // console.log("hover: exit restyle", point.curveNumber, point.pointNumber);
 
           // let curveNumbers = point.data.customdata["curveNumbers"];
           // let curveAxis = point.data.customdata["curveAxis"];

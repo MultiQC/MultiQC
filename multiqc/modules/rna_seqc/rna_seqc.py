@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_names is None:
                 s_names = [x for x in s if x != ""]
             else:
-                data.append(s[1:])
+                data.append([float(val) for val in s[1:]])
 
         # Filter for ignored sample names
         filtered_s_names = list()

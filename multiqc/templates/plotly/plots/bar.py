@@ -81,10 +81,13 @@ class BarPlot(Plot):
         self.layout.height = height
 
         # swap x and y axes: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
+        barmode = "stack" if self.p_active else "relative"
+        if "stacking" in pconfig and pconfig["stacking"] == "percentage":
+            barmode = "relative"
         self.layout.update(
             dict(
                 showlegend=True,
-                barmode=pconfig.get("stacking", "stack" if self.p_active else "relative"),
+                barmode=barmode,
                 hovermode="y unified",
                 # xaxis_title_text=self.layout.xaxis.title.text,
                 # yaxis_title_text=self.layout.yaxis.title.text,

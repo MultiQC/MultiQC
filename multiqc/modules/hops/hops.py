@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Get values from named list into a list of lists required for heatmap
         levels = []
         for s in samples:
-            levels.append(self.hops_data[s].values())
+            levels.append(list(self.hops_data[s].values()))
 
         pconfig = {
             "id": "hops-heatmap",

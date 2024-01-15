@@ -121,11 +121,19 @@ class HeatmapPlot(Plot):
 
         self.min = self.pconfig.get("min", None)
         if self.min is None:
-            self.min = min(min(min(filter(None, row)) for row in dataset.rows) for dataset in self.datasets)
+            for dataset in self.datasets:
+                for row in dataset.rows:
+                    for val in row:
+                        if val is not None:
+                            assert isinstance(val, (int, float))
+                            self.min = val if self.min is None else min(self.min, val)
         self.max = self.pconfig.get("max", None)
         if self.max is None:
-            self.max = max(max(max(filter(None, row)) for row in dataset.rows) for dataset in self.datasets)
-
+            for dataset in self.datasets:
+                for row in dataset.rows:
+                    for val in row:
+                        if val is not None:
+                            self.max = val if self.max is None else max(self.max, val)
         self.heatmap_config = {
             "colorscale": self.pconfig.get(
                 "colstops",

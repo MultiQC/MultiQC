@@ -3,6 +3,7 @@ import logging
 from typing import Dict, List, Union, Any, Optional
 import copy
 
+import math
 import numpy as np
 import plotly.graph_objects as go
 
@@ -81,32 +82,51 @@ class Dataset(BaseDataset):
         show_only_outliers = False
         for i, metric in enumerate(headers_by_metric):
             header = headers_by_metric[metric]
-            values = values_by_metric[metric]
             samples = samples_by_metric[metric]
-
             all_samples.update(set(samples))
 
-            xmin = header.get("min")
-            if xmin is None:
-                xmin = min(values)
-            xmax = header.get("max")
-            if xmax is None:
-                xmax = max(values)
-            xmin -= (xmax - xmin) * 0.005
-            xmax += (xmax - xmin) * 0.005
-            header["xaxis"] = {"range": [xmin, xmax]}
+            values = [v for v in values_by_metric[metric] if v is not None]
+            if not values:
+                logger.warning(f"No non-None values for metric: {header['title']}")
+                values_by_metric[metric] = values
+                continue
 
-            if len(values) > THRESHOLD_BEFORE_OUTLIERS:
-                logger.warning(
-                    f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
-                    f"This may be too many to display clearly, so showing "
-                    f"only outliers in each violin."
-                )
+            values_are_numerical = all(isinstance(v, (int, float)) for v in values)
+            if values_are_numerical:
+                values = [v for v in values if not math.isnan(v)]
+                if not values:
+                    logger.warning(f"All values are NaN for metric: {header['title']}")
+                    values_by_metric[metric] = values
+                    continue
 
-                outlier_indices = find_outliers(values + [xmin, xmax])[:-2]
-                outlier_indices_by_metric[metric] = outlier_indices
-                logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
-                show_only_outliers = True
+                xmin = header.get("min")
+                xmax = header.get("max")
+                if all(isinstance(v, (int, float)) for v in values):
+                    if xmin is None or not isinstance(xmin, (int, float)):
+                        xmin = min(values)
+                    if xmax is None or not isinstance(xmin, (int, float)):
+                        xmax = max(values)
+                    xmin -= (xmax - xmin) * 0.005
+                    xmax += (xmax - xmin) * 0.005
+                header["xaxis"] = {"range": [xmin, xmax]}
+
+                if len(values) > THRESHOLD_BEFORE_OUTLIERS:
+                    logger.warning(
+                        f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
+                        f"This may be too many to display clearly, so showing "
+                        f"only outliers in each violin."
+                    )
+
+                    outlier_indices = find_outliers(
+                        values,
+                        minval=header.get("min"),
+                        maxval=header.get("max"),
+                    )
+
+                    outlier_indices_by_metric[metric] = outlier_indices
+                    logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
+                    show_only_outliers = True
+            values_by_metric[metric] = values
 
         return Dataset(
             **dataset.__dict__,
@@ -258,16 +278,28 @@ def find_outliers(
     values: Union[List[int], List[float]],
     n: Optional[int] = None,
     z_cutoff: float = 2.0,
+    minval: Optional[Union[float, int]] = None,
+    maxval: Optional[Union[float, int]] = None,
 ) -> List[int]:
     """
     If `n` is defined, find `n` most outlying points in a list.
     Otherwise, find outliers with a Z-score above `z_cutoff`.
 
     Return indices in the input list.
+
+    `minval` and/or `maxval` can be added to include them into the outlier detection array.
+    This is a trick to avoid the following problem: for example, percentage values are
+    clustered around 0, but differ in e.g. 3+rd decimal place. In this case, the outliers
+    will be nearly no different from the other values. If we add "100%" as an artificial
+    additional value, none of those near-zero clustered values won't be called outliers.
     """
     if len(values) == 0 or (n is not None and n <= 0):
         return []
 
+    if minval is not None:
+        values = [minval] + values
+    if maxval is not None:
+        values = [maxval] + values
     values = np.array(values)
 
     # Calculate the mean and standard deviation
@@ -282,7 +314,28 @@ def find_outliers(
 
     # Get indices of the top N outliers
     if n:
-        outliers_indices = np.argsort(z_scores)[-n:]
-        return outliers_indices.tolist()
+        indices = np.argsort(z_scores)[-n:].tolist()
     else:
-        return np.where(z_scores > z_cutoff)[0].tolist()
+        indices = []
+        while z_cutoff > 1.0:
+            indices = np.where(z_scores > z_cutoff)[0]
+            if len(indices) > (int(minval is not None) + int(maxval is not None)):
+                indices = indices.tolist()
+                break
+            logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}, trying a lower threshold")
+            z_cutoff -= 0.2
+
+    if minval is not None and maxval is not None:
+        if 0 in indices:
+            indices.remove(0)
+        if 1 in indices:
+            indices.remove(1)
+    elif minval is not None or maxval is not None:
+        if 0 in indices:
+            indices.remove(0)
+
+    if len(indices) == 0:
+        logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}")
+        indices = list(range(len(values)))
+
+    return indices
