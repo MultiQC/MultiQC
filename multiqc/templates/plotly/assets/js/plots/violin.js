@@ -69,7 +69,7 @@ class ViolinPlot extends Plot {
       });
 
       let title = header.title + "  ";
-      if (header["namespace"] !== null) title = header["namespace"] + "  <br>" + title;
+      if (header["namespace"]) title = header["namespace"] + "  <br>" + title;
 
       // Set layouts for each violin individually
       layout["xaxis" + axisKey] = Object.assign(JSON.parse(JSON.stringify(layout.xaxis)), header["xaxis"]);
@@ -151,9 +151,6 @@ class ViolinPlot extends Plot {
         let customData = {
           curveNumbers: curveNumbersBySample[sample],
           curveAxis: curveAxisBySample[sample],
-          highlighted: state.highlight !== null,
-          unhoveredColor: color,
-          unhoveredSize: size,
         };
 
         const jitter = 0.5;
@@ -185,24 +182,6 @@ class ViolinPlot extends Plot {
       if (!eventdata.points) return;
       let point = eventdata.points[0];
       if (point.data.type === "scatter") {
-        // let update;
-        // if (point.data.customdata.highlighted) {
-        //   update = {
-        //     "marker.line.color": "black",
-        //     "marker.line.width": 2,
-        //   };
-        // } else {
-        //   update = {
-        //     "marker.size": 10,
-        //     "marker.color": "rgb(98,192,248)",
-        //     "marker.line.color": "black",
-        //     "marker.line.width": 2,
-        //   };
-        // }
-        // console.log("hover: enter restyle", point.curveNumber, point.pointNumber);
-        // Plotly.restyle(target, update, point.data.customdata["curveNumbers"]);
-        // console.log("hover: exit restyle", point.curveNumber, point.pointNumber);
-
         let curveNumbers = point.data.customdata["curveNumbers"];
         let curveAxis = point.data.customdata["curveAxis"];
         let points = curveNumbers.map((curveNum) => {
@@ -211,26 +190,5 @@ class ViolinPlot extends Plot {
         Plotly.Fx.hover(target, points, curveAxis);
       }
     });
-    // .on("plotly_unhover", function (eventdata) {
-    //   if (!eventdata.points) return;
-    //   let point = eventdata.points[0];
-    //   if (point.data.type === "scatter") {
-    //     let curveNumbers = point.data.customdata["curveNumbers"];
-    //     const unhoveredColor = point.data.customdata["unhoveredColor"];
-    //     const unhoveredSize = point.data.customdata["unhoveredSize"];
-    //     let update = {
-    //       marker: {
-    //         color: unhoveredColor,
-    //         size: unhoveredSize,
-    //         line: {
-    //           width: 0,
-    //         },
-    //       },
-    //     };
-    //     // console.log("unhover: enter restyle", point.curveNumber, point.pointNumber);
-    //     // Plotly.restyle(target, update, curveNumbers);
-    //     // console.log("unhover: exit restyle", point.curveNumber, point.pointNumber);
-    //   }
-    // });
   }
 }
