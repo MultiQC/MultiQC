@@ -392,6 +392,7 @@ function renderPlot(target) {
       "zoomIn2d",
       "zoomOut2d",
       "resetScale2d",
+      "toImage",
     ],
   });
 

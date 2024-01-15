@@ -912,7 +912,7 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  margin-top: 15px;
+  margin-top: 10px;
 }
 .hc-plot-handle {
   position: absolute;
@@ -996,4 +996,8 @@ tbody .sorthandle {
 
 g.annotation {
   position: absolute !important;
+}
+
+.export-plot {
+  float: right;
 }

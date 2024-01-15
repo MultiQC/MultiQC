@@ -366,8 +366,8 @@ $(function () {
         let mime = $("#mqc_export_ft").val();
         let format = mime.replace("image/", "").split("+")[0];
         const f_scale = parseInt($("#mqc_export_scaling").val());
-        const f_width = parseInt($("#mqc_exp_width").val()) * f_scale;
-        const f_height = parseInt($("#mqc_exp_height").val()) * f_scale;
+        const f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
+        const f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
         checked_plots.each(function () {
           const target = $(this).val();
           if (checked_plots.length <= zip_threshold) {
@@ -508,6 +508,21 @@ $(function () {
     $("#mqc_exportplots").hide();
     $(".mqc-toolbox-buttons a[href=#mqc_exportplots]").parent().hide();
   }
+
+  // Export plot buttons
+  $(".export-plot").click(function (e) {
+    e.preventDefault();
+    // Get the id of the span element that was clicked
+    let id = e.target.dataset.pid;
+    // Tick only this plot in the toolbox and slide out
+    $("#mqc_export_selectplots input").prop("checked", false);
+    $('#mqc_export_selectplots input[value="' + id + '"]').prop("checked", true);
+    // Special case - Table scatter plots are in a modal, need to close this first
+    if (id === "tableScatterPlot") {
+      $("#tableScatterModal").modal("hide");
+    }
+    mqc_toolbox_openclose("#mqc_exportplots", true);
+  });
 
   /// SAVING STUFF
   // Load the saved setting names

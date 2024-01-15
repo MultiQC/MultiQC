@@ -279,6 +279,7 @@ class Plot(ABC):
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
+        html = "<div class='control-panel'>"
 
         def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
             """Build a switch button for the plot."""
@@ -288,7 +289,6 @@ class Plot(ABC):
             return f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
 
         cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
-        html = ""
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
@@ -329,6 +329,14 @@ class Plot(ABC):
                     data_attrs=data_attrs,
                 )
             html += "</div>\n\n"
+
+        # Export plot button
+        html += _btn("export-plot", self.id, False, "Export Plot")
+        # f"<button class='export-plot' id='{self.id}-export-plot' plot_id='{self.id}' style='color:#999999;'>"
+        # f"Export Plot"
+        # f"</button>\n"
+
+        html += "</div>\n\n"
         return html
 
     def dump_for_javascript(self) -> Dict:

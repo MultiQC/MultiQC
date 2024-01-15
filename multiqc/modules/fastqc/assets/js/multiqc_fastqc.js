@@ -653,6 +653,7 @@ function fastqc_module(module_element, module_key) {
         "zoomIn2d",
         "zoomOut2d",
         "resetScale2d",
+        "toImage",
       ],
     };
     Plotly.newPlot(target, traces, layout, config);

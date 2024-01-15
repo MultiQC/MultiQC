@@ -369,6 +369,7 @@ $(function () {
             "zoomIn2d",
             "zoomOut2d",
             "resetScale2d",
+            "toImage",
           ],
         };
         let plot = Plotly.newPlot(target, traces, layout, config);
