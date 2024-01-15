@@ -324,6 +324,7 @@ def find_outliers(
                 break
             logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}, trying a lower threshold")
             z_cutoff -= 0.2
+            indices = indices.tolist()
 
     if minval is not None and maxval is not None:
         if 0 in indices:
