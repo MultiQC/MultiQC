@@ -912,11 +912,7 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  border-bottom: 1px solid #ccc;
   margin-top: 15px;
-}
-.hc-violin-wrapper {
-  margin-top: 0;
 }
 .hc-plot-handle {
   position: absolute;
@@ -973,12 +969,11 @@ tbody .sorthandle {
   height: 29px;
   padding: 5px 8px;
   font-size: 13px;
-  /*border-left: 2px solid #46b8da;*/
-  border-top: 1px solid #dedede;
+  border-left: 2px solid #46b8da;
+  border-bottom: 1px solid #dedede;
   background-color: #d9edf7;
   color: #31708f;
 }
-
 .beeswarm-plots {
   height: calc(100% - 25px);
 }

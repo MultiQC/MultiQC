@@ -96,7 +96,10 @@ def parse_reports(self):
                 self.general_stats_data[s_name].update(self.bam_stat_data[s_name])
 
     # Make dot plot of counts
-    pconfig = {"id": "rseqc_bam_stat"}
+    pconfig = {
+        "id": "rseqc_bam_stat",
+        "title": "RSeQC: Bam Stat",
+    }
     defaults = {
         "min": 0,
         "shared_key": "read_count",

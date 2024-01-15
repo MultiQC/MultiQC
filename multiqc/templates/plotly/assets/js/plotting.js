@@ -22,14 +22,14 @@ class Plot {
     this.layout = dump.layout;
     this.trace_params = dump.trace_params;
     this.datasets = dump.datasets;
-    this.config = dump.config;
+    this.square = dump.square;
     this.axis_controlled_by_switches = dump.axis_controlled_by_switches;
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles
     this.active_dataset_idx = 0;
-    this.p_active = dump.config.p_active;
-    this.l_active = dump.config.l_active;
+    this.p_active = dump.p_active;
+    this.l_active = dump.l_active;
   }
 
   activeDatasetSize() {
@@ -38,7 +38,7 @@ class Plot {
 
   resize(newHeight) {
     Plotly.relayout(this.target, { height: newHeight });
-    if (this.config.square) {
+    if (this.square) {
       Plotly.relayout(this.target, { width: newHeight });
     }
   }
@@ -164,7 +164,7 @@ $(function () {
 
   $(".hc-plot-handle").on("mousedown", function (e) {
     let wrapper = $(this).parent();
-    let target = wrapper.children()[0].id;
+    let target = wrapper.children(".hc-plot")[0].id;
     let startHeight = wrapper.height();
     let pY = e.pageY;
 

@@ -37,10 +37,10 @@ def plot(data, headers=None, pconfig=None):
     if len(s_names) >= config.max_table_rows and pconfig.get("no_beeswarm") is not True:
         logger.debug(f"Plotting beeswarm instead of table, {len(s_names)} samples")
         warning = (
-            '<p class="text-muted"><span class="glyphicon glyphicon-exclamation-sign" '
+            '<p class="text-muted" id="table-violin-info-{}"><span class="glyphicon glyphicon-exclamation-sign" '
             'title="A beeswarm plot has been generated instead because of the large number of samples. '
             'See http://multiqc.info/docs/#tables--beeswarm-plots"'
-            ' data-toggle="tooltip"></span> Showing {} samples.</p>'.format(len(s_names))
+            ' data-toggle="tooltip"></span> Showing {} samples.</p>'.format(pconfig["id"], len(s_names))
         )
         return warning + beeswarm.make_plot(dt)
     else:

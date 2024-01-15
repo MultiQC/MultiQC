@@ -126,9 +126,13 @@ class Plot(ABC):
         if self.pconfig.get("square"):
             width = height
 
+        title = self.pconfig.get("table_title", self.pconfig.get("title"))
+        if not title:
+            logger.error(f"Plot title is not set for {self.id}")
+
         self.layout = go.Layout(
             title=dict(
-                text=self.pconfig.get("title"),
+                text=title,
                 xanchor="center",
                 x=0.5,
                 font=dict(size=20),
@@ -212,17 +216,15 @@ class Plot(ABC):
 
     def interactive_plot(self, report) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
+
         html += self.control_panel()
 
-        # Plot HTML
-        html += """
-        <div class="hc-plot-wrapper"{height}>
-            <div id="{id}" class="hc-plot not_rendered hc-{plot_type}-plot"></div>
-        </div>""".format(
-            id=self.id,
-            height=f' style="height:{self.layout.height}px"' if self.layout.height else "",
-            plot_type=self.plot_type,
-        )
+        height_style = f'style="height:{self.layout.height}px"' if self.layout.height else ""
+        html += f"""
+        <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
+            <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>
+        </div>"""
+
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
@@ -338,13 +340,11 @@ class Plot(ABC):
             "trace_params": self.trace_params,
             "axis_controlled_by_switches": self.axis_controlled_by_switches(),
             "datasets": [d.dump_for_javascript() for d in self.datasets],
-            # TODO: save figures to JSON, not datasets?
+            # TODO: save figures to JSON, not datasets? Problem is interactivity though
             # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
-            "config": {
-                "p_active": self.p_active,
-                "l_active": self.l_active,
-                "square": self.pconfig.get("square"),
-            },
+            "p_active": self.p_active,
+            "l_active": self.l_active,
+            "square": self.pconfig.get("square"),
         }
 
     @abstractmethod

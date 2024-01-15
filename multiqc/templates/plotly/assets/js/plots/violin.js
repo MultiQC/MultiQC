@@ -1,8 +1,8 @@
 class ViolinPlot extends Plot {
   constructor(dump) {
     super(dump);
-    this.hovered_points = {};
     this.scatter_trace_params = dump.scatter_trace_params;
+    this.show_only_outliers = dump.show_only_outliers;
   }
 
   activeDatasetSize() {
@@ -12,6 +12,10 @@ class ViolinPlot extends Plot {
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
+    if (this.show_only_outliers) {
+      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
+    }
+
     let dataset = this.datasets[this.active_dataset_idx];
     let valuesByMetric = dataset["values_by_metric"];
     let samplesByMetric = dataset["samples_by_metric"];
@@ -55,7 +59,7 @@ class ViolinPlot extends Plot {
       let line = { width: 0 };
       if (outlierIndices !== undefined && outlierIndices.length === 0) {
         // keep the border so trivial violins (from identical numbers) are also visible:
-        line = { width: 1, color: "rgba(0,0,0,0.5)" };
+        line = { width: 2, color: "rgba(0,0,0,0.5)" };
       }
       traces.push({
         type: "violin",
@@ -153,7 +157,7 @@ class ViolinPlot extends Plot {
           curveAxis: curveAxisBySample[sample],
         };
 
-        const jitter = 0.5;
+        const jitter = 0.3;
         scatters.push({
           type: "scatter",
           x: [value],
@@ -177,6 +181,7 @@ class ViolinPlot extends Plot {
   afterPlotCreated() {
     let target = this.target;
     let plot = document.getElementById(target);
+    let hoverInfoDiv = $("#" + target + "-hoverinfo");
 
     plot.on("plotly_hover", function (eventdata) {
       if (!eventdata.points) return;
@@ -187,8 +192,17 @@ class ViolinPlot extends Plot {
         let points = curveNumbers.map((curveNum) => {
           return { curveNumber: curveNum, pointNumber: 0 };
         });
+        // console.log("hover", point.curveNumber);
+        // hoverInfoDiv.html(point.data.text);
         Plotly.Fx.hover(target, points, curveAxis);
       }
     });
+    // .on('plotly_unhover', function(eventdata){
+    //   let point = eventdata.points[0];
+    //   if (point.data.type === "scatter") {
+    //     console.log("unhover", point.curveNumber);
+    //     hoverInfoDiv.innerHTML = "";
+    //   }
+    // });
   }
 }

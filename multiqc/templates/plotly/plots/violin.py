@@ -159,7 +159,7 @@ class ViolinPlot(Plot):
             )
         ]
 
-        self.categories: List[str] = pconfig.get("categories", [])
+        self.show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
 
         self.trace_params.update(
             orientation="h",
@@ -186,7 +186,11 @@ class ViolinPlot(Plot):
 
         self.layout.update(
             height=70 * max(len(ds.values_by_metric) for ds in self.datasets),
-            margin=dict(pad=0, t=10, b=30),
+            margin=dict(
+                pad=0,
+                # t=43,
+                b=40,
+            ),
             violingap=0,
             grid=dict(
                 rows=num_rows,
@@ -206,16 +210,6 @@ class ViolinPlot(Plot):
             # ),
         )
 
-    def add_to_report(self, report) -> str:
-        show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
-        warning = ""
-        if show_only_outliers:
-            warning = (
-                f'<p class="text-muted">The number of samples is above {THRESHOLD_BEFORE_OUTLIERS}, '
-                f"so for efficiency, separate points are shown only for outliers.</p>"
-            )
-        return warning + super().add_to_report(report)
-
     @staticmethod
     def tt_label() -> str:
         return ": %{x}"
@@ -223,9 +217,23 @@ class ViolinPlot(Plot):
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
-        d["categories"] = self.categories
-        d["scatter_trace_params"] = self.scatter_trace_params
+        d.update(
+            {
+                "scatter_trace_params": self.scatter_trace_params,
+                "show_only_outliers": any(ds.show_only_outliers for ds in self.datasets),
+            }
+        )
         return d
+
+    # def control_panel(self):
+    #     """Add a control panel to the plot"""
+    #     if not self.show_only_outliers:
+    #         return ""
+    #     return (
+    #         f'<div class="beeswarm-hovertext" id="{self.id}-hoverinfo">' +
+    #         '<em class="placeholder">Hover over a data point for more information</em>' +
+    #         '</div>'
+    #     )
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """

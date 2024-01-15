@@ -197,7 +197,14 @@ class StatsReportMixin:
             name="Alignment metrics",
             anchor="samtools-stats",
             description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
-            plot=beeswarm.plot(self.samtools_stats, keys, {"id": "samtools-stats-dp"}),
+            plot=beeswarm.plot(
+                self.samtools_stats,
+                keys,
+                {
+                    "id": "samtools-stats-dp",
+                    "title": "Samtools stats: Alignment Metrics",
+                },
+            ),
         )
 
         # Return the number of logs that were found
