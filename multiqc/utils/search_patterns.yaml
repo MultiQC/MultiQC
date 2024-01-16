@@ -429,9 +429,21 @@ homer/FreqDistribution:
   fn: "petag.FreqDistribution_1000.txt"
 hops:
   fn: "heatmap_overview_Wevid.json"
-humid:
+humid/stats:
   fn: "stats.dat"
   contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: "neigh.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: "counts.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: "clusters.dat"
+  contents_re: "[0-9]+ [0-9]+"
   num_lines: 1
 interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
