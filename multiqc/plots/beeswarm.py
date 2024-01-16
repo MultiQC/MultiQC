@@ -5,7 +5,7 @@
 import logging
 import random
 from collections import defaultdict
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 from multiqc.plots import table_object
 from multiqc.utils import config, report, util_functions
@@ -27,7 +27,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: List[Dict], headers: Optional[List[Dict]] = None, pconfig=None):
+def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
