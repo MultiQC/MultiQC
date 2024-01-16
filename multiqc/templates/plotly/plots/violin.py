@@ -7,150 +7,128 @@ import math
 import numpy as np
 import plotly.graph_objects as go
 
+from multiqc.plots.table import make_table
 from multiqc.plots.table_object import DataTable
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: DataTable) -> str:
+def plot(dt: DataTable, show_table_by_default=False) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    values_by_metric = dict()
-    samples_by_metric = dict()
-    headers_by_metric = dict()
-
-    for idx, (_data_by_sample, _headers_by_metric) in enumerate(zip(dt.data, dt.headers)):
-        for sample, data in _data_by_sample.items():
-            for metric, value in data.items():
-                if metric not in _headers_by_metric:
-                    continue
-                if metric not in values_by_metric:
-                    values_by_metric[metric] = []
-                if metric not in samples_by_metric:
-                    samples_by_metric[metric] = []
-                samples_by_metric[metric].append(sample)
-                values_by_metric[metric].append(value)
-
-        for metric, header in _headers_by_metric.items():
-            color = header.get("colour")
-            headers_by_metric[metric] = {
-                "namespace": header["namespace"],
-                "title": header["title"],
-                "description": header["description"],
-                "max": header.get("max"),
-                "min": header.get("min"),
-                "suffix": header.get("suffix", ""),
-                "color": color,
-            }
-
-    p = ViolinPlot(
-        [values_by_metric],
-        [samples_by_metric],
-        [headers_by_metric],
-        dt.pconfig,
-    )
+    p = ViolinPlot.from_dt(dt)
 
     from multiqc.utils import report
 
-    return p.add_to_report(report)
+    plot_html = p.add_to_report(report)
+
+    if show_table_by_default:
+        table_html = make_table(dt, violin_switch=True)
+        report.plot_data[p.id]["table_html"] = table_html
+        report.plot_data[p.id]["plot_html"] = plot_html
+        report.plot_data[p.id]["static"] = True
+        return table_html
+    else:
+        return plot_html
 
 
 THRESHOLD_BEFORE_OUTLIERS = 50
-# NUMBER_OF_OUTLIERS = 20
-
-
-@dataclasses.dataclass
-class Dataset(BaseDataset):
-    values_by_metric: Dict[str, Union[List[int], List[float], List[str]]]
-    samples_by_metric: Dict[str, List[str]]
-    headers_by_metric: Dict[str, Dict[str, Any]]
-    outlier_indices_by_metric: Dict[str, List[int]]
-    all_samples: List[str]  # list of all samples in this dataset
-    show_only_outliers: False
-
-    @staticmethod
-    def create(
-        dataset: BaseDataset,
-        values_by_metric: Dict[str, Union[List[int], List[float], List[str]]],
-        samples_by_metric: Dict[str, List[str]],
-        headers_by_metric: Dict[str, Dict[str, Any]],
-    ) -> "Dataset":
-        outlier_indices_by_metric: Dict[str, List[int]] = dict()
-        all_samples = set()
-        show_only_outliers = False
-        for i, metric in enumerate(headers_by_metric):
-            header = headers_by_metric[metric]
-            samples = samples_by_metric[metric]
-            all_samples.update(set(samples))
-
-            values = [v for v in values_by_metric[metric] if v is not None]
-            if not values:
-                logger.warning(f"No non-None values for metric: {header['title']}")
-                values_by_metric[metric] = values
-                continue
-
-            values_are_numerical = all(isinstance(v, (int, float)) for v in values)
-            if values_are_numerical:
-                values = [v for v in values if not math.isnan(v)]
-                if not values:
-                    logger.warning(f"All values are NaN for metric: {header['title']}")
-                    values_by_metric[metric] = values
-                    continue
-
-                xmin = header.get("min")
-                xmax = header.get("max")
-                if all(isinstance(v, (int, float)) for v in values):
-                    if xmin is None or not isinstance(xmin, (int, float)):
-                        xmin = min(values)
-                    if xmax is None or not isinstance(xmin, (int, float)):
-                        xmax = max(values)
-                    xmin -= (xmax - xmin) * 0.005
-                    xmax += (xmax - xmin) * 0.005
-                header["xaxis"] = {"range": [xmin, xmax]}
-
-                if len(values) > THRESHOLD_BEFORE_OUTLIERS:
-                    logger.warning(
-                        f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
-                        f"This may be too many to display clearly, so showing "
-                        f"only outliers in each violin."
-                    )
-
-                    outlier_indices = find_outliers(
-                        values,
-                        minval=header.get("min"),
-                        maxval=header.get("max"),
-                    )
-
-                    outlier_indices_by_metric[metric] = outlier_indices
-                    logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
-                    show_only_outliers = True
-            values_by_metric[metric] = values
-
-        return Dataset(
-            **dataset.__dict__,
-            values_by_metric=values_by_metric,
-            samples_by_metric=samples_by_metric,
-            headers_by_metric=headers_by_metric,
-            outlier_indices_by_metric=outlier_indices_by_metric,
-            all_samples=list(all_samples),
-            show_only_outliers=show_only_outliers,
-        )
 
 
 class ViolinPlot(Plot):
+    @dataclasses.dataclass
+    class Dataset(BaseDataset):
+        values_by_metric: Dict[str, Union[List[int], List[float], List[str]]]
+        samples_by_metric: Dict[str, List[str]]
+        headers_by_metric: Dict[str, Dict[str, Any]]
+        outlier_indices_by_metric: Dict[str, List[int]]
+        all_samples: List[str]  # list of all samples in this dataset
+        show_only_outliers: False
+
+        @staticmethod
+        def create(
+            dataset: BaseDataset,
+            values_by_metric: Dict[str, Union[List[int], List[float], List[str]]],
+            samples_by_metric: Dict[str, List[str]],
+            headers_by_metric: Dict[str, Dict[str, Any]],
+        ) -> "ViolinPlot.Dataset":
+            outlier_indices_by_metric: Dict[str, List[int]] = dict()
+            all_samples = set()
+            show_only_outliers = False
+            for i, metric in enumerate(headers_by_metric):
+                header = headers_by_metric[metric]
+                samples = samples_by_metric[metric]
+                all_samples.update(set(samples))
+
+                values = [v for v in values_by_metric[metric] if v is not None]
+                if not values:
+                    logger.warning(f"No non-None values for metric: {header['title']}")
+                    values_by_metric[metric] = values
+                    continue
+
+                values_are_numerical = all(isinstance(v, (int, float)) for v in values)
+                if values_are_numerical:
+                    values = [v for v in values if not math.isnan(v)]
+                    if not values:
+                        logger.warning(f"All values are NaN for metric: {header['title']}")
+                        values_by_metric[metric] = values
+                        continue
+
+                    xmin = header.get("min")
+                    xmax = header.get("max")
+                    if all(isinstance(v, (int, float)) for v in values):
+                        if xmin is None or not isinstance(xmin, (int, float)):
+                            xmin = min(values)
+                        if xmax is None or not isinstance(xmin, (int, float)):
+                            xmax = max(values)
+                        xmin -= (xmax - xmin) * 0.005
+                        xmax += (xmax - xmin) * 0.005
+                    header["xaxis"] = {"range": [xmin, xmax]}
+
+                    if len(values) > THRESHOLD_BEFORE_OUTLIERS:
+                        logger.warning(
+                            f"Violin plot with {len(values)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
+                            f"This may be too many to display clearly, so showing "
+                            f"only outliers in each violin."
+                        )
+
+                        outlier_indices = find_outliers(
+                            values,
+                            minval=header.get("min"),
+                            maxval=header.get("max"),
+                        )
+
+                        outlier_indices_by_metric[metric] = outlier_indices
+                        logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
+                        show_only_outliers = True
+                values_by_metric[metric] = values
+
+            return ViolinPlot.Dataset(
+                **dataset.__dict__,
+                values_by_metric=values_by_metric,
+                samples_by_metric=samples_by_metric,
+                headers_by_metric=headers_by_metric,
+                outlier_indices_by_metric=outlier_indices_by_metric,
+                all_samples=list(all_samples),
+                show_only_outliers=show_only_outliers,
+            )
+
     def __init__(
         self,
         list_of_values_by_metric: List[Dict[str, List[Union[List[int], List[float], List[str]]]]],
         list_of_samples_by_metric: List[Dict[str, List[str]]],
         list_of_headers_by_metric: List[Dict[str, Dict]],
         pconfig: Dict,
+        table_html: Optional[str] = None,
     ):
         super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_metric))
 
-        self.datasets: List[Dataset] = [
-            Dataset.create(ds, values_by_metric, samples_by_metric, headers_by_metric)
+        self.table_html = table_html
+
+        self.datasets: List[ViolinPlot.Dataset] = [
+            ViolinPlot.Dataset.create(ds, values_by_metric, samples_by_metric, headers_by_metric)
             for ds, values_by_metric, samples_by_metric, headers_by_metric in zip(
                 self.datasets,
                 list_of_values_by_metric,
@@ -211,8 +189,54 @@ class ViolinPlot(Plot):
         )
 
     @staticmethod
+    def from_dt(dt: DataTable, show_table_by_default: bool = False) -> "ViolinPlot":
+        values_by_metric = dict()
+        samples_by_metric = dict()
+        headers_by_metric = dict()
+
+        for idx, (_data_by_sample, _headers_by_metric) in enumerate(zip(dt.data, dt.headers)):
+            for sample, data in _data_by_sample.items():
+                for metric, value in data.items():
+                    if metric not in _headers_by_metric:
+                        continue
+                    if metric not in values_by_metric:
+                        values_by_metric[metric] = []
+                    if metric not in samples_by_metric:
+                        samples_by_metric[metric] = []
+                    samples_by_metric[metric].append(sample)
+                    values_by_metric[metric].append(value)
+
+            for metric, header in _headers_by_metric.items():
+                color = header.get("colour")
+                headers_by_metric[metric] = {
+                    "namespace": header["namespace"],
+                    "title": header["title"],
+                    "description": header["description"],
+                    "max": header.get("max"),
+                    "min": header.get("min"),
+                    "suffix": header.get("suffix", ""),
+                    "color": color,
+                }
+
+        return ViolinPlot(
+            [values_by_metric],
+            [samples_by_metric],
+            [headers_by_metric],
+            pconfig=dt.pconfig,
+        )
+
+    @staticmethod
     def tt_label() -> str:
         return ": %{x}"
+
+    # def interactive_plot(self, report) -> str:
+    #     plot_html = super().interactive_plot(report)
+    #     if self.table_html:
+    #         self.plot_html = plot_html
+    #         return self.table_html
+    #     else:
+    #         self.table_html = plot_html
+    #         super().interactive_plot(report)
 
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
@@ -221,6 +245,7 @@ class ViolinPlot(Plot):
             {
                 "scatter_trace_params": self.scatter_trace_params,
                 "show_only_outliers": any(ds.show_only_outliers for ds in self.datasets),
+                "initial_html": self.table_html,
             }
         )
         return d

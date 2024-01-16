@@ -17,19 +17,19 @@ window.mqc_hide_regex_mode = false;
 
 class Plot {
   constructor(dump) {
-    this.target = dump.id;
-    this.plot_type = dump.plot_type;
-    this.layout = dump.layout;
-    this.trace_params = dump.trace_params;
-    this.datasets = dump.datasets;
-    this.square = dump.square;
-    this.axis_controlled_by_switches = dump.axis_controlled_by_switches;
+    this.target = dump["id"];
+    this.layout = dump["layout"];
+    this.traceParams = dump["trace_params"];
+    this.datasets = dump["datasets"];
+    this.square = dump["square"];
+    this.axisControlledBySwitches = dump["axis_controlled_by_switches"];
+    this.static = dump["static"] ?? false;
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles
-    this.active_dataset_idx = 0;
-    this.p_active = dump.p_active;
-    this.l_active = dump.l_active;
+    this.activeDatasetIdx = 0;
+    this.pActive = dump["p_active"];
+    this.lActive = dump["l_active"];
   }
 
   activeDatasetSize() {
@@ -43,6 +43,10 @@ class Plot {
     }
   }
 
+  buildHtml() {
+    // Build the HTML directly, instead of passing it to Plotly
+  }
+
   buildTraces() {
     throw new Error("buildTraces() not implemented");
   }
@@ -53,12 +57,12 @@ class Plot {
 }
 
 function initPlot(dump) {
-  if (dump.plot_type === "xy_line") return new LinePlot(dump);
-  if (dump.plot_type === "bar_graph") return new BarPlot(dump);
-  if (dump.plot_type === "scatter") return new ScatterPlot(dump);
-  if (dump.plot_type === "heatmap") return new HeatmapPlot(dump);
-  if (dump.plot_type === "violin") return new ViolinPlot(dump);
-  console.log("Did not recognise plot type: " + dump.plot_type);
+  if (dump["plot_type"] === "xy_line") return new LinePlot(dump);
+  if (dump["plot_type"] === "bar_graph") return new BarPlot(dump);
+  if (dump["plot_type"] === "scatter") return new ScatterPlot(dump);
+  if (dump["plot_type"] === "heatmap") return new HeatmapPlot(dump);
+  if (dump["plot_type"] === "violin") return new ViolinPlot(dump);
+  console.log("Did not recognise plot type: " + dump["plot_type"]);
   return null;
 }
 
@@ -71,10 +75,10 @@ $(function () {
   let mqc_plotdata = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
   mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
-  let should_render = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
+  let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
 
   // Render plots on page load
-  should_render.each(function () {
+  shouldRender.each(function () {
     let target = $(this).attr("id");
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
@@ -87,7 +91,7 @@ $(function () {
   });
 
   // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-  if (should_render.length === 0) loading_warning.hide();
+  if (shouldRender.length === 0) loading_warning.hide();
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
   $("body").on("click", ".render_plot", function (e) {
@@ -115,7 +119,7 @@ $(function () {
     let target = $(this).data("pid");
 
     // Toggling flags
-    mqc_plots[target].p_active = !$(this).hasClass("active");
+    mqc_plots[target].pActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
     renderPlot(target);
@@ -127,11 +131,11 @@ $(function () {
     let target = $(this).data("pid");
 
     // Toggling flags
-    mqc_plots[target].l_active = !$(this).hasClass("active");
+    mqc_plots[target].lActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    mqc_plots[target].axis_controlled_by_switches.map((axis) => {
-      Plotly.relayout(target, axis + ".type", mqc_plots[target].l_active ? "log" : "linear");
+    mqc_plots[target].axisControlledBySwitches.map((axis) => {
+      Plotly.relayout(target, axis + ".type", mqc_plots[target].lActive ? "log" : "linear");
     });
   });
 
@@ -142,10 +146,10 @@ $(function () {
     $(this).siblings("button.active").removeClass("active");
     $(this).addClass("active");
     let target = $(this).data("pid");
-    let active_dataset_idx = mqc_plots[target].active_dataset_idx;
-    let new_dataset_idx = $(this).data("datasetIndex");
-    mqc_plots[target].active_dataset_idx = new_dataset_idx;
-    if (active_dataset_idx === new_dataset_idx) return;
+    let activeDatasetIdx = mqc_plots[target].activeDatasetIdx;
+    let newDatasetIdx = $(this).data("datasetIndex");
+    mqc_plots[target].activeDatasetIdx = newDatasetIdx;
+    if (activeDatasetIdx === newDatasetIdx) return;
 
     renderPlot(target);
   });
@@ -372,10 +376,15 @@ function renderPlot(target) {
     func = Plotly.react;
   }
 
+  // Useful for default views like a table that can be switched to a Violin plot.
+  if (plot.static) {
+    return;
+  }
+
   // Apply toggle states
-  plot.layout.xaxis.tickformat = plot.p_active ? ".0%" : "";
-  plot.axis_controlled_by_switches.map((axis) => {
-    plot.layout[axis].type = plot.l_active ? "log" : "linear";
+  plot.layout.xaxis.tickformat = plot.pActive ? ".0%" : "";
+  plot.axisControlledBySwitches.map((axis) => {
+    plot.layout[axis].type = plot.lActive ? "log" : "linear";
   });
 
   func(target, plot.buildTraces(), plot.layout, {

@@ -34,8 +34,20 @@ $(function () {
       $(".mqc_table").trigger("update");
     });
 
+    $(".mqc_table_show_violin").click(function (e) {
+      e.preventDefault();
+      let target = $(this).data("target");
+
+      let violinView = !$(this).hasClass("active");
+      mqc_plots[target].static = !violinView;
+      $(this).toggleClass("active");
+      let html = violinView ? mqc_plots[target].plotHtml : mqc_plots[target].tableHtml;
+      $("#" + target).html(html);
+      renderPlot(target);
+    });
+
     // Copy table contents to clipboard
-    var clipboard = new Clipboard(".mqc_table_copy_btn");
+    let clipboard = new Clipboard(".mqc_table_copy_btn");
     clipboard.on("success", function (e) {
       e.clearSelection();
     });

@@ -12,6 +12,17 @@ logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+
+
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
 
 def plot(data, headers=None, pconfig=None):
     """Return HTML for a MultiQC table.
@@ -33,6 +44,17 @@ def plot(data, headers=None, pconfig=None):
         for s_name in d.keys():
             s_names.add(s_name)
 
+    mod = get_template_mod()
+    if "table" in mod.__dict__ and callable(mod.table):
+        # noinspection PyBroadException
+        try:
+            return mod.table(dt)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+
     # Make a beeswarm plot if we have lots of samples
     if len(s_names) >= config.max_table_rows and pconfig.get("no_beeswarm") is not True:
         logger.debug(f"Plotting beeswarm instead of table, {len(s_names)} samples")
@@ -47,7 +69,7 @@ def plot(data, headers=None, pconfig=None):
         return make_table(dt)
 
 
-def make_table(dt: table_object.DataTable):
+def make_table(dt: table_object.DataTable, violin_switch=False):
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
@@ -292,6 +314,13 @@ def make_table(dt: table_object.DataTable):
     # Buttons above the table
     html = ""
     if not config.simple_output:
+        if violin_switch:
+            html += """
+            <button type="button" class="mqc_table_show_violin btn btn-default btn-sm" data-target="{tid}">
+                <span class="glyphicon glyphicon-stats"></span> Switch to violin plot
+            </button>
+            """.format(tid=table_id)
+
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
@@ -303,7 +332,7 @@ def make_table(dt: table_object.DataTable):
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
-                <span class="glyphicon glyphicon-th"></span> Configure Columns
+                <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """.format(tid=table_id)
 

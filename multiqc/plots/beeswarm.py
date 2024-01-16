@@ -54,6 +54,17 @@ def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pc
     # Make a datatable object
     dt = table_object.DataTable(data, headers, pconfig)
 
+    mod = get_template_mod()
+    if "violin" in mod.__dict__ and callable(mod.violin):
+        # noinspection PyBroadException
+        try:
+            return mod.violin(dt)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+
     return make_plot(dt)
 
 
@@ -61,17 +72,6 @@ def make_plot(dt: table_object.DataTable):
     """
     Make a plot - template custom, or interactive or flat
     """
-    mod = get_template_mod()
-    if "beeswarm" in mod.__dict__ and callable(mod.beeswarm):
-        # noinspection PyBroadException
-        try:
-            return mod.beeswarm(dt)
-        except:  # noqa: E722
-            if config.strict:
-                # Crash quickly in the strict mode. This can be helpful for interactive
-                # debugging of modules
-                raise
-
     categories = []
     s_names = []
     data = []

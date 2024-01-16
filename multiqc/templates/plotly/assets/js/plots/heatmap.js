@@ -9,16 +9,16 @@ class HeatmapPlot extends Plot {
 
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    let rows = this.datasets[this.active_dataset_idx].rows;
+    let rows = this.datasets[this.activeDatasetIdx]["rows"];
     if (rows.length === 0) return 0; // no rows
     return rows[0].length; // no columns in a row
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let rows = this.datasets[this.active_dataset_idx].rows;
-    let xcats = this.datasets[this.active_dataset_idx].xcats;
-    let ycats = this.datasets[this.active_dataset_idx].ycats;
+    let rows = this.datasets[this.activeDatasetIdx]["rows"];
+    let xcats = this.datasets[this.activeDatasetIdx]["xcats"];
+    let ycats = this.datasets[this.activeDatasetIdx]["ycats"];
 
     if (this.xcats_samples) {
       let xcatsSettings = applyToolboxSettings(xcats);
@@ -47,8 +47,8 @@ class HeatmapPlot extends Plot {
   }
 
   resize(newHeight) {
-    let xcats = this.datasets[this.active_dataset_idx].xcats;
-    let ycats = this.datasets[this.active_dataset_idx].ycats;
+    let xcats = this.datasets[this.activeDatasetIdx]["xcats"];
+    let ycats = this.datasets[this.activeDatasetIdx]["ycats"];
 
     let pxPerElem = newHeight / ycats.length;
     let newWidth = pxPerElem * xcats.length;

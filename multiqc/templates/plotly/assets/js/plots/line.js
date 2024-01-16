@@ -9,12 +9,12 @@ class LinePlot extends Plot {
 
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    return this.datasets[this.active_dataset_idx].lines.length; // no samples in a dataset
+    return this.datasets[this.activeDatasetIdx].lines.length; // no samples in a dataset
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let lines = this.datasets[this.active_dataset_idx].lines;
+    let lines = this.datasets[this.activeDatasetIdx].lines;
     if (lines.length === 0) return [];
 
     let samples = lines.map((line) => line.name);
@@ -64,7 +64,7 @@ class LinePlot extends Plot {
         y = line.data;
       }
 
-      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
       if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
       else params.marker.color = line.color;
 

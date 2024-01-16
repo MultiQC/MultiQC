@@ -1,32 +1,34 @@
 class ViolinPlot extends Plot {
   constructor(dump) {
     super(dump);
-    this.scatter_trace_params = dump.scatter_trace_params;
-    this.show_only_outliers = dump.show_only_outliers;
+    this.scatterTraceParams = dump["scatter_trace_params"];
+    this.showOnlyOutliers = dump["show_only_outliers"];
+    this.tableHtml = dump["table_html"];
+    this.plotHtml = dump["plot_html"];
   }
 
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    return this.datasets[this.active_dataset_idx]["all_samples"].length;
+    return this.datasets[this.activeDatasetIdx]["all_samples"].length;
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    if (this.show_only_outliers) {
+    if (this.showOnlyOutliers) {
       $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
     }
 
-    let dataset = this.datasets[this.active_dataset_idx];
+    let dataset = this.datasets[this.activeDatasetIdx];
     let valuesByMetric = dataset["values_by_metric"];
     let samplesByMetric = dataset["samples_by_metric"];
     if (Object.keys(valuesByMetric).length === 0) return [];
     let headersByMetric = dataset["headers_by_metric"];
     let outlierIndicesByMetric = dataset["outlier_indices_by_metric"];
     let layout = this.layout;
-    const traceParams = this.trace_params;
-    const scatterTraceParams = this.scatter_trace_params;
+    const traceParams = this.traceParams;
+    const scatterTraceParams = this.scatterTraceParams;
 
-    let allSamples = this.datasets[this.active_dataset_idx]["all_samples"];
+    let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
     if (sampleSettings == null) return; // All series are hidden, do not render the graph.
 
@@ -181,7 +183,6 @@ class ViolinPlot extends Plot {
   afterPlotCreated() {
     let target = this.target;
     let plot = document.getElementById(target);
-    let hoverInfoDiv = $("#" + target + "-hoverinfo");
 
     plot.on("plotly_hover", function (eventdata) {
       if (!eventdata.points) return;
@@ -197,12 +198,5 @@ class ViolinPlot extends Plot {
         Plotly.Fx.hover(target, points, curveAxis);
       }
     });
-    // .on('plotly_unhover', function(eventdata){
-    //   let point = eventdata.points[0];
-    //   if (point.data.type === "scatter") {
-    //     console.log("unhover", point.curveNumber);
-    //     hoverInfoDiv.innerHTML = "";
-    //   }
-    // });
   }
 }

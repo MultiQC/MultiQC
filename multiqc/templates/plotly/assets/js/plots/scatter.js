@@ -6,12 +6,12 @@ class ScatterPlot extends Plot {
 
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
-    return this.datasets[this.active_dataset_idx].points; // no data points in a dataset
+    return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
   }
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    let points = this.datasets[this.active_dataset_idx].points;
+    let points = this.datasets[this.activeDatasetIdx].points;
     if (points.length === 0) return [];
 
     let samples = points.map((point) => point.name);
@@ -32,7 +32,7 @@ class ScatterPlot extends Plot {
       let x = point.x;
       if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
 
-      let params = JSON.parse(JSON.stringify(this.trace_params)); // deep copy
+      let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
       params.marker.size = point["marker_size"] ?? params.marker.size;
       params.marker.line = {
         width: point["marker_line_width"] ?? params.marker.line.width,
