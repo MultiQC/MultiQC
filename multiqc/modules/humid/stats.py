@@ -72,7 +72,22 @@ def add_general_stats(self):
             "modify": lambda x: x * config.read_count_multiplier,
         }
         self.general_stats_addcols(data, headers)
+
+    def add_passing_deduplication(self):
+        """
+        Add the percentage of reads remaining after deduplication
+        """
+        data = {k: {"perc": (v["clusters"]/v["total"])*100} for k, v in self.stats.items()}
+        headers = OrderedDict()
+        headers["perc"] = {
+            "title": "% Pass Dedup",
+            "description": f"% processed reads that passed deduplication",
+            "shared_key": "perc_reads",
+        }
+        self.general_stats_addcols(data, headers)
+
     add_unique_reads(self)
+    add_passing_deduplication(self)
 
 def add_stats_section(self):
     # The values we want to plot (add to the total number of reads)
