@@ -27,11 +27,9 @@ it prints the contents of these files into the report.
       url(data:image/svg;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.svg', b64=True) }}) format('svg');
 }
 </style>
-<style type="text/css">
-    {{ include_file('assets/css/bootstrap.min.css') }}
-    {{ include_file('assets/css/default_multiqc.css') }}
-    {{ include_file('assets/css/jquery.toast.css') }}
-</style>
+<style>{{ include_file('assets/css/bootstrap.min.css') }}</style>
+<style>{{ include_file('assets/css/default_multiqc.css') }}</style>
+<style>{{ include_file('assets/css/jquery.toast.css') }}</style>
 {% for css_href in config.custom_css_files %}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {% endfor %}
