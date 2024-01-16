@@ -32,6 +32,10 @@ def parse_log_files(self):
             nr_reads, count = line.strip("\n").split(" ")
             d[int(nr_reads)] = int(count)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Got this far, data must be good
         if s_name in self.counts:
             log.debug("Duplicate sample name found! Overwriting: {s_name}")

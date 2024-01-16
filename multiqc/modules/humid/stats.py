@@ -13,6 +13,10 @@ def parse_reports(self):
     # Parse the output files
     parse_stat_files(self)
 
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
+
     # Remove filtered samples
     self.stats = self.ignore_samples(self.stats)
 
