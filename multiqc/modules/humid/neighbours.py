@@ -33,7 +33,7 @@ def parse_log_files(self):
 
         # Got this far, data must be good
         if s_name in self.neighbours:
-            log.debug("Duplicate sample name found! Overwriting: {s_name})
+            log.debug("Duplicate sample name found! Overwriting: {s_name}")
         self.neighbours[s_name] = d
         self.add_data_source(f, s_name)
 

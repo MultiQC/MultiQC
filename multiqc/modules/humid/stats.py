@@ -57,17 +57,22 @@ def parse_stat_files(self):
         self.add_data_source(f, s_name)
 
 def add_general_stats(self):
-    # Add the number of unique reads (=clusters) to the general statistics
-    # report
-    data = {k: {"uniq": v["clusters"]} for k, v in self.stats.items()}
-    headers = OrderedDict()
-    headers["uniq"] = {
-        "title": f"{config.read_count_prefix} Unique",
-        "description": f"Number of unique reads after UMI deduplication ({config.read_count_desc})",
-        "shared_key": "read_count",
-        "modify": lambda x: x * config.read_count_multiplier,
-    }
-    self.general_stats_addcols(data, headers)
+    def add_unique_reads(self):
+        """
+        Add the number of reads after deduplication
+        
+        This corresponds to the number of clusters in HUMID
+        """
+        data = {k: {"uniq": v["clusters"]} for k, v in self.stats.items()}
+        headers = OrderedDict()
+        headers["uniq"] = {
+            "title": f"{config.read_count_prefix} Unique Reads",
+            "description": f"Reads remaining after deduplication ({config.read_count_desc})",
+            "shared_key": "read_count",
+            "modify": lambda x: x * config.read_count_multiplier,
+        }
+        self.general_stats_addcols(data, headers)
+    add_unique_reads(self)
 
 def add_stats_section(self):
     # The values we want to plot (add to the total number of reads)
