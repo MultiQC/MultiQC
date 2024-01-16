@@ -279,7 +279,6 @@ class Plot(ABC):
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
-        html = "<div class='control-panel'>"
 
         def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
             """Build a switch button for the plot."""
@@ -288,29 +287,29 @@ class Plot(ABC):
             data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
             return f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
 
+        switch_buttons = ""
+
         cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
-                html += _btn(
+                switch_buttons += _btn(
                     cls=f"{cls} percent-switch",
                     pid=self.id,
                     active=self.p_active,
                     label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
                 )
             if self.add_log_tab:
-                html += _btn(
+                switch_buttons += _btn(
                     cls=f"{cls} log10-switch",
                     pid=self.id,
                     active=self.l_active,
                     label=self.pconfig.get("logswitch_label", "Log10"),
                 )
-            if len(self.datasets) > 1:
-                html += " &nbsp; &nbsp; "
 
         # Buttons to cycle through different datasets
         if len(self.datasets) > 1:
-            html += f'<div class="btn-group {cls} dataset-switch-group">\n'
+            switch_buttons += f'<div class="btn-group {cls} dataset-switch-group">\n'
             for ds_idx, ds in enumerate(self.datasets):
                 data_attrs = {
                     "ylab": ds.ylab,
@@ -321,22 +320,27 @@ class Plot(ABC):
                     # dataset and view, so have to save individual image IDs.
                     "dataset-uid": ds.uid,
                 }
-                html += _btn(
-                    cls="",
+                switch_buttons += _btn(
+                    cls="mr-auto",
                     pid=self.id,
                     active=ds_idx == 0,
                     label=ds.label,
                     data_attrs=data_attrs,
                 )
-            html += "</div>\n\n"
+            switch_buttons += "</div>\n\n"
 
-        # Export plot button
-        html += _btn("export-plot", self.id, False, "Export Plot")
-        # f"<button class='export-plot' id='{self.id}-export-plot' plot_id='{self.id}' style='color:#999999;'>"
-        # f"Export Plot"
-        # f"</button>\n"
+        export_btn = _btn("export-plot", self.id, False, "Export Plot")
 
-        html += "</div>\n\n"
+        html = "".join(
+            [
+                "<div class='row'>",
+                "<div class='col-xs-12'>",
+                switch_buttons,
+                export_btn,
+                "</div>",
+                "</div>\n\n",
+            ]
+        )
         return html
 
     def dump_for_javascript(self) -> Dict:
