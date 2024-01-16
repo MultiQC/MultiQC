@@ -912,7 +912,7 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  margin-top: 10px;
+  margin-top: 5px;
 }
 .hc-plot-handle {
   position: absolute;
@@ -1000,4 +1000,17 @@ g.annotation {
 
 .export-plot {
   float: right;
+}
+
+.col-xs-12 > button {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.mqc-section > hr {
+  border-top: 0;
+}
+
+.mqc-section-description > p {
+  margin-bottom: 0;
 }
