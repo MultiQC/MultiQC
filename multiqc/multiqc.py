@@ -1132,17 +1132,25 @@ def run(
                     fdir = ""
                 path = os.path.join(fdir, name)
 
-                dev_path = os.path.join(template_mod.template_dir, name)
-                if os.path.exists(dev_path):
-                    fdir = template_mod.template_dir
-                    name = dev_path
-                    path = dev_path
-                if config.development and name.endswith(".js"):
-                    if path.endswith(".min.js"):
-                        full_name = re.sub(r"\.min\.js$", ".js", name)
-                        if os.path.exists(os.path.join(fdir, full_name)):
-                            name = full_name
-                    return f'</script><script type="text/javascript" src="{name}">'
+                if config.development:
+                    if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+                    elif os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+
+                    if re.match(r".*\.min\.(js|css)$", name):
+                        unminimized_name = re.sub(r"\.min\.", ".", name)
+                        if os.path.exists(os.path.join(fdir, unminimized_name)):
+                            name = unminimized_name
+
+                    if name.endswith(".js"):
+                        return f'</script><script type="text/javascript" src="{name}">'
+                    if name.endswith(".css"):
+                        return f'</style><link rel="stylesheet" href="{name}">'
 
                 if b64:
                     with io.open(path, "rb") as f:
