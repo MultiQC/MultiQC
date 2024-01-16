@@ -73,6 +73,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False):
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
+    :param violin_switch: Add a button to switch to violin plot
     """
 
     table_id = dt.pconfig["id"]
@@ -316,7 +317,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False):
     if not config.simple_output:
         if violin_switch:
             html += """
-            <button type="button" class="mqc_table_show_violin btn btn-default btn-sm" data-target="{tid}">
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
                 <span class="glyphicon glyphicon-stats"></span> Switch to violin plot
             </button>
             """.format(tid=table_id)

@@ -166,7 +166,7 @@ class HeatmapPlot(Plot):
         d["heatmap_config"] = self.heatmap_config
         return d
 
-    def control_panel(self) -> str:
+    def _control_panel(self) -> str:
         """
         Heatmap-specific controls, only for the interactive version.
         """

@@ -377,9 +377,7 @@ function renderPlot(target) {
   }
 
   // Useful for default views like a table that can be switched to a Violin plot.
-  if (plot.static) {
-    return;
-  }
+  if (plot.static) return;
 
   // Apply toggle states
   plot.layout.xaxis.tickformat = plot.pActive ? ".0%" : "";

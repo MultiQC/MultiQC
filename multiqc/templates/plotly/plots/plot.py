@@ -217,7 +217,7 @@ class Plot(ABC):
     def interactive_plot(self, report) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self.control_panel()
+        html += self._control_panel()
 
         height_style = f'style="height:{self.layout.height}px"' if self.layout.height else ""
         html += f"""
@@ -233,15 +233,20 @@ class Plot(ABC):
         return html
 
     def flat_plot(self) -> str:
-        html = (
-            '<p class="text-info"><small><span class="glyphicon glyphicon-picture" aria-hidden="true"></span> '
-            + "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work "
-            + '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).</small></p>'
+        html = "".join(
+            [
+                '<p class="text-info">',
+                "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
+                "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
+                '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).',
+                "</small>",
+                "</p>",
+            ]
         )
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self.control_panel()
+            html += self._control_panel()
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
@@ -275,32 +280,33 @@ class Plot(ABC):
         html += "</div>"
         return html
 
-    def control_panel(self):
-        """
-        Add buttons: percentage on/off, log scale on/off, datasets switch panel
-        """
+    @staticmethod
+    def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
+        """Build a switch button for the plot."""
+        data_attrs = data_attrs.copy() if data_attrs else {}
+        data_attrs["pid"] = pid
+        data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
+        return (
+            f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
+        )
 
-        def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
-            """Build a switch button for the plot."""
-            data_attrs = data_attrs.copy() if data_attrs else {}
-            data_attrs["pid"] = pid
-            data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-            return f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
-
+    def buttons(self) -> List[str]:
+        """
+        Build buttons for control panel
+        """
         switch_buttons = ""
-
         cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
-                switch_buttons += _btn(
+                switch_buttons += self._btn(
                     cls=f"{cls} percent-switch",
                     pid=self.id,
                     active=self.p_active,
                     label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
                 )
             if self.add_log_tab:
-                switch_buttons += _btn(
+                switch_buttons += self._btn(
                     cls=f"{cls} log10-switch",
                     pid=self.id,
                     active=self.l_active,
@@ -320,7 +326,7 @@ class Plot(ABC):
                     # dataset and view, so have to save individual image IDs.
                     "dataset-uid": ds.uid,
                 }
-                switch_buttons += _btn(
+                switch_buttons += self._btn(
                     cls="mr-auto",
                     pid=self.id,
                     active=ds_idx == 0,
@@ -329,18 +335,15 @@ class Plot(ABC):
                 )
             switch_buttons += "</div>\n\n"
 
-        export_btn = _btn("export-plot", self.id, False, "Export Plot")
+        export_btn = self._btn("export-plot", self.id, False, "Export Plot")
+        return [switch_buttons, export_btn]
 
-        html = "".join(
-            [
-                "<div class='row'>",
-                "<div class='col-xs-12'>",
-                switch_buttons,
-                export_btn,
-                "</div>",
-                "</div>\n\n",
-            ]
-        )
+    def _control_panel(self) -> str:
+        """
+        Add buttons: percentage on/off, log scale on/off, datasets switch panel
+        """
+        buttons = "\n".join(self.buttons())
+        html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
     def dump_for_javascript(self) -> Dict:

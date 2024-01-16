@@ -1003,8 +1003,8 @@ g.annotation {
 }
 
 .col-xs-12 > button {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 0px;
+  margin-bottom: 2px;
 }
 
 .mqc-section > hr {
@@ -1012,5 +1012,5 @@ g.annotation {
 }
 
 .mqc-section-description > p {
-  margin-bottom: 0;
+  margin-bottom: 4px;
 }

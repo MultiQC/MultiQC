@@ -34,16 +34,21 @@ $(function () {
       $(".mqc_table").trigger("update");
     });
 
-    $(".mqc_table_show_violin").click(function (e) {
+    $(".mqc-table-to-violin").click(function (e) {
       e.preventDefault();
-      let target = $(this).data("target");
-
-      let violinView = !$(this).hasClass("active");
-      mqc_plots[target].static = !violinView;
-      $(this).toggleClass("active");
-      let html = violinView ? mqc_plots[target].plotHtml : mqc_plots[target].tableHtml;
-      $("#" + target).html(html);
+      let target = $(this).data("pid");
+      mqc_plots[target].static = false;
+      $("#mqc-table-" + target).hide();
+      $("#mqc-violin-" + target).show();
       renderPlot(target);
+    });
+
+    $(".mqc-violin-to-table").click(function (e) {
+      e.preventDefault();
+      let target = $(this).data("pid");
+      mqc_plots[target].static = true;
+      $("#mqc-violin-" + target).hide();
+      $("#mqc-table-" + target).show();
     });
 
     // Copy table contents to clipboard

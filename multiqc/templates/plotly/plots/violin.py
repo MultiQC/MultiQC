@@ -22,16 +22,19 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
 
     from multiqc.utils import report
 
-    plot_html = p.add_to_report(report)
-
+    violin_html = p.add_to_report(report)
     if show_table_by_default:
         table_html = make_table(dt, violin_switch=True)
-        report.plot_data[p.id]["table_html"] = table_html
-        report.plot_data[p.id]["plot_html"] = plot_html
+        html = (
+            f"<div id='mqc-violin-{p.id}' style='display: none;'>{violin_html}</div>"
+            + f"<div id='mqc-table-{p.id}'>{table_html}</div>"
+        )
         report.plot_data[p.id]["static"] = True
-        return table_html
     else:
-        return plot_html
+        html = violin_html
+
+    return html
+    # return f"<div class='table-violin-wrapper' id='table-violin-wrapper-{p.id}'>\n{html}</div>"
 
 
 THRESHOLD_BEFORE_OUTLIERS = 50
@@ -250,15 +253,18 @@ class ViolinPlot(Plot):
         )
         return d
 
-    # def control_panel(self):
-    #     """Add a control panel to the plot"""
-    #     if not self.show_only_outliers:
-    #         return ""
-    #     return (
-    #         f'<div class="beeswarm-hovertext" id="{self.id}-hoverinfo">' +
-    #         '<em class="placeholder">Hover over a data point for more information</em>' +
-    #         '</div>'
-    #     )
+    def buttons(self) -> []:
+        """Add a control panel to the plot"""
+        buttons = super().buttons()
+        buttons = [
+            self._btn(
+                cls="mqc-violin-to-table",
+                pid=self.id,
+                active=False,
+                label="<span class='glyphicon glyphicon-th-list'></span> Switch to table",
+            )
+        ] + buttons
+        return buttons
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
         """
