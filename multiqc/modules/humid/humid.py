@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 # Import HUMID submodules
 from . import stats, neighbours, counts, clusters
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialse the parent object
@@ -43,5 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Look for cluster files
         clusters.parse_reports(self)
 
-        if all(not(x) for x in [self.stats, self.neighbours, self.counts, self.clusters]):
+        if all(
+            not (x) for x in [self.stats, self.neighbours, self.counts, self.clusters]
+        ):
             raise ModuleNoSamplesFound

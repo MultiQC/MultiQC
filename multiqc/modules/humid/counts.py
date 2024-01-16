@@ -3,6 +3,7 @@ from multiqc.plots import linegraph
 
 log = logging.getLogger(__name__)
 
+
 def parse_reports(self):
     # To store the summary data
     self.counts = dict()
@@ -28,7 +29,7 @@ def parse_log_files(self):
         # process the file content
         d = {}
         for line in f["contents_lines"]:
-            nr_reads, count = line.strip('\n').split(' ')
+            nr_reads, count = line.strip("\n").split(" ")
             d[int(nr_reads)] = int(count)
 
         # Got this far, data must be good
@@ -36,6 +37,7 @@ def parse_log_files(self):
             log.debug("Duplicate sample name found! Overwriting: {s_name}")
         self.counts[s_name] = d
         self.add_data_source(f, s_name)
+
 
 def add_to_humid_section(self):
     # Figure configuration

@@ -5,6 +5,7 @@ from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
+
 def parse_reports(self):
     # To store the summary data
     self.stats = dict()
@@ -43,7 +44,10 @@ def parse_stat_files(self):
             d["duplicates"] = d["total"] - d["clusters"] - d["filtered"]
 
             # Make sure we only return data that makes sense
-            if not sum(d[field] for field in ["duplicates", "clusters", "filtered"]) == d["total"]:
+            if (
+                not sum(d[field] for field in ["duplicates", "clusters", "filtered"])
+                == d["total"]
+            ):
                 log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
                 continue
         except KeyError as e:
@@ -56,11 +60,12 @@ def parse_stat_files(self):
         self.stats[s_name] = d
         self.add_data_source(f, s_name)
 
+
 def add_general_stats(self):
     def add_unique_reads(self):
         """
         Add the number of reads after deduplication
-        
+
         This corresponds to the number of clusters in HUMID
         """
         data = {k: {"uniq": v["clusters"]} for k, v in self.stats.items()}
@@ -77,7 +82,10 @@ def add_general_stats(self):
         """
         Add the percentage of reads remaining after deduplication
         """
-        data = {k: {"perc": (v["clusters"]/v["total"])*100} for k, v in self.stats.items()}
+        data = {
+            k: {"perc": (v["clusters"] / v["total"]) * 100}
+            for k, v in self.stats.items()
+        }
         headers = OrderedDict()
         headers["perc"] = {
             "title": "% Pass Dedup",
@@ -88,6 +96,7 @@ def add_general_stats(self):
 
     add_unique_reads(self)
     add_passing_deduplication(self)
+
 
 def add_stats_section(self):
     # The values we want to plot (add to the total number of reads)
