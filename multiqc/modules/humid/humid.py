@@ -2,15 +2,13 @@
 
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
-
-# Initialise the logger
-log = logging.getLogger(__name__)
 
 # Import HUMID submodules
 from . import stats, neighbours, counts, clusters
+
+# Initialise the logger
+log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -44,7 +42,5 @@ class MultiqcModule(BaseMultiqcModule):
         # Look for cluster files
         clusters.parse_reports(self)
 
-        if all(
-            not (x) for x in [self.stats, self.neighbours, self.counts, self.clusters]
-        ):
+        if all(not (x) for x in [self.stats, self.neighbours, self.counts, self.clusters]):
             raise ModuleNoSamplesFound

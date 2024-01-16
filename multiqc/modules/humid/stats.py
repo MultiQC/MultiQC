@@ -44,10 +44,7 @@ def parse_stat_files(self):
             d["duplicates"] = d["total"] - d["clusters"] - d["filtered"]
 
             # Make sure we only return data that makes sense
-            if (
-                not sum(d[field] for field in ["duplicates", "clusters", "filtered"])
-                == d["total"]
-            ):
+            if not sum(d[field] for field in ["duplicates", "clusters", "filtered"]) == d["total"]:
                 log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
                 continue
         except KeyError as e:
@@ -82,14 +79,11 @@ def add_general_stats(self):
         """
         Add the percentage of reads remaining after deduplication
         """
-        data = {
-            k: {"perc": (v["clusters"] / v["total"]) * 100}
-            for k, v in self.stats.items()
-        }
+        data = {k: {"perc": (v["clusters"] / v["total"]) * 100} for k, v in self.stats.items()}
         headers = OrderedDict()
         headers["perc"] = {
             "title": "% Pass Dedup",
-            "description": f"% processed reads that passed deduplication",
+            "description": "% processed reads that passed deduplication",
             "shared_key": "perc_reads",
         }
         self.general_stats_addcols(data, headers)
