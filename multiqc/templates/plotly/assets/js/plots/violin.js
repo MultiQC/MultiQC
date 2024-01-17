@@ -3,8 +3,6 @@ class ViolinPlot extends Plot {
     super(dump);
     this.scatterTraceParams = dump["scatter_trace_params"];
     this.showOnlyOutliers = dump["show_only_outliers"];
-    this.tableHtml = dump["table_html"];
-    this.plotHtml = dump["plot_html"];
   }
 
   activeDatasetSize() {
@@ -19,11 +17,11 @@ class ViolinPlot extends Plot {
     }
 
     let dataset = this.datasets[this.activeDatasetIdx];
-    let valuesByMetric = dataset["values_by_metric"];
-    let samplesByMetric = dataset["samples_by_metric"];
-    if (Object.keys(valuesByMetric).length === 0) return [];
-    let headersByMetric = dataset["headers_by_metric"];
-    let outlierIndicesByMetric = dataset["outlier_indices_by_metric"];
+    let metrics = dataset["metrics"];
+    if (metrics.length === 0) return [];
+    let headerByMetric = dataset["header_by_metric"];
+    let valuesBySampleByMetric = dataset["values_by_sample_by_metric"];
+    let outliersByMetric = dataset["outliers_by_metric"];
     let layout = this.layout;
     const traceParams = this.traceParams;
     const scatterTraceParams = this.scatterTraceParams;
@@ -32,34 +30,42 @@ class ViolinPlot extends Plot {
     let sampleSettings = applyToolboxSettings(allSamples);
     if (sampleSettings == null) return; // All series are hidden, do not render the graph.
 
-    let filteredValuesByMetric = {};
-    let filteredSamplesByMetric = {};
-    Object.entries(valuesByMetric).map(([metric, values]) => {
-      filteredValuesByMetric[metric] = [];
-      filteredSamplesByMetric[metric] = [];
-      let samples = samplesByMetric[metric];
-      for (let i = 0; i < samples.length; i++) {
-        let sample = samples[i];
-        if (sampleSettings[samples.indexOf(sample)].hidden) continue;
-        filteredValuesByMetric[metric].push(values[i]);
-        filteredSamplesByMetric[metric].push(sample);
-      }
+    // Hidden metrics
+    metrics = metrics.filter((metric) => {
+      let header = headerByMetric[metric];
+      return header["hidden"] !== true;
     });
-    valuesByMetric = filteredValuesByMetric;
-    samplesByMetric = filteredSamplesByMetric;
+
+    // Hidden samples
+    let filteredValuesBySampleByMetric = {};
+    metrics.map((metric) => {
+      filteredValuesBySampleByMetric[metric] = {};
+      Object.keys(valuesBySampleByMetric[metric]).map((sample, sampleIdx) => {
+        if (!sampleSettings[allSamples.indexOf(sample)].hidden) {
+          filteredValuesBySampleByMetric[metric][sample] = valuesBySampleByMetric[metric][sample];
+        }
+      });
+    });
+    valuesBySampleByMetric = filteredValuesBySampleByMetric;
 
     let traces = [];
-    Object.keys(valuesByMetric).map((metric, metricIdx) => {
+    metrics.map((metric, metricIdx) => {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
 
-      let values = valuesByMetric[metric];
-      let samples = samplesByMetric[metric];
-      let header = headersByMetric[metric];
-      let outlierIndices = outlierIndicesByMetric[metric];
+      let header = headerByMetric[metric];
+      let valuesBySample = valuesBySampleByMetric[metric];
+      let outliers = outliersByMetric[metric];
+
+      let samples = [];
+      let values = [];
+      Object.entries(valuesBySample).map(([sample, value]) => {
+        samples.push(sample);
+        values.push(value);
+      });
 
       let line = { width: 0 };
-      if (outlierIndices !== undefined && outlierIndices.length === 0) {
+      if (outliers !== undefined && outliers.length === 0) {
         // keep the border so trivial violins (from identical numbers) are also visible:
         line = { width: 2, color: "rgba(0,0,0,0.5)" };
       }
@@ -94,24 +100,19 @@ class ViolinPlot extends Plot {
     // We want to select points on all violins belonging to this specific sample.
     // Points are rendered each as a separate trace, so we need to collect
     // each trace (curve) number for each point by sample.
-    let currentCurveNumber = Object.keys(valuesByMetric).length;
+    let currentCurveNumber = traces.length;
     let curveNumbersBySample = {};
     let curveAxisBySample = {};
     let scatterDataByMetric = [];
-    Object.keys(valuesByMetric).map((metric, metricIdx) => {
+    metrics.map((metric, metricIdx) => {
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-      let values = valuesByMetric[metric];
-      let samples = samplesByMetric[metric];
-      let outlierIndices = outlierIndicesByMetric[metric];
+      let outliers = outliersByMetric[metric];
+      let valuesBySample = valuesBySampleByMetric[metric];
 
       let scatterData = [];
-      for (let sampleIdx = 0; sampleIdx < samples.length; sampleIdx++) {
-        if (outlierIndices !== undefined && !outlierIndices.includes(sampleIdx)) {
-          continue; // showing only outliers
-        }
+      Object.entries(valuesBySample).map(([sample, value]) => {
+        if (outliers !== undefined && !outliers.includes(sample)) return; // showing only outliers
 
-        let sample = samples[sampleIdx];
-        let value = values[sampleIdx];
         scatterData.push([sample, value]);
 
         if (!curveNumbersBySample[sample]) {
@@ -120,7 +121,7 @@ class ViolinPlot extends Plot {
         }
         curveNumbersBySample[sample].push(currentCurveNumber++);
         curveAxisBySample[sample].push("x" + axisKey + "y" + axisKey);
-      }
+      });
       scatterDataByMetric.push(scatterData);
     });
 

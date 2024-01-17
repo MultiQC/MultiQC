@@ -280,15 +280,12 @@ class Plot(ABC):
         html += "</div>"
         return html
 
-    @staticmethod
-    def _btn(cls: str, pid: str, active: bool, label: str, data_attrs: Dict[str, str] = None) -> str:
+    def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        data_attrs["pid"] = pid
+        data_attrs["pid"] = self.id
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-        return (
-            f'<button class="btn btn-default btn-sm {cls} {"active" if active else ""}" {data_attrs}>{label}</button>\n'
-        )
+        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 
     def buttons(self) -> List[str]:
         """
@@ -301,16 +298,14 @@ class Plot(ABC):
             if self.add_pct_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} percent-switch",
-                    pid=self.id,
-                    active=self.p_active,
                     label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
+                    pressed=self.p_active,
                 )
             if self.add_log_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} log10-switch",
-                    pid=self.id,
-                    active=self.l_active,
                     label=self.pconfig.get("logswitch_label", "Log10"),
+                    pressed=self.l_active,
                 )
 
         # Buttons to cycle through different datasets
@@ -328,14 +323,13 @@ class Plot(ABC):
                 }
                 switch_buttons += self._btn(
                     cls="mr-auto",
-                    pid=self.id,
-                    active=ds_idx == 0,
                     label=ds.label,
                     data_attrs=data_attrs,
+                    pressed=ds_idx == 0,
                 )
             switch_buttons += "</div>\n\n"
 
-        export_btn = self._btn("export-plot", self.id, False, "Export Plot")
+        export_btn = self._btn(cls="export-plot", label="Export Plot")
         return [switch_buttons, export_btn]
 
     def _control_panel(self) -> str:

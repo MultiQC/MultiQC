@@ -8,7 +8,7 @@ from HighCharts to Plotly.
 
 """
 import os
-from .plots import bar, line, scatter, heatmap, violin, table
+from .plots import bar, line, scatter, heatmap, violin
 from ...utils import config
 
 template_parent = "default"
@@ -21,7 +21,11 @@ linegraph = line.plot
 scatter = scatter.plot
 heatmap = heatmap.plot
 violin = violin.plot
-table = table.plot
+
+
+def table(dt):
+    return violin(dt, show_table_by_default=True)
+
 
 __all__ = ["bargraph", "linegraph", "scatter", "heatmap", "violin", "table"]
 

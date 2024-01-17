@@ -89,32 +89,37 @@ $(function () {
     /////// COLUMN CONFIG
     // show + hide columns
     $(".mqc_table_col_visible").change(function () {
-      var target = $(this).data("target");
+      let target = $(this).data("target");
       mqc_table_col_updateVisible(target);
     });
     // Bulk set visible / hidden
     $(".mqc_configModal_bulkVisible").click(function (e) {
       e.preventDefault();
-      var target = $(this).data("target");
-      var visible = $(this).data("action") == "showAll";
+      let target = $(this).data("target");
+      let visible = $(this).data("action") === "showAll";
       $(target + "_configModal_table tbody .mqc_table_col_visible").prop("checked", visible);
       mqc_table_col_updateVisible(target);
     });
     function mqc_table_col_updateVisible(target) {
+      let metricsHidden = {};
       $(target + "_configModal_table .mqc_table_col_visible").each(function () {
-        var cclass = $(this).val();
-        if ($(this).is(":checked")) {
-          $(target + " ." + cclass).removeClass("hidden");
-          $(target + "_configModal_table ." + cclass).removeClass("text-muted");
+        let metric = $(this).val();
+        metricsHidden[metric] = !$(this).is(":checked");
+      });
+
+      Object.entries(metricsHidden).map(([metric, hidden]) => {
+        if (hidden) {
+          $(target + " ." + metric).addClass("hidden");
+          $(target + "_configModal_table ." + metric).addClass("text-muted");
         } else {
-          $(target + " ." + cclass).addClass("hidden");
-          $(target + "_configModal_table ." + cclass).addClass("text-muted");
+          $(target + " ." + metric).removeClass("hidden");
+          $(target + "_configModal_table ." + metric).removeClass("text-muted");
         }
       });
       // Hide empty rows
       $(target + " tbody tr").show();
       $(target + " tbody tr").each(function () {
-        var hasVal = false;
+        let hasVal = false;
         $(this)
           .find("td:visible")
           .each(function () {
@@ -129,6 +134,18 @@ $(function () {
       // Update counts
       $(target + "_numrows").text($(target + " tbody tr:visible").length);
       $(target + "_numcols").text($(target + " thead th:visible").length - 1);
+
+      // Also update the violin plot
+      let pid = target.replace("#", "");
+      let plot = mqc_plots[pid];
+      if (plot !== undefined) {
+        plot.datasets.map((dataset) => {
+          dataset["metrics"].map((metric) => {
+            dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
+          });
+        });
+        renderPlot(pid);
+      }
     }
 
     // Make rows in MultiQC tables sortable

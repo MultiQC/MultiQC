@@ -69,7 +69,7 @@ def plot(data, headers=None, pconfig=None):
         return make_table(dt)
 
 
-def make_table(dt: table_object.DataTable, violin_switch=False):
+def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
@@ -409,7 +409,19 @@ def make_table(dt: table_object.DataTable, violin_switch=False):
 
     # Build the bootstrap modal to customise columns and order
     if not config.simple_output:
-        html += """
+        html += _configuration_modal(table_id, table_title, "".join(t_modal_headers.values()))
+
+    # Save the raw values to a file if requested
+    if dt.pconfig.get("save_file") is True:
+        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
+        util_functions.write_data_file(dt.raw_vals, fn)
+        report.saved_raw_data[fn] = dt.raw_vals
+
+    return html
+
+
+def _configuration_modal(tid: str, title: str, trows: str) -> str:
+    return f"""
     <!-- MultiQC Table Columns Modal -->
     <div class="modal fade" id="{tid}_configModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -442,15 +454,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False):
             </table>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
-    </div> </div> </div>""".format(tid=table_id, title=table_title, trows="".join(t_modal_headers.values()))
-
-    # Save the raw values to a file if requested
-    if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
-        util_functions.write_data_file(dt.raw_vals, fn)
-        report.saved_raw_data[fn] = dt.raw_vals
-
-    return html
+    </div> </div> </div>"""
 
 
 def _get_sortlist(dt: table_object.DataTable) -> str:
