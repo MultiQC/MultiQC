@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 
 from multiqc.plots.table_object import DataTable
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.utils import config
 from .table import make_table
 
 logger = logging.getLogger(__name__)
@@ -114,12 +115,13 @@ class ViolinPlot(Plot):
         list_of_header_by_metric: List[Dict[str, Dict]],
         pconfig: Dict,
         dt: Optional[DataTable] = None,
-        show_table_by_default=False,
+        show_table_by_default: bool = False,
     ):
         super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_sample_by_metric))
 
         self.dt = dt
-        self.show_table_by_default = show_table_by_default
+        self.show_table_by_default = dt is not None and show_table_by_default
+        self.show_table = dt is not None
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -131,6 +133,16 @@ class ViolinPlot(Plot):
         ]
 
         self.show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
+
+        # If the number of samples is high:
+        # - do not add a table
+        # - plot a Violin in Python, and serialise the figure instead of the datasets
+        self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
+        self.serialize_figure = False
+        if self.n_samples >= config.max_table_rows:
+            logger.debug(f"Plotting violin instead of table, {self.n_samples} samples")
+            self.serialize_figure = True
+            self.show_table = False
 
         self.trace_params.update(
             orientation="h",
@@ -244,25 +256,42 @@ class ViolinPlot(Plot):
     def tt_label() -> str:
         return ": %{x}"
 
-    # def interactive_plot(self, report) -> str:
-    #     plot_html = super().interactive_plot(report)
-    #     if self.table_html:
-    #         self.plot_html = plot_html
-    #         return self.table_html
-    #     else:
-    #         self.table_html = plot_html
-    #         super().interactive_plot(report)
-
     def add_to_report(self, report) -> str:
         violin_html = super().add_to_report(report)
-        table_html, configuration_modal = make_table(self.dt, violin_switch=True)
-        html = "".join(
-            [
-                f"<div id='mqc-violin-{self.id}' style='{'display: none;' if self.show_table_by_default else ''}'>{violin_html}</div>",
-                f"<div id='mqc-table-{self.id}' style='{'display: none;' if not self.show_table_by_default else ''}'>{table_html}</div>",
-                configuration_modal,
-            ]
+
+        warning = ""
+        if self.show_table_by_default and not self.show_table:
+            warning = (
+                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + 'title="An interactive table is not available because of the large number of samples. '
+                + "A violin plot is generated instead, showing density of values for each metric, as "
+                + "well as hoverable points for outlier samples in each metric. "
+                + 'See http://multiqc.info/docs/#tables--beeswarm-plots"'
+                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+            )
+        elif not self.show_table:
+            warning = (
+                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + 'title="An interactive table is not available because of the large number of samples. '
+                + "The violin plot displays hoverable points only for outlier samples in each metric, "
+                + "and the hiding/highlighting functionality through the toolbox only works for outliers "
+                + 'See http://multiqc.info/docs/#tables--beeswarm-plots"'
+                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+            )
+
+        html = (
+            f"<div id='mqc-violin-{self.id}' style='{'display: none;' if (self.show_table and self.show_table_by_default) else ''}'>"
+            + f"{warning}"
+            + f"{violin_html}"
+            + "</div>"
         )
+        if self.dt:
+            table_html, configuration_modal = make_table(self.dt, violin_switch=True)
+            if self.show_table:
+                html += f"<div id='mqc-table-{self.id}' style='{'display: none;' if not self.show_table_by_default else ''}'>{table_html}</div>"
+            html += configuration_modal
         return html
 
     def dump_for_javascript(self):
@@ -272,7 +301,7 @@ class ViolinPlot(Plot):
             {
                 "scatter_trace_params": self.scatter_trace_params,
                 "show_only_outliers": any(ds.show_only_outliers for ds in self.datasets),
-                "static": self.show_table_by_default,
+                "static": self.show_table and self.show_table_by_default,
             }
         )
         return d
@@ -288,12 +317,13 @@ class ViolinPlot(Plot):
                     data_attrs={"toggle": "modal", "target": f"#{self.id}_configModal"},
                 )
             )
-        buttons.append(
-            self._btn(
-                cls="mqc-violin-to-table",
-                label="<span class='glyphicon glyphicon-th-list'></span> Table",
+        if self.show_table:
+            buttons.append(
+                self._btn(
+                    cls="mqc-violin-to-table",
+                    label="<span class='glyphicon glyphicon-th-list'></span> Table",
+                )
             )
-        )
 
         return buttons + super().buttons()
 

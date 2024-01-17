@@ -4,22 +4,13 @@ from typing import Tuple
 
 from multiqc.plots import table_object
 from multiqc.utils import config, mqc_colour, util_functions, report
+from . import violin
 
 logger = logging.getLogger(__name__)
 
 
-# def plot(dt: table_object.DataTable) -> str:
-#     s_names = set()
-#     for d in dt.data:
-#         for s_name in d.keys():
-#             s_names.add(s_name)
-#
-#     if len(s_names) >= config.max_table_rows and dt.pconfig.get("no_beeswarm") is not True:
-#         logger.debug(f"Plotting violin instead of table, {len(s_names)} samples")
-#         return plot_violin(dt)
-#     else:
-#         # Plot a table with a switch to a violin plot
-#         return plot_violin(dt, show_table_by_default=True)
+def plot(dt: table_object.DataTable) -> str:
+    return violin.plot(dt, show_table_by_default=True)
 
 
 def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, str]:
