@@ -360,24 +360,22 @@ function renderPlot(target) {
   if (plot === undefined) return false;
   if (plot.datasets.length === 0) return false;
 
+  // Useful for default views like a table that can be switched to a Violin plot.
+  if (plot.static) return;
+
+  let container = $("#" + target);
+
   // When the plot was already rendered, it's faster to call react, using the same signature
   // https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
   let func;
   if (!plot.rendered) {
     func = Plotly.newPlot;
     plot.rendered = true;
-    $("#" + target)
-      .removeClass("not_rendered")
-      .parent()
-      .find(".render_plot")
-      .remove();
+    container.removeClass("not_rendered").parent().find(".render_plot").remove();
     if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
   } else {
     func = Plotly.react;
   }
-
-  // Useful for default views like a table that can be switched to a Violin plot.
-  if (plot.static) return;
 
   // Apply toggle states
   plot.layout.xaxis.tickformat = plot.pActive ? ".0%" : "";
@@ -385,7 +383,15 @@ function renderPlot(target) {
     plot.layout[axis].type = plot.lActive ? "log" : "linear";
   });
 
-  func(target, plot.buildTraces(), plot.layout, {
+  let traces = plot.buildTraces();
+  if (traces.length === 0) {
+    // All series hidden. Hide the graph.
+    container.hide();
+    return;
+  }
+
+  container.show();
+  func(target, traces, plot.layout, {
     responsive: true,
     displaylogo: false,
     displayModeBar: true,

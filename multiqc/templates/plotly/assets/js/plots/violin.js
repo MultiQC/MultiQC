@@ -35,6 +35,16 @@ class ViolinPlot extends Plot {
       let header = headerByMetric[metric];
       return header["hidden"] !== true;
     });
+    layout.height = 70 * metrics.length + 50;
+    $("#" + this.target + "-wrapper").css("height", layout.height + "px");
+    if (metrics.length === 0) {
+      return [];
+    }
+    layout.grid.rows = metrics.length;
+    layout.grid.subplots = metrics.map((metric, metricIdx) => {
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+      return ["x" + axisKey + "y" + axisKey];
+    });
 
     // Hidden samples
     let filteredValuesBySampleByMetric = {};

@@ -170,7 +170,7 @@ class ViolinPlot(Plot):
             unhidden_rows = max(unhidden_rows, len(unhidden_metrics))
 
         self.layout.update(
-            height=70 * unhidden_rows,
+            height=70 * unhidden_rows + 50,
             margin=dict(
                 pad=0,
                 # t=43,
@@ -179,10 +179,10 @@ class ViolinPlot(Plot):
             violingap=0,
             grid=dict(
                 rows=unhidden_rows,
+                subplots=[[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(unhidden_rows)],
                 columns=1,
                 roworder="top to bottom",
                 ygap=0.4,
-                subplots=[[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(total_rows)],
             ),
             xaxis=dict(
                 tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
