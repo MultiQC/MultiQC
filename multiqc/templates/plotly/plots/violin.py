@@ -18,22 +18,11 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    p = ViolinPlot.from_dt(dt)
+    p = ViolinPlot.from_dt(dt, show_table_by_default)
 
     from multiqc.utils import report
 
-    violin_html = p.add_to_report(report)
-    table_html, configuration_modal = make_table(dt, violin_switch=True)
-    html = "".join(
-        [
-            f"<div id='mqc-violin-{p.id}' style='{'display: none;' if show_table_by_default else ''}'>{violin_html}</div>",
-            f"<div id='mqc-table-{p.id}' style='{'display: none;' if not show_table_by_default else ''}'>{table_html}</div>",
-            configuration_modal,
-        ]
-    )
-    report.plot_data[p.id]["static"] = show_table_by_default
-
-    return html
+    return p.add_to_report(report)
 
 
 THRESHOLD_BEFORE_OUTLIERS = 50
@@ -102,15 +91,15 @@ class ViolinPlot(Plot):
                             f"only outliers in each violin."
                         )
 
-                        samples = list(value_by_sample.values())
+                        samples = list(value_by_sample.keys())
                         values = list(value_by_sample.values())
-                        outlier_indices = find_outliers(
+                        outlier_statuses = find_outliers(
                             values,
                             minval=header.get("min"),
                             maxval=header.get("max"),
                         )
-                        logger.debug(f"Found {len(outlier_indices)} outliers for metric: {header['title']}")
-                        ds.outliers_by_metric[metric] = [samples[idx] for idx in outlier_indices]
+                        logger.debug(f"Found {len(outlier_statuses)} outliers for metric: {header['title']}")
+                        ds.outliers_by_metric[metric] = [samples[idx] for idx in outlier_statuses]
                         ds.show_only_outliers = True
 
                 ds.values_by_sample_by_metric[metric] = value_by_sample
@@ -124,11 +113,13 @@ class ViolinPlot(Plot):
         list_of_values_by_sample_by_metric: List[Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]],
         list_of_header_by_metric: List[Dict[str, Dict]],
         pconfig: Dict,
-        table_html: Optional[str] = None,
+        dt: Optional[DataTable] = None,
+        show_table_by_default=False,
     ):
         super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_sample_by_metric))
 
-        self.table_html = table_html
+        self.dt = dt
+        self.show_table_by_default = show_table_by_default
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -152,6 +143,7 @@ class ViolinPlot(Plot):
             # so setting it to "points" as we don't show points, so it's effectively
             # disabling it.
             hoveron="points",
+            line={"width": 0},
         )
 
         self.scatter_trace_params = {
@@ -190,33 +182,34 @@ class ViolinPlot(Plot):
             yaxis=dict(
                 automargin=True,
             ),
-            # hoverlabel=dict(
-            #     bgcolor="rgb(141,203,255)",
-            # ),
         )
 
     @staticmethod
-    def from_dt(dt: DataTable) -> "ViolinPlot":
+    def from_dt(dt: DataTable, show_table_by_default=False) -> "ViolinPlot":
         values_by_sample_by_metric = dict()
         header_by_metric = dict()
 
         for idx, k, header in dt.get_headers_in_order():
             rid = header["rid"]
             header_by_metric[rid] = {
-                "rid": header["rid"],
                 "namespace": header["namespace"],
                 "title": header["title"],
                 "description": header["description"],
                 "max": header.get("max"),
                 "min": header.get("min"),
                 "suffix": header.get("suffix", ""),
-                "color": header.get("color"),
+                "color": header.get("colour", header.get("color")),
                 "hidden": header.get("hidden"),
             }
             values_by_sample_by_metric[rid] = dict()
             for s_name, val_by_metric in dt.data[idx].items():
                 if k in val_by_metric:
                     values_by_sample_by_metric[rid][s_name] = val_by_metric[k]
+
+        # If all colors are the same, remove them
+        if len(set([v["color"] for v in header_by_metric.values()])) == 1:
+            for v in header_by_metric.values():
+                v.pop("color", None)
 
         # for idx, (_data_by_sample, _headers_by_metric) in enumerate(zip(dt.data, dt.headers)):
         #     for sample, data in _data_by_sample.items():
@@ -243,6 +236,8 @@ class ViolinPlot(Plot):
             [values_by_sample_by_metric],
             [header_by_metric],
             pconfig=dt.pconfig,
+            dt=dt,
+            show_table_by_default=show_table_by_default,
         )
 
     @staticmethod
@@ -258,6 +253,18 @@ class ViolinPlot(Plot):
     #         self.table_html = plot_html
     #         super().interactive_plot(report)
 
+    def add_to_report(self, report) -> str:
+        violin_html = super().add_to_report(report)
+        table_html, configuration_modal = make_table(self.dt, violin_switch=True)
+        html = "".join(
+            [
+                f"<div id='mqc-violin-{self.id}' style='{'display: none;' if self.show_table_by_default else ''}'>{violin_html}</div>",
+                f"<div id='mqc-table-{self.id}' style='{'display: none;' if not self.show_table_by_default else ''}'>{table_html}</div>",
+                configuration_modal,
+            ]
+        )
+        return html
+
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
@@ -265,19 +272,14 @@ class ViolinPlot(Plot):
             {
                 "scatter_trace_params": self.scatter_trace_params,
                 "show_only_outliers": any(ds.show_only_outliers for ds in self.datasets),
-                "initial_html": self.table_html,
+                "static": self.show_table_by_default,
             }
         )
         return d
 
     def buttons(self) -> []:
         """Add a control panel to the plot"""
-        buttons = [
-            self._btn(
-                cls="mqc-violin-to-table",
-                label="<span class='glyphicon glyphicon-th-list'></span> Switch to table",
-            )
-        ]
+        buttons = []
         if any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
@@ -286,6 +288,12 @@ class ViolinPlot(Plot):
                     data_attrs={"toggle": "modal", "target": f"#{self.id}_configModal"},
                 )
             )
+        buttons.append(
+            self._btn(
+                cls="mqc-violin-to-table",
+                label="<span class='glyphicon glyphicon-th-list'></span> Table",
+            )
+        )
 
         return buttons + super().buttons()
 
@@ -293,40 +301,61 @@ class ViolinPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-        for i, header in enumerate(dataset.header_by_metric):
+        metrics = [m for m in dataset.metrics if not dataset.header_by_metric[m].get("hidden", False)]
+
+        for i, metric in enumerate(metrics):
+            header = dataset.header_by_metric[metric]
             layout[f"xaxis{i + 1}"] = copy.deepcopy(layout["xaxis"])
-            layout[f"xaxis{i + 1}"].update(header["xaxis"])
+            layout[f"xaxis{i + 1}"].update(header.get("xaxis", {}))
             layout[f"yaxis{i + 1}"] = copy.deepcopy(layout["yaxis"])
+            if header.get("color"):
+                layout[f"yaxis{i + 1}"].update(
+                    tickfont=dict(
+                        color=f"rgba({header['color']},1)",
+                    ),
+                )
 
         layout.showlegend = False
         fig = go.Figure(layout=layout)
 
-        for i, metric in enumerate(dataset.header_by_metric):
+        for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
+            if header.get("hidden"):
+                continue
+
             values_by_sample = dataset.values_by_sample_by_metric[metric]
+            outliers = dataset.outliers_by_metric.get(metric, [])
+
             params = copy.deepcopy(self.trace_params)
             if header.get("color"):
                 params["fillcolor"] = f"rgba({header['color']},0.5)"
+
+            if self.show_only_outliers and not outliers:
+                # keep the border so trivial violins (from identical numbers) are also visible:
+                params["line"] = {"width": 2, "color": "rgba(0,0,0,0.5)"}
+
+            axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
             fig.add_trace(
                 go.Violin(
                     x=list(values_by_sample.values()),
-                    name=header["title"] + "  ",
+                    name=metric_idx,
                     text=list(values_by_sample.keys()),
-                    xaxis=f"x{i + 1}",
-                    yaxis=f"y{i + 1}",
+                    xaxis=f"x{axis_key}",
+                    yaxis=f"y{axis_key}",
                     **params,
                 ),
             )
-            for j, (sample, value) in enumerate(values_by_sample.items()):
+            for sample_idx, (sample, value) in enumerate(values_by_sample.items()):
+                scatter_params = copy.deepcopy(self.scatter_trace_params)
+                scatter_params["showlegend"] = False
                 fig.add_trace(
                     go.Scatter(
                         x=[value],
-                        y=[header["title"] + "  "],
+                        y=[metric_idx],
                         text=[sample],
-                        xaxis=f"x{i + 1}",
-                        yaxis=f"y{i + 1}",
-                        showlegend=False,
-                        **self.scatter_trace_params,
+                        xaxis=f"x{metric_idx + 1}",
+                        yaxis=f"y{metric_idx + 1}",
+                        **scatter_params,
                     ),
                 )
         return fig
@@ -337,16 +366,16 @@ class ViolinPlot(Plot):
 
 def find_outliers(
     values: Union[List[int], List[float]],
-    n: Optional[int] = None,
+    top_n: Optional[int] = None,
     z_cutoff: float = 2.0,
     minval: Optional[Union[float, int]] = None,
     maxval: Optional[Union[float, int]] = None,
-) -> List[int]:
+) -> np.array:
     """
     If `n` is defined, find `n` most outlying points in a list.
     Otherwise, find outliers with a Z-score above `z_cutoff`.
 
-    Return indices in the input list.
+    Return a list of booleans, indicating if the value with this index is an outlier.
 
     `minval` and/or `maxval` can be added to include them into the outlier detection array.
     This is a trick to avoid the following problem: for example, percentage values are
@@ -354,50 +383,39 @@ def find_outliers(
     will be nearly no different from the other values. If we add "100%" as an artificial
     additional value, none of those near-zero clustered values won't be called outliers.
     """
-    if len(values) == 0 or (n is not None and n <= 0):
-        return []
+    if len(values) == 0 or (top_n is not None and top_n <= 0):
+        return np.zeros(len(values), dtype=bool)
 
+    added_values = []
     if minval is not None:
-        values = [minval] + values
+        added_values.append(minval)
     if maxval is not None:
-        values = [maxval] + values
-    values = np.array(values)
+        added_values.append(maxval)
+    values = np.array(values + added_values)
 
     # Calculate the mean and standard deviation
     mean = np.mean(values)
     std_dev = np.std(values)
     if std_dev == 0:
         logger.warning(f"All {len(values)} points have the same values")
-        return []
+        return np.zeros(len(values), dtype=bool)
 
     # Calculate Z-scores (measures of "outlyingness")
     z_scores = np.abs((values - mean) / std_dev)
 
     # Get indices of the top N outliers
-    if n:
-        indices = np.argsort(z_scores)[-n:].tolist()
+    outlier_status = np.zeros(len(values), dtype=bool)
+    if top_n:
+        outlier_status[np.argsort(z_scores)[-top_n:]] = True
     else:
-        indices = []
-        while z_cutoff > 1.0:
+        indices = np.where(z_scores > z_cutoff)[0]
+        while len(indices) <= len(added_values) or z_cutoff > 1.0:
+            new_z_cutoff = z_cutoff - 0.2
+            logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}, trying a lower cutoff: {new_z_cutoff}")
+            z_cutoff = new_z_cutoff
             indices = np.where(z_scores > z_cutoff)[0]
-            if len(indices) > (int(minval is not None) + int(maxval is not None)):
-                indices = indices.tolist()
-                break
-            logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}, trying a lower threshold")
-            z_cutoff -= 0.2
-            indices = indices.tolist()
+        outlier_status[indices] = True
 
-    if minval is not None and maxval is not None:
-        if 0 in indices:
-            indices.remove(0)
-        if 1 in indices:
-            indices.remove(1)
-    elif minval is not None or maxval is not None:
-        if 0 in indices:
-            indices.remove(0)
-
-    if len(indices) == 0:
-        logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}")
-        indices = list(range(len(values)))
-
-    return indices
+    if added_values:
+        outlier_status = outlier_status[: -len(added_values)]
+    return outlier_status

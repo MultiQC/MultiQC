@@ -268,13 +268,6 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
     # Buttons above the table
     html = ""
     if not config.simple_output:
-        if violin_switch:
-            html += """
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
-                <span class="glyphicon glyphicon-stats"></span> Switch to violin plot
-            </button>
-            """.format(tid=table_id)
-
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
@@ -301,7 +294,14 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
-                <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
+                <span class="glyphicon glyphicon glyphicon-stats"></span> Scatter plot
+            </button>
+            """.format(tid=table_id)
+
+        if violin_switch:
+            html += """
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
+                <span class="glyphicon glyphicon-stats"></span> Violin plot
             </button>
             """.format(tid=table_id)
 

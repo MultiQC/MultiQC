@@ -374,6 +374,7 @@ class Plot(ABC):
         Create a Plotly Figure object.
         """
         layout = go.Layout(**self.layout.to_plotly_json())  # make a copy
+        layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
             layout[axis].type = "log" if is_log else "linear"
             if is_pct:
@@ -389,8 +390,9 @@ class Plot(ABC):
         """
         Build one static image, return an HTML wrapper.
         """
+        assert fig.layout.width
         write_kwargs = dict(
-            width=fig.layout.width or Plot.FLAT_PLOT_WIDTH,  # While interactive plots take full width of screen,
+            width=fig.layout.width,  # While interactive plots take full width of screen,
             # for the flat plots we explicitly set width
             height=fig.layout.height,
             scale=2,  # higher detail (retina display)
@@ -420,6 +422,6 @@ class Plot(ABC):
         hiding = "" if active else ' style="display:none;"'
         return (
             f'<div class="mqc_mplplot" id="{uid}"{hiding}>'
-            f'<img src="{img_src}" height="{fig.layout.height}" width="{fig.layout.width}" />'
+            f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px" />'
             f"</div>"
         )
