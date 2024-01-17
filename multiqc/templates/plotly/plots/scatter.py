@@ -56,7 +56,6 @@ class ScatterPlot(Plot):
             ),
         )
 
-        self.layout.height = self.layout.height or 600
         # Make a tooltip always show on hover over nearest point on plot
         self.layout.hoverdistance = -1
 
