@@ -365,17 +365,19 @@ $(function () {
       if ($("#mqc_image_download").is(":visible")) {
         let mime = $("#mqc_export_ft").val();
         let format = mime.replace("image/", "").split("+")[0];
+        let f_width = parseInt($("#mqc_exp_width").val());
+        let f_height = parseInt($("#mqc_exp_height").val());
         const f_scale = parseInt($("#mqc_export_scaling").val());
-        const f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
-        const f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
         checked_plots.each(function () {
           const target = $(this).val();
+
           if (checked_plots.length <= zip_threshold) {
             // Not many plots to export, just trigger a download for each:"
             Plotly.Snapshot.downloadImage(target, {
               format: format,
-              width: f_width,
-              height: f_height,
+              width: f_width / f_scale,
+              height: f_height / f_scale,
+              scale: f_scale,
               filename: target,
             });
           } else {
