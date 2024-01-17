@@ -883,10 +883,12 @@ tbody .sorthandle {
 /* Flat MatPlotLib plots */
 .mqc_mplplot {
   border: 1px solid #dedede;
-  margin-top: 15px;
+  margin-top: 0;
+  width: 100%;
 }
 .mqc_mplplot img {
   max-width: 100%;
+  height: auto;
 }
 
 /* Draggable height bar for HighCharts Plots */

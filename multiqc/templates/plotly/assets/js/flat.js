@@ -12,8 +12,8 @@ $(function () {
 
     let target = "#" + pid;
 
-    let p = plotgroup.children(".percent-switch");
-    let l = plotgroup.children(".log10-switch");
+    let p = plotgroup.find(".percent-switch");
+    let l = plotgroup.find(".log10-switch");
     if (p.length > 0 || l.length > 0) {
       let pActive = p.length > 0 && p.hasClass("active");
       let lActive = l.length > 0 && l.hasClass("active");

@@ -280,7 +280,7 @@ class ViolinPlot(Plot):
     def buttons(self) -> []:
         """Add a control panel to the plot"""
         buttons = []
-        if any(len(ds.metrics) > 1 for ds in self.datasets):
+        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",
@@ -308,12 +308,17 @@ class ViolinPlot(Plot):
             layout[f"xaxis{i + 1}"] = copy.deepcopy(layout["xaxis"])
             layout[f"xaxis{i + 1}"].update(header.get("xaxis", {}))
             layout[f"yaxis{i + 1}"] = copy.deepcopy(layout["yaxis"])
+            layout[f"yaxis{i + 1}"].update(
+                {
+                    "tickmode": "array",
+                    "tickvals": [i],
+                    "ticktext": [header["title"] + "  "],
+                }
+            )
             if header.get("color"):
-                layout[f"yaxis{i + 1}"].update(
-                    tickfont=dict(
-                        color=f"rgba({header['color']},1)",
-                    ),
-                )
+                layout[f"yaxis{i + 1}"]["tickfont"] = {
+                    "color": f"rgba({header['color']},1)",
+                }
 
         layout.showlegend = False
         fig = go.Figure(layout=layout)
@@ -411,7 +416,9 @@ def find_outliers(
         indices = np.where(z_scores > z_cutoff)[0]
         while len(indices) <= len(added_values) or z_cutoff > 1.0:
             new_z_cutoff = z_cutoff - 0.2
-            logger.warning(f"No outliers found with Z-score cutoff {z_cutoff}, trying a lower cutoff: {new_z_cutoff}")
+            logger.warning(
+                f"No outliers found with Z-score cutoff {z_cutoff:.1f}, trying a lower cutoff: {new_z_cutoff:.1f}"
+            )
             z_cutoff = new_z_cutoff
             indices = np.where(z_scores > z_cutoff)[0]
         outlier_status[indices] = True

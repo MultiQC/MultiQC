@@ -70,11 +70,11 @@ class BarPlot(Plot):
         if max_n_samples > 5:
             px_per_sample = 35
         if max_n_samples > 10:
-            px_per_sample = 25
+            px_per_sample = 30
         if max_n_samples > 20:
-            px_per_sample = 15
+            px_per_sample = 25
         if max_n_samples > 30:
-            px_per_sample = 10
+            px_per_sample = 20
         height = max_n_samples * px_per_sample
         height = min(MAX_PLOT_HEIGHT, height)
         height = max(MIN_PLOT_HEIGHT, height)
@@ -87,6 +87,7 @@ class BarPlot(Plot):
         self.layout.update(
             dict(
                 showlegend=True,
+                legend=None,  # default legend location
                 barmode=barmode,
                 hovermode="y unified",
                 # xaxis_title_text=self.layout.xaxis.title.text,

@@ -37,7 +37,7 @@ $(function () {
     $(".mqc-table-to-violin").click(function (e) {
       e.preventDefault();
       let target = $(this).data("pid");
-      mqc_plots[target].static = false;
+      if (mqc_plots[target]) mqc_plots[target].static = false;
       $("#mqc-table-" + target).hide();
       $("#mqc-violin-" + target).show();
       renderPlot(target);
@@ -46,7 +46,7 @@ $(function () {
     $(".mqc-violin-to-table").click(function (e) {
       e.preventDefault();
       let target = $(this).data("pid");
-      mqc_plots[target].static = true;
+      if (mqc_plots[target]) mqc_plots[target].static = true;
       $("#mqc-violin-" + target).hide();
       $("#mqc-table-" + target).show();
     });

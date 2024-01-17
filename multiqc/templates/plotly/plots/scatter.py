@@ -105,7 +105,7 @@ class ScatterPlot(Plot):
                 threshold = 1.0
                 while threshold <= 6.0:
                     n_outliers = np.count_nonzero((x_z_scores > threshold) | (y_z_scores > threshold))
-                    logger.debug(f"Scatter plot outlier threshold: {threshold}, outliers: {n_outliers}")
+                    logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
                     if n_annotated + n_outliers <= MAX_ANNOTATIONS:
                         break
                     # If there are too many outliers, we increase the threshold until we have less than 10

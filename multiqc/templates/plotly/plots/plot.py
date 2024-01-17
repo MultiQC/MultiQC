@@ -175,6 +175,15 @@ class Plot(ABC):
                 activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=self.flat,
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=-0.15,
+                xanchor="center",
+                x=0.5,
+            )
+            if self.flat
+            else None,
         )
         if self.add_log_tab and self.l_active:
             for axis in self.axis_controlled_by_switches():
@@ -329,7 +338,9 @@ class Plot(ABC):
                 )
             switch_buttons += "</div>\n\n"
 
-        export_btn = self._btn(cls="export-plot", label="Export Plot")
+        export_btn = ""
+        if not self.flat:
+            export_btn = self._btn(cls="export-plot", label="Export Plot")
         return [switch_buttons, export_btn]
 
     def _control_panel(self) -> str:
@@ -420,8 +431,10 @@ class Plot(ABC):
 
         # Should this plot be hidden on report load?
         hiding = "" if active else ' style="display:none;"'
-        return (
-            f'<div class="mqc_mplplot" id="{uid}"{hiding}>'
-            f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px" />'
-            f"</div>"
+        return "".join(
+            [
+                f'<div class="mqc_mplplot" id="{uid}"{hiding}>',
+                f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
+                "</div>",
+            ]
         )
