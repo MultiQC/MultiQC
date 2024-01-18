@@ -130,6 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "prinseplusplus-filtered-reads-beeswarm",
+                    "title": "PRINSEQ++: Filtered Reads",
                 },
             ),
         )

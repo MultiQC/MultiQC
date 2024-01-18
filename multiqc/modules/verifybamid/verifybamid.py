@@ -273,6 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
         tconfig = {
             "namespace": "VerifyBAMID",
             "id": "verifybamid-results",
+            "title": "VerifyBAMID: Results",
         }
 
         # send the plot to add section function with data dict and headers

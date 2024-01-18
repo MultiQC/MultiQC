@@ -56,7 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_indel_data,
                 self.gen_headers("_indel"),
-                pconfig={"id": "happy_indel_plot"},
+                pconfig={
+                    "id": "happy_indel_plot",
+                    "title": "Happy: INDEL",
+                },
             ),
         )
 
@@ -72,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_snp_data,
                 self.gen_headers("_snp"),
-                pconfig={"id": "happy_snp_plot"},
+                pconfig={"id": "happy_snp_plot", "title": "Happy: SNP"},
             ),
         )
 
