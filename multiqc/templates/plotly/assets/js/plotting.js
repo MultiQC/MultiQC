@@ -82,7 +82,6 @@ $(function () {
     let target = $(this).attr("id");
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
-      let plot = mqc_plots[target];
       renderPlot(target);
       if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
         // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning

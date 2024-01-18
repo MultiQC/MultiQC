@@ -360,8 +360,6 @@ class Plot(ABC):
             "trace_params": self.trace_params,
             "axis_controlled_by_switches": self.axis_controlled_by_switches(),
             "datasets": [d.dump_for_javascript() for d in self.datasets],
-            # TODO: save figures to JSON, not datasets? Problem is interactivity though
-            # "figures": [self._make_fig(dataset).to_plotly_json() for dataset in datasets],
             "p_active": self.p_active,
             "l_active": self.l_active,
             "square": self.pconfig.get("square"),

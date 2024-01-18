@@ -128,6 +128,9 @@ class ViolinPlot(Plot):
         dt: Optional[DataTable] = None,
         show_table_by_default: bool = False,
     ):
+        assert len(list_of_values_by_sample_by_metric) == len(list_of_header_by_metric)
+        assert len(list_of_values_by_sample_by_metric) > 0
+
         super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_sample_by_metric))
 
         self.dt = dt
@@ -151,8 +154,10 @@ class ViolinPlot(Plot):
         self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
         self.serialize_figure = False
         if self.n_samples >= config.max_table_rows:
-            logger.debug(f"Plotting violin instead of table, {self.n_samples} samples")
-            self.serialize_figure = True
+            logger.debug(
+                f"The number of samples exceeds the threshold: {self.n_samples} > {config.max_table_rows}. "
+                "Will build a violin plot instead of a general stats table"
+            )
             self.show_table = False
 
         self.trace_params.update(
@@ -234,27 +239,6 @@ class ViolinPlot(Plot):
             for v in header_by_metric.values():
                 v.pop("color", None)
 
-        # for idx, (_data_by_sample, _headers_by_metric) in enumerate(zip(dt.data, dt.headers)):
-        #     for sample, data in _data_by_sample.items():
-        #         for metric, value in data.items():
-        #             if metric not in _headers_by_metric:
-        #                 continue
-        #             if metric not in list_of_values_by_sample_by_metric:
-        #                 list_of_values_by_sample_by_metric[metric] = dict()
-        #             list_of_values_by_sample_by_metric[metric][sample] = value
-        #
-        #     for metric, header in _headers_by_metric.items():
-        #         color = header.get("colour")
-        #         headers_by_metric[metric] = {
-        #             "namespace": header["namespace"],
-        #             "title": header["title"],
-        #             "description": header["description"],
-        #             "max": header.get("max"),
-        #             "min": header.get("min"),
-        #             "suffix": header.get("suffix", ""),
-        #             "color": color,
-        #         }
-
         return ViolinPlot(
             [values_by_sample_by_metric],
             [header_by_metric],
@@ -306,7 +290,7 @@ class ViolinPlot(Plot):
         return html
 
     def dump_for_javascript(self):
-        """Serialise the data to pick up in plotly-js"""
+        """Serialise the data to pick up in Plotly-JS"""
         d = super().dump_for_javascript()
         d.update(
             {
@@ -338,26 +322,33 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons()
 
-    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
+    def create_figure(
+        self,
+        layout: go.Layout,
+        dataset: Dataset,
+        is_log=False,
+        is_pct=False,
+        add_scatter=True,
+    ):
         """
         Create a Plotly figure for a dataset
         """
         metrics = [m for m in dataset.metrics if not dataset.header_by_metric[m].get("hidden", False)]
 
-        for i, metric in enumerate(metrics):
+        for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
-            layout[f"xaxis{i + 1}"] = copy.deepcopy(layout["xaxis"])
-            layout[f"xaxis{i + 1}"].update(header.get("xaxis", {}))
-            layout[f"yaxis{i + 1}"] = copy.deepcopy(layout["yaxis"])
-            layout[f"yaxis{i + 1}"].update(
+            layout[f"xaxis{metric_idx + 1}"] = copy.deepcopy(layout["xaxis"])
+            layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
+            layout[f"yaxis{metric_idx + 1}"] = copy.deepcopy(layout["yaxis"])
+            layout[f"yaxis{metric_idx + 1}"].update(
                 {
                     "tickmode": "array",
-                    "tickvals": [i],
+                    "tickvals": [metric_idx],
                     "ticktext": [header["title"] + "  "],
                 }
             )
             if header.get("color"):
-                layout[f"yaxis{i + 1}"]["tickfont"] = {
+                layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
                     "color": f"rgba({header['color']},1)",
                 }
 
@@ -366,9 +357,6 @@ class ViolinPlot(Plot):
 
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
-            if header.get("hidden"):
-                continue
-
             values_by_sample = dataset.values_by_sample_by_metric[metric]
             outliers = dataset.outliers_by_metric.get(metric, [])
 
@@ -391,19 +379,22 @@ class ViolinPlot(Plot):
                     **params,
                 ),
             )
-            for sample_idx, (sample, value) in enumerate(values_by_sample.items()):
-                scatter_params = copy.deepcopy(self.scatter_trace_params)
-                scatter_params["showlegend"] = False
-                fig.add_trace(
-                    go.Scatter(
-                        x=[value],
-                        y=[metric_idx],
-                        text=[sample],
-                        xaxis=f"x{metric_idx + 1}",
-                        yaxis=f"y{metric_idx + 1}",
-                        **scatter_params,
-                    ),
-                )
+            if add_scatter:
+                for sample, value in values_by_sample.items():
+                    scatter_params = copy.deepcopy(self.scatter_trace_params)
+                    scatter_params["showlegend"] = False
+                    if dataset.show_only_outliers and sample not in outliers:
+                        continue
+                    fig.add_trace(
+                        go.Scatter(
+                            x=[value],
+                            y=[metric_idx],
+                            text=[sample],
+                            xaxis=f"x{axis_key}",
+                            yaxis=f"y{axis_key}",
+                            **scatter_params,
+                        ),
+                    )
         return fig
 
     def save_data_file(self, data: BaseDataset) -> None:
