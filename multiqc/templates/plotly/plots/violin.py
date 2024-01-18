@@ -43,12 +43,12 @@ class ViolinPlot(Plot):
         def create(
             dataset: BaseDataset,
             values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]],
-            headers_by_metric: Dict[str, Dict[str, Any]],
+            header_by_metric: Dict[str, Dict[str, Any]],
         ) -> "ViolinPlot.Dataset":
             ds = ViolinPlot.Dataset(
                 **dataset.__dict__,
-                metrics=list(headers_by_metric.keys()),
-                header_by_metric=headers_by_metric,
+                metrics=list(header_by_metric.keys()),
+                header_by_metric=header_by_metric,
                 values_by_sample_by_metric=dict(),
                 outliers_by_metric=dict(),
                 all_samples=[],
@@ -58,6 +58,8 @@ class ViolinPlot(Plot):
             all_samples = set()
             for metric in ds.metrics:
                 header = ds.header_by_metric[metric]
+
+                header["xaxis"] = {"ticksuffix": header.get("suffix")}
 
                 value_by_sample = values_by_sample_by_metric[metric]
                 value_by_sample = {s: v for s, v in value_by_sample.items() if v is not None}
@@ -81,15 +83,19 @@ class ViolinPlot(Plot):
                             xmin = min(value_by_sample.values())
                         if xmax is None or not isinstance(xmin, (int, float)):
                             xmax = max(value_by_sample.values())
-                        xmin -= (xmax - xmin) * 0.005
-                        xmax += (xmax - xmin) * 0.005
-                    header["xaxis"] = {"range": [xmin, xmax]}
+                    tickvals = None
+                    if xmin == xmax == 0:  # Plotly will modify the 0:0 range to -1:1, and we want to keep it 0-centered
+                        xmax = 1
+                        tickvals = [0]
+                    xmin -= (xmax - xmin) * 0.005
+                    xmax += (xmax - xmin) * 0.005
+                    header["xaxis"]["range"] = [xmin, xmax]
+                    header["xaxis"]["tickvals"] = tickvals
 
                     if len(value_by_sample) > THRESHOLD_BEFORE_OUTLIERS:
-                        logger.warning(
-                            f"Violin plot with {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS} samples. "
-                            f"This may be too many to display clearly, so showing "
-                            f"only outliers in each violin."
+                        logger.debug(
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS}. "
+                            f"Will add interactive points only for the outlier values."
                         )
 
                         samples = list(value_by_sample.keys())
@@ -98,9 +104,14 @@ class ViolinPlot(Plot):
                             values,
                             minval=header.get("min"),
                             maxval=header.get("max"),
+                            metric=header["title"],
                         )
-                        logger.debug(f"Found {len(outlier_statuses)} outliers for metric: {header['title']}")
-                        ds.outliers_by_metric[metric] = [samples[idx] for idx in outlier_statuses]
+                        logger.debug(
+                            f"Violin for '{header['title']}': found {np.count_nonzero(outlier_statuses)} outliers"
+                        )
+                        ds.outliers_by_metric[metric] = [
+                            samples[idx] for idx in range(len(samples)) if outlier_statuses[idx]
+                        ]
                         ds.show_only_outliers = True
 
                 ds.values_by_sample_by_metric[metric] = value_by_sample
@@ -405,6 +416,7 @@ def find_outliers(
     z_cutoff: float = 2.0,
     minval: Optional[Union[float, int]] = None,
     maxval: Optional[Union[float, int]] = None,
+    metric: Optional[str] = None,
 ) -> np.array:
     """
     If `n` is defined, find `n` most outlying points in a list.
@@ -444,10 +456,11 @@ def find_outliers(
         outlier_status[np.argsort(z_scores)[-top_n:]] = True
     else:
         indices = np.where(z_scores > z_cutoff)[0]
-        while len(indices) <= len(added_values) or z_cutoff > 1.0:
+        while len(indices) <= len(added_values) and z_cutoff > 1.0:
             new_z_cutoff = z_cutoff - 0.2
             logger.warning(
                 f"No outliers found with Z-score cutoff {z_cutoff:.1f}, trying a lower cutoff: {new_z_cutoff:.1f}"
+                + (f", metric: '{metric}'" if metric else "")
             )
             z_cutoff = new_z_cutoff
             indices = np.where(z_scores > z_cutoff)[0]
