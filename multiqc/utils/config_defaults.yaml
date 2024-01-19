@@ -893,3 +893,7 @@ module_order:
   - xengsort:
       module_tag:
         - DNA
+  - metaphlan:
+      module_tag:
+        - DNA
+        - metagenomics
