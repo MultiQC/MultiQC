@@ -37,9 +37,11 @@ class Plot {
   }
 
   resize(newHeight) {
-    Plotly.relayout(this.target, { height: newHeight });
-    if (this.square) {
-      Plotly.relayout(this.target, { width: newHeight });
+    if (!this.square) {
+      Plotly.relayout(this.target, { autosize: true, height: newHeight });
+    } else {
+      // noinspection JSSuspiciousNameCombination
+      Plotly.relayout(this.target, { autosize: true, height: newHeight, width: newHeight });
     }
   }
 
