@@ -569,7 +569,7 @@ def general_stats_headers(self):
     }
     for c in self.covs:
         self.general_stats_headers[f"{c}_x_pc"] = {
-            "title": f"&ge; {c}X",
+            "title": f"≥ {c}X",
             "description": f"Fraction of genome with at least {c}X coverage",
             "max": 100,
             "min": 0,

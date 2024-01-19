@@ -1102,7 +1102,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="""The cumulative percentage count of the proportion of your
             library which has seen each of the adapter sequences at each position.""",
             helptext="""
-            Note that only samples with &ge; 0.1% adapter contamination are shown.
+            Note that only samples with ≥ 0.1% adapter contamination are shown.
 
             There may be several lines per sample, as one is shown for each adapter
             detected in the file.

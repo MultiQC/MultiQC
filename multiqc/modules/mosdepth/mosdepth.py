@@ -512,7 +512,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
-                "title": f"&ge; {t}X",
+                "title": f"≥ {t}X",
                 "description": f"Fraction of genome with at least {t}X coverage",
                 "max": 100,
                 "min": 0,
