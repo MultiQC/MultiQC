@@ -63,6 +63,7 @@ jobs:
       - name: Commit and push changes
         if: env.changed == 'YES'
         run: |
+          gh pr checkout ${{ github.event.issue.number }}
           git config user.name 'MultiQC Bot'
           git config user.email 'multiqc-bot@seqera.io'
           git config push.default upstream
