@@ -194,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "# Genes",
                 "description": "Number of genes detected with at least 5 reads",
                 "min": 0,
-                "scale": "Bu",
+                "scale": "Blues",
                 "format": "{:,.0f}",
             },
             "rRNA rate": {
