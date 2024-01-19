@@ -11,8 +11,6 @@
 - BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
-- Module for metaphlan ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
-- WIP: Add cluster statistics for HUMID ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
 
 ### New modules
 
