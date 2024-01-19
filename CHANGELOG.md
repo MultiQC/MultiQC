@@ -13,6 +13,7 @@
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Module for metaphlan ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
 - WIP: Add cluster statistics for HUMID ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
+- changed hifiasm module to account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
 
 ### New modules
 
