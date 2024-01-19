@@ -22,7 +22,6 @@ class MultiqcModule(BaseMultiqcModule):
         href="https://github.com/biobakery/MetaPhlAn",
         info="is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.",
         doi="10.1038/s41587-023-01688-w",
-        sp_key="metaphlan",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -45,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.top_n = getattr(config, "metaphlan", {}).get("top_n", 10)
 
         self.metaphlan_raw_data = dict()
-        for f in self.find_log_files(sp_key, filehandles=True):
+        for f in self.find_log_files("metaphlan", filehandles=True):
             f["f"].seek(0)
             self.parse_logs(f)
             self.add_data_source(f)
@@ -55,7 +54,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.metaphlan_raw_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.metaphlan_raw_data)))
+        log.info(f"Found {len(self.metaphlan_raw_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.write_data_file(self.metaphlan_raw_data, f"multiqc_{self.anchor}")
 
@@ -65,10 +68,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_cols()
         self.top_taxa_barplot()
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
 
     def parse_logs(self, f):
         """
