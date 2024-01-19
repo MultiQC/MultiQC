@@ -63,6 +63,15 @@ class ViolinPlot(Plot):
 
                 value_by_sample = values_by_sample_by_metric[metric]
                 value_by_sample = {s: v for s, v in value_by_sample.items() if v is not None}
+                for s, v in value_by_sample.items():
+                    if isinstance(v, str):
+                        try:
+                            value_by_sample[s] = int(v)
+                        except ValueError:
+                            try:
+                                value_by_sample[s] = float(v)
+                            except ValueError:
+                                pass
                 if not value_by_sample:
                     logger.warning(f"No non-None values for metric: {header['title']}")
                     ds.values_by_sample_by_metric[metric] = value_by_sample
@@ -164,15 +173,15 @@ class ViolinPlot(Plot):
             orientation="h",
             box={"visible": True},
             meanline={"visible": True},
-            fillcolor="rgba(0,0,0,0.1)",
+            fillcolor="grey",
+            line={"width": 2, "color": "grey"},
+            opacity=0.5,
             points=False,  # Don't show points, we'll add them manually
             # The hover information is useful, but the formatting is ugly and not
             # configurable as far as I can see. Also, it's not possible to disable it,
             # so setting it to "points" as we don't show points, so it's effectively
             # disabling it.
             hoveron="points",
-            line={"width": 2},
-            opacity=0.5,
         )
 
         self.scatter_trace_params = {
@@ -336,10 +345,7 @@ class ViolinPlot(Plot):
             layout[f"xaxis{metric_idx + 1}"] = {
                 "gridcolor": layout["xaxis"]["gridcolor"],
                 "zerolinecolor": layout["xaxis"]["zerolinecolor"],
-                "tickfont": {
-                    "size": 9,
-                    "color": "rgba(0,0,0,0.5)",
-                },
+                "tickfont": copy.deepcopy(layout["xaxis"]["tickfont"]),
             }
             layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
             layout[f"yaxis{metric_idx + 1}"] = {
@@ -443,7 +449,7 @@ def find_outliers(
     mean = np.mean(values)
     std_dev = np.std(values)
     if std_dev == 0:
-        logger.warning(f"All {len(values)} points have the same values")
+        logger.warning(f"All {len(values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
         return np.zeros(len(values), dtype=bool)
 
     # Calculate Z-scores (measures of "outlyingness")
