@@ -70,21 +70,33 @@ class ViolinPlot extends Plot {
       // Set layouts for each violin individually
       let title = header.title + "  ";
       if (header["namespace"]) title = header["namespace"] + "  <br>" + title;
-      layout["xaxis" + axisKey] = JSON.parse(JSON.stringify(layout.xaxis));
-      layout["yaxis" + axisKey] = JSON.parse(JSON.stringify(layout.yaxis));
+      layout["xaxis" + (metricIdx + 1)] = {
+        gridcolor: layout["xaxis"]["gridcolor"],
+        zerolinecolor: layout["xaxis"]["zerolinecolor"],
+        tickfont: {
+          size: 9,
+          color: "rgba(0,0,0,0.5)",
+        },
+      };
+      layout["yaxis" + (metricIdx + 1)] = {
+        gridcolor: layout["yaxis"]["gridcolor"],
+        zerolinecolor: layout["yaxis"]["zerolinecolor"],
+        automargin: true,
+      };
       if (header["xaxis"] !== undefined) {
-        layout["xaxis" + axisKey] = Object.assign(layout["xaxis" + axisKey], header["xaxis"]);
+        layout["xaxis" + (metricIdx + 1)] = Object.assign(layout["xaxis" + axisKey], header["xaxis"]);
       }
-      layout["yaxis" + axisKey] = Object.assign(layout["yaxis" + axisKey], {
-        tickmode: "array",
-        tickvals: [metricIdx],
-        ticktext: [title],
-      });
+      layout["yaxis" + (metricIdx + 1)]["tickmode"] = "array";
+      layout["yaxis" + (metricIdx + 1)]["tickvals"] = [metricIdx];
+      layout["yaxis" + (metricIdx + 1)]["ticktext"] = [title];
+
+      params["line"] = { width: 4 };
 
       // Set color for each violin individually
       if (header["color"] !== undefined) {
         layout["yaxis" + axisKey]["tickfont"] = { color: "rgba(" + header["color"] + ",1)" };
-        params["fillcolor"] = "rgba(" + header["color"] + ",0.5)";
+        params["fillcolor"] = "rgba(" + header["color"] + ",1)";
+        params["line"]["color"] = "rgba(" + header["color"] + ",1)";
       }
 
       // Create violin traces
@@ -95,11 +107,6 @@ class ViolinPlot extends Plot {
         values.push(value);
       });
 
-      params.line = { width: 0 };
-      if (outliers !== undefined && outliers.length === 0) {
-        // keep the border so trivial violins (from identical numbers) are also visible:
-        params.line = { width: 2, color: "rgba(0,0,0,0.5)" };
-      }
       traces.push({
         type: "violin",
         x: values,
@@ -110,6 +117,9 @@ class ViolinPlot extends Plot {
         ...params,
       });
     });
+
+    layout["xaxis"] = layout["xaxis1"];
+    layout["yaxis"] = layout["yaxis1"];
 
     // We want to select points on all violins belonging to this specific sample.
     // Points are rendered each as a separate trace, so we need to collect

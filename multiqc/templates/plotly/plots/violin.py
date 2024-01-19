@@ -171,7 +171,8 @@ class ViolinPlot(Plot):
             # so setting it to "points" as we don't show points, so it's effectively
             # disabling it.
             hoveron="points",
-            line={"width": 0},
+            line={"width": 2},
+            opacity=0.5,
         )
 
         self.scatter_trace_params = {
@@ -182,33 +183,23 @@ class ViolinPlot(Plot):
             "hoverlabel": {"bgcolor": "white"},
         }
 
-        total_rows = 0
-        unhidden_rows = 0
-        for ds in self.datasets:
-            total_rows = max(total_rows, len(ds.metrics))
-            unhidden_metrics = [m for m in ds.metrics if not ds.header_by_metric[m].get("hidden", False)]
-            unhidden_rows = max(unhidden_rows, len(unhidden_metrics))
-
         self.layout.update(
-            height=70 * unhidden_rows + 50,
             margin=dict(
                 pad=0,
                 # t=43,
                 b=40,
             ),
             violingap=0,
-            grid=dict(
-                rows=unhidden_rows,
-                subplots=[[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(unhidden_rows)],
-                columns=1,
-                roworder="top to bottom",
-                ygap=0.4,
-            ),
             xaxis=dict(
                 tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
             ),
             yaxis=dict(
                 automargin=True,
+            ),
+            grid=dict(
+                columns=1,
+                roworder="top to bottom",
+                ygap=0.4,
             ),
         )
 
@@ -335,11 +326,27 @@ class ViolinPlot(Plot):
         """
         metrics = [m for m in dataset.metrics if not dataset.header_by_metric[m].get("hidden", False)]
 
+        layout = copy.deepcopy(layout)
+        layout.height = 70 * len(metrics) + 50
+        layout.grid.rows = len(metrics)
+        layout.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
+
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
-            layout[f"xaxis{metric_idx + 1}"] = copy.deepcopy(layout["xaxis"])
+            layout[f"xaxis{metric_idx + 1}"] = {
+                "gridcolor": layout["xaxis"]["gridcolor"],
+                "zerolinecolor": layout["xaxis"]["zerolinecolor"],
+                "tickfont": {
+                    "size": 9,
+                    "color": "rgba(0,0,0,0.5)",
+                },
+            }
             layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
-            layout[f"yaxis{metric_idx + 1}"] = copy.deepcopy(layout["yaxis"])
+            layout[f"yaxis{metric_idx + 1}"] = {
+                "gridcolor": layout["yaxis"]["gridcolor"],
+                "zerolinecolor": layout["yaxis"]["zerolinecolor"],
+                "automargin": True,
+            }
             layout[f"yaxis{metric_idx + 1}"].update(
                 {
                     "tickmode": "array",
@@ -352,6 +359,9 @@ class ViolinPlot(Plot):
                     "color": f"rgba({header['color']},1)",
                 }
 
+        layout.xaxis = layout["xaxis1"]
+        layout.yaxis = layout["yaxis1"]
+
         layout.showlegend = False
         fig = go.Figure(layout=layout)
 
@@ -361,12 +371,10 @@ class ViolinPlot(Plot):
             outliers = dataset.outliers_by_metric.get(metric, [])
 
             params = copy.deepcopy(self.trace_params)
-            if header.get("color"):
-                params["fillcolor"] = f"rgba({header['color']},0.5)"
-
-            if self.show_only_outliers and not outliers:
-                # keep the border so trivial violins (from identical numbers) are also visible:
-                params["line"] = {"width": 2, "color": "rgba(0,0,0,0.5)"}
+            color = header.get("color")
+            if color:
+                params["fillcolor"] = f"rgba({color},1)"
+                params["line"]["color"] = f"rgba({color},1)"
 
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
             fig.add_trace(
