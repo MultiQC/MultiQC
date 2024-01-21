@@ -855,6 +855,13 @@ function plot_scatter_plot(target, ds) {
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
 
+  $.each(data, function (j, s) {
+    data[j]["marker"] = {
+      radius: data[j]["marker_size"] ?? config["marker_size"],
+      lineWidth: data[j]["marker_line_width"] ?? config["marker_line_width"],
+    };
+  });
+
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {
     $.each(data, function (j, s) {

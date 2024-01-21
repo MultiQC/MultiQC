@@ -188,14 +188,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def peddy_pca_plot(self):
         ancestry_colors = {
-            "SAS": "rgb(68,1,81,1)",
-            "EAS": "rgb(59,81,139,1)",
-            "AMR": "rgb(33,144,141,1)",
-            "AFR": "rgb(92,200,99,1)",
-            "EUR": "rgb(253,231,37,1)",
+            "SAS": "68,1,81",
+            "EAS": "59,81,139",
+            "AMR": "33,144,141",
+            "AFR": "92,200,99",
+            "EUR": "253,231,37",
         }
-        default_color = "#000000"
-        default_background_color = "rgb(211,211,211,0.05)"
+        default_color = "0,0,0"
+        default_background_color = "211,211,211"
 
         data = {}
 
@@ -206,9 +206,8 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "x": pc1,
                     "y": pc2,
-                    "color": ancestry_colors.get(ancestry, default_background_color),
+                    "color": f"rgba({ancestry_colors.get(ancestry, default_background_color)},0.1)",
                     "name": ancestry,
-                    "opacity": 0.3,
                     "marker_size": 3,
                     "marker_line_width": 0,
                     "annotate": False,
@@ -228,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": d["PC2_het_check"],
                 }
                 try:
-                    data[s_name]["color"] = ancestry_colors.get(d["ancestry-prediction"], default_color)
+                    data[s_name]["color"] = f"rgb({ancestry_colors.get(d['ancestry-prediction'], default_color)}"
                 except KeyError:
                     pass
 

@@ -642,7 +642,7 @@ class MultiqcModule(BaseMultiqcModule):
             c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
             cats = self.somalier_ancestry_cats
             ancestry_colors = dict(zip(cats, c_scale[: len(cats)]))
-            default_background_color = "rgb(255,192,203,0.3)"
+            default_background_color = "rgba(255,192,203,0.3)"
 
             # Make colours semi-transparent
             ancestry_colors = dict(zip(ancestry_colors.keys(), _make_col_alpha(ancestry_colors.values(), 0.3)))
@@ -653,7 +653,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": pc2,
                     "color": ancestry_colors.get(ancestry, default_background_color),
                     "name": ancestry,
-                    "opacity": 0.5,
                     "marker_size": 3,
                     "marker_line_width": 0,
                     "annotate": False,
