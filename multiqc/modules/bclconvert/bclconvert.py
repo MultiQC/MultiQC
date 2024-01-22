@@ -403,7 +403,7 @@ class MultiqcModule(BaseMultiqcModule):
                         float(row.get("Mean Quality Score (PF)", 0)) * sample["_calculated_yield"]
                     )
                     lane["_calculated_quality_score_sum"] += (
-                        float(row.get("Mean Quality Score (PF)", 0)) * lane["_calculated_yield"]
+                        float(row.get("Mean Quality Score (PF)", 0)) * sample["_calculated_yield"]
                     )
 
                 if lane_id not in total_reads_in_lane:
