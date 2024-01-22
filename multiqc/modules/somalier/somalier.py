@@ -464,7 +464,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         colours_legend = ""
-        for rel, group in relatedness_groups.items():
+        for rel, group in sorted(relatedness_groups.items()):
             col = group["color"].replace(str(alpha), "1.0")
             colours_legend += f'<span style="color:{col}">{group["name"]}</span>, '
 

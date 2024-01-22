@@ -173,6 +173,10 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
 
     report.num_hc_plots += 1
 
+    # Reverse order of dots in plotdata as the z-order is reversed in Highcharts compared to Plotly
+    for d in plotdata:
+        d.reverse()
+
     report.plot_data[pconfig["id"]] = {"plot_type": "scatter", "datasets": plotdata, "config": pconfig}
 
     return html
