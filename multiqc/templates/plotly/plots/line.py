@@ -122,7 +122,7 @@ class LinePlot(Plot):
                         y1=line["value"],
                         line={
                             "width": line["width"],
-                            "dash": line["dashStyle"].lower(),
+                            "dash": convert_dash_style(line["dashStyle"]),
                             "color": line["color"],
                         },
                     )
@@ -139,7 +139,7 @@ class LinePlot(Plot):
                         y1=1,
                         line={
                             "width": line["width"],
-                            "dash": line["dashStyle"].lower(),
+                            "dash": convert_dash_style(line["dashStyle"]),
                             "color": line["color"],
                         },
                     )
@@ -180,7 +180,7 @@ class LinePlot(Plot):
 
             params = copy.deepcopy(self.trace_params)
             if "dashStyle" in line:
-                params["line"]["dash"] = line["dashStyle"].lower()
+                params["line"]["dash"] = convert_dash_style(line["dashStyle"].lower())
             if "lineWidth" in line:
                 params["line"]["width"] = line["lineWidth"]
             fig.add_trace(
@@ -230,3 +230,20 @@ class LinePlot(Plot):
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
             util_functions.write_data_file(fdata, dataset.uid)
+
+
+def convert_dash_style(dash_style: str) -> str:
+    """Convert dash style from Highcharts to Plotly"""
+    return {
+        "Solid": "solid",
+        "ShortDash": "dash",
+        "ShortDot": "dot",
+        "ShortDashDot": "dashdot",
+        "ShortDashDotDot": "dashdot",
+        "Dot": "dot",
+        "Dash": "dash",
+        "DashDot": "dashdot",
+        "LongDash": "longdash",
+        "LongDashDot": "longdashdot",
+        "LongDashDotDot": "longdashdot",
+    }.get(dash_style, "solid")
