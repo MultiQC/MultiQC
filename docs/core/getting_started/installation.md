@@ -297,7 +297,7 @@ This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewel
 To build a singularity container image from the docker image, use the following command: _(change `1.20` to the current MultiQC version)_
 
 ```bash
-singularity build multiqc-1.20.sif docker://multiqc/multiqc:1.20
+singularity build multiqc-1.20.sif docker://multiqc/multiqc:v1.20
 ```
 
 Then, use `singularity run` to run the image with the normal MultiQC arguments:
