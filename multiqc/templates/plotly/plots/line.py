@@ -175,7 +175,10 @@ class LinePlot(Plot):
                 xs = [x[0] for x in line["data"]]
                 ys = [x[1] for x in line["data"]]
             else:
-                xs = [x for x in range(len(line["data"]))]
+                if self.categories:
+                    xs = self.categories
+                else:
+                    xs = [x for x in range(len(line["data"]))]
                 ys = line["data"]
 
             params = copy.deepcopy(self.trace_params)
