@@ -62,7 +62,7 @@ class ScatterPlot(Plot):
     @staticmethod
     def tt_label() -> Optional[str]:
         """Default tooltip label"""
-        return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}>"
+        return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
 
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
