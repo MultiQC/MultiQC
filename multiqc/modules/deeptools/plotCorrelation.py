@@ -42,7 +42,10 @@ class plotCorrelationMixin:
             for s1 in samples:
                 row = []
                 for s2 in samples:
-                    row.append(self.deeptools_plotCorrelationData[s1][s2])
+                    try:
+                        row.append(self.deeptools_plotCorrelationData[s1][s2])
+                    except KeyError:
+                        row.append(None)
                 rows.append(row)
             if len(rows) == 0:
                 log.debug("No valid data for correlation plot")
