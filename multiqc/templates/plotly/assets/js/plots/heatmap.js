@@ -36,13 +36,15 @@ class HeatmapPlot extends Plot {
       rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
     }
 
+    let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
+
     let heatmap = {
       type: "heatmap",
       z: rows,
       x: xcats,
       y: ycats,
+      ...params,
     };
-    heatmap = Object.assign(heatmap, this.heatmap_config);
     return [heatmap];
   }
 

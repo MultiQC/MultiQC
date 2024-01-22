@@ -134,7 +134,8 @@ class HeatmapPlot(Plot):
                     for val in row:
                         if val is not None:
                             self.max = val if self.max is None else max(self.max, val)
-        self.heatmap_config = {
+
+        self.trace_params = {
             "colorscale": self.pconfig.get(
                 "colstops",
                 [
@@ -157,13 +158,16 @@ class HeatmapPlot(Plot):
             "zmax": self.pconfig.get("max", None),
         }
 
+        # Enable datalabels if there are less than 20x20 cells, unless heatmap_config.datalabels is set explicitly
+        if self.pconfig.get("datalabels") is None and num_rows * num_cols < 400:
+            self.trace_params["texttemplate"] = "%{z:.2f}"
+
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""
         d = super().dump_for_javascript()
         d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
         d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
         d["square"] = self.square
-        d["heatmap_config"] = self.heatmap_config
         return d
 
     def _control_panel(self) -> str:
@@ -208,25 +212,12 @@ class HeatmapPlot(Plot):
         """
         Create a Plotly figure for a dataset
         """
-        import json
-
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-layout.json", "w") as f:
-            f.write(json.dumps(layout.to_plotly_json()))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-data.json", "w") as f:
-            f.write(json.dumps(dataset.rows))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-ycats.json", "w") as f:
-            f.write(json.dumps(dataset.ycats))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-xcats.json", "w") as f:
-            f.write(json.dumps(dataset.xcats))
-        with open(f"/Users/vlad/git/playground/dumps/{self.id}-heatmap_config.json", "w") as f:
-            f.write(json.dumps(self.heatmap_config))
-
         return go.Figure(
             data=go.Heatmap(
                 z=dataset.rows,
                 x=dataset.xcats,
                 y=dataset.ycats,
-                **self.heatmap_config,
+                **self.trace_params,
             ),
             layout=layout,
         )
