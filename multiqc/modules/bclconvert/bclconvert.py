@@ -399,12 +399,11 @@ class MultiqcModule(BaseMultiqcModule):
                     # columns only present pre v3.9.3, after they moved to quality_metrics
                     sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
                     # Collecting to re-calculate mean_quality:
-                    sample["_calculated_quality_score_sum"] += (
+                    calculated_quality_score_sum = (
                         float(row.get("Mean Quality Score (PF)", 0)) * sample["_calculated_yield"]
                     )
-                    lane["_calculated_quality_score_sum"] += (
-                        float(row.get("Mean Quality Score (PF)", 0)) * sample["_calculated_yield"]
-                    )
+                    sample["_calculated_quality_score_sum"] += calculated_quality_score_sum
+                    lane["_calculated_quality_score_sum"] += calculated_quality_score_sum
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
