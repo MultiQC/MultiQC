@@ -336,7 +336,7 @@ class ViolinPlot(Plot):
         layout = copy.deepcopy(layout)
         layout.height = 70 * len(metrics) + 50
         layout.grid.rows = len(metrics)
-        layout.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
+        layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
 
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
@@ -351,16 +351,19 @@ class ViolinPlot(Plot):
                 "zerolinecolor": layout["yaxis"]["zerolinecolor"],
                 "automargin": True,
             }
+            title = header["title"] + "  "
+            if header.get("namespace"):
+                title = f"{header['namespace']}  <br>" + title
             layout[f"yaxis{metric_idx + 1}"].update(
                 {
                     "tickmode": "array",
                     "tickvals": [metric_idx],
-                    "ticktext": [header["title"] + "  "],
+                    "ticktext": [title],
                 }
             )
             if header.get("color"):
                 layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgba({header['color']},1)",
+                    "color": f"rgb({header['color']})",
                 }
 
         layout.xaxis = layout["xaxis1"]
