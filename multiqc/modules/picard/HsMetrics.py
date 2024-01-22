@@ -181,6 +181,7 @@ def parse_reports(module):
                 "namespace": "HsMetrics",
                 "scale": "RdYlGn",
                 "min": 0,
+                "title": "Picard HsMetrics",
             },
         ),
     )
