@@ -117,11 +117,11 @@ jobs:
         if: matrix.python-version == env.latest_python
         run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
-      - name: Specific module / named output dir / dev template / JSON data / File list
+      - name: Specific module / named output dir / JSON data / File list
         if: matrix.python-version == env.latest_python
         run: |
           cd test_data
-          multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+          multiqc -m star -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
 
       - name: No report
         if: matrix.python-version == env.latest_python
