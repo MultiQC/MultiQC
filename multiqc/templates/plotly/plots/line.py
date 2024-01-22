@@ -61,7 +61,9 @@ class LinePlot(Plot):
 
         y_bands = self.pconfig.get("yPlotBands")
         x_bands = self.pconfig.get("xPlotBands")
-        if y_bands or x_bands:
+        x_lines = self.pconfig.get("xPlotLines")
+        y_lines = self.pconfig.get("yPlotLines")
+        if y_bands or x_bands or x_lines or y_lines:
             # We don't want the bands to affect the calculated y-axis range. So we
             # call `fig.full_figure_for_development` to force-calculate the figure size
             # before we add the bands, and then force set the calculated range.
@@ -76,37 +78,74 @@ class LinePlot(Plot):
                 max([fig.layout.xaxis.range[1] for fig in dev_figs]),
             ]
 
-            self.layout.shapes = [
-                dict(
-                    type="rect",
-                    y0=band["from"],
-                    y1=band["to"],
-                    x0=0,
-                    x1=1,
-                    xref="paper",  # make x coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in self.pconfig.get("yPlotBands", [])
-            ] + [
-                dict(
-                    type="rect",
-                    x0=band["from"],
-                    x1=band["to"],
-                    y0=0,
-                    y1=1,
-                    yref="paper",  # make y coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in self.pconfig.get("xPlotBands", [])
-            ]
+            self.layout.shapes = (
+                [
+                    dict(
+                        type="rect",
+                        y0=band["from"],
+                        y1=band["to"],
+                        x0=0,
+                        x1=1,
+                        xref="paper",  # make x coords are relative to the plot paper [0,1]
+                        fillcolor=band["color"],
+                        line={
+                            "width": 0,
+                        },
+                        layer="below",
+                    )
+                    for band in (y_bands or [])
+                ]
+                + [
+                    dict(
+                        type="rect",
+                        x0=band["from"],
+                        x1=band["to"],
+                        y0=0,
+                        y1=1,
+                        yref="paper",  # make y coords are relative to the plot paper [0,1]
+                        fillcolor=band["color"],
+                        line={
+                            "width": 0,
+                        },
+                        layer="below",
+                    )
+                    for band in (x_bands or [])
+                ]
+                + [
+                    dict(
+                        type="line",
+                        xref="paper",
+                        yref="y",
+                        x0=0,
+                        y0=line["value"],
+                        x1=1,
+                        y1=line["value"],
+                        line={
+                            "width": line["width"],
+                            "dash": line["dashStyle"].lower(),
+                            "color": line["color"],
+                        },
+                    )
+                    for line in (y_lines or [])
+                ]
+                + [
+                    dict(
+                        type="line",
+                        yref="paper",
+                        xref="x",
+                        x0=line["value"],
+                        y0=0,
+                        x1=line["value"],
+                        y1=1,
+                        line={
+                            "width": line["width"],
+                            "dash": line["dashStyle"].lower(),
+                            "color": line["color"],
+                        },
+                    )
+                    for line in (x_lines or [])
+                ]
+            )
 
     @staticmethod
     def tt_label() -> Optional[str]:
