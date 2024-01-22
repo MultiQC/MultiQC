@@ -1114,6 +1114,7 @@ def run(
     # Generate report if required
     if config.make_report:
         # Load in parent template files first if a child theme
+        parent_template = None
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
         except AttributeError:
@@ -1137,7 +1138,9 @@ def run(
                         fdir = template_mod.template_dir
                         name = dev_path
                         path = dev_path
-                    elif os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
+                    elif parent_template and os.path.exists(
+                        dev_path := os.path.join(parent_template.template_dir, name)
+                    ):
                         fdir = template_mod.template_dir
                         name = dev_path
                         path = dev_path
