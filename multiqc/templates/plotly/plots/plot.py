@@ -181,6 +181,10 @@ class Plot(ABC):
         if self.add_log_tab and self.l_active:
             for axis in self.axis_controlled_by_switches():
                 self.layout[axis].type = "log"
+        if self.pconfig.get("xLog"):
+            self.layout.xaxis.type = "log"
+        if self.pconfig.get("yLog"):
+            self.layout.yaxis.type = "log"
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
