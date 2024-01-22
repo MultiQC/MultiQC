@@ -80,6 +80,12 @@ def make_plot(dt: table_object.DataTable):
         for k, header in hs.items():
             bcol = f"rgb({header.get('colour', '204,204,204')})"
 
+            if "modify" in header and callable(header["modify"]):
+                if "dmax" in header:
+                    header["dmax"] = header["modify"](header["dmax"])
+                if "dmin" in header:
+                    header["dmin"] = header["modify"](header["dmin"])
+
             categories.append(
                 {
                     "namespace": header["namespace"],
@@ -87,9 +93,10 @@ def make_plot(dt: table_object.DataTable):
                     "description": header["description"],
                     "max": header["dmax"],
                     "min": header["dmin"],
-                    "suffix": header.get("suffix", ""),
+                    "suffix": header.get("suffix", "") + (f" {header['ttSuffix']}" if "ttSuffix" in header else ""),
                     "decimalPlaces": header.get("decimalPlaces", "2"),
                     "bordercol": bcol,
+                    "format": header.get("format", ""),
                 }
             )
 

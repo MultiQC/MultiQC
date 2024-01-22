@@ -85,21 +85,17 @@ class ViolinPlot(Plot):
                         ds.values_by_sample_by_metric[metric] = value_by_sample
                         continue
 
-                    xmin = header.get("min")
-                    xmax = header.get("max")
-                    if all(isinstance(v, (int, float)) for v in value_by_sample.values()):
-                        if xmin is None or not isinstance(xmin, (int, float)):
-                            xmin = min(value_by_sample.values())
-                        if xmax is None or not isinstance(xmin, (int, float)):
-                            xmax = max(value_by_sample.values())
+                    xmin = header.get("dmin")
+                    xmax = header.get("dmax")
                     tickvals = None
                     if xmin == xmax == 0:  # Plotly will modify the 0:0 range to -1:1, and we want to keep it 0-centered
                         xmax = 1
                         tickvals = [0]
-                    xmin -= (xmax - xmin) * 0.005
-                    xmax += (xmax - xmin) * 0.005
-                    header["xaxis"]["range"] = [xmin, xmax]
                     header["xaxis"]["tickvals"] = tickvals
+                    if xmin is not None and xmax is not None:
+                        xmin -= (xmax - xmin) * 0.005
+                        xmax += (xmax - xmin) * 0.005
+                        header["xaxis"]["range"] = [xmin, xmax]
 
                     if len(value_by_sample) > THRESHOLD_BEFORE_OUTLIERS:
                         logger.debug(
@@ -111,8 +107,8 @@ class ViolinPlot(Plot):
                         values = list(value_by_sample.values())
                         outlier_statuses = find_outliers(
                             values,
-                            minval=header.get("min"),
-                            maxval=header.get("max"),
+                            minval=header.get("dmin"),
+                            maxval=header.get("dmax"),
                             metric=header["title"],
                         )
                         logger.debug(
@@ -225,6 +221,8 @@ class ViolinPlot(Plot):
                 "description": header["description"],
                 "max": header.get("max"),
                 "min": header.get("min"),
+                "dmax": header.get("dmax"),
+                "dmin": header.get("dmin"),
                 "suffix": header.get("suffix", ""),
                 "color": header.get("colour", header.get("color")),
                 "hidden": header.get("hidden"),

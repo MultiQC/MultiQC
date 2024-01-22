@@ -243,8 +243,6 @@ class DataTable:
                     for s_name, samp in data[idx].items():
                         try:
                             val = float(samp[k])
-                            if callable(headers[idx][k]["modify"]):
-                                val = float(headers[idx][k]["modify"](val))
                             if setdmax:
                                 headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
                             if setdmin:

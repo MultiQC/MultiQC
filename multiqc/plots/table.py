@@ -105,6 +105,12 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
             checked = ""
             hidden_cols += 1
 
+        if "modify" in header and callable(header["modify"]):
+            if "dmax" in header:
+                header["dmax"] = header["modify"](header["dmax"])
+            if "dmin" in header:
+                header["dmin"] = header["modify"](header["dmin"])
+
         data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}'.format(
             header["dmax"], header["dmin"], header["namespace"], shared_key
         )

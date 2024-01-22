@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
+            "ttSuffix": f"{config.read_count_prefix} reads",
             "decimalPlaces": 0,
             "shared_key": "read_count",
         }

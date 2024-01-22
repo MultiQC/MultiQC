@@ -153,14 +153,14 @@ class StatsReportMixin:
         reads = {
             "min": 0,
             "modify": lambda x: float(x) / 1000000.0,
-            "suffix": "M reads",
+            "ttSuffix": "M reads",
             "decimalPlaces": 2,
             "shared_key": "read_count",
         }
         bases = {
             "min": 0,
             "modify": lambda x: float(x) / 1000000.0,
-            "suffix": "M bases",
+            "ttSuffix": "M bases",
             "decimalPlaces": 2,
             "shared_key": "base_count",
         }
