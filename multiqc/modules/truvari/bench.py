@@ -251,7 +251,7 @@ class BenchSummary:
             "ylab": "Recall (%)",
             "square": True,
             "title": "Truvari: Precision vs. Recall",
-            "tt_label": "Precision: {point.x:>4.1f}%<br/>Recall: {point.y:>6.1f}%",
+            "tt_label": "{point.x:.1f}% precision<br/>{point.y:.1f}% recall",
         }
         self.add_section(
             name="Precision vs. Recall",

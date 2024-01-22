@@ -105,17 +105,9 @@ class Plot(ABC):
         # Format on-hover tooltips
         tt_label = self.tt_label()
         if "tt_label" in self.pconfig:
-            tt_label = self.pconfig["tt_label"]
-            replace_d = {  # Convert HighCharts format to Plotly format
-                "{point.x": "%{x",
-                "{point.y": "%{y",
-                "{point.category}": "%{x}",
-                "<strong>": "<b>",
-                "</strong>": "</b>",
-                "<br/>": "<br>",
-            }
-            for k, v in replace_d.items():
-                tt_label = tt_label.replace(k, v)
+            tt_label = self._clean_config_tt_label(self.pconfig["tt_label"])
+            if not tt_label.startswith("<br>"):
+                tt_label = "<br>" + tt_label
         elif tt_label:
             tt_label += self.pconfig.get("tt_suffix", "")
         if tt_label:
@@ -202,6 +194,22 @@ class Plot(ABC):
     def tt_label() -> Optional[str]:
         """Default tooltip label"""
         return None
+
+    @staticmethod
+    def _clean_config_tt_label(tt_label: str) -> str:
+        replace_d = {  # Convert HighCharts format to Plotly format
+            "{point.x": "%{x",
+            "{point.y": "%{y",
+            "x:>": "x:",
+            "y:>": "y:",
+            "{point.category}": "%{x}",
+            "<strong>": "<b>",
+            "</strong>": "</b>",
+            "<br/>": "<br>",
+        }
+        for k, v in replace_d.items():
+            tt_label = tt_label.replace(k, v)
+        return tt_label
 
     def __repr__(self):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}

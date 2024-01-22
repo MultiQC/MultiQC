@@ -93,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Mapped reads (millions)",
                     "min": 0,
                     "scale": "PuRd",
-                    "modify": lambda x: float(x) / config.read_count_multiplier,
+                    "modify": lambda x: float(x) * config.read_count_multiplier,
                     "suffix": config.read_count_prefix,
                     "shared_key": "read_count",
                 },

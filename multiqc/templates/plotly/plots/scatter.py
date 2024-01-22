@@ -59,8 +59,7 @@ class ScatterPlot(Plot):
         # Make a tooltip always show on hover over nearest point on plot
         self.layout.hoverdistance = -1
 
-    @staticmethod
-    def tt_label() -> Optional[str]:
+    def tt_label(self) -> Optional[str]:
         """Default tooltip label"""
         return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
 

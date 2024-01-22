@@ -152,14 +152,14 @@ class StatsReportMixin:
         keys = {}
         reads = {
             "min": 0,
-            "modify": lambda x: float(x) / config.read_count_multiplier,
+            "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": config.read_count_prefix,
             "decimalPlaces": 2,
             "shared_key": "read_count",
         }
         bases = {
             "min": 0,
-            "modify": lambda x: float(x) / config.base_count_multiplier,
+            "modify": lambda x: float(x) * config.base_count_multiplier,
             "suffix": config.base_count_prefix,
             "decimalPlaces": 2,
             "shared_key": "base_count",
