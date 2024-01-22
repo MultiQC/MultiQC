@@ -178,13 +178,18 @@ class Plot(ABC):
             if self.flat
             else None,
         )
-        if self.add_log_tab and self.l_active:
-            for axis in self.axis_controlled_by_switches():
-                self.layout[axis].type = "log"
+        self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xLog"):
             self.layout.xaxis.type = "log"
+            if "xaxis" in self._axis_controlled_by_switches:
+                self._axis_controlled_by_switches.remove("xaxis")
         if self.pconfig.get("yLog"):
             self.layout.yaxis.type = "log"
+            if "yaxis" in self._axis_controlled_by_switches:
+                self._axis_controlled_by_switches.remove("yaxis")
+        if self.add_log_tab and self.l_active:
+            for axis in self._axis_controlled_by_switches:
+                self.layout[axis].type = "log"
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -371,7 +376,7 @@ class Plot(ABC):
             "plot_type": self.plot_type.value,
             "layout": self.layout.to_plotly_json(),
             "trace_params": self.trace_params,
-            "axis_controlled_by_switches": self.axis_controlled_by_switches(),
+            "axis_controlled_by_switches": self._axis_controlled_by_switches,
             "datasets": [d.dump_for_javascript() for d in self.datasets],
             "p_active": self.p_active,
             "l_active": self.l_active,
