@@ -37,6 +37,7 @@ workspace_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 assert pr_title, pr_title
 assert pr_number, pr_number
+assert pr_number.isdigit(), pr_number
 
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
