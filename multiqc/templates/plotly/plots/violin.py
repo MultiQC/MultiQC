@@ -72,13 +72,21 @@ class ViolinPlot(Plot):
                                 value_by_sample[s] = float(v)
                             except ValueError:
                                 pass
+                    if "modify" in header and callable(header["modify"]):
+                        try:
+                            value_by_sample[s] = header["modify"](v)
+                        except Exception:
+                            pass
+
                 if not value_by_sample:
                     logger.warning(f"No non-None values for metric: {header['title']}")
                     ds.values_by_sample_by_metric[metric] = value_by_sample
                     continue
 
-                values_are_numerical = all(isinstance(v, (int, float)) for v in value_by_sample.values())
-                if values_are_numerical:
+                values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
+                values_are_integer = all(isinstance(v, int) for v in value_by_sample.values())
+
+                if values_are_numeric:
                     value_by_sample = {s: v for s, v in value_by_sample.items() if not math.isnan(v)}
                     if not value_by_sample:
                         logger.warning(f"All values are NaN for metric: {header['title']}")
@@ -118,6 +126,12 @@ class ViolinPlot(Plot):
                             samples[idx] for idx in range(len(samples)) if outlier_statuses[idx]
                         ]
                         ds.show_only_outliers = True
+
+                if values_are_numeric and not values_are_integer and "tt_decimals" in header:
+                    header["hoverformat"] = f".{header['tt_decimals']}f"
+                    del header["tt_decimals"]
+                if "modify" in header and callable(header["modify"]):
+                    del header["modify"]  # To keep the data JSON-serializable
 
                 ds.values_by_sample_by_metric[metric] = value_by_sample
                 all_samples.update(set(list(value_by_sample.keys())))
@@ -219,13 +233,13 @@ class ViolinPlot(Plot):
                 "namespace": header["namespace"],
                 "title": header["title"],
                 "description": header["description"],
-                "max": header.get("max"),
-                "min": header.get("min"),
                 "dmax": header.get("dmax"),
                 "dmin": header.get("dmin"),
                 "suffix": header.get("suffix", ""),
                 "color": header.get("colour", header.get("color")),
                 "hidden": header.get("hidden"),
+                "modify": header.get("modify"),
+                "tt_decimals": header.get("decimalPlaces", 2),
             }
             values_by_sample_by_metric[rid] = dict()
             for s_name, val_by_metric in dt.data[idx].items():

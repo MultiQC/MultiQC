@@ -69,6 +69,7 @@ class ViolinPlot extends Plot {
       layout["xaxis" + (metricIdx + 1)] = {
         gridcolor: layout["xaxis"]["gridcolor"],
         zerolinecolor: layout["xaxis"]["zerolinecolor"],
+        hoverformat: layout["xaxis"]["hoverformat"],
         tickfont: {
           size: layout["xaxis"]["tickfont"]["size"],
           color: layout["xaxis"]["tickfont"]["color"],
@@ -77,6 +78,7 @@ class ViolinPlot extends Plot {
       layout["yaxis" + (metricIdx + 1)] = {
         gridcolor: layout["yaxis"]["gridcolor"],
         zerolinecolor: layout["yaxis"]["zerolinecolor"],
+        hoverformat: layout["yaxis"]["hoverformat"],
         automargin: true,
       };
       if (header["xaxis"] !== undefined) {
@@ -87,6 +89,10 @@ class ViolinPlot extends Plot {
       let title = header.title + "  ";
       if (header["namespace"]) title = header["namespace"] + "  <br>" + title;
       layout["yaxis" + (metricIdx + 1)]["ticktext"] = [title];
+
+      if (header["hoverformat"] !== undefined) {
+        layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
+      }
 
       // Set color for each violin individually
       if (header["color"] !== undefined) {

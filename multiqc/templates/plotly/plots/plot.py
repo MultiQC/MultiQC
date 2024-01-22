@@ -144,6 +144,7 @@ class Plot(ABC):
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
                 tickformat=".0%" if self.p_active and self.add_pct_tab else None,
+                hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
             ),
             yaxis=dict(
                 gridcolor="rgba(0,0,0,0.1)",

@@ -5,6 +5,7 @@ import logging
 import re
 
 from multiqc.plots import beeswarm
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -104,7 +105,8 @@ def parse_reports(self):
         "min": 0,
         "shared_key": "read_count",
         "decimalPlaces": 2,
-        "modify": lambda x: float(x) / 1000000.0,
+        "modify": lambda x: x * config.read_count_multiplier,
+        "suffix": config.read_count_prefix,
     }
     keys = dict()
     keys["total_records"] = dict(defaults, **{"title": "Total records"})

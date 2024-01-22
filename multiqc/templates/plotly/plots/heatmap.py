@@ -118,6 +118,7 @@ class HeatmapPlot(Plot):
         self.layout.yaxis.automargin = True  # to make sure there is enough space for ticks labels
         self.layout.xaxis.showgrid = False
         self.layout.yaxis.showgrid = False
+        self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
 
         self.min = self.pconfig.get("min", None)
         if self.min is None:
@@ -135,23 +136,38 @@ class HeatmapPlot(Plot):
                         if val is not None:
                             self.max = val if self.max is None else max(self.max, val)
 
+        colstops = self.pconfig.get("colstops", None)
+        if colstops:
+            # A list of 2-element lists where the first element is the
+            # normalized color level value (starting at 0 and ending at 1),
+            # and the second item is a valid color string.
+            try:
+                colorscale = [[float(x), color] for x, color in colstops]
+            except ValueError:
+                colorscale = None
+            else:
+                # normalise the stop to a range from 0 to 1
+                minval = min(x for x, _ in colorscale)
+                maxval = max(x for x, _ in colorscale)
+                rng = maxval - minval
+                colorscale = [[(x - minval) / rng, color] for x, color in colorscale]
+        else:
+            # default colstops
+            colorscale = [
+                [0, "#313695"],
+                [0.1, "#4575b4"],
+                [0.2, "#74add1"],
+                [0.3, "#abd9e9"],
+                [0.4, "#e0f3f8"],
+                [0.5, "#ffffbf"],
+                [0.6, "#fee090"],
+                [0.7, "#fdae61"],
+                [0.8, "#f46d43"],
+                [0.9, "#d73027"],
+                [1, "#a50026"],
+            ]
         self.trace_params = {
-            "colorscale": self.pconfig.get(
-                "colstops",
-                [
-                    [0, "#313695"],
-                    [0.1, "#4575b4"],
-                    [0.2, "#74add1"],
-                    [0.3, "#abd9e9"],
-                    [0.4, "#e0f3f8"],
-                    [0.5, "#ffffbf"],
-                    [0.6, "#fee090"],
-                    [0.7, "#fdae61"],
-                    [0.8, "#f46d43"],
-                    [0.9, "#d73027"],
-                    [1, "#a50026"],
-                ],
-            ),
+            "colorscale": colorscale,
             "reversescale": self.pconfig.get("reverseColors", False),
             "showscale": self.pconfig.get("legend", True),
             "zmin": self.pconfig.get("min", None),

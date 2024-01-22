@@ -71,7 +71,7 @@ class FlagstatReportMixin:
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "ttSuffix": f"{config.read_count_prefix} reads",
+            "suffix": config.read_count_prefix,
             "decimalPlaces": 2,
             "shared_key": "read_count",
         }

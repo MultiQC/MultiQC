@@ -351,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
             keys[col] = {
                 "title": col,
                 "shared_key": "read_count",
-                "ttSuffix": config.read_count_prefix,
+                "suffix": config.read_count_prefix,
             }
 
         self.add_section(
