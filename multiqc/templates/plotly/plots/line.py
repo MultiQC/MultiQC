@@ -1,3 +1,4 @@
+import copy
 import dataclasses
 import io
 import logging
@@ -51,8 +52,8 @@ class LinePlot(Plot):
 
         self.trace_params.update(
             mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-            line=dict(width=2 if config.lineplot_style == "lines" else 0.6),
-            marker=dict(size=4),
+            line={"width": 2 if config.lineplot_style == "lines" else 0.6},
+            marker={"size": 4},
         )
 
         if self.flat and self.datasets:
@@ -138,6 +139,11 @@ class LinePlot(Plot):
                 xs = [x for x in range(len(line["data"]))]
                 ys = line["data"]
 
+            params = copy.deepcopy(self.trace_params)
+            if "dashStyle" in line:
+                params["line"]["dash"] = line["dashStyle"].lower()
+            if "lineWidth" in line:
+                params["line"]["width"] = line["lineWidth"]
             fig.add_trace(
                 go.Scatter(
                     x=xs,
@@ -145,7 +151,7 @@ class LinePlot(Plot):
                     name=line["name"],
                     text=[line["name"]] * len(xs),
                     marker_color=line.get("color"),
-                    **self.trace_params,
+                    **params,
                 )
             )
         return fig

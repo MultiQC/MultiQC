@@ -68,6 +68,9 @@ class LinePlot extends Plot {
       if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
       else params.marker.color = line.color;
 
+      if (line["dashStyle"] !== undefined) params.line.dash = line["dashStyle"].toLowerCase();
+      if (line["lineWidth"] !== undefined) params.line.width = line["lineWidth"];
+
       return {
         type: "scatter",
         x: x,
