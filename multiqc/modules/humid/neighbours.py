@@ -14,10 +14,10 @@ def parse_reports(self):
     # Remove filtered samples
     self.neighbours = self.ignore_samples(self.neighbours)
 
-    log.info(f"Found {len(self.neighbours)} reports")
-    self.write_data_file(self.neighbours, "multiqc_humid_neighbours")
-
-    add_to_humid_section(self)
+    if self.neighbours:
+        log.info(f"Found {len(self.neighbours)} reports")
+        self.write_data_file(self.neighbours, "multiqc_humid_neighbours")
+        add_to_humid_section(self)
 
 
 def parse_log_files(self):

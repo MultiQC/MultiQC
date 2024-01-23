@@ -14,10 +14,10 @@ def parse_reports(self):
     # Remove filtered samples
     self.counts = self.ignore_samples(self.counts)
 
-    log.info(f"Found {len(self.counts)} reports")
-    self.write_data_file(self.counts, "multiqc_humid_counts")
-
-    add_to_humid_section(self)
+    if self.counts:
+        log.info(f"Found {len(self.counts)} reports")
+        self.write_data_file(self.counts, "multiqc_humid_counts")
+        add_to_humid_section(self)
 
 
 def parse_log_files(self):
