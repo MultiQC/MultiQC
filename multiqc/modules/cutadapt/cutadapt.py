@@ -2,6 +2,7 @@
 
 
 import logging
+import os
 import re
 import shlex
 
@@ -40,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_obsexp = {"default": dict()}
         self.ends = ["default"]
 
-        for f in self.find_log_files("cutadapt", filehandles=True):
+        for f in self.find_log_files("cutadapt"):
             self.parse_cutadapt_logs(f)
 
         # Transform trimmed length data by type
@@ -68,7 +69,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_cutadapt_logs(self, f):
         """Go through log file looking for cutadapt output"""
-        fh = f["f"]
         regexes = {
             "1.7": {
                 "bp_processed": r"Total basepairs processed:\s*([\d,]+) bp",
@@ -103,7 +103,10 @@ class MultiqcModule(BaseMultiqcModule):
         cutadapt_version = None
         parsing_version = "1.7"
         log_section = None
-        for line in fh:
+        path = os.path.join(f["root"], f["fn"])
+        with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+            lines = fh.readlines()
+        for line in lines:
             # New log starting
             if "This is cutadapt" in line or "cutadapt version" in line:
                 s_name = None
