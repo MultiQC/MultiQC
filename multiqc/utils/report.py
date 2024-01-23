@@ -196,7 +196,12 @@ def pathwalk(path):
         elif item.is_dir():
             pathwalk(item)
 
-def get_filelist(run_module_names, walk_method=oswalk):
+walk_choices = {
+    'oswalk': oswalk,
+    'pathwalk': pathwalk
+}
+
+def get_filelist(run_module_names, walk_method):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -326,6 +331,7 @@ def get_filelist(run_module_names, walk_method=oswalk):
 
     # Go through the analysis directories and get file list
     total_sp_starttime = time.time()
+    walk_func = walk_choices[walk_method]
     for path in config.analysis_dir:
         if os.path.islink(path) and config.ignore_symlinks:
             file_search_stats["skipped_symlinks"] += 1
@@ -333,7 +339,7 @@ def get_filelist(run_module_names, walk_method=oswalk):
         elif os.path.isfile(path):
             searchfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
-            walk_method(path)
+            walk_func(path)
 
     # Search through collected files
     console = rich.console.Console(
