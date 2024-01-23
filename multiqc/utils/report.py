@@ -186,7 +186,8 @@ def pathwalk(path):
         return
 
     for item in path.iterdir():
-        if item.is_symlink() and config.ignore_symlinks:
+        # Need all 3 conditions since os.walk only ignores symlink directories
+        if item.is_symlink() and item.is_dir() and config.ignore_symlinks:
             continue
         elif item.is_file():
             searchfiles.append([item.name, os.fspath(item.parent)])
