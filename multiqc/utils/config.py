@@ -175,7 +175,7 @@ custom_data: Dict = {}
 report_section_order: Dict = {}
 output_fn: Optional[str] = None
 megaqc_upload: bool = False
-walk_method: str = 'oswalk'
+walk_method: str = "oswalk"
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']

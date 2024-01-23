@@ -279,7 +279,12 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     help="Custom CSS file to add to the final report",
 )
-@click.option("--walk-method", type=click.Choice(report.walk_choices),metavar=None, help="Method of walking folder trees to discover files. Default to os.walk. Pathwalk can be used on filesystems that do not properly support features such as symlinks")
+@click.option(
+    "--walk-method",
+    type=click.Choice(report.walk_choices),
+    metavar=None,
+    help="Method of walking folder trees to discover files. Default to os.walk. Pathwalk can be used on filesystems that do not properly support features such as symlinks",
+)
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(**kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
@@ -346,7 +351,7 @@ def run(
     profile_runtime=False,
     no_ansi=False,
     custom_css_files=(),
-    walk_method='oswalk',
+    walk_method="oswalk",
     **kwargs,
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
