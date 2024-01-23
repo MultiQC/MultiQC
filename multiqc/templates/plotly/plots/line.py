@@ -24,6 +24,13 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
+
+    # if self.n_samples >= config.max_table_rows:
+    # Get a line of median values at each point with an interval of max and
+    # min values
+    # Create a violin of median values in each sample, showing dots for outliers
+    # Clicking on a dot of a violin will show the line plot for that sample
+
     p = LinePlot(pconfig, lists_of_lines)
 
     from multiqc.utils import report

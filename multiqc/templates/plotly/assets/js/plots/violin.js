@@ -12,19 +12,21 @@ class ViolinPlot extends Plot {
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    if (this.showOnlyOutliers) {
+    if (this.showOnlyOutliers)
       $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
-    }
+
+    let layout = this.layout;
+    const traceParams = this.traceParams;
+    const scatterTraceParams = this.scatterTraceParams;
 
     let dataset = this.datasets[this.activeDatasetIdx];
     let metrics = dataset["metrics"];
     if (metrics.length === 0) return [];
     let headerByMetric = dataset["header_by_metric"];
-    let valuesBySampleByMetric = dataset["values_by_sample_by_metric"];
-    let outliersByMetric = dataset["outliers_by_metric"];
-    let layout = this.layout;
-    const traceParams = this.traceParams;
-    const scatterTraceParams = this.scatterTraceParams;
+    let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
+    let scatterValuesBySampleByMetric;
+    if (!this.showOnlyOutliers) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
+    else scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
 
     let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
@@ -47,23 +49,38 @@ class ViolinPlot extends Plot {
     });
 
     // Hidden samples
-    let filteredValuesBySampleByMetric = {};
-    metrics.map((metric) => {
-      filteredValuesBySampleByMetric[metric] = {};
-      Object.keys(valuesBySampleByMetric[metric]).map((sample, sampleIdx) => {
-        if (!sampleSettings[allSamples.indexOf(sample)].hidden) {
-          filteredValuesBySampleByMetric[metric][sample] = valuesBySampleByMetric[metric][sample];
-        }
+    let someHidden = sampleSettings.filter((s) => s.hidden).length > 0;
+    if (someHidden) {
+      let filteredViolinValuesBySampleByMetric = {};
+      let filteredScatterValuesBySampleByMetric = {};
+      metrics.map((metric) => {
+        filteredViolinValuesBySampleByMetric[metric] = {};
+        Object.keys(violinValuesBySampleByMetric[metric]).map((sample) => {
+          if (!sampleSettings[allSamples.indexOf(sample)].hidden)
+            filteredViolinValuesBySampleByMetric[metric][sample] = violinValuesBySampleByMetric[metric][sample];
+        });
       });
-    });
-    valuesBySampleByMetric = filteredValuesBySampleByMetric;
+      violinValuesBySampleByMetric = filteredViolinValuesBySampleByMetric;
+      if (this.showOnlyOutliers) {
+        metrics.map((metric) => {
+          filteredScatterValuesBySampleByMetric[metric] = {};
+          Object.keys(scatterValuesBySampleByMetric[metric]).map((sample) => {
+            if (!sampleSettings[allSamples.indexOf(sample)].hidden)
+              filteredScatterValuesBySampleByMetric[metric][sample] = scatterValuesBySampleByMetric[metric][sample];
+          });
+        });
+        scatterValuesBySampleByMetric = filteredScatterValuesBySampleByMetric;
+      } else {
+        scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
+      }
+    }
 
     let traces = [];
     metrics.map((metric, metricIdx) => {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
       let header = headerByMetric[metric];
-      let valuesBySample = valuesBySampleByMetric[metric];
+      let violinValuesBySample = violinValuesBySampleByMetric[metric];
 
       // Set layouts for each violin individually
       layout["xaxis" + (metricIdx + 1)] = {
@@ -104,7 +121,7 @@ class ViolinPlot extends Plot {
       // Create violin traces
       let samples = [],
         values = [];
-      Object.entries(valuesBySample).map(([sample, value]) => {
+      Object.entries(violinValuesBySample).map(([sample, value]) => {
         samples.push(sample);
         values.push(value);
       });
@@ -132,13 +149,10 @@ class ViolinPlot extends Plot {
     let scatterDataByMetric = [];
     metrics.map((metric, metricIdx) => {
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-      let outliers = outliersByMetric[metric];
-      let valuesBySample = valuesBySampleByMetric[metric];
+      let valuesBySample = scatterValuesBySampleByMetric[metric];
 
       let scatterData = [];
       Object.entries(valuesBySample).map(([sample, value]) => {
-        if (outliers !== undefined && !outliers.includes(sample)) return; // showing only outliers
-
         scatterData.push([sample, value]);
 
         if (!curveNumbersBySample[sample]) {

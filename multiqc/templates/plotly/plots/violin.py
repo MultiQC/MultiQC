@@ -34,8 +34,8 @@ class ViolinPlot(Plot):
     class Dataset(BaseDataset):
         metrics: List[str]
         header_by_metric: Dict[str, Dict[str, Any]]
-        values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
-        outliers_by_metric: Dict[str, List[str]]
+        violin_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
+        scatter_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         all_samples: List[str]  # unique list of all samples in this dataset
         show_only_outliers: False
 
@@ -49,8 +49,8 @@ class ViolinPlot(Plot):
                 **dataset.__dict__,
                 metrics=list(header_by_metric.keys()),
                 header_by_metric=header_by_metric,
-                values_by_sample_by_metric=dict(),
-                outliers_by_metric=dict(),
+                violin_values_by_sample_by_metric=dict(),
+                scatter_values_by_sample_by_metric=dict(),
                 all_samples=[],
                 show_only_outliers=False,
             )
@@ -62,7 +62,8 @@ class ViolinPlot(Plot):
                 header["xaxis"] = {"ticksuffix": header.get("suffix")}
 
                 value_by_sample = values_by_sample_by_metric[metric]
-                value_by_sample = {s: v for s, v in value_by_sample.items() if v is not None}
+                value_by_sample = {s: v for s, v in value_by_sample.items() if v is not None and str(v).strip() != ""}
+
                 for s, v in value_by_sample.items():
                     if isinstance(v, str):
                         try:
@@ -80,8 +81,7 @@ class ViolinPlot(Plot):
 
                 if not value_by_sample:
                     logger.warning(f"No non-None values for metric: {header['title']}")
-                    ds.values_by_sample_by_metric[metric] = value_by_sample
-                    continue
+                    value_by_sample = {}
 
                 values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
                 values_are_integer = all(isinstance(v, int) for v in value_by_sample.values())
@@ -90,8 +90,7 @@ class ViolinPlot(Plot):
                     value_by_sample = {s: v for s, v in value_by_sample.items() if not math.isnan(v)}
                     if not value_by_sample:
                         logger.warning(f"All values are NaN for metric: {header['title']}")
-                        ds.values_by_sample_by_metric[metric] = value_by_sample
-                        continue
+                        value_by_sample = {}
 
                     xmin = header.get("dmin")
                     xmax = header.get("dmax")
@@ -105,12 +104,21 @@ class ViolinPlot(Plot):
                         xmax += (xmax - xmin) * 0.005
                         header["xaxis"]["range"] = [xmin, xmax]
 
-                    if len(value_by_sample) > THRESHOLD_BEFORE_OUTLIERS:
+                ds.show_only_outliers = len(value_by_sample) > THRESHOLD_BEFORE_OUTLIERS
+                if not ds.show_only_outliers:
+                    scatter_values_by_sample = {}  # will use the violin values
+                else:
+                    if not values_are_numeric:
+                        logger.debug(
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS}. "
+                            f"As values are not numeric, will not add interactive points."
+                        )
+                        scatter_values_by_sample = {}
+                    else:
                         logger.debug(
                             f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS}. "
                             f"Will add interactive points only for the outlier values."
                         )
-
                         samples = list(value_by_sample.keys())
                         values = list(value_by_sample.values())
                         outlier_statuses = find_outliers(
@@ -122,19 +130,37 @@ class ViolinPlot(Plot):
                         logger.debug(
                             f"Violin for '{header['title']}': found {np.count_nonzero(outlier_statuses)} outliers"
                         )
-                        ds.outliers_by_metric[metric] = [
-                            samples[idx] for idx in range(len(samples)) if outlier_statuses[idx]
-                        ]
-                        ds.show_only_outliers = True
+                        scatter_values_by_sample = {
+                            samples[idx]: values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
+                        }
 
+                ds.scatter_values_by_sample_by_metric[metric] = scatter_values_by_sample
+
+                # Now sort and downsample values to keep max 2000 points for each metric
+                violin_values_by_sample = value_by_sample
+                max_violin_points = getattr(config, "max_violin_points")
+                if max_violin_points is not None and len(violin_values_by_sample) > max_violin_points:
+                    logger.debug(
+                        f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)} > {max_violin_points}. "
+                        f"Will downsample to max {max_violin_points} points."
+                    )
+                    samples = list(violin_values_by_sample.keys())
+                    values = list(violin_values_by_sample.values())
+                    indices = np.argsort(values)
+                    indices = indices[:: int(math.ceil(len(indices) / max_violin_points))]
+                    violin_values_by_sample = {samples[idx]: values[idx] for idx in indices}
+
+                ds.violin_values_by_sample_by_metric[metric] = violin_values_by_sample
+
+                # Clean up the header
                 if values_are_numeric and not values_are_integer and "tt_decimals" in header:
                     header["hoverformat"] = f".{header['tt_decimals']}f"
                     del header["tt_decimals"]
                 if "modify" in header and callable(header["modify"]):
                     del header["modify"]  # To keep the data JSON-serializable
 
-                ds.values_by_sample_by_metric[metric] = value_by_sample
-                all_samples.update(set(list(value_by_sample.keys())))
+                all_samples.update(set(list(scatter_values_by_sample.keys())))
+                all_samples.update(set(list(violin_values_by_sample.keys())))
 
             ds.all_samples = sorted(all_samples)
             return ds
@@ -172,7 +198,7 @@ class ViolinPlot(Plot):
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
         self.serialize_figure = False
-        if self.n_samples >= config.max_table_rows:
+        if self.n_samples > config.max_table_rows:
             logger.debug(
                 f"The number of samples exceeds the threshold: {self.n_samples} > {config.max_table_rows}. "
                 "Will build a violin plot instead of a general stats table"

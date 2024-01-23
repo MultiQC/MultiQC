@@ -62,7 +62,8 @@ plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 lineplot_style: lines # "lines+markers"
-lineplot_max_samples: 100 # turn into a violin plot if more than this
+lineplot_max_samples: 100 # turn into a violin plot if more than this number
+max_violin_points: 2000 # downsample data for violin plot starting from this number os samples
 collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
