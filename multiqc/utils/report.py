@@ -196,7 +196,7 @@ def pathwalk(path):
         elif item.is_dir():
             pathwalk(item)
 
-def get_filelist(run_module_names, traverse_method=oswalk):
+def get_filelist(run_module_names, walk_method=oswalk):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -333,7 +333,7 @@ def get_filelist(run_module_names, traverse_method=oswalk):
         elif os.path.isfile(path):
             searchfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
-            traverse_method(path)
+            walk_method(path)
 
     # Search through collected files
     console = rich.console.Console(
