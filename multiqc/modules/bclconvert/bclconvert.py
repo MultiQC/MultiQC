@@ -813,7 +813,7 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,
-            "scale": "RdYlGn",
+            "scale": "PiYG",
         }
 
         # Table config
