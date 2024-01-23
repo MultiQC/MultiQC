@@ -76,6 +76,7 @@ def add_general_stats(self):
             "description": f"Reads remaining after deduplication ({config.read_count_desc})",
             "shared_key": "read_count",
             "modify": lambda x: x * config.read_count_multiplier,
+            "scale": "Blues",
         }
         self.general_stats_addcols(data, headers)
 
@@ -89,6 +90,7 @@ def add_general_stats(self):
             "title": "% Pass Dedup",
             "description": "% processed reads that passed deduplication",
             "shared_key": "perc_reads",
+            "scale": "RdBu",
         }
         self.general_stats_addcols(data, headers)
 
