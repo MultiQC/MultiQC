@@ -12,6 +12,7 @@
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Module for metaphlan ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
+- Add alternative walk method using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 
 ### New modules
 
