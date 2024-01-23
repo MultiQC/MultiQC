@@ -14,7 +14,7 @@ import os
 import re
 import time
 from collections import defaultdict, OrderedDict
-
+import pathlib
 import rich
 import rich.progress
 import yaml
@@ -170,6 +170,31 @@ def oswalk(path):
         # Search filenames in this directory
         for fn in filenames:
             searchfiles.append([fn, root])
+
+def pathwalk(path):
+    """
+    Alternative method to traverse directories using pathlib.
+    Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
+    """
+    path = pathlib.Path(path)
+    # Skip directory if it matches ignore patterns
+    d_matches = any(d for d in config.fn_ignore_dirs if path.match(d.rstrip(os.sep)))
+    p_matches = any(p for p in config.fn_ignore_paths if path.match(p.rstrip(os.sep)))
+    if d_matches or p_matches:
+        file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+        return
+    
+    # Check not running in install directory
+    if is_searching_install_dir(path, [f.name for f in path.iterdir() if f.is_file()]):
+        return
+
+    for item in path.iterdir():
+        if item.is_symlink() and config.ignore_symlinks:
+            continue
+        elif item.is_file():
+            searchfiles.append([item.name, os.fspath(item.parent)])
+        elif item.is_dir():
+            pathwalk(item)
 
 def get_filelist(run_module_names, traverse_method=oswalk):
     """
