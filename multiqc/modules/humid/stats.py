@@ -89,7 +89,9 @@ def add_general_stats(self):
         headers["perc"] = {
             "title": "% Pass Dedup",
             "description": "% processed reads that passed deduplication",
-            "shared_key": "perc_reads",
+            "suffix": "%",
+            "min": 0,
+            "max": 100,
             "scale": "RdBu",
         }
         self.general_stats_addcols(data, headers)
