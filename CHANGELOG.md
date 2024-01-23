@@ -12,6 +12,7 @@
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
+- Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
 
 ### New modules
 
