@@ -100,58 +100,76 @@ def init():
     global software_versions
     software_versions = defaultdict(lambda: defaultdict(list))
 
-def oswalk(multiqc_installation_dir_files):
-    for path in config.analysis_dir:
-        if os.path.islink(path) and config.ignore_symlinks:
-            file_search_stats["skipped_symlinks"] += 1
-            continue
-        elif os.path.isfile(path):
-            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
-        elif os.path.isdir(path):
-            for root, dirnames, filenames in os.walk(path, followlinks=(not config.ignore_symlinks), topdown=True):
-                bname = os.path.basename(root)
+def is_searching_install_dir(path, filenames):
+    """
+    Checks whether MultiQC is searching for files in the source code folder
+    """
+    multiqc_installation_dir_files = [
+        "LICENSE",
+        "CHANGELOG.md",
+        "Dockerfile",
+        "MANIFEST.in",
+        ".gitmodules",
+        "README.md",
+        "CSP.txt",
+        "setup.py",
+        ".gitignore",
+    ]
 
-                # Skip any sub-directories matching ignore params
+    if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
+        logger.error(f"Error: MultiQC is running in source code directory! {path}")
+        logger.warning(
+            "Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc"
+        )
+        return True
+    else:
+        return False
+
+def oswalk(path):
+    """
+    Default behavior for walking directories using os.walk.
+    May not work properly with symlinks on non-POSIX compliant filesystems.
+    """
+    for root, dirnames, filenames in os.walk(path, followlinks=(not config.ignore_symlinks), topdown=True):
+        bname = os.path.basename(root)
+
+        # Skip any sub-directories matching ignore params
+        orig_dirnames = dirnames[:]
+        for n in config.fn_ignore_dirs:
+            dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
+            if len(orig_dirnames) != len(dirnames):
+                removed_dirs = [
+                    os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
+                ]
+                file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
                 orig_dirnames = dirnames[:]
-                for n in config.fn_ignore_dirs:
-                    dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
-                    if len(orig_dirnames) != len(dirnames):
-                        removed_dirs = [
-                            os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                        ]
-                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
-                        orig_dirnames = dirnames[:]
-                for n in config.fn_ignore_paths:
-                    dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
-                    if len(orig_dirnames) != len(dirnames):
-                        removed_dirs = [
-                            os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                        ]
-                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
+        for n in config.fn_ignore_paths:
+            dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
+            if len(orig_dirnames) != len(dirnames):
+                removed_dirs = [
+                    os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
+                ]
+                file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
 
-                # Skip *this* directory if matches ignore params
-                d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
-                if len(d_matches) > 0:
-                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-                    continue
-                p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
-                if len(p_matches) > 0:
-                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-                    continue
+        # Skip *this* directory if matches ignore params
+        d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
+        if len(d_matches) > 0:
+            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+            continue
+        p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
+        if len(p_matches) > 0:
+            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+            continue
 
-                # Sanity check - make sure that we're not just running in the installation directory
-                if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
-                    logger.error(f"Error: MultiQC is running in source code directory! {root}")
-                    logger.warning(
-                        "Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc"
-                    )
-                    dirnames[:] = []
-                    filenames[:] = []
-                    continue
+        # Sanity check - make sure that we're not just running in the installation directory
+        if is_searching_install_dir(root, filenames):
+            dirnames[:] = []
+            filenames[:] = []
+            continue
 
-                # Search filenames in this directory
-                for fn in filenames:
-                    searchfiles.append([fn, root])
+        # Search filenames in this directory
+        for fn in filenames:
+            searchfiles.append([fn, root])
 
 def get_filelist(run_module_names, traverse_method=oswalk):
     """
@@ -282,19 +300,15 @@ def get_filelist(run_module_names, traverse_method=oswalk):
         return file_matched
 
     # Go through the analysis directories and get file list
-    multiqc_installation_dir_files = [
-        "LICENSE",
-        "CHANGELOG.md",
-        "Dockerfile",
-        "MANIFEST.in",
-        ".gitmodules",
-        "README.md",
-        "CSP.txt",
-        "setup.py",
-        ".gitignore",
-    ]
     total_sp_starttime = time.time()
-    traverse_method(multiqc_installation_dir_files)
+    for path in config.analysis_dir:
+        if os.path.islink(path) and config.ignore_symlinks:
+            file_search_stats["skipped_symlinks"] += 1
+            continue
+        elif os.path.isfile(path):
+            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
+        elif os.path.isdir(path):
+            traverse_method(path)
 
     # Search through collected files
     console = rich.console.Console(
