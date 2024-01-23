@@ -1,5 +1,4 @@
 import logging
-from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import bargraph
 
@@ -70,7 +69,7 @@ def add_general_stats(self):
         This corresponds to the number of clusters in HUMID
         """
         data = {k: {"uniq": v["clusters"]} for k, v in self.stats.items()}
-        headers = OrderedDict()
+        headers = dict()
         headers["uniq"] = {
             "title": f"{config.read_count_prefix} Unique Reads",
             "description": f"Reads remaining after deduplication ({config.read_count_desc})",
@@ -85,7 +84,7 @@ def add_general_stats(self):
         Add the percentage of reads remaining after deduplication
         """
         data = {k: {"perc": (v["clusters"] / v["total"]) * 100} for k, v in self.stats.items()}
-        headers = OrderedDict()
+        headers = dict()
         headers["perc"] = {
             "title": "% Pass Dedup",
             "description": "% processed reads that passed deduplication",
@@ -102,7 +101,7 @@ def add_general_stats(self):
 
 def add_stats_section(self):
     # The values we want to plot (add to the total number of reads)
-    cats = OrderedDict()
+    cats = dict()
     cats["clusters"] = {"name": "Unique reads"}
     cats["duplicates"] = {"name": "Duplicate reads"}
     cats["filtered"] = {"name": "Filtered reads"}
