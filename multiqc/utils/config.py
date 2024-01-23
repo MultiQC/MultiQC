@@ -2,9 +2,8 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
+from typing import List, Dict, Optional
 
-
-import collections
 import inspect
 
 # Default logger will be replaced by caller
@@ -16,8 +15,10 @@ from datetime import datetime
 
 import importlib_metadata
 import yaml
+import pyaml_env
 
 import multiqc
+from multiqc.utils.util_functions import strtobool
 
 logger = logging.getLogger("multiqc")
 
@@ -32,20 +33,124 @@ try:
         ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
     git_hash_short = git_hash[:7]
-    version = "{} ({})".format(version, git_hash_short)
-except:
+    version = f"{version} ({git_hash_short})"
+except Exception:
     pass
 
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 ##### MultiQC Defaults
-# Default MultiQC config
-searchp_fn = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
-with open(searchp_fn) as f:
-    configs = yaml.safe_load(f)
-    for c, v in configs.items():
-        globals()[c] = v
+# Declaring variables for static typing
+title: str
+subtitle: str
+intro_text: str
+report_comment: str
+report_header_info: List[Dict[str, str]]
+show_analysis_paths: bool
+show_analysis_time: bool
+config_file: str
+custom_logo: str
+custom_logo_url: str
+custom_logo_title: str
+custom_css_files: List[str]
+simple_output: bool
+template: str
+profile_runtime: bool
+pandoc_template: str
+read_count_multiplier: float
+read_count_prefix: str
+read_count_desc: str
+long_read_count_multiplier: float
+long_read_count_prefix: str
+long_read_count_desc: str
+base_count_multiplier: float
+base_count_prefix: str
+base_count_desc: str
+output_fn_name: str
+data_dir_name: str
+plots_dir_name: str
+data_format: str
+module_tag: List[str]
+force: bool
+no_ansi: bool
+quiet: bool
+prepend_dirs: bool
+prepend_dirs_depth: int
+prepend_dirs_sep: str
+file_list: bool
+require_logs: bool
+
+make_data_dir: bool
+zip_data_dir: bool
+data_dump_file: bool
+megaqc_url: str
+megaqc_access_token: str
+megaqc_timeout: float
+export_plots: bool
+make_report: bool
+plots_force_flat: bool
+plots_force_interactive: bool
+plots_flat_numseries: int
+num_datasets_plot_limit: int
+collapse_tables: bool
+max_table_rows: int
+table_columns_visible: Dict
+table_columns_placement: Dict
+table_columns_name: Dict
+table_cond_formatting_colours: List[Dict[str, str]]
+table_cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+decimalPoint_format: str
+thousandsSep_format: str
+remove_sections: List
+section_comments: Dict
+lint: bool  # Deprecated since v1.17
+strict: bool
+custom_plot_config: Dict
+custom_table_header_config: Dict
+software_versions: Dict
+ignore_symlinks: bool
+ignore_images: bool
+fn_ignore_dirs: List[str]
+fn_ignore_paths: List[str]
+sample_names_ignore: List[str]
+sample_names_ignore_re: List[str]
+sample_names_rename_buttons: List[str]
+sample_names_replace: Dict
+sample_names_replace_regex: bool
+sample_names_replace_exact: bool
+sample_names_replace_complete: bool
+sample_names_rename: List
+show_hide_buttons: List
+show_hide_patterns: List
+show_hide_regex: List
+show_hide_mode: List
+no_version_check: bool
+log_filesize_limit: int
+filesearch_lines_limit: int
+report_readerrors: int
+skip_generalstats: int
+skip_versions_section: int
+disable_version_detection: int
+versions_table_group_header: str
+data_format_extensions: Dict[str, str]
+export_plot_formats: List[str]
+custom_content: Dict
+fn_clean_sample_names: bool
+use_filename_as_sample_name: bool
+fn_clean_exts: List
+fn_clean_trim: List
+fn_ignore_files: List
+top_modules: List
+module_order: List
+
+# Populating the variables above from the default MultiQC config
+config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
+with open(config_defaults_path) as f:
+    _default_config = yaml.safe_load(f)
+for c, v in _default_config.items():
+    globals()[c] = v
+
 # Module filename search patterns
 searchp_fn = os.path.join(MULTIQC_DIR, "utils", "search_patterns.yaml")
 with open(searchp_fn) as f:
@@ -59,6 +164,17 @@ working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+
+# Other variables that set only through the CLI
+run_modules: List[str] = []
+exclude_modules: List[str] = []
+data_dir: Optional[str] = None
+plots_tmp_dir: Optional[str] = None
+plots_dir: Optional[str] = None
+custom_data: Dict = {}
+report_section_order: Dict = {}
+output_fn: Optional[str] = None
+megaqc_upload: bool = False
 
 ##### Available modules
 # Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
@@ -103,12 +219,21 @@ def mqc_load_userconfig(paths=()):
     # Load and parse installation config file if we find it
     mqc_load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
 
+    # Load and parse a config file in $XDG_CONFIG_HOME
+    # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+    mqc_load_config(
+        os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
+    )
+
     # Load and parse a user config file if we find it
     mqc_load_config(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
         mqc_load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
+
+    # Load separate config entries from MULTIQC_* environment variables
+    mqc_add_config(mqc_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
     mqc_load_config("multiqc_config.yaml")
@@ -118,21 +243,21 @@ def mqc_load_userconfig(paths=()):
         mqc_load_config(p)
 
 
-def mqc_load_config(yaml_config):
+def mqc_load_config(yaml_config_path: str):
     """Load and parse a config file if we find it"""
-    if not os.path.isfile(yaml_config) and os.path.isfile(yaml_config.replace(".yaml", ".yml")):
-        yaml_config = yaml_config.replace(".yaml", ".yml")
+    if not os.path.isfile(yaml_config_path) and os.path.isfile(yaml_config_path.replace(".yaml", ".yml")):
+        yaml_config_path = yaml_config_path.replace(".yaml", ".yml")
 
-    if os.path.isfile(yaml_config):
+    if os.path.isfile(yaml_config_path):
         try:
-            with open(yaml_config) as f:
-                new_config = yaml.safe_load(f)
-                logger.debug("Loading config settings from: {}".format(yaml_config))
-                mqc_add_config(new_config, yaml_config)
+            # pyaml_env allows referencing environment variables in YAML for default values
+            new_config = pyaml_env.parse_config(yaml_config_path)
+            logger.debug(f"Loading config settings from: {yaml_config_path}")
+            mqc_add_config(new_config, yaml_config_path)
         except (IOError, AttributeError) as e:
-            logger.debug("Config error: {}".format(e))
+            logger.debug(f"Config error: {e}")
         except yaml.scanner.ScannerError as e:
-            logger.error("Error parsing config YAML: {}".format(e))
+            logger.error(f"Error parsing config YAML: {e}")
             sys.exit(1)
 
 
@@ -146,15 +271,56 @@ def mqc_cl_config(cl_config):
                 parsed_clc = yaml.safe_load(clc_str)
             assert isinstance(parsed_clc, dict)
         except yaml.scanner.ScannerError as e:
-            logger.error("Could not parse command line config: {}\n{}".format(clc_str, e))
+            logger.error(f"Could not parse command line config: {clc_str}\n{e}")
         except AssertionError:
-            logger.error("Could not parse command line config: {}".format(clc_str))
+            logger.error(f"Could not parse command line config: {clc_str}")
         else:
-            logger.debug("Found command line config: {}".format(parsed_clc))
+            logger.debug(f"Found command line config: {parsed_clc}")
             mqc_add_config(parsed_clc)
 
 
-def mqc_add_config(conf, conf_path=None):
+def mqc_env_vars_config() -> Dict:
+    """
+    Check MULTIQC_* environment variables and set to corresponding config values if they are of scalar types.
+    """
+    RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
+    PREFIX = "MULTIQC_"  # Prefix for environment variables
+    env_config = {}
+    for k, v in os.environ.items():
+        if k.startswith(PREFIX) and k not in RESERVED_NAMES:
+            conf_key = k[len(PREFIX) :].lower()
+            if conf_key not in globals():
+                continue
+            if isinstance(globals()[conf_key], bool):
+                try:
+                    v = strtobool(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a boolean value from the environment variable ${k}={v}")
+                    continue
+            elif isinstance(globals()[conf_key], int):
+                try:
+                    v = int(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a int value from the environment variable ${k}={v}")
+                    continue
+            elif isinstance(globals()[conf_key], float):
+                try:
+                    v = float(v)
+                except ValueError:
+                    logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
+                    continue
+            elif not isinstance(globals()[conf_key], str) and globals()[conf_key] is not None:
+                logger.warning(
+                    f"Can only set scalar config entries (str, int, float, bool) with environment variable, "
+                    f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
+                )
+                continue
+            env_config[conf_key] = v
+            logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
+    return env_config
+
+
+def mqc_add_config(conf: Dict, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
     global custom_css_files, fn_clean_exts, fn_clean_trim
     log_new_config = {}
@@ -182,7 +348,7 @@ def mqc_add_config(conf, conf_path=None):
             elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), v)):
                 fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), v))
             else:
-                logger.error("Config '{}' path not found, skipping ({})".format(c, fpath))
+                logger.error(f"Config '{c}' path not found, skipping ({fpath})")
                 continue
             log_new_config[c] = fpath
             update({c: fpath})
@@ -193,9 +359,9 @@ def mqc_add_config(conf, conf_path=None):
                 elif conf_path is not None and os.path.exists(os.path.join(os.path.dirname(conf_path), fpath)):
                     fpath = os.path.abspath(os.path.join(os.path.dirname(conf_path), fpath))
                 else:
-                    logger.error("CSS path '{}' path not found, skipping ({})".format(c, fpath))
+                    logger.error(f"CSS path '{c}' path not found, skipping ({fpath})")
                     continue
-                logger.debug("Adding css file '{}': {}".format(c, fpath))
+                logger.debug(f"Adding css file '{c}': {fpath}")
                 if not custom_css_files:
                     custom_css_files = []
                 custom_css_files.append(fpath)
@@ -220,9 +386,9 @@ def load_sample_names(snames_file):
     num_cols = None
     try:
         with open(snames_file) as f:
-            logger.debug("Loading sample renaming config settings from: {}".format(snames_file))
-            for l in f:
-                s = l.strip().split("\t")
+            logger.debug(f"Loading sample renaming config settings from: {snames_file}")
+            for line in f:
+                s = line.strip().split("\t")
                 if len(s) > 1:
                     # Check that we have consistent numbers of columns
                     if num_cols is None:
@@ -230,7 +396,7 @@ def load_sample_names(snames_file):
                     elif num_cols != len(s):
                         logger.warning(
                             "Inconsistent number of columns found in sample names file (skipping line): '{}'".format(
-                                l.strip()
+                                line.strip()
                             )
                         )
                     # Parse the line
@@ -238,47 +404,47 @@ def load_sample_names(snames_file):
                         sample_names_rename_buttons = s
                     else:
                         sample_names_rename.append(s)
-                elif len(l.strip()) > 0:
-                    logger.warning("Sample names file line did not have columns (must use tabs): {}".format(l.strip()))
+                elif len(line.strip()) > 0:
+                    logger.warning(f"Sample names file line did not have columns (must use tabs): {line.strip()}")
     except (IOError, AttributeError) as e:
-        logger.error("Error loading sample names file: {}".format(e))
-    logger.debug("Found {} sample renaming patterns".format(len(sample_names_rename_buttons)))
+        logger.error(f"Error loading sample names file: {e}")
+    logger.debug(f"Found {len(sample_names_rename_buttons)} sample renaming patterns")
 
 
 def load_replace_names(rnames_file):
     global sample_names_replace
     try:
         with open(rnames_file) as f:
-            logger.debug("Loading sample replace config settings from: {}".format(rnames_file))
-            for l in f:
-                s = l.strip().split("\t")
+            logger.debug(f"Loading sample replace config settings from: {rnames_file}")
+            for line in f:
+                s = line.strip().split("\t")
                 if len(s) == 2:
                     sample_names_replace[s[0]] = s[1]
     except (IOError, AttributeError) as e:
-        logger.error("Error loading sample names replacement file: {}".format(e))
-    logger.debug("Found {} sample replacing patterns".format(len(sample_names_replace)))
+        logger.error(f"Error loading sample names replacement file: {e}")
+    logger.debug(f"Found {len(sample_names_replace)} sample replacing patterns")
 
 
 def load_show_hide(sh_file):
-    global show_hide_buttons, show_hide_patterns, show_hide_mode
+    global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex
     if sh_file:
         try:
             with open(sh_file, "r") as f:
-                logger.debug("Loading sample renaming config settings from: {}".format(sh_file))
-                for l in f:
-                    s = l.strip().split("\t")
+                logger.debug(f"Loading sample renaming config settings from: {sh_file}")
+                for line in f:
+                    s = line.strip().split("\t")
                     if len(s) >= 3 and s[1] in ["show", "hide", "show_re", "hide_re"]:
                         show_hide_buttons.append(s[0])
                         show_hide_mode.append(s[1])
                         show_hide_patterns.append(s[2:])
                         show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
         except AttributeError as e:
-            logger.error("Error loading show patterns file: {}".format(e))
+            logger.error(f"Error loading show patterns file: {e}")
 
     # Prepend a "Show all" button if we have anything
     # Do this outside of the file load block in case it was set in the config
     if len(show_hide_buttons) > 0:
-        logger.debug("Found {} show/hide patterns".format(len(show_hide_buttons)))
+        logger.debug(f"Found {len(show_hide_buttons)} show/hide patterns")
         show_hide_buttons.insert(0, "Show all")
         show_hide_mode.insert(0, "hide")
         show_hide_patterns.insert(0, [])
@@ -292,7 +458,7 @@ def update(u):
 def update_dict(d, u):
     """Recursively updates nested dict d from nested dict u"""
     for key, val in u.items():
-        if isinstance(val, collections.abc.Mapping):
+        if isinstance(val, dict):
             d[key] = update_dict(d.get(key, {}), val)
         else:
             d[key] = u[key]

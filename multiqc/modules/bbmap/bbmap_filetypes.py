@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from multiqc.utils import config
 
 from .plot_aqhist import plot_aqhist
@@ -15,13 +13,6 @@ from .plot_qahist import plot_qahist
 from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
-
-class slice2OrderedDict(object):
-    def __getitem__(self, keys):
-        return OrderedDict([(slice.start, slice.stop) for slice in keys])
-
-
-odict = slice2OrderedDict()
 
 section_order = [
     "stats",
@@ -55,7 +46,7 @@ file_types = {
             "Total": (
                 "Total number of reads processed",
                 {
-                    "description": "Aligned Reads ({})".format(config.read_count_desc),
+                    "description": f"Aligned Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "PuBu",
@@ -65,7 +56,7 @@ file_types = {
             "Matched": (
                 "Total number of reads matching adapters/contaminants",
                 {
-                    "description": "Aligned Reads ({})".format(config.read_count_desc),
+                    "description": f"Aligned Reads ({config.read_count_desc})",
                     "shared_key": "read_count",
                     "modify": lambda x: x * config.read_count_multiplier,
                     "scale": "Reds",
@@ -77,12 +68,16 @@ file_types = {
                 {"max": 100, "min": 0, "scale": "OrRd", "suffix": "%", "hidden": False},
             ),
         },
-        "cols": odict["Name":str, "Reads":int, "ReadsPct" : lambda v: float(v.strip("%"))],
-        "extracols": odict[
-            "Bases":int,
-            "BasesPct":float,
-        ],
-        "plot_func": None,  ## Plotting for 'stats' not implemented
+        "cols": {
+            "Name": str,
+            "Reads": int,
+            "ReadsPct": lambda v: float(v.strip("%")),
+        },
+        "extracols": {
+            "Bases": int,
+            "BasesPct": float,
+        },
+        "plot_func": None,  # Plotting for 'stats' not implemented
         "plot_params": {},
     },
     "aqhist": {
@@ -90,7 +85,7 @@ file_types = {
         "descr": "Histogram of average read qualities (`aqhist`). "
         "Plot shows the number of reads at each quality score.",
         "help_text": "",
-        "cols": odict["Quality":int, "count1":int, "fraction1":float, "count2":int, "fraction2":float],
+        "cols": {"Quality": int, "count1": int, "fraction1": float, "count2": int, "fraction2": float},
         "plot_func": plot_aqhist,
         "plot_params": {
             "xPlotBands": [
@@ -110,7 +105,7 @@ file_types = {
         "The plot shows the percentage of `G+C`, `A+T`, and `N` bases "
         "for each position in the reads.",
         "help_text": "Relative composition",
-        "cols": odict["Pos":int, "A":float, "C":float, "G":float, "T":float, "N":float],
+        "cols": {"Pos": int, "A": float, "C": float, "G": float, "T": float, "N": float},
         "plot_func": plot_bhist,
         "plot_params": {},
     },
@@ -119,7 +114,7 @@ file_types = {
         "descr": "Binned coverage per location, one line per X bases (`bincov`).",
         "help_text": "",
         "kvrows": ["Mean", "STDev"],
-        "cols": odict["RefName":str, "Cov":float, "Pos":int, "RunningPos":int],
+        "cols": {"RefName": str, "Cov": float, "Pos": int, "RunningPos": int},
         "plot_func": plot_basic_hist,
         "plot_params": {},
         "not_implemented": "",
@@ -130,27 +125,27 @@ file_types = {
         "Refer to original source files for complete boxplot data. "
         "Plot shows mean base quality for each read position. ",
         "help_text": "",
-        "cols": odict[
-            "BaseNum":int,
-            "count_1":int,
-            "min_1":int,
-            "max_1":int,
-            "mean_1":float,
-            "Q1_1":int,
-            "med_1":int,
-            "Q3_1":int,
-            "LW_1":int,
-            "RW_1":int,
-            "count_2":int,
-            "min_2":int,
-            "max_2":int,
-            "mean_2":float,
-            "Q1_2":int,
-            "med_2":int,
-            "Q3_2":int,
-            "LW_2":int,
-            "RW_2":int,
-        ],
+        "cols": {
+            "BaseNum": int,
+            "count_1": int,
+            "min_1": int,
+            "max_1": int,
+            "mean_1": float,
+            "Q1_1": int,
+            "med_1": int,
+            "Q3_1": int,
+            "LW_1": int,
+            "RW_1": int,
+            "count_2": int,
+            "min_2": int,
+            "max_2": int,
+            "mean_2": float,
+            "Q1_2": int,
+            "med_2": int,
+            "Q3_2": int,
+            "LW_2": int,
+            "RW_2": int,
+        },
         "plot_func": plot_bqhist,
         "plot_params": {},
     },
@@ -160,7 +155,7 @@ file_types = {
         "Note that lines have been smoothed to 400 points; "
         "higher resolution data might be available in the original data source. ",
         "help_text": "",
-        "cols": odict["Coverage":int, "numBases":int],
+        "cols": {"Coverage": int, "numBases": int},
         "plot_func": plot_covhist,
         "plot_params": {
             "yLog": True,
@@ -170,18 +165,18 @@ file_types = {
         "title": "Coverage stats",
         "descr": "Per-scaffold coverage info (`covstats`).",
         "help_text": "",
-        "cols": odict["ID":str, "Avg_fold":float],
-        "extracols": odict[
-            "Length":int,
-            "Ref_GC":float,
-            "Covered_percent":float,
-            "Covered_bases":int,
-            "Plus_reads":int,
-            "Minus_reads":int,
-            "Median_fold":int,
-            "Read_GC":float,
-            "Std_Dev":float,
-        ],
+        "cols": {"ID": str, "Avg_fold": float},
+        "extracols": {
+            "Length": int,
+            "Ref_GC": float,
+            "Covered_percent": float,
+            "Covered_bases": int,
+            "Plus_reads": int,
+            "Minus_reads": int,
+            "Median_fold": int,
+            "Read_GC": float,
+            "Std_Dev": float,
+        },
         "plot_func": plot_basic_hist,
         "plot_params": {},
         "not_implemented": "",
@@ -190,7 +185,7 @@ file_types = {
         "title": "Errors-per-read",
         "descr": "Errors-per-read histogram (`ehist`). ",
         "help_text": "",
-        "cols": odict["Errors":int, "Count":int],
+        "cols": {"Errors": int, "Count": int},
         "plot_func": plot_basic_hist,
         "plot_params": {"xlab": "Errors", "ylab": "# Reads"},
     },
@@ -205,7 +200,7 @@ file_types = {
             "Mode": ("The most commonly occuring value of the GC content distribution", {}),
             "STDev": ("Standard deviation of average GC content", {}),
         },
-        "cols": odict["GC":float, "Count":int],
+        "cols": {"GC": float, "Count": int},
         "plot_func": plot_basic_hist,
         "plot_params": {"xlab": "Proportion GC", "ylab": "# Reads"},
     },
@@ -245,7 +240,7 @@ file_types = {
                 {},
             ),
         },
-        "cols": odict["Identity":float, "Reads":int, "Bases":int],
+        "cols": {"Identity": float, "Reads": int, "Bases": int},
         "plot_func": plot_idhist,
         "plot_params": {},
     },
@@ -267,7 +262,7 @@ file_types = {
             "STDev": ("Standard deviation of insert size length distribution", {}),
             "PercentOfPairs": ("", {}),
         },
-        "cols": odict["InsertSize":int, "Count":int],
+        "cols": {"InsertSize": int, "Count": int},
         "plot_func": plot_ihist,
         "plot_params": {},
     },
@@ -277,7 +272,7 @@ file_types = {
         "The plots show the number of observed insertions and deletions, "
         "for each insertion and deletion length.",
         "help_text": "",
-        "cols": odict["Length":int, "Deletions":int, "Insertions":int],
+        "cols": {"Length": int, "Deletions": int, "Insertions": int},
         "plot_func": plot_indelhist,
         "plot_params": {},
     },
@@ -285,7 +280,7 @@ file_types = {
         "title": "Read lengths",
         "descr": "Read length histogram (`lhist`).",
         "help_text": "",
-        "cols": odict["Length":int, "Count":int],
+        "cols": {"Length": int, "Count": int},
         "plot_func": plot_basic_hist,
         "plot_params": {"xlab": "Read length (base pairs)", "ylab": "# Reads"},
     },
@@ -293,21 +288,21 @@ file_types = {
         "title": "Match, substitution, deletion, and insertion rates",
         "descr": "Histogram of match, substitution, deleletion, " "and insertion rates by read location (`mhist`).",
         "help_text": "",
-        "cols": odict[
-            "BaseNum":int,
-            "Match1":float,
-            "Sub1":float,
-            "Del1":float,
-            "Ins1":float,
-            "N1":float,
-            "Other1":float,
-            "Match2":float,
-            "Sub2":float,
-            "Del2":float,
-            "Ins2":float,
-            "N2":float,
-            "Other2":float,
-        ],
+        "cols": {
+            "BaseNum": int,
+            "Match1": float,
+            "Sub1": float,
+            "Del1": float,
+            "Ins1": float,
+            "N1": float,
+            "Other1": float,
+            "Match2": float,
+            "Sub2": float,
+            "Del2": float,
+            "Ins2": float,
+            "N2": float,
+            "Other2": float,
+        },
         "plot_func": plot_mhist,
         "plot_params": {},
     },
@@ -321,9 +316,15 @@ file_types = {
             "Deviation": ("", {}),
             "DeviationSub": ("", {}),
         },
-        "cols": odict[
-            "Quality":int, "Match":int, "Sub":int, "Ins":int, "Del":int, "TrueQuality":float, "TrueQualitySub":float
-        ],
+        "cols": {
+            "Quality": int,
+            "Match": int,
+            "Sub": int,
+            "Ins": int,
+            "Del": int,
+            "TrueQuality": float,
+            "TrueQualitySub": float,
+        },
         "plot_func": plot_qahist,
         "plot_params": {},
     },
@@ -332,7 +333,7 @@ file_types = {
         "descr": "Histogram of base qualities (`qchist`). "
         "Plot shows the number of bases at each quality score. Zero counts are shown as `0.1` due to log axis.",
         "help_text": "",
-        "cols": odict["Quality":int, "count1":int, "fraction1":float],
+        "cols": {"Quality": int, "count1": int, "fraction1": float},
         "plot_func": plot_qchist,
         "plot_params": {
             "xPlotBands": [
@@ -352,15 +353,15 @@ file_types = {
         "using the linear values, logarithmically scaled values, and the "
         "actual measured qualities based on the alignments.",
         "help_text": "",
-        "cols": odict[
-            "BaseNum":int,
-            "Read1_linear":float,
-            "Read1_log":float,
-            "Read1_measured":float,
-            "Read2_linear":float,
-            "Read2_log":float,
-            "Read2_measured":float,
-        ],
+        "cols": {
+            "BaseNum": int,
+            "Read1_linear": float,
+            "Read1_log": float,
+            "Read1_measured": float,
+            "Read2_linear": float,
+            "Read2_log": float,
+            "Read2_measured": float,
+        },
         "plot_func": plot_qhist,
         "plot_params": {},
     },
@@ -375,16 +376,16 @@ file_types = {
             "Mapped": ("", {}),
             "RefSequences": ("", {}),
         },
-        "cols": odict[
-            "Name":str,
-            "Length":int,
-            "Bases":int,
-            "Coverage":float,
-            "Reads":int,
-            "RPKM":float,
-            "Frags":int,
-            "FPKM":float,
-        ],
+        "cols": {
+            "Name": str,
+            "Length": int,
+            "Bases": int,
+            "Coverage": float,
+            "Reads": int,
+            "RPKM": float,
+            "Frags": int,
+            "FPKM": float,
+        },
         "plot_func": plot_basic_hist,
         "plot_params": {},
         "not_implemented": "",

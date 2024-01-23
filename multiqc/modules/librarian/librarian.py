@@ -3,7 +3,7 @@
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import mqc_colour
 
@@ -33,8 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the data files to disk
         if not self.librarian_data:
-            raise UserWarning
-        log.info("Found {} samples".format(len(self.librarian_data)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.librarian_data)} samples")
 
         if self.librarian_data:
             self.write_data_file(self.librarian_data, "multiqc_librarian_data")
@@ -48,20 +48,24 @@ class MultiqcModule(BaseMultiqcModule):
         """Loop through Librarian files and parse their data"""
         for f in self.find_log_files("librarian", filehandles=True):
             headers = f["f"].readline().strip().split("\t")
-            for l in f["f"]:
-                data = dict(zip(headers, l.strip().split("\t")))
+            for line in f["f"]:
+                data = dict(zip(headers, line.strip().split("\t")))
                 s_name = self.clean_s_name(data["sample_name"], f)
                 del data["sample_name"]
                 data_float = {}
                 for k, v in data.items():
                     try:
                         data_float[k] = float(v)
-                    except:
+                    except Exception:
                         data_float[k] = v
                 if s_name in self.librarian_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.librarian_data[s_name] = data_float
                 self.add_data_source(f, s_name=s_name)
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, s_name)
 
     def plot_librarian_heatmap(self):
         """Make the heatmap plot"""

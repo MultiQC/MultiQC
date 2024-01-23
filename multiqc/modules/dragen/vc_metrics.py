@@ -21,8 +21,12 @@ class DragenVCMetrics(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="vc_metrics")
             data_by_sample[s_name] = data
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -51,7 +55,14 @@ class DragenVCMetrics(BaseMultiqcModule):
             except for the "Filtered" metrics which represent how many variants were filtered out
             from pre-filter VCF to generate the post-filter VCF.
             """,
-            plot=table.plot(data_by_sample, vc_table_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                data_by_sample,
+                vc_table_headers,
+                pconfig={
+                    "id": "dragen-vc-metrics-table",
+                    "namespace": NAMESPACE,
+                },
+            ),
         )
         return data_by_sample.keys()
 

@@ -2,7 +2,7 @@ name: "MultiQC"
 on:
   push:
     branches:
-      - master
+      - main
     paths-ignore:
       - "docs/**"
       - "*.md"
@@ -15,7 +15,7 @@ env:
   # To reduce code duplication between Win and Linux jobs
   core_python_dependencies: "pip setuptools beautifulsoup4"
   # No need to run test variations across all Python versions
-  latest_python: "3.11"
+  latest_python: "3.12"
 
 jobs:
   changes:
@@ -25,7 +25,7 @@ jobs:
       single_module: ${{ steps.single_module.outputs.value }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: dorny/paths-filter@v2
         id: filter
@@ -55,15 +55,16 @@ jobs:
     needs: changes
     strategy:
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+        # Just test the oldest and newest supported Python versions
+        python-version: ["3.8", "3.12"]
     timeout-minutes: 10
 
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -75,14 +76,14 @@ jobs:
         run: pip install .
 
       - name: Download test data
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          repository: ewels/MultiQC_TestData
+          repository: MultiQC/test-data
           path: test_data
 
       # Run all of the tests!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --filename full_report.html
 
       # More variations of command line flags and inputs. No need to run those across all Python versions.
       - name: Special case input data
@@ -91,14 +92,14 @@ jobs:
 
       - name: All modules / Log filename as s_name, no cleaning
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ --fullnames --fn_as_s_name
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
         if: matrix.python-version == env.latest_python
         run: |
           multiqc ${{ needs.changes.outputs.single_module }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
-            echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or UserWarning when no matching files are found" >&2
+            echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or ModuleNoSamplesFound when no matching files are found" >&2
             exit 1
           fi
 
@@ -110,17 +111,27 @@ jobs:
 
       - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
         if: matrix.python-version == env.latest_python
-        run: multiqc --lint test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+        run: multiqc --strict test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
       - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
       - name: Specific module / named output dir / dev template / JSON data / File list
         if: matrix.python-version == env.latest_python
         run: |
           cd test_data
           multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+
+      - name: No report
+        if: matrix.python-version == env.latest_python
+        run: |
+          cd test_data
+          multiqc -m star data/modules/star --no-report -n no-report
+          if [[ -f no-report.html ]]; then
+            echo "Running with the --no-report flag should not produce an HTML" >&2
+            exit 1
+          fi
 
       - name: Empty directory (confirm no report)
         if: matrix.python-version == env.latest_python
@@ -144,7 +155,7 @@ jobs:
 
     steps:
       # Check out MultiQC code
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Set up Windows with C++ for numpy
       - name: Visual Studio Command Prompt tool
@@ -152,9 +163,9 @@ jobs:
 
       # Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       # Update core packages
       - name: Install dependencies for CI tests
@@ -168,10 +179,10 @@ jobs:
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: Download test data
         run: |
-          curl -fsSL https://github.com/ewels/MultiQC_TestData/archive/master.zip -o test_data.zip
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test_data.zip
           7z x test_data.zip -y -o"test_data"
-          dir test_data\MultiQC_TestData-master
+          dir test_data\test-data-main
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --lint test_data\MultiQC_TestData-master\data\modules\ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\test-data-main\data\modules\ --filename full_report.html

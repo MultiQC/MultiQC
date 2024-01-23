@@ -1,9 +1,8 @@
 """ MultiQC module to parse output from Cell Ranger """
 
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Samtools submodules
 from .count import CellRangerCountMixin
@@ -30,22 +29,22 @@ class MultiqcModule(BaseMultiqcModule, CellRangerCountMixin, CellRangerVdjMixin)
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
         # Call submodule functions
         n["count"] = self.parse_count_html()
         if n["count"] > 0:
-            log.info("Found {} Cell Ranger count reports".format(n["count"]))
+            log.info(f"Found {n['count']} Cell Ranger count reports")
 
         n["vdj"] = self.parse_vdj_html()
         if n["vdj"] > 0:
-            log.info("Found {} Cell Ranger VDJ reports".format(n["vdj"]))
+            log.info(f"Found {n['vdj']} Cell Ranger VDJ reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

@@ -190,6 +190,9 @@ bowtie2:
     - "bisulfite"
     - "HiC-Pro"
   shared: true
+bracken:
+  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
+  num_lines: 1
 busco:
   fn: "short_summary*"
   contents: "BUSCO version is:"
@@ -318,7 +321,9 @@ dragen_fastqc:
 eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
 fastp:
-  fn: "*fastp.json"
+  fn: "*.json"
+  contents: '"before_filtering": {'
+  num_lines: 10
 fastq_screen:
   fn: "*_screen.txt"
 fastqc/data:
@@ -380,7 +385,7 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+\t\d+)$'
+  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
 hicexplorer:
   contents: "Min rest. site distance"
@@ -389,15 +394,22 @@ hicexplorer:
 hicup:
   fn: "HiCUP_summary_report*"
 hicpro/mmapstat:
-  fn: "*.mmapstat"
+  fn: "*mapstat"
+  contents: "total_R"
+  num_lines: 10
 hicpro/mpairstat:
-  fn: "*.mpairstat"
+  fn: "*pairstat"
+  contents: "Total_pairs_processed"
+  num_lines: 10
 hicpro/mergestat:
   fn: "*.mergestat"
+  contents: "valid_interaction"
+  num_lines: 10
 hicpro/mRSstat:
-  fn: "*.mRSstat"
+  fn: "*RSstat"
+  contents: "Valid_interaction_pairs"
 hicpro/assplit:
-  fn: "*.assplit.stat"
+  fn: "*assplit.stat"
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1
@@ -444,7 +456,7 @@ kallisto:
   shared: true
 nanostat:
   max_filesize: 4096
-  contents_re: "Metrics dataset\\s*"
+  contents_re: "Metrics\\s+dataset\\s*"
   num_lines: 1
 nanostat/legacy:
   max_filesize: 4096
@@ -453,8 +465,8 @@ nanostat/legacy:
 kat:
   fn: "*.dist_analysis.json"
 kraken:
-  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)\s+(.+)'
-  num_lines: 2
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
+  num_lines: 1
 librarian:
   fn: "librarian_heatmap.txt"
 leehom:
@@ -484,6 +496,9 @@ mapdamage:
   - fn: "3p*_freq.txt"
   - fn: "5p*_freq.txt"
   - fn: "lgdistribution.txt"
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
 methylQA:
   fn: "*.report"
   shared: true
@@ -555,6 +570,10 @@ peddy/sex_check:
   fn: "*.sex_check.csv"
 peddy/background_pca:
   fn: "*.background_pca.json"
+seqera_cli/run_dump:
+  fn: "runs_*.tar.gz"
+seqera_cli/json:
+  fn: "workflow.json"
 somalier/somalier-ancestry:
   fn: "*.somalier-ancestry.tsv"
 somalier/samples:
@@ -576,72 +595,62 @@ pbmarkdup:
 phantompeakqualtools/out:
   fn: "*.spp.out"
 picard/alignment_metrics:
-  contents: "AlignmentSummaryMetrics"
-  shared: true
+  - contents: "picard.analysis.AlignmentSummaryMetrics"
+  - contents: "--algo AlignmentStat"
 picard/basedistributionbycycle:
   contents: "BaseDistributionByCycleMetrics"
-  shared: true
 picard/crosscheckfingerprints:
   contents: "CrosscheckFingerprints"
-  shared: true
 picard/gcbias:
-  contents: "GcBias"
-  shared: true
+  - contents: "GcBiasDetailMetrics"
+  - contents: "GcBiasSummaryMetrics"
+  - contents: "--algo GCBias"
 picard/hsmetrics:
-  contents: "HsMetrics"
-  shared: true
+  - contents: "HsMetrics"
+  - contents: "--algo HsMetricAlgo"
 picard/insertsize:
-  contents: "InsertSizeMetrics"
-  shared: true
+  - contents: "picard.analysis.InsertSizeMetrics"
+  - contents: "--algo InsertSizeMetricAlgo"
 picard/markdups:
-  contents: "DuplicationMetrics"
-  shared: true
+  - contents: "picard.sam.MarkDuplicates"
+  - contents: "picard.sam.DuplicationMetrics"
+  - contents: "picard.sam.markduplicates.MarkDuplicates"
+  - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
+  - contents: "markduplicates.GATKDuplicationMetrics"
+  - contents: "--algo Dedup"
 picard/oxogmetrics:
   contents: "OxoGMetrics"
-  shared: true
 picard/pcr_metrics:
   contents: "TargetedPcrMetrics"
-  shared: true
 picard/quality_by_cycle:
-  contents_re: "[Qq]uality[Bb]y[Cc]ycle"
-  contents: "MEAN_QUALITY"
-  shared: true
+  - contents_re: "[Qq]uality[Bb]y[Cc]ycle"
+    contents: "MEAN_QUALITY"
+  - contents: "--algo MeanQualityByCycle"
 picard/quality_score_distribution:
-  contents_re: "[Qq]uality[Ss]core[Dd]istribution"
-  contents: "COUNT_OF_Q"
-  shared: true
+  - contents_re: "[Qq]uality[Ss]core[Dd]istribution"
+    contents: "COUNT_OF_Q"
+  - contents: "--algo QualDistribution"
 picard/quality_yield_metrics:
   contents: "QualityYieldMetrics"
-  shared: true
 picard/rnaseqmetrics:
   contents_re: "[Rr]na[Ss]eq[Mm]etrics"
-  contents: "## METRICS CLASS"
-  shared: true
 picard/rrbs_metrics:
   contents: "RrbsSummaryMetrics"
-  shared: true
 picard/sam_file_validation:
   fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-  # This looks wrong but I think it's intentional - tests fail if I "fix" it
-  fn: "*.variant_calling_detail_metrics"
-  contents: "CollectVariantCallingMetrics"
-  shared: true
+  contents: "VariantCallingDetailMetrics"
 picard/wgs_metrics:
-  contents: "CollectWgsMetrics"
-  shared: true
+  contents_re: "## METRICS CLASS.*WgsMetrics"
 picard/collectilluminabasecallingmetrics:
   contents: "CollectIlluminaBasecallingMetrics"
-  shared: true
 picard/collectilluminalanemetrics:
   contents: "CollectIlluminaLaneMetrics"
-  shared: true
 picard/extractilluminabarcodes:
   contents: "ExtractIlluminaBarcodes"
-  shared: true
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
-  shared: true
 porechop:
   contents: "Looking for known adapter sets"
   num_lines: 10
@@ -738,6 +747,10 @@ rseqc/tin:
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: "lib_format_counts.json"
 salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
@@ -759,15 +772,6 @@ samtools/rmdup:
   shared: true
 sargasso:
   fn: "overall_filtering_summary.txt"
-sentieon/alignment_metrics:
-  contents: "--algo AlignmentStat"
-  shared: true
-sentieon/insertsize:
-  contents: "--algo InsertSizeMetricAlgo"
-  shared: true
-sentieon/gcbias:
-  contents: "--algo GCBias"
-  shared: true
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
@@ -853,6 +857,10 @@ tophat:
 trimmomatic:
   contents: "Trimmomatic"
   shared: true
+truvari/bench:
+  contents_re: ".*truvari.* bench.*"
+  fn: "log.txt"
+  num_lines: 2
 umitools:
   contents: "# UMI-tools version:"
   num_lines: 3
@@ -887,3 +895,9 @@ verifybamid/selfsm:
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
+xenome:
+  contents: "B	G	H	M	count	percent	class"
+  num_lines: 2
+xengsort:
+  contents: "# Xengsort classify"
+  num_lines: 2

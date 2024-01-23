@@ -1,13 +1,67 @@
 ---
-title: Updating for compatibility
-description: Notes for upgrading
+title: Breaking changes
+description: Notes about major MultiQC updates
 ---
 
-# Updating for compatibility
+# Updating after major changes
 
-When releasing new versions of MultiQC we aim to maintain compatibility so that your existing
-modules and plugins will keep working. However, in some cases we have to make changes that
-require code to be modified. This section summarises the changes by MultiQC release.
+When releasing new versions of MultiQC we aim to maintain compatibility so that your existing modules and plugins will keep working.
+However, in some cases we have to make changes that require code to be modified.
+This section describes any major breaking changes in MultiQC releases.
+
+## GitHub Repo and Docker images moved
+
+On December 18th 2023, just after the v1.19 release of MultiQC, the GitHub repo and Docker images were moved.
+
+- GitHub source code:
+  - Repo name `ewels/MultiQC` became `MultiQC/MultiQC`
+  - Default branch `master` was renamed to `main`
+- Docker images renamed:
+  - DockerHub: `ewels/multiqc` became `multiqc/multiqc`
+  - GitHub Packages: `ghcr.io/ewels/multiqc` became `ghcr.io/multiqc/multiqc`
+
+### GitHub repository name change
+
+The repository <https://github.com/MultiQC/MultiQC> was moved to <https://github.com/MultiQC/MultiQC>.
+All issues, pull-requests and other GitHub metadata moved with it.
+In most cases, GitHub should automatically redirect to the new location and you should not notice any difference.
+However, if you have a local clone / fork of the repository it's still a good idea to update the remote name.
+
+Assuming that you have forked the repo and have a local clone, configured with a remote called `upstream` with which you pull in new changes (with `git pull upstream`), you can rename the remote with the following:
+
+```bash
+git remote set-url upstream git@github.com:MultiQC/MultiQC.git
+```
+
+### Default branch name changed
+
+At the same time as moving the repo, we also changed the default branch name from `master` to `main`. This is inline with changing industry standards.
+See [`github/renaming`](https://github.com/github/renaming/) and [this software freedom conservancy blog post](https://sfconservancy.org/news/2020/jun/23/gitbranchname/) for more details.
+
+If you maintain your own fork of MultiQC, it will be unaffected by this change. The branch name is only switched on the main MultiQC repository. All pull-requests have been automatically updated to point to the renamed branch.
+
+If you wish to change the default branch name on your fork, you can do (probably a good idea so as not to get confusing).
+First, rename the branch on GitHub.com (_Settings_ -> _Default branch_, see also the [GitHub docs](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-branches-in-your-repository/renaming-a-branch))
+
+Once renamed on GitHub.com, you'll need to rename the branch in your local clone and point to the renamed remote branch:
+
+```bash
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+```
+
+### New Docker images
+
+To coincide with the GitHub repository renaming, the official Docker images have also been renamed.
+
+**The previous `ewels/multiqc` images have _not_ been removed**, so as not to hinder reproducibility.
+However, they will no longer be updated and get no new pushes to `:dev`, `:latest` or releases after `:v1.19`.
+
+New docker images have been created [at DockerHub (`multiqc/multiqc`)](https://hub.docker.com/r/multiqc/multiqc/)
+and at [GitHub Packages (`ghcr.io/multiqc/multiqc`)](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
+These do not have old versions, but will be updated from now on with releases v1.20 and onwards.
 
 ## v1.0 Updates
 
@@ -135,9 +189,9 @@ All fields are optional. If `name` is omitted then the end result will be the sa
 
 #### Updated number formatting
 
-A couple of minor updates to how numbers are handled in tables may affect your configs. Firstly, format strings looking like `{:.1f}` should now be `{:,.1f}` (note the extra comma). This enables customisable number formatting with separated thousand groups.
+A couple of minor updates to how numbers are handled in tables may affect your configs. Firstly, format strings looking like `{:.1f}` should now be `{:,.1f}` (note the extra comma). This enables customisable number formatting with separated thousand groups. For example, `{:,.2f}` will format `1234567.89` as `1,234,567.89`. For decimal numbers, use `{:,d}`.
 
-Secondly, any table columns reporting a read count should use new config options to allow user-configurable multipliers. For example, instead of this:
+Secondly, any table columns reporting a read and base counts should use new config options to allow user-configurable multipliers. For example, instead of this:
 
 ```python
 headers['read_counts'] = {
@@ -153,8 +207,8 @@ you should now use this:
 
 ```python
 headers['read_counts'] = {
-  'title': '{} Reads'.format(config.read_count_prefix),
-  'description': 'Total raw sequences ({})'.format(config.read_count_desc),
+  'title': f'{config.read_count_prefix} Reads',
+  'description': f'Total raw sequences ({config.read_count_desc})',
   'modify': lambda x: x * config.read_count_multiplier,
   'format': '{:,.2f} ' + config.read_count_prefix,
   'shared_key': 'read_count'
@@ -162,3 +216,15 @@ headers['read_counts'] = {
 ```
 
 Not as pretty, but allows users to view low depth coverage.
+
+Similarly, for base counts:
+
+```python
+headers['base_counts'] = {
+  'title': f'{config.base_count_prefix} Bases',
+  'description': f'Total raw bases ({config.base_count_desc})',
+  'modify': lambda x: x * config.base_count_multiplier,
+  'format': '{:,.2f} ' + config.base_count_prefix,
+  'shared_key': 'base_count'
+}
+```

@@ -19,7 +19,9 @@ body:
         Please drag and drop (and upload to the GitHub issue) an input file that can be used to replicate the error.
         ***Please do not copy and paste log contents***, as important whitespace can change.
         If the file type is not allowed, please compress into a `.zip` file.
-      placeholder: "[ Drag and drop an example file here to upload ]"
+      placeholder: |
+        [ Drag and drop an example file here to upload ]
+        Please do not copy and paste log contents! Use a .zip file if needed.
 
   - type: textarea
     id: log
@@ -50,7 +52,7 @@ body:
         Please ensure your bug report fulfills all of the following requirements.
       options:
         - label: >-
-            I have read the [troubleshooting documentation](https://multiqc.info/docs/#troubleshooting-1).
+            I have read the [troubleshooting documentation](https://multiqc.info/docs/usage/troubleshooting/).
           required: true
         - label: >-
             I am using the latest release of MultiQC.

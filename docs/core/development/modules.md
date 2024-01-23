@@ -25,7 +25,7 @@ Get this stuff right, and your pull-request is much more likely to be merged qui
 ### Don't add everything
 
 MultiQC was designed to _summarise_ tool outputs.
-An end-user should be able to visially scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
+An end-user should be able to visually scan the report and spot any outlier samples, then go to the underlying tool to look at those samples in more detail.
 
 MultiQC is _not_ designed to replicate every single metric from a tool. Doing so makes the report difficult to read and digest quickly for many samples.
 Module additions that add huge quantities of metrics to reports will be asked to slim down.
@@ -39,7 +39,7 @@ Plots should be _recreated_ within MultiQC by parsing the raw data and generatin
 
 I almost never merge modules that include images into reports.
 If you really need images in your report, you can do this either via Custom Content or an unofficial plugin module.
-Feel free to discuss on Gitter if you think that your case is an exception. There have been one or two in the past.
+Feel free to discuss on the community forum if you think that your case is an exception. There have been one or two in the past.
 
 ### One at a time
 
@@ -87,22 +87,39 @@ you can write it as part of a custom plugin. The process is almost identical,
 though it keeps the code bases separate. For more information about this,
 see the docs about _MultiQC Plugins_ below.
 
-## MultiQC Lint Tests
+## Strict mode validation
 
 MultiQC has been developed to be as forgiving as possible and will handle lots of
-invalid or ignored code. This is useful most of the time but can be difficult when
-writing new MultiQC modules (especially during pull-request reviews).
+invalid or ignored code. Even if a module raised an unexpected exception, MultiQC
+will log that error, and continue running.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+This is useful most of the time, but can be difficult when writing new MultiQC
+modules (especially during pull-request reviews). To help with this, you can run
+MultiQC with the `--strict` flag. It will give explicit warnings about anything that
+is not optimally configured, and will also make MultiQC exit early if a module crashed.
+
+For example:
 
 ```bash
-multiqc --lint test_data
+multiqc --strict test_data
 ```
 
 Note that the automated MultiQC continuous integration testing runs in this mode,
 so you will need to pass all lint tests for those checks to pass. This is required
 for any pull-requests.
+
+You can alternatively enable the strict mode using an environment variable:
+
+```bash
+export MULTIQC_STRICT=true
+```
+
+Or set it in the [config](http://multiqc.info/docs/#configuring-multiqc):
+
+```yaml
+# In multiqc_config.yaml
+strict: True
+```
 
 ## Code formatting
 
@@ -121,17 +138,17 @@ Better still, many of these tools can automatically change the formatting so tha
 can write code in whatever style they prefer and defer this task to automation.
 
 Much like source control, gloves in a lab, and wearing a seatbelt, code formatters and code linting
-is an annoying inconvience at first for most people which in time becomes an indespesible
+is an annoying inconvenience at first for most people which in time becomes an indispensable
 tool in the maintenance of high quality software.
 
 MultiQC uses a range of tools to check the code base. The main two code formatters are:
 
-- [Black](https://github.com/psf/black) - Python Code
+- [Ruff](https://docs.astral.sh/ruff/) - Python Code
 - [Prettier](https://prettier.io/) - Everything else (almost)
 
 The easiest way to work with these is to install editor plugins that run the tools every time you save a file.
 For example, [Visual Studio Code](https://code.visualstudio.com/) has
-[built-in support for Black](https://code.visualstudio.com/docs/python/editing#_formatting) and
+[built-in support for Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff) and
 plugins for [Prettier](https://github.com/prettier/prettier-vscode).
 
 ### Pre-commit
@@ -239,7 +256,7 @@ module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
 knows it exists. This process is automated once the file is added to the core
 repository.
 
-This docs file should be placed in `docs/modules/<your_module_name>.md` and
+These docs file should be placed in `docs/modules/<your_module_name>.md` and
 should have the following structure:
 
 ```markdown
@@ -257,11 +274,6 @@ you think would be helpful. Please avoid using heading levels 1 to 3.
 
 The file search patterns will be shown on the website page automatically
 and do not need to be included in this file.
-
-### Changelog
-
-Last but not least, remember to add your new module to the `CHANGELOG.md`,
-so that people know that it's there.
 
 ### MultiqcModule Class
 
@@ -334,6 +346,21 @@ Log messages can come in a range of formats:
   - Alert user about problems that don't halt execution
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
+
+### Changelog
+
+When opening a pull-request, please ensure that the PR title is
+formatted as `New module: XYZ`, where `XYZ` is the name of your module.
+
+The changelog entry will be automatically generated for you, based on
+the meta-information that you add to the module `MultiqcModule` class.
+
+:::tip
+Please do not add anything to the `CHANGELOG.md` file!
+This is now handled by our friendly MultiQC bot 🤖
+
+For more information about how it works, see the [contributing docs](../development/contributing.md#changelog).
+:::
 
 ## Step 1 - Find log files
 
@@ -473,8 +500,8 @@ instead:
 ```python
 for f in self.find_log_files('mymod', filehandles=True):
     # f['f'] is now a filehandle instead of contents
-    for l in f['f']:
-        print( l )
+    for line in f['f']:
+        print(line)
 ```
 
 This is good if the file is large, as Python doesn't read the entire
@@ -498,8 +525,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_logs(self, f):
         data = {}
-        for l in f.splitlines():
-            s = l.split()
+        for line in f.splitlines():
+            s = line.split()
             data[s[0]] = s[1]
         return data
 ```
@@ -536,12 +563,14 @@ Note that this function should be used _after_ cleaning the sample name with
 ### No files found
 
 If your module cannot find any matching files, it needs to raise an
-exception of type `UserWarning`. This tells the core MultiQC program
+exception of type `ModuleNoSamplesFound`. This tells the core MultiQC program
 that no modules were found. For example:
 
 ```python
+from multiqc.modules.base_module import ModuleNoSamplesFound
+
 if len(self.mod_data) == 0:
-    raise UserWarning
+    raise ModuleNoSamplesFound
 ```
 
 Note that this has to be raised as early as possible, so that it halts
@@ -599,7 +628,7 @@ create log files _and_ print to `stdout` for example.
 
 ```python
 if f['s_name'] in self.bowtie_data:
-    log.debug("Duplicate sample name found! Overwriting: {}".format(f['s_name']))
+    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 ```
 
 ### Printing to the sources file
@@ -690,6 +719,22 @@ for line in f.splitlines():
     # ..rest of file parsing
 ```
 
+Even if the logs does not contain any version information, you should still
+add a superfluous `self.add_software_version()` call to the module. This
+will help maintainers to check if new modules or submodules parse any version
+information that might exist. The call should also include a note that it is
+a dummy call. Example:
+
+```python
+for f in self.find_log_files("mymodule/submodule"):
+    sample = f["s_name"]
+    data[sample] = parse_file(f)
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None, sample)
+```
+
 ## Step 3 - Adding to the general statistics table
 
 Now that you have your parsed data, you can start inserting it into the
@@ -719,19 +764,20 @@ To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
 
 ```python
-headers = OrderedDict()
-headers['first_col'] = {
-    'title': 'First',
-    'description': 'My First Column',
-    'scale': 'RdYlGn-rev'
-}
-headers['second_col'] = {
-    'title': 'Second',
-    'description': 'My Second Column',
-    'max': 100,
-    'min': 0,
-    'scale': 'Blues',
-    'suffix': '%'
+headers = {
+    'first_col': {
+        'title': 'First',
+        'description': 'My First Column',
+        'scale': 'RdYlGn-rev'
+    },
+    'second_col': {
+        'title': 'Second',
+        'description': 'My Second Column',
+        'max': 100,
+        'min': 0,
+        'scale': 'Blues',
+        'suffix': '%'
+    }
 }
 self.general_stats_addcols(data, headers)
 ```
@@ -747,8 +793,8 @@ headers['name'] = {
     'min': None,                    # Maximum value in range, for bar / colour coding
     'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
     'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string
-    'shared_key': None              # See below for description
+    'format': '{:,.1f}',            # Output format() string. Can also be a lambda function.
+    'shared_key': None,             # See below for description
     'modify': None,                 # Lambda function to modify values
     'hidden': False,                # Set to True to hide the column on page load
     'placement' : 1000.0,           # Alter the default ordering of columns in the table
@@ -772,13 +818,16 @@ headers['name'] = {
 - `modify`
   - A python `lambda` function to change the data in some way when it is
     inserted into the table.
+- `format`
+  - A format string or a python `lambda` function to format the data to display
+    on screen.
 - `hidden`
   - Setting this to `True` will hide the column when the report loads. It can
     then be shown through the _Configure Columns_ modal in the report. This can
     be useful when data could be sometimes useful. For example, some modules
     show "percentage aligned" on page load but hide "number of reads aligned".
 - `placement`
-  - If you feel that the results from your module should appear at the left side
+  - If you feel that the results from your module should appear on the left side
     of the table set this value less than 1000. Or to move the column right, set
     it greater than 1000. This value can be any float.
 
@@ -788,8 +837,8 @@ that should be used to allow users to change the multiplier for read counts: `re
 `read_count_prefix` and `read_count_desc`. For example:
 
 ```python
-'title': '{} Reads'.format(config.read_count_prefix),
-'description': 'Number of reads ({})'.format(config.read_count_desc),
+'title': f'{config.read_count_prefix} Reads',
+'description': f'Number of reads ({config.read_count_desc})',
 'modify': lambda x: x * config.read_count_multiplier,
 ```
 

@@ -11,16 +11,19 @@ it collects the configuration settings from the following places in this order
 (overwriting at each step if a conflicting config variable is found):
 
 1. Hardcoded defaults in MultiQC code
-2. System-wide config in `<installation_dir>/multiqc_config.yaml`
+1. System-wide config in `<installation_dir>/multiqc_config.yaml`
    - Manual installations only, not `pip` or `conda`
-3. User config in `~/.multiqc_config.yaml`
-4. File path set in environment variable `MULTIQC_CONFIG_PATH`
+1. User config in `$XDG_CONFIG_HOME/multiqc_config.yaml` (or `~/.config/multiqc_config.yaml` if `$XDG_CONFIG_HOME` is not set)
+1. User config in `~/.multiqc_config.yaml`
+1. File path set in environment variable `$MULTIQC_CONFIG_PATH`
    - For example, define this in your `~/.bashrc` file and keep the file anywhere you like
-5. Config file in the current working directory: `multiqc_config.yaml`
-6. Config file paths specified in the command with `--config` / `-c`
+1. Environment variables prefixed with `MULTIQC_`
+   - For example, `$MULTIQC_TITLE`, `$MULTIQC_TEMPLATE` - see [docs below](#config-with-environment-variables)
+1. Config file in the current working directory: `multiqc_config.yaml`
+1. Config file paths specified in the command with `--config` / `-c`
    - You can specify multiple files like this, they can have any filename.
-7. Command line config (`--cl-config`)
-8. Specific command line options (_e.g._ `--force`)
+1. Command line config (`--cl-config`)
+1. Specific command line options (_e.g._ `--force`)
 
 ## Sample name cleaning
 
@@ -256,7 +259,7 @@ they can be overwritten in `<installation_dir>/multiqc_config.yaml` or
 
 To see the default search patterns, check a given module in the MultiQC documentation.
 Each module has its search patterns listed beneath any free-text docs.
-Alternatively, see the [`search_patterns.yaml`](https://github.com/ewels/MultiQC/blob/master/multiqc/utils/search_patterns.yaml)
+Alternatively, see the [`search_patterns.yaml`](https://github.com/MultiQC/MultiQC/blob/main/multiqc/utils/search_patterns.yaml)
 file in the MultiQC source code. Copy the section for the program that you want to modify and paste this
 into your config file. Make sure you make it part of a dictionary called `sp`
 as follows:
@@ -440,6 +443,63 @@ Qualimap module: _(as [described in the docs](https://multiqc.info/modules/quali
 ```bash
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
 ```
+
+## Config with environment variables
+
+Config parameters can be set through environment variables prefixed with `MULTIQC_`.
+For example, setting:
+
+```bash
+export MULTIQC_TITLE="My report"
+export MULTIQC_FILESEARCH_LINES_LIMIT=10
+```
+
+Is equivalent to setting these in YAML:
+
+```yaml
+title: "My report"
+filesearch_lines_limit: 10
+```
+
+:::tip
+Some variables such as `title` can be also directly set through the command line
+options: `--title "My report"`. For a list of all parameters, run `multiqc --help`.
+:::
+
+Note that it is _not_ possible to set nested config parameters through environment
+variables, such as those that expect lists or dicts as values (e.g. `fn_clean_exts`).
+
+## Referencing environment variables in YAML configs
+
+It is also supported to interpolate environment variables with config files. For
+example, if you have a config file `multiqc_config.yaml` with the following content:
+
+```yaml
+title: !ENV "${TITLE}"
+report_header_info:
+  - Contact E-mail: !ENV "${NAME:info}@${DOMAIN:example.com}"
+```
+
+And you have the following environment variables set:
+
+```bash
+export TITLE="My report"
+export NAME="John"
+```
+
+You will get the following report header:
+
+```
+*My report*
+Contact E-mail: John@example.com
+```
+
+See that the `$DOMAIN` environment variable was not set, and the default value
+`"example.com"` is used instead.
+
+For more details on environment variable interpolation, refer to the documentation
+of [pyaml_env](https://github.com/mkaranasou/pyaml_env), that is used by MultiQC
+internally to process user YAML files.
 
 ## Optimising run-time
 

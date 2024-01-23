@@ -2,10 +2,9 @@
 
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
@@ -59,16 +58,16 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 # Import the submodule and call parse_reports()
                 #   Function returns number of parsed logs
-                module = __import__("multiqc.modules.rseqc.{}".format(sm), fromlist=[""])
+                module = __import__(f"multiqc.modules.rseqc.{sm}", fromlist=[""])
                 n[sm] = getattr(module, "parse_reports")(self)
                 if n[sm] > 0:
-                    log.info("Found {} {} reports".format(n[sm], sm))
+                    log.info(f"Found {n[sm]} {sm} reports")
             except (ImportError, AttributeError):
-                log.error("Could not find RSeQC Section '{}'".format(sm))
+                log.error(f"Could not find RSeQC Section '{sm}'")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         if max((len(vals) for vals in self.general_stats_data.values()), default=0) > 0:
