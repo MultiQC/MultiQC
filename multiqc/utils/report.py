@@ -100,6 +100,7 @@ def init():
     global software_versions
     software_versions = defaultdict(lambda: defaultdict(list))
 
+
 def is_searching_install_dir(path, filenames):
     """
     Checks whether MultiQC is searching for files in the source code folder
@@ -118,12 +119,11 @@ def is_searching_install_dir(path, filenames):
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
-        logger.warning(
-            "Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc"
-        )
+        logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
         return True
     else:
         return False
+
 
 def oswalk(path):
     """
@@ -138,17 +138,13 @@ def oswalk(path):
         for n in config.fn_ignore_dirs:
             dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
             if len(orig_dirnames) != len(dirnames):
-                removed_dirs = [
-                    os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                ]
+                removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
                 file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
                 orig_dirnames = dirnames[:]
         for n in config.fn_ignore_paths:
             dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
             if len(orig_dirnames) != len(dirnames):
-                removed_dirs = [
-                    os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                ]
+                removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
                 file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
 
         # Skip *this* directory if matches ignore params
@@ -171,6 +167,7 @@ def oswalk(path):
         for fn in filenames:
             searchfiles.append([fn, root])
 
+
 def pathwalk(path):
     """
     Alternative method to traverse directories using pathlib.
@@ -183,7 +180,7 @@ def pathwalk(path):
     if d_matches or p_matches:
         file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
         return
-    
+
     # Check not running in install directory
     if is_searching_install_dir(path, [f.name for f in path.iterdir() if f.is_file()]):
         return
@@ -196,10 +193,9 @@ def pathwalk(path):
         elif item.is_dir():
             pathwalk(item)
 
-walk_choices = {
-    'oswalk': oswalk,
-    'pathwalk': pathwalk
-}
+
+walk_choices = {"oswalk": oswalk, "pathwalk": pathwalk}
+
 
 def get_filelist(run_module_names, walk_method):
     """
