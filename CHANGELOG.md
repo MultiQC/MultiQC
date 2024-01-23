@@ -14,6 +14,9 @@
 - Module for metaphlan ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
 - Add alternative walk method using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
+- Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
+- Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
+- Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
 
 ### New modules
 

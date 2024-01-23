@@ -416,18 +416,51 @@ def search_file(pattern, f, module_key):
         if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
             f["contents_lines"] = []
             file_path = os.path.join(f["root"], f["fn"])
+
             try:
-                with io.open(file_path, "r", encoding="utf-8") as fh:
-                    for i, line in enumerate(fh):
-                        f["contents_lines"].append(line)
-                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
-                            break
-            # Can't open file - usually because it's a binary file, and we're reading as utf-8
-            except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
+                fh = io.open(file_path, "r", encoding="utf-8")
+            except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
                 file_search_stats["skipped_file_contents_search_errors"] += 1
                 return False
+            else:
+                try:
+                    for i, line in enumerate(fh):
+                        f["contents_lines"].append(line)
+                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
+                            break
+                except UnicodeDecodeError as e:
+                    if config.report_readerrors:
+                        logger.debug(
+                            f"Couldn't read file as a utf-8 text when looking for output: {file_path}, {e}. "
+                            f"Usually because it's a binary file. But sometimes there are single non-unicode "
+                            f"characters, so attempting reading while skipping such characters."
+                        )
+                    try:
+                        with io.open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                            for i, line in enumerate(fh):
+                                f["contents_lines"].append(line)
+                                if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
+                                    break
+                    except Exception as e:
+                        if config.report_readerrors:
+                            logger.debug(f"Still couldn't read the file, skipping: {file_path}, {e}")
+                        file_search_stats["skipped_file_contents_search_errors"] += 1
+                        return False
+                    else:
+                        if not f["contents_lines"]:
+                            if config.report_readerrors:
+                                logger.debug(f"No utf-8 lines were read from the file, skipping {file_path}")
+                            file_search_stats["skipped_file_contents_search_errors"] += 1
+                            return False
+                except Exception as e:
+                    if config.report_readerrors:
+                        logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+                    file_search_stats["skipped_file_contents_search_errors"] += 1
+                    return False
+            finally:
+                fh.close()
 
         # Go through the parsed file contents
         for i, line in enumerate(f["contents_lines"]):
