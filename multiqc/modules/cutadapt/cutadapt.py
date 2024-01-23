@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
         log_section = None
         path = os.path.join(f["root"], f["fn"])
         with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-            lines = fh.readlines()
+            lines = iter(fh.readlines())
         for line in lines:
             # New log starting
             if "This is cutadapt" in line or "cutadapt version" in line:
@@ -192,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
 
                     # Nested loop to read this section while the regex matches
-                    for line2 in fh:
+                    for line2 in lines:
                         r_seqs = re.search(r"^(\d+)\s+(\d+)\s+([\d\.]+)", line2)
                         if r_seqs:
                             a_len = int(r_seqs.group(1))
