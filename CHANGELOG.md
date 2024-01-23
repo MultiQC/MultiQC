@@ -12,6 +12,7 @@
 - Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
+- Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
 
 ### New modules
 
