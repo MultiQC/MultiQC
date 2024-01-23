@@ -37,6 +37,7 @@ workspace_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 assert pr_title, pr_title
 assert pr_number, pr_number
+assert pr_number.isdigit(), pr_number
 
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
@@ -167,17 +168,6 @@ def _modules_added_by_pr(pr_number) -> list[str]:
     return added_modules
 
 
-def _load_file_content_after_pr(path) -> str:
-    """
-    Returns the contents of the file changed by the PR.
-    """
-    _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
-    with (workspace_path / path).open() as f:
-        text = f.read()
-    _run_cmd(f"cd {workspace_path} && git checkout main")
-    return text
-
-
 def _modules_modified_by_pr(pr_number) -> set[str]:
     """
     Returns paths to the "<module>.py" files of the altered modules.
@@ -194,9 +184,13 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
         #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
         #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
         #   num_lines: 1
+        _run_cmd(f"cd {workspace_path} && git checkout main")
         with (workspace_path / sp_path).open() as f:
             old_text = f.read()
-        new_text = _load_file_content_after_pr(sp_path)
+        # Get contents of the file changed by the PR.
+        _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
+        with (workspace_path / sp_path).open() as f:
+            new_text = f.read()
         if old_text != new_text:
             old_data = yaml.safe_load(old_text)
             new_data = yaml.safe_load(new_text)

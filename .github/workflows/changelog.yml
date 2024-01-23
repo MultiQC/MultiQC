@@ -54,6 +54,7 @@ jobs:
             export PR_TITLE='${{ github.event.pull_request.title }}'
           fi
           python ${GITHUB_WORKSPACE}/.github/workflows/changelog.py
+          gh pr checkout $PR_NUMBER
 
       - name: Check if CHANGELOG.md actually changed
         run: |
@@ -61,6 +62,8 @@ jobs:
           echo "File changed: ${{ env.changed }}"
 
       - name: Commit and push changes
+        env:
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
         if: env.changed == 'YES'
         run: |
           git config user.name 'MultiQC Bot'
