@@ -17,7 +17,7 @@ def parse_reports(module):
     samplestats_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/basedistributionbycycle", filehandles=True):
+    for f in module.find_log_files("picard/basedistributionbycycle", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
 

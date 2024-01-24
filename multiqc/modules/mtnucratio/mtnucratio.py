@@ -96,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Mitochondrial to nuclear reads ratio (MTNUC)",
                 "min": 0,
                 "max": 100,
-                "scale": "RdYlGrn-rev",
+                "scale": "RdYlGn-rev",
             },
             "nucreads": {
                 "title": f"{config.read_count_prefix} Genome reads",

@@ -110,21 +110,42 @@ class CellRangerVdjMixin:
                     name="VDJ - Warnings",
                     anchor="cellranger-vdj-warnings",
                     description="Warnings encountered during the analysis",
-                    plot=table.plot(self.cellrangervdj_warnings, self.vdj_warnings_headers, {"namespace": "VDJ"}),
+                    plot=table.plot(
+                        self.cellrangervdj_warnings,
+                        self.vdj_warnings_headers,
+                        {
+                            "namespace": "VDJ",
+                            "id": "cellranger-vdj-warnings-table",
+                        },
+                    ),
                 )
 
             self.add_section(
                 name="VDJ - Summary stats",
                 anchor="cellranger-vdj-stats",
                 description="Summary QC metrics from Cell Ranger count",
-                plot=table.plot(self.cellrangervdj_mapping, self.vdj_mapping_headers, {"namespace": "VDJ"}),
+                plot=table.plot(
+                    self.cellrangervdj_mapping,
+                    self.vdj_mapping_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-stats-table",
+                    },
+                ),
             )
 
             self.add_section(
                 name="VDJ - Annotations",
                 anchor="cellranger-vdj-annot",
                 description="V(D)J annotations from Cell Ranger VDJ analysis",
-                plot=table.plot(self.cellrangervdj_annotations, self.vdj_annotations_headers, {"namespace": "VDJ"}),
+                plot=table.plot(
+                    self.cellrangervdj_annotations,
+                    self.vdj_annotations_headers,
+                    {
+                        "namespace": "VDJ",
+                        "id": "cellranger-vdj-annot-table",
+                    },
+                ),
             )
 
             self.add_section(

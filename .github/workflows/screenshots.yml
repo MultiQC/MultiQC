@@ -7,19 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out MultiQC code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
 
       - name: Install MultiQC
         run: pip install .
 
       - name: Download test data
         run: |
-          wget https://github.com/ewels/MultiQC_TestData/archive/refs/heads/master.zip
-          unzip master.zip
-          mv MultiQC_TestData-master/ test_data/
+          wget https://github.com/MultiQC/test-data/archive/refs/heads/main.zip
+          unzip main.zip
+          mv test-data-main/ test_data/
 
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1

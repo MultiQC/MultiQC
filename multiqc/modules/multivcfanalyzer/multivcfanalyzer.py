@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             "SNP Calls (all)": {
                 "title": "SNPs",
                 "description": "Total number of non-reference calls",
-                "scale": "RdGn",
+                "scale": "RdBu",
                 "shared_key": "snp_call",
                 "format": "{:,.0f}",
             },

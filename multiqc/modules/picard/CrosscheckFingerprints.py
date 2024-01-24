@@ -40,7 +40,7 @@ def parse_reports(module):
     data_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/crosscheckfingerprints", filehandles=True):
+    for f in module.find_log_files("picard/crosscheckfingerprints", filehandles=True):
         # Parse an individual CrosscheckFingerprints Report
         (metrics, comments) = _take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
         header = next(metrics).rstrip("\n").split("\t")

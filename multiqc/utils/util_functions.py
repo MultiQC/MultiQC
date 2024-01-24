@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import time
+import datetime
 
 import yaml
 
@@ -161,3 +162,25 @@ def strtobool(val) -> bool:
         return False
     else:
         raise ValueError(f"invalid truth value {val!r}")
+
+
+def choose_emoji():
+    """Choose an emoji to use in the report header."""
+    # NB: We haven't parsed the config yet, so can't disable via config
+    today = datetime.date.today()
+    emojis = {
+        "bottle_with_popping_cork": (1, 1, 1, 5),  # New Year's Day
+        "rose": (2, 14, 0, 0),  # Valentine's Day
+        "four_leaf_clover": (3, 17, 0, 0),  # St Patrick's Day
+        "globe_showing_asia-australia": (4, 22, 0, 0),  # Earth Day
+        "jack-o-lantern": (10, 31, 5, 0),  # Halloween
+        "santa": (12, 25, 0, 0),  # Christmas Day
+        "christmas_tree": (12, 25, 7, 7),  # Christmas
+    }
+    for emoji, (month, day, days_before, days_after) in emojis.items():
+        special_date = datetime.date(today.year, month, day)
+        date_range_start = special_date - datetime.timedelta(days=days_before)
+        date_range_end = special_date + datetime.timedelta(days=days_after)
+        if date_range_start <= today <= date_range_end:
+            return emoji
+    return "mag"

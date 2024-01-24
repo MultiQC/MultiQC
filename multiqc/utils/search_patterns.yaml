@@ -243,8 +243,7 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   contents: "This is cutadapt"
-  # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
-  shared: true
+  num_lines: 2
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
@@ -390,15 +389,22 @@ hicexplorer:
 hicup:
   fn: "HiCUP_summary_report*"
 hicpro/mmapstat:
-  fn: "*.mmapstat"
+  fn: "*mapstat"
+  contents: "total_R"
+  num_lines: 10
 hicpro/mpairstat:
-  fn: "*.mpairstat"
+  fn: "*pairstat"
+  contents: "Total_pairs_processed"
+  num_lines: 10
 hicpro/mergestat:
   fn: "*.mergestat"
+  contents: "valid_interaction"
+  num_lines: 10
 hicpro/mRSstat:
-  fn: "*.mRSstat"
+  fn: "*RSstat"
+  contents: "Valid_interaction_pairs"
 hicpro/assplit:
-  fn: "*.assplit.stat"
+  fn: "*assplit.stat"
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1
@@ -488,6 +494,9 @@ mapdamage:
 megahit:
   contents: " - MEGAHIT v"
   num_lines: 5
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
 methylQA:
   fn: "*.report"
   shared: true
@@ -601,8 +610,12 @@ picard/insertsize:
   - contents: "picard.analysis.InsertSizeMetrics"
   - contents: "--algo InsertSizeMetricAlgo"
 picard/markdups:
+  - contents: "picard.sam.MarkDuplicates"
   - contents: "picard.sam.DuplicationMetrics"
+  - contents: "picard.sam.markduplicates.MarkDuplicates"
   - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
+  - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
   contents: "OxoGMetrics"
@@ -732,6 +745,10 @@ rseqc/tin:
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: "lib_format_counts.json"
 salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:

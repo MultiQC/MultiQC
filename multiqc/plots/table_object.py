@@ -3,7 +3,9 @@
 """ MultiQC datatable class, used by tables and beeswarm plots """
 
 import logging
+import random
 import re
+import string
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
@@ -24,9 +26,16 @@ class DataTable:
             pconfig = {}
 
         # Allow user to overwrite any given config for this plot
-        if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
+        if pconfig.get("id") and pconfig["id"] in config.custom_plot_config:
             for k, v in config.custom_plot_config[pconfig["id"]].items():
                 pconfig[k] = v
+
+        if not pconfig.get("id"):
+            if config.strict:
+                errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            pconfig["id"] = report.save_htmlid(f"table_{''.join(random.sample(string.ascii_lowercase, 4))}")
 
         # Given one dataset - turn it into a list
         if not isinstance(data, list):
