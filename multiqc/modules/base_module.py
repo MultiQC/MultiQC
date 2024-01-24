@@ -198,10 +198,25 @@ class BaseMultiqcModule(object):
                                 f["f"] = fh
                                 yield f
                             elif filecontents:
-                                f["f"] = fh.read()
+                                try:
+                                    f["f"] = fh.read()
+                                except UnicodeDecodeError as e:
+                                    logger.debug(
+                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
+                                    )
+                                    try:
+                                        with io.open(
+                                            os.path.join(f["root"], f["fn"]), "r", encoding="utf-8", errors="ignore"
+                                        ) as fh_ignoring:
+                                            f["f"] = fh_ignoring.read()
+                                    except Exception as e:
+                                        logger.debug(f"Still couldn't read file: {f['fn']}\n{e}")
+                                        f["f"] = None
+                                    finally:
+                                        fh.close()
                                 yield f
-                except (IOError, OSError, ValueError, UnicodeDecodeError):
-                    logger.debug("Couldn't open filehandle when returning file: {f['fn']}\n{e}")
+                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
+                    logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
                     f["f"] = None
             else:
                 yield f
