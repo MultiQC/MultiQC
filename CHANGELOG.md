@@ -15,6 +15,7 @@
 - Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
 - Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
 - Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
+- Add CMD to Dockerfile so a default run displays the --help ([#2279](https://github.com/MultiQC/MultiQC/pull/2279))
 
 ### New modules
 
