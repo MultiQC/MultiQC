@@ -145,5 +145,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="Run statistics",
             anchor="megahit-stats",
             description="Metrics and run statistics from MEGAHIT run logs.",
-            plot=table.plot(data, headers),
+            plot=table.plot(
+                data,
+                headers,
+                pconfig={"id": "megahit-stats-table", "title": "Run statistics"},
+            ),
         )
