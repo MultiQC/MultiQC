@@ -4,7 +4,6 @@
 import logging
 import re
 
-import humanize
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -36,7 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_software_version(version, sample=f["s_name"])
                 elif " - Memory used: " in line:
                     mem = line.split(" - Memory used: ")[1].strip()
-                    data[f["s_name"]] = {"megahit_mem": mem}
+                    try:
+                        mem_mb = float(mem) / 1024 / 1024
+                    except ValueError:
+                        mem_mb = None
+                    data[f["s_name"]] = {"megahit_mem": mem_mb}
                 elif " - ALL DONE. Time elapsed: " in line:
                     time = line.split(" - ALL DONE. Time elapsed: ")[1].strip().replace(" seconds", "")
                     data[f["s_name"]]["megahit_time"] = time
@@ -65,26 +68,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data, f"multiqc_{self.anchor}")
 
         headers = {
-            "megahit_mem": {
-                "title": "Memory",
-                "description": "Memory used",
-                "min": 0,
-                "scale": "Reds",
-                "format": lambda x: humanize.naturalsize(x),
-            },
-            "megahit_time": {
-                "title": "Time",
-                "description": "Time elapsed",
-                "min": 0,
-                "suffix": "&nbsp;s",
-                "scale": "Greys",
-            },
             "megahit_contigs": {
                 "title": "Contigs",
                 "description": "Number of contigs",
                 "min": 0,
                 "scale": "Greens",
-                "hidden": True,
                 "format": "{:,d}",
             },
             "megahit_bases": {
@@ -100,25 +88,24 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Minimum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "hidden": True,
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
+                "hidden": True,
             },
             "megahit_max_contig": {
                 "title": "Max contig",
                 "description": "Maximum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "hidden": True,
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
+                "hidden": True,
             },
             "megahit_avg_contig": {
                 "title": "Avg",
                 "description": "Average contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "hidden": True,
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
             },
@@ -129,6 +116,22 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Greens",
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
+            },
+            "megahit_mem": {
+                "title": "Memory",
+                "description": "Memory used, MB",
+                "min": 0,
+                "suffix": "&nbsp;MB",
+                "scale": "Reds",
+                "hidden": True,
+            },
+            "megahit_time": {
+                "title": "Time",
+                "description": "Time elapsed",
+                "min": 0,
+                "suffix": "&nbsp;s",
+                "scale": "Greys",
+                "hidden": True,
             },
         }
 
