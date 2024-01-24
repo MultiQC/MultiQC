@@ -15,19 +15,20 @@ def parse_reports(self):
     """Find Qualimap RNASeq reports and parse their data"""
 
     self.qualimap_rnaseq_genome_results = dict()
-    regexes = {
-        "reads_aligned": r"read(?:s| pairs) aligned\s*=\s*([\d,]+)",
-        "total_alignments": r"total alignments\s*=\s*([\d,]+)",
-        "non_unique_alignments": r"non-unique alignments\s*=\s*([\d,]+)",
-        "reads_aligned_genes": r"aligned to genes\s*=\s*([\d,]+)",
-        "ambiguous_alignments": r"ambiguous alignments\s*=\s*([\d,]+)",
-        "not_aligned": r"not aligned\s*=\s*([\d,]+)",
-        "5_3_bias": r"5'-3' bias\s*=\s*([\d,\.]+)$",
-        "reads_aligned_exonic": r"exonic\s*=\s*([\d,]+)",
-        "reads_aligned_intronic": r"intronic\s*=\s*([\d,]+)",
-        "reads_aligned_intergenic": r"intergenic\s*=\s*([\d,]+)",
-        "reads_aligned_overlapping_exon": r"overlapping exon\s*=\s*([\d,]+)",
+    numeric_regexes = {
+        "reads_aligned": (int, r"read(?:s| pairs) aligned\s*=\s*([\d,\.\xa0]+)"),
+        "total_alignments": (int, r"total alignments\s*=\s*([\d,\.\xa0]+)"),
+        "non_unique_alignments": (int, r"non-unique alignments\s*=\s*([\d,\.\xa0]+)"),
+        "reads_aligned_genes": (int, r"aligned to genes\s*=\s*([\d,\.\xa0]+)"),
+        "ambiguous_alignments": (int, r"ambiguous alignments\s*=\s*([\d,\.\xa0]+)"),
+        "not_aligned": (int, r"not aligned\s*=\s*([\d,\.\xa0]+)"),
+        "reads_aligned_exonic": (int, r"exonic\s*=\s*([\d,\.\xa0]+)"),
+        "reads_aligned_intronic": (int, r"intronic\s*=\s*([\d,\.\xa0]+)"),
+        "reads_aligned_intergenic": (int, r"intergenic\s*=\s*([\d,\.\xa0]+)"),
+        "reads_aligned_overlapping_exon": (int, r"overlapping exon\s*=\s*([\d,\.\xa0]+)"),
+        "5_3_bias": (float, r"5'-3' bias\s*=\s*(\d+([,\.]\d+)?)$"),
     }
+
     for f in self.find_log_files("qualimap/rnaseq/rnaseq_results"):
         d = dict()
 
@@ -40,24 +41,20 @@ def parse_reports(self):
             log.warning(f"Couldn't find an input filename in genome_results file {f['root']}/{f['fn']}")
             return None
 
-        # Check for and 'fix' European style decimal places / thousand separators
-        comma_regex = re.search(r"exonic\s*=\s*[\d\.]+ \(\d{1,3},\d+%\)", f["f"], re.MULTILINE)
-        if comma_regex:
-            log.debug(f"Trying to fix European comma style syntax in Qualimap report {f['root']}/{f['fn']}")
-            f["f"] = f["f"].replace(".", "")
-            f["f"] = f["f"].replace(",", ".")
-
         # Go through all numeric regexes
-        for k, r in regexes.items():
-            r_search = re.search(r, f["f"], re.MULTILINE)
+        for key, (numeric_type, regex) in numeric_regexes.items():
+            r_search = re.search(regex, f["f"], re.MULTILINE)
             if r_search:
                 try:
-                    d[k] = float(r_search.group(1).replace(",", ""))
+                    if numeric_type == int:
+                        d[key] = int(re.sub(r"[,\.\xa0]", "", r_search.group(1)))
+                    elif numeric_type == float:
+                        d[key] = float(r_search.group(1).replace(",", "."))
                 except UnicodeEncodeError:
                     # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
                     pass
                 except ValueError:
-                    d[k] = r_search.group(1)
+                    d[key] = r_search.group(1)
 
         # Add to general stats table
         for k in ["5_3_bias", "reads_aligned"]:
@@ -72,7 +69,7 @@ def parse_reports(self):
         self.qualimap_rnaseq_genome_results[s_name] = d
         self.add_data_source(f, s_name=s_name, section="rna_genome_results")
 
-    #### Coverage profile
+    # Coverage profile
     self.qualimap_rnaseq_cov_hist = dict()
     for f in self.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
         s_name = self.get_s_name(f)
@@ -81,7 +78,7 @@ def parse_reports(self):
             if line.startswith("#"):
                 continue
             coverage, count = line.split(None, 1)
-            coverage = int(round(float(coverage)))
+            coverage = int(round(float(coverage.replace(",", "."))))
             count = float(count)
             d[coverage] = count
 
