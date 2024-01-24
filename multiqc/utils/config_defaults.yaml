@@ -39,7 +39,6 @@ output_fn_name: "multiqc_report.html"
 data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
 data_format: "tsv"
-module_tag: []
 force: false
 no_ansi: false
 quiet: false
@@ -350,7 +349,7 @@ top_modules: []
 # Order that modules should appear in report. Try to list in order of analysis.
 module_order:
   # MultiQC general module for catching output from custom scripts
-  - "custom_content"
+  - custom_content
   # Post-alignment QC
   - ccs
   - ngsderive

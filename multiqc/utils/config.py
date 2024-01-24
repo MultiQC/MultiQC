@@ -2,7 +2,7 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import inspect
 
@@ -71,7 +71,6 @@ output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
 data_format: str
-module_tag: List[str]
 force: bool
 no_ansi: bool
 quiet: bool
@@ -142,7 +141,7 @@ fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List
-module_order: List
+module_order: List[Union[str, Dict]]
 
 # Populating the variables above from the default MultiQC config
 config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
