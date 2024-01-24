@@ -1,7 +1,7 @@
 ---
-Name: SeqWho
-URL: https://daehwankimlab.github.io/seqwho/
-Description: >
+name: SeqWho
+url: https://daehwankimlab.github.io/seqwho/
+description: >
   SeqWho is a reliable and extremely rapid program designed to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.
 ---
 
