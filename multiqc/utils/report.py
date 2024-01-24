@@ -125,52 +125,9 @@ def is_searching_install_dir(path, filenames):
         return False
 
 
-def oswalk(path):
-    """
-    Default behavior for walking directories using os.walk.
-    May not work properly with symlinks on non-POSIX compliant filesystems.
-    """
-    for root, dirnames, filenames in os.walk(path, followlinks=(not config.ignore_symlinks), topdown=True):
-        bname = os.path.basename(root)
-
-        # Skip any sub-directories matching ignore params
-        orig_dirnames = dirnames[:]
-        for n in config.fn_ignore_dirs:
-            dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
-            if len(orig_dirnames) != len(dirnames):
-                removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
-                orig_dirnames = dirnames[:]
-        for n in config.fn_ignore_paths:
-            dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
-            if len(orig_dirnames) != len(dirnames):
-                removed_dirs = [os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))]
-                file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
-
-        # Skip *this* directory if matches ignore params
-        d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
-        if len(d_matches) > 0:
-            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-            continue
-        p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
-        if len(p_matches) > 0:
-            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-            continue
-
-        # Sanity check - make sure that we're not just running in the installation directory
-        if is_searching_install_dir(root, filenames):
-            dirnames[:] = []
-            filenames[:] = []
-            continue
-
-        # Search filenames in this directory
-        for fn in filenames:
-            searchfiles.append([fn, root])
-
-
 def pathwalk(path):
     """
-    Alternative method to traverse directories using pathlib.
+    Walks directory trees using pathlib.
     Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
     """
     path = pathlib.Path(path)
@@ -194,7 +151,7 @@ def pathwalk(path):
         elif item.is_dir():
             pathwalk(item)
 
-def get_filelist(run_module_names, walk_method=oswalk):
+def get_filelist(run_module_names):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -331,7 +288,7 @@ def get_filelist(run_module_names, walk_method=oswalk):
         elif os.path.isfile(path):
             searchfiles.append([os.path.basename(path), os.path.dirname(path)])
         elif os.path.isdir(path):
-            walk_method(path)
+            pathwalk(path)
 
     # Search through collected files
     console = rich.console.Console(
