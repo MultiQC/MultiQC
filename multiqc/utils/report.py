@@ -101,7 +101,7 @@ def init():
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
-def is_searching_install_dir(path, filenames):
+def is_searching_install_dir(path):
     """
     Checks whether MultiQC is searching for files in the source code folder
     """
@@ -116,6 +116,8 @@ def is_searching_install_dir(path, filenames):
         "setup.py",
         ".gitignore",
     ]
+
+    filenames = [f.name for f in path.iterdir() if f.is_file()]
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
@@ -139,17 +141,25 @@ def pathwalk(path):
         return
 
     # Check not running in install directory
-    if is_searching_install_dir(path, [f.name for f in path.iterdir() if f.is_file()]):
+    if is_searching_install_dir(path):
         return
 
     for item in path.iterdir():
-        # Need all 3 conditions since os.walk only ignores symlink directories
-        if item.is_symlink() and item.is_dir() and config.ignore_symlinks:
-            continue
-        elif item.is_file():
-            searchfiles.append([item.name, os.fspath(item.parent)])
-        elif item.is_dir():
-            pathwalk(item)
+        handle_path_item(item)
+
+
+def handle_path_item(item):
+    """
+    Contains the branching logic for path items
+    """
+    if item.is_symlink() and config.ignore_symlinks:
+        file_search_stats["skipped_symlinks"] += 1
+        return
+    elif item.is_file():
+        searchfiles.append([item.name, os.fspath(item.parent)])
+    elif item.is_dir():
+        pathwalk(item)
+
 
 def get_filelist(run_module_names):
     """
@@ -282,13 +292,7 @@ def get_filelist(run_module_names):
     # Go through the analysis directories and get file list
     total_sp_starttime = time.time()
     for path in config.analysis_dir:
-        if os.path.islink(path) and config.ignore_symlinks:
-            file_search_stats["skipped_symlinks"] += 1
-            continue
-        elif os.path.isfile(path):
-            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
-        elif os.path.isdir(path):
-            pathwalk(path)
+        handle_path_item(pathlib.Path(path))
 
     # Search through collected files
     console = rich.console.Console(
