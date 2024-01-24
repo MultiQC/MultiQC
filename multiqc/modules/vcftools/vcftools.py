@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from vcftools """
 
-from __future__ import print_function
+
 import logging
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+
 from .relatedness2 import Relatedness2Mixin
 from .tstv_by_count import TsTvByCountMixin
 from .tstv_by_qual import TsTvByQualMixin
@@ -29,15 +29,15 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
 
         n["tstv_by_count"] = self.parse_tstv_by_count()
         if n["tstv_by_count"] > 0:
-            log.info("Found {} TsTv.count reports".format(n["tstv_by_count"]))
+            log.info(f"Found {n['tstv_by_count']} TsTv.count reports")
 
         n["tstv_by_qual"] = self.parse_tstv_by_qual()
         if n["tstv_by_qual"] > 0:
-            log.info("Found {} TsTv.qual reports".format(n["tstv_by_qual"]))
+            log.info(f"Found {n['tstv_by_qual']} TsTv.qual reports")
 
         n["tstv_summary"] = self.parse_tstv_summary()
         if n["tstv_summary"] > 0:
-            log.info("Found {} TsTv.summary reports".format(n["tstv_summary"]))
+            log.info(f"Found {n['tstv_summary']} TsTv.summary reports")
 
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

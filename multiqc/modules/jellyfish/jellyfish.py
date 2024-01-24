@@ -1,12 +1,10 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse results from jellyfish  """
 
-from __future__ import print_function
 
 import logging
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -28,6 +26,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("jellyfish", filehandles=True):
             self.parse_jellyfish_data(f)
 
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
+
         if self.jellyfish_max_x < 100:
             # the maximum is below 100, we display anyway up to 200
             self.jellyfish_max_x = 200
@@ -38,12 +40,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_data = self.ignore_samples(self.jellyfish_data)
 
         if len(self.jellyfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.jellyfish_data, "jellyfish")
 
-        log.info("Found {} reports".format(len(self.jellyfish_data)))
+        log.info(f"Found {len(self.jellyfish_data)} reports")
 
         self.frequencies_plot(xmax=self.jellyfish_max_x)
 
@@ -63,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_max_x = max(self.jellyfish_max_x, self.max_key)
         if len(histogram) > 0:
             if f["s_name"] in self.jellyfish_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f)
             self.jellyfish_data[f["s_name"]] = histogram
 

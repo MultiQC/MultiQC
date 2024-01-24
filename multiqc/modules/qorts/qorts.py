@@ -1,15 +1,12 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from QoRTs """
 
-from __future__ import print_function
-from collections import OrderedDict
-import re
-import os
-import logging
 
+import logging
+import os
+import re
+
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -17,7 +14,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="QoRTs",
@@ -40,9 +36,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_data = self.ignore_samples(self.qorts_data)
 
         if len(self.qorts_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.qorts_data)))
+        log.info(f"Found {len(self.qorts_data)} logs")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.write_data_file(self.qorts_data, "multiqc_qorts")
 
         # Make plots
@@ -54,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qorts(self, f):
         s_names = None
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             if s_names is None:
                 raw_s_names = s[1:]
                 s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
@@ -66,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                         s_names = [f["s_name"]]
                 for s_name in s_names:
                     if s_name in self.qorts_data:
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.qorts_data[s_name] = dict()
             else:
                 for i, s_name in enumerate(s_names):
@@ -83,19 +84,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def qorts_general_stats(self):
         """Add columns to the General Statistics table"""
-        headers = OrderedDict()
-        headers["Genes_PercentWithNonzeroCounts"] = {
-            "title": "% Genes with Counts",
-            "description": "Percent of Genes with Non-Zero Counts",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["NumberOfChromosomesCovered"] = {
-            "title": "Chrs Covered",
-            "description": "Number of Chromosomes Covered",
-            "format": "{:,.0f}",
+        headers = {
+            "Genes_PercentWithNonzeroCounts": {
+                "title": "% Genes with Counts",
+                "description": "Percent of Genes with Non-Zero Counts",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "NumberOfChromosomesCovered": {
+                "title": "Chrs Covered",
+                "description": "Number of Chromosomes Covered",
+                "format": "{:,.0f}",
+            },
         }
         self.general_stats_addcols(self.qorts_data, headers)
 
@@ -111,10 +113,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ReadPairs_NoGene_TenKbFromGene",
             "ReadPairs_NoGene_MiddleOfNowhere",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("ReadPairs_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -163,10 +165,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceLoci_Novel_ManyReads",
             "SpliceLoci_Novel_FewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceLoci_", "").replace("_", ": ")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -219,10 +221,10 @@ class MultiqcModule(BaseMultiqcModule):
             "SpliceEvents_NovelLociWithManyReads",
             "SpliceEvents_NovelLociWithFewReads",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("SpliceEvents_", "")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name}
 
         # Config for the plot
@@ -272,10 +274,10 @@ class MultiqcModule(BaseMultiqcModule):
             "StrandTest_ambig_noGenes",
             "StrandTest_ambig_other",
         ]
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
             name = k.replace("StrandTest_", "").replace("_", " ").replace("ambig", "ambig:")
-            name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", name)
+            name = re.sub("([a-z])([A-Z])", r"\g<1> \g<2>", name)
             cats[k] = {"name": name.title()}
 
         # Config for the plot

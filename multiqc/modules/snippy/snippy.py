@@ -1,13 +1,9 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Snippy """
 
-from collections import OrderedDict
 import logging
 
-from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -52,9 +48,12 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("snippy/snippy"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_data:
-                log.debug("Duplicate sample name found for snippy! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found for snippy! Overwriting: {f['s_name']}")
             # Add the file data under the key filename
-            self.snippy_data[f["s_name"]] = self.parse_snippy_txt(f["f"])
+            data = self.parse_snippy_txt(f["f"])
+            if data:
+                self.snippy_data[f["s_name"]] = data
+                self.add_software_version(data["version"], f["s_name"])
 
             self.add_data_source(f, section="snippy")
 
@@ -65,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("snippy/snippy-core"):
             # Check for duplicate sample names
             if f["s_name"] in self.snippy_core_data:
-                log.debug("Duplicate sample name found for snippy-core! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found for snippy-core! Overwriting: {f['s_name']}")
             # Add the file data under the key filename
             self.snippy_core_data[f["s_name"]] = self.parse_snippy_core_txt(f["f"])
 
@@ -76,16 +75,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise warning if no logs were found.
         if len(self.snippy_data) == 0 and len(self.snippy_core_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Run analysis if txt files found
         if len(self.snippy_data) > 0:
-            log.info("Found {} reports".format(len(self.snippy_data)))
+            log.info(f"Found {len(self.snippy_data)} reports")
             self.snippy_stats_table()
             self.snippy_report_section()
 
         if len(self.snippy_core_data) > 0:
-            log.info("Found {} snippy-core reports".format(len(self.snippy_core_data)))
+            log.info(f"Found {len(self.snippy_core_data)} snippy-core reports")
             self.snippy_core_stats_table()
             self.snippy_core_report_section()
 
@@ -99,6 +98,12 @@ class MultiqcModule(BaseMultiqcModule):
             split_line = line.strip().split("\t")
             if split_line[0] in self.snippy_col:
                 data[split_line[0]] = int(split_line[1])
+
+            if split_line[0] == "Software":
+                data["version"] = split_line[1].split(" ")[1]
+
+        if len(data) == 0:
+            return False
         for col in self.snippy_col:
             if col not in data:
                 data[col] = 0
@@ -216,42 +221,43 @@ class MultiqcModule(BaseMultiqcModule):
         Prepare the headers for the snippy core stats table.
         """
         # General stats table headers
-        headers = OrderedDict()
-        headers["Percent_Het"] = {
-            "title": "% Het",
-            "description": "Percent of aligned sites that are heterozygous",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn-rev",
-            "suffix": "%",
-        }
-        headers["HET"] = {
-            "title": "# Hets",
-            "description": "Number of heterozygous sites",
-            "scale": "RdYlGn-rev",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["VARIANT"] = {
-            "title": "# Variants",
-            "description": "Number of variants",
-            "scale": "Blues",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        headers["Percent_Aligned"] = {
-            "title": "% Aligned",
-            "description": "Percent of bases aligned to the reference",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": "%",
-        }
-        headers["ALIGNED"] = {
-            "title": "# Aligned",
-            "description": "Number of aligned nucleotides",
-            "scale": "RdYlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
+        headers = {
+            "Percent_Het": {
+                "title": "% Het",
+                "description": "Percent of aligned sites that are heterozygous",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn-rev",
+                "suffix": "%",
+            },
+            "HET": {
+                "title": "# Hets",
+                "description": "Number of heterozygous sites",
+                "scale": "RdYlGn-rev",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "VARIANT": {
+                "title": "# Variants",
+                "description": "Number of variants",
+                "scale": "Blues",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "Percent_Aligned": {
+                "title": "% Aligned",
+                "description": "Percent of bases aligned to the reference",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+                "suffix": "%",
+            },
+            "ALIGNED": {
+                "title": "# Aligned",
+                "description": "Number of aligned nucleotides",
+                "scale": "RdYlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         return headers

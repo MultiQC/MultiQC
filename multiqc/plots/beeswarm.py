@@ -4,9 +4,10 @@
 
 import logging
 import random
+from collections import defaultdict
 
-from multiqc.utils import config, report
 from multiqc.plots import table_object
+from multiqc.utils import config, report, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ letters = "abcdefghijklmnopqrstuvwxyz"
 def plot(data, headers=None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
-    :param headers: A list of Dicts / OrderedDicts with information
+    :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
                     max values etc.
     :return: HTML string
@@ -32,14 +33,13 @@ def plot(data, headers=None, pconfig=None):
             pconfig[k] = v
 
     # Make a datatable object
-    dt = table_object.datatable(data, headers, pconfig)
+    dt = table_object.DataTable(data, headers, pconfig)
 
     return make_plot(dt)
 
 
-def make_plot(dt):
-
-    bs_id = dt.pconfig.get("id", "table_{}".format("".join(random.sample(letters, 4))))
+def make_plot(dt: table_object.DataTable):
+    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
 
     # Sanitise plot ID and check for duplicates
     bs_id = report.save_htmlid(bs_id)
@@ -47,10 +47,10 @@ def make_plot(dt):
     categories = []
     s_names = []
     data = []
+    dt.raw_vals = defaultdict(lambda: dict())
     for idx, hs in enumerate(dt.headers):
         for k, header in hs.items():
-
-            bcol = "rgb({})".format(header.get("colour", "204,204,204"))
+            bcol = f"rgb({header.get('colour', '204,204,204')})"
 
             categories.append(
                 {
@@ -68,10 +68,10 @@ def make_plot(dt):
             # Add the data
             thisdata = []
             these_snames = []
-            for (s_name, samp) in dt.data[idx].items():
+            for s_name, samp in dt.data[idx].items():
                 if k in samp:
-
                     val = samp[k]
+                    dt.raw_vals[s_name][k] = val
 
                     if "modify" in header and callable(header["modify"]):
                         val = header["modify"](val)
@@ -97,5 +97,11 @@ def make_plot(dt):
     report.num_hc_plots += 1
 
     report.plot_data[bs_id] = {"plot_type": "beeswarm", "samples": s_names, "datasets": data, "categories": categories}
+
+    # Save the raw values to a file if requested
+    if dt.pconfig.get("save_file") is True:
+        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{bs_id}")
+        util_functions.write_data_file(dt.raw_vals, fn)
+        report.saved_raw_data[fn] = dt.raw_vals
 
     return html

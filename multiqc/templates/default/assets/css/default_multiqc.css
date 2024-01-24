@@ -183,12 +183,22 @@ kbd {
   margin: 0 0 20px;
 }
 #page_title img {
-  max-width: 260px;
+  max-width: 320px;
 }
 .report_comment,
 .mqc-section-comment {
   border-left: 5px solid #8eb9dd;
   background-color: #e8f1f8;
+}
+.mqc-module-title-section {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  column-gap: 10px;
+}
+h2.mqc-module-title {
+  margin: 0;
 }
 #analysis_dirs_wrapper {
   max-height: 80px;
@@ -237,6 +247,16 @@ kbd {
 .footer a {
   color: #999;
   text-decoration: underline;
+}
+.footer .seqera-logo img {
+  height: 24px;
+  padding-right: 30px;
+  margin-top: 8px;
+  opacity: 80%;
+  transition: opacity 0.2s;
+}
+.footer .seqera-logo:hover img {
+  opacity: 100%;
 }
 
 /* Epic scroll bar of joy */
@@ -639,6 +659,17 @@ input.form-control[type="color"] {
   font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
 }
 
+.mqc-toolbox-wrapper .seqera-logo img {
+  height: 24px;
+  max-width: 80%;
+  opacity: 60%;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+.mqc-toolbox-wrapper .seqera-logo a:hover img {
+  opacity: 100%;
+}
+
 /* MultiQC tables */
 .table tr td {
   font-size: 0.9em;
@@ -674,7 +705,7 @@ input.form-control[type="color"] {
 .mqc_table thead td {
   background-color: #ffffff;
 }
-.mqc_table thead th:after {
+.mqc_table thead th .tablesorter-header-inner:after {
   content: "";
   display: inline-block;
   width: 0;
@@ -684,14 +715,14 @@ input.form-control[type="color"] {
   border-right: 4px solid transparent;
   border-left: 4px solid transparent;
 }
-.mqc_table thead th.headerSortDown:after {
+.mqc_table thead th.tablesorter-headerAsc .tablesorter-header-inner:after {
   border-bottom: 4px dashed;
 }
-.mqc_table thead th.headerSortUp:after {
+.mqc_table thead th.tablesorter-headerDesc .tablesorter-header-inner:after {
   border-top: 4px dashed;
 }
-.mqc_table thead th.headerSortDown,
-.mqc_table thead th.headerSortUp {
+.mqc_table thead th.tablesorter-headerAsc,
+.mqc_table thead th.tablesorter-headerDesc {
   background-color: #ededed;
   color: #1ca8dd;
   border-bottom: 2px solid #1ca8dd;
@@ -845,7 +876,6 @@ tbody .sorthandle {
 }
 .mqc_table .val {
   display: block;
-  position: absolute;
   padding: 5px;
   left: 0;
 }
@@ -954,4 +984,13 @@ tbody .sorthandle {
 
 .mqc-custom-content-image img {
   max-width: 100%;
+}
+
+/* MultiQC Software Versions table */
+.mqc_versions_table {
+  width: 100%;
+}
+
+.mqc_versions_table tbody:nth-child(even) {
+  background-color: #f2f2f2;
 }

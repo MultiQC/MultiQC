@@ -1,22 +1,21 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse output from Adapter Removal """
 
-from __future__ import print_function
-from collections import OrderedDict
+
 import logging
+import re
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"AdapterRemoval ver. ([\d\.]+)"
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Adapter Removal",
@@ -49,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.s_name = f["s_name"]
             try:
                 parsed_data = self.parse_settings_file(f)
-            except UserWarning:
+            except ModuleNoSamplesFound:
                 continue
             if parsed_data is not None:
                 self.adapter_removal_data[self.s_name] = parsed_data
@@ -59,9 +58,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_data = self.ignore_samples(self.adapter_removal_data)
 
         if len(self.adapter_removal_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.adapter_removal_data)))
+        log.info(f"Found {len(self.adapter_removal_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.adapter_removal_data, "multiqc_adapter_removal")
@@ -73,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_removal_length_dist_plot()
 
     def parse_settings_file(self, f):
-
         self.result_data = {
             "total": None,
             "unaligned": None,
@@ -87,10 +85,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         block_title = None
         for i, line in enumerate(f["f"]):
-
             line = line.rstrip("\n")
             if line == "":
                 continue
+
+            if line.startswith("AdapterRemoval"):
+                version_match = re.search(VERSION_REGEX, line)
+                if version_match:
+                    self.add_software_version(version_match.group(1), self.s_name)
 
             if not block_title:
                 block_title = "header"
@@ -130,8 +132,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # biological/technical relevance is not clear -> skip
         if self.__read_type == "single" and self.__collapsed:
-            log.warning("Case single-end and collapse is not " "implemented -> File %s skipped" % self.s_name)
-            raise UserWarning
+            log.warning(f"Case single-end and collapse is not implemented -> File {self.s_name} skipped")
+            raise ModuleNoSamplesFound
 
     def set_trim_stat(self, trim_data):
         required = [
@@ -178,19 +180,48 @@ class MultiqcModule(BaseMultiqcModule):
         self.result_data["unaligned_total"] = unaligned_total
         self.result_data["reads_total"] = reads_total
         self.result_data["discarded_total"] = reads_total - self.result_data["retained"]
-
-        self.result_data["retained_reads"] = (
-            self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
-        )
+        if self.__read_type == "paired":
+            if not self.__collapsed:
+                self.result_data["paired_reads"] = (
+                    self.result_data["retained"] - self.result_data["singleton_m1"] - self.result_data["singleton_m2"]
+                )
+            else:
+                self.result_data["paired_reads"] = (
+                    self.result_data["retained"]
+                    - self.result_data["full-length_cp"]
+                    - self.result_data["truncated_cp"]
+                    - self.result_data["singleton_m1"]
+                    - self.result_data["singleton_m2"]
+                )
+            full_length_cp = self.result_data["full-length_cp"] * 2
+            truncated_cp = self.result_data["truncated_cp"] * 2
+            self.result_data["full-length_cp"] = full_length_cp
+            self.result_data["truncated_cp"] = truncated_cp
         try:
             self.result_data["percent_aligned"] = (
                 float(self.result_data["aligned"]) * 100.0 / float(self.result_data["total"])
             )
         except ZeroDivisionError:
             self.result_data["percent_aligned"] = 0
+        if self.__collapsed:
+            try:
+                self.result_data["percent_collapsed"] = (
+                    float(self.result_data["full-length_cp"] + self.result_data["truncated_cp"])
+                    * 100.0
+                    / float(self.result_data["reads_total"])
+                )
+            except ZeroDivisionError:
+                self.result_data["percent_collapsed"] = 0
+        try:
+            self.result_data["percent_discarded"] = (
+                float(self.result_data["discarded_m1"] + self.result_data["discarded_m2"])
+                * 100.0
+                / float(self.result_data["reads_total"])
+            )
+        except ZeroDivisionError:
+            self.result_data["percent_discarded"] = 0
 
     def set_len_dist(self, len_dist_data):
-
         for line in len_dist_data[1:]:
             l_data = line.rstrip("\n").split("\t")
             l_data = list(map(int, l_data))
@@ -236,29 +267,47 @@ class MultiqcModule(BaseMultiqcModule):
                     self.len_dist_plot_data["all"][self.s_name][l_data[0]] = l_data[7]
 
     def adapter_removal_stats_table(self):
-
-        headers = OrderedDict()
-        headers["percent_aligned"] = {
-            "title": "% Trimmed",
-            "description": "% trimmed reads",
+        headers = {
+            "percent_aligned": {
+                "title": "% Trimmed",
+                "description": "% trimmed reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+                "shared_key": "percent_aligned",
+            },
+            "aligned_total": {
+                "title": f"{config.read_count_prefix} Reads Trimmed",
+                "description": f"Total trimmed reads ({config.read_count_desc})",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "min": 0,
+                "scale": "PuBu",
+                "shared_key": "read_count",
+            },
+        }
+        if self.__any_collapsed:
+            headers["percent_collapsed"] = {
+                "title": "% Collapsed",
+                "description": "% collapsed reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn-rev",
+                "shared_key": "percent_aligned",
+            }
+        headers["percent_discarded"] = {
+            "title": "% Discarded",
+            "description": "% discarded reads",
             "max": 100,
             "min": 0,
             "suffix": "%",
             "scale": "RdYlGn-rev",
-            "shared_key": "percent_aligned",
-        }
-        headers["aligned_total"] = {
-            "title": "{} Reads Trimmed".format(config.read_count_prefix),
-            "description": "Total trimmed reads ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
-            "min": 0,
-            "scale": "PuBu",
-            "shared_key": "read_count",
+            "shared_key": "percent_discarded",
         }
         self.general_stats_addcols(self.adapter_removal_data, headers)
 
     def adapter_removal_retained_chart(self):
-
         pconfig = {
             "title": "Adapter Removal: Discarded Reads",
             "id": "ar_retained_plot",
@@ -267,10 +316,9 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        cats_pec = OrderedDict()
-
+        cats_pec = {}
         if self.__any_paired:
-            cats_pec["retained_reads"] = {"name": "Retained Read Pairs"}
+            cats_pec["paired_reads"] = {"name": "Uncollapsed Paired Reads"}
 
         cats_pec["singleton_m1"] = {"name": "Singleton R1"}
 
@@ -278,23 +326,25 @@ class MultiqcModule(BaseMultiqcModule):
             cats_pec["singleton_m2"] = {"name": "Singleton R2"}
 
             if self.__any_collapsed:
-                cats_pec["full-length_cp"] = {"name": "Full-length Collapsed Pairs"}
-                cats_pec["truncated_cp"] = {"name": "Truncated Collapsed Pairs"}
+                cats_pec["full-length_cp"] = {"name": "Full-length Collapsed Reads"}
+                cats_pec["truncated_cp"] = {"name": "Truncated Collapsed Reads"}
 
         cats_pec["discarded_m1"] = {"name": "Discarded R1"}
 
         if self.__any_paired:
             cats_pec["discarded_m2"] = {"name": "Discarded R2"}
-
+        if self.__any_collapsed:
+            retained_chart_description = "The number of input sequences that were retained, collapsed, and discarded. Be aware that the number of collapsed reads in the output FASTQ will be half of the numbers displayed in this plot, because both R1 and R2 of the collapsed sequences are counted here."
+        else:
+            retained_chart_description = "The number of input sequences that were retained and discarded."
         self.add_section(
-            name="Retained and Discarded Paired-End Collapsed",
+            name="Retained and Discarded Reads",
             anchor="adapter_removal_retained_plot",
-            description="The number of retained and discarded reads.",
+            description=retained_chart_description,
             plot=bargraph.plot(self.adapter_removal_data, cats_pec, pconfig),
         )
 
     def adapter_removal_length_dist_plot(self):
-
         pconfig = {
             "title": "Adapter Removal: Length Distribution",
             "id": "ar_length_count_plot",
@@ -332,7 +382,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig["data_labels"] = data_labels
 
         self.add_section(
-            name="Length Distribution Paired End Collapsed",
+            name="Length Distribution",
             anchor="ar_length_count",
             description="The length distribution of reads after processing adapter alignment.",
             plot=linegraph.plot(lineplot_data, pconfig),

@@ -1,7 +1,7 @@
 ---
-Name: Pychopper
-URL: https://github.com/nanoporetech/pychopper
-Description: >
+name: Pychopper
+url: https://github.com/nanoporetech/pychopper
+description: >
   is a tool to identify, orient and trim full-length Nanopore cDNA reads. The tool is also able to rescue fused reads.
 ---
 

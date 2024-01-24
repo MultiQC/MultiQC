@@ -1,7 +1,7 @@
 ---
-Name: mirtop
-URL: https://github.com/miRTop/mirtop
-Description: Command line tool to annotate miRNAs with a standard mirna/isomir naming
+name: mirtop
+url: https://github.com/miRTop/mirtop
+description: Command line tool to annotate miRNAs with a standard mirna/isomir naming
 ---
 
 This tool is dedicated to the creation and management of miRNA alignment output using the standardized GFF3 format (<https://github.com/miRTop/mirGFF3>).
