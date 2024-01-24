@@ -129,6 +129,10 @@ show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 50000000
 filesearch_lines_limit: 1000
+# By default, module consumes files that matched its search patterns, without leaving
+# it for other modules to parse too. This can be disabled by the "shared: true" flag
+# in search_patterns.yaml, or by this option. Take a list of modules.
+filesearch_file_shared: []
 report_readerrors: false
 skip_generalstats: false
 skip_versions_section: false
