@@ -279,12 +279,6 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     help="Custom CSS file to add to the final report",
 )
-@click.option(
-    "--walk-method",
-    type=click.Choice(report.walk_choices),
-    metavar=None,
-    help="Method of walking folder trees to discover files. Default to os.walk. Pathwalk can be used on filesystems that do not properly support features such as symlinks",
-)
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(**kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
@@ -351,7 +345,6 @@ def run(
     profile_runtime=False,
     no_ansi=False,
     custom_css_files=(),
-    walk_method="oswalk",
     **kwargs,
 ):
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -506,10 +499,6 @@ def run(
         config.no_ansi = True
     if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
-    if walk_method not in report.walk_choices:
-        logger.warning(f"Unknown walk method {walk_method}, defualting to oswalk")
-    else:
-        config.walk_method = walk_method
     config.kwargs = kwargs  # Plugin command line options
 
     # Discarding the CLI variables to make sure we use only config down below.
@@ -709,7 +698,7 @@ def run(
     # Get the list of files to search
     for d in config.analysis_dir:
         logger.info(f"Search path : {os.path.abspath(d)}")
-    report.get_filelist(run_module_names, walk_method=config.walk_method)
+    report.get_filelist(run_module_names)
 
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
