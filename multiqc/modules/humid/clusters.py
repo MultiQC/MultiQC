@@ -12,13 +12,13 @@ def parse_reports(self):
     parse_log_files(self)
 
     # Remove filtered samples
-    self.cluster = self.ignore_samples(self.clusters)
+    self.clusters = self.ignore_samples(self.clusters)
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     self.add_software_version(None)
 
-    if self.cluster:
+    if self.clusters:
         log.info(f"Found {len(self.clusters)} reports")
         self.write_data_file(self.clusters, "multiqc_humid_clusters")
         add_to_humid_section(self)
