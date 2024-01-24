@@ -177,21 +177,6 @@ class Plot(ABC):
             )
             if self.flat
             else None,
-            # images=[
-            #     go.layout.Image(
-            #         source=self._get_logo(),
-            #         xref="paper",
-            #         yref="paper",
-            #         x=1,
-            #         y=0,
-            #         sizex=0.1,
-            #         sizey=0.1,
-            #         xanchor="left",
-            #         yanchor="bottom",
-            #         opacity=0.5,
-            #         layer="below",
-            #     )
-            # ],
         )
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xLog"):
@@ -265,6 +250,7 @@ class Plot(ABC):
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
             <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>
+            <div class="created-with-multiqc">Created with MultiQC</div>
         </div>"""
 
         html += "</div>"
