@@ -38,21 +38,38 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.hicpro_data:
             data = self.hicpro_data[s_name]
             try:
-                data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
-                data["percent_duplicates"] = float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
-                data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
-                data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
-                data["paired_reads"] = int(data["Reported_pairs"])
-                data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
-                data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
-                data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
-                data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+                if "valid_interaction" in data:
+                    if "valid_interaction_rmdup" in data:
+                        data["duplicates"] = data["valid_interaction"] - data["valid_interaction_rmdup"]
+                        if float(data["valid_interaction"]) > 0:
+                            data["percent_duplicates"] = (
+                                float(data["duplicates"]) / float(data["valid_interaction"]) * 100.0
+                            )
+                    if "valid_pairs_on_target" in data:
+                        data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(
+                            data["valid_pairs_on_target"]
+                        )
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_valid"] = float(data["valid_interaction"]) / float(data["total_R1"]) * 100.0
+
+                if "Reported_pairs" in data:
+                    data["paired_reads"] = int(data["Reported_pairs"])
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_paired_reads"] = float(data["Reported_pairs"]) / float(data["total_R1"]) * 100.0
+
+                if "mapped_R1" in data:
+                    data["Failed_To_Align_Read_R1"] = int(data["total_R1"]) - int(data["mapped_R1"])
+                    if "total_R1" in data and float(data["total_R1"]) > 0:
+                        data["percent_mapped_R1"] = float(data["mapped_R1"]) / float(data["total_R1"]) * 100.0
+
+                if "mapped_R2" in data:
+                    data["Failed_To_Align_Read_R2"] = int(data["total_R2"]) - int(data["mapped_R2"])
+                    if "total_R2" in data and float(data["total_R2"]) > 0:
+                        data["percent_mapped_R2"] = float(data["mapped_R2"]) / float(data["total_R2"]) * 100.0
+
             except KeyError as e:
                 log.error(f"Missing expected key {e} in sample '{s_name}'")
-
-            try:
-                data["valid_pairs_off_target"] = int(data["valid_interaction"]) - int(data["valid_pairs_on_target"])
-            except KeyError:
+            except (ValueError, TypeError):
                 pass
 
         # Filter to strip out ignored sample names
@@ -157,7 +174,9 @@ class MultiqcModule(BaseMultiqcModule):
             if not line.startswith("#"):
                 s = line.split("\t")
                 if s[0] in self.hicpro_data[s_name]:
-                    log.debug(f"Duplicated keys found! Overwriting: {s[0]}")
+                    log.debug(
+                        f"Duplicated key {s[0]} found in {f['root'] + '/' + f['fn']} for sample {s_name}, overwriting"
+                    )
                 # Try to convert the extracted value to a number and store it in hicpro_data.
                 # try-block is used to prevent program crash, because there is no
                 # guarantee that the value (s[1]) can be always converted to integer.
@@ -169,6 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
                         self.hicpro_data[s_name][s[0]] = float(s[1])
                     # Otherwise just store the value as is.
                     except ValueError:
+                        log.error(f"Could not parse value for key '{s[0]}' as a number in sample '{s_name}': '{s[1]}'")
                         self.hicpro_data[s_name][s[0]] = s[1]
 
     def hicpro_stats_table(self):
@@ -289,15 +309,24 @@ class MultiqcModule(BaseMultiqcModule):
         data = [{}, {}]
         for s_name in self.hicpro_data:
             for r in [1, 2]:
-                try:
-                    data[r - 1][f"{s_name} [R{r}]"] = {
-                        "Full_Alignments_Read": self.hicpro_data[s_name][f"global_R{r}"],
-                        "Trimmed_Alignments_Read": self.hicpro_data[s_name][f"local_R{r}"],
-                        "Failed_To_Align_Read": int(self.hicpro_data[s_name][f"total_R{r}"])
-                        - int(self.hicpro_data[s_name][f"mapped_R{r}"]),
-                    }
-                except KeyError as e:
-                    log.error(f"Missing expected plot key {e} in {s_name} Read {r}")
+                n_global = self.hicpro_data[s_name].get(f"global_R{r}")
+                n_local = self.hicpro_data[s_name].get(f"local_R{r}")
+                n_mapped = self.hicpro_data[s_name].get(f"mapped_R{r}")
+                n_total = self.hicpro_data[s_name].get(f"total_R{r}")
+                d = dict()
+                if n_global is not None:
+                    d["Full_Alignments_Read"] = n_global
+                if n_local is not None:
+                    d["Trimmed_Alignments_Read"] = n_local
+                if n_mapped is not None and n_total is not None:
+                    try:
+                        d["Failed_To_Align_Read"] = int(n_total) - int(n_mapped)
+                    except ValueError:
+                        log.warning(
+                            f"Could not parse mapped_R{r}={n_mapped} or total_R{r}={n_total} "
+                            f"as an integer number for sample {s_name}"
+                        )
+                data[r - 1][f"{s_name} [R{r}]"] = d
 
         # Config for the plot
         config = {
@@ -332,6 +361,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_filtering_chart(self):
@@ -358,6 +391,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Read Pairs",
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_contact_chart(self):
@@ -379,6 +416,10 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
+
         return bargraph.plot(self.hicpro_data, keys, config)
 
     def hicpro_as_chart(self):
@@ -397,7 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "Valid_pairs_from_alt_and_ref_genome_(1-2/2-1)": {
                 "color": "#a6611a",
-                "name": "Trans homologuous read pairs (1-2/2/1)",
+                "name": "Trans homologous read pairs (1-2/2/1)",
             },
             "Valid_pairs_with_both_unassigned_mated_(0-0)": {"color": "#cccccc", "name": "Unassigned read pairs"},
             "Valid_pairs_with_at_least_one_conflicting_mate_(3-)": {
@@ -406,14 +447,6 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        # check allele-specific analysis was run
-        num_samples = 0
-        for s_name in self.hicpro_data:
-            for k in keys:
-                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
-        if num_samples == 0:
-            return False
-
         # Config for the plot
         config = {
             "id": "hicpro_asan_plot",
@@ -421,6 +454,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Pairs",
             "cpswitch_counts_label": "Number of Pairs",
         }
+
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
 
         return bargraph.plot(self.hicpro_data, keys, config)
 
@@ -433,14 +470,6 @@ class MultiqcModule(BaseMultiqcModule):
             "valid_pairs_off_target": {"color": "#cccccc", "name": "Off-target valid pairs"},
         }
 
-        # Check capture info are available
-        num_samples = 0
-        for s_name in self.hicpro_data:
-            for k in keys:
-                num_samples += sum([1 if k in self.hicpro_data[s_name] else 0])
-        if num_samples == 0:
-            return False
-
         # Config for the plot
         config = {
             "id": "hicpro_cap_plot",
@@ -448,5 +477,9 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "# Pairs",
             "cpswitch_counts_label": "Number of Pairs",
         }
+
+        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+            # No data found to build this plot
+            return
 
         return bargraph.plot(self.hicpro_data, keys, config)

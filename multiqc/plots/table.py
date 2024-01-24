@@ -3,7 +3,6 @@
 """ MultiQC functions to plot a table """
 
 import logging
-import random
 from collections import defaultdict
 
 from multiqc.plots import beeswarm, table_object
@@ -54,8 +53,7 @@ def make_table(dt: table_object.DataTable):
     :param dt: MultiQC datatable object
     """
 
-    table_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
-    table_id = report.save_htmlid(table_id)
+    table_id = dt.pconfig["id"]
     t_headers = dict()
     t_modal_headers = dict()
     t_rows = dict()

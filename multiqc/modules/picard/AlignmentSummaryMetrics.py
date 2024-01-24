@@ -16,7 +16,7 @@ def parse_reports(module):
     data_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/alignment_metrics", filehandles=True):
+    for f in module.find_log_files("picard/alignment_metrics", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
         keys = None

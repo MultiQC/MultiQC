@@ -323,7 +323,7 @@ eigenstratdatabasetools:
 fastp:
   fn: "*.json"
   contents: '"before_filtering": {'
-  num_lines: 3
+  num_lines: 10
 fastq_screen:
   fn: "*_screen.txt"
 fastqc/data:
@@ -390,15 +390,22 @@ hicexplorer:
 hicup:
   fn: "HiCUP_summary_report*"
 hicpro/mmapstat:
-  fn: "*.mmapstat"
+  fn: "*mapstat"
+  contents: "total_R"
+  num_lines: 10
 hicpro/mpairstat:
-  fn: "*.mpairstat"
+  fn: "*pairstat"
+  contents: "Total_pairs_processed"
+  num_lines: 10
 hicpro/mergestat:
   fn: "*.mergestat"
+  contents: "valid_interaction"
+  num_lines: 10
 hicpro/mRSstat:
-  fn: "*.mRSstat"
+  fn: "*RSstat"
+  contents: "Valid_interaction_pairs"
 hicpro/assplit:
-  fn: "*.assplit.stat"
+  fn: "*assplit.stat"
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1
@@ -485,6 +492,9 @@ mapdamage:
   - fn: "3p*_freq.txt"
   - fn: "5p*_freq.txt"
   - fn: "lgdistribution.txt"
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
 methylQA:
   fn: "*.report"
   shared: true
@@ -598,8 +608,12 @@ picard/insertsize:
   - contents: "picard.analysis.InsertSizeMetrics"
   - contents: "--algo InsertSizeMetricAlgo"
 picard/markdups:
+  - contents: "picard.sam.MarkDuplicates"
   - contents: "picard.sam.DuplicationMetrics"
+  - contents: "picard.sam.markduplicates.MarkDuplicates"
   - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
+  - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
   contents: "OxoGMetrics"
@@ -728,6 +742,10 @@ rseqc/tin:
 salmon/meta:
   fn: "meta_info.json"
   contents: "salmon_version"
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: "lib_format_counts.json"
 salmon/fld:
   fn: "flenDist.txt"
 sambamba/markdup:
