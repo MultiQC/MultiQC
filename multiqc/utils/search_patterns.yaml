@@ -240,7 +240,6 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   contents: "This is cutadapt"
-  # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
@@ -686,7 +685,7 @@ qualimap/rnaseq/coverage:
 quast:
   fn: "report.tsv"
   contents: "Assembly	"
-  num_lines: 1
+  num_lines: 2
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"
   contents: "Sample	Note	"
