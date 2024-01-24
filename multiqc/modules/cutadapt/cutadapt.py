@@ -368,8 +368,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot(self):
         """Generate the trimming length plot"""
-        ends = list(self.cutadapt_length_counts.keys())
-        for end in [x for x in ["default", "5", "3"] if x in ends]:
+        ends = [end for end, d_by_s in self.cutadapt_length_counts.items() if any(d_by_s.values())]
+        ends = [x for x in ["default", "5", "3"] if x in ends]  # enforcing order
+        for end in ends:
             pconfig = {
                 "id": f"cutadapt_trimmed_sequences_plot_{end}",
                 "title": "Cutadapt: Lengths of Trimmed Sequences{}".format(
@@ -386,19 +387,18 @@ class MultiqcModule(BaseMultiqcModule):
                 ],
             }
 
-            if any(d_by_s for d_by_s in self.cutadapt_length_counts[end].values()):
-                self.add_section(
-                    name="Trimmed Sequence Lengths{}".format("" if end == "default" else f" ({end}')"),
-                    anchor=f"cutadapt_trimmed_sequences{'' if end == 'default' else f'_{end}'}",
-                    description="This plot shows the number of reads with certain lengths of adapter trimmed{}.".format(
-                        "" if end == "default" else f" for the {end}' end"
-                    ),
-                    helptext="""
-                    Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
-                    A defined peak may be related to adapter length.
-    
-                    See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
-                    for more information on how these numbers are generated.
-                    """,
-                    plot=linegraph.plot([self.cutadapt_length_counts[end], self.cutadapt_length_obsexp[end]], pconfig),
-                )
+            self.add_section(
+                name="Trimmed Sequence Lengths{}".format("" if end == "default" else f" ({end}')"),
+                anchor=f"cutadapt_trimmed_sequences{'' if end == 'default' else f'_{end}'}",
+                description="This plot shows the number of reads with certain lengths of adapter trimmed{}.".format(
+                    "" if end == "default" else f" for the {end}' end"
+                ),
+                helptext="""
+                Obs/Exp shows the raw counts divided by the number expected due to sequencing errors.
+                A defined peak may be related to adapter length.
+
+                See the [cutadapt documentation](http://cutadapt.readthedocs.org/en/latest/guide.html#how-to-read-the-report)
+                for more information on how these numbers are generated.
+                """,
+                plot=linegraph.plot([self.cutadapt_length_counts[end], self.cutadapt_length_obsexp[end]], pconfig),
+            )
