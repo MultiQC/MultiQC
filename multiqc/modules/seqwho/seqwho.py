@@ -164,7 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
         barchart
         """
 
-        headers = ["human", "mouse"]
+        cats = ["human", "mouse"]
         config = {
             "id": "seqwho_species_plot",
             "title": "SeqWho: Species",
@@ -179,14 +179,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Species",
             anchor="seqwho_species",
             description="This plot shows the maximum likelihood that a given species matches.",
-            plot=bargraph.plot(self.seqwho_data, headers, config),
+            plot=bargraph.plot(self.seqwho_data, cats, config),
         )
 
     def seqwho_library_plot(self):
         """Take the Maximum Likelihood Library data from the SeqWho report and make a
         barplot"""
 
-        headers = ["amplicon", "bisulf", "wxs", "chip", "wgs", "dnase", "rnaseq", "atac", "mirnaseq"]
+        cats = ["amplicon", "bisulf", "wxs", "chip", "wgs", "dnase", "rnaseq", "atac", "mirnaseq"]
         # Config for the plot
         config = {
             "id": "seqwho_sequencing_plot",
@@ -202,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Library Type",
             anchor="seqwho_library",
             description="This plot shows the maximum likelihood that a given library matches.",
-            plot=bargraph.plot(self.seqwho_data, headers, config),
+            plot=bargraph.plot(self.seqwho_data, cats, config),
         )
 
     def seqwho_qualdist_plot(self):
