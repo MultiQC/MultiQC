@@ -177,6 +177,21 @@ class Plot(ABC):
             )
             if self.flat
             else None,
+            # images=[
+            #     go.layout.Image(
+            #         source=self._get_logo(),
+            #         xref="paper",
+            #         yref="paper",
+            #         x=1,
+            #         y=0,
+            #         sizex=0.1,
+            #         sizey=0.1,
+            #         xanchor="left",
+            #         yanchor="bottom",
+            #         opacity=0.5,
+            #         layer="below",
+            #     )
+            # ],
         )
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xLog"):
@@ -454,3 +469,14 @@ class Plot(ABC):
                 "</div>",
             ]
         )
+
+    @staticmethod
+    def _get_logo() -> str:
+        """
+        Return the MultiQC logo as a base64 encoded string.
+        """
+        # logo_path = Path(__file__).parent.parent / "assets" / "img" / "MultiQC_logo.png"
+        logo_path = Path(__file__).parent.parent / "assets" / "img" / "MultiQC_logo_dark.svg"
+        with open(logo_path, "rb") as f:
+            data = f.read()
+        return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
