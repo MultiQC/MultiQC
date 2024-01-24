@@ -14,7 +14,7 @@ import os
 import re
 import time
 from collections import defaultdict, OrderedDict
-import pathlib
+from pathlib import Path
 import rich
 import rich.progress
 import yaml
@@ -101,7 +101,7 @@ def init():
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
-def is_searching_install_dir(path):
+def is_searching_in_source_dir(path: Path) -> bool:
     """
     Checks whether MultiQC is searching for files in the source code folder
     """
@@ -127,30 +127,11 @@ def is_searching_install_dir(path):
         return False
 
 
-def pathwalk(path):
+def handle_analysis_path(item: Path):
     """
-    Walks directory trees using pathlib.
+    Branching logic to handle analysis paths (directories and files)
+    Walks directory trees recursively calling pathlib's `path.iterdir()`.
     Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
-    """
-    path = pathlib.Path(path)
-    # Skip directory if it matches ignore patterns
-    d_matches = any(d for d in config.fn_ignore_dirs if path.match(d.rstrip(os.sep)))
-    p_matches = any(p for p in config.fn_ignore_paths if path.match(p.rstrip(os.sep)))
-    if d_matches or p_matches:
-        file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-        return
-
-    # Check not running in install directory
-    if is_searching_install_dir(path):
-        return
-
-    for item in path.iterdir():
-        handle_path_item(item)
-
-
-def handle_path_item(item):
-    """
-    Contains the branching logic for path items
     """
     if item.is_symlink() and config.ignore_symlinks:
         file_search_stats["skipped_symlinks"] += 1
@@ -158,7 +139,19 @@ def handle_path_item(item):
     elif item.is_file():
         searchfiles.append([item.name, os.fspath(item.parent)])
     elif item.is_dir():
-        pathwalk(item)
+        # Skip directory if it matches ignore patterns
+        d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
+        p_matches = any(p for p in config.fn_ignore_paths if item.match(p.rstrip(os.sep)))
+        if d_matches or p_matches:
+            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+            return
+
+        # Check not running in install directory
+        if is_searching_in_source_dir(item):
+            return
+
+        for item in item.iterdir():
+            handle_analysis_path(item)
 
 
 def get_filelist(run_module_names):
@@ -292,7 +285,7 @@ def get_filelist(run_module_names):
     # Go through the analysis directories and get file list
     total_sp_starttime = time.time()
     for path in config.analysis_dir:
-        handle_path_item(pathlib.Path(path))
+        handle_analysis_path(Path(path))
 
     # Search through collected files
     console = rich.console.Console(
