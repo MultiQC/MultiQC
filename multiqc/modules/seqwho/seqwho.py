@@ -1,18 +1,12 @@
-# !/usr/bin/env python
-
 """ MultiQC module to parse output from SeqWho """
 
-from __future__ import print_function
-from collections import OrderedDict
-import logging
-import os
 import json
-import numpy as np
+import logging
+from collections import OrderedDict
 
 from multiqc import config
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -22,13 +16,13 @@ class MultiqcModule(BaseMultiqcModule):
     """SeqWho module"""
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SeqWho",
             anchor="seqwho",
             href="https://daehwankimlab.github.io/seqwho/",
             info="is a tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.",
+            # doi=""
         )
 
         # Find and load any SeqWho reports
@@ -38,10 +32,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.seqwho_readdist = dict()
 
         for f in self.find_log_files("seqwho", filehandles=True):
-            try:
-                self.parseJSON(f)
-            except KeyError:
-                logging.warning("Error loading file {}".format(f["fn"]))
+            self.parse_json(f)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names
         self.seqwho_data = self.ignore_samples(self.seqwho_data)
@@ -50,9 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.seqwho_readdist = self.ignore_samples(self.seqwho_readdist)
 
         if len(self.seqwho_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.seqwho_data)))
+        log.info(f"Found {len(self.seqwho_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.seqwho_data, "multiqc_seqwho")
@@ -61,16 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.seqwho_general_stats_table()
 
         # SeqWho MLE Species Table
-        self.add_section(
-            description="This plot shows the Maximum Likelihood that a given Species matches.",
-            plot=self.seqwho_species_plot(),
-        )
+        self.seqwho_species_plot()
 
         # SeqWho MLE Sequencing Table
-        self.add_section(
-            description="This plot shows the Maximum Likelihood that a given Library matches.",
-            plot=self.seqwho_library_plot(),
-        )
+        self.seqwho_library_plot()
 
         # Quality Distribution
         self.seqwho_qualdist_plot()
@@ -82,25 +71,25 @@ class MultiqcModule(BaseMultiqcModule):
         self.seqwho_readdist_plot()
 
     # Parse our nice little JSON file
-    def parseJSON(self, f):
+    def parse_json(self, f):
         """Parse the JSON output from SeqWho and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-        except:
-            log.warning("Could not parse SeqWho JSON: '{}'".format(f["fn"]))
-            return None
+        except json.JSONDecodeError:
+            log.warning(f"Could not parse SeqWho JSON: '{f['fn']}'")
+            return
 
         # Get sample name from JSON first
-        sample_names = parsed_json.keys()
-        for s_name in sample_names:
+        for s_name, data in parsed_json.items():
+            s_name = self.clean_s_name(s_name, f["root"])
             self.add_data_source(f, s_name)
             self.seqwho_data[s_name] = {}
 
-            call_data = parsed_json[s_name]["Call"]
+            call_data = data["Call"]
             self.seqwho_data[s_name]["predicted_species"] = call_data["Species"]
             self.seqwho_data[s_name]["predicted_library"] = call_data["Library"]
             self.seqwho_data[s_name]["mle"] = call_data["Maximum Likelihood Estimate"]
-            self.seqwho_data[s_name]["est_read_number"] = parsed_json[s_name]["Estimated Read Number"]
+            self.seqwho_data[s_name]["est_read_number"] = data["Estimated Read Number"]
 
             # Make MLE Matrix table for subset of predicted species and library
             mle_matrix = call_data["MLE Matrix"]
@@ -122,19 +111,19 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Make a Quality Score vs count  version of the data
             self.seqwho_qualdis[s_name] = OrderedDict()
-            qual_dist = parsed_json[s_name]["Quality Dist"]
+            qual_dist = data["Quality Dist"]
             for i in range(len(qual_dist)):
                 self.seqwho_qualdis[s_name][i] = qual_dist[i]
 
             # Make a Quality score vs position  version of the data
             self.seqwho_qualscore[s_name] = OrderedDict()
-            qual_scores = parsed_json[s_name]["Quality Scores"]
+            qual_scores = data["Quality Scores"]
             for i in range(len(qual_scores)):
                 self.seqwho_qualscore[s_name][i] = qual_scores[i]
 
             # Make a Read Length vs count of the data
             self.seqwho_readdist[s_name] = OrderedDict()
-            read_dist = parsed_json[s_name]["Read lengths"]
+            read_dist = data["Read lengths"]
             for i in range(len(read_dist)):
                 self.seqwho_readdist[s_name][i] = read_dist[i]
 
@@ -142,75 +131,86 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the SeqWho report and add it to the
         General Statistics table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["predicted_species"] = {
-            "title": "Predicted Species",
-            "description": "Predicted Species",
-        }
-        headers["predicted_library"] = {
-            "title": "Predicted Library type",
-            "description": "Predicted Library type",
-        }
-        headers["mle"] = {
-            "title": "Maximum Likelihood Estimate (Overall)",
-            "description": "Overall Maximum Likelihood Estimate",
-            "min": 0,
-            "format": "{:,.3f}",
-            "scale": False,
-        }
-        headers["est_read_number"] = {
-            "title": "Estimated Read Number (millions)",
-            "description": "M Estimated Read Number",
-            "min": 0,
-            "scale": "Blues",
-            "modify": lambda x: x * config.read_count_multiplier,
+        headers = {
+            "predicted_species": {
+                "title": "Pred Species",
+                "description": "Predicted species",
+            },
+            "predicted_library": {
+                "title": "Pred Library",
+                "description": "Predicted library type",
+            },
+            "mle": {
+                "title": "Max Likelihood Est",
+                "description": "Overall maximum likelihood estimate (overall)",
+                "min": 0,
+                "format": "{:,.3f}",
+                "scale": False,
+            },
+            "est_read_number": {
+                "title": f"{config.read_count_prefix} Est Reads",
+                "description": f"Estimated read number ({config.read_count_desc})",
+                "min": 0,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "scale": "Blues",
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.seqwho_data, headers)
 
     def seqwho_species_plot(self):
-        """Take the Maximimum Likelihood Species data from the SeqWho report and make
-        barchart"""
+        """
+        Take the Maximum Likelihood Species data from the SeqWho report and make
+        barchart
+        """
 
         headers = ["human", "mouse"]
-        # Config for the plot
         config = {
-            "id": "SeqWho_species_plot",
+            "id": "seqwho_species_plot",
             "title": "SeqWho: Species",
-            "ylab": "Sample",
             "ymax": 1.0,
             "stacking": None,
             "cpswitch": False,
-            "cpswitch_counts_label": "Maximum Likelihood",
+            "cpswitch_counts_label": "Maximum likelihood",
             "tt_decimals": 3,
         }
 
-        return bargraph.plot(self.seqwho_data, headers, config)
+        self.add_section(
+            name="Species",
+            anchor="seqwho_species",
+            description="This plot shows the maximum likelihood that a given species matches.",
+            plot=bargraph.plot(self.seqwho_data, headers, config),
+        )
 
     def seqwho_library_plot(self):
-        """Take the Maximimum Likelihood Library data from the SeqWho report and make a
+        """Take the Maximum Likelihood Library data from the SeqWho report and make a
         barplot"""
 
         headers = ["amplicon", "bisulf", "wxs", "chip", "wgs", "dnase", "rnaseq", "atac", "mirnaseq"]
         # Config for the plot
         config = {
-            "id": "SeqWho_sequencing_plot",
-            "title": "SeqWho: Library",
-            "ylab": "Sample",
+            "id": "seqwho_sequencing_plot",
+            "title": "SeqWho: Library Type",
             "ymax": 1.0,
             "stacking": None,
             "cpswitch": False,
-            "cpswitch_counts_label": "Maximum Likelihood",
+            "cpswitch_counts_label": "Maximum likelihood",
             "tt_decimals": 3,
         }
 
-        return bargraph.plot(self.seqwho_data, headers, config)
+        self.add_section(
+            name="Library Type",
+            anchor="seqwho_library",
+            description="This plot shows the maximum likelihood that a given library matches.",
+            plot=bargraph.plot(self.seqwho_data, headers, config),
+        )
 
     def seqwho_qualdist_plot(self):
         """Generate the Average Sequence Quality Distribution plot"""
         pconfig = {
-            "id": "SeqWho_qualdis_plot",
+            "id": "seqwho_qualdis_plot",
             "title": "SeqWho: Per Sequence Quality Scores",
-            "ylab": "Counts",
+            "ylab": "Reads",
             "xlab": "Sequence Quality (Phred)",
             "xDecimals": False,
             "ymin": 0,
@@ -219,8 +219,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Predicted Per Sequence Quality Scores",
+            anchor="seqwho_qualdis",
             description="This plot shows the predicted number of reads with average quality scores.",
-            plot=linegraph.plot([self.seqwho_qualdis], pconfig),
+            plot=linegraph.plot(self.seqwho_qualdis, pconfig),
         )
 
     def seqwho_qualscore_plot(self):
@@ -237,8 +238,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Predicted Mean Quality Scores",
+            anchor="seqwho_qualscore",
             description="This plot shows the predicted mean quality value across each base position in the read.",
-            plot=linegraph.plot([self.seqwho_qualscore], pconfig),
+            plot=linegraph.plot(self.seqwho_qualscore, pconfig),
         )
 
     def seqwho_readdist_plot(self):
@@ -246,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "seqwho_readdist_plot",
             "title": "SeqWho: Read Distribution",
-            "ylab": "Counts",
+            "ylab": "Reads",
             "xlab": "Length (bp)",
             "xDecimals": False,
             "ymin": 0,
@@ -255,6 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Predicted Read Distribution",
+            anchor="seqwho_readdist",
             description="This plot shows predicted the number of reads with certain lengths.",
-            plot=linegraph.plot([self.seqwho_readdist], pconfig),
+            plot=linegraph.plot(self.seqwho_readdist, pconfig),
         )
