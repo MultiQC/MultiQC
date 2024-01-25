@@ -30,7 +30,7 @@
 - **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
 - **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
 - **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
-- **QualiMap**: address NBSP as thousand separators in rnaseqqc ([#2282](https://github.com/MultiQC/MultiQC/pull/2282))
+- **QualiMap**: address NBSP as thousand separators ([#2282](https://github.com/MultiQC/MultiQC/pull/2282))
 - **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
 
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
