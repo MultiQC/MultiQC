@@ -39,9 +39,8 @@ class ViolinPlot extends Plot {
     });
     layout.height = 70 * metrics.length + 50;
     $("#" + this.target + "-wrapper").css("height", layout.height + "px");
-    if (metrics.length === 0) {
-      return [];
-    }
+    if (metrics.length === 0) return [];
+
     layout.grid.rows = metrics.length;
     layout.grid.subplots = metrics.map((metric, metricIdx) => {
       let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
@@ -75,12 +74,8 @@ class ViolinPlot extends Plot {
       }
     }
 
-    let traces = [];
     metrics.map((metric, metricIdx) => {
-      let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
-
       let header = headerByMetric[metric];
-      let violinValuesBySample = violinValuesBySampleByMetric[metric];
 
       // Set layouts for each violin individually
       layout["xaxis" + (metricIdx + 1)] = {
@@ -110,6 +105,15 @@ class ViolinPlot extends Plot {
       if (header["hoverformat"] !== undefined) {
         layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
       }
+    });
+
+    layout.xaxis = layout["xaxis1"];
+    layout.yaxis = layout["yaxis1"];
+
+    let traces = [];
+    metrics.map((metric, metricIdx) => {
+      let header = headerByMetric[metric];
+      let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
       // Set color for each violin individually
       if (header["color"] !== undefined) {
@@ -119,6 +123,7 @@ class ViolinPlot extends Plot {
       }
 
       // Create violin traces
+      let violinValuesBySample = violinValuesBySampleByMetric[metric];
       let samples = [],
         values = [];
       Object.entries(violinValuesBySample).map(([sample, value]) => {
@@ -136,9 +141,6 @@ class ViolinPlot extends Plot {
         ...params,
       });
     });
-
-    layout.xaxis = layout["xaxis1"];
-    layout.yaxis = layout["yaxis1"];
 
     // We want to select points on all violins belonging to this specific sample.
     // Points are rendered each as a separate trace, so we need to collect

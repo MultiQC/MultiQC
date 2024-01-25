@@ -251,6 +251,7 @@ class ViolinPlot(Plot):
                 roworder="top to bottom",
                 ygap=0.4,
             ),
+            showlegend=False,
         )
 
     @staticmethod
@@ -379,23 +380,29 @@ class ViolinPlot(Plot):
         metrics = [m for m in dataset.metrics if not dataset.header_by_metric[m].get("hidden", False)]
 
         layout = copy.deepcopy(layout)
-        layout.height = 70 * len(metrics) + 50
         layout.grid.rows = len(metrics)
         layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
+        layout.height = 70 * len(metrics) + 50
 
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
+
             layout[f"xaxis{metric_idx + 1}"] = {
                 "gridcolor": layout["xaxis"]["gridcolor"],
                 "zerolinecolor": layout["xaxis"]["zerolinecolor"],
+                "hoverformat": layout["xaxis"]["hoverformat"],
                 "tickfont": copy.deepcopy(layout["xaxis"]["tickfont"]),
             }
             layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
             layout[f"yaxis{metric_idx + 1}"] = {
                 "gridcolor": layout["yaxis"]["gridcolor"],
                 "zerolinecolor": layout["yaxis"]["zerolinecolor"],
+                "hoverformat": layout["yaxis"]["hoverformat"],
                 "automargin": True,
             }
+            if "hoverformat" in header:
+                layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
+
             title = header["title"] + "  "
             if header.get("namespace"):
                 title = f"{header['namespace']}  <br>" + title
@@ -411,44 +418,49 @@ class ViolinPlot(Plot):
                     "color": f"rgb({header['color']})",
                 }
 
-        layout.xaxis = layout["xaxis1"]
-        layout.yaxis = layout["yaxis1"]
+        layout["xaxis"] = layout["xaxis1"]
+        layout["yaxis"] = layout["yaxis1"]
 
-        layout.showlegend = False
         fig = go.Figure(layout=layout)
+
+        violin_values_by_sample_by_metric = dataset.violin_values_by_sample_by_metric
+        if dataset.show_only_outliers:
+            scatter_values_by_sample_by_metric = dataset.scatter_values_by_sample_by_metric
+        else:
+            scatter_values_by_sample_by_metric = dataset.violin_values_by_sample_by_metric
 
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
-            values_by_sample = dataset.values_by_sample_by_metric[metric]
-            outliers = dataset.outliers_by_metric.get(metric, [])
-
             params = copy.deepcopy(self.trace_params)
             color = header.get("color")
             if color:
-                params["fillcolor"] = f"rgba({color},1)"
-                params["line"]["color"] = f"rgba({color},1)"
+                params["fillcolor"] = f"rgb({color})"
+                params["line"]["color"] = f"rgb({color})"
 
+            violin_values_by_sample = violin_values_by_sample_by_metric[metric]
             axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
             fig.add_trace(
                 go.Violin(
-                    x=list(values_by_sample.values()),
+                    x=list(violin_values_by_sample.values()),
                     name=metric_idx,
-                    text=list(values_by_sample.keys()),
+                    text=list(violin_values_by_sample.keys()),
                     xaxis=f"x{axis_key}",
                     yaxis=f"y{axis_key}",
                     **params,
                 ),
             )
+
             if add_scatter:
-                for sample, value in values_by_sample.items():
-                    scatter_params = copy.deepcopy(self.scatter_trace_params)
-                    scatter_params["showlegend"] = False
-                    if dataset.show_only_outliers and sample not in outliers:
-                        continue
+                scatter_params = copy.deepcopy(self.scatter_trace_params)
+                for sample, value in scatter_values_by_sample_by_metric.items():
+                    # add vertical jitter (not working in python version currently)
+                    y = float(metric_idx)
+                    # y += random.uniform(-0.2, 0.2)
+                    # y += random.random() * 0.3 - 0.3 / 2
                     fig.add_trace(
                         go.Scatter(
                             x=[value],
-                            y=[metric_idx],
+                            y=[y],
                             text=[sample],
                             xaxis=f"x{axis_key}",
                             yaxis=f"y{axis_key}",
