@@ -143,6 +143,10 @@ class Plot(ABC):
             xaxis=dict(
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
+                tickfont=dict(
+                    size=10,
+                    color="rgba(0,0,0,0.5)",
+                ),
                 title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
@@ -152,6 +156,10 @@ class Plot(ABC):
             yaxis=dict(
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
+                tickfont=dict(
+                    size=10,
+                    color="rgba(0,0,0,0.5)",
+                ),
                 title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
                 range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
@@ -167,9 +175,9 @@ class Plot(ABC):
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=dict(
-                pad=10,  # pad sample names in a bar graph a bit
+                pad=5,  # pad sample names in a bar graph a bit
                 t=50,  # more compact title
-                r=10,  # remove excessive whitespace on the right
+                r=15,  # remove excessive whitespace on the right
             ),
             hoverlabel=dict(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
