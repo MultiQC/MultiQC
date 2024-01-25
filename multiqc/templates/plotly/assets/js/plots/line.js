@@ -1,7 +1,6 @@
 class LinePlot extends Plot {
   constructor(dump) {
     super(dump);
-    this.categories = dump["categories"];
 
     // Tracking Y-axis range to maintain the "Y-Limits" toggle button
     this.ymin = this.layout.yaxis.range[0];
@@ -75,8 +74,7 @@ class LinePlot extends Plot {
         x = line.data.map((x) => x[0]);
         y = line.data.map((x) => x[1]);
       } else {
-        if (this.categories !== undefined) x = this.categories;
-        else x = [...Array(line.data.length).keys()];
+        x = [...Array(line.data.length).keys()];
         y = line.data;
       }
 

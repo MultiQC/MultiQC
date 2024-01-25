@@ -53,6 +53,9 @@ class LinePlot(Plot):
         ]
 
         self.categories: List[str] = pconfig.get("categories", [])
+        if self.categories:
+            self.layout.xaxis.ticktext = self.categories
+            self.layout.xaxis.tickvals = list(range(len(self.categories)))
 
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
@@ -175,7 +178,6 @@ class LinePlot(Plot):
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
-        d["categories"] = self.categories
         d["y_autorange_before_bands"] = self.y_autorange_before_bands
         return d
 
@@ -189,10 +191,7 @@ class LinePlot(Plot):
                 xs = [x[0] for x in line["data"]]
                 ys = [x[1] for x in line["data"]]
             else:
-                if self.categories:
-                    xs = self.categories
-                else:
-                    xs = [x for x in range(len(line["data"]))]
+                xs = [x for x in range(len(line["data"]))]
                 ys = line["data"]
 
             params = copy.deepcopy(self.trace_params)
