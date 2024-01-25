@@ -13,20 +13,26 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     """Find Qualimap RNASeq reports and parse their data"""
-
     self.qualimap_rnaseq_genome_results = dict()
-    numeric_regexes = {
-        "reads_aligned": (int, r"read(?:s| pairs) aligned\s*=\s*([\d,\.\xa0]+)"),
-        "total_alignments": (int, r"total alignments\s*=\s*([\d,\.\xa0]+)"),
-        "non_unique_alignments": (int, r"non-unique alignments\s*=\s*([\d,\.\xa0]+)"),
-        "reads_aligned_genes": (int, r"aligned to genes\s*=\s*([\d,\.\xa0]+)"),
-        "ambiguous_alignments": (int, r"ambiguous alignments\s*=\s*([\d,\.\xa0]+)"),
-        "not_aligned": (int, r"not aligned\s*=\s*([\d,\.\xa0]+)"),
-        "reads_aligned_exonic": (int, r"exonic\s*=\s*([\d,\.\xa0]+)"),
-        "reads_aligned_intronic": (int, r"intronic\s*=\s*([\d,\.\xa0]+)"),
-        "reads_aligned_intergenic": (int, r"intergenic\s*=\s*([\d,\.\xa0]+)"),
-        "reads_aligned_overlapping_exon": (int, r"overlapping exon\s*=\s*([\d,\.\xa0]+)"),
-        "5_3_bias": (float, r"5'-3' bias\s*=\s*(\d+([,\.]\d+)?)$"),
+
+    regex_by_type = {
+        int: r"[\d,\.\xa0]+",  # 95,543 or 95 543 or 95.543 or 95
+        float: r"[\d,\.\xa0]+([,\.]\d+)?",  # 1.5 or 1 or 95,543.6053
+        str: r".+",
+    }
+
+    regexes = {
+        "reads_aligned": ("read(?:s| pairs) aligned", int),
+        "total_alignments": ("total alignments", int),
+        "non_unique_alignments": ("non-unique alignments", int),
+        "reads_aligned_genes": ("aligned to genes", int),
+        "ambiguous_alignments": ("ambiguous alignments", int),
+        "not_aligned": ("not aligned", int),
+        "reads_aligned_exonic": ("exonic", int),
+        "reads_aligned_intronic": ("intronic", int),
+        "reads_aligned_intergenic": ("intergenic", int),
+        "reads_aligned_overlapping_exon": ("overlapping exon", int),
+        "5_3_bias": ("5'-3' bias", float),
     }
 
     for f in self.find_log_files("qualimap/rnaseq/rnaseq_results"):
@@ -42,19 +48,36 @@ def parse_reports(self):
             return None
 
         # Go through all numeric regexes
-        for key, (numeric_type, regex) in numeric_regexes.items():
-            r_search = re.search(regex, f["f"], re.MULTILINE)
-            if r_search:
-                try:
-                    if numeric_type == int:
-                        d[key] = int(re.sub(r"[,\.\xa0]", "", r_search.group(1)))
-                    elif numeric_type == float:
-                        d[key] = float(r_search.group(1).replace(",", "."))
-                except UnicodeEncodeError:
-                    # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
-                    pass
-                except ValueError:
-                    d[key] = r_search.group(1)
+        for key, (regex, regex_type) in regexes.items():
+            try:
+                regex = rf"{regex}\s*=\s*({regex_by_type[regex_type]})"
+                m = re.search(regex, f["f"], re.MULTILINE)
+                if not m:
+                    continue
+                val = m.group(1)
+                val = re.sub(r"\xa0", "", val)
+                if regex_type == int:
+                    d[key] = int(re.sub(r"[,\.]", "", val))
+                elif regex_type == float:
+                    # need to determine either dot or comma is either a decimal or thousands separator
+                    if val.count(".") == 1 and val.count(",") == 0:
+                        if len(val.split(".")[-1]) < 3:  # 1.12
+                            pass  # dot is decimal, so keeping dot
+                    elif val.count(",") == 1 and val.count(".") == 0:
+                        if len(val.split(",")[-1]) < 3:  # 1,12
+                            pass  # comma is decimal, so keeping comma
+                    elif val.count(",") >= 1 and val.count(".") >= 1:
+                        # the thousands separator is whatever met first
+                        if val.find(",") < val.find("."):
+                            val = re.sub(r",", "", val)
+                        else:
+                            val = re.sub(r"\.", "", val)
+                    d[key] = float(val.replace(",", "."))
+                else:
+                    d[key] = val
+            except UnicodeEncodeError:
+                # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
+                pass
 
         # Add to general stats table
         for k in ["5_3_bias", "reads_aligned"]:

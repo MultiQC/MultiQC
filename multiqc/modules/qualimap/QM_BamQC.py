@@ -82,32 +82,38 @@ def parse_reports(self):
 
 def parse_genome_results(self, f):
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
+    regex_by_type = {
+        int: r"[\d,\.\xa0]+",  # 95,543 or 95 543 or 95.543 or 95
+        float: r"[\d,\.\xa0]+([,\.]\d+)?",  # 1.5 or 1 or 95,543.6053
+        str: r".+",
+    }
+
     regexes = {
         "Input": {
-            "bam_file": r"bam file = (.+)",
+            "bam_file": ("bam file", str),
         },
         "Globals": {
-            "total_reads": r"number of reads = ([\d,]+)",
-            "mapped_reads": r"number of mapped reads = ([\d,]+)",
-            "mapped_bases": r"number of mapped bases = ([\d,]+)",
-            "sequenced_bases": r"number of sequenced bases = ([\d,]+)",
+            "total_reads": ("number of reads", int),
+            "mapped_reads": ("number of mapped reads", int),
+            "mapped_bases": ("number of mapped bases", int),
+            "sequenced_bases": ("number of sequenced bases", int),
         },
         "Insert size": {
-            "mean_insert_size": r"mean insert size = ([\d,\.]+)",
-            "median_insert_size": r"median insert size = ([\d,\.]+)",
+            "mean_insert_size": ("mean insert size", float),
+            "median_insert_size": ("median insert size", float),
         },
         "Mapping quality": {
-            "mean_mapping_quality": r"mean mapping quality = ([\d,\.]+)",
+            "mean_mapping_quality": ("mean mapping quality", float),
         },
         "Mismatches and indels": {
-            "general_error_rate": r"general error rate = ([\d,\.]+)",
+            "general_error_rate": ("general error rate", float),
         },
         "Coverage": {
-            "mean_coverage": r"mean coverageData = ([\d,\.]+)",
+            "mean_coverage": ("mean coverageData", float),
         },
         "Globals inside": {
-            "regions_size": r"regions size = ([\d,\.]+)",
-            "regions_mapped_reads": r"number of mapped reads = ([\d,]+)",  # WARNING: Same as in Globals
+            "regions_size": ("regions size", int),
+            "regions_mapped_reads": ("number of mapped reads", int),  # WARNING: Same as in Globals
         },
     }
     d = dict()
@@ -116,16 +122,32 @@ def parse_genome_results(self, f):
         if line.startswith(">>>>>>>"):
             section = line[8:]
         elif section:
-            for k, r in regexes.get(section, {}).items():
-                r_search = re.search(r, line)
-                if r_search:
-                    if r"\d" in r:
-                        try:
-                            d[k] = float(r_search.group(1).replace(",", ""))
-                        except ValueError:
-                            d[k] = r_search.group(1)
-                    else:
-                        d[k] = r_search.group(1)
+            for key, (regex, regex_type) in regexes.get(section, {}).items():
+                regex = rf"{regex}\s*=\s*({regex_by_type[regex_type]})"
+                m = re.search(regex, line)
+                if not m:
+                    continue
+                val = m.group(1)
+                val = re.sub(r"\xa0", "", val)
+                if regex_type == int:
+                    d[key] = int(re.sub(r"[,\.]", "", val))
+                elif regex_type == float:
+                    # need to determine either dot or comma is either a decimal or thousands separator
+                    if val.count(".") == 1 and val.count(",") == 0:
+                        if len(val.split(".")[-1]) < 3:  # 1.12
+                            pass  # dot is decimal, so keeping dot
+                    elif val.count(",") == 1 and val.count(".") == 0:
+                        if len(val.split(",")[-1]) < 3:  # 1,12
+                            pass  # comma is decimal, so keeping comma
+                    elif val.count(",") >= 1 and val.count(".") >= 1:
+                        # the thousands separator is whatever met first
+                        if val.find(",") < val.find("."):
+                            val = re.sub(r",", "", val)
+                        else:
+                            val = re.sub(r"\.", "", val)
+                    d[key] = float(val)
+                else:
+                    d[key] = val
 
     # Check we have an input filename
     if "bam_file" not in d:
@@ -174,7 +196,7 @@ def parse_coverage(self, f):
         if line.startswith("#"):
             continue
         coverage, count = line.split(None, 1)
-        coverage = int(round(float(coverage)))
+        coverage = int(round(float(coverage.replace(",", "."))))
         count = float(count)
         d[coverage] = count
 
