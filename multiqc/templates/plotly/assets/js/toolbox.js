@@ -416,17 +416,8 @@ $(function () {
           try {
             const target = $(this).val();
             const fname = target + "." + format;
-            // Custom plot not in mqc_plots
-            if (mqc_plots[target] === undefined) {
-              const plot_div = $("#" + target);
-              if (plot_div.hasClass("has-custom-export")) {
-                plot_div.trigger("mqc_plotexport_data", { target: target, ft: format, fname: fname, sep: sep });
-              } else {
-                skipped_plots += 1;
-              }
-            }
             // If JSON then just dump everything
-            else if (format === "json") {
+            if (format === "json") {
               const json_str = JSON.stringify(mqc_plots[target], null, 2);
               const blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
               if (checked_plots.length <= zip_threshold) {
@@ -437,43 +428,12 @@ $(function () {
                 zip.file(fname, blob);
               }
             }
-            // Beeswarm plots must be done manually
-            else if (mqc_plots[target]["plot_type"] === "beeswarm") {
-              // Header line
-              let data_str = "Sample";
-              for (let j = 0; j < mqc_plots[target]["categories"].length; j++) {
-                data_str += sep + mqc_plots[target]["categories"][j]["description"];
-              }
-              data_str += "\n";
-              // This assumes that the same samples are in all rows
-              // TODO: Check and throw error if this isn't the case
-              let rows = Array();
-              for (let j = 0; j < mqc_plots[target]["samples"][0].length; j++) {
-                rows[j] = Array(mqc_plots[target]["samples"][0][j]);
-              }
-              for (let j = 0; j < mqc_plots[target]["datasets"].length; j++) {
-                for (let k = 0; k < mqc_plots[target]["datasets"][j].length; k++) {
-                  rows[k].push(mqc_plots[target]["datasets"][j][k]);
-                }
-              }
-              for (let j = 0; j < rows.length; j++) {
-                data_str += rows[j].join(sep) + "\n";
-              }
-              let blob = new Blob([data_str], { type: "text/plain;charset=utf-8" });
-              if (checked_plots.length <= zip_threshold) {
-                // Not many plots to export, just trigger a download for each
-                saveAs(blob, fname);
-              } else {
-                // Lots of plots - add to a zip file for download
-                zip.file(fname, blob);
-              }
-            }
             // Normal plot - use HighCharts plugin to get the data from the plot
             else if (format === "tsv" || format === "csv") {
-              var hc = $("#" + target).highcharts();
-              if (hc !== undefined) {
-                hc.update({ exporting: { csv: { itemDelimiter: sep } } });
-                const blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
+              let plot = mqc_plots[target];
+              if (plot !== undefined) {
+                let text = plot.exportData(format);
+                const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
                 if (checked_plots.length <= zip_threshold) {
                   // Not many plots to export, just trigger a download for each
                   saveAs(blob, fname);

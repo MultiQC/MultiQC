@@ -178,6 +178,7 @@ class LinePlot(Plot):
     def dump_for_javascript(self):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
+        d["categories"] = self.categories
         d["y_autorange_before_bands"] = self.y_autorange_before_bands
         return d
 
