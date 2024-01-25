@@ -1,6 +1,7 @@
 """ MultiQC module to parse output from ganon classify """
 
 import logging
+import re
 from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule
@@ -26,6 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ganon"):
             self.parse_logs(f)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         self.calculate_entry_remainder()
 
         self.ganon_data = self.ignore_samples(self.ganon_data)
@@ -45,10 +50,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.barplot_taxonomic_entries()
 
     def parse_logs(self, f):
-        for l in f["f"].splitlines():
-            if l.startswith("--output-prefix"):
+        for line in f["f"].splitlines():
+            if line.startswith("--output-prefix"):
                 ## find and set name - we don't clean as can never take from file name
-                s_name = l.split()[1]
+                s_name = line.split()[1]
 
                 ## check for duplicates
                 if s_name in self.ganon_data:
@@ -57,38 +62,42 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.add_data_source(f, s_name=s_name)
 
-            if l.startswith("ganon-classify processed"):
-                self.ganon_data[s_name]["reads_processed"] = int(l.split()[2])
-                self.ganon_data[s_name]["mbp_processed"] = l.split()[4].lstrip("(").rstrip(")")
+            version = re.search(r"^\s+_\|\s+v. (\d\.\d.\d)", line)
+            if version is not None:
+                self.add_software_version(version.group(1), f["s_name"])
 
-            if "reads classified" in l:
-                self.ganon_data[s_name]["reads_classified"] = int(l.split()[1])
-                self.ganon_data[s_name]["reads_classified_pc"] = l.split()[4].lstrip("(").rstrip(")").rstrip("%")
+            if line.startswith("ganon-classify processed"):
+                self.ganon_data[s_name]["reads_processed"] = int(line.split()[2])
+                self.ganon_data[s_name]["mbp_processed"] = line.split()[4].lstrip("(").rstrip(")")
 
-            if "with unique matches" in l:
-                self.ganon_data[s_name]["unique_matches"] = int(l.split()[1])
-                self.ganon_data[s_name]["unique_matches_pc"] = l.split()[5].lstrip("(").rstrip(")").rstrip("%")
+            if "reads classified" in line:
+                self.ganon_data[s_name]["reads_classified"] = int(line.split()[1])
+                self.ganon_data[s_name]["reads_classified_pc"] = line.split()[4].lstrip("(").rstrip(")").rstrip("%")
 
-            if "with multiple matches" in l:
-                self.ganon_data[s_name]["multiple_matches"] = int(l.split()[1])
-                self.ganon_data[s_name]["multiple_matches_pc"] = l.split()[5].lstrip("(").rstrip(")").rstrip("%")
+            if "with unique matches" in line:
+                self.ganon_data[s_name]["unique_matches"] = int(line.split()[1])
+                self.ganon_data[s_name]["unique_matches_pc"] = line.split()[5].lstrip("(").rstrip(")").rstrip("%")
 
-            if "matches (avg" in l:
-                self.ganon_data[s_name]["overall_matches"] = int(l.split()[1])
-                self.ganon_data[s_name]["match_to_read"] = l.split()[4].lstrip("(").rstrip(")")
+            if "with multiple matches" in line:
+                self.ganon_data[s_name]["multiple_matches"] = int(line.split()[1])
+                self.ganon_data[s_name]["multiple_matches_pc"] = line.split()[5].lstrip("(").rstrip(")").rstrip("%")
 
-            if "reads unclassified" in l:
-                self.ganon_data[s_name]["reads_unclassified"] = int(l.split()[1])
-                self.ganon_data[s_name]["reads_unclassified_pc"] = l.split()[4].lstrip("(").rstrip(")").rstrip("%")
+            if "matches (avg" in line:
+                self.ganon_data[s_name]["overall_matches"] = int(line.split()[1])
+                self.ganon_data[s_name]["match_to_read"] = line.split()[4].lstrip("(").rstrip(")")
 
-            if "entries reported" in l:
-                self.ganon_data[s_name]["taxonomic_entries_reported"] = int(l.split()[1])
+            if "reads unclassified" in line:
+                self.ganon_data[s_name]["reads_unclassified"] = int(line.split()[1])
+                self.ganon_data[s_name]["reads_unclassified_pc"] = line.split()[4].lstrip("(").rstrip(")").rstrip("%")
 
-            if "removed not in --ranks" in l:
-                self.ganon_data[s_name]["taxonomic_entries_removed_rank_filter"] = int(l.split()[1])
+            if "entries reported" in line:
+                self.ganon_data[s_name]["taxonomic_entries_reported"] = int(line.split()[1])
 
-            if "removed with --min-count" in l:
-                self.ganon_data[s_name]["taxonomic_entries_removed_mincount_filter"] = int(l.split()[1])
+            if "removed not in --ranks" in line:
+                self.ganon_data[s_name]["taxonomic_entries_removed_rank_filter"] = int(line.split()[1])
+
+            if "removed with --min-count" in line:
+                self.ganon_data[s_name]["taxonomic_entries_removed_mincount_filter"] = int(line.split()[1])
 
         return
 
@@ -243,8 +252,14 @@ class MultiqcModule(BaseMultiqcModule):
     def barplot_reads_match_type(self):
         """Barplot of total number of reads classified"""
         cats = OrderedDict()
-        cats["unique_matches"] = {"name": "Reads with unique matches", "color": "#7cb5ec"}
-        cats["multiple_matches"] = {"name": "Reads with multiple matches", "color": "#f7a35c"}
+        cats["unique_matches"] = {
+            "name": "Reads with unique matches",
+            "color": "#7cb5ec",
+        }
+        cats["multiple_matches"] = {
+            "name": "Reads with multiple matches",
+            "color": "#f7a35c",
+        }
         config = {
             "id": "ganon-reads-match-type-plot",
             "title": "Ganon (classify): match type summary",
@@ -276,9 +291,18 @@ class MultiqcModule(BaseMultiqcModule):
     def barplot_taxonomic_entries(self):
         """Barplot of total number of reads classified"""
         cats = OrderedDict()
-        cats["taxonomic_entries_retained"] = {"name": "Retained Taxonomic assignments", "color": "#7cb5ec"}
-        cats["taxonomic_entries_removed_rank_filter"] = {"name": "Rank filter removed", "color": "#f7a35c"}
-        cats["taxonomic_entries_removed_mincount_filter"] = {"name": "Min. count filter removed", "color": "#fb9a99"}
+        cats["taxonomic_entries_retained"] = {
+            "name": "Retained Taxonomic assignments",
+            "color": "#7cb5ec",
+        }
+        cats["taxonomic_entries_removed_rank_filter"] = {
+            "name": "Rank filter removed",
+            "color": "#f7a35c",
+        }
+        cats["taxonomic_entries_removed_mincount_filter"] = {
+            "name": "Min. count filter removed",
+            "color": "#fb9a99",
+        }
 
         config = {
             "id": "ganon-taxonomic-entries-plot",
