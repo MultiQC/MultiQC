@@ -21,10 +21,10 @@ class LinePlot extends Plot {
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
     if (sampleSettings == null) return; // All series are hidden, do not render the graph.
-    lines = lines.map((line, idx) => {
+    lines = lines.filter((line, idx) => {
       line.name = sampleSettings[idx].name ?? line.name;
       line.highlight = sampleSettings[idx].highlight;
-      if (!sampleSettings[idx].hidden) return line;
+      return !sampleSettings[idx].hidden;
     });
 
     // Reorder points so highlighted points are on top
