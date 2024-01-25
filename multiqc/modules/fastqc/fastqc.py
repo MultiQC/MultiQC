@@ -623,7 +623,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmax": 100,
             "xmin": 0,
             "yDecimals": False,
-            "tt_label": "<b>{point.x}% GC</b>: {point.y}",
+            "tt_label": "<b>{point.x}% GC</b>: {point.y}%",
             "colors": self.get_status_cols("per_sequence_gc_content"),
             "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
         }

@@ -6,6 +6,7 @@ class LinePlot extends Plot {
     // Tracking Y-axis range to maintain the "Y-Limits" toggle button
     this.ymin = this.layout.yaxis.range[0];
     this.ymax = this.layout.yaxis.range[1];
+    this.yAutorangeBeforeBands = dump["y_autorange_before_bands"];
   }
 
   activeDatasetSize() {
@@ -37,7 +38,17 @@ class LinePlot extends Plot {
     let yminSet = this.ymin !== "undefined" && this.ymin !== null;
     // Only create if there is a y-axis limit
     let groupDiv = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    if (ymaxSet || (yminSet && this.ymin !== 0)) {
+    let addLimitToggle = ymaxSet || (yminSet && this.ymin !== 0);
+    if (this.yAutorangeBeforeBands) {
+      if (
+        yminSet &&
+        this.yAutorangeBeforeBands[0] <= this.ymin &&
+        ymaxSet &&
+        this.yAutorangeBeforeBands[1] >= this.ymax
+      )
+        addLimitToggle = false;
+    }
+    if (addLimitToggle) {
       let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(groupDiv);
       wrapper.append(
         '<span class="mqc_switch_wrapper"' +
@@ -50,6 +61,9 @@ class LinePlot extends Plot {
           '"' +
           ' data-target="' +
           this.target +
+          '"' +
+          ' data-y_autorange_range_before_bands="' +
+          this.yAutorangeBeforeBands +
           '">Y-Limits: <span class="mqc_switch on">on</span></span>',
       );
       wrapper.after('<div class="clearfix" />');

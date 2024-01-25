@@ -3,6 +3,7 @@ import dataclasses
 import io
 import logging
 import random
+import re
 import string
 from abc import abstractmethod, ABC
 from enum import Enum
@@ -104,14 +105,24 @@ class Plot(ABC):
 
         # Format on-hover tooltips
         tt_label = self.tt_label()
+        tt_suffix = self.pconfig.get("tt_suffix")
         if "tt_label" in self.pconfig:
-            tt_label = self._clean_config_tt_label(self.pconfig["tt_label"])
+            # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
+            tt_label = self.pconfig["tt_label"]
+            tt_label = self._clean_config_tt_label(tt_label)
+            if not tt_suffix:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
+                m = re.search(r"\{y.*}(\S+)", tt_label)  # complex label format
+                if m:
+                    tt_suffix = m.group(1)
+            # remove the suffix from the label, as it will be added automatically for the simple format
+            if tt_suffix and "{y}" + tt_suffix in tt_label:
+                tt_label = tt_label.replace("{y}" + tt_suffix, "{y}")
+            # add missing line break between the sample name and the key-value pair
             if not tt_label.startswith("<br>"):
                 tt_label = "<br>" + tt_label
-        elif tt_label:
-            tt_label += self.pconfig.get("tt_suffix", "")
         if tt_label:
             self.trace_params["hovertemplate"] = "<b>%{text}</b>" + tt_label + "<extra></extra>"
+        ticksuffix = tt_suffix
 
         height = self.pconfig.get("height", 600)
         width = self.pconfig.get("width")
@@ -143,9 +154,10 @@ class Plot(ABC):
                 zerolinecolor="rgba(0,0,0,0.1)",
                 title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
-                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax", self.pconfig.get("yCeiling"))],
+                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
                 # Default precision for floating numbers is too high - allowing to override it
                 hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
+                ticksuffix=ticksuffix,
             ),
             height=height,
             width=width,

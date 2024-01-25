@@ -209,16 +209,23 @@ $(function () {
 
     let y_limits_switch = $(this).find(".mqc_switch");
     if (y_limits_switch.hasClass("on")) {
-      y_limits_switch.removeClass("on").addClass("off").text("off");
-      Plotly.relayout(target, "yaxis.autorange", true);
+      // pre-calculated autorange limits in Python to make sure autorange doesn't include yPlotBands
+      let range = $(this).data("y_autorange_range_before_bands");
+      if (range !== null) {
+        range = range.split(",");
+        Plotly.relayout(target, "yaxis.range", range);
+      } else {
+        Plotly.relayout(target, "yaxis.autorange", true);
+      }
       if (ymin === 0)
         // for plots with only positive numbers we want to keep the ymin=0 limit
         Plotly.relayout(target, "yaxis.range[0]", 0);
+      y_limits_switch.removeClass("on").addClass("off").text("off");
     } else {
-      y_limits_switch.removeClass("off").addClass("on").text("on");
       Plotly.relayout(target, "yaxis.autorange", false);
       if (ymin_is_set && ymin !== 0) Plotly.relayout(target, "yaxis.range[0]", ymin);
       if (ymax_is_set) Plotly.relayout(target, "yaxis.range[1]", ymax);
+      y_limits_switch.removeClass("off").addClass("on").text("on");
     }
   });
 

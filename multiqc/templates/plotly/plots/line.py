@@ -66,11 +66,13 @@ class LinePlot(Plot):
         if self.flat and self.datasets:
             self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
 
+        self.y_autorange_before_bands = None
+        y_min_range = self.pconfig.get("yMinRange")
         y_bands = self.pconfig.get("yPlotBands")
         x_bands = self.pconfig.get("xPlotBands")
         x_lines = self.pconfig.get("xPlotLines")
         y_lines = self.pconfig.get("yPlotLines")
-        if y_bands or x_bands or x_lines or y_lines:
+        if y_min_range or y_bands or x_bands or x_lines or y_lines:
             # We don't want the bands to affect the calculated y-axis range. So we
             # call `fig.full_figure_for_development` to force-calculate the figure size
             # before we add the bands, and then force set the calculated range.
@@ -84,6 +86,10 @@ class LinePlot(Plot):
                 min([fig.layout.xaxis.range[0] for fig in dev_figs]),
                 max([fig.layout.xaxis.range[1] for fig in dev_figs]),
             ]
+            if y_min_range:
+                if self.layout.yaxis.range[1] - self.layout.yaxis.range[0] < y_min_range:
+                    self.layout.yaxis.range = [self.layout.yaxis.range[0], self.layout.yaxis.range[0] + y_min_range]
+            self.y_autorange_before_bands = self.layout.yaxis.range
 
             self.layout.shapes = (
                 [
@@ -170,6 +176,7 @@ class LinePlot(Plot):
         """Serialise the data to pick up in plotly-js"""
         d = super().dump_for_javascript()
         d["categories"] = self.categories
+        d["y_autorange_before_bands"] = self.y_autorange_before_bands
         return d
 
     def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):

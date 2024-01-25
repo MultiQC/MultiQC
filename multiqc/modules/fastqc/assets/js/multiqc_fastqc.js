@@ -631,11 +631,13 @@ function fastqc_module(module_element, module_key) {
       title: s_name,
       colorway: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
       xaxis: {
-        title: "Position (bp)",
+        title: "Position",
+        ticksuffix: " bp",
       },
       yaxis: {
         title: "% Reads",
         range: [0, 100],
+        ticksuffix: "%",
       },
       hovermode: "x unified",
     };
