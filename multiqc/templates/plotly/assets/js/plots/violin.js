@@ -25,7 +25,7 @@ class ViolinPlot extends Plot {
     let headerByMetric = dataset["header_by_metric"];
     let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
     let scatterValuesBySampleByMetric;
-    if (!this.showOnlyOutliers) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
+    if (this.showOnlyOutliers) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
     else scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
 
     let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
