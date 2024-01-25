@@ -7,9 +7,14 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, bargraph
+from multiqc.utils import mqc_colour
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+
+LIBRARIES = ["amplicon", "bisulf", "wxs", "chip", "wgs", "dnase", "rnaseq", "atac", "mirnaseq"]
+SPECIES = ["human", "mouse"]
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -93,19 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Make MLE Matrix table for subset of predicted species and library
             mle_matrix = call_data["MLE Matrix"]
-            mle_columns = [
-                "human",
-                "mouse",
-                "amplicon",
-                "bisulf",
-                "wxs",
-                "chip",
-                "wgs",
-                "dnase",
-                "rnaseq",
-                "atac",
-                "mirnaseq",
-            ]
+            mle_columns = SPECIES + LIBRARIES
             for i in mle_columns:
                 self.seqwho_data[s_name][i] = mle_matrix[i]
 
@@ -130,22 +123,32 @@ class MultiqcModule(BaseMultiqcModule):
     def seqwho_general_stats_table(self):
         """Take the parsed stats from the SeqWho report and add it to the
         General Statistics table at the top of the report"""
+        species_scale = mqc_colour.mqc_colour_scale("Dark2")
+        species_colors = [{v: species_scale.get_colour(i, lighten=0.5)} for i, v in enumerate(SPECIES)]
+        library_scale = mqc_colour.mqc_colour_scale("Accent")
+        library_colors = [{v: library_scale.get_colour(i, lighten=0.5)} for i, v in enumerate(LIBRARIES)]
 
         headers = {
             "predicted_species": {
                 "title": "Pred Species",
                 "description": "Predicted species",
+                "cond_formatting_colours": species_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in SPECIES},
+                "scale": False,
             },
             "predicted_library": {
                 "title": "Pred Library",
                 "description": "Predicted library type",
+                "cond_formatting_colours": library_colors,
+                "cond_formatting_rules": {v: [{"s_eq": v}] for v in LIBRARIES},
+                "scale": False,
             },
             "mle": {
                 "title": "Max Likelihood Est",
                 "description": "Overall maximum likelihood estimate (overall)",
                 "min": 0,
                 "format": "{:,.3f}",
-                "scale": False,
+                "scale": "RdYlGn",
             },
             "est_read_number": {
                 "title": f"{config.read_count_prefix} Est Reads",
@@ -164,10 +167,10 @@ class MultiqcModule(BaseMultiqcModule):
         barchart
         """
 
-        cats = ["human", "mouse"]
         config = {
             "id": "seqwho_species_plot",
             "title": "SeqWho: Species",
+            "ylab": "Maximum likelihood estimate",
             "ymax": 1.0,
             "stacking": None,
             "cpswitch": False,
@@ -179,18 +182,18 @@ class MultiqcModule(BaseMultiqcModule):
             name="Species",
             anchor="seqwho_species",
             description="This plot shows the maximum likelihood that a given species matches.",
-            plot=bargraph.plot(self.seqwho_data, cats, config),
+            plot=bargraph.plot(self.seqwho_data, SPECIES, config),
         )
 
     def seqwho_library_plot(self):
         """Take the Maximum Likelihood Library data from the SeqWho report and make a
         barplot"""
 
-        cats = ["amplicon", "bisulf", "wxs", "chip", "wgs", "dnase", "rnaseq", "atac", "mirnaseq"]
         # Config for the plot
         config = {
             "id": "seqwho_sequencing_plot",
             "title": "SeqWho: Library Type",
+            "ylab": "Maximum likelihood estimate",
             "ymax": 1.0,
             "stacking": None,
             "cpswitch": False,
@@ -202,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Library Type",
             anchor="seqwho_library",
             description="This plot shows the maximum likelihood that a given library matches.",
-            plot=bargraph.plot(self.seqwho_data, cats, config),
+            plot=bargraph.plot(self.seqwho_data, LIBRARIES, config),
         )
 
     def seqwho_qualdist_plot(self):
