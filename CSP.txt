@@ -2,6 +2,14 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.20
+    'sha256-3JN7WYkmBPWoaslpNs1/8J4l8Yrmt1joAUokx/oDnpE='
+    'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo='
+    'sha256-eFtZUm5Jg2u3wQlJyx/x3PbSJ5V0b3MsEUZjsJ03/Gw='
+    'sha256-32tFXQa6SSbYsOvzWvptubYxsMWwwX6FxguciADl3PQ='
+    'sha256-R8tufWnhf/sLNJ46PysPiMwDIhO2A5wwT5I85wvkzEs='
+    'sha256-oJVbDDKdMhFYhvM8distAVKI/a7sfRpB3KZ0FgYH/Yg='
+
     # 1.19
     'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # jquery.tablesorter.min.js
     'sha256-/C57+E7g4T7gJpkhM4cBNKuHqniEVV8thOcQDOUy640=' # multiqc/templates/default/assets/js/multiqc_plotting.js
