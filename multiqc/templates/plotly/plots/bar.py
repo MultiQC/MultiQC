@@ -2,6 +2,7 @@
 import copy
 import dataclasses
 import logging
+import re
 from typing import Dict, List
 
 import math
@@ -41,13 +42,48 @@ def plot(
     return p.add_to_report(report)
 
 
-@dataclasses.dataclass
-class Dataset(BaseDataset):
-    cats: List[Dict]
-    samples: List[str]
+def _split_long_string(s: str, max_width=80) -> List[str]:
+    """
+    Split string into lines of max_width characters
+    """
+    lines = []
+    current_line = ""
+    words = re.split(r"(\W+)", s)
+    for word in words:
+        if len(current_line + word) <= max_width:
+            current_line += word
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines
 
 
 class BarPlot(Plot):
+    @dataclasses.dataclass
+    class Dataset(BaseDataset):
+        cats: List[Dict]
+        samples: List[str]
+
+        @staticmethod
+        def create(
+            dataset: BaseDataset,
+            cats: List[Dict],
+            samples: List[str],
+        ) -> "BarPlot.Dataset":
+            for cat in cats:
+                cat["name"] = "<br>".join(_split_long_string(cat["name"]))
+            ds = BarPlot.Dataset(
+                **dataset.__dict__,
+                cats=cats,
+                samples=samples,
+            )
+            return ds
+
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
         # swap x and y axes parameters: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
         for x_param in ["xmin", "xmax", "xCeiling"]:
@@ -59,12 +95,13 @@ class BarPlot(Plot):
             raise ValueError("Number of datasets and samples lists do not match")
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[Dataset] = [
-            Dataset(**d.__dict__, cats=cats, samples=samples)
+        self.datasets: List[BarPlot.Dataset] = [
+            BarPlot.Dataset.create(d, cats=cats, samples=samples)
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
-        MIN_PLOT_HEIGHT = 300
+        # set height to be proportional to the number of samples
+        MIN_PLOT_HEIGHT = 400
         MAX_PLOT_HEIGHT = 2560
         px_per_sample = 50
         if max_n_samples > 5:
@@ -76,6 +113,11 @@ class BarPlot(Plot):
         if max_n_samples > 30:
             px_per_sample = 20
         height = max_n_samples * px_per_sample
+
+        # set height to be proportional to the number of categories
+        max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
+        height = min(800, max(height, 19 * max_n_cats + 140))
+
         height = min(MAX_PLOT_HEIGHT, height)
         height = max(MIN_PLOT_HEIGHT, height)
         self.layout.height = height
