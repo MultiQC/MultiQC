@@ -119,6 +119,7 @@ class HeatmapPlot(Plot):
         self.layout.xaxis.showgrid = False
         self.layout.yaxis.showgrid = False
         self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
+        self.layout.yaxis.ticklabelposition = "outside right"
 
         self.min = self.pconfig.get("min", None)
         if self.min is None:
