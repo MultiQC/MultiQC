@@ -768,7 +768,8 @@ samtools/rmdup:
 sargasso:
   fn: "overall_filtering_summary.txt"
 seqwho:
-  fn: "SeqWho_call.json"
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
