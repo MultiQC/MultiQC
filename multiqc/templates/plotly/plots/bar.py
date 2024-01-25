@@ -139,6 +139,7 @@ class BarPlot(Plot):
                     categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
                     automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
+                    ticksuffix=None,
                 ),
                 xaxis=dict(
                     title=dict(text=self.layout.yaxis.title.text),
