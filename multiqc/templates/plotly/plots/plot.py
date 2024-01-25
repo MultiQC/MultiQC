@@ -141,12 +141,10 @@ class Plot(ABC):
                 font=dict(size=20),
             ),
             xaxis=dict(
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-                tickfont=dict(
-                    size=10,
-                    color="rgba(0,0,0,0.5)",
-                ),
+                gridcolor="rgba(0,0,0,0.05)",
+                zerolinecolor="rgba(0,0,0,0.05)",
+                color="rgba(0,0,0,0.4)",  # axis labels
+                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
@@ -154,12 +152,10 @@ class Plot(ABC):
                 hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
             ),
             yaxis=dict(
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-                tickfont=dict(
-                    size=10,
-                    color="rgba(0,0,0,0.5)",
-                ),
+                gridcolor="rgba(0,0,0,0.05)",
+                zerolinecolor="rgba(0,0,0,0.05)",
+                color="rgba(0,0,0,0.4)",  # axis labels
+                tickfont=dict(size=10, color="rgba(0,0,0,1)"),
                 title=dict(text=self.pconfig.get("ylab") or (self.datasets[0].ylab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
                 range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
