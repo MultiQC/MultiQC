@@ -20,6 +20,7 @@
 ### New modules
 
 - [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
+
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
 
 - [**ganon**](https://pirovc.github.io/ganon/)
