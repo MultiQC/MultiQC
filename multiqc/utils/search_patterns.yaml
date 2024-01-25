@@ -243,8 +243,7 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   contents: "This is cutadapt"
-  # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
-  shared: true
+  num_lines: 100
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
