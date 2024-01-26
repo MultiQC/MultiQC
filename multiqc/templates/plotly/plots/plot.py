@@ -262,7 +262,7 @@ class Plot(ABC):
     def interactive_plot(self, report) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self._control_panel()
+        html += self.__control_panel()
 
         HANDLE_HEIGHT = 10
         height_style = f'style="height:{self.layout.height + HANDLE_HEIGHT}px"' if self.layout.height else ""
@@ -293,7 +293,7 @@ class Plot(ABC):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self._control_panel()
+            html += self.__control_panel()
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
@@ -381,7 +381,7 @@ class Plot(ABC):
             export_btn = self._btn(cls="export-plot", label="Export Plot")
         return [switch_buttons, export_btn]
 
-    def _control_panel(self) -> str:
+    def __control_panel(self) -> str:
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """

@@ -187,37 +187,40 @@ class HeatmapPlot(Plot):
         d["square"] = self.square
         return d
 
-    def _control_panel(self) -> str:
+    def buttons(self) -> List[str]:
         """
         Heatmap-specific controls, only for the interactive version.
         """
-        if self.flat:
-            return ""
+        buttons = super().buttons()
 
-        # find min val across all datasets across all cols and rows
-        return f"""
-        <div class="btn-group hc_switch_group">
-            <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{self.id}" disabled="disabled">
-                <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
-            </button>
-        </div>
-        <div class="mqc_hcplot_range_sliders">
-            <div>
-                <label for="{self.id}_range_slider_min_txt">Min:</label>
-                <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
-                    value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
-                <input id="{self.id}_range_slider_min" type="range" 
-                    value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
+        if not self.flat:
+            # find min val across all datasets across all cols and rows
+            buttons.append(
+                f"""
+            <div class="btn-group hc_switch_group">
+                <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{self.id}" disabled="disabled">
+                    <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
+                </button>
             </div>
-            <div>
-                <label for="{self.id}_range_slider_max_txt">Max:</label>
-                <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
-                    value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
-                <input id="{self.id}_range_slider_max" type="range" 
-                    value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
+            <div class="mqc_hcplot_range_sliders">
+                <div>
+                    <label for="{self.id}_range_slider_min_txt">Min:</label>
+                    <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
+                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
+                    <input id="{self.id}_range_slider_min" type="range" 
+                        value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
+                </div>
+                <div>
+                    <label for="{self.id}_range_slider_max_txt">Max:</label>
+                    <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
+                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
+                    <input id="{self.id}_range_slider_max" type="range" 
+                        value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
+                </div>
             </div>
-        </div>
-        """
+            """
+            )
+        return buttons
 
     def create_figure(
         self,
