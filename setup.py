@@ -116,6 +116,7 @@ setup(
             "filtlong = multiqc.modules.filtlong:MultiqcModule",
             "freyja = multiqc.modules.freyja:MultiqcModule",
             "gffcompare = multiqc.modules.gffcompare:MultiqcModule",
+            "ganon = multiqc.modules.ganon:MultiqcModule",
             "gatk = multiqc.modules.gatk:MultiqcModule",
             "goleft_indexcov = multiqc.modules.goleft_indexcov:MultiqcModule",
             "gopeaks = multiqc.modules.gopeaks:MultiqcModule",

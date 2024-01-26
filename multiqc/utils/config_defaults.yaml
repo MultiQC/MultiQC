@@ -655,6 +655,10 @@ module_order:
   - hicpro:
       module_tag:
         - hi-c
+  - ganon:
+      module_tag:
+        - DNA
+        - metagenomics
   - salmon:
       module_tag:
         - RNA
