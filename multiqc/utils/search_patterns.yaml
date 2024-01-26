@@ -243,7 +243,7 @@ conpair/contamination:
   num_lines: 3
 cutadapt:
   contents: "This is cutadapt"
-  num_lines: 2
+  num_lines: 100
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
