@@ -1202,7 +1202,7 @@ function addLogo(imageDataUrl, callback) {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black text
     ctx.globalAlpha = 0.5; // Adjust for semi-transparency
 
-    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 10);
+    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 5);
     // Callback with the combined image
     callback(canvas.toDataURL());
   };

@@ -174,6 +174,8 @@ class Plot(ABC):
                 pad=5,  # pad sample names in a bar graph a bit
                 t=50,  # more compact title
                 r=15,  # remove excessive whitespace on the right
+                b=65,  # remove excessive whitespace on the bottom
+                l=60,  # remove excessive whitespace on the left
             ),
             hoverlabel=dict(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
@@ -262,7 +264,8 @@ class Plot(ABC):
 
         html += self._control_panel()
 
-        height_style = f'style="height:{self.layout.height}px"' if self.layout.height else ""
+        HANDLE_HEIGHT = 10
+        height_style = f'style="height:{self.layout.height + HANDLE_HEIGHT}px"' if self.layout.height else ""
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
             <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>
