@@ -1215,10 +1215,9 @@ function addLogo(imageDataUrl, callback) {
     ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
 
     // Text properties
-    ctx.font = "12px Lucida Grande"; // Set the desired font-size and type
+    ctx.font = "10px Lucida Grande"; // Set the desired font-size and type
     ctx.textAlign = "right";
-    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black text
-    ctx.globalAlpha = 0.5; // Adjust for semi-transparency
+    ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
 
     ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 5);
     // Callback with the combined image

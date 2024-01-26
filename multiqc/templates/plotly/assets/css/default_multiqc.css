@@ -1021,7 +1021,7 @@ g.annotation {
   position: absolute;
   bottom: 10px;
   right: 4px;
-  margin-bottom: 0px;
+  margin-bottom: 0;
   padding: 0;
   color: #999999;
   font-size: 9px;
