@@ -318,7 +318,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
         if violin_switch:
             html += """
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
-                <span class="glyphicon glyphicon-stats"></span> Switch to violin plot
+                <span class="glyphicon glyphicon-align-left"></span> Switch to violin plot
             </button>
             """.format(tid=table_id)
 
@@ -348,7 +348,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
-                <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
+                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Plot
             </button>
             """.format(tid=table_id)
 

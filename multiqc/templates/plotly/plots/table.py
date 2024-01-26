@@ -285,14 +285,14 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
-                <span class="glyphicon glyphicon glyphicon-stats"></span> Scatter plot
+                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """.format(tid=table_id)
 
         if violin_switch:
             html += """
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
-                <span class="glyphicon glyphicon-stats"></span> Violin plot
+                <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """.format(tid=table_id)
 
