@@ -342,9 +342,9 @@ $(function () {
       }
     });
 
-    function data_url_to_blob(data_url, mime) {
+    function dataUrlToBlob(dataUrl, mime) {
       // Split the data URL at the comma
-      const byte_str = atob(data_url.split(",")[1]);
+      const byte_str = atob(dataUrl.split(",")[1]);
       const byte_numbers = new Array(byte_str.length);
       for (let i = 0; i < byte_str.length; i++) {
         byte_numbers[i] = byte_str.charCodeAt(i);
@@ -371,29 +371,30 @@ $(function () {
         checked_plots.each(function () {
           const target = $(this).val();
 
-          if (checked_plots.length <= zip_threshold) {
-            // Not many plots to export, just trigger a download for each:"
-            Plotly.Snapshot.downloadImage(target, {
+          promises.push(
+            Plotly.toImage(target, {
               format: format,
               width: f_width / f_scale,
               height: f_height / f_scale,
               scale: f_scale,
-              filename: target,
-            });
-          } else {
-            // Lots of plots - add to a zip file for download:
-            promises.push(
-              Plotly.toImage(target, {
-                format: format,
-                width: f_width,
-                height: f_height,
-                imageDataOnly: true, // Otherwise will return a Data URL
-              }).then(function (content) {
-                const fname = target + "." + format;
-                zip.file(fname, content, { base64: format !== "svg" });
-              }),
-            );
-          }
+            }).then(function (img) {
+              addLogo(img, function (imageWithLogo) {
+                if (checked_plots.length <= zip_threshold) {
+                  // Not many plots to export, just trigger a download for each:"
+                  const blob = dataUrlToBlob(imageWithLogo, mime);
+                  saveAs(blob, target + "." + format);
+                } else {
+                  // Lots of plots - add to a zip file for download:
+                  const fname = target + "." + format;
+                  // strip off the data: url prefix to get just the base64-encoded bytes
+                  let data;
+                  if (format === "png") data = imageWithLogo.replace(/^data:image\/png;base64,/, "");
+                  else if (format === "svg") data = imageWithLogo.replace(/^data:image\/svg+xml;base64,/, "");
+                  zip.file(fname, data, { base64: format !== "svg" });
+                }
+              });
+            }),
+          );
         });
         if (checked_plots.length > zip_threshold) {
           // Wait for all promises to resolve
@@ -1180,4 +1181,30 @@ function load_mqc_config(name) {
 
   // Trigger loaded event to initialise plots
   $(document).trigger("mqc_config_loaded");
+}
+
+function addLogo(imageDataUrl, callback) {
+  // Append "watermark" to the image
+  let plotlyImage = new Image();
+  plotlyImage.onload = function () {
+    let canvas = document.createElement("canvas");
+    let ctx = canvas.getContext("2d");
+
+    // Set canvas size to double for retina display
+    canvas.width = plotlyImage.width;
+    canvas.height = plotlyImage.height; // additional height for the text
+
+    ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
+
+    // Text properties
+    ctx.font = "12px Lucida Grande"; // Set the desired font-size and type
+    ctx.textAlign = "right";
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent black text
+    ctx.globalAlpha = 0.5; // Adjust for semi-transparency
+
+    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 10);
+    // Callback with the combined image
+    callback(canvas.toDataURL());
+  };
+  plotlyImage.src = imageDataUrl;
 }
