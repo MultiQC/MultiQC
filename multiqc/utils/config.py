@@ -94,6 +94,10 @@ plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
 lineplot_style: str
+lineplot_max_samples: int
+violin_downsample_after: int
+violin_min_threshold_outliers: int
+violin_min_threshold_no_points: int
 collapse_tables: bool
 max_table_rows: int
 table_columns_visible: Dict

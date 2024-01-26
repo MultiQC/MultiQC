@@ -26,9 +26,6 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
     return p.add_to_report(report)
 
 
-THRESHOLD_BEFORE_OUTLIERS = 50
-
-
 class ViolinPlot(Plot):
     @dataclasses.dataclass
     class Dataset(BaseDataset):
@@ -37,6 +34,7 @@ class ViolinPlot(Plot):
         violin_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         scatter_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         all_samples: List[str]  # unique list of all samples in this dataset
+        show_points: False
         show_only_outliers: False
 
         @staticmethod
@@ -53,6 +51,7 @@ class ViolinPlot(Plot):
                 scatter_values_by_sample_by_metric=dict(),
                 all_samples=[],
                 show_only_outliers=False,
+                show_points=True,
             )
 
             all_samples = set()
@@ -104,19 +103,23 @@ class ViolinPlot(Plot):
                         xmax += (xmax - xmin) * 0.005
                         header["xaxis"]["range"] = [xmin, xmax]
 
-                ds.show_only_outliers = len(value_by_sample) > THRESHOLD_BEFORE_OUTLIERS
-                if not ds.show_only_outliers:
+                ds.show_points = len(value_by_sample) <= config.violin_min_threshold_no_points
+                ds.show_only_outliers = len(value_by_sample) > config.violin_min_threshold_outliers
+
+                if not ds.show_points:  # Do not add any interactive points
+                    scatter_values_by_sample = {}
+                elif not ds.show_only_outliers:
                     scatter_values_by_sample = {}  # will use the violin values
                 else:
                     if not values_are_numeric:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {ds.show_only_outliers}. "
                             f"As values are not numeric, will not add interactive points."
                         )
                         scatter_values_by_sample = {}
                     else:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {THRESHOLD_BEFORE_OUTLIERS}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {ds.show_only_outliers}. "
                             f"Will add interactive points only for the outlier values."
                         )
                         samples = list(value_by_sample.keys())
@@ -138,7 +141,7 @@ class ViolinPlot(Plot):
 
                 # Now sort and downsample values to keep max 2000 points for each metric
                 violin_values_by_sample = value_by_sample
-                max_violin_points = getattr(config, "max_violin_points")
+                max_violin_points = config.violin_downsample_after
                 if max_violin_points is not None and len(violin_values_by_sample) > max_violin_points:
                     logger.debug(
                         f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)} > {max_violin_points}. "
@@ -339,7 +342,6 @@ class ViolinPlot(Plot):
         d.update(
             {
                 "scatter_trace_params": self.scatter_trace_params,
-                "show_only_outliers": any(ds.show_only_outliers for ds in self.datasets),
                 "static": self.show_table and self.show_table_by_default,
             }
         )

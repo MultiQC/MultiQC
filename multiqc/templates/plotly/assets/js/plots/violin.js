@@ -2,7 +2,6 @@ class ViolinPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.scatterTraceParams = dump["scatter_trace_params"];
-    this.showOnlyOutliers = dump["show_only_outliers"];
   }
 
   activeDatasetSize() {
@@ -12,21 +11,24 @@ class ViolinPlot extends Plot {
 
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
-    if (this.showOnlyOutliers)
-      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
-
     let layout = this.layout;
     const traceParams = this.traceParams;
     const scatterTraceParams = this.scatterTraceParams;
 
     let dataset = this.datasets[this.activeDatasetIdx];
+
+    if (dataset["show_points"] && dataset["show_only_outliers"])
+      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
+
     let metrics = dataset["metrics"];
     if (metrics.length === 0) return [];
     let headerByMetric = dataset["header_by_metric"];
     let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
-    let scatterValuesBySampleByMetric;
-    if (this.showOnlyOutliers) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
-    else scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
+    let scatterValuesBySampleByMetric = {};
+    if (dataset["show_points"]) {
+      if (dataset["show_only_outliers"]) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
+      else scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
+    }
 
     let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
@@ -60,7 +62,7 @@ class ViolinPlot extends Plot {
         });
       });
       violinValuesBySampleByMetric = filteredViolinValuesBySampleByMetric;
-      if (this.showOnlyOutliers) {
+      if (dataset["show_points"] && dataset["show_only_outliers"]) {
         metrics.map((metric) => {
           filteredScatterValuesBySampleByMetric[metric] = {};
           Object.keys(scatterValuesBySampleByMetric[metric]).map((sample) => {
@@ -142,84 +144,86 @@ class ViolinPlot extends Plot {
       });
     });
 
-    // We want to select points on all violins belonging to this specific sample.
-    // Points are rendered each as a separate trace, so we need to collect
-    // each trace (curve) number for each point by sample.
-    let currentCurveNumber = traces.length;
-    let curveNumbersBySample = {};
-    let curveAxisBySample = {};
-    let scatterDataByMetric = [];
-    metrics.map((metric, metricIdx) => {
-      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-      let valuesBySample = scatterValuesBySampleByMetric[metric];
+    if (dataset["show_points"]) {
+      // We want to select points on all violins belonging to this specific sample.
+      // Points are rendered each as a separate trace, so we need to collect
+      // each trace (curve) number for each point by sample.
+      let currentCurveNumber = traces.length;
+      let curveNumbersBySample = {};
+      let curveAxisBySample = {};
+      let scatterDataByMetric = [];
+      metrics.map((metric, metricIdx) => {
+        let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+        let valuesBySample = scatterValuesBySampleByMetric[metric];
 
-      let scatterData = [];
-      Object.entries(valuesBySample).map(([sample, value]) => {
-        scatterData.push([sample, value]);
+        let scatterData = [];
+        Object.entries(valuesBySample).map(([sample, value]) => {
+          scatterData.push([sample, value]);
 
-        if (!curveNumbersBySample[sample]) {
-          curveNumbersBySample[sample] = [];
-          curveAxisBySample[sample] = [];
-        }
-        curveNumbersBySample[sample].push(currentCurveNumber++);
-        curveAxisBySample[sample].push("x" + axisKey + "y" + axisKey);
+          if (!curveNumbersBySample[sample]) {
+            curveNumbersBySample[sample] = [];
+            curveAxisBySample[sample] = [];
+          }
+          curveNumbersBySample[sample].push(currentCurveNumber++);
+          curveAxisBySample[sample].push("x" + axisKey + "y" + axisKey);
+        });
+        scatterDataByMetric.push(scatterData);
       });
-      scatterDataByMetric.push(scatterData);
-    });
 
-    let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
+      let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
 
-    let seed = 1;
-    function random() {
-      // Math.random does not have a seed, so we use this
-      let x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
-    }
-    let scatters = [];
-    // Add scatter plots on top of violins to show individual points
-    // Plotly supports showing points automatically with `points="all"`,
-    // however, it's problematic to give each sample individual color,
-    // and set up hover events to highlight all points for a sample. So as
-    // a workaround, we add a separate scatter plot. One thing to solve later
-    // would be to be able to only show outliers, not all points, as the violin
-    // plot can do that automatically, and we lose this functionality here.
-    scatterDataByMetric.map((scatterData, metricIdx) => {
-      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+      let seed = 1;
+      function random() {
+        // Math.random does not have a seed, so we use this
+        let x = Math.sin(seed++) * 10000;
+        return x - Math.floor(x);
+      }
+      let scatters = [];
+      // Add scatter plots on top of violins to show individual points
+      // Plotly supports showing points automatically with `points="all"`,
+      // however, it's problematic to give each sample individual color,
+      // and set up hover events to highlight all points for a sample. So as
+      // a workaround, we add a separate scatter plot. One thing to solve later
+      // would be to be able to only show outliers, not all points, as the violin
+      // plot can do that automatically, and we lose this functionality here.
+      scatterDataByMetric.map((scatterData, metricIdx) => {
+        let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
 
-      scatterData.map(([sample, value]) => {
-        let state = sampleSettings[allSamples.indexOf(sample)];
-        let params = JSON.parse(JSON.stringify(scatterTraceParams)); // deep copy
+        scatterData.map(([sample, value]) => {
+          let state = sampleSettings[allSamples.indexOf(sample)];
+          let params = JSON.parse(JSON.stringify(scatterTraceParams)); // deep copy
 
-        let color = "black"; // trace_params["marker"]["color"];
-        let size = params.marker.size;
-        if (highlightingEnabled) {
-          color = state.highlight ?? "#cccccc";
-          size = state.highlight !== null ? 10 : size;
-        }
+          let color = "black"; // trace_params["marker"]["color"];
+          let size = params.marker.size;
+          if (highlightingEnabled) {
+            color = state.highlight ?? "#cccccc";
+            size = state.highlight !== null ? 10 : size;
+          }
 
-        let customData = {
-          curveNumbers: curveNumbersBySample[sample],
-          curveAxis: curveAxisBySample[sample],
-        };
+          let customData = {
+            curveNumbers: curveNumbersBySample[sample],
+            curveAxis: curveAxisBySample[sample],
+          };
 
-        const jitter = 0.3;
-        scatters.push({
-          type: "scatter",
-          x: [value],
-          y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
-          text: [state.name ?? sample],
-          xaxis: "x" + axisKey,
-          yaxis: "y" + axisKey,
-          customdata: customData,
-          ...params,
-          marker: {
-            color: color,
-            size: size,
-          },
+          const jitter = 0.3;
+          scatters.push({
+            type: "scatter",
+            x: [value],
+            y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
+            text: [state.name ?? sample],
+            xaxis: "x" + axisKey,
+            yaxis: "y" + axisKey,
+            customdata: customData,
+            ...params,
+            marker: {
+              color: color,
+              size: size,
+            },
+          });
         });
       });
-    });
-    traces = traces.concat(scatters);
+      traces = traces.concat(scatters);
+    }
     return traces;
   }
 
