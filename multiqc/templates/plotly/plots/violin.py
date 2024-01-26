@@ -452,7 +452,8 @@ class ViolinPlot(Plot):
 
             if add_scatter:
                 scatter_params = copy.deepcopy(self.scatter_trace_params)
-                for sample, value in scatter_values_by_sample_by_metric.items():
+                scatter_values_by_sample = scatter_values_by_sample_by_metric[metric]
+                for sample, value in scatter_values_by_sample.items():
                     # add vertical jitter (not working in python version currently)
                     y = float(metric_idx)
                     # y += random.uniform(-0.2, 0.2)
