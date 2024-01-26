@@ -378,21 +378,39 @@ $(function () {
               height: f_height / f_scale,
               scale: f_scale,
             }).then(function (img) {
-              addLogo(img, function (imageWithLogo) {
-                if (checked_plots.length <= zip_threshold) {
-                  // Not many plots to export, just trigger a download for each:"
-                  const blob = dataUrlToBlob(imageWithLogo, mime);
-                  saveAs(blob, target + "." + format);
-                } else {
-                  // Lots of plots - add to a zip file for download:
-                  const fname = target + "." + format;
-                  // strip off the data: url prefix to get just the base64-encoded bytes
-                  let data;
-                  if (format === "png") data = imageWithLogo.replace(/^data:image\/png;base64,/, "");
-                  else if (format === "svg") data = imageWithLogo.replace(/^data:image\/svg+xml;base64,/, "");
-                  zip.file(fname, data, { base64: format !== "svg" });
-                }
-              });
+              if (format === "svg") {
+                Plotly.Snapshot.downloadImage(target, {
+                  format: format,
+                  width: f_width / f_scale,
+                  height: f_height / f_scale,
+                  scale: f_scale,
+                  filename: target,
+                });
+                // if (checked_plots.length <= zip_threshold) {
+                //   // Not many plots to export, just trigger a download for each
+                //   const data = img.replace(/^data:image\/svg\+xml;base64,/, "");
+                //   const blob = new Blob([data], { type: mime });
+                //   saveAs(blob, target + "." + format);
+                // } else {
+                //   // Lots of plots - add to a zip file for download
+                //   const fname = target + "." + format;
+                //   zip.file(fname, img, { base64: false });
+                // }
+              } else {
+                // Can add logo to a PNG image
+                addLogo(img, function (imageWithLogo) {
+                  if (checked_plots.length <= zip_threshold) {
+                    // Not many plots to export, just trigger a download for each:"
+                    const blob = dataUrlToBlob(imageWithLogo, mime);
+                    saveAs(blob, target + "." + format);
+                  } else {
+                    // Lots of plots - add to a zip file for download:
+                    const fname = target + "." + format;
+                    const data = imageWithLogo.replace(/^data:image\/png;base64,/, "");
+                    zip.file(fname, data, { base64: true });
+                  }
+                });
+              }
             }),
           );
         });
