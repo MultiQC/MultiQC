@@ -3,6 +3,7 @@ import copy
 import dataclasses
 import logging
 import re
+from collections import defaultdict
 from typing import Dict, List
 
 import math
@@ -226,11 +227,9 @@ class BarPlot(Plot):
         return fig
 
     def save_data_file(self, dataset: Dataset) -> None:
-        fdata = {}
+        val_by_cat_by_sample = defaultdict(dict)
         for cat in dataset.cats:
             for d_idx, d_val in enumerate(cat["data"]):
                 s_name = dataset.samples[d_idx]
-                if s_name not in fdata:
-                    fdata[s_name] = dict()
-                fdata[s_name][cat["name"]] = d_val
-        util_functions.write_data_file(fdata, dataset.uid)
+                val_by_cat_by_sample[s_name][cat["name"]] = d_val
+        util_functions.write_data_file(val_by_cat_by_sample, dataset.uid)

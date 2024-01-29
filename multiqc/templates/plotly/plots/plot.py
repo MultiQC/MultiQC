@@ -299,7 +299,7 @@ class Plot(ABC):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.pconfig.get("save_data_file", True):
+            if self.pconfig.get("save_data_file", True) and self.id != "general_stats_table":
                 self.save_data_file(dataset)
 
             html += self._fig_to_static_html(

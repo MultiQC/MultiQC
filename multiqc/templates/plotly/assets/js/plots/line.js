@@ -16,11 +16,12 @@ class LinePlot extends Plot {
   }
 
   prepData() {
+    // Prepare data to either build Plotly traces or export as a file
     let lines = this.datasets[this.activeDatasetIdx].lines;
 
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
-    if (sampleSettings == null) return []; // All series are hidden, do not render the graph.
+
     lines = lines.filter((line, idx) => {
       line.name = sampleSettings[idx].name ?? line.name;
       line.highlight = sampleSettings[idx].highlight;
@@ -107,7 +108,7 @@ class LinePlot extends Plot {
     let [samples, lines] = this.prepData();
 
     // check if all lines have the same x values
-    let sameX = true;
+    let sharedX = true;
     let x = null;
     lines.forEach((line) => {
       let thisX;
@@ -119,31 +120,23 @@ class LinePlot extends Plot {
       if (x === null) {
         x = thisX;
       } else if (x.length !== thisX.length) {
-        sameX = false;
+        sharedX = false;
       } else if (x.some((v, i) => v !== thisX[i])) {
-        sameX = false;
+        sharedX = false;
       }
     });
 
-    let delim = format === "tsv" ? "\t" : ",";
+    let sep = format === "tsv" ? "\t" : ",";
     let csv = "";
-    if (sameX) {
-      // can create a CSV where columns are samples, and rows are x values, and cells are y values
-      csv += "Sample" + delim + lines.map((line) => line.name).join(delim) + "\n";
-      for (let i = 0; i < x.length; i++) {
-        csv += x[i] + delim + lines.map((line) => line.data[i][1]).join(delim) + "\n";
-      }
-    } else {
-      // can create a CSV where columns are: sample - x - y
-      csv += "Sample" + delim + "X" + delim + "Y" + "\n";
+    if (sharedX) {
+      csv += "Sample" + sep + x.join(sep) + "\n";
       lines.forEach((line) => {
-        csv +=
-          line.name +
-          delim +
-          line.data.map((x) => x[0]).join(";") +
-          delim +
-          line.data.map((x) => x[1]).join(";") +
-          "\n";
+        csv += line.name + sep + line.data.map((x) => x[1]).join(sep) + "\n";
+      });
+    } else {
+      lines.forEach((line) => {
+        csv += line.name + sep + "X" + sep + line.data.map((x) => x[0]).join(sep) + "\n";
+        csv += line.name + sep + "Y" + sep + line.data.map((x) => x[1]).join(sep) + "\n";
       });
     }
     return csv;

@@ -429,7 +429,6 @@ $(function () {
       else if ($("#mqc_data_download").is(":visible")) {
         const format = $("#mqc_export_data_ft").val();
         console.log("Exporting data in " + format + " format");
-        const sep = format === "tsv" ? "\t" : ",";
         let skipped_plots = 0;
         checked_plots.each(function () {
           try {

@@ -213,11 +213,11 @@ class LinePlot(Plot):
         return fig
 
     def save_data_file(self, dataset: Dataset) -> None:
-        fdata = dict()
+        y_by_x_by_sample = dict()
         last_cats = None
         shared_cats = True
         for line in dataset.lines:
-            fdata[line["name"]] = dict()
+            y_by_x_by_sample[line["name"]] = dict()
 
             # Check to see if all categories are the same
             if len(line["data"]) > 0 and isinstance(line["data"][0], list):
@@ -228,25 +228,27 @@ class LinePlot(Plot):
 
             for i, x in enumerate(line["data"]):
                 if isinstance(x, list):
-                    fdata[line["name"]][x[0]] = x[1]
+                    y_by_x_by_sample[line["name"]][x[0]] = x[1]
                 else:
                     try:
-                        fdata[line["name"]][self.categories[i]] = x
+                        y_by_x_by_sample[line["name"]][self.categories[i]] = x
                     except (ValueError, KeyError, IndexError):
-                        fdata[line["name"]][str(i)] = x
+                        y_by_x_by_sample[line["name"]][str(i)] = x
 
         # Custom tsv output if the x-axis varies
-        if not shared_cats and config.data_format == "tsv":
+        if not shared_cats and config.data_format in ["tsv", "csv"]:
+            sep = "\t" if config.data_format == "tsv" else ","
             fout = ""
             for line in dataset.lines:
-                fout += "\t" + "\t".join([str(x[0]) for x in line["data"]])
-                fout += "\n{}\t".format(line["name"])
-                fout += "\t".join([str(x[1]) for x in line["data"]])
-                fout += "\n"
-            with io.open(os.path.join(config.data_dir, f"{dataset.uid}.txt"), "w", encoding="utf-8") as f:
+                fout += line["name"] + sep + "X" + sep + sep.join([str(x[0]) for x in line["data"]]) + "\n"
+                fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
+
+            fn = f"{dataset.uid}.{config.data_format_extensions[config.data_format]}"
+            fpath = os.path.join(config.data_dir, fn)
+            with io.open(fpath, "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
-            util_functions.write_data_file(fdata, dataset.uid)
+            util_functions.write_data_file(y_by_x_by_sample, dataset.uid)
 
 
 def convert_dash_style(dash_style: str) -> str:

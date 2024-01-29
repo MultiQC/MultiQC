@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -242,5 +243,11 @@ class HeatmapPlot(Plot):
             layout=layout,
         )
 
-    def save_data_file(self, dataset: BaseDataset) -> None:
-        pass
+    def save_data_file(self, dataset: Dataset) -> None:
+        data = [
+            ["."] + dataset.xcats,
+        ]
+        for ycat, row in zip(dataset.ycats, dataset.rows):
+            data.append([ycat] + row)
+
+        util_functions.write_data_file(data, dataset.uid)

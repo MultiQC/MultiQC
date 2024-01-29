@@ -14,8 +14,8 @@ class HeatmapPlot extends Plot {
     return rows[0].length; // no columns in a row
   }
 
-  // Constructs and returns traces for the Plotly plot
-  buildTraces() {
+  prepData() {
+    // Prepare data to either build Plotly traces or export as a file
     let rows = this.datasets[this.activeDatasetIdx]["rows"];
     let xcats = this.datasets[this.activeDatasetIdx]["xcats"];
     let ycats = this.datasets[this.activeDatasetIdx]["ycats"];
@@ -53,6 +53,12 @@ class HeatmapPlot extends Plot {
       rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
     }
 
+    return [rows, xcats, ycats];
+  }
+
+  buildTraces() {
+    let [rows, xcats, ycats] = this.prepData();
+
     let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
 
     let heatmap = {
@@ -63,6 +69,18 @@ class HeatmapPlot extends Plot {
       ...params,
     };
     return [heatmap];
+  }
+
+  exportData(format) {
+    let [rows, xcats, ycats] = this.prepData();
+
+    let sep = format === "tsv" ? "\t" : ",";
+
+    let csv = [".", ...xcats].join(sep) + "\n";
+    for (let i = 0; i < rows.length; i++) {
+      csv += [ycats[i], ...rows[i]].join(sep) + "\n";
+    }
+    return csv;
   }
 
   resize(newHeight) {

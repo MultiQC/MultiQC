@@ -5,15 +5,19 @@
 
 import io
 import json
+import logging
 import os
 import shutil
 import sys
 import time
 import datetime
+from typing import Dict, List
 
 import yaml
 
 from . import config
+
+log = logging.getLogger(__name__)
 
 
 def robust_rmtree(path, logger=None, max_retries=10):
@@ -40,74 +44,100 @@ def robust_rmtree(path, logger=None, max_retries=10):
     shutil.rmtree(path)
 
 
-def write_data_file(data, fn, sort_cols=False, data_format=None):
-    """Write a data file to the report directory. Will not do anything
+def write_data_file(
+    data: Dict[str, Dict | List] | List[Dict],
+    fn: str,
+    sort_cols=False,
+    data_format=None,
+):
+    """
+    Write a data file to the report directory. Will not do anything
     if config.data_dir is not set.
-    :param: data - a 2D dict, first key sample name (row header),
-            second key field (column header).
+    :param: data - either: a 2D dict, first key sample name (row header),
+        second key field (column header); a list of dicts; or a list of lists
     :param: fn - Desired filename. Directory will be prepended automatically.
     :param: sort_cols - Sort columns alphabetically
     :param: data_format - Output format. Defaults to config.data_format (usually tsv)
-    :return: None"""
+    :return: None
+    """
 
-    if config.data_dir is not None:
-        # Get data format from config
-        if data_format is None:
-            data_format = config.data_format
+    if config.data_dir is None:
+        return
 
-        # JSON encoder class to handle lambda functions
-        class MQCJSONEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if callable(obj):
-                    try:
-                        return obj(1)
-                    except Exception:
-                        return None
-                return json.JSONEncoder.default(self, obj)
+    # Get data format from config
+    if data_format is None:
+        data_format = config.data_format
 
-        # Some metrics can't be coerced to tab-separated output, test and handle exceptions
-        if data_format not in ["json", "yaml"]:
-            # attempt to reshape data to tsv
-            try:
-                # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
-                headers = []
-                for d in data.values():
-                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
-                        continue
+    # JSON encoder class to handle lambda functions
+    class MQCJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if callable(obj):
+                # noinspection PyBroadException
+                try:
+                    return obj(1)
+                except Exception:
+                    return None
+            return json.JSONEncoder.default(self, obj)
+
+    body = None
+    # Some metrics can't be coerced to tab-separated output, test and handle exceptions
+    if data_format in ["tsv", "csv"]:
+        sep = "\t" if data_format == "tsv" else ","
+        # Attempt to reshape data to tsv
+        # noinspection PyBroadException
+        try:
+            # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+            headers = []
+            rows = []
+
+            for d in data.values() if isinstance(data, dict) else data:
+                if not d or (isinstance(d, list) and isinstance(d[0], dict)):
+                    continue
+                if isinstance(d, dict):
                     for h in d.keys():
                         if h not in headers:
                             headers.append(h)
+            if headers:
                 if sort_cols:
                     headers = sorted(headers)
-
                 headers_str = [str(item) for item in headers]
-                # Add Sample header in to first element
-                headers_str.insert(0, "Sample")
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    headers_str.insert(0, "Sample")
+                rows.append(sep.join(headers_str))
 
-                # Get the rows
-                rows = ["\t".join(headers_str)]
-                for sn in sorted(data.keys()):
-                    # Make a list starting with the sample name, then each field in order of the header cols
-                    line = [str(sn)] + [str(data[sn].get(h, "")) for h in headers]
-                    rows.append("\t".join(line))
+            # The rest of the rows
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+                # Make a list starting with the sample name, then each field in order of the header cols
+                if headers:
+                    line = [str(d.get(h, "")) for h in headers]
+                else:
+                    line = [str(item) for item in (d.values() if isinstance(d, dict) else d)]
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    line.insert(0, str(key))
+                rows.append(sep.join(line))
+            body = "\n".join(rows)
 
-                body = "\n".join(rows)
+        except Exception as e:
+            if config.development:
+                raise
+            data_format = "yaml"
+            log.debug(f"{fn} could not be saved as tsv/csv, falling back to YAML. {e}")
 
-            except Exception:
-                data_format = "yaml"
-                config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
-
-        # Add relevant file extension to filename, save file.
-        fn = f"{fn}.{config.data_format_extensions[data_format]}"
-        with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
-            if data_format == "json":
-                jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
-                print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
-            elif data_format == "yaml":
-                yaml.dump(data, f, default_flow_style=False)
-            else:
-                # Default - tab separated output
-                print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+    # Add relevant file extension to filename, save file.
+    fn = f"{fn}.{config.data_format_extensions[data_format]}"
+    fpath = os.path.join(config.data_dir, fn)
+    with io.open(fpath, "w", encoding="utf-8") as f:
+        if data_format == "json":
+            jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif data_format == "yaml":
+            yaml.dump(data, f, default_flow_style=False)
+        elif body:
+            # Default - tab separated output
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+    log.debug(f"Wrote data file {fn}")
 
 
 def view_all_tags(ctx, param, value):

@@ -9,19 +9,31 @@ class ScatterPlot extends Plot {
     return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
   }
 
-  // Constructs and returns traces for the Plotly plot
-  buildTraces() {
+  prepData() {
+    // Prepare data to either build Plotly traces or export as a file
     let points = this.datasets[this.activeDatasetIdx].points;
-    if (points.length === 0) return [];
 
     let samples = points.map((point) => point.name);
     let sampleSettings = applyToolboxSettings(samples);
-    if (sampleSettings == null) return; // All series are hidden, do not render the graph
+
     points = points.map((point, idx) => {
       point.name = sampleSettings[idx].name ?? point.name;
       point.highlight = sampleSettings[idx].highlight;
       if (!sampleSettings[idx].hidden) return point;
     });
+
+    points = points.map((point) => {
+      if (this.categories && Number.isInteger(point.x) && point.x < this.categories.length)
+        point.x = this.categories[point.x];
+      return point;
+    });
+
+    return [samples, points];
+  }
+
+  buildTraces() {
+    let [samples, points] = this.prepData();
+    if (points.length === 0 || samples.length === 0) return [];
 
     // Reorder points so highlighted points are on top
     let highlighted = points.filter((p) => p.highlight);
@@ -29,9 +41,6 @@ class ScatterPlot extends Plot {
     points = nonHighlighted.concat(highlighted);
 
     return points.map((point) => {
-      let x = point.x;
-      if (this.categories && Number.isInteger(x) && x < this.categories.length) x = this.categories[x];
-
       let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
       params.marker.size = point["marker_size"] ?? params.marker.size;
       params.marker.line = {
@@ -43,12 +52,25 @@ class ScatterPlot extends Plot {
 
       return {
         type: "scatter",
-        x: [x],
+        x: [point.x],
         y: [point.y],
         name: point.name,
         text: [point.annotation ?? point.name],
         ...params,
       };
     });
+  }
+
+  exportData(format) {
+    let [samples, points] = this.prepData();
+
+    let sep = format === "tsv" ? "\t" : ",";
+
+    let csv = ["Name", "X", "Y"].join(sep) + "\n";
+    for (let i = 0; i < samples.length; i++) {
+      let point = points[i];
+      csv += [samples[i], +point.x, point.y].join(sep) + "\n";
+    }
+    return csv;
   }
 }

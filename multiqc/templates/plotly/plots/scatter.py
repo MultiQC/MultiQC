@@ -8,6 +8,7 @@ import numpy as np
 from plotly import graph_objects as go
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -187,5 +188,13 @@ class ScatterPlot(Plot):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-    def save_data_file(self, dataset: BaseDataset) -> None:
-        pass
+    def save_data_file(self, dataset: Dataset) -> None:
+        data = [
+            {
+                "Name": point["name"],
+                "X": point["x"],
+                "Y": point["y"],
+            }
+            for point in dataset.points
+        ]
+        util_functions.write_data_file(data, dataset.uid)

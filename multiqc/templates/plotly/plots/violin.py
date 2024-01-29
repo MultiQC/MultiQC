@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 
 from multiqc.plots.table_object import DataTable
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import config
+from multiqc.utils import config, util_functions
 from .table import make_table
 
 logger = logging.getLogger(__name__)
@@ -484,8 +484,14 @@ class ViolinPlot(Plot):
                     )
         return fig
 
-    def save_data_file(self, data: BaseDataset) -> None:
-        pass
+    def save_data_file(self, dataset: Dataset) -> None:
+        data = {}
+        for metric in dataset.metrics:
+            values_by_sample = dataset.violin_values_by_sample_by_metric[metric]
+            for sample, value in values_by_sample.items():
+                data.setdefault(sample, {})[metric] = value
+
+        util_functions.write_data_file(data, dataset.uid)
 
 
 def find_outliers(

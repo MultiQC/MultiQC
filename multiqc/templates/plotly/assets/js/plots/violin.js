@@ -9,20 +9,17 @@ class ViolinPlot extends Plot {
     return this.datasets[this.activeDatasetIdx]["all_samples"].length;
   }
 
-  // Constructs and returns traces for the Plotly plot
-  buildTraces() {
-    let layout = this.layout;
-    const traceParams = this.traceParams;
-    const scatterTraceParams = this.scatterTraceParams;
-
+  prepData() {
     let dataset = this.datasets[this.activeDatasetIdx];
-
-    if (dataset["show_points"] && dataset["show_only_outliers"])
-      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
-
     let metrics = dataset["metrics"];
-    if (metrics.length === 0) return [];
     let headerByMetric = dataset["header_by_metric"];
+
+    // Hidden metrics
+    metrics = metrics.filter((metric) => {
+      let header = headerByMetric[metric];
+      return header["hidden"] !== true;
+    });
+
     let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
     let scatterValuesBySampleByMetric = {};
     if (dataset["show_points"]) {
@@ -32,22 +29,6 @@ class ViolinPlot extends Plot {
 
     let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
-    if (sampleSettings == null) return; // All series are hidden, do not render the graph.
-
-    // Hidden metrics
-    metrics = metrics.filter((metric) => {
-      let header = headerByMetric[metric];
-      return header["hidden"] !== true;
-    });
-    layout.height = 70 * metrics.length + 50;
-    $("#" + this.target + "-wrapper").css("height", layout.height + "px");
-    if (metrics.length === 0) return [];
-
-    layout.grid.rows = metrics.length;
-    layout.grid.subplots = metrics.map((metric, metricIdx) => {
-      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-      return ["x" + axisKey + "y" + axisKey];
-    });
 
     // Hidden samples
     let someHidden = sampleSettings.filter((s) => s.hidden).length > 0;
@@ -75,6 +56,48 @@ class ViolinPlot extends Plot {
         scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
       }
     }
+
+    return [
+      metrics,
+      headerByMetric,
+      allSamples,
+      sampleSettings,
+      violinValuesBySampleByMetric,
+      scatterValuesBySampleByMetric,
+    ];
+  }
+
+  // Constructs and returns traces for the Plotly plot
+  buildTraces() {
+    let layout = this.layout;
+    const traceParams = this.traceParams;
+    const scatterTraceParams = this.scatterTraceParams;
+
+    let dataset = this.datasets[this.activeDatasetIdx];
+
+    if (dataset["show_points"] && dataset["show_only_outliers"])
+      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
+
+    let [
+      metrics,
+      headerByMetric,
+      allSamples,
+      sampleSettings,
+      violinValuesBySampleByMetric,
+      scatterValuesBySampleByMetric,
+    ] = this.prepData();
+    if (metrics.length === 0) return [];
+    if (sampleSettings.filter((s) => !s.hidden).length === 0) return [];
+
+    layout.height = 70 * metrics.length + 50;
+    $("#" + this.target + "-wrapper").css("height", layout.height + "px");
+    if (metrics.length === 0) return [];
+
+    layout.grid.rows = metrics.length;
+    layout.grid.subplots = metrics.map((metric, metricIdx) => {
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+      return ["x" + axisKey + "y" + axisKey];
+    });
 
     metrics.map((metric, metricIdx) => {
       let header = headerByMetric[metric];
@@ -225,6 +248,33 @@ class ViolinPlot extends Plot {
       traces = traces.concat(scatters);
     }
     return traces;
+  }
+
+  exportData(format) {
+    let [
+      metrics,
+      headerByMetric,
+      allSamples,
+      sampleSettings,
+      violinValuesBySampleByMetric,
+      scatterValuesBySampleByMetric,
+    ] = this.prepData();
+
+    let sep = format === "tsv" ? "\t" : ",";
+    // Export all data points as a table, samples are rows, metrics are columns
+    let csv = "Sample" + sep + metrics.join(sep) + "\n";
+    for (let i = 0; i < allSamples.length; i++) {
+      let sample = allSamples[i];
+      if (sampleSettings[i].hidden) continue;
+      csv += sample + sep;
+      metrics.map((metric) => {
+        let val = violinValuesBySampleByMetric[metric][sample];
+        if (val === undefined) val = ".";
+        csv += val + sep;
+      });
+      csv += "\n";
+    }
+    return csv;
   }
 
   afterPlotCreated() {
