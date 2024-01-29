@@ -227,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": d["PC2_het_check"],
                 }
                 try:
-                    data[s_name]["color"] = f"rgb({ancestry_colors.get(d['ancestry-prediction'], default_color)}"
+                    data[s_name]["color"] = f"rgb({ancestry_colors.get(d['ancestry-prediction'], default_color)})"
                 except KeyError:
                     pass
 
