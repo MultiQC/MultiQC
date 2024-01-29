@@ -452,6 +452,7 @@ class Plot(ABC):
             for file_ext in config.export_plot_formats:
                 plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
                 plot_fn.parent.mkdir(parents=True, exist_ok=True)
+                # TODO: add the logo here as well
                 fig.write_image(plot_fn, **write_kwargs)
 
         # Now writing the PNGs for the HTML
@@ -463,6 +464,8 @@ class Plot(ABC):
             # Output the figure to a base64 encoded string
             img_buffer = io.BytesIO()
             fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = Plot.add_logo(img_buffer)
+
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
             img_buffer.close()
             img_src = f"data:image/png;base64,{b64_img}"
@@ -476,6 +479,33 @@ class Plot(ABC):
                 "</div>",
             ]
         )
+
+    @staticmethod
+    def add_logo(img_buffer: io.BytesIO) -> io.BytesIO:
+        from PIL import Image, ImageDraw, ImageFont
+
+        # Load the image from the BytesIO object
+        image = Image.open(img_buffer)
+
+        # Create a drawing context
+        draw = ImageDraw.Draw(image)
+
+        font = ImageFont.truetype("Arial", 13)
+
+        # Define text and position
+        text = "Created with MultiQC"
+        text_width = draw.textlength(text, font=font)
+        position = (image.width - text_width - 27, image.height - 20)
+
+        # Draw the text
+        draw.text(position, text, fill="#9f9f9f", font=font)
+
+        # Save the image to a BytesIO object
+        output_buffer = io.BytesIO()
+        image.save(output_buffer, format="PNG")
+        output_buffer.seek(0)
+
+        return output_buffer
 
     @staticmethod
     def _get_logo() -> str:
