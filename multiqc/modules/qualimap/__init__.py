@@ -24,9 +24,27 @@ def parse_numerals(
     for k in rate_metrics:
         if k in preparsed_d:
             val = preparsed_d[k]
+            if "," in val and "." in val:
+                log.error(
+                    f"Couldn't determine decimal separator for file {fpath}, as both . and , are "
+                    f"found in a rational value: {val}"
+                )
+                return {}
             if "," in val:
+                if decimalcomma is False:
+                    log.error(
+                        f"Couldn't determine decimal separator for file {fpath}, as differently formatted"
+                        f"rational values are found"
+                    )
+                    return {}
                 decimalcomma = True
             if "." in val:
+                if decimalcomma is True:
+                    log.error(
+                        f"Couldn't determine decimal separator for file {fpath}, as differently formatted"
+                        f"rational values are found"
+                    )
+                    return {}
                 decimalcomma = False
     if decimalcomma is None:
         # All expected float numbers are integer, so attempt to instead determine the
@@ -41,8 +59,20 @@ def parse_numerals(
                     )
                     return {}
                 if "," in val:
+                    if decimalcomma is True:
+                        log.error(
+                            f"Couldn't determine decimal separator for file {fpath}, as differently formatted"
+                            f"rational values are found"
+                        )
+                        return {}
                     decimalcomma = False
                 if "." in val:
+                    if decimalcomma is False:
+                        log.error(
+                            f"Couldn't determine decimal separator for file {fpath}, as differently formatted"
+                            f"rational values are found"
+                        )
+                        return {}
                     decimalcomma = True
     if decimalcomma is None:
         log.warning(f"Couldn't determine decimal separator for file {fpath}")
