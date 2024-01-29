@@ -2,10 +2,13 @@
 
 
 import logging
+import os
+
 import math
 import re
 
 from multiqc import config
+from multiqc.modules.qualimap import parse_numerals
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -82,80 +85,62 @@ def parse_reports(self):
 
 def parse_genome_results(self, f):
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
-    regex_by_type = {
-        int: r"[\d,\.\xa0]+",  # 95,543 or 95 543 or 95.543 or 95
-        float: r"[\d,\.\xa0]+([,\.]\d+)?",  # 1.5 or 1 or 95,543.6053
-        str: r".+",
+
+    int_metrics = {
+        "number of reads": "total_reads",
+        "number of mapped reads": "mapped_reads",
+        "number of mapped reads inside": "regions_mapped_reads",
+        "number of mapped bases": "mapped_bases",
+        "number of sequenced bases": "sequenced_bases",
+        "regions size": "regions_size",
+    }
+    float_metrics = {
+        "mean insert size": "mean_insert_size",
+        "median insert size": "median_insert_size",
+        "mean mapping quality": "mean_mapping_quality",
+        "mean coverageData": "mean_coverage",
+    }
+    rate_metrics = {  # useful to determine decimal separator
+        "general error rate": "general_error_rate",
+        "GC percentage": "gc_percentage",
+        "duplication rate": "duplication_rate",
+        "homopolymer indels": "homopolymer_indels",
     }
 
-    regexes = {
-        "Input": {
-            "bam_file": ("bam file", str),
-        },
-        "Globals": {
-            "total_reads": ("number of reads", int),
-            "mapped_reads": ("number of mapped reads", int),
-            "mapped_bases": ("number of mapped bases", int),
-            "sequenced_bases": ("number of sequenced bases", int),
-        },
-        "Insert size": {
-            "mean_insert_size": ("mean insert size", float),
-            "median_insert_size": ("median insert size", float),
-        },
-        "Mapping quality": {
-            "mean_mapping_quality": ("mean mapping quality", float),
-        },
-        "Mismatches and indels": {
-            "general_error_rate": ("general error rate", float),
-        },
-        "Coverage": {
-            "mean_coverage": ("mean coverageData", float),
-        },
-        "Globals inside": {
-            "regions_size": ("regions size", int),
-            "regions_mapped_reads": ("number of mapped reads", int),  # WARNING: Same as in Globals
-        },
-    }
-    d = dict()
+    value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
+    preparsed_d = dict()
+    # Keeping track of the section because "number of mapped reads" occurs both
+    # under "Globals" and "Globals inside"
     section = None
     for line in f["f"].splitlines():
         if line.startswith(">>>>>>>"):
             section = line[8:]
-        elif section:
-            for key, (regex, regex_type) in regexes.get(section, {}).items():
-                regex = rf"{regex}\s*=\s*({regex_by_type[regex_type]})"
-                m = re.search(regex, line)
-                if not m:
-                    continue
-                val = m.group(1)
+        elif not section:
+            continue
+        if "=" in line:
+            key, val = line.split("=", 1)
+            m = re.search(value_regex, val)
+            if m:
+                val = m.group(0)
                 val = re.sub(r"\xa0", "", val)
-                if regex_type == int:
-                    d[key] = int(re.sub(r"[,\.]", "", val))
-                elif regex_type == float:
-                    # need to determine either dot or comma is either a decimal or thousands separator
-                    if val.count(".") == 1 and val.count(",") == 0:
-                        if len(val.split(".")[-1]) < 3:  # 1.12
-                            pass  # dot is decimal, so keeping dot
-                    elif val.count(",") == 1 and val.count(".") == 0:
-                        if len(val.split(",")[-1]) < 3:  # 1,12
-                            pass  # comma is decimal, so keeping comma
-                    elif val.count(",") >= 1 and val.count(".") >= 1:
-                        # the thousands separator is whatever met first
-                        if val.find(",") < val.find("."):
-                            val = re.sub(r",", "", val)
-                        else:
-                            val = re.sub(r"\.", "", val)
-                    d[key] = float(val)
-                else:
-                    d[key] = val
+            key = key.strip()
+            if "Globals inside" in section and key == "number of mapped reads":
+                key = "number of mapped reads inside"
+            preparsed_d[key] = val.strip()
 
     # Check we have an input filename
-    if "bam_file" not in d:
+    if "bam file" not in preparsed_d:
         log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
         return None
+    s_name = self.clean_s_name(preparsed_d["bam file"], f)
 
-    # Get a nice sample name
-    s_name = self.clean_s_name(d["bam_file"], f)
+    d = parse_numerals(
+        preparsed_d,
+        float_metrics=float_metrics,
+        int_metrics=int_metrics,
+        rate_metrics=rate_metrics,
+        fpath=os.path.join(f["root"], f["fn"]),
+    )
 
     if "general_error_rate" in d:
         d["general_error_rate"] = d["general_error_rate"] * 100.0

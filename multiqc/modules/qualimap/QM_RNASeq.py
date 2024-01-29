@@ -2,9 +2,11 @@
 
 
 import logging
+import os
 import re
 
 from multiqc import config
+from multiqc.modules.qualimap import parse_numerals
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -15,69 +17,52 @@ def parse_reports(self):
     """Find Qualimap RNASeq reports and parse their data"""
     self.qualimap_rnaseq_genome_results = dict()
 
-    regex_by_type = {
-        int: r"[\d,\.\xa0]+",  # 95,543 or 95 543 or 95.543 or 95
-        float: r"[\d,\.\xa0]+([,\.]\d+)?",  # 1.5 or 1 or 95,543.6053
-        str: r".+",
+    int_metrics = {
+        "read pairs aligned": "reads_aligned",
+        "reads aligned": "reads_aligned",
+        "total alignments": "total_alignments",
+        "non-unique alignments": "non_unique_alignments",
+        "aligned to genes": "reads_aligned_genes",
+        "ambiguous alignments": "ambiguous_alignments",
+        "not aligned": "not_aligned",
+        "exonic": "reads_aligned_exonic",
+        "intronic": "reads_aligned_intronic",
+        "intergenic": "reads_aligned_intergenic",
+        "overlapping exon": "reads_aligned_overlapping_exon",
+    }
+    rate_metrics = {
+        "5' bias": "5_bias",
+        "3' bias": "3_bias",
+        "SSP estimation (fwd/rev)": "ssp_estimation",
+        "5'-3' bias": "5_3_bias",
     }
 
-    regexes = {
-        "reads_aligned": ("read(?:s| pairs) aligned", int),
-        "total_alignments": ("total alignments", int),
-        "non_unique_alignments": ("non-unique alignments", int),
-        "reads_aligned_genes": ("aligned to genes", int),
-        "ambiguous_alignments": ("ambiguous alignments", int),
-        "not_aligned": ("not aligned", int),
-        "reads_aligned_exonic": ("exonic", int),
-        "reads_aligned_intronic": ("intronic", int),
-        "reads_aligned_intergenic": ("intergenic", int),
-        "reads_aligned_overlapping_exon": ("overlapping exon", int),
-        "5_3_bias": ("5'-3' bias", float),
-    }
-
+    value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
     for f in self.find_log_files("qualimap/rnaseq/rnaseq_results"):
-        d = dict()
+        preparsed_d = dict()
+        for line in f["f"].splitlines():
+            if "=" in line:
+                key, val = line.split("=", 1)
+                m = re.search(value_regex, val)
+                if m:
+                    val = m.group(0)
+                    val = re.sub(r"\xa0", "", val)
+                key = key.strip()
+                preparsed_d[key] = val.strip()
 
-        # Get the sample name
-        s_name_regex = re.search(r"bam file\s*=\s*(.+)", f["f"], re.MULTILINE)
-        if s_name_regex:
-            d["bam_file"] = s_name_regex.group(1)
-            s_name = self.clean_s_name(d["bam_file"], f)
-        else:
-            log.warning(f"Couldn't find an input filename in genome_results file {f['root']}/{f['fn']}")
+        # Check we have an input filename
+        if "bam file" not in preparsed_d:
+            log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
             return None
+        s_name = self.clean_s_name(preparsed_d["bam file"], f)
 
-        # Go through all numeric regexes
-        for key, (regex, regex_type) in regexes.items():
-            try:
-                regex = rf"{regex}\s*=\s*({regex_by_type[regex_type]})"
-                m = re.search(regex, f["f"], re.MULTILINE)
-                if not m:
-                    continue
-                val = m.group(1)
-                val = re.sub(r"\xa0", "", val)
-                if regex_type == int:
-                    d[key] = int(re.sub(r"[,\.]", "", val))
-                elif regex_type == float:
-                    # need to determine either dot or comma is either a decimal or thousands separator
-                    if val.count(".") == 1 and val.count(",") == 0:
-                        if len(val.split(".")[-1]) < 3:  # 1.12
-                            pass  # dot is decimal, so keeping dot
-                    elif val.count(",") == 1 and val.count(".") == 0:
-                        if len(val.split(",")[-1]) < 3:  # 1,12
-                            pass  # comma is decimal, so keeping comma
-                    elif val.count(",") >= 1 and val.count(".") >= 1:
-                        # the thousands separator is whatever met first
-                        if val.find(",") < val.find("."):
-                            val = re.sub(r",", "", val)
-                        else:
-                            val = re.sub(r"\.", "", val)
-                    d[key] = float(val.replace(",", "."))
-                else:
-                    d[key] = val
-            except UnicodeEncodeError:
-                # Qualimap reports infinity (\u221e) when 3' bias denominator is zero
-                pass
+        d = parse_numerals(
+            preparsed_d,
+            float_metrics={},
+            int_metrics=int_metrics,
+            rate_metrics=rate_metrics,
+            fpath=os.path.join(f["root"], f["fn"]),
+        )
 
         # Add to general stats table
         for k in ["5_3_bias", "reads_aligned"]:
@@ -123,7 +108,7 @@ def parse_reports(self):
     self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
     self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
 
-    #### Plots
+    # Plots
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
     if len(self.qualimap_rnaseq_genome_results) > 0:
