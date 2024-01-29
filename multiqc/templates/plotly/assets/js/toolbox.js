@@ -1219,7 +1219,7 @@ function addLogo(imageDataUrl, callback) {
     ctx.textAlign = "right";
     ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
 
-    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 5);
+    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 8);
     // Callback with the combined image
     callback(canvas.toDataURL());
   };

@@ -264,8 +264,10 @@ class Plot(ABC):
 
         html += self.__control_panel()
 
-        HANDLE_HEIGHT = 10
-        height_style = f'style="height:{self.layout.height + HANDLE_HEIGHT}px"' if self.layout.height else ""
+        # This width only affects the space before plot is rendered, and the initial
+        # height for the resizing function. For the actual plot container, Plotly will
+        # re-calculate the wrapper size after rendering.
+        height_style = f'style="height:{self.layout.height + 7}px"' if self.layout.height else ""
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
             <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>

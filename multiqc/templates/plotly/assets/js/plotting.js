@@ -164,7 +164,7 @@ $(function () {
     if (!$(this).siblings().hasClass("hc-plot-handle")) {
       $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
     }
-    $(this).css({ height: "auto", top: 0, bottom: "10px", position: "absolute" });
+    $(this).css({ height: "auto", top: 0, bottom: "6px", position: "absolute" });
   });
 
   $(".hc-plot-handle").on("mousedown", function (e) {
@@ -183,9 +183,9 @@ $(function () {
     });
 
     $(document).on("mousemove", function (me) {
-      let newHeight = startHeight + (me.pageY - pY);
+      let newHeight = startHeight + (me.pageY - pY) + 2; // 2 px for the border or something
       wrapper.css("height", newHeight);
-      mqc_plots[target].resize(newHeight);
+      if (mqc_plots[target] !== undefined) mqc_plots[target].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
     });
   });
 
