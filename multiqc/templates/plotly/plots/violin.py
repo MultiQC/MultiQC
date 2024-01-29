@@ -45,7 +45,7 @@ class ViolinPlot(Plot):
         ) -> "ViolinPlot.Dataset":
             ds = ViolinPlot.Dataset(
                 **dataset.__dict__,
-                metrics=list(header_by_metric.keys()),
+                metrics=[],
                 header_by_metric=header_by_metric,
                 violin_values_by_sample_by_metric=dict(),
                 scatter_values_by_sample_by_metric=dict(),
@@ -55,14 +55,16 @@ class ViolinPlot(Plot):
             )
 
             all_samples = set()
-            for metric in ds.metrics:
-                header = ds.header_by_metric[metric]
+            for metric, header in header_by_metric.items():
+                # Add Plotly-specific parameters to the header
+                xaxis = {"ticksuffix": header.get("suffix")}
+                header["xaxis"] = xaxis
 
-                header["xaxis"] = {"ticksuffix": header.get("suffix")}
-
+                # Take non-empty values for the violin
                 value_by_sample = values_by_sample_by_metric[metric]
                 value_by_sample = {s: v for s, v in value_by_sample.items() if v is not None and str(v).strip() != ""}
 
+                # Parse values to numbers if possible
                 for s, v in value_by_sample.items():
                     if isinstance(v, str):
                         try:
@@ -73,38 +75,43 @@ class ViolinPlot(Plot):
                             except ValueError:
                                 pass
                     if "modify" in header and callable(header["modify"]):
+                        # noinspection PyBroadException
                         try:
                             value_by_sample[s] = header["modify"](v)
-                        except Exception:
+                        except Exception:  # User-provided modify function can raise any exception
                             pass
 
                 if not value_by_sample:
-                    logger.warning(f"No non-None values for metric: {header['title']}")
-                    value_by_sample = {}
+                    logger.debug(f"No non-empty values found for metric: {header['title']}")
+                    continue
 
                 values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
                 values_are_integer = all(isinstance(v, int) for v in value_by_sample.values())
-
                 if values_are_numeric:
+                    # Keep non-NaN values
                     value_by_sample = {s: v for s, v in value_by_sample.items() if not math.isnan(v)}
                     if not value_by_sample:
                         logger.warning(f"All values are NaN for metric: {header['title']}")
-                        value_by_sample = {}
+                        continue
 
+                ds.show_points = len(value_by_sample) <= config.violin_min_threshold_no_points
+                ds.show_only_outliers = len(value_by_sample) > config.violin_min_threshold_outliers
+
+                if values_are_numeric:
+                    # Calculate range
                     xmin = header.get("dmin")
                     xmax = header.get("dmax")
                     tickvals = None
                     if xmin == xmax == 0:  # Plotly will modify the 0:0 range to -1:1, and we want to keep it 0-centered
                         xmax = 1
                         tickvals = [0]
-                    header["xaxis"]["tickvals"] = tickvals
+                    xaxis["tickvals"] = tickvals
                     if xmin is not None and xmax is not None:
-                        xmin -= (xmax - xmin) * 0.005
-                        xmax += (xmax - xmin) * 0.005
-                        header["xaxis"]["range"] = [xmin, xmax]
-
-                ds.show_points = len(value_by_sample) <= config.violin_min_threshold_no_points
-                ds.show_only_outliers = len(value_by_sample) > config.violin_min_threshold_outliers
+                        if ds.show_points:
+                            # add extra padding to avoid clipping the points at range limits
+                            xmin -= (xmax - xmin) * 0.005
+                            xmax += (xmax - xmin) * 0.005
+                        xaxis["range"] = [xmin, xmax]
 
                 if not ds.show_points:  # Do not add any interactive points
                     scatter_values_by_sample = {}
@@ -114,7 +121,7 @@ class ViolinPlot(Plot):
                     if not values_are_numeric:
                         logger.debug(
                             f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {ds.show_only_outliers}. "
-                            f"As values are not numeric, will not add interactive points."
+                            f"As values are not numeric, will not add any interactive points."
                         )
                         scatter_values_by_sample = {}
                     else:
@@ -164,6 +171,7 @@ class ViolinPlot(Plot):
 
                 all_samples.update(set(list(scatter_values_by_sample.keys())))
                 all_samples.update(set(list(violin_values_by_sample.keys())))
+                ds.metrics.append(metric)
 
             ds.all_samples = sorted(all_samples)
             return ds
@@ -193,7 +201,6 @@ class ViolinPlot(Plot):
                 list_of_header_by_metric,
             )
         ]
-
         self.show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
 
         # If the number of samples is high:
@@ -202,11 +209,15 @@ class ViolinPlot(Plot):
         self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
         self.serialize_figure = False
         if self.n_samples > config.max_table_rows:
-            logger.debug(
-                f"The number of samples exceeds the threshold: {self.n_samples} > {config.max_table_rows}. "
-                "Will build a violin plot instead of a general stats table"
-            )
             self.show_table = False
+            if self.show_table_by_default:
+                logger.debug(
+                    f"Table '{self.id}': sample number {self.n_samples} > {config.max_table_rows}, "
+                    "Will render only a violin plot instead of the table"
+                )
+
+        self.violin_height = 70
+        self.extra_height = 50
 
         self.trace_params.update(
             orientation="h",
@@ -234,7 +245,6 @@ class ViolinPlot(Plot):
         self.layout.update(
             margin=dict(
                 pad=0,
-                # t=43,
                 b=40,
             ),
             violingap=0,
@@ -343,6 +353,8 @@ class ViolinPlot(Plot):
             {
                 "scatter_trace_params": self.scatter_trace_params,
                 "static": self.show_table and self.show_table_by_default,
+                "violin_height": self.violin_height,
+                "extra_height": self.extra_height,
             }
         )
         return d
@@ -384,7 +396,7 @@ class ViolinPlot(Plot):
         layout = copy.deepcopy(layout)
         layout.grid.rows = len(metrics)
         layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
-        layout.height = 70 * len(metrics) + 50
+        layout.height = self.violin_height * len(metrics) + self.extra_height
 
         for metric_idx, metric in enumerate(metrics):
             header = dataset.header_by_metric[metric]
