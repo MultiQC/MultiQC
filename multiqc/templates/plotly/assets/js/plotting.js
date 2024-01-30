@@ -387,11 +387,13 @@ function renderPlot(target) {
 
   // Apply toggle states
   plot.layout.xaxis.tickformat = plot.pActive ? ".0%" : "";
+  plot.layout.xaxis.hoverformat = plot.pActive ? ".1%" : "";
   plot.axisControlledBySwitches.map((axis) => {
     plot.layout[axis].type = plot.lActive ? "log" : "linear";
   });
 
   let traces = plot.buildTraces();
+  if (traces.length > 0 && traces[0].constructor === Array) traces = [].concat.apply([], traces); // if list of lists, flatten
   if (traces.length === 0) {
     // All series hidden. Hide the graph.
     container.hide();

@@ -122,7 +122,7 @@ class Plot(ABC):
                 tt_label = "<br>" + tt_label
         if tt_label:
             self.trace_params["hovertemplate"] = "<b>%{text}</b>" + tt_label + "<extra></extra>"
-        ticksuffix = tt_suffix
+        y_ticksuffix = tt_suffix
 
         height = self.pconfig.get("height", 600)
         width = self.pconfig.get("width")
@@ -133,14 +133,21 @@ class Plot(ABC):
         if not title:
             logger.error(f"Plot title is not set for {self.id}")
 
+        hoverformat = None
+        tt_decimals = self.pconfig.get("tt_decimals")
+        if tt_decimals is not None:
+            hoverformat = f".{tt_decimals}f"
+        if self.p_active:
+            hoverformat = ".1%"
+
         self.layout = go.Layout(
-            title=dict(
+            title=go.layout.Title(
                 text=title,
                 xanchor="center",
                 x=0.5,
                 font=dict(size=20),
             ),
-            xaxis=dict(
+            xaxis=go.layout.XAxis(
                 gridcolor="rgba(0,0,0,0.05)",
                 zerolinecolor="rgba(0,0,0,0.05)",
                 color="rgba(0,0,0,0.4)",  # axis labels
@@ -148,10 +155,10 @@ class Plot(ABC):
                 title=dict(text=self.pconfig.get("xlab") or (self.datasets[0].xlab if self.datasets else None)),
                 rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
                 range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
-                tickformat=".0%" if self.p_active and self.add_pct_tab else None,
-                hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
+                tickformat=".0%" if self.p_active else None,
+                hoverformat=hoverformat,
             ),
-            yaxis=dict(
+            yaxis=go.layout.YAxis(
                 gridcolor="rgba(0,0,0,0.05)",
                 zerolinecolor="rgba(0,0,0,0.05)",
                 color="rgba(0,0,0,0.4)",  # axis labels
@@ -160,8 +167,8 @@ class Plot(ABC):
                 rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
                 range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
                 # Default precision for floating numbers is too high - allowing to override it
-                hoverformat=f".{pconfig['tt_decimals']}f" if "tt_decimals" in pconfig else None,
-                ticksuffix=ticksuffix,
+                hoverformat=hoverformat,
+                ticksuffix=y_ticksuffix,
             ),
             height=height,
             width=width,
@@ -170,23 +177,23 @@ class Plot(ABC):
             font=dict(color="Black", family="Lucida Grande"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
-            margin=dict(
+            margin=go.layout.Margin(
                 pad=5,  # pad sample names in a bar graph a bit
                 t=50,  # more compact title
                 r=15,  # remove excessive whitespace on the right
                 b=65,  # remove excessive whitespace on the bottom
                 l=60,  # remove excessive whitespace on the left
             ),
-            hoverlabel=dict(
+            hoverlabel=go.layout.Hoverlabel(
                 namelength=-1,  # do not crop sample names inside hover label <extra></extra>
             ),
-            modebar=dict(
+            modebar=go.layout.Modebar(
                 bgcolor="rgba(0, 0, 0, 0)",
                 color="rgba(0, 0, 0, 0.5)",
                 activecolor="rgba(0, 0, 0, 1)",
             ),
             showlegend=self.flat,
-            legend=dict(
+            legend=go.layout.Legend(
                 orientation="h",
                 yanchor="top",
                 y=-0.15,

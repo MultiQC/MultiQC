@@ -83,6 +83,8 @@ class BarPlot(Plot):
                 cats=cats,
                 samples=samples,
             )
+            for cat in ds.cats:
+                assert len(ds.samples) == len(cat["data"])
             return ds
 
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
@@ -121,32 +123,28 @@ class BarPlot(Plot):
 
         height = min(MAX_PLOT_HEIGHT, height)
         height = max(MIN_PLOT_HEIGHT, height)
-        self.layout.height = height
 
-        # swap x and y axes: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
         barmode = "stack" if self.p_active else "relative"
         if "stacking" in pconfig and pconfig["stacking"] == "percentage":
             barmode = "relative"
+
         self.layout.update(
-            dict(
-                showlegend=True,
-                legend=None,  # default legend location
-                barmode=barmode,
-                hovermode="y unified",
-                # xaxis_title_text=self.layout.xaxis.title.text,
-                # yaxis_title_text=self.layout.yaxis.title.text,
-                yaxis=dict(
-                    showgrid=False,
-                    categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
-                    automargin=True,  # to make sure there is enough space for ticks labels
-                    title=None,
-                    ticksuffix=None,
-                ),
-                xaxis=dict(
-                    title=dict(text=self.layout.yaxis.title.text),
-                    range=[0, self.layout.xaxis.range[1]],
-                ),
-            )
+            legend=None,  # reset to default legend location on the top right
+            height=height,
+            showlegend=True,
+            barmode=barmode,
+            hovermode="y unified",
+            yaxis=dict(
+                showgrid=False,
+                categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
+                automargin=True,  # to make sure there is enough space for ticks labels
+                title=None,
+                ticksuffix=None,
+            ),
+            xaxis=dict(
+                title=dict(text=self.layout.yaxis.title.text),
+                range=[0, self.layout.xaxis.range[1]],
+            ),
         )
 
         self.trace_params = dict(
@@ -185,6 +183,8 @@ class BarPlot(Plot):
             # Sorting from small to large so the log switch makes sense
             for dataset in self.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
+            # But reversing the legend so the largest bars are still on the top
+            self.layout.legend.traceorder = "reversed"
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:

@@ -247,18 +247,18 @@ class ViolinPlot(Plot):
                 pad=0,
                 b=40,
             ),
-            violingap=0,
             xaxis=dict(
-                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-            ),
-            yaxis=dict(
                 automargin=True,
                 tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
             ),
+            yaxis=dict(
+                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+                gridcolor="rgba(0,0,0,0.1)",
+                zerolinecolor="rgba(0,0,0,0.1)",
+            ),
+            violingap=0,
             grid=dict(
                 columns=1,
                 roworder="top to bottom",

@@ -2,6 +2,8 @@ class ViolinPlot extends Plot {
   constructor(dump) {
     super(dump);
     this.scatterTraceParams = dump["scatter_trace_params"];
+    this.violinHeight = dump["violin_height"];
+    this.extraHeight = dump["extra_height"];
   }
 
   activeDatasetSize() {
@@ -89,7 +91,7 @@ class ViolinPlot extends Plot {
     if (metrics.length === 0) return [];
     if (sampleSettings.filter((s) => !s.hidden).length === 0) return [];
 
-    layout.height = 70 * metrics.length + 50;
+    layout.height = this.violinHeight * metrics.length + this.extraHeight;
     $("#" + this.target + "-wrapper").css("height", layout.height + "px");
     if (metrics.length === 0) return [];
 
