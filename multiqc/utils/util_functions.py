@@ -11,7 +11,7 @@ import shutil
 import sys
 import time
 import datetime
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import yaml
 
@@ -45,7 +45,7 @@ def robust_rmtree(path, logger=None, max_retries=10):
 
 
 def write_data_file(
-    data: Dict[str, Dict | List] | List[Dict],
+    data: Union[Dict[str, Union[Dict, List]], List[Dict]],
     fn: str,
     sort_cols=False,
     data_format=None,
