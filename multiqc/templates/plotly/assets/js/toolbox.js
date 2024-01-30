@@ -1214,11 +1214,11 @@ function addLogo(imageDataUrl, callback) {
     ctx.drawImage(plotlyImage, 0, 0, plotlyImage.width, plotlyImage.height);
 
     // Text properties
-    ctx.font = "10px Lucida Grande"; // Set the desired font-size and type
+    ctx.font = "9px Lucida Grande"; // Set the desired font-size and type
     ctx.textAlign = "right";
     ctx.fillStyle = "#9f9f9f"; // Semi-transparent black text
 
-    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 8);
+    ctx.fillText("Created with MultiQC", plotlyImage.width - 15, plotlyImage.height - 6);
     // Callback with the combined image
     callback(canvas.toDataURL());
   };

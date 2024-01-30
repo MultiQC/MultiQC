@@ -452,23 +452,27 @@ class Plot(ABC):
             for file_ext in config.export_plot_formats:
                 plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
                 plot_fn.parent.mkdir(parents=True, exist_ok=True)
-                # TODO: add the logo here as well
-                fig.write_image(plot_fn, **write_kwargs)
+                img_buffer = io.BytesIO()
+                fig.write_image(img_buffer, **write_kwargs)
+                img_buffer = Plot.add_logo(img_buffer)
+                with open(plot_fn, "wb") as f:
+                    f.write(img_buffer.getvalue())
+                img_buffer.close()
 
         # Now writing the PNGs for the HTML
-        write_kwargs["format"] = "png"
 
         if config.development:
+            # Using file written in the config.export_plots block above
             img_src = Path(config.plots_dir_name) / "png" / f"{uid}.png"
         else:
-            # Output the figure to a base64 encoded string
             img_buffer = io.BytesIO()
+            write_kwargs["format"] = "png"
             fig.write_image(img_buffer, **write_kwargs)
             img_buffer = Plot.add_logo(img_buffer)
-
+            # Convert to a base64 encoded string
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_buffer.close()
             img_src = f"data:image/png;base64,{b64_img}"
+            img_buffer.close()
 
         # Should this plot be hidden on report load?
         hiding = "" if active else ' style="display:none;"'
@@ -490,12 +494,12 @@ class Plot(ABC):
         # Create a drawing context
         draw = ImageDraw.Draw(image)
 
-        font = ImageFont.truetype("Arial", 13)
+        font = ImageFont.truetype("Arial", 16)
 
         # Define text and position
         text = "Created with MultiQC"
         text_width = draw.textlength(text, font=font)
-        position = (image.width - text_width - 27, image.height - 20)
+        position = (image.width - text_width, image.height - 30)
 
         # Draw the text
         draw.text(position, text, fill="#9f9f9f", font=font)
