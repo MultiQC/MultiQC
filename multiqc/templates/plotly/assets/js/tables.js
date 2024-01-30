@@ -174,12 +174,12 @@ $(function () {
       $(".mqc_table_sortHighlight").hide();
       $(".mqc_table tbody th").removeClass("highlighted").removeData("highlight");
       $(".mqc_table tbody th").each(function (i) {
-        var th = $(this);
-        var thtext = $(this).text();
-        var thiscol = "#333";
+        let th = $(this);
+        let thtext = $(this).text();
+        let thiscol = "#333";
         $.each(f_texts, function (idx, f_text) {
           if ((regex_mode && thtext.match(f_text)) || (!regex_mode && thtext.indexOf(f_text) > -1)) {
-            thiscol = f_cols[idx];
+            thiscol = f_cols[idx] ?? "#cccccc";
             th.addClass("highlighted").data("highlight", idx);
             $(".mqc_table_sortHighlight").show();
           }
@@ -191,15 +191,15 @@ $(function () {
     // Sort MultiQC tables by highlight
     $(".mqc_table_sortHighlight").click(function (e) {
       e.preventDefault();
-      var target = $(this).data("target");
+      let target = $(this).data("target");
       // collect highlighted rows
-      var hrows = $(target + " tbody th.highlighted")
+      let hrows = $(target + " tbody th.highlighted")
         .parent()
         .detach();
       hrows = hrows.sort(function (a, b) {
         return $(a).find("th").data("highlight") - $(b).find("th").data("highlight");
       });
-      if ($(this).data("direction") == "desc") {
+      if ($(this).data("direction") === "desc") {
         hrows = hrows.get().reverse();
         $(target + " tbody").prepend(hrows);
         $(this).data("direction", "asc");
@@ -212,10 +212,10 @@ $(function () {
     // Rename samples
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
       $(".mqc_table tbody th").each(function () {
-        var s_name = String($(this).data("original-sn"));
+        let s_name = String($(this).data("original-sn"));
         $.each(f_texts, function (idx, f_text) {
           if (regex_mode) {
-            var re = new RegExp(f_text, "g");
+            let re = new RegExp(f_text, "g");
             s_name = s_name.replace(re, t_texts[idx]);
           } else {
             s_name = s_name.replace(f_text, t_texts[idx]);
@@ -229,14 +229,14 @@ $(function () {
     $(document).on("mqc_hidesamples", function (e, f_texts, regex_mode) {
       // Hide rows in MultiQC tables
       $(".mqc_table tbody th").each(function () {
-        var match = false;
-        var hfilter = $(this).text();
+        let match = false;
+        let hfilter = $(this).text();
         $.each(f_texts, function (idx, f_text) {
           if ((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)) {
             match = true;
           }
         });
-        if (window.mqc_hide_mode == "show") {
+        if (window.mqc_hide_mode === "show") {
           match = !match;
         }
         if (match) {
@@ -246,32 +246,32 @@ $(function () {
         }
       });
       $(".mqc_table_numrows").each(function () {
-        var tid = $(this).attr("id").replace("_numrows", "");
+        let tid = $(this).attr("id").replace("_numrows", "");
         $(this).text($("#" + tid + " tbody tr:visible").length);
       });
 
       // Hide empty columns
       $(".mqc_table").each(function () {
-        var table = $(this);
-        var gsthidx = 0;
+        let table = $(this);
+        let gsthidx = 0;
         table.find("thead th, tbody tr td").show();
         table.find("thead th").each(function () {
-          if (gsthidx == 0) {
+          if (gsthidx === 0) {
             gsthidx += 1;
             return true;
           }
-          var count = 0;
-          var empties = 0;
+          let count = 0;
+          let empties = 0;
           table
             .find("tbody tr td:nth-child(" + (gsthidx + 2) + ")")
             .filter(":visible")
             .each(function () {
               count += 1;
-              if ($(this).text() == "") {
+              if ($(this).text() === "") {
                 empties += 1;
               }
             });
-          if (count > 0 && count == empties) {
+          if (count > 0 && count === empties) {
             $(this).hide();
             table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").hide();
           }
@@ -279,7 +279,7 @@ $(function () {
         });
       });
       $(".mqc_table_numcols").each(function () {
-        var tid = $(this).attr("id").replace("_numcols", "");
+        let tid = $(this).attr("id").replace("_numcols", "");
         $(this).text($("#" + tid + " thead th:visible").length - 1);
       });
     });
@@ -291,13 +291,13 @@ $(function () {
   });
   $(".mqc_table_makeScatter").click(function (e) {
     // Reset dropdowns
-    if ($("#tableScatter_tid").val() != $(this).data("table")) {
+    if ($("#tableScatter_tid").val() !== $(this).data("table")) {
       $("#tableScatter_col1, #tableScatter_col2").html('<option value="">Select Column</option>');
       // Add columns to dropdowns
       $($(this).data("table") + " thead tr th").each(function (e) {
-        var c_id = $(this).attr("id");
-        if (c_id != undefined) {
-          var c_name = $(this).attr("data-namespace") + ": " + $(this).text();
+        let c_id = $(this).attr("id");
+        if (c_id !== undefined) {
+          let c_name = $(this).attr("data-namespace") + ": " + $(this).text();
           $("#tableScatter_col1, #tableScatter_col2").append('<option value="' + c_id + '">' + c_name + "</select>");
         }
       });
@@ -306,15 +306,15 @@ $(function () {
     }
   });
   $("#tableScatterForm select").change(function (e) {
-    var tid = $("#tableScatter_tid").val();
-    var col1 = $("#tableScatter_col1").val().replace("header_", "");
-    var col2 = $("#tableScatter_col2").val().replace("header_", "");
-    var col1_name = $("#tableScatter_col1 option:selected").text();
-    var col2_name = $("#tableScatter_col2 option:selected").text();
-    var col1_max = parseFloat($(tid + " thead th#header_" + col1).data("dmax"));
-    var col1_min = parseFloat($(tid + " thead th#header_" + col1).data("dmin"));
-    var col2_max = parseFloat($(tid + " thead th#header_" + col2).data("dmax"));
-    var col2_min = parseFloat($(tid + " thead th#header_" + col2).data("dmin"));
+    let tid = $("#tableScatter_tid").val();
+    let col1 = $("#tableScatter_col1").val().replace("header_", "");
+    let col2 = $("#tableScatter_col2").val().replace("header_", "");
+    let col1_name = $("#tableScatter_col1 option:selected").text();
+    let col2_name = $("#tableScatter_col2 option:selected").text();
+    let col1_max = parseFloat($(tid + " thead th#header_" + col1).data("dmax"));
+    let col1_min = parseFloat($(tid + " thead th#header_" + col1).data("dmin"));
+    let col2_max = parseFloat($(tid + " thead th#header_" + col2).data("dmax"));
+    let col2_min = parseFloat($(tid + " thead th#header_" + col2).data("dmin"));
     if (isNaN(col1_max)) {
       col1_max = undefined;
     }
@@ -350,12 +350,12 @@ $(function () {
         datasets: [[]],
       };
       $(tid + " tbody tr").each(function (e) {
-        var s_name = $(this).children("th.rowheader").text();
-        var val_1 = $(this)
+        let s_name = $(this).children("th.rowheader").text();
+        let val_1 = $(this)
           .children("td." + col1)
           .text()
           .replace(/[^\d\.]/g, "");
-        var val_2 = $(this)
+        let val_2 = $(this)
           .children("td." + col2)
           .text()
           .replace(/[^\d\.]/g, "");
@@ -429,21 +429,21 @@ $(function () {
 // button is only visible when this is hidden. Ace!
 function change_mqc_table_col_order(table) {
   // Find the targets of this sorting
-  var tid = table.attr("id");
-  var target = tid.replace("_configModal_table", "");
+  let tid = table.attr("id");
+  let target = tid.replace("_configModal_table", "");
 
   // Collect the desired order of columns
-  var classes = [];
+  let classes = [];
   $("#" + tid + " tbody tr").each(function () {
     classes.push($(this).attr("class"));
   });
   // Go through each row
   $("#" + target + " tr").each(function () {
-    var cols = {};
-    var row = $(this);
+    let cols = {};
+    let row = $(this);
     // Detach any cell that matches a known class from above
     row.find("td, th").each(function () {
-      var cell = $(this);
+      let cell = $(this);
       $.each(classes, function (idx, c) {
         if (cell.hasClass(c)) {
           cols[c] = cell.detach();
@@ -452,7 +452,7 @@ function change_mqc_table_col_order(table) {
     });
     // Insert detached cells back in the order given in the sorted table
     for (var idx in classes) {
-      var c = classes[idx];
+      let c = classes[idx];
       if (cols[c] !== undefined) {
         row.append(cols[c]);
       }
