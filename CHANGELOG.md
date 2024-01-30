@@ -16,6 +16,7 @@
 - Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
 - Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
 - Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
+- handle failed tasks in seqera cli dump ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 
 ### New modules
 
