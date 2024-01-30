@@ -22,6 +22,9 @@
 - [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
 
+- [**sincei**](http://sincei.rtfd.io/)
+  - a toolkit to explore single-cell (epi)-genomics data. It contains modules for read-level and count-level quality control of such data from BAM files.
+
 ### Module updates
 
 - **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
