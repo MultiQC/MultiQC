@@ -254,7 +254,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Make nicer label names
         pkeys = dict()
         for k in sorted_keys:
-            pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
+            key = k.replace("_", " ").title().replace("Utr", "UTR")
+            if key == "None":
+                key = "Unknown"
+            pkeys[k] = {"name": key}
 
         # Config for the plot
         pconfig = {
