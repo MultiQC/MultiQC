@@ -1,9 +1,4 @@
 class ScatterPlot extends Plot {
-  constructor(data) {
-    super(data);
-    this.categories = data.categories;
-  }
-
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     return this.datasets[this.activeDatasetIdx].points; // no data points in a dataset
@@ -11,7 +6,9 @@ class ScatterPlot extends Plot {
 
   prepData() {
     // Prepare data to either build Plotly traces or export as a file
-    let points = this.datasets[this.activeDatasetIdx].points;
+    let dataset = this.datasets[this.activeDatasetIdx];
+
+    let points = dataset.points;
 
     let samples = points.map((point) => point.name);
     let sampleSettings = applyToolboxSettings(samples);
@@ -23,15 +20,17 @@ class ScatterPlot extends Plot {
     });
 
     points = points.map((point) => {
-      if (this.categories && Number.isInteger(point.x) && point.x < this.categories.length)
-        point.x = this.categories[point.x];
+      if (dataset.categories && Number.isInteger(point.x) && point.x < dataset.categories.length)
+        point.x = dataset.categories[point.x];
       return point;
     });
 
     return [samples, points];
   }
 
-  buildTraces() {
+  buildTraces(layout) {
+    let dataset = this.datasets[this.activeDatasetIdx];
+
     let [samples, points] = this.prepData();
     if (points.length === 0 || samples.length === 0) return [];
 
@@ -41,7 +40,7 @@ class ScatterPlot extends Plot {
     points = nonHighlighted.concat(highlighted);
 
     return points.map((point) => {
-      let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
+      let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
       params.marker.size = point["marker_size"] ?? params.marker.size;
       params.marker.line = {
         width: point["marker_line_width"] ?? params.marker.line.width,

@@ -785,7 +785,7 @@ function apply_mqc_highlights() {
     }
 
     // Only add pattern if it hasn't already been added
-    if (f_texts.indexOf(pattern) < 0) {
+    if (pattern.length > 0 && f_texts.indexOf(pattern) < 0) {
       f_texts.push(pattern);
       f_cols.push(inputElement.css("color"));
     } else {
@@ -958,7 +958,7 @@ function mqc_save_config(name, clear, as_default) {
       console.log("Could not access localStorage");
     }
 
-    if (clear == true) {
+    if (clear === true) {
       // Remove from load select box
       $("#mqc_loadconfig_form select option:contains('" + name + "')").remove();
       // Successfully deleted message

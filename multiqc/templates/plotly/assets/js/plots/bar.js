@@ -28,11 +28,9 @@ class BarPlot extends Plot {
   }
 
   // Constructs and returns traces for the Plotly plot
-  buildTraces() {
+  buildTraces(layout) {
     let [cats, filteredSettings] = this.prepData();
     if (cats.length === 0 || filteredSettings.length === 0) return [];
-
-    let layout = this.layout;
 
     // Use subplots only to set different color to each bar label when using
     // highlight interactivity
@@ -48,12 +46,14 @@ class BarPlot extends Plot {
     // We use legend groups with subplots to simulate standard legend interactivity
     // like we had a standard bar graph without subplots. We need to remove the space
     // between the legend groups to make it look like a single legend.
-    layout.legend_tracegroupgap = 0;
+    if (layout.legend === undefined) layout.legend = {};
+    layout.legend.tracegroupgap = 0;
 
     let anyHighlight = filteredSettings.some((s) => s.highlight);
 
     filteredSettings.forEach((sample, sampleIdx) => {
       layout["yaxis" + (sampleIdx + 1)] = {
+        showgrid: false,
         gridcolor: layout["yaxis"]["gridcolor"],
         zerolinecolor: layout["yaxis"]["zerolinecolor"],
         color: layout["yaxis"]["color"],
@@ -68,9 +68,13 @@ class BarPlot extends Plot {
     });
     layout.yaxis = layout["yaxis1"];
 
+    let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
+
+    layout.hovermode = "closest";
+
     return cats.map((cat) => {
       return filteredSettings.map((sample, sampleIdx) => {
-        let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
+        let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
         params.marker.color = cat.color;
         params.marker.line = {
           // Remove grey from highlights:
@@ -83,10 +87,13 @@ class BarPlot extends Plot {
           x: [cat.data[sampleIdx]],
           y: [sample.name],
           name: cat.name,
+          text: cat.name,
           yaxis: "y" + (sampleIdx === 0 ? "" : sampleIdx + 1),
           ...params,
           legendgroup: cat.name,
           showlegend: sampleIdx === 0,
+          meta: cat.name,
+          hovertemplate: "%{meta}: %{x}<extra></extra>",
         };
       });
     });

@@ -1,7 +1,6 @@
 class ViolinPlot extends Plot {
   constructor(dump) {
     super(dump);
-    this.scatterTraceParams = dump["scatter_trace_params"];
     this.violinHeight = dump["violin_height"];
     this.extraHeight = dump["extra_height"];
   }
@@ -70,11 +69,7 @@ class ViolinPlot extends Plot {
   }
 
   // Constructs and returns traces for the Plotly plot
-  buildTraces() {
-    let layout = this.layout;
-    const traceParams = this.traceParams;
-    const scatterTraceParams = this.scatterTraceParams;
-
+  buildTraces(layout) {
     let dataset = this.datasets[this.activeDatasetIdx];
 
     if (dataset["show_points"] && dataset["show_only_outliers"])
@@ -140,7 +135,7 @@ class ViolinPlot extends Plot {
     let traces = [];
     metrics.map((metric, metricIdx) => {
       let header = headerByMetric[metric];
-      let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
+      let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
       // Set color for each violin individually
       if (header["color"] !== undefined) {
@@ -216,7 +211,7 @@ class ViolinPlot extends Plot {
 
         scatterData.map(([sample, value]) => {
           let state = sampleSettings[allSamples.indexOf(sample)];
-          let params = JSON.parse(JSON.stringify(scatterTraceParams)); // deep copy
+          let params = JSON.parse(JSON.stringify(dataset["scatter_trace_params"])); // deep copy
 
           let color = "black"; // trace_params["marker"]["color"];
           let size = params.marker.size;

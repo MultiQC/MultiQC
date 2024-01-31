@@ -200,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "fastq_screen_plot",
             "title": "FastQ Screen: Mapped Reads",
             "cpswitch_c_active": False,
-            "ylab": "Percentages",
+            "ylab": "Mapped reads",
         }
         cats["Multiple Genomes"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["No hits"] = {"name": "No hits", "color": "#cccccc"}

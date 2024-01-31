@@ -18,8 +18,6 @@ window.mqc_hide_regex_mode = false;
 class Plot {
   constructor(dump) {
     this.target = dump["id"];
-    this.layout = dump["layout"];
-    this.traceParams = dump["trace_params"];
     this.datasets = dump["datasets"];
     this.square = dump["square"];
     this.axisControlledBySwitches = dump["axis_controlled_by_switches"];
@@ -28,8 +26,8 @@ class Plot {
     this.rendered = false;
     // State of toggles
     this.activeDatasetIdx = 0;
-    this.pActive = dump["p_active"];
     this.lActive = dump["l_active"];
+    this.pActive = dump["p_active"];
   }
 
   activeDatasetSize() {
@@ -45,11 +43,7 @@ class Plot {
     }
   }
 
-  buildHtml() {
-    // Build the HTML directly, instead of passing it to Plotly
-  }
-
-  buildTraces() {
+  buildTraces(layout) {
     throw new Error("buildTraces() not implemented");
   }
 
@@ -187,46 +181,6 @@ $(function () {
       wrapper.css("height", newHeight);
       if (mqc_plots[target] !== undefined) mqc_plots[target].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
     });
-  });
-
-  // // Special case for the beeswarm plot. TODO: fix for Plotly
-  // $(".hc-plot, .beeswarm-plot").on("mqc_plotresize", function (e) {
-  //   if ($(this).highcharts()) {
-  //     $(this).highcharts().reflow();
-  //   }
-  // });
-
-  // Switch the Y-axis limits on or off
-  $(".mqc_hcplot_plotgroup").on("click", ".mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper", function () {
-    let target = $(this).data("target");
-    let ymax = $(this).data("ymax");
-    let ymin = $(this).data("ymin");
-    let ymax_is_set = ymax !== "undefined" && ymax !== null;
-    let ymin_is_set = ymin !== "undefined" && ymin !== null;
-    if (!ymax_is_set && !(ymin_is_set && ymin !== 0))
-      // If limits are not set (or the minimal limit is zero), don't do anything
-      return;
-
-    let y_limits_switch = $(this).find(".mqc_switch");
-    if (y_limits_switch.hasClass("on")) {
-      // pre-calculated autorange limits in Python to make sure autorange doesn't include yPlotBands
-      let range = $(this).data("y_autorange_range_before_bands");
-      if (range !== null) {
-        range = range.split(",");
-        Plotly.relayout(target, "yaxis.range", range);
-      } else {
-        Plotly.relayout(target, "yaxis.autorange", true);
-      }
-      if (ymin === 0)
-        // for plots with only positive numbers we want to keep the ymin=0 limit
-        Plotly.relayout(target, "yaxis.range[0]", 0);
-      y_limits_switch.removeClass("on").addClass("off").text("off");
-    } else {
-      Plotly.relayout(target, "yaxis.autorange", false);
-      if (ymin_is_set && ymin !== 0) Plotly.relayout(target, "yaxis.range[0]", ymin);
-      if (ymax_is_set) Plotly.relayout(target, "yaxis.range[1]", ymax);
-      y_limits_switch.removeClass("off").addClass("on").text("on");
-    }
   });
 
   // Sort a heatmap by highlighted names  // TODO: fix for Plotly
@@ -385,14 +339,20 @@ function renderPlot(target) {
     func = Plotly.react;
   }
 
-  // Apply toggle states
-  plot.layout.xaxis.tickformat = plot.pActive ? ".0%" : "";
-  plot.layout.xaxis.hoverformat = plot.pActive ? ".1%" : "";
-  plot.axisControlledBySwitches.map((axis) => {
-    plot.layout[axis].type = plot.lActive ? "log" : "linear";
-  });
+  let dataset = plot.datasets[plot.activeDatasetIdx];
+  let layout = JSON.parse(JSON.stringify(dataset.layout));
 
-  let traces = plot.buildTraces();
+  // Apply pct/log toggle states
+  plot.axisControlledBySwitches.map((axis) => {
+    layout[axis].type = plot.lActive ? "log" : "linear";
+  });
+  if (plot.pActive) {
+    layout.xaxis.ticksuffix = "%";
+    layout.xaxis.hoverformat = ".1f";
+    layout.xaxis.range = [0, 100];
+  }
+
+  let traces = plot.buildTraces(layout);
   if (traces.length > 0 && traces[0].constructor === Array) traces = [].concat.apply([], traces); // if list of lists, flatten
   if (traces.length === 0) {
     // All series hidden. Hide the graph.
@@ -401,7 +361,7 @@ function renderPlot(target) {
   }
 
   container.show();
-  func(target, traces, plot.layout, {
+  func(target, traces, layout, {
     responsive: true,
     displaylogo: false,
     displayModeBar: true,
@@ -446,4 +406,25 @@ function highlight_fade_text(obj) {
       transition: "background-color 0.5s, color 0.5s",
     });
   }, 500);
+}
+
+function updateObject(target, source) {
+  // Iterate through all keys in the source object
+  for (const key in source) {
+    // Check if the value is not null
+    if (source[key] !== null) {
+      // Check if the value is an object and not an array
+      if (typeof source[key] === "object" && !Array.isArray(source[key])) {
+        // If the target doesn't have this key or it's not an object, initialize it
+        if (!target[key] || typeof target[key] !== "object") {
+          target[key] = {};
+        }
+        // Recursively update the object
+        updateObject(target[key], source[key]);
+      } else {
+        // Directly update the value
+        target[key] = source[key];
+      }
+    }
+  }
 }

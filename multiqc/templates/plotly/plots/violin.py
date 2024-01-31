@@ -27,6 +27,9 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
 
 
 class ViolinPlot(Plot):
+    VIOLIN_HEIGHT = 70
+    EXTRA_HEIGHT = 50
+
     @dataclasses.dataclass
     class Dataset(BaseDataset):
         metrics: List[str]
@@ -34,6 +37,7 @@ class ViolinPlot(Plot):
         violin_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         scatter_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         all_samples: List[str]  # unique list of all samples in this dataset
+        scatter_trace_params: Dict[str, Any]
         show_points: False
         show_only_outliers: False
 
@@ -50,6 +54,7 @@ class ViolinPlot(Plot):
                 violin_values_by_sample_by_metric=dict(),
                 scatter_values_by_sample_by_metric=dict(),
                 all_samples=[],
+                scatter_trace_params=dict(),
                 show_only_outliers=False,
                 show_points=True,
             )
@@ -174,7 +179,159 @@ class ViolinPlot(Plot):
                 ds.metrics.append(metric)
 
             ds.all_samples = sorted(all_samples)
+
+            ds.trace_params.update(
+                orientation="h",
+                box={"visible": True},
+                meanline={"visible": True},
+                fillcolor="grey",
+                line={"width": 2, "color": "grey"},
+                opacity=0.5,
+                points=False,  # Don't show points, we'll add them manually
+                # The hover information is useful, but the formatting is ugly and not
+                # configurable as far as I can see. Also, it's not possible to disable it,
+                # so setting it to "points" as we don't show points, so it's effectively
+                # disabling it.
+                hoveron="points",
+            )
+
+            ds.scatter_trace_params = {
+                "mode": "markers",
+                "marker": {"size": 4, "color": "rgba(0,0,0,1)"},
+                "showlegend": False,
+                "hovertemplate": ds.trace_params["hovertemplate"],
+                "hoverlabel": {"bgcolor": "white"},
+            }
+
+            ds.layout.update(
+                margin=dict(
+                    pad=0,
+                    b=40,
+                ),
+                xaxis=dict(
+                    automargin=True,
+                    tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+                    gridcolor="rgba(0,0,0,0.1)",
+                    zerolinecolor="rgba(0,0,0,0.1)",
+                ),
+                yaxis=dict(
+                    tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+                    gridcolor="rgba(0,0,0,0.1)",
+                    zerolinecolor="rgba(0,0,0,0.1)",
+                ),
+                violingap=0,
+                grid=dict(
+                    columns=1,
+                    roworder="top to bottom",
+                    ygap=0.4,
+                ),
+                showlegend=False,
+            )
+
             return ds
+
+        def create_figure(
+            self,
+            layout: Optional[go.Layout] = None,
+            is_log=False,
+            is_pct=False,
+            add_scatter=True,
+        ):
+            """
+            Create a Plotly figure for a dataset
+            """
+            metrics = [m for m in self.metrics if not self.header_by_metric[m].get("hidden", False)]
+
+            layout = copy.deepcopy(layout or self.layout)
+            layout.grid.rows = len(metrics)
+            layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
+            layout.height = ViolinPlot.VIOLIN_HEIGHT * len(metrics) + ViolinPlot.EXTRA_HEIGHT
+
+            for metric_idx, metric in enumerate(metrics):
+                header = self.header_by_metric[metric]
+
+                layout[f"xaxis{metric_idx + 1}"] = {
+                    "gridcolor": layout["xaxis"]["gridcolor"],
+                    "zerolinecolor": layout["xaxis"]["zerolinecolor"],
+                    "hoverformat": layout["xaxis"]["hoverformat"],
+                    "tickfont": copy.deepcopy(layout["xaxis"]["tickfont"]),
+                }
+                layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
+                layout[f"yaxis{metric_idx + 1}"] = {
+                    "gridcolor": layout["yaxis"]["gridcolor"],
+                    "zerolinecolor": layout["yaxis"]["zerolinecolor"],
+                    "hoverformat": layout["yaxis"]["hoverformat"],
+                    "automargin": True,
+                }
+                if "hoverformat" in header:
+                    layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
+
+                title = header["title"] + "  "
+                if header.get("namespace"):
+                    title = f"{header['namespace']}  <br>" + title
+                layout[f"yaxis{metric_idx + 1}"].update(
+                    {
+                        "tickmode": "array",
+                        "tickvals": [metric_idx],
+                        "ticktext": [title],
+                    }
+                )
+                if header.get("color"):
+                    layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
+                        "color": f"rgb({header['color']})",
+                    }
+
+            layout["xaxis"] = layout["xaxis1"]
+            layout["yaxis"] = layout["yaxis1"]
+
+            fig = go.Figure(layout=layout)
+
+            violin_values_by_sample_by_metric = self.violin_values_by_sample_by_metric
+            if self.show_only_outliers:
+                scatter_values_by_sample_by_metric = self.scatter_values_by_sample_by_metric
+            else:
+                scatter_values_by_sample_by_metric = self.violin_values_by_sample_by_metric
+
+            for metric_idx, metric in enumerate(metrics):
+                header = self.header_by_metric[metric]
+                params = copy.deepcopy(self.trace_params)
+                color = header.get("color")
+                if color:
+                    params["fillcolor"] = f"rgb({color})"
+                    params["line"]["color"] = f"rgb({color})"
+
+                violin_values_by_sample = violin_values_by_sample_by_metric[metric]
+                axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
+                fig.add_trace(
+                    go.Violin(
+                        x=list(violin_values_by_sample.values()),
+                        name=metric_idx,
+                        text=list(violin_values_by_sample.keys()),
+                        xaxis=f"x{axis_key}",
+                        yaxis=f"y{axis_key}",
+                        **params,
+                    ),
+                )
+
+                if add_scatter:
+                    scatter_params = copy.deepcopy(self.scatter_trace_params)
+                    scatter_values_by_sample = scatter_values_by_sample_by_metric[metric]
+                    for sample, value in scatter_values_by_sample.items():
+                        # add vertical jitter (not working in python version currently)
+                        y = float(metric_idx)
+                        # y += random.uniform(-0.2, 0.2)
+                        # y += random.random() * 0.3 - 0.3 / 2
+                        fig.add_trace(
+                            go.Scatter(
+                                x=[value],
+                                y=[y],
+                                text=[sample],
+                                xaxis=f"x{axis_key}",
+                                yaxis=f"y{axis_key}",
+                                **scatter_params,
+                            ),
+                        )
+            return fig
 
     def __init__(
         self,
@@ -201,7 +358,6 @@ class ViolinPlot(Plot):
                 list_of_header_by_metric,
             )
         ]
-        self.show_only_outliers = any(ds.show_only_outliers for ds in self.datasets)
 
         # If the number of samples is high:
         # - do not add a table
@@ -215,57 +371,6 @@ class ViolinPlot(Plot):
                     f"Table '{self.id}': sample number {self.n_samples} > {config.max_table_rows}, "
                     "Will render only a violin plot instead of the table"
                 )
-
-        self.violin_height = 70
-        self.extra_height = 50
-
-        self.trace_params.update(
-            orientation="h",
-            box={"visible": True},
-            meanline={"visible": True},
-            fillcolor="grey",
-            line={"width": 2, "color": "grey"},
-            opacity=0.5,
-            points=False,  # Don't show points, we'll add them manually
-            # The hover information is useful, but the formatting is ugly and not
-            # configurable as far as I can see. Also, it's not possible to disable it,
-            # so setting it to "points" as we don't show points, so it's effectively
-            # disabling it.
-            hoveron="points",
-        )
-
-        self.scatter_trace_params = {
-            "mode": "markers",
-            "marker": {"size": 4, "color": "rgba(0,0,0,1)"},
-            "showlegend": False,
-            "hovertemplate": self.trace_params["hovertemplate"],
-            "hoverlabel": {"bgcolor": "white"},
-        }
-
-        self.layout.update(
-            margin=dict(
-                pad=0,
-                b=40,
-            ),
-            xaxis=dict(
-                automargin=True,
-                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-            ),
-            yaxis=dict(
-                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-            ),
-            violingap=0,
-            grid=dict(
-                columns=1,
-                roworder="top to bottom",
-                ygap=0.4,
-            ),
-            showlegend=False,
-        )
 
     @staticmethod
     def from_dt(dt: DataTable, show_table_by_default=False) -> "ViolinPlot":
@@ -351,10 +456,9 @@ class ViolinPlot(Plot):
         d = super().dump_for_javascript()
         d.update(
             {
-                "scatter_trace_params": self.scatter_trace_params,
                 "static": self.show_table and self.show_table_by_default,
-                "violin_height": self.violin_height,
-                "extra_height": self.extra_height,
+                "violin_height": ViolinPlot.VIOLIN_HEIGHT,
+                "extra_height": ViolinPlot.EXTRA_HEIGHT,
             }
         )
         return d
@@ -379,110 +483,6 @@ class ViolinPlot(Plot):
             )
 
         return buttons + super().buttons()
-
-    def create_figure(
-        self,
-        layout: go.Layout,
-        dataset: Dataset,
-        is_log=False,
-        is_pct=False,
-        add_scatter=True,
-    ):
-        """
-        Create a Plotly figure for a dataset
-        """
-        metrics = [m for m in dataset.metrics if not dataset.header_by_metric[m].get("hidden", False)]
-
-        layout = copy.deepcopy(layout)
-        layout.grid.rows = len(metrics)
-        layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
-        layout.height = self.violin_height * len(metrics) + self.extra_height
-
-        for metric_idx, metric in enumerate(metrics):
-            header = dataset.header_by_metric[metric]
-
-            layout[f"xaxis{metric_idx + 1}"] = {
-                "gridcolor": layout["xaxis"]["gridcolor"],
-                "zerolinecolor": layout["xaxis"]["zerolinecolor"],
-                "hoverformat": layout["xaxis"]["hoverformat"],
-                "tickfont": copy.deepcopy(layout["xaxis"]["tickfont"]),
-            }
-            layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
-            layout[f"yaxis{metric_idx + 1}"] = {
-                "gridcolor": layout["yaxis"]["gridcolor"],
-                "zerolinecolor": layout["yaxis"]["zerolinecolor"],
-                "hoverformat": layout["yaxis"]["hoverformat"],
-                "automargin": True,
-            }
-            if "hoverformat" in header:
-                layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
-
-            title = header["title"] + "  "
-            if header.get("namespace"):
-                title = f"{header['namespace']}  <br>" + title
-            layout[f"yaxis{metric_idx + 1}"].update(
-                {
-                    "tickmode": "array",
-                    "tickvals": [metric_idx],
-                    "ticktext": [title],
-                }
-            )
-            if header.get("color"):
-                layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
-                    "color": f"rgb({header['color']})",
-                }
-
-        layout["xaxis"] = layout["xaxis1"]
-        layout["yaxis"] = layout["yaxis1"]
-
-        fig = go.Figure(layout=layout)
-
-        violin_values_by_sample_by_metric = dataset.violin_values_by_sample_by_metric
-        if dataset.show_only_outliers:
-            scatter_values_by_sample_by_metric = dataset.scatter_values_by_sample_by_metric
-        else:
-            scatter_values_by_sample_by_metric = dataset.violin_values_by_sample_by_metric
-
-        for metric_idx, metric in enumerate(metrics):
-            header = dataset.header_by_metric[metric]
-            params = copy.deepcopy(self.trace_params)
-            color = header.get("color")
-            if color:
-                params["fillcolor"] = f"rgb({color})"
-                params["line"]["color"] = f"rgb({color})"
-
-            violin_values_by_sample = violin_values_by_sample_by_metric[metric]
-            axis_key = "" if metric_idx == 0 else str(metric_idx + 1)
-            fig.add_trace(
-                go.Violin(
-                    x=list(violin_values_by_sample.values()),
-                    name=metric_idx,
-                    text=list(violin_values_by_sample.keys()),
-                    xaxis=f"x{axis_key}",
-                    yaxis=f"y{axis_key}",
-                    **params,
-                ),
-            )
-
-            if add_scatter:
-                scatter_params = copy.deepcopy(self.scatter_trace_params)
-                scatter_values_by_sample = scatter_values_by_sample_by_metric[metric]
-                for sample, value in scatter_values_by_sample.items():
-                    # add vertical jitter (not working in python version currently)
-                    y = float(metric_idx)
-                    # y += random.uniform(-0.2, 0.2)
-                    # y += random.random() * 0.3 - 0.3 / 2
-                    fig.add_trace(
-                        go.Scatter(
-                            x=[value],
-                            y=[y],
-                            text=[sample],
-                            xaxis=f"x{axis_key}",
-                            yaxis=f"y{axis_key}",
-                            **scatter_params,
-                        ),
-                    )
-        return fig
 
     def save_data_file(self, dataset: Dataset) -> None:
         data = {}

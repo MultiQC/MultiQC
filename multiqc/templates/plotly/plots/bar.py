@@ -4,7 +4,7 @@ import dataclasses
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import math
 import plotly.graph_objects as go
@@ -87,6 +87,37 @@ class BarPlot(Plot):
                 assert len(ds.samples) == len(cat["data"])
             return ds
 
+        def create_figure(
+            self,
+            layout: Optional[go.Layout] = None,
+            is_log=False,
+            is_pct=False,
+        ) -> go.Figure:
+            """
+            Create a Plotly figure for a dataset
+            """
+            fig = go.Figure(layout=layout or self.layout)
+            for cat in self.cats:
+                data = cat["data"]
+                if is_pct:
+                    data = cat["data_pct"]
+
+                params = copy.deepcopy(self.trace_params)
+                marker = params["marker"]
+                color = cat.get("color")
+                if color:
+                    marker["color"] = color
+
+                fig.add_trace(
+                    go.Bar(
+                        y=self.samples,
+                        x=data,
+                        name=cat["name"],
+                        **params,
+                    ),
+                )
+            return fig
+
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
         # swap x and y axes parameters: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
         for x_param in ["xmin", "xmax", "xCeiling"]:
@@ -97,7 +128,6 @@ class BarPlot(Plot):
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        # Extend each dataset object with a list of samples
         self.datasets: List[BarPlot.Dataset] = [
             BarPlot.Dataset.create(d, cats=cats, samples=samples)
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
@@ -128,29 +158,34 @@ class BarPlot(Plot):
         if "stacking" in pconfig and pconfig["stacking"] == "percentage":
             barmode = "relative"
 
-        self.layout.update(
-            legend=None,  # reset to default legend location on the top right
-            height=height,
-            showlegend=True,
-            barmode=barmode,
-            hovermode="y unified",
-            yaxis=dict(
-                showgrid=False,
-                categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
-                automargin=True,  # to make sure there is enough space for ticks labels
-                title=None,
-                ticksuffix=None,
-            ),
-            xaxis=dict(
-                title=dict(text=self.layout.yaxis.title.text),
-                range=[0, self.layout.xaxis.range[1]],
-            ),
-        )
-
-        self.trace_params = dict(
-            orientation="h",
-            marker=dict(line=dict(width=0)),
-        )
+        for dataset in self.datasets:
+            xmax = max(sum(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+            dataset.layout.update(
+                legend=None,  # reset to default legend location on the top right
+                height=height,
+                showlegend=True,
+                barmode=barmode,
+                hovermode="y unified",
+                yaxis=dict(
+                    showgrid=False,
+                    categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
+                    automargin=True,  # to make sure there is enough space for ticks labels
+                    title=None,
+                    ticksuffix=None,
+                ),
+                xaxis=dict(
+                    title=dict(text=dataset.layout.yaxis.title.text),
+                    hoverformat=dataset.layout.yaxis.hoverformat,
+                    ticksuffix=dataset.layout.yaxis.ticksuffix,
+                    range=[0, xmax],
+                ),
+            )
+            dataset.trace_params.update(
+                orientation="h",
+                marker=dict(line=dict(width=0)),
+                textposition="inside",
+                insidetextanchor="start",
+            )
 
         # Expand data with zeroes if there are fewer values than samples
         for dataset in self.datasets:
@@ -176,15 +211,15 @@ class BarPlot(Plot):
                         if sum_for_cat == 0:
                             values[key] = 0
                         else:
-                            values[key] = float(var + 0.0) / float(sum_for_cat)
+                            values[key] = float(var + 0.0) / float(sum_for_cat) * 100.0
                     cat["data_pct"] = values
 
         if self.add_log_tab:
             # Sorting from small to large so the log switch makes sense
             for dataset in self.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
-            # But reversing the legend so the largest bars are still on the top
-            self.layout.legend.traceorder = "reversed"
+                # But reversing the legend so the largest bars are still on the top
+                dataset.layout.legend.traceorder = "reversed"
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -193,38 +228,6 @@ class BarPlot(Plot):
         switch buttons
         """
         return ["xaxis"]
-
-    def create_figure(
-        self,
-        layout: go.Layout,
-        dataset: Dataset,
-        is_log=False,
-        is_pct=False,
-    ) -> go.Figure:
-        """
-        Create a Plotly figure for a dataset
-        """
-        fig = go.Figure(layout=layout)
-        for cat in dataset.cats:
-            data = cat["data"]
-            if is_pct:
-                data = cat["data_pct"]
-
-            params = copy.deepcopy(self.trace_params)
-            marker = params["marker"]
-            color = cat.get("color")
-            if color:
-                marker["color"] = color
-
-            fig.add_trace(
-                go.Bar(
-                    y=dataset.samples,
-                    x=data,
-                    name=cat["name"],
-                    **params,
-                ),
-            )
-        return fig
 
     def save_data_file(self, dataset: Dataset) -> None:
         val_by_cat_by_sample = defaultdict(dict)

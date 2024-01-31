@@ -1,15 +1,4 @@
 class LinePlot extends Plot {
-  constructor(dump) {
-    super(dump);
-
-    this.categories = dump["categories"];
-    this.yAutorangeBeforeBands = dump["y_autorange_before_bands"];
-
-    // Tracking Y-axis range to maintain the "Y-Limits" toggle button
-    this.ymin = this.layout.yaxis.range[0];
-    this.ymax = this.layout.yaxis.range[1];
-  }
-
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     return this.datasets[this.activeDatasetIdx].lines.length; // no samples in a dataset
@@ -17,7 +6,9 @@ class LinePlot extends Plot {
 
   prepData() {
     // Prepare data to either build Plotly traces or export as a file
-    let lines = this.datasets[this.activeDatasetIdx].lines;
+    let dataset = this.datasets[this.activeDatasetIdx];
+
+    let lines = dataset.lines;
 
     let samples = lines.map((line) => line.name);
     let sampleSettings = applyToolboxSettings(samples);
@@ -31,7 +22,9 @@ class LinePlot extends Plot {
     return [samples, lines];
   }
 
-  buildTraces() {
+  buildTraces(layout) {
+    let dataset = this.datasets[this.activeDatasetIdx];
+
     let [samples, lines] = this.prepData();
     if (lines.length === 0 || samples.length === 0) return [];
 
@@ -39,42 +32,6 @@ class LinePlot extends Plot {
     let highlighted = lines.filter((p) => p.highlight);
     let nonHighlighted = lines.filter((p) => !p.highlight);
     lines = nonHighlighted.concat(highlighted);
-
-    // Toggle buttons for Y-axis limis
-    let ymaxSet = this.ymax !== "undefined" && this.ymax !== null;
-    let yminSet = this.ymin !== "undefined" && this.ymin !== null;
-    // Only create if there is a y-axis limit
-    let groupDiv = $("#" + this.target).closest(".mqc_hcplot_plotgroup");
-    let addLimitToggle = ymaxSet || (yminSet && this.ymin !== 0);
-    if (this.yAutorangeBeforeBands) {
-      if (
-        yminSet &&
-        this.yAutorangeBeforeBands[0] <= this.ymin &&
-        ymaxSet &&
-        this.yAutorangeBeforeBands[1] >= this.ymax
-      )
-        addLimitToggle = false;
-    }
-    if (addLimitToggle) {
-      let wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(groupDiv);
-      wrapper.append(
-        '<span class="mqc_switch_wrapper"' +
-          '"' +
-          ' data-ymax="' +
-          this.ymax +
-          '"' +
-          ' data-ymin="' +
-          this.ymin +
-          '"' +
-          ' data-target="' +
-          this.target +
-          '"' +
-          ' data-y_autorange_range_before_bands="' +
-          this.yAutorangeBeforeBands +
-          '">Y-Limits: <span class="mqc_switch on">on</span></span>',
-      );
-      wrapper.after('<div class="clearfix" />');
-    }
 
     return lines.map((line) => {
       let x, y;
@@ -86,7 +43,7 @@ class LinePlot extends Plot {
         y = line.data;
       }
 
-      let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
+      let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
       if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
       else params.marker.color = line.color;
 
@@ -105,6 +62,8 @@ class LinePlot extends Plot {
   }
 
   exportData(format) {
+    let dataset = this.datasets[this.activeDatasetIdx];
+
     let [samples, lines] = this.prepData();
 
     // check if all lines have the same x values
@@ -115,7 +74,7 @@ class LinePlot extends Plot {
       if (line.data.length > 0 && Array.isArray(line.data[0])) {
         thisX = line.data.map((x) => x[0]);
       } else {
-        thisX = this.categories;
+        thisX = dataset.categories;
       }
       if (x === null) {
         x = thisX;

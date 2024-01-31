@@ -960,14 +960,6 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders input.form-control {
   width: 100px;
 }
-.mqc_hcplot_yaxis_limit_toggle {
-  float: right;
-  font-size: 11px;
-  margin-top: -30px;
-}
-.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
-  margin-left: 20px;
-}
 
 .beeswarm-hovertext {
   height: 29px;

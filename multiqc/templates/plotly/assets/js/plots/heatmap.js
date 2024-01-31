@@ -3,7 +3,6 @@ class HeatmapPlot extends Plot {
     super(dump);
     this.xcats_samples = dump.xcats_samples;
     this.ycats_samples = dump.ycats_samples;
-    this.square = dump.square;
     this.heatmap_config = dump.heatmap_config;
   }
 
@@ -16,9 +15,10 @@ class HeatmapPlot extends Plot {
 
   prepData() {
     // Prepare data to either build Plotly traces or export as a file
-    let rows = this.datasets[this.activeDatasetIdx]["rows"];
-    let xcats = this.datasets[this.activeDatasetIdx]["xcats"];
-    let ycats = this.datasets[this.activeDatasetIdx]["ycats"];
+    let dataset = this.datasets[this.activeDatasetIdx];
+    let rows = dataset["rows"];
+    let xcats = dataset["xcats"];
+    let ycats = dataset["ycats"];
 
     if (this.xcats_samples) {
       let xcatsSettings = applyToolboxSettings(xcats);
@@ -56,10 +56,11 @@ class HeatmapPlot extends Plot {
     return [rows, xcats, ycats];
   }
 
-  buildTraces() {
+  buildTraces(layout) {
     let [rows, xcats, ycats] = this.prepData();
 
-    let params = JSON.parse(JSON.stringify(this.traceParams)); // deep copy
+    let dataset = this.datasets[this.activeDatasetIdx];
+    let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
     let heatmap = {
       type: "heatmap",
@@ -84,17 +85,18 @@ class HeatmapPlot extends Plot {
   }
 
   resize(newHeight) {
-    let xcats = this.datasets[this.activeDatasetIdx]["xcats"];
-    let ycats = this.datasets[this.activeDatasetIdx]["ycats"];
+    let dataset = this.datasets[this.activeDatasetIdx];
+    let xcats = dataset["xcats"];
+    let ycats = dataset["ycats"];
 
     let pxPerElem = newHeight / ycats.length;
     let newWidth = pxPerElem * xcats.length;
-    newWidth = this.square ? newWidth : null;
+    newWidth = dataset.square ? newWidth : null;
 
     if (newHeight < this.layout.height) {
       // We're shrinking the plot, so we need to allow plotly to skip ticks
-      this.layout.xaxis.nticks = null;
-      this.layout.yaxis.nticks = null;
+      dataset.layout.xaxis.nticks = null;
+      dataset.layout.yaxis.nticks = null;
     }
 
     Plotly.relayout(this.target, { height: newHeight, width: newWidth });

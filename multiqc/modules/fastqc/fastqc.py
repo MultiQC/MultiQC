@@ -622,9 +622,12 @@ class MultiqcModule(BaseMultiqcModule):
             "xmax": 100,
             "xmin": 0,
             "yDecimals": False,
-            "tt_label": "<b>{point.x}% GC</b>: {point.y}%",
+            "tt_label": "<b>{point.x}% GC</b>: {point.y}",
             "colors": self.get_status_cols("per_sequence_gc_content"),
-            "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
+            "data_labels": [
+                {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
+                {"name": "Counts", "ylab": "Count", "tt_suffix": ""},
+            ],
         }
 
         # Try to find and plot a theoretical GC line
@@ -930,7 +933,6 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 2,
             "tt_suffix": "%",
             "tt_percentages": False,
-            "ylab_format": "{value}%",
             "cpswitch": False,
             "ylab": "Percentage of Total Sequences",
         }

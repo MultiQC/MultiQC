@@ -4,8 +4,8 @@ import io
 import logging
 import os
 from typing import Dict, List, Union, Optional
-
 import plotly.graph_objects as go
+
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions, config
@@ -38,130 +38,172 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     return p.add_to_report(report)
 
 
-@dataclasses.dataclass
-class Dataset(BaseDataset):
-    lines: List[Dict]
-
-
 class LinePlot(Plot):
+    @dataclasses.dataclass
+    class Dataset(BaseDataset):
+        lines: List[Dict]
+        categories: List[str]
+
+        @staticmethod
+        def create(
+            dataset: BaseDataset,
+            lines: List[Dict],
+            pconfig: Dict,
+        ) -> "LinePlot.Dataset":
+            dataset = LinePlot.Dataset(
+                **dataset.__dict__,
+                lines=lines,
+                categories=pconfig.get("categories", []),
+            )
+            if dataset.categories:
+                dataset.layout.xaxis.ticktext = dataset.categories
+                dataset.layout.xaxis.tickvals = list(range(len(dataset.categories)))
+
+            # Make a tooltip always show on hover over any point on plot
+            dataset.layout.hoverdistance = -1
+
+            dataset.trace_params.update(
+                mode="lines" if config.lineplot_style == "lines" else "lines+markers",
+                line={"width": 2 if config.lineplot_style == "lines" else 0.6},
+                marker={"size": 4},
+            )
+
+            y_min_range = pconfig.get("yMinRange")
+            y_bands = pconfig.get("yPlotBands")
+            x_bands = pconfig.get("xPlotBands")
+            x_lines = pconfig.get("xPlotLines")
+            y_lines = pconfig.get("yPlotLines")
+            if y_min_range or y_bands or x_bands or x_lines or y_lines:
+                # We don't want the bands to affect the calculated y-axis range. So we
+                # call `fig.full_figure_for_development` to force-calculate the figure size
+                # before we add the bands, and then force set the calculated range.
+                dev_fig = dataset.create_figure(dataset.layout).full_figure_for_development(warn=False)
+                dataset.layout.yaxis.range = dev_fig.layout.yaxis.range
+                dataset.layout.xaxis.range = dev_fig.layout.xaxis.range
+                if y_min_range:
+                    if dataset.layout.yaxis.range[1] - dataset.layout.yaxis.range[0] < y_min_range:
+                        dataset.layout.yaxis.range = [
+                            dataset.layout.yaxis.range[0],
+                            dataset.layout.yaxis.range[0] + y_min_range,
+                        ]
+
+                dataset.layout.shapes = (
+                    [
+                        dict(
+                            type="rect",
+                            y0=band["from"],
+                            y1=band["to"],
+                            x0=0,
+                            x1=1,
+                            xref="paper",  # make x coords are relative to the plot paper [0,1]
+                            fillcolor=band["color"],
+                            line={
+                                "width": 0,
+                            },
+                            layer="below",
+                        )
+                        for band in (y_bands or [])
+                    ]
+                    + [
+                        dict(
+                            type="rect",
+                            x0=band["from"],
+                            x1=band["to"],
+                            y0=0,
+                            y1=1,
+                            yref="paper",  # make y coords are relative to the plot paper [0,1]
+                            fillcolor=band["color"],
+                            line={
+                                "width": 0,
+                            },
+                            layer="below",
+                        )
+                        for band in (x_bands or [])
+                    ]
+                    + [
+                        dict(
+                            type="line",
+                            xref="paper",
+                            yref="y",
+                            x0=0,
+                            y0=line["value"],
+                            x1=1,
+                            y1=line["value"],
+                            line={
+                                "width": line["width"],
+                                "dash": convert_dash_style(line["dashStyle"]),
+                                "color": line["color"],
+                            },
+                        )
+                        for line in (y_lines or [])
+                    ]
+                    + [
+                        dict(
+                            type="line",
+                            yref="paper",
+                            xref="x",
+                            x0=line["value"],
+                            y0=0,
+                            x1=line["value"],
+                            y1=1,
+                            line={
+                                "width": line["width"],
+                                "dash": convert_dash_style(line["dashStyle"]),
+                                "color": line["color"],
+                            },
+                        )
+                        for line in (x_lines or [])
+                    ]
+                )
+
+            return dataset
+
+        def create_figure(
+            self,
+            layout: Optional[go.Layout] = None,
+            is_log=False,
+            is_pct=False,
+        ) -> go.Figure:
+            """
+            Create a Plotly figure for a dataset
+            """
+            fig = go.Figure(layout=layout or self.layout)
+
+            for line in self.lines:
+                if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                    xs = [x[0] for x in line["data"]]
+                    ys = [x[1] for x in line["data"]]
+                else:
+                    xs = [x for x in range(len(line["data"]))]
+                    ys = line["data"]
+
+                params = copy.deepcopy(self.trace_params)
+                if "dashStyle" in line:
+                    params["line"]["dash"] = convert_dash_style(line["dashStyle"].lower())
+                if "lineWidth" in line:
+                    params["line"]["width"] = line["lineWidth"]
+                fig.add_trace(
+                    go.Scatter(
+                        x=xs,
+                        y=ys,
+                        name=line["name"],
+                        text=[line["name"]] * len(xs),
+                        marker_color=line.get("color"),
+                        **params,
+                    )
+                )
+            return fig
+
     def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):
         super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
 
-        # Extend each dataset object with a list of samples
-        self.datasets: List[Dataset] = [
-            Dataset(**d.__dict__, lines=lines) for d, lines in zip(self.datasets, lists_of_lines)
+        self.datasets: List[LinePlot.Dataset] = [
+            LinePlot.Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
         ]
 
-        self.categories: List[str] = pconfig.get("categories", [])
-        if self.categories:
-            self.layout.xaxis.ticktext = self.categories
-            self.layout.xaxis.tickvals = list(range(len(self.categories)))
-
-        # Make a tooltip always show on hover over any point on plot
-        self.layout.hoverdistance = -1
-
-        self.trace_params.update(
-            mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-            line={"width": 2 if config.lineplot_style == "lines" else 0.6},
-            marker={"size": 4},
-        )
-
-        if self.flat and self.datasets:
-            self.layout.height += len(self.datasets[0].lines) * 5  # extra space for legend
-
-        self.y_autorange_before_bands = None
-        y_min_range = self.pconfig.get("yMinRange")
-        y_bands = self.pconfig.get("yPlotBands")
-        x_bands = self.pconfig.get("xPlotBands")
-        x_lines = self.pconfig.get("xPlotLines")
-        y_lines = self.pconfig.get("yPlotLines")
-        if y_min_range or y_bands or x_bands or x_lines or y_lines:
-            # We don't want the bands to affect the calculated y-axis range. So we
-            # call `fig.full_figure_for_development` to force-calculate the figure size
-            # before we add the bands, and then force set the calculated range.
-            dev_figs = [self.create_figure(self.layout, d) for d in self.datasets]
-            dev_figs = [fig.full_figure_for_development(warn=False) for fig in dev_figs]
-            self.layout.yaxis.range = [
-                min([fig.layout.yaxis.range[0] for fig in dev_figs]),
-                max([fig.layout.yaxis.range[1] for fig in dev_figs]),
-            ]
-            self.layout.xaxis.range = [
-                min([fig.layout.xaxis.range[0] for fig in dev_figs]),
-                max([fig.layout.xaxis.range[1] for fig in dev_figs]),
-            ]
-            if y_min_range:
-                if self.layout.yaxis.range[1] - self.layout.yaxis.range[0] < y_min_range:
-                    self.layout.yaxis.range = [self.layout.yaxis.range[0], self.layout.yaxis.range[0] + y_min_range]
-            self.y_autorange_before_bands = self.layout.yaxis.range
-
-            self.layout.shapes = (
-                [
-                    dict(
-                        type="rect",
-                        y0=band["from"],
-                        y1=band["to"],
-                        x0=0,
-                        x1=1,
-                        xref="paper",  # make x coords are relative to the plot paper [0,1]
-                        fillcolor=band["color"],
-                        line={
-                            "width": 0,
-                        },
-                        layer="below",
-                    )
-                    for band in (y_bands or [])
-                ]
-                + [
-                    dict(
-                        type="rect",
-                        x0=band["from"],
-                        x1=band["to"],
-                        y0=0,
-                        y1=1,
-                        yref="paper",  # make y coords are relative to the plot paper [0,1]
-                        fillcolor=band["color"],
-                        line={
-                            "width": 0,
-                        },
-                        layer="below",
-                    )
-                    for band in (x_bands or [])
-                ]
-                + [
-                    dict(
-                        type="line",
-                        xref="paper",
-                        yref="y",
-                        x0=0,
-                        y0=line["value"],
-                        x1=1,
-                        y1=line["value"],
-                        line={
-                            "width": line["width"],
-                            "dash": convert_dash_style(line["dashStyle"]),
-                            "color": line["color"],
-                        },
-                    )
-                    for line in (y_lines or [])
-                ]
-                + [
-                    dict(
-                        type="line",
-                        yref="paper",
-                        xref="x",
-                        x0=line["value"],
-                        y0=0,
-                        x1=line["value"],
-                        y1=1,
-                        line={
-                            "width": line["width"],
-                            "dash": convert_dash_style(line["dashStyle"]),
-                            "color": line["color"],
-                        },
-                    )
-                    for line in (x_lines or [])
-                ]
-            )
+        for dataset in self.datasets:
+            if self.flat:
+                dataset.layout.height += len(dataset.lines) * 5  # extra space for legend
 
     @staticmethod
     def tt_label() -> Optional[str]:
@@ -174,43 +216,6 @@ class LinePlot(Plot):
         switch buttons
         """
         return ["yaxis"]
-
-    def dump_for_javascript(self):
-        """Serialise the data to pick up in plotly-js"""
-        d = super().dump_for_javascript()
-        d["categories"] = self.categories
-        d["y_autorange_before_bands"] = self.y_autorange_before_bands
-        return d
-
-    def create_figure(self, layout: go.Layout, dataset: Dataset, is_log=False, is_pct=False):
-        """
-        Create a Plotly figure for a dataset
-        """
-        fig = go.Figure(layout=layout)
-        for line in dataset.lines:
-            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                xs = [x[0] for x in line["data"]]
-                ys = [x[1] for x in line["data"]]
-            else:
-                xs = [x for x in range(len(line["data"]))]
-                ys = line["data"]
-
-            params = copy.deepcopy(self.trace_params)
-            if "dashStyle" in line:
-                params["line"]["dash"] = convert_dash_style(line["dashStyle"].lower())
-            if "lineWidth" in line:
-                params["line"]["width"] = line["lineWidth"]
-            fig.add_trace(
-                go.Scatter(
-                    x=xs,
-                    y=ys,
-                    name=line["name"],
-                    text=[line["name"]] * len(xs),
-                    marker_color=line.get("color"),
-                    **params,
-                )
-            )
-        return fig
 
     def save_data_file(self, dataset: Dataset) -> None:
         y_by_x_by_sample = dict()
@@ -231,7 +236,7 @@ class LinePlot(Plot):
                     y_by_x_by_sample[line["name"]][x[0]] = x[1]
                 else:
                     try:
-                        y_by_x_by_sample[line["name"]][self.categories[i]] = x
+                        y_by_x_by_sample[line["name"]][dataset.categories[i]] = x
                     except (ValueError, KeyError, IndexError):
                         y_by_x_by_sample[line["name"]][str(i)] = x
 
