@@ -78,18 +78,20 @@ class BarPlot(Plot):
             samples: List[str],
         ) -> "BarPlot.Dataset":
             for cat in cats:
+                if "name" not in cat:
+                    raise ValueError(f"Bar plot {dataset.plot.id}: missing 'name' key in category")
                 cat["name"] = "<br>".join(_split_long_string(cat["name"]))
                 color = spectra.html(cat["color"])
                 cat["color"] = ",".join([str(x) for x in color.rgb])
 
-            ds = BarPlot.Dataset(
+            dataset = BarPlot.Dataset(
                 **dataset.__dict__,
                 cats=cats,
                 samples=samples,
             )
-            for cat in ds.cats:
-                assert len(ds.samples) == len(cat["data"])
-            return ds
+            for cat in dataset.cats:
+                assert len(dataset.samples) == len(cat["data"])
+            return dataset
 
         def create_figure(
             self,

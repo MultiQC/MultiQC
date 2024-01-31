@@ -131,7 +131,7 @@ class LinePlot(Plot):
                             y1=line["value"],
                             line={
                                 "width": line["width"],
-                                "dash": convert_dash_style(line["dashStyle"]),
+                                "dash": convert_dash_style(line.get("dashStyle")),
                                 "color": line["color"],
                             },
                         )
@@ -148,7 +148,7 @@ class LinePlot(Plot):
                             y1=1,
                             line={
                                 "width": line["width"],
-                                "dash": convert_dash_style(line["dashStyle"]),
+                                "dash": convert_dash_style(line.get("dashStyle")),
                                 "color": line["color"],
                             },
                         )

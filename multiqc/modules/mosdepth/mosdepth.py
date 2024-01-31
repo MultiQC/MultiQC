@@ -28,21 +28,21 @@ def read_config():
     if not isinstance(cfg["exclude_contigs"], list):
         cfg["exclude_contigs"] = []
 
-    cfg["xchr"] = cfg.get("xchr", None)
-    if not isinstance(cfg["xchr"], str):
-        cfg["xchr"] = None
+    xchr = cfg.get("xchr")
+    if xchr and isinstance(cfg["xchr"], str):
+        cfg["xchr"] = xchr
 
-    cfg["ychr"] = cfg.get("ychr", None)
-    if not isinstance(cfg["ychr"], str):
-        cfg["ychr"] = None
+    ychr = cfg.get("ychr")
+    if ychr and isinstance(cfg["ychr"], str):
+        cfg["ychr"] = ychr
 
     if cfg["include_contigs"]:
         log.debug(f"Trying to include these contigs in mosdepth: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
         log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
-    if cfg["xchr"]:
+    if cfg.get("xchr"):
         log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
-    if cfg["ychr"]:
+    if cfg.get("ychr"):
         log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
@@ -302,8 +302,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             if xy_cov:
                 xy_keys = {
-                    "x": {"name": self.cfg.get("xchr", "Chromosome X")},
-                    "y": {"name": self.cfg.get("xchr", "Chromosome Y")},
+                    "x": {"name": self.cfg.get("xchr") or "Chromosome X"},
+                    "y": {"name": self.cfg.get("xchr") or "Chromosome Y"},
                 }
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
