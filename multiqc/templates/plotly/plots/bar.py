@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 
 import math
 import plotly.graph_objects as go
+import spectra
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions
@@ -78,6 +79,9 @@ class BarPlot(Plot):
         ) -> "BarPlot.Dataset":
             for cat in cats:
                 cat["name"] = "<br>".join(_split_long_string(cat["name"]))
+                color = spectra.html(cat["color"])
+                cat["color"] = ",".join([str(x) for x in color.rgb])
+
             ds = BarPlot.Dataset(
                 **dataset.__dict__,
                 cats=cats,
@@ -104,9 +108,7 @@ class BarPlot(Plot):
 
                 params = copy.deepcopy(self.trace_params)
                 marker = params["marker"]
-                color = cat.get("color")
-                if color:
-                    marker["color"] = color
+                marker["color"] = f"rgb({cat['color']})"
 
                 fig.add_trace(
                     go.Bar(

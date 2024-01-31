@@ -70,15 +70,20 @@ class BarPlot extends Plot {
 
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
+    // Because we are using subplots, we need to make sure the legend is not
+    // duplicated for each sample, so we pick one sample for that as all
+    // samples have data for all categories.
+    let legendSample = 0;
+    if (anyHighlight)
+      // To make sure the legend uses the bright colors from the toolbox
+      legendSample = filteredSettings.findIndex((s) => s.highlight);
+
     return cats.map((cat) => {
       return filteredSettings.map((sample, sampleIdx) => {
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
-        params.marker.color = cat.color;
-        params.marker.line = {
-          // Remove grey from highlights:
-          color: anyHighlight ? sample.highlight : null,
-          width: sample.highlight ? 2 : params.marker.line.width,
-        };
+
+        let alpha = anyHighlight && !sample.highlight ? 0.1 : 1;
+        params.marker.color = "rgba(" + cat.color + "," + alpha + ")";
 
         return {
           type: "bar",
@@ -89,7 +94,7 @@ class BarPlot extends Plot {
           yaxis: "y" + (sampleIdx === 0 ? "" : sampleIdx + 1),
           ...params,
           legendgroup: cat.name,
-          showlegend: sampleIdx === 0,
+          showlegend: sampleIdx === legendSample,
           meta: cat.name,
           hovertemplate: "%{meta}: %{x}<extra></extra>",
         };
