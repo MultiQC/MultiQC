@@ -545,7 +545,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Heterozygosity",
-                description="Standard devation of heterozygous allele balance against mean depth.",
+                description="Standard deviation of heterozygous allele balance against mean depth.",
                 helptext="A high standard deviation in allele balance suggests contamination.",
                 anchor="somalier-hetcheck",
                 plot=scatter.plot(data, pconfig),
@@ -605,7 +605,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.somalier_data.items():
             # ensure that only relevant items are added,
             # i.e. only ancestry category values
-            ls = {k: v for k, v in d.items() if (k in self.somalier_ancestry_cats)}
+            ls = {k: v * 100.0 for k, v in d.items() if (k in self.somalier_ancestry_cats)}
             if len(ls) > 0:  # only add dict, if it contains values
                 data[s_name] = ls
 
@@ -616,6 +616,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "cpswitch": False,
                 "hide_zero_cats": False,
                 "ylab": "Predicted Ancestry",
+                "tt_suffix": "%",
             }
 
             self.add_section(

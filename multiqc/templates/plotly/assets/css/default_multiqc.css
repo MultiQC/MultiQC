@@ -1005,7 +1005,7 @@ g.annotation {
   float: right;
 }
 
-.col-xs-12 > button {
+.col-xs-12 button {
   margin-top: 0;
   margin-bottom: 2px;
 }

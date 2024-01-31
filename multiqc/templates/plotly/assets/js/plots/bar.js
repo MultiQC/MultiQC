@@ -70,8 +70,6 @@ class BarPlot extends Plot {
 
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
-    layout.hovermode = "closest";
-
     return cats.map((cat) => {
       return filteredSettings.map((sample, sampleIdx) => {
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
