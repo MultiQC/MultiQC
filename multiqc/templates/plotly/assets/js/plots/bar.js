@@ -90,7 +90,6 @@ class BarPlot extends Plot {
           x: [cat.data[sampleIdx]],
           y: [sample.name],
           name: cat.name,
-          text: cat.name,
           yaxis: "y" + (sampleIdx === 0 ? "" : sampleIdx + 1),
           ...params,
           legendgroup: cat.name,
