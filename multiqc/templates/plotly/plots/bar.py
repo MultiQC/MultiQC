@@ -190,6 +190,9 @@ class BarPlot(Plot):
                 textposition="inside",
                 insidetextanchor="start",
             )
+            if "hovertemplate" in dataset.trace_params:
+                # %{text} doesn't work for unified hovermode:
+                dataset.trace_params["hovertemplate"] = dataset.trace_params["hovertemplate"].replace("%{text}", "")
 
         # Expand data with zeroes if there are fewer values than samples
         for dataset in self.datasets:
@@ -240,3 +243,8 @@ class BarPlot(Plot):
                 s_name = dataset.samples[d_idx]
                 val_by_cat_by_sample[s_name][cat["name"]] = d_val
         util_functions.write_data_file(val_by_cat_by_sample, dataset.uid)
+
+    @staticmethod
+    def tt_label() -> str:
+        """Default tooltip label"""
+        return "%{meta}: <b>%{x}</b>"

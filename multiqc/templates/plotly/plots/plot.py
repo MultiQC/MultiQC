@@ -262,7 +262,10 @@ class Plot(ABC):
             ),
         )
 
-        trace_params = {"hovertemplate": hovertemplate}
+        trace_params = {}
+        if hovertemplate:
+            trace_params["hovertemplate"] = hovertemplate
+
         return layout, trace_params
 
     @staticmethod

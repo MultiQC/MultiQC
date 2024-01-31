@@ -95,7 +95,6 @@ class BarPlot extends Plot {
           legendgroup: cat.name,
           showlegend: sampleIdx === legendSample,
           meta: cat.name,
-          hovertemplate: "%{meta}: %{x}<extra></extra>",
         };
       });
     });
