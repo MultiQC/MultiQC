@@ -305,7 +305,7 @@ class StatsReportMixin:
             # Make line graph of variants per depth
             if len(depth_data) > 0:
                 pconfig = {
-                    "id": "bcftools_stats_depth",
+                    "id": "bcftools_stats_variant_depth",
                     "title": "Bcftools Stats: Variant depths",
                     "ylab": "Fraction of sites (%)",
                     "xlab": "Variant depth",
@@ -374,7 +374,7 @@ class StatsReportMixin:
             # Make bargraph plot of sequencing depth stats
             if len(self.bcftools_stats_sample_depth) > 0:
                 pconfig = {
-                    "id": "bcftools-stats-depth",
+                    "id": "bcftools-stats-sequencing-depth",
                     "title": "Bcftools Stats: Sequencing depth",
                     "ylab": "Sequencing depth",
                     "cpswitch_counts_label": "Sequencing depth",
