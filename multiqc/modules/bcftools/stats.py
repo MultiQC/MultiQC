@@ -113,7 +113,7 @@ class StatsReportMixin:
                         change = ">".join(rc[n] for n in change.split(">"))
 
                     field = f"substitution_type_{change}"
-                    value = float(s[3].strip())
+                    value = int(s[3].strip())
                     if field not in self.bcftools_stats[s_name]:
                         self.bcftools_stats[s_name][field] = 0
                     self.bcftools_stats[s_name][field] += value
