@@ -49,7 +49,6 @@ def multiqc_dump_json(report):
             "subtitle",
             "title",
             "version",
-            "cwd",
             "output_dir",
         ],
     }
