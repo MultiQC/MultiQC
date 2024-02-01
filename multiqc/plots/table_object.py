@@ -126,13 +126,13 @@ class DataTable:
                 if shared_key in ["read_count", "long_read_count", "base_count"]:
                     if shared_key == "read_count":
                         multiplier = config.read_count_multiplier
-                        suffix = config.read_count_prefix
+                        suffix = " " + config.read_count_prefix
                     elif shared_key == "long_read_count":
                         multiplier = config.long_read_count_multiplier
-                        suffix = config.long_read_count_prefix
+                        suffix = " " + config.long_read_count_prefix
                     elif shared_key == "base_count":
                         multiplier = config.base_count_multiplier
-                        suffix = config.base_count_prefix
+                        suffix = " " + config.base_count_prefix
                     if headers[idx][k].get("modify") is None:
                         headers[idx][k]["modify"] = lambda x: x * multiplier
                     if headers[idx][k].get("min") is None:
@@ -140,8 +140,10 @@ class DataTable:
                     if headers[idx][k].get("format") is None:
                         if multiplier == 1:
                             headers[idx][k]["format"] = "{:,.0f}"
-                if "suffix" not in headers[idx][k] and suffix:
-                    headers[idx][k]["suffix"] = suffix
+                if suffix:
+                    suffix = suffix.replace(" ", "&nbsp;")
+                    if "suffix" not in headers[idx][k]:
+                        headers[idx][k]["suffix"] = suffix
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))
