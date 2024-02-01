@@ -158,7 +158,6 @@ def plot(data, cats=None, pconfig=None):
                     thisdata.append(float("nan"))
                     continue
                 val = d[s][c]
-                math.isnan(val)
                 if not isinstance(val, (float, int)):
                     try:
                         val = int(val)
