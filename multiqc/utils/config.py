@@ -25,10 +25,7 @@ logger = logging.getLogger("multiqc")
 # Get the MultiQC version
 version = importlib_metadata.version("multiqc")
 short_version = version
-# Get cwd and script path (included in MegaQC JSON)
-cwd = os.path.realpath(os.getcwd())
 script_path = os.path.dirname(os.path.realpath(__file__))
-# Get Git hash
 git_hash = None
 git_hash_short = None
 try:
