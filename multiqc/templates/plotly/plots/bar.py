@@ -126,6 +126,7 @@ class BarPlot(Plot):
                         **params,
                     ),
                 )
+
             return fig
 
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
@@ -210,6 +211,12 @@ class BarPlot(Plot):
             if "hovertemplate" in dataset.trace_params:
                 # %{text} doesn't work for unified hovermode:
                 dataset.trace_params["hovertemplate"] = dataset.trace_params["hovertemplate"].replace("%{text}", "")
+
+            if dataset.layout.xaxis.hoverformat is None:
+                if all(all(isinstance(x, float) for x in cat["data"]) for cat in dataset.cats):
+                    dataset.layout.xaxis.hoverformat = ",.2f"
+                elif all(all(isinstance(x, int) for x in cat["data"]) for cat in dataset.cats):
+                    dataset.layout.xaxis.hoverformat = ",.0f"
 
         # Expand data with zeroes if there are fewer values than samples
         for dataset in self.datasets:

@@ -247,7 +247,7 @@ class Plot(ABC):
         ymax = dconfig.get("ymax", self.pconfig.get("ymax"))
 
         # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-        tt_decimals = dconfig.get("tt_decimals", self.pconfig.get("tt_decimals", 0))
+        tt_decimals = dconfig.get("tt_decimals", self.pconfig.get("tt_decimals"))
         y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
         layout = dict(
