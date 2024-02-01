@@ -77,20 +77,26 @@ class BarPlot(Plot):
             cats: List[Dict],
             samples: List[str],
         ) -> "BarPlot.Dataset":
+            # Post-process categories
             for cat in cats:
+                # Split long category names
                 if "name" not in cat:
                     raise ValueError(f"Bar plot {dataset.plot.id}: missing 'name' key in category")
                 cat["name"] = "<br>".join(_split_long_string(cat["name"]))
+
+                # Reformat color to be ready to add alpha in Plotly-JS
                 color = spectra.html(cat["color"])
                 cat["color"] = ",".join([str(x) for x in color.rgb])
+
+                # Check that the number of samples is the same for all categories
+                assert len(samples) == len(cat["data"])
 
             dataset = BarPlot.Dataset(
                 **dataset.__dict__,
                 cats=cats,
                 samples=samples,
             )
-            for cat in dataset.cats:
-                assert len(dataset.samples) == len(cat["data"])
+
             return dataset
 
         def create_figure(
@@ -153,7 +159,7 @@ class BarPlot(Plot):
         height = min(MAX_PLOT_HEIGHT, height)
         height = max(MIN_PLOT_HEIGHT, height)
 
-        barmode = "stack" if self.p_active else "relative"
+        barmode = "stack"
         if "stacking" in pconfig and pconfig["stacking"] != "stack":
             barmode = "group"
 
