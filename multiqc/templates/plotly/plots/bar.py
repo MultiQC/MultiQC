@@ -123,11 +123,6 @@ class BarPlot(Plot):
             return fig
 
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
-        # swap x and y axes parameters: the bar plot is "transposed", so yaxis corresponds to the horizontal axis
-        for x_param in ["xmin", "xmax", "xCeiling"]:
-            y_param = "y" + x_param[1:]
-            pconfig[x_param], pconfig[y_param] = pconfig.get(y_param), pconfig.get(x_param)
-
         super().__init__(PlotType.BAR, pconfig, len(cats_lists))
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
@@ -159,29 +154,45 @@ class BarPlot(Plot):
         height = max(MIN_PLOT_HEIGHT, height)
 
         barmode = "stack" if self.p_active else "relative"
-        if "stacking" in pconfig and pconfig["stacking"] == "percentage":
-            barmode = "relative"
+        if "stacking" in pconfig and pconfig["stacking"] != "stack":
+            barmode = "group"
 
         for dataset in self.datasets:
-            xmax = max(sum(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+            xmax = self.pconfig.get("ymax")
+            if xmax is None:
+                if barmode == "stack":
+                    xmax = max(sum(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                else:
+                    xmax = max(max(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
             dataset.layout.update(
-                legend=None,  # reset to default legend location on the top right
                 height=height,
                 showlegend=True,
                 barmode=barmode,
-                hovermode="y unified",
                 yaxis=dict(
                     showgrid=False,
                     categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
                     automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
-                    ticksuffix=None,
+                    hoverformat=dataset.layout.xaxis.hoverformat,
+                    ticksuffix=dataset.layout.xaxis.ticksuffix,
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout.yaxis.title.text),
                     hoverformat=dataset.layout.yaxis.hoverformat,
                     ticksuffix=dataset.layout.yaxis.ticksuffix,
                     range=[0, xmax],
+                ),
+                # Re-initiate legend to reset to default legend location on the top right
+                legend=go.layout.Legend(
+                    # We use legend groups with subplots to simulate standard legend interactivity
+                    # like we had a standard bar graph without subplots. We need to remove the space
+                    # between the legend groups to make it look like a single legend.
+                    tracegroupgap=0,
+                ),
+                hovermode="y unified",
+                hoverlabel=dict(
+                    bgcolor="rgba(255, 255, 255, 0.8)",
+                    font=dict(color="black"),
                 ),
             )
             dataset.trace_params.update(
