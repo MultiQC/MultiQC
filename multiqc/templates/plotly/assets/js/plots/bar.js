@@ -43,11 +43,6 @@ class BarPlot extends Plot {
         return ["xy" + (sampleIdx === 0 ? "" : sampleIdx + 1)];
       }),
     };
-    // We use legend groups with subplots to simulate standard legend interactivity
-    // like we had a standard bar graph without subplots. We need to remove the space
-    // between the legend groups to make it look like a single legend.
-    if (layout.legend === undefined) layout.legend = {};
-    layout.legend.tracegroupgap = 0;
 
     let anyHighlight = filteredSettings.some((s) => s.highlight);
 
