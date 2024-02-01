@@ -152,13 +152,24 @@ def plot(data, cats=None, pconfig=None):
             for s in hc_samples:
                 if s not in sample_dcount:
                     sample_dcount[s] = 0
-                try:
-                    thisdata.append(float(d[s][c]))
-                    catcount += 1
-                    sample_dcount[s] += 1
-                except (KeyError, ValueError):
+
+                if s not in d or c not in d[s]:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float("nan"))
+                    continue
+                val = d[s][c]
+                if not isinstance(val, (float, int)):
+                    try:
+                        val = float(val)
+                    except ValueError:
+                        val = None
+                if val is None:
+                    # Pad with NaNs when we have missing categories in a sample
+                    thisdata.append(float("nan"))
+                    continue
+                thisdata.append(val)
+                catcount += 1
+                sample_dcount[s] += 1
             if catcount > 0:
                 if pconfig.get("hide_zero_cats", True) is False or max(x for x in thisdata if not math.isnan(x)) > 0:
                     thisdict = {"name": cats[idx][c]["name"], "data": thisdata}
