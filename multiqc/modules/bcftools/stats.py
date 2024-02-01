@@ -314,6 +314,11 @@ class StatsReportMixin:
             )
         # Make line graph of variants per depth
         if len(self.bcftools_stats_depth_data) > 0:
+            # Order depth bins as numbers
+            for sname, d in self.bcftools_stats_depth_data.items():
+                d = dict(sorted(d.items(), key=lambda x: int(re.sub(r"\D", "", x[0]))))
+                self.bcftools_stats_depth_data[sname] = d
+
             pconfig = {
                 "id": "bcftools_stats_variant_depths",
                 "title": "Bcftools Stats: Variant depths",
