@@ -56,8 +56,9 @@ class LinePlot(Plot):
                 categories=pconfig.get("categories", []),
             )
             if dataset.categories:
-                dataset.layout.xaxis.ticktext = dataset.categories
-                dataset.layout.xaxis.tickvals = list(range(len(dataset.categories)))
+                dataset.layout.xaxis.type = "category"
+                # check that all lines have the same number of categories
+                assert all(len(line["data"]) == len(dataset.categories) for line in dataset.lines), dataset.uid
 
             # Make a tooltip always show on hover over any point on plot
             dataset.layout.hoverdistance = -1
@@ -173,6 +174,10 @@ class LinePlot(Plot):
                 if len(line["data"]) > 0 and isinstance(line["data"][0], list):
                     xs = [x[0] for x in line["data"]]
                     ys = [x[1] for x in line["data"]]
+                elif self.categories:
+                    assert len(line["data"]) == len(self.categories)
+                    xs = self.categories
+                    ys = line["data"]
                 else:
                     xs = [x for x in range(len(line["data"]))]
                     ys = line["data"]

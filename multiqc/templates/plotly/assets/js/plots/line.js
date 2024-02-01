@@ -38,6 +38,9 @@ class LinePlot extends Plot {
       if (line.data.length > 0 && Array.isArray(line.data[0])) {
         x = line.data.map((x) => x[0]);
         y = line.data.map((x) => x[1]);
+      } else if (dataset.categories) {
+        x = dataset.categories;
+        y = line.data;
       } else {
         x = [...Array(line.data.length).keys()];
         y = line.data;
