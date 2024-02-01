@@ -314,11 +314,16 @@ class StatsReportMixin:
             )
         # Make line graph of variants per depth
         if len(self.bcftools_stats_depth_data) > 0:
-            # Order depth bins as numbers
-            for sname, d in self.bcftools_stats_depth_data.items():
-                d = dict(sorted(d.items(), key=lambda x: int(re.sub(r"\D", "", x[0]))))
-                self.bcftools_stats_depth_data[sname] = d
-
+            # Get shared list of bins and order them numerically
+            all_bins = []
+            for sname, val_by_bin in self.bcftools_stats_depth_data.items():
+                all_bins.extend(list(val_by_bin.keys()))
+            all_bins = sorted(all_bins, key=lambda x: int(re.sub(r"\D", "", x)))
+            # Order bins in samples and fill missing bins:
+            sorted_data = {
+                sname: {b: self.bcftools_stats_depth_data[sname].get(b, 0) for b in all_bins}
+                for sname in self.bcftools_stats_depth_data
+            }
             pconfig = {
                 "id": "bcftools_stats_variant_depths",
                 "title": "Bcftools Stats: Variant depths",
@@ -333,7 +338,7 @@ class StatsReportMixin:
                 name="Variant depths",
                 anchor="bcftools-stats_depth_plot",
                 description="Read depth support distribution for called variants",
-                plot=linegraph.plot(self.bcftools_stats_depth_data, pconfig),
+                plot=linegraph.plot(sorted_data, pconfig),
             )
 
         # Make bargraph plot of missing sites
