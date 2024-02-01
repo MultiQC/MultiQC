@@ -219,11 +219,11 @@ class Plot(ABC):
             if ysuffix is None:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
                 m = re.search(r"\{y.*}(\S+)", tt_label)  # complex label format
                 if m:
-                    ysuffix = m.group(1)
+                    ysuffix = m.group(1).rstrip()
             if xsuffix is None:
                 m = re.search(r"\{x.*}(.+)%\{", tt_label)
                 if m:
-                    xsuffix = m.group(1).replace("</b>", "").replace(":", "").strip()
+                    xsuffix = m.group(1).replace("</b>", "").replace(":", "").rstrip()
 
             # As the suffix will be added automatically for the simple format ({y}), remove it from the label
             if ysuffix is not None and "{y}" + ysuffix in tt_label:
