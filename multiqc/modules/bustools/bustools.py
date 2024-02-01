@@ -241,7 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
         # also make some nice barplots
         # barplot for mean umis per sample
         mean_umis = {
-            sample: {"UMIs per barcode": values["meanUMIsPerBarcode"]} for sample, values in self.bustools_data.items()
+            sample: {"Mean UMIs per barcode": values["meanUMIsPerBarcode"]}
+            for sample, values in self.bustools_data.items()
         }
 
         self.add_section(
