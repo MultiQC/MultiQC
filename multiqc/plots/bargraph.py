@@ -158,15 +158,22 @@ def plot(data, cats=None, pconfig=None):
                     thisdata.append(float("nan"))
                     continue
                 val = d[s][c]
+                math.isnan(val)
                 if not isinstance(val, (float, int)):
                     try:
-                        val = float(val)
+                        val = int(val)
                     except ValueError:
-                        val = None
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            val = None
                 if val is None:
                     # Pad with NaNs when we have missing categories in a sample
                     thisdata.append(float("nan"))
                     continue
+                if isinstance(val, float):
+                    if math.floor(val) == val:
+                        val = int(val)
                 thisdata.append(val)
                 catcount += 1
                 sample_dcount[s] += 1
