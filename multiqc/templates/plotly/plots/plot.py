@@ -201,12 +201,15 @@ class Plot(ABC):
         Sets dataset-specific number format layout and trace options.
         """
         # Format on-hover tooltips
-        ysuffix = dconfig.get("tt_suffix")
+        ysuffix = dconfig.get("ysuffix", dconfig.get("tt_suffix"))
         if ysuffix is None:
-            ysuffix = self.pconfig.get("tt_suffix")
+            ysuffix = self.pconfig.get("ysuffix", self.pconfig.get("tt_suffix"))
         if self.pconfig.get("ylab_format") and "%" in self.pconfig["ylab_format"]:
             ysuffix = "%"
-        xsuffix = None
+
+        xsuffix = dconfig.get("xsuffix")
+        if xsuffix is None:
+            xsuffix = self.pconfig.get("xsuffix")
 
         if "tt_label" in self.pconfig:
             # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
