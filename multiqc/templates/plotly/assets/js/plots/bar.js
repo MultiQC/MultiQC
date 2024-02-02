@@ -32,52 +32,40 @@ class BarPlot extends Plot {
     let [cats, filteredSettings] = this.prepData();
     if (cats.length === 0 || filteredSettings.length === 0) return [];
 
-    // Use subplots only to set different color to each bar label when using
-    // highlight interactivity
-    layout.grid = {
-      columns: 1,
-      roworder: "top to bottom",
-      ygap: 0,
-      rows: filteredSettings.length,
-      subplots: filteredSettings.map((_, sampleIdx) => {
-        return ["xy" + (sampleIdx === 0 ? "" : sampleIdx + 1)];
-      }),
-    };
+    function subsample(values, num, start = 0) {
+      // Take ~`num` samples from values evenly, always include `start`
+      if (values.length <= num) return values;
 
-    let anyHighlight = filteredSettings.some((s) => s.highlight);
+      let indices = Array.from({ length: values.length }, (_, i) => i);
+      let reordered = indices.slice(start).concat(indices.slice(0, start));
+      let subsampledIndices = reordered.filter((_, i) => i % Math.floor(values.length / num) === 0);
+      return subsampledIndices.map((i) => values[i]);
+    }
 
-    filteredSettings.forEach((sample, sampleIdx) => {
-      layout["yaxis" + (sampleIdx + 1)] = {
-        showgrid: false,
-        gridcolor: layout["yaxis"]["gridcolor"],
-        zerolinecolor: layout["yaxis"]["zerolinecolor"],
-        color: layout["yaxis"]["color"],
-        tickfont: {
-          size: layout["yaxis"]["tickfont"]["size"],
-          color: anyHighlight ? sample.highlight ?? "#cccccc" : "black",
-        },
-        hoverformat: layout["yaxis"]["hoverformat"],
-        ticksuffix: layout["yaxis"]["ticksuffix"],
-        automargin: true,
-      };
-    });
-    layout.yaxis = layout["yaxis1"];
+    let firstHighlightedSample = 0;
+    let highlighted = filteredSettings.filter((s) => s.highlight);
+    if (highlighted.length > 0) {
+      firstHighlightedSample = filteredSettings.findIndex((s) => s.highlight);
+
+      // Have to switch to tickmode=array to set colors to ticks. however, this way plotly will try
+      // to fit _all_ ticks on the screen, and if there are too many, they will overlap. to prevent that,
+      // if there are too many samples, we will show only highlighted samples plus a subsampled number
+      // of ticks, but up to 55:
+      layout.yaxis.tickmode = "array";
+      const maxTicks = 55;
+      let selected = subsample(filteredSettings, maxTicks, firstHighlightedSample);
+
+      layout.yaxis.tickvals = selected.map((s) => s.name);
+      layout.yaxis.ticktext = selected.map((s) => "<span style='color:" + s.highlight + "'>" + s.name + "</span>");
+    }
 
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
-
-    // Because we are using subplots, we need to make sure the legend is not
-    // duplicated for each sample, so we pick one sample for that as all
-    // samples have data for all categories.
-    let legendSample = 0;
-    if (anyHighlight)
-      // To make sure the legend uses the bright colors from the toolbox
-      legendSample = filteredSettings.findIndex((s) => s.highlight);
 
     return cats.map((cat) => {
       return filteredSettings.map((sample, sampleIdx) => {
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
-        let alpha = anyHighlight && !sample.highlight ? 0.1 : 1;
+        let alpha = highlighted.length > 0 && !sample.highlight ? 0.1 : 1;
         params.marker.color = "rgba(" + cat.color + "," + alpha + ")";
 
         return {
@@ -85,11 +73,11 @@ class BarPlot extends Plot {
           x: [cat.data[sampleIdx]],
           y: [sample.name],
           name: cat.name,
-          yaxis: "y" + (sampleIdx === 0 ? "" : sampleIdx + 1),
-          ...params,
-          legendgroup: cat.name,
-          showlegend: sampleIdx === legendSample,
           meta: cat.name,
+          // To make sure the legend uses bright category colors and not the deemed ones.
+          showlegend: sampleIdx === firstHighlightedSample,
+          legendgroup: cat.name,
+          ...params,
         };
       });
     });

@@ -139,38 +139,58 @@ class BarPlot(Plot):
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
-        # set height to be proportional to the number of samples
-        MIN_PLOT_HEIGHT = 400
-        MAX_PLOT_HEIGHT = 2560
-        px_per_sample = 50
+        # Set height to be proportional to the number of samples
+        PADDING = 140  # plot header and footer
+        height_per_bar = 50
         if max_n_samples > 5:
-            px_per_sample = 35
+            height_per_bar = 35
         if max_n_samples > 10:
-            px_per_sample = 30
+            height_per_bar = 30
         if max_n_samples > 20:
-            px_per_sample = 25
+            height_per_bar = 25
         if max_n_samples > 30:
-            px_per_sample = 20
-        height = max_n_samples * px_per_sample
+            height_per_bar = 20
+        height = max_n_samples * height_per_bar + PADDING
 
-        # set height to be proportional to the number of categories
-        max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
-        height = min(800, max(height, 19 * max_n_cats + 140))
+        # Set height to also be proportional to the number of cats to fit a legend
+        HEIGHT_PER_LEGEND_ITEM = 19
+        n_cats = max([len(dataset.cats) for dataset in self.datasets])
+        legend_height = HEIGHT_PER_LEGEND_ITEM * n_cats + PADDING
+        # expand the plot to fit the legend:
+        height = max(height, max(height, legend_height))
+        # but not too much - if there are only 2 samples, we don't want the plot to be too high:
+        height = min(800, max(height, legend_height))
 
-        height = min(MAX_PLOT_HEIGHT, height)
-        height = max(MIN_PLOT_HEIGHT, height)
+        # now, limit the max and min height (plotly will start to automatically skip
+        # some of the ticks on the left when the plot is too high)
+        MIN_HEIGHT = 400
+        MAX_HEIGHT = 2560
+        height = min(MAX_HEIGHT, height)
+        height = max(MIN_HEIGHT, height)
 
-        barmode = "stack"
-        if "stacking" in pconfig and pconfig["stacking"] != "stack":
-            barmode = "group"
+        # Set the barmode
+        barmode = "relative"  # stacking, but drawing negative values below zero
+        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
+            barmode = "group"  # side by side
 
         for dataset in self.datasets:
             xmax = self.pconfig.get("ymax")
+            xmin = self.pconfig.get("ymin")
             if xmax is None:
-                if barmode == "stack":
-                    xmax = max(sum(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
-                else:
+                if barmode == "group":
+                    # max category
                     xmax = max(max(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                    xmin = min(min(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                else:
+                    # max sum of all categories across all samples
+                    xmax = max(
+                        sum(cat["data"][i] if cat["data"][i] > 0 else 0 for cat in dataset.cats)
+                        for i in range(len(dataset.samples))
+                    )
+                    xmin = min(
+                        sum(cat["data"][i] if cat["data"][i] < 0 else 0 for cat in dataset.cats)
+                        for i in range(len(dataset.samples))
+                    )
             dataset.layout.update(
                 height=height,
                 showlegend=True,
@@ -187,7 +207,7 @@ class BarPlot(Plot):
                     title=dict(text=dataset.layout.yaxis.title.text),
                     hoverformat=dataset.layout.yaxis.hoverformat,
                     ticksuffix=dataset.layout.yaxis.ticksuffix,
-                    range=[0, xmax],
+                    range=[xmin, xmax],
                 ),
                 # Re-initiate legend to reset to default legend location on the top right
                 legend=go.layout.Legend(
