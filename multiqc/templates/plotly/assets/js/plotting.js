@@ -37,12 +37,17 @@ class Plot {
   }
 
   resize(newHeight) {
+    this.layout.height = newHeight;
+    this.layout.autosize = true;
     if (!this.square) {
-      Plotly.relayout(this.target, { autosize: true, height: newHeight });
+      this.layout.width = null;
+      // Plotly.relayout(this.target, { autosize: true, height: newHeight });
     } else {
       // noinspection JSSuspiciousNameCombination
-      Plotly.relayout(this.target, { autosize: true, height: newHeight, width: newHeight });
+      this.layout.width = newHeight;
+      // Plotly.relayout(this.target, { autosize: true, height: newHeight, width: newHeight });
     }
+    Plotly.relayout(this.target, this.layout);
   }
 
   buildTraces(layout) {
