@@ -23,10 +23,15 @@ class ViolinPlot extends Plot {
 
     let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
     let scatterValuesBySampleByMetric = {};
-    if (dataset["show_points"]) {
-      if (dataset["show_only_outliers"]) scatterValuesBySampleByMetric = dataset["scatter_values_by_sample_by_metric"];
-      else scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
-    }
+    metrics.forEach((metric) => {
+      let header = headerByMetric[metric];
+      let scatterValuesBySample = {};
+      if (header["show_points"]) {
+        if (header["show_only_outliers"]) scatterValuesBySample = dataset["scatter_values_by_sample_by_metric"][metric];
+        else scatterValuesBySample = violinValuesBySampleByMetric[metric];
+      }
+      scatterValuesBySampleByMetric[metric] = scatterValuesBySample;
+    });
 
     let allSamples = this.datasets[this.activeDatasetIdx]["all_samples"];
     let sampleSettings = applyToolboxSettings(allSamples);
@@ -44,18 +49,20 @@ class ViolinPlot extends Plot {
         });
       });
       violinValuesBySampleByMetric = filteredViolinValuesBySampleByMetric;
-      if (dataset["show_points"] && dataset["show_only_outliers"]) {
-        metrics.map((metric) => {
-          filteredScatterValuesBySampleByMetric[metric] = {};
-          Object.keys(scatterValuesBySampleByMetric[metric]).map((sample) => {
-            if (!sampleSettings[allSamples.indexOf(sample)].hidden)
-              filteredScatterValuesBySampleByMetric[metric][sample] = scatterValuesBySampleByMetric[metric][sample];
-          });
+      metrics.forEach((metric) => {
+        let header = headerByMetric[metric];
+        let scatterValuesBySample;
+        if (header["show_points"] && header["show_only_outliers"]) {
+          scatterValuesBySample = filteredScatterValuesBySampleByMetric[metric];
+        } else {
+          scatterValuesBySample = violinValuesBySampleByMetric[metric];
+        }
+        filteredScatterValuesBySampleByMetric[metric] = {};
+        Object.keys(scatterValuesBySample).map((sample) => {
+          if (!sampleSettings[allSamples.indexOf(sample)].hidden)
+            filteredScatterValuesBySampleByMetric[metric][sample] = scatterValuesBySample[sample];
         });
-        scatterValuesBySampleByMetric = filteredScatterValuesBySampleByMetric;
-      } else {
-        scatterValuesBySampleByMetric = violinValuesBySampleByMetric;
-      }
+      });
     }
 
     return [
@@ -71,10 +78,6 @@ class ViolinPlot extends Plot {
   // Constructs and returns traces for the Plotly plot
   buildTraces(layout) {
     let dataset = this.datasets[this.activeDatasetIdx];
-
-    if (dataset["show_points"] && dataset["show_only_outliers"])
-      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
-
     let [
       metrics,
       headerByMetric,
@@ -85,6 +88,18 @@ class ViolinPlot extends Plot {
     ] = this.prepData();
     if (metrics.length === 0) return [];
     if (sampleSettings.filter((s) => !s.hidden).length === 0) return [];
+
+    let showPoints = false;
+    let showOnlyOutliers = false;
+    metrics.forEach((metric) => {
+      let header = headerByMetric[metric];
+      if (header["show_points"] && header["show_only_outliers"]) {
+        showPoints = true;
+        showOnlyOutliers = true;
+      }
+    });
+    if (showPoints && showOnlyOutliers)
+      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
 
     layout.height = this.violinHeight * metrics.length + this.extraHeight;
     $("#" + this.target + "-wrapper").css("height", layout.height + "px");
@@ -164,7 +179,7 @@ class ViolinPlot extends Plot {
       });
     });
 
-    if (dataset["show_points"]) {
+    if (showPoints) {
       // We want to select points on all violins belonging to this specific sample.
       // Points are rendered each as a separate trace, so we need to collect
       // each trace (curve) number for each point by sample.

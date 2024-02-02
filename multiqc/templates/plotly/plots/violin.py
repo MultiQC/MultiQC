@@ -38,8 +38,6 @@ class ViolinPlot(Plot):
         scatter_values_by_sample_by_metric: Dict[str, Dict[str, Union[List[int], List[float], List[str]]]]
         all_samples: List[str]  # unique list of all samples in this dataset
         scatter_trace_params: Dict[str, Any]
-        show_points: False
-        show_only_outliers: False
 
         @staticmethod
         def create(
@@ -55,8 +53,6 @@ class ViolinPlot(Plot):
                 scatter_values_by_sample_by_metric=dict(),
                 all_samples=[],
                 scatter_trace_params=dict(),
-                show_only_outliers=False,
-                show_points=True,
             )
 
             all_samples = set()
@@ -64,6 +60,8 @@ class ViolinPlot(Plot):
                 # Add Plotly-specific parameters to the header
                 xaxis = {"ticksuffix": header.get("suffix")}
                 header["xaxis"] = xaxis
+                header["show_points"] = True
+                header["show_only_outliers"] = False
 
                 # Take non-empty values for the violin
                 value_by_sample = values_by_sample_by_metric[metric]
@@ -99,8 +97,8 @@ class ViolinPlot(Plot):
                         logger.warning(f"All values are NaN for metric: {header['title']}")
                         continue
 
-                ds.show_points = len(value_by_sample) <= config.violin_min_threshold_no_points
-                ds.show_only_outliers = len(value_by_sample) > config.violin_min_threshold_outliers
+                header["show_points"] = len(value_by_sample) <= config.violin_min_threshold_no_points
+                header["show_only_outliers"] = len(value_by_sample) > config.violin_min_threshold_outliers
 
                 if values_are_numeric:
                     # Calculate range
@@ -112,26 +110,26 @@ class ViolinPlot(Plot):
                         tickvals = [0]
                     xaxis["tickvals"] = tickvals
                     if xmin is not None and xmax is not None:
-                        if ds.show_points:
+                        if header["show_points"]:
                             # add extra padding to avoid clipping the points at range limits
                             xmin -= (xmax - xmin) * 0.005
                             xmax += (xmax - xmin) * 0.005
                         xaxis["range"] = [xmin, xmax]
 
-                if not ds.show_points:  # Do not add any interactive points
+                if not header["show_points"]:  # Do not add any interactive points
                     scatter_values_by_sample = {}
-                elif not ds.show_only_outliers:
+                elif not header["show_only_outliers"]:
                     scatter_values_by_sample = {}  # will use the violin values
                 else:
                     if not values_are_numeric:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {ds.show_only_outliers}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header["show_only_outliers"]}. "
                             f"As values are not numeric, will not add any interactive points."
                         )
                         scatter_values_by_sample = {}
                     else:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {ds.show_only_outliers}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header["show_only_outliers"]}. "
                             f"Will add interactive points only for the outlier values."
                         )
                         samples = list(value_by_sample.keys())
