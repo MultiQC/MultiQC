@@ -92,11 +92,6 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
     # Build the HTML for the page
     html = """
     <div class="mqc_hcplot_plotgroup">
-        <div class="btn-group hc_switch_group">
-            <button type="button" class="mqc_heatmap_sortHighlight btn btn-default btn-sm" data-target="#{id}" disabled="disabled">
-                <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
-            </button>
-        </div>
         <div class="mqc_hcplot_range_sliders">
             <div>
                 <label for="{id}_range_slider_min_txt">Min:</label>
