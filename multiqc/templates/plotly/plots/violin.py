@@ -123,13 +123,13 @@ class ViolinPlot(Plot):
                 else:
                     if not values_are_numeric:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header["show_only_outliers"]}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header['show_only_outliers']}. "
                             f"As values are not numeric, will not add any interactive points."
                         )
                         scatter_values_by_sample = {}
                     else:
                         logger.debug(
-                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header["show_only_outliers"]}. "
+                            f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header['show_only_outliers']}. "
                             f"Will add interactive points only for the outlier values."
                         )
                         samples = list(value_by_sample.keys())
