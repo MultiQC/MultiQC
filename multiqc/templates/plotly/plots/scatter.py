@@ -58,10 +58,6 @@ class ScatterPlot(Plot):
                     color="rgba(124, 181, 236, .5)",
                 ),
             )
-
-            # Make a tooltip always show on hover over nearest point on plot
-            dataset.layout.hoverdistance = -1
-
             return dataset
 
         def create_figure(
@@ -73,7 +69,7 @@ class ScatterPlot(Plot):
             """
             Create a Plotly figure for a dataset
             """
-            fig = go.Figure(layout=layout or self.layout)
+            fig = go.Figure(layout=layout)
 
             MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
             n_annotated = len([el for el in self.points if "annotation" in el])
@@ -187,6 +183,9 @@ class ScatterPlot(Plot):
         self.datasets: List[ScatterPlot.Dataset] = [
             ScatterPlot.Dataset.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
         ]
+
+        # Make a tooltip always show on hover over nearest point on plot
+        self.layout.hoverdistance = -1
 
     def tt_label(self) -> Optional[str]:
         """Default tooltip label"""

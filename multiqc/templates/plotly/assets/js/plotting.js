@@ -18,9 +18,11 @@ window.mqc_hide_regex_mode = false;
 class Plot {
   constructor(dump) {
     this.target = dump["id"];
+    this.layout = dump["layout"];
     this.datasets = dump["datasets"];
-    this.square = dump["square"];
+    this.pctAxisUpdate = dump["pct_axis_update"];
     this.axisControlledBySwitches = dump["axis_controlled_by_switches"];
+    this.square = dump["square"];
     this.static = dump["static"] ?? false;
     // To make sure we only render plot once
     this.rendered = false;
@@ -277,45 +279,6 @@ function applyToolboxSettings(samples, target) {
   return objects;
 }
 
-// // Hiding samples. Returns indices of samples in the "samples" array
-// function hideSamples(target, samples) {
-//   let plot_group_div = $("#" + target).closest(".mqc_hcplot_plotgroup");
-//   plot_group_div.parent().find(".samples-hidden-warning").remove();
-//   plot_group_div.show();
-//
-//   if (window.mqc_hide_f_texts.length === 0) return [];
-//
-//   let result = [];
-//   for (let j = 0; j < samples.length; j++) {
-//     let match = false;
-//     for (let i = 0; i < window.mqc_hide_f_texts.length; i++) {
-//       const f_text = window.mqc_hide_f_texts[i];
-//       if (window.mqc_hide_regex_mode) {
-//         if (samples[j].match(f_text)) match = true;
-//       } else {
-//         if (samples[j].indexOf(f_text) > -1) match = true;
-//       }
-//     }
-//     if (window.mqc_hide_mode === "show") {
-//       match = !match;
-//     }
-//     if (match) {
-//       result.push(j);
-//     }
-//   }
-//   // Some series hidden. Show a warning text string.
-//   if (result.length > 0) {
-//     const alert =
-//       '<div class="samples-hidden-warning alert alert-warning"><span class="glyphicon glyphicon-info-sign"></span> <strong>Warning:</strong> ' +
-//       result.length +
-//       ' samples hidden. <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a></div>';
-//     plot_group_div.before(alert);
-//   }
-//   // All series hidden. Hide the graph.
-//   if (result.length === samples.length) plot_group_div.hide();
-//   return result;
-// }
-
 // Call to render any plot
 function renderPlot(target) {
   let plot = mqc_plots[target];
@@ -340,17 +303,16 @@ function renderPlot(target) {
   }
 
   let dataset = plot.datasets[plot.activeDatasetIdx];
-  let layout = JSON.parse(JSON.stringify(dataset.layout));
+  let layout = plot.layout;
+  updateObject(layout, dataset.layout);
 
   // Apply pct/log toggle states
   plot.axisControlledBySwitches.map((axis) => {
     layout[axis].type = plot.lActive ? "log" : "linear";
+    if (plot.pActive) {
+      updateObject(layout[axis], plot["pctAxisUpdate"]);
+    }
   });
-  if (plot.pActive) {
-    layout.xaxis.ticksuffix = "%";
-    layout.xaxis.hoverformat = ".1f";
-    layout.xaxis.range = [null, null];
-  }
 
   let traces = plot.buildTraces(layout);
   if (traces.length > 0 && traces[0].constructor === Array) traces = [].concat.apply([], traces); // if list of lists, flatten
@@ -412,19 +374,17 @@ function updateObject(target, source) {
   // Iterate through all keys in the source object
   for (const key in source) {
     // Check if the value is not null
-    if (source[key] !== null) {
-      // Check if the value is an object and not an array
-      if (typeof source[key] === "object" && !Array.isArray(source[key])) {
-        // If the target doesn't have this key or it's not an object, initialize it
-        if (!target[key] || typeof target[key] !== "object") {
-          target[key] = {};
-        }
-        // Recursively update the object
-        updateObject(target[key], source[key]);
-      } else {
-        // Directly update the value
-        target[key] = source[key];
+    // Check if the value is an object and not an array
+    if (typeof source[key] === "object" && !Array.isArray(source[key])) {
+      // If the target doesn't have this key, or it's not an object, initialize it
+      if (!target[key] || typeof target[key] !== "object") {
+        target[key] = {};
       }
+      // Recursively update the object
+      updateObject(target[key], source[key]);
+    } else {
+      // Directly update the value
+      target[key] = source[key];
     }
   }
 }

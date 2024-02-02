@@ -202,37 +202,11 @@ class ViolinPlot(Plot):
                 "hovertemplate": ds.trace_params["hovertemplate"],
                 "hoverlabel": {"bgcolor": "white"},
             }
-
-            ds.layout.update(
-                margin=dict(
-                    pad=0,
-                    b=40,
-                ),
-                xaxis=dict(
-                    automargin=True,
-                    tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                    gridcolor="rgba(0,0,0,0.1)",
-                    zerolinecolor="rgba(0,0,0,0.1)",
-                ),
-                yaxis=dict(
-                    tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                    gridcolor="rgba(0,0,0,0.1)",
-                    zerolinecolor="rgba(0,0,0,0.1)",
-                ),
-                violingap=0,
-                grid=dict(
-                    columns=1,
-                    roworder="top to bottom",
-                    ygap=0.4,
-                ),
-                showlegend=False,
-            )
-
             return ds
 
         def create_figure(
             self,
-            layout: Optional[go.Layout] = None,
+            layout: go.Layout,
             is_log=False,
             is_pct=False,
             add_scatter=True,
@@ -242,7 +216,7 @@ class ViolinPlot(Plot):
             """
             metrics = [m for m in self.metrics if not self.header_by_metric[m].get("hidden", False)]
 
-            layout = copy.deepcopy(layout or self.layout)
+            layout = copy.deepcopy(layout)
             layout.grid.rows = len(metrics)
             layout.grid.subplots = [[(f"x{i + 1}y{i + 1}" if i > 0 else "xy")] for i in range(len(metrics))]
             layout.height = ViolinPlot.VIOLIN_HEIGHT * len(metrics) + ViolinPlot.EXTRA_HEIGHT
@@ -358,6 +332,31 @@ class ViolinPlot(Plot):
                 list_of_header_by_metric,
             )
         ]
+
+        self.layout.update(
+            margin=dict(
+                pad=0,
+                b=40,
+            ),
+            xaxis=dict(
+                automargin=True,
+                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+                gridcolor="rgba(0,0,0,0.1)",
+                zerolinecolor="rgba(0,0,0,0.1)",
+            ),
+            yaxis=dict(
+                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
+                gridcolor="rgba(0,0,0,0.1)",
+                zerolinecolor="rgba(0,0,0,0.1)",
+            ),
+            violingap=0,
+            grid=dict(
+                columns=1,
+                roworder="top to bottom",
+                ygap=0.4,
+            ),
+            showlegend=False,
+        )
 
         # If the number of samples is high:
         # - do not add a table

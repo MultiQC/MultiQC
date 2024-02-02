@@ -4,7 +4,7 @@ import dataclasses
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import math
 import plotly.graph_objects as go
@@ -44,27 +44,6 @@ def plot(
     return p.add_to_report(report)
 
 
-def _split_long_string(s: str, max_width=80) -> List[str]:
-    """
-    Split string into lines of max_width characters
-    """
-    lines = []
-    current_line = ""
-    words = re.split(r"(\W+)", s)
-    for word in words:
-        if len(current_line + word) <= max_width:
-            current_line += word
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-
-    if current_line:
-        lines.append(current_line)
-
-    return lines
-
-
 class BarPlot(Plot):
     @dataclasses.dataclass
     class Dataset(BaseDataset):
@@ -101,14 +80,14 @@ class BarPlot(Plot):
 
         def create_figure(
             self,
-            layout: Optional[go.Layout] = None,
+            layout: go.Layout,
             is_log=False,
             is_pct=False,
         ) -> go.Figure:
             """
             Create a Plotly figure for a dataset
             """
-            fig = go.Figure(layout=layout or self.layout)
+            fig = go.Figure(layout=layout)
             for cat in self.cats:
                 data = cat["data"]
                 if is_pct:
@@ -126,7 +105,6 @@ class BarPlot(Plot):
                         **params,
                     ),
                 )
-
             return fig
 
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
@@ -173,6 +151,37 @@ class BarPlot(Plot):
         if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
             barmode = "group"  # side by side
 
+        self.layout.update(
+            height=height,
+            showlegend=True,
+            barmode=barmode,
+            yaxis=dict(
+                showgrid=False,
+                categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
+                automargin=True,  # to make sure there is enough space for ticks labels
+                title=None,
+                hoverformat=self.layout.xaxis.hoverformat,
+                ticksuffix=self.layout.xaxis.ticksuffix,
+            ),
+            xaxis=dict(
+                title=dict(text=self.layout.yaxis.title.text),
+                hoverformat=self.layout.yaxis.hoverformat,
+                ticksuffix=self.layout.yaxis.ticksuffix,
+            ),
+            # Re-initiate legend to reset to default legend location on the top right
+            legend=go.layout.Legend(
+                # We use legend groups with subplots to simulate standard legend interactivity
+                # like we had a standard bar graph without subplots. We need to remove the space
+                # between the legend groups to make it look like a single legend.
+                tracegroupgap=0,
+            ),
+            hovermode="y unified",
+            hoverlabel=dict(
+                bgcolor="rgba(255, 255, 255, 0.8)",
+                font=dict(color="black"),
+            ),
+        )
+
         for dataset in self.datasets:
             xmax = self.pconfig.get("ymax")
             xmin = self.pconfig.get("ymin")
@@ -192,34 +201,16 @@ class BarPlot(Plot):
                         for i in range(len(dataset.samples))
                     )
             dataset.layout.update(
-                height=height,
-                showlegend=True,
-                barmode=barmode,
                 yaxis=dict(
-                    showgrid=False,
-                    categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
-                    automargin=True,  # to make sure there is enough space for ticks labels
                     title=None,
-                    hoverformat=dataset.layout.xaxis.hoverformat,
-                    ticksuffix=dataset.layout.xaxis.ticksuffix,
+                    hoverformat=dataset.layout["xaxis"]["hoverformat"],
+                    ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
                 ),
                 xaxis=dict(
-                    title=dict(text=dataset.layout.yaxis.title.text),
-                    hoverformat=dataset.layout.yaxis.hoverformat,
-                    ticksuffix=dataset.layout.yaxis.ticksuffix,
+                    title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
+                    hoverformat=dataset.layout["yaxis"]["hoverformat"],
+                    ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
                     range=[xmin, xmax],
-                ),
-                # Re-initiate legend to reset to default legend location on the top right
-                legend=go.layout.Legend(
-                    # We use legend groups with subplots to simulate standard legend interactivity
-                    # like we had a standard bar graph without subplots. We need to remove the space
-                    # between the legend groups to make it look like a single legend.
-                    tracegroupgap=0,
-                ),
-                hovermode="y unified",
-                hoverlabel=dict(
-                    bgcolor="rgba(255, 255, 255, 0.8)",
-                    font=dict(color="black"),
                 ),
             )
             dataset.trace_params.update(
@@ -232,11 +223,11 @@ class BarPlot(Plot):
                 # %{text} doesn't work for unified hovermode:
                 dataset.trace_params["hovertemplate"] = dataset.trace_params["hovertemplate"].replace("%{text}", "")
 
-            if dataset.layout.xaxis.hoverformat is None:
+            if dataset.layout["xaxis"]["hoverformat"] is None:
                 if all(all(isinstance(x, float) for x in cat["data"]) for cat in dataset.cats):
-                    dataset.layout.xaxis.hoverformat = ",.2f"
+                    dataset.layout["xaxis"]["hoverformat"] = ",.2f"
                 elif all(all(isinstance(x, int) for x in cat["data"]) for cat in dataset.cats):
-                    dataset.layout.xaxis.hoverformat = ",.0f"
+                    dataset.layout["xaxis"]["hoverformat"] = ",.0f"
 
         # Expand data with zeroes if there are fewer values than samples
         for dataset in self.datasets:
@@ -257,8 +248,6 @@ class BarPlot(Plot):
                 # Now, calculate percentages for each category
                 for cat in dataset.cats:
                     values = [x for x in cat["data"]]
-                    if any(v < 0 for v in values):
-                        print(values)
                     for sample_idx, val in enumerate(values):
                         sum_for_sample = sums[sample_idx]
                         if sum_for_sample == 0:
@@ -272,7 +261,7 @@ class BarPlot(Plot):
             for dataset in self.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
                 # But reversing the legend so the largest bars are still on the top
-                dataset.layout.legend.traceorder = "reversed"
+                self.layout.legend.traceorder = "reversed"
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -294,3 +283,24 @@ class BarPlot(Plot):
     def tt_label() -> str:
         """Default tooltip label"""
         return "%{meta}: <b>%{x}</b>"
+
+
+def _split_long_string(s: str, max_width=80) -> List[str]:
+    """
+    Split string into lines of max_width characters
+    """
+    lines = []
+    current_line = ""
+    words = re.split(r"(\W+)", s)
+    for word in words:
+        if len(current_line + word) <= max_width:
+            current_line += word
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines

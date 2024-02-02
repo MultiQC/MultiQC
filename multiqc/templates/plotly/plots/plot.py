@@ -38,16 +38,15 @@ class BaseDataset(ABC):
     plot: "Plot"
     label: str
     uid: str
-    layout: go.Layout
+    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
 
     def dump_for_javascript(self) -> Dict:
         d = {k: v for k, v in self.__dict__.items()}
         del d["plot"]
-        d["layout"] = d["layout"].to_plotly_json()
         return d
 
-    def create_figure(self, layout: Optional[go.Layout] = None, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False):
         """
         To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
@@ -88,7 +87,7 @@ class Plot(ABC):
                 self,
                 label=str(i + 1),
                 uid=self.id,
-                layout=go.Layout(),
+                layout=dict(),
                 trace_params=dict(),
             )
             for i in range(n_datasets)
@@ -103,7 +102,7 @@ class Plot(ABC):
         if not title:
             logger.error(f"Plot title is not set for {self.id}")
 
-        layout = go.Layout(
+        self.layout = go.Layout(
             title=go.layout.Title(
                 text=title,
                 xanchor="center",
@@ -115,16 +114,12 @@ class Plot(ABC):
                 zerolinecolor="rgba(0,0,0,0.05)",
                 color="rgba(0,0,0,0.4)",  # axis labels
                 tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-                rangemode="tozero" if self.pconfig.get("xmin") == 0 else "normal",
-                range=[self.pconfig.get("xmin"), self.pconfig.get("xmax")],
             ),
             yaxis=go.layout.YAxis(
                 gridcolor="rgba(0,0,0,0.05)",
                 zerolinecolor="rgba(0,0,0,0.05)",
                 color="rgba(0,0,0,0.4)",  # axis labels
                 tickfont=dict(size=10, color="rgba(0,0,0,1)"),
-                rangemode="tozero" if self.pconfig.get("ymin") == 0 else "normal",
-                range=[self.pconfig.get("ymin"), self.pconfig.get("ymax")],
             ),
             height=height,
             width=width,
@@ -159,18 +154,19 @@ class Plot(ABC):
             if self.flat
             else None,
         )
+
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xLog"):
-            layout.xaxis.type = "log"
+            self.layout.xaxis.type = "log"
             if "xaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("xaxis")
         if self.pconfig.get("yLog"):
-            layout.yaxis.type = "log"
+            self.layout.yaxis.type = "log"
             if "yaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("yaxis")
         if self.add_log_tab and self.l_active:
             for axis in self._axis_controlled_by_switches:
-                layout[axis].type = "log"
+                self.layout[axis].type = "log"
 
         dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
         for idx, dataset in enumerate(self.datasets):
@@ -190,88 +186,14 @@ class Plot(ABC):
                 dataset.label = dconfig["label"]
                 dconfig["ylab"] = dconfig["label"]
 
-            dataset.layout = go.Layout(**layout.to_plotly_json())  # make a copy
+            dataset.layout, dataset.trace_params = _dataset_layout(dconfig, dconfig, self.tt_label())
 
-            layout_update, trace_params_update = self._set_number_format(dconfig)
-            dataset.layout.update(layout_update)
-            dataset.trace_params.update(trace_params_update)
-
-    def _set_number_format(self, dconfig: Dict) -> Tuple[Dict, Dict]:
-        """
-        Sets dataset-specific number format layout and trace options.
-        """
-        # Format on-hover tooltips
-        ysuffix = dconfig.get("ysuffix", dconfig.get("tt_suffix"))
-        if ysuffix is None:
-            ysuffix = self.pconfig.get("ysuffix", self.pconfig.get("tt_suffix"))
-        if self.pconfig.get("ylab_format") and "%" in self.pconfig["ylab_format"]:
-            ysuffix = "%"
-
-        xsuffix = dconfig.get("xsuffix")
-        if xsuffix is None:
-            xsuffix = self.pconfig.get("xsuffix")
-
-        if "tt_label" in self.pconfig:
-            # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
-            tt_label = self.pconfig["tt_label"]
-            tt_label = self._clean_config_tt_label(tt_label)
-
-            if ysuffix is None:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
-                m = re.search(r"\{y.*}(\S+)", tt_label)  # complex label format
-                if m:
-                    ysuffix = m.group(1).rstrip()
-            if xsuffix is None:
-                m = re.search(r"\{x.*}(.+)%\{", tt_label)
-                if m:
-                    xsuffix = m.group(1).replace("</b>", "").replace(":", "").rstrip()
-
-            # As the suffix will be added automatically for the simple format ({y}), remove it from the label
-            if ysuffix is not None and "{y}" + ysuffix in tt_label:
-                tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
-            if xsuffix is not None and "{x}" + xsuffix in tt_label:
-                tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
-
-            # add missing line break between the sample name and the key-value pair
-            if not tt_label.startswith("<br>"):
-                tt_label = "<br>" + tt_label
-        else:
-            tt_label = self.tt_label()
-
-        if tt_label:
-            hovertemplate = "<b>%{text}</b>" + tt_label + "<extra></extra>"
-        else:
-            hovertemplate = None
-
-        xlab = dconfig.get("xlab", self.pconfig.get("xlab"))
-        ylab = dconfig.get("ylab", self.pconfig.get("ylab"))
-        xmin = dconfig.get("xmin", self.pconfig.get("xmin"))
-        xmax = dconfig.get("xmax", self.pconfig.get("xmax"))
-        ymin = dconfig.get("ymin", self.pconfig.get("ymin"))
-        ymax = dconfig.get("ymax", self.pconfig.get("ymax"))
-
-        # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-        tt_decimals = dconfig.get("tt_decimals", self.pconfig.get("tt_decimals"))
-        y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
-
-        layout = dict(
-            xaxis=dict(
-                ticksuffix=xsuffix,
-                title=dict(text=xlab),
-                range=[xmin, xmax],
-            ),
-            yaxis=dict(
-                hoverformat=y_hoverformat,
-                ticksuffix=ysuffix,
-                title=dict(text=ylab),
-                range=[ymin, ymax],
-            ),
+        # Layout update for the counts/percentage switch
+        self.pct_axis_update = dict(
+            ticksuffix="%",
+            hoverformat=".1f",
+            range=[None, None],
         )
-
-        trace_params = {}
-        if hovertemplate:
-            trace_params["hovertemplate"] = hovertemplate
-
-        return layout, trace_params
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -285,22 +207,6 @@ class Plot(ABC):
     def tt_label() -> Optional[str]:
         """Default tooltip label"""
         return None
-
-    @staticmethod
-    def _clean_config_tt_label(tt_label: str) -> str:
-        replace_d = {  # Convert HighCharts format to Plotly format
-            "{point.x": "%{x",
-            "{point.y": "%{y",
-            "x:>": "x:",
-            "y:>": "y:",
-            "{point.category}": "%{x}",
-            "<strong>": "<b>",
-            "</strong>": "</b>",
-            "<br/>": "<br>",
-        }
-        for k, v in replace_d.items():
-            tt_label = tt_label.replace(k, v)
-        return tt_label
 
     def __repr__(self):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
@@ -331,8 +237,8 @@ class Plot(ABC):
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
         # re-calculate the wrapper size after rendering.
-        heights = [dataset.layout.height for dataset in self.datasets if dataset.layout.height]
-        height_style = f'style="height:{min(heights) + 7}px"' if heights else ""
+        height = self.layout.height
+        height_style = f'style="height:{height + 7}px"' if height else ""
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
             <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>
@@ -368,25 +274,25 @@ class Plot(ABC):
                 self.save_data_file(dataset)
 
             html += self._fig_to_static_html(
-                self._make_fig(dataset),
+                self._make_flat_fig(dataset),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
             if self.add_pct_tab:
                 html += self._fig_to_static_html(
-                    self._make_fig(dataset, is_pct=True),
+                    self._make_flat_fig(dataset, is_pct=True),
                     active=ds_idx == 0 and self.p_active,
                     uid=f"{dataset.uid}-pct",
                 )
             if self.add_log_tab:
                 html += self._fig_to_static_html(
-                    self._make_fig(dataset, is_log=True),
+                    self._make_flat_fig(dataset, is_log=True),
                     active=ds_idx == 0 and self.l_active,
                     uid=f"{dataset.uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += self._fig_to_static_html(
-                    self._make_fig(dataset, is_pct=True, is_log=True),
+                    self._make_flat_fig(dataset, is_pct=True, is_log=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     uid=f"{dataset.uid}-pct-log",
                 )
@@ -457,9 +363,11 @@ class Plot(ABC):
         """Serialise the plot data to pick up in plotly-js"""
         return {
             "id": self.id,
-            "plot_type": self.plot_type.value,
-            "axis_controlled_by_switches": self._axis_controlled_by_switches,
+            "layout": self.layout.to_plotly_json(),
             "datasets": [d.dump_for_javascript() for d in self.datasets],
+            "plot_type": self.plot_type.value,
+            "pct_axis_update": self.pct_axis_update,
+            "axis_controlled_by_switches": self._axis_controlled_by_switches,
             "p_active": self.p_active,
             "l_active": self.l_active,
             "square": self.pconfig.get("square"),
@@ -471,16 +379,17 @@ class Plot(ABC):
         Save dataset to disk.
         """
 
-    def _make_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> go.Figure:
+    def _make_flat_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> go.Figure:
         """
         Create a Plotly Figure object.
         """
-        layout = go.Layout(**dataset.layout.to_plotly_json())  # make a copy
+        layout = go.Layout(self.layout.to_plotly_json())  # make a copy
+        layout.update(**dataset.layout)
         layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
             layout[axis].type = "log" if is_log else "linear"
             if is_pct:
-                layout[axis].tickformat = ".0%"
+                layout[axis].update(self.pct_axis_update)
         return dataset.create_figure(layout, is_log, is_pct)
 
     @staticmethod
@@ -577,3 +486,104 @@ class Plot(ABC):
         with open(logo_path, "rb") as f:
             data = f.read()
         return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
+
+
+def _dataset_layout(
+    pconfig: Dict,
+    dconfig: Dict,
+    default_tt_label: Optional[str],
+) -> Tuple[Dict, Dict]:
+    """
+    Sets dataset-specific number format layout and trace options.
+    """
+    # Format on-hover tooltips
+    ysuffix = dconfig.get("ysuffix", dconfig.get("tt_suffix"))
+    if ysuffix is None:
+        ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
+    if pconfig.get("ylab_format") and "%" in pconfig["ylab_format"]:
+        ysuffix = "%"
+
+    xsuffix = dconfig.get("xsuffix")
+    if xsuffix is None:
+        xsuffix = pconfig.get("xsuffix")
+
+    if "tt_label" in pconfig:
+        # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
+        tt_label = pconfig["tt_label"]
+        tt_label = _clean_config_tt_label(tt_label)
+
+        if ysuffix is None:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
+            m = re.search(r"\{y.*}(\S+)", tt_label)  # complex label format
+            if m:
+                ysuffix = m.group(1).rstrip()
+        if xsuffix is None:
+            m = re.search(r"\{x.*}(.+)%\{", tt_label)
+            if m:
+                xsuffix = m.group(1).replace("</b>", "").replace(":", "").rstrip()
+
+        # As the suffix will be added automatically for the simple format ({y}), remove it from the label
+        if ysuffix is not None and "{y}" + ysuffix in tt_label:
+            tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
+        if xsuffix is not None and "{x}" + xsuffix in tt_label:
+            tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+
+        # add missing line break between the sample name and the key-value pair
+        if not tt_label.startswith("<br>"):
+            tt_label = "<br>" + tt_label
+    else:
+        tt_label = default_tt_label
+
+    if tt_label:
+        hovertemplate = "<b>%{text}</b>" + tt_label + "<extra></extra>"
+    else:
+        hovertemplate = None
+
+    xlab = dconfig.get("xlab", pconfig.get("xlab"))
+    ylab = dconfig.get("ylab", pconfig.get("ylab"))
+    xmin = dconfig.get("xmin", pconfig.get("xmin"))
+    xmax = dconfig.get("xmax", pconfig.get("xmax"))
+    ymin = dconfig.get("ymin", pconfig.get("ymin"))
+    ymax = dconfig.get("ymax", pconfig.get("ymax"))
+
+    # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
+    tt_decimals = dconfig.get("tt_decimals", pconfig.get("tt_decimals"))
+    y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
+
+    layout = dict(
+        xaxis=dict(
+            hoverformat=None,
+            ticksuffix=xsuffix or "",
+            title=dict(text=xlab),
+            range=[xmin, xmax],
+            rangemode="tozero" if xmin == 0 else "normal",
+        ),
+        yaxis=dict(
+            hoverformat=y_hoverformat,
+            ticksuffix=ysuffix or "",
+            title=dict(text=ylab),
+            range=[ymin, ymax],
+            rangemode="tozero" if ymin == 0 else "normal",
+        ),
+    )
+
+    trace_params = {}
+    if hovertemplate:
+        trace_params["hovertemplate"] = hovertemplate
+
+    return layout, trace_params
+
+
+def _clean_config_tt_label(tt_label: str) -> str:
+    replace_d = {  # Convert HighCharts format to Plotly format
+        "{point.x": "%{x",
+        "{point.y": "%{y",
+        "x:>": "x:",
+        "y:>": "y:",
+        "{point.category}": "%{x}",
+        "<strong>": "<b>",
+        "</strong>": "</b>",
+        "<br/>": "<br>",
+    }
+    for k, v in replace_d.items():
+        tt_label = tt_label.replace(k, v)
+    return tt_label
