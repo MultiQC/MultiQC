@@ -89,16 +89,14 @@ class ViolinPlot extends Plot {
     if (metrics.length === 0) return [];
     if (sampleSettings.filter((s) => !s.hidden).length === 0) return [];
 
-    let showPoints = false;
-    let showOnlyOutliers = false;
+    let outliersWarning = true;
     metrics.forEach((metric) => {
       let header = headerByMetric[metric];
-      if (header["show_points"] && header["show_only_outliers"]) {
-        showPoints = true;
-        showOnlyOutliers = true;
+      if (!header["show_points"] || !header["show_only_outliers"]) {
+        outliersWarning = false;
       }
     });
-    if (showPoints && showOnlyOutliers)
+    if (outliersWarning)
       $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
 
     layout.height = this.violinHeight * metrics.length + this.extraHeight;
@@ -179,86 +177,84 @@ class ViolinPlot extends Plot {
       });
     });
 
-    if (showPoints) {
-      // We want to select points on all violins belonging to this specific sample.
-      // Points are rendered each as a separate trace, so we need to collect
-      // each trace (curve) number for each point by sample.
-      let currentCurveNumber = traces.length;
-      let curveNumbersBySample = {};
-      let curveAxisBySample = {};
-      let scatterDataByMetric = [];
-      metrics.map((metric, metricIdx) => {
-        let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-        let valuesBySample = scatterValuesBySampleByMetric[metric];
+    // We want to select points on all violins belonging to this specific sample.
+    // Points are rendered each as a separate trace, so we need to collect
+    // each trace (curve) number for each point by sample.
+    let currentCurveNumber = traces.length;
+    let curveNumbersBySample = {};
+    let curveAxisBySample = {};
+    let scatterDataByMetric = [];
+    metrics.map((metric, metricIdx) => {
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+      let valuesBySample = scatterValuesBySampleByMetric[metric];
 
-        let scatterData = [];
-        Object.entries(valuesBySample).map(([sample, value]) => {
-          scatterData.push([sample, value]);
+      let scatterData = [];
+      Object.entries(valuesBySample).map(([sample, value]) => {
+        scatterData.push([sample, value]);
 
-          if (!curveNumbersBySample[sample]) {
-            curveNumbersBySample[sample] = [];
-            curveAxisBySample[sample] = [];
-          }
-          curveNumbersBySample[sample].push(currentCurveNumber++);
-          curveAxisBySample[sample].push("x" + axisKey + "y" + axisKey);
-        });
-        scatterDataByMetric.push(scatterData);
+        if (!curveNumbersBySample[sample]) {
+          curveNumbersBySample[sample] = [];
+          curveAxisBySample[sample] = [];
+        }
+        curveNumbersBySample[sample].push(currentCurveNumber++);
+        curveAxisBySample[sample].push("x" + axisKey + "y" + axisKey);
       });
+      scatterDataByMetric.push(scatterData);
+    });
 
-      let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
+    let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
 
-      let seed = 1;
-      function random() {
-        // Math.random does not have a seed, so we use this
-        let x = Math.sin(seed++) * 10000;
-        return x - Math.floor(x);
-      }
-      let scatters = [];
-      // Add scatter plots on top of violins to show individual points
-      // Plotly supports showing points automatically with `points="all"`,
-      // however, it's problematic to give each sample individual color,
-      // and set up hover events to highlight all points for a sample. So as
-      // a workaround, we add a separate scatter plot. One thing to solve later
-      // would be to be able to only show outliers, not all points, as the violin
-      // plot can do that automatically, and we lose this functionality here.
-      scatterDataByMetric.map((scatterData, metricIdx) => {
-        let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
-
-        scatterData.map(([sample, value]) => {
-          let state = sampleSettings[allSamples.indexOf(sample)];
-          let params = JSON.parse(JSON.stringify(dataset["scatter_trace_params"])); // deep copy
-
-          let color = "black"; // trace_params["marker"]["color"];
-          let size = params.marker.size;
-          if (highlightingEnabled) {
-            color = state.highlight ?? "#cccccc";
-            size = state.highlight !== null ? 10 : size;
-          }
-
-          let customData = {
-            curveNumbers: curveNumbersBySample[sample],
-            curveAxis: curveAxisBySample[sample],
-          };
-
-          const jitter = 0.3;
-          scatters.push({
-            type: "scatter",
-            x: [value],
-            y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
-            text: [state.name ?? sample],
-            xaxis: "x" + axisKey,
-            yaxis: "y" + axisKey,
-            customdata: customData,
-            ...params,
-            marker: {
-              color: color,
-              size: size,
-            },
-          });
-        });
-      });
-      traces = traces.concat(scatters);
+    let seed = 1;
+    function random() {
+      // Math.random does not have a seed, so we use this
+      let x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
     }
+    let scatters = [];
+    // Add scatter plots on top of violins to show individual points
+    // Plotly supports showing points automatically with `points="all"`,
+    // however, it's problematic to give each sample individual color,
+    // and set up hover events to highlight all points for a sample. So as
+    // a workaround, we add a separate scatter plot. One thing to solve later
+    // would be to be able to only show outliers, not all points, as the violin
+    // plot can do that automatically, and we lose this functionality here.
+    scatterDataByMetric.map((scatterData, metricIdx) => {
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
+
+      scatterData.map(([sample, value]) => {
+        let state = sampleSettings[allSamples.indexOf(sample)];
+        let params = JSON.parse(JSON.stringify(dataset["scatter_trace_params"])); // deep copy
+
+        let color = "black"; // trace_params["marker"]["color"];
+        let size = params.marker.size;
+        if (highlightingEnabled) {
+          color = state.highlight ?? "#cccccc";
+          size = state.highlight !== null ? 10 : size;
+        }
+
+        let customData = {
+          curveNumbers: curveNumbersBySample[sample],
+          curveAxis: curveAxisBySample[sample],
+        };
+
+        const jitter = 0.3;
+        scatters.push({
+          type: "scatter",
+          x: [value],
+          y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
+          text: [state.name ?? sample],
+          xaxis: "x" + axisKey,
+          yaxis: "y" + axisKey,
+          customdata: customData,
+          ...params,
+          marker: {
+            color: color,
+            size: size,
+          },
+        });
+      });
+    });
+    traces = traces.concat(scatters);
     return traces;
   }
 
