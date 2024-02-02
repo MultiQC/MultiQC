@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "ylab": "Count",
                     "tt_percentages": False,
                     "use_legend": True,
-                    "tt_suffix": "reads",
+                    "tt_suffix": " reads",
                 },
             ),
         )
