@@ -37,6 +37,10 @@ class Plot {
   }
 
   resize(newHeight) {
+    if (newHeight === null || newHeight === undefined) {
+      console.error("Plot.resize: newHeight is " + newHeight);
+      return;
+    }
     this.layout.height = newHeight;
     this.layout.autosize = true;
     if (!this.square) {
@@ -308,18 +312,17 @@ function renderPlot(target) {
   }
 
   let dataset = plot.datasets[plot.activeDatasetIdx];
-  let layout = plot.layout;
-  updateObject(layout, dataset.layout);
+  updateObject(plot.layout, dataset.layout);
 
   // Apply pct/log toggle states
   plot.axisControlledBySwitches.map((axis) => {
-    layout[axis].type = plot.lActive ? "log" : "linear";
+    plot.layout[axis].type = plot.lActive ? "log" : "linear";
     if (plot.pActive) {
-      updateObject(layout[axis], plot["pctAxisUpdate"]);
+      updateObject(plot.layout[axis], plot["pctAxisUpdate"]);
     }
   });
 
-  let traces = plot.buildTraces(layout);
+  let traces = plot.buildTraces(plot.layout);
   if (traces.length > 0 && traces[0].constructor === Array) traces = [].concat.apply([], traces); // if list of lists, flatten
   if (traces.length === 0) {
     // All series hidden. Hide the graph.
@@ -328,7 +331,7 @@ function renderPlot(target) {
   }
 
   container.show();
-  func(target, traces, layout, {
+  func(target, traces, plot.layout, {
     responsive: true,
     displaylogo: false,
     displayModeBar: true,

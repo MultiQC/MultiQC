@@ -1,4 +1,9 @@
 class BarPlot extends Plot {
+  constructor(dump) {
+    super(dump);
+    this.filteredSettings = [];
+  }
+
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     let cats = this.datasets[this.activeDatasetIdx]["cats"];
@@ -27,38 +32,73 @@ class BarPlot extends Plot {
     return [cats, filteredSettings];
   }
 
-  // Constructs and returns traces for the Plotly plot
-  buildTraces(layout) {
-    let [cats, filteredSettings] = this.prepData();
-    if (cats.length === 0 || filteredSettings.length === 0) return [];
+  resize(newHeight) {
+    if (newHeight === null || newHeight === undefined) console.error("BarPlot.resize: newHeight is " + newHeight);
 
+    this.layout.height = newHeight;
+    this.recalculateTicks();
+    super.resize(newHeight);
+  }
+
+  recalculateTicks() {
     function subsample(values, num, start = 0) {
       // Take ~`num` samples from values evenly, always include `start`
       if (values.length <= num) return values;
 
       let indices = Array.from({ length: values.length }, (_, i) => i);
-      let reordered = indices.slice(start).concat(indices.slice(0, start));
-      let subsampledIndices = reordered.filter((_, i) => i % Math.floor(values.length / num) === 0);
-      return subsampledIndices.map((i) => values[i]);
+      let after = indices.slice(start);
+      let before = indices.slice(0, start + 1); // including the pivot
+      before.reverse(); // will stepping back
+      let step = Math.floor(values.length / num);
+      before = before.filter((_, i) => i % step === 0);
+      after = after.filter((_, i) => i % step === 0);
+      before.reverse();
+      before = before.slice(0, before.length - 1); // remove the pivot
+      indices = before.concat(after);
+      return indices.map((i) => values[i]);
     }
 
-    let firstHighlightedSample = 0;
-    let highlighted = filteredSettings.filter((s) => s.highlight);
-    if (highlighted.length > 0) {
-      firstHighlightedSample = filteredSettings.findIndex((s) => s.highlight);
+    let highlighted = this.filteredSettings.filter((s) => s.highlight);
+    let firstHighlightedSample = this.firstHighlightedSample();
 
+    if (highlighted.length === 0) {
+      this.layout.yaxis.tickmode = null;
+      this.layout.yaxis.tickvals = null;
+      this.layout.yaxis.ticktext = null;
+    } else {
       // Have to switch to tickmode=array to set colors to ticks. however, this way plotly will try
       // to fit _all_ ticks on the screen, and if there are too many, they will overlap. to prevent that,
       // if there are too many samples, we will show only highlighted samples plus a subsampled number
-      // of ticks, but up to 55:
-      layout.yaxis.tickmode = "array";
-      const maxTicks = 55;
-      let selected = subsample(filteredSettings, maxTicks, firstHighlightedSample);
+      // of ticks, but up to a constant:
+      this.layout.yaxis.tickmode = "array";
+      if (this.layout.height === null || this.layout.height === undefined)
+        console.error("BarPlot.recalculateTicks: this.layout.height is " + this.layout.height);
 
-      layout.yaxis.tickvals = selected.map((s) => s.name);
-      layout.yaxis.ticktext = selected.map((s) => "<span style='color:" + s.highlight + "'>" + s.name + "</span>");
+      const maxTicks = (this.layout.height - 140) / 15; // 20px per tick
+      let selected = subsample(this.filteredSettings, maxTicks, firstHighlightedSample);
+
+      this.layout.yaxis.tickvals = selected.map((s) => s.name);
+      this.layout.yaxis.ticktext = selected.map((s) => "<span style='color:" + s.highlight + "'>" + s.name + "</span>");
     }
+  }
 
+  firstHighlightedSample() {
+    let index = 0;
+    let highlighted = this.filteredSettings.filter((s) => s.highlight);
+    if (highlighted.length > 0) index = this.filteredSettings.findIndex((s) => s.highlight);
+    return index;
+  }
+
+  // Constructs and returns traces for the Plotly plot
+  buildTraces(layout) {
+    let [cats, filteredSettings] = this.prepData();
+    if (cats.length === 0 || filteredSettings.length === 0) return [];
+    this.filteredSettings = filteredSettings;
+
+    this.recalculateTicks();
+
+    let highlighted = filteredSettings.filter((s) => s.highlight);
+    let firstHighlightedSample = this.firstHighlightedSample();
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
     return cats.map((cat) => {
