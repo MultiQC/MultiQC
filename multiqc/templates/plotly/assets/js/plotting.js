@@ -349,7 +349,7 @@ function renderPlot(target) {
   if (plot.pActive) {
     layout.xaxis.ticksuffix = "%";
     layout.xaxis.hoverformat = ".1f";
-    layout.xaxis.range = [0, 100];
+    layout.xaxis.range = [null, null];
   }
 
   let traces = plot.buildTraces(layout);

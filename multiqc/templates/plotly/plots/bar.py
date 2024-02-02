@@ -141,15 +141,15 @@ class BarPlot(Plot):
 
         # Set height to be proportional to the number of samples
         PADDING = 140  # plot header and footer
-        height_per_bar = 50
+        height_per_bar = 40
         if max_n_samples > 5:
-            height_per_bar = 35
-        if max_n_samples > 10:
             height_per_bar = 30
-        if max_n_samples > 20:
+        if max_n_samples > 10:
             height_per_bar = 25
-        if max_n_samples > 30:
+        if max_n_samples > 20:
             height_per_bar = 20
+        if max_n_samples > 30:
+            height_per_bar = 15
         height = max_n_samples * height_per_bar + PADDING
 
         # Set height to also be proportional to the number of cats to fit a legend
@@ -252,17 +252,19 @@ class BarPlot(Plot):
                 for cat in dataset.cats:
                     for sample_idx, val in enumerate(cat["data"]):
                         if not math.isnan(val):
-                            sums[sample_idx] += val
+                            sums[sample_idx] += abs(val)
 
                 # Now, calculate percentages for each category
                 for cat in dataset.cats:
                     values = [x for x in cat["data"]]
-                    for key, var in enumerate(values):
-                        sum_for_cat = sums[key]
-                        if sum_for_cat == 0:
-                            values[key] = 0
+                    if any(v < 0 for v in values):
+                        print(values)
+                    for sample_idx, val in enumerate(values):
+                        sum_for_sample = sums[sample_idx]
+                        if sum_for_sample == 0:
+                            values[sample_idx] = 0
                         else:
-                            values[key] = float(var + 0.0) / float(sum_for_cat) * 100.0
+                            values[sample_idx] = float(val + 0.0) / float(sum_for_sample) * 100.0
                     cat["data_pct"] = values
 
         if self.add_log_tab:
