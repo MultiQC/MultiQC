@@ -93,7 +93,7 @@ class Plot(ABC):
             for i in range(n_datasets)
         ]
 
-        height = self.pconfig.get("height", 600)
+        height = self.pconfig.get("height", 500)
         width = self.pconfig.get("width")
         if self.pconfig.get("square"):
             width = height
