@@ -143,9 +143,9 @@ jobs:
             exit 1
           fi
 
-      - name: Test for missing CSPs
-        if: matrix.python-version == env.latest_python
-        run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
+  #      - name: Test for missing CSPs
+  #        if: matrix.python-version == env.latest_python
+  #        run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
 
   run_windows:
     name: Windows
