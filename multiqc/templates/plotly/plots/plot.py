@@ -186,7 +186,7 @@ class Plot(ABC):
                 dataset.label = dconfig["label"]
                 dconfig["ylab"] = dconfig["label"]
 
-            dataset.layout, dataset.trace_params = _dataset_layout(dconfig, dconfig, self.tt_label())
+            dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
 
         # Layout update for the counts/percentage switch
         self.pct_axis_update = dict(
