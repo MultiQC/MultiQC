@@ -81,7 +81,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "base_count",
                 "min": 0,
                 "scale": "Blues",
-                "hidden": True,
             },
             "megahit_min_contig": {
                 "title": "Min contig length",
@@ -90,7 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
-                "hidden": True,
             },
             "megahit_max_contig": {
                 "title": "Max contig length",
@@ -99,7 +97,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "YlGn",
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
-                "hidden": True,
             },
             "megahit_avg_contig": {
                 "title": "Avg contig length",
@@ -123,7 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "&nbsp;MB",
                 "scale": "Reds",
-                "hidden": True,
             },
             "megahit_time": {
                 "title": "Time",
@@ -131,16 +127,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "&nbsp;s",
                 "scale": "Greys",
-                "hidden": True,
             },
         }
 
         # Basic Stats Table
-        self.general_stats_addcols(data, headers)
+        genstats_cols = ["megahit_contigs", "megahit_avg_contig", "megahit_n50"]
+        self.general_stats_addcols(data, {h: v for h, v in headers.items() if h in genstats_cols})
 
-        # Separate table with all metrics visible
-        for k, v in headers.items():
-            v["hidden"] = False
+        # Separate table with all metrics
         self.add_section(
             name="Run statistics",
             anchor="megahit-stats",
