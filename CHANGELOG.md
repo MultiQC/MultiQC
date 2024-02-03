@@ -520,6 +520,8 @@ for more information.
   - Mark duplicate reads from PacBio sequencing of an amplified library
 - [**WhatsHap**](https://whatshap.readthedocs.io)
   - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
+- [**SeqWho**](https://daehwankimlab.github.io/seqwho/)
+  - Tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.
 
 ### Module feature additions
 

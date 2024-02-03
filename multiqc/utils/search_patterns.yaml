@@ -767,6 +767,9 @@ samtools/rmdup:
   shared: true
 sargasso:
   fn: "overall_filtering_summary.txt"
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
