@@ -15,6 +15,7 @@
 - Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
 - Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
 - Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
+- Add `filesearch_file_shared` config option, remove unnecessary per-module `shared` flags in search patterns ([#2227](https://github.com/ewels/MultiQC/pull/2227))
 - Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))

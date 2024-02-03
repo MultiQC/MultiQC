@@ -18,7 +18,6 @@ bakta:
   contents: "Bakta:"
 bamtools/stats:
   contents: "Stats for BAM file(s):"
-  shared: true
   num_lines: 10
 bbduk:
   contents: "Executing jgi.BBDuk"
@@ -88,7 +87,6 @@ bbmap/statsfile:
   num_lines: 1
 bcftools/stats:
   contents: "This file was produced by bcftools stats"
-  shared: true
 bcl2fastq:
   fn: "Stats.json"
   contents: "DemuxResults"
@@ -348,19 +346,16 @@ filtlong:
   num_lines: 5
 flash/log:
   contents: "[FLASH]"
-  shared: true
 flash/hist:
   fn: "*flash*.hist"
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
-  shared: true
 freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
-  shared: true
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
@@ -412,7 +407,6 @@ hifiasm:
   num_lines: 1
 hisat2:
   contents: "HISAT2 summary stats:"
-  shared: true
 homer/findpeaks:
   contents: "# HOMER Peaks"
   num_lines: 3
@@ -462,7 +456,6 @@ kaiju:
   num_lines: 1
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
-  shared: true
 nanostat:
   max_filesize: 4096
   contents_re: "Metrics\\s+dataset\\s*"
@@ -480,7 +473,7 @@ librarian:
   fn: "librarian_heatmap.txt"
 leehom:
   contents: "Adapter dimers/chimeras"
-  shared: true
+  num_lines: 100
 lima/summary:
   contents: "ZMWs above all thresholds"
   num_lines: 2
@@ -707,15 +700,14 @@ qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
 quast:
   fn: "report.tsv"
-  shared: true
+  contents: "Assembly	"
+  num_lines: 2
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"
   contents: "Sample	Note	"
-  shared: true
 rna_seqc/metrics_v2:
   fn: "*metrics.tsv"
   contents: "High Quality Ambiguous Alignment Rate"
-  shared: true
 rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
@@ -767,18 +759,14 @@ sambamba/markdup:
   num_lines: 50
 samblaster:
   contents: "samblaster: Version"
-  shared: true
 samtools/stats:
   contents: "This file was produced by samtools stats"
-  shared: true
 samtools/flagstat:
   contents: "in total (QC-passed reads + QC-failed reads)"
-  shared: true
 samtools/idxstats:
   fn: "*idxstat*"
 samtools/rmdup:
   contents: "[bam_rmdup"
-  shared: true
 sargasso:
   fn: "overall_filtering_summary.txt"
 seqwho:
@@ -793,7 +781,6 @@ sickle:
   num_lines: 2
 skewer:
   contents: "maximum error ratio allowed (-r):"
-  shared: true
 slamdunk/summary:
   contents: "# slamdunk summary"
   num_lines: 1
@@ -830,7 +817,6 @@ software_versions:
   fn_re: ".+_mqc_versions\\.(yaml|yml)"
 sortmerna:
   contents: "Minimal SW score based on E-value"
-  shared: true
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
@@ -868,7 +854,6 @@ tophat:
   shared: true
 trimmomatic:
   contents: "Trimmomatic"
-  shared: true
 truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"
