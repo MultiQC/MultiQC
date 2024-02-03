@@ -19,7 +19,6 @@ def parse_reports(self):
     self.add_software_version(None)
 
     if self.clusters:
-        log.info(f"Found {len(self.clusters)} reports")
         self.write_data_file(self.clusters, "multiqc_humid_clusters")
         add_to_humid_section(self)
 

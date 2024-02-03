@@ -44,3 +44,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if all(not x for x in [self.stats, self.neighbours, self.counts, self.clusters]):
             raise ModuleNoSamplesFound
+
+        num_samples = max([len(x) for x in [self.stats, self.neighbours, self.counts, self.clusters]])
+        log.info(f"Found {num_samples} reports")

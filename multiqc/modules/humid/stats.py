@@ -20,7 +20,6 @@ def parse_reports(self):
     self.stats = self.ignore_samples(self.stats)
 
     if self.stats:
-        log.info(f"Found {len(self.stats)} reports")
         self.write_data_file(self.stats, "multiqc_humid_stats")
         add_general_stats(self)
         add_stats_section(self)
