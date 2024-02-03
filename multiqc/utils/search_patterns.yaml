@@ -228,6 +228,7 @@ clipandmerge:
   num_lines: 5
 clusterflow/logs:
   fn: "*_clusterFlow.txt"
+  shared: true
 clusterflow/runfiles:
   fn: "*.run"
   contents: "Cluster Flow Run File"
