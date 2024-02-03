@@ -2,9 +2,10 @@
 
 import logging
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+
+# Import HUMID submodules
+from . import stats, neighbours, counts, clusters
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -12,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
+        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="HUMID",
             anchor="humid",
@@ -20,106 +21,29 @@ class MultiqcModule(BaseMultiqcModule):
             info=" is a fast, reference free tool to remove (UMI) duplicates from sequencing data",
             # No publication / DOI // doi=
         )
-
-        # To store the summary data
-        self.humid = dict()
-
-        # Parse the output files
-        self.parse_stat_files()
-
-        # Remove filtered samples
-        self.humid = self.ignore_samples(self.humid)
-
-        # Let MultiQC know this module found no data
-        if not self.humid:
-            raise ModuleNoSamplesFound
-
-        log.info(f"Found {len(self.humid)} reports")
+        self.stats = None
+        self.neighbours = None
+        self.counts = None
+        self.clusters = None
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        self.write_data_file(self.humid, "multiqc_humid")
+        # Look for stats files
+        stats.parse_reports(self)
 
-        self.add_general_stats()
-        self.add_humid_section()
+        # Look for neighbour files
+        neighbours.parse_reports(self)
 
-    def parse_stat_files(self):
-        for f in self.find_log_files("humid", filehandles=True):
-            # There is no sample name in the log, so we use the root of the
-            # file as sample name (since the filename is always stats.dat
-            s_name = self.clean_s_name(f["root"], f)
+        # Look for count files
+        counts.parse_reports(self)
 
-            # Read the statistics from file
-            d = {}
-            for line in f["f"]:
-                try:
-                    field, value = line.strip().split(": ")
-                    d[field] = int(value)
-                except ValueError:
-                    pass
+        # Look for cluster files
+        clusters.parse_reports(self)
 
-            try:
-                # Calculate additional statistics
-                d["filtered"] = d["total"] - d["usable"]
-                d["duplicates"] = d["total"] - d["clusters"] - d["filtered"]
+        if all(not x for x in [self.stats, self.neighbours, self.counts, self.clusters]):
+            raise ModuleNoSamplesFound
 
-                # Make sure we only return data that makes sense
-                if not sum(d[field] for field in ["duplicates", "clusters", "filtered"]) == d["total"]:
-                    log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
-                    continue
-            except KeyError as e:
-                log.warning(f"Expected HUMID keys missing {e}, skipping sample: {s_name}")
-                continue
-
-            # Got this far, data must be good
-            if s_name in self.humid:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.humid[s_name] = d
-            self.add_data_source(f, s_name)
-
-    def add_general_stats(self):
-        # Add the number of unique reads (=clusters) to the general statistics
-        # report
-        data = {k: {"uniq": v["clusters"]} for k, v in self.humid.items()}
-        headers = {
-            "uniq": {
-                "title": f"{config.read_count_prefix} Unique",
-                "description": f"Number of unique reads after UMI deduplication ({config.read_count_desc})",
-                "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
-            }
-        }
-        self.general_stats_addcols(data, headers)
-
-    def add_humid_section(self):
-        # The values we want to plot (add to the total number of reads)
-        cats = {
-            "clusters": {"name": "Unique reads"},
-            "duplicates": {"name": "Duplicate reads"},
-            "filtered": {"name": "Filtered reads"},
-        }
-
-        # Bargraph configuration
-        config = {
-            "id": "humid-bargraph",
-            "title": "HUMID: Deduplication results",
-            "ylab": "Number of reads",
-            "hide_zero_cats": False,
-        }
-        self.add_section(
-            name="Duplication Summary",
-            anchor="humid-section",
-            description="""
-                Duplication statistics per sample. Every read in the
-                input data has been assigned to one of the three categories
-                shown here.
-                """,
-            helptext="""
-                - **Unique reads** are the reads that are left over after deduplication.
-                - **Duplicate reads** are the reads that were determined to be duplicates of the **Unique reads**.
-                - **Filtered reads** were reads that could not be analysed, due to N nucleotides, or because the UMI or sequences were too short to use.
-                """,
-            plot=bargraph.plot(self.humid, cats, config),
-        )
+        num_samples = max([len(x) for x in [self.stats, self.neighbours, self.counts, self.clusters]])
+        log.info(f"Found {num_samples} reports")

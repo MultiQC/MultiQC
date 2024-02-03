@@ -129,6 +129,7 @@ show_hide_mode: []
 no_version_check: false
 log_filesize_limit: 50000000
 filesearch_lines_limit: 1000
+filesearch_file_shared: []
 report_readerrors: false
 skip_generalstats: false
 skip_versions_section: false
@@ -391,6 +392,10 @@ module_order:
         - Methylation
         - DNA
   - mosdepth:
+      module_tag:
+        - DNA
+        - RNA
+  - bamdst:
       module_tag:
         - DNA
         - RNA
@@ -795,6 +800,10 @@ module_order:
         - RNA
         - DNA
   - fastq_screen:
+      module_tag:
+        - RNA
+        - DNA
+  - seqwho:
       module_tag:
         - RNA
         - DNA
