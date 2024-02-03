@@ -26,6 +26,8 @@
   - Bamdst is a lightweight tool to stat the depth coverage of target regions of bam file(s).
 - [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
+- [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
+  - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
 
 ### Module updates
 
