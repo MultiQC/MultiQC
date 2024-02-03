@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
         # parse them with a library, take the difference "complete" - "start" to get the
         # wall time, and convert the wall time it to a human-readable format.
-        if "start" in d and "complete" in d:
+        if "start" in d and "complete" in d and d["complete"] is not None:
             start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
             complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
             wall_time = complete - start

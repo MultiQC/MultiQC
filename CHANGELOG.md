@@ -16,6 +16,9 @@
 - Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
 - Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
 - Add `filesearch_file_shared` config option, remove unnecessary per-module `shared` flags in search patterns ([#2227](https://github.com/ewels/MultiQC/pull/2227))
+- Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
+- Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
+- Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 
 ### New modules
 
@@ -24,10 +27,14 @@
 
 ### Module updates
 
-- **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- **Bcftools**: order variant depths plot categories ([#2289](https://github.com/MultiQC/MultiQC/pull/2289))
+- **Bcftools**: add missing `self.ignore_samples` in stats ([#2288](https://github.com/MultiQC/MultiQC/pull/2288))
 - **BCLConvert**: Add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
+- **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 - **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
+- **Cutadapt**: support JSON format ([#2281](https://github.com/MultiQC/MultiQC/pull/2281))
 - **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
+- **HUMID**: Add cluster statistics ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
 - **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
 - **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
@@ -516,6 +523,8 @@ for more information.
   - Mark duplicate reads from PacBio sequencing of an amplified library
 - [**WhatsHap**](https://whatshap.readthedocs.io)
   - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
+- [**SeqWho**](https://daehwankimlab.github.io/seqwho/)
+  - Tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.
 
 ### Module feature additions
 

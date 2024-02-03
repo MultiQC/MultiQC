@@ -239,7 +239,10 @@ conpair/contamination:
   contents: "Tumor sample contamination level: "
   num_lines: 3
 cutadapt:
-  contents: "This is cutadapt"
+  - contents: "This is cutadapt"
+    num_lines: 100
+  - fn: "*.json"
+    contents: "Cutadapt report"
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
@@ -420,9 +423,21 @@ homer/FreqDistribution:
   fn: "petag.FreqDistribution_1000.txt"
 hops:
   fn: "heatmap_overview_Wevid.json"
-humid:
+humid/stats:
   fn: "stats.dat"
   contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: "neigh.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: "counts.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: "clusters.dat"
+  contents_re: "[0-9]+ [0-9]+"
   num_lines: 1
 interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
@@ -753,6 +768,9 @@ samtools/rmdup:
   contents: "[bam_rmdup"
 sargasso:
   fn: "overall_filtering_summary.txt"
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
