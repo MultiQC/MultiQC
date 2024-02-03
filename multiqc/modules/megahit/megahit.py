@@ -69,10 +69,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "megahit_contigs": {
-                "title": "Contigs",
+                "title": "# Contigs",
                 "description": "Number of contigs",
                 "min": 0,
-                "scale": "Greens",
+                "scale": "Purples",
                 "format": "{:,d}",
             },
             "megahit_bases": {
@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "megahit_min_contig": {
-                "title": "Min contig",
+                "title": "Min contig length",
                 "description": "Minimum contig length",
                 "min": 0,
                 "scale": "YlGn",
@@ -93,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "megahit_max_contig": {
-                "title": "Max contig",
+                "title": "Max contig length",
                 "description": "Maximum contig length",
                 "min": 0,
                 "scale": "YlGn",
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "megahit_avg_contig": {
-                "title": "Avg",
+                "title": "Avg contig length",
                 "description": "Average contig length",
                 "min": 0,
                 "scale": "YlGn",
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "N50",
                 "description": "N50 contig length",
                 "min": 0,
-                "scale": "Greens",
+                "scale": "YlGnBu",
                 "suffix": "&nbsp;bp",
                 "format": "{:,d}",
             },
