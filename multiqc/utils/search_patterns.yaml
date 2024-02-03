@@ -16,6 +16,9 @@ anglerfish:
 bakta:
   fn: "*.txt"
   contents: "Bakta:"
+bamdst/coverage:
+  contents: "## The file was created by bamdst"
+  num_lines: 5
 bamtools/stats:
   contents: "Stats for BAM file(s):"
   num_lines: 10

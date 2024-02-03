@@ -395,6 +395,10 @@ module_order:
       module_tag:
         - DNA
         - RNA
+  - bamdst:
+      module_tag:
+        - DNA
+        - RNA
   - phantompeakqualtools:
       module_tag:
         - chip
