@@ -793,6 +793,10 @@ module_order:
       module_tag:
         - RNA
         - DNA
+  - seqwho:
+      module_tag:
+        - RNA
+        - DNA
   - afterqc:
       module_tag:
         - RNA

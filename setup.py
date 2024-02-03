@@ -185,6 +185,7 @@ setup(
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
+            "seqwho = multiqc.modules.seqwho:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
