@@ -22,6 +22,8 @@
 
 ### New modules
 
+- [**Bamdst**](https://https://github.com/shiquan/bamdst) ([#2161](https://github.com/MultiQC/MultiQC/pull/2161))
+  - Bamdst is a lightweight tool to stat the depth coverage of target regions of bam file(s).
 - [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
 
