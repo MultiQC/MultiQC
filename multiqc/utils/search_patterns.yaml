@@ -242,8 +242,10 @@ conpair/contamination:
   contents: "Tumor sample contamination level: "
   num_lines: 3
 cutadapt:
-  contents: "This is cutadapt"
-  num_lines: 100
+  - contents: "This is cutadapt"
+    num_lines: 100
+  - fn: "*.json"
+    contents: "Cutadapt report"
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
