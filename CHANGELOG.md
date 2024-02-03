@@ -33,6 +33,7 @@
 - **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - **Cutadapt**: support JSON format ([#2281](https://github.com/MultiQC/MultiQC/pull/2281))
 - **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
+- **HUMID**: Add cluster statistics ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
 - **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
 - **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
