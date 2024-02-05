@@ -224,9 +224,9 @@ class BarPlot(Plot):
                 dataset.trace_params["hovertemplate"] = dataset.trace_params["hovertemplate"].replace("%{text}", "")
 
             if dataset.layout["xaxis"]["hoverformat"] is None:
-                if all(all(isinstance(x, float) for x in cat["data"]) for cat in dataset.cats):
+                if all(all(isinstance(x, float) or math.isnan(x) for x in cat["data"]) for cat in dataset.cats):
                     dataset.layout["xaxis"]["hoverformat"] = ",.2f"
-                elif all(all(isinstance(x, int) for x in cat["data"]) for cat in dataset.cats):
+                elif all(all(isinstance(x, int) or math.isnan(x) for x in cat["data"]) for cat in dataset.cats):
                     dataset.layout["xaxis"]["hoverformat"] = ",.0f"
 
         # Expand data with zeroes if there are fewer values than samples
