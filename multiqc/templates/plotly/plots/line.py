@@ -75,7 +75,7 @@ class LinePlot(Plot):
                 if "dashStyle" in src_line:
                     new_line["line"] = new_line.get("line", {})
                     new_line["line"]["dash"] = convert_dash_style(src_line["dashStyle"])
-                if "new_line" in src_line:
+                if "lineWidth" in src_line:
                     new_line["line"] = new_line.get("line", {})
                     new_line["line"]["width"] = src_line["lineWidth"]
                 if "showInLegend" in src_line:
