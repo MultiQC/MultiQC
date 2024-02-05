@@ -223,6 +223,8 @@ class ViolinPlot(Plot):
                 header = self.header_by_metric[metric]
 
                 layout[f"xaxis{metric_idx + 1}"] = {
+                    "automargin": layout["xaxis"]["automargin"],
+                    "color": layout["xaxis"]["color"],
                     "gridcolor": layout["xaxis"]["gridcolor"],
                     "zerolinecolor": layout["xaxis"]["zerolinecolor"],
                     "hoverformat": layout["xaxis"]["hoverformat"],
@@ -230,10 +232,12 @@ class ViolinPlot(Plot):
                 }
                 layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
                 layout[f"yaxis{metric_idx + 1}"] = {
+                    "automargin": True,
+                    "color": layout["yaxis"]["color"],
                     "gridcolor": layout["yaxis"]["gridcolor"],
                     "zerolinecolor": layout["yaxis"]["zerolinecolor"],
                     "hoverformat": layout["yaxis"]["hoverformat"],
-                    "automargin": True,
+                    "tickfont": copy.deepcopy(layout["yaxis"]["tickfont"]),
                 }
                 if "hoverformat" in header:
                     layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
@@ -259,10 +263,6 @@ class ViolinPlot(Plot):
             fig = go.Figure(layout=layout)
 
             violin_values_by_sample_by_metric = self.violin_values_by_sample_by_metric
-            if self.show_only_outliers:
-                scatter_values_by_sample_by_metric = self.scatter_values_by_sample_by_metric
-            else:
-                scatter_values_by_sample_by_metric = self.violin_values_by_sample_by_metric
 
             for metric_idx, metric in enumerate(metrics):
                 header = self.header_by_metric[metric]
@@ -285,9 +285,12 @@ class ViolinPlot(Plot):
                     ),
                 )
 
-                if add_scatter:
+                if add_scatter and header["show_points"]:
+                    if header["show_only_outliers"]:
+                        scatter_values_by_sample = self.scatter_values_by_sample_by_metric[metric]
+                    else:
+                        scatter_values_by_sample = violin_values_by_sample
                     scatter_params = copy.deepcopy(self.scatter_trace_params)
-                    scatter_values_by_sample = scatter_values_by_sample_by_metric[metric]
                     for sample, value in scatter_values_by_sample.items():
                         # add vertical jitter (not working in python version currently)
                         y = float(metric_idx)
