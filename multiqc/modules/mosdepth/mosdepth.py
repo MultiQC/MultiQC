@@ -268,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_data,
                         {
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-multi",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Region",
                             "ylab": "Average Coverage",
@@ -284,7 +284,7 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = bargraph.plot(
                         perchrom_avg_data,
                         pconfig={
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-single",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
@@ -295,7 +295,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.add_section(
                     name="Average coverage per contig",
-                    anchor="mosdepth-coverage-per-contig-id",
+                    anchor="mosdepth-coverage-per-contig-section",
                     description="Average coverage per contig or chromosome",
                     plot=perchrom_plot,
                 )
