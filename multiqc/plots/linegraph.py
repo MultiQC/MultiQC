@@ -115,25 +115,37 @@ def plot(data, pconfig=None):
     for data_index, d in enumerate(data):
         thisplotdata: List[Dict] = []
 
+        # Ensure any overwritten conditionals from data_labels (e.g. ymax or categories) are taken in consideration
+        dataset_config = pconfig.copy()
+        if "data_labels" in pconfig and isinstance(
+            pconfig["data_labels"][data_index], dict
+        ):  # if not a dict: only dataset name is provided
+            dataset_config.update(pconfig["data_labels"][data_index])
+
+        if "categories" in dataset_config:
+            if not isinstance(pconfig["categories"], list):
+                dataset_config["categories"] = list()
+
+            # Add any new categories
+            for s in sorted(d.keys()):
+                for k in d[s].keys():
+                    if k not in dataset_config["categories"]:
+                        dataset_config["categories"].append(k)
+
+            # Save adjusted categories per-dataset
+            del pconfig["categories"]
+            if "data_labels" not in pconfig:
+                pconfig["data_labels"] = [{}] * len(data)
+            pconfig["data_labels"][data_index]["categories"] = dataset_config["categories"]
+
         for s in sorted(d.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config = pconfig.copy()
-            if "data_labels" in pconfig and isinstance(
-                pconfig["data_labels"][data_index], dict
-            ):  # if not a dict: only dataset name is provided
-                series_config.update(pconfig["data_labels"][data_index])
-
+            series_config = dataset_config.copy()
             pairs = []
             maxval = 0
             if "categories" in series_config:
-                if "categories" not in pconfig or not isinstance(pconfig["categories"], list):
-                    pconfig["categories"] = list()
-                # Add any new categories
-                for k in d[s].keys():
-                    if k not in pconfig["categories"]:
-                        pconfig["categories"].append(k)
                 # Go through categories and add either data or a blank
-                for k in pconfig["categories"]:
+                for k in series_config["categories"]:
                     try:
                         pairs.append(d[s][k])
                         maxval = max(maxval, d[s][k])

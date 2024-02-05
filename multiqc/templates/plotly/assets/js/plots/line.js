@@ -33,13 +33,14 @@ class LinePlot extends Plot {
     let nonHighlighted = lines.filter((p) => !p.highlight);
     lines = nonHighlighted.concat(highlighted);
 
+    let categories = dataset["dconfig"]["categories"] ?? [];
     return lines.map((line) => {
       let x, y;
       if (line.data.length > 0 && Array.isArray(line.data[0])) {
         x = line.data.map((x) => x[0]);
         y = line.data.map((x) => x[1]);
-      } else if (dataset.categories) {
-        x = dataset.categories;
+      } else if (categories.length > 0) {
+        x = categories;
         y = line.data;
       } else {
         x = [...Array(line.data.length).keys()];
@@ -67,7 +68,7 @@ class LinePlot extends Plot {
   exportData(format) {
     let dataset = this.datasets[this.activeDatasetIdx];
 
-    let [samples, lines] = this.prepData();
+    let [_, lines] = this.prepData();
 
     // check if all lines have the same x values
     let sharedX = true;
@@ -77,7 +78,7 @@ class LinePlot extends Plot {
       if (line.data.length > 0 && Array.isArray(line.data[0])) {
         thisX = line.data.map((x) => x[0]);
       } else {
-        thisX = dataset.categories;
+        thisX = dataset["dconfig"]["categories"];
       }
       if (x === null) {
         x = thisX;

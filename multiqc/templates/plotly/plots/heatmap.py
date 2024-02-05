@@ -174,8 +174,6 @@ class HeatmapPlot(Plot):
         self.layout.yaxis.nticks = y_nticks
         self.layout.height = pconfig.get("height") or (200 + height)
         self.layout.width = pconfig.get("width") or (200 + width) if self.square else None
-        self.layout.xaxis.automargin = True  # to make sure there is enough space for ticks labels
-        self.layout.yaxis.automargin = True  # to make sure there is enough space for ticks labels
         self.layout.xaxis.showgrid = False
         self.layout.yaxis.showgrid = False
         self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top

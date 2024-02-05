@@ -38,6 +38,7 @@ class BaseDataset(ABC):
     plot: "Plot"
     label: str
     uid: str
+    dconfig: Dict  # user dataset-specific configuration
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
     pct_range = [None, None]  # range of the percentage view
@@ -88,6 +89,7 @@ class Plot(ABC):
                 self,
                 label=str(i + 1),
                 uid=self.id,
+                dconfig=dict(),
                 layout=dict(),
                 trace_params=dict(),
             )
@@ -113,14 +115,16 @@ class Plot(ABC):
             xaxis=go.layout.XAxis(
                 gridcolor="rgba(0,0,0,0.05)",
                 zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.4)",  # axis labels
+                color="rgba(0,0,0,0.3)",  # axis labels
                 tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+                automargin=True,  # auto-expand axis to fit the tick labels
             ),
             yaxis=go.layout.YAxis(
                 gridcolor="rgba(0,0,0,0.05)",
                 zerolinecolor="rgba(0,0,0,0.05)",
-                color="rgba(0,0,0,0.4)",  # axis labels
+                color="rgba(0,0,0,0.3)",  # axis labels
                 tickfont=dict(size=10, color="rgba(0,0,0,1)"),
+                automargin=True,  # auto-expand axis to fit the tick labels
             ),
             height=height,
             width=width,
@@ -193,6 +197,7 @@ class Plot(ABC):
                 dconfig["ylab"] = dconfig["label"]
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
+            dataset.dconfig = dconfig
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:

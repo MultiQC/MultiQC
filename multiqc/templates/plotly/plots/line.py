@@ -42,7 +42,6 @@ class LinePlot(Plot):
     @dataclasses.dataclass
     class Dataset(BaseDataset):
         lines: List[Dict]
-        categories: List[str]
 
         @staticmethod
         def create(
@@ -53,12 +52,14 @@ class LinePlot(Plot):
             dataset = LinePlot.Dataset(
                 **dataset.__dict__,
                 lines=lines,
-                categories=pconfig.get("categories", []),
             )
-            if dataset.categories:
+            dataset.dconfig["categories"] = dataset.dconfig.get("categories", pconfig.get("categories", []))
+            if dataset.dconfig["categories"]:
                 dataset.layout["xaxis"]["type"] = "category"
                 # check that all lines have the same number of categories
-                assert all(len(line["data"]) == len(dataset.categories) for line in dataset.lines), dataset.uid
+                assert all(
+                    len(line["data"]) == len(dataset.dconfig["categories"]) for line in dataset.lines
+                ), dataset.uid
 
             dataset.trace_params.update(
                 mode="lines" if config.lineplot_style == "lines" else "lines+markers",
@@ -84,9 +85,9 @@ class LinePlot(Plot):
                 if len(line["data"]) > 0 and isinstance(line["data"][0], list):
                     xs = [x[0] for x in line["data"]]
                     ys = [x[1] for x in line["data"]]
-                elif self.categories:
-                    assert len(line["data"]) == len(self.categories)
-                    xs = self.categories
+                elif self.dconfig.get("categories"):
+                    assert len(line["data"]) == len(self.dconfig["categories"])
+                    xs = self.dconfig["categories"]
                     ys = line["data"]
                 else:
                     xs = [x for x in range(len(line["data"]))]
@@ -240,7 +241,7 @@ class LinePlot(Plot):
                     y_by_x_by_sample[line["name"]][x[0]] = x[1]
                 else:
                     try:
-                        y_by_x_by_sample[line["name"]][dataset.categories[i]] = x
+                        y_by_x_by_sample[line["name"]][dataset.dconfig["categories"][i]] = x
                     except (ValueError, KeyError, IndexError):
                         y_by_x_by_sample[line["name"]][str(i)] = x
 
