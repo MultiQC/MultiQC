@@ -104,7 +104,6 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": config.read_count_prefix,
-            "decimalPlaces": 0,
             "shared_key": "read_count",
         }
         headers = {
