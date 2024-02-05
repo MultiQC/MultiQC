@@ -40,6 +40,7 @@ class BaseDataset(ABC):
     uid: str
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
+    pct_range = [None, None]  # range of the percentage view
 
     def dump_for_javascript(self) -> Dict:
         d = {k: v for k, v in self.__dict__.items()}
@@ -154,6 +155,11 @@ class Plot(ABC):
             if self.flat
             else None,
         )
+        # Layout update for the counts/percentage switch
+        self.pct_axis_update = dict(
+            ticksuffix="%",
+            hoverformat=".1f",
+        )
 
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xLog"):
@@ -187,13 +193,6 @@ class Plot(ABC):
                 dconfig["ylab"] = dconfig["label"]
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
-
-        # Layout update for the counts/percentage switch
-        self.pct_axis_update = dict(
-            ticksuffix="%",
-            hoverformat=".1f",
-            range=[None, None],
-        )
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:

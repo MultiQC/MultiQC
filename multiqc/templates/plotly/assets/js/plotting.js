@@ -319,6 +319,7 @@ function renderPlot(target) {
     plot.layout[axis].type = plot.lActive ? "log" : "linear";
     if (plot.pActive) {
       updateObject(plot.layout[axis], plot["pctAxisUpdate"]);
+      plot.layout[axis]["range"] = dataset["pct_range"];
     }
   });
 

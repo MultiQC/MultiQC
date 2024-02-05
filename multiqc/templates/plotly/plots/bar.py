@@ -183,23 +183,23 @@ class BarPlot(Plot):
         )
 
         for dataset in self.datasets:
-            xmax = self.pconfig.get("ymax")
-            xmin = self.pconfig.get("ymin")
-            if xmax is None:
-                if barmode == "group":
-                    # max category
-                    xmax = max(max(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
-                    xmin = min(min(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
-                else:
-                    # max sum of all categories across all samples
-                    xmax = max(
-                        sum(cat["data"][i] if cat["data"][i] > 0 else 0 for cat in dataset.cats)
-                        for i in range(len(dataset.samples))
-                    )
-                    xmin = min(
-                        sum(cat["data"][i] if cat["data"][i] < 0 else 0 for cat in dataset.cats)
-                        for i in range(len(dataset.samples))
-                    )
+            if barmode == "group":
+                # max category
+                xmax_cnt = max(max(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                xmin_cnt = min(min(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+            else:
+                # max sum of all categories across all samples
+                xmax_cnt = max(
+                    sum(cat["data"][i] if cat["data"][i] > 0 else 0 for cat in dataset.cats)
+                    for i in range(len(dataset.samples))
+                )
+                xmin_cnt = min(
+                    sum(cat["data"][i] if cat["data"][i] < 0 else 0 for cat in dataset.cats)
+                    for i in range(len(dataset.samples))
+                )
+
+            xmin_cnt = self.pconfig.get("ymin", xmin_cnt)
+            xmax_cnt = self.pconfig.get("ymax", xmax_cnt)
             dataset.layout.update(
                 yaxis=dict(
                     title=None,
@@ -210,7 +210,7 @@ class BarPlot(Plot):
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
-                    range=[xmin, xmax],
+                    range=[xmin_cnt, xmax_cnt],
                 ),
             )
             dataset.trace_params.update(
@@ -255,6 +255,16 @@ class BarPlot(Plot):
                         else:
                             values[sample_idx] = float(val + 0.0) / float(sum_for_sample) * 100.0
                     cat["data_pct"] = values
+
+                if barmode == "group":
+                    # calculating the min percentage range as well because it will be negative for negative values
+                    xmin_pct = min(min(cat["data_pct"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                else:
+                    xmin_pct = min(
+                        sum(cat["data_pct"][i] if cat["data_pct"][i] < 0 else 0 for cat in dataset.cats)
+                        for i in range(len(dataset.samples))
+                    )
+                dataset.pct_range = [xmin_pct, 100]
 
         if self.add_log_tab:
             # Sorting from small to large so the log switch makes sense
