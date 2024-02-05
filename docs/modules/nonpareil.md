@@ -55,27 +55,11 @@ call function `export_curve()` on object `curves`:
 
 ### Module config options
 
-The module builds a line graph for each model with a tab panel to switch between models.
-The plot will contain a line for the observed data and a line of the inferred model data.
-You can hide one of those lines with the config options below:
+The module plots a line graph for each sample, with a tab panel to switch between only observed data, only models,
+or both combined (model with a dashed line). It will use the colors specified in the JSON file by `nonpareil` and,
+if some is missing use one from a MultiQC colour scheme (default: Paired) that can be defined with:
 
 ```yaml
 nonpareil:
-  plot_observed: true # default: true
-  plot_model: false # default: true
+  plot_colours: Paired
 ```
-
-You can also add extra dashed lines to represent the dispersion of the model:
-
-```yaml
-nonpareil:
-  plot_dispersion: sd # default: none
-```
-
-The available values for `plot_dispersion`:
-
-- `sd`: one standard deviation around the mean,
-- `ci95`: confidence interval at 95%,
-- `ci90`: confidence interval at 90%,
-- `ci50`: confidence interval at 50%,
-- `iq`: inter-quartile range.

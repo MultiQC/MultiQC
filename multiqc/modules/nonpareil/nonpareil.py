@@ -6,6 +6,8 @@ import numpy as np
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.utils import mqc_colour
+
 
 # Initialise the logger
 from multiqc.plots import table, linegraph
@@ -29,9 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options
-        self.plot_observed = getattr(config, "nonpareil", {}).get("plot_observed", True)
-        self.plot_model = getattr(config, "nonpareil", {}).get("plot_model", True)
-        self.disp_type = getattr(config, "nonpareil", {}).get("plot_dispersion", False)
+        self.plot_colours = getattr(config, "nonpareil", {}).get("plot_colours", "Paired")
 
         # Read JSON file
         self.data_by_sample = dict()
@@ -72,17 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse nonpareil JSON: '{f['fn']}': {e}, skipping file")
             return None, {}
 
-        # x.obs Rarefied sequencing effort.
-        # x.adj Adjusted rarefied sequencing effort.
-        # y.red Rarefied redundancy (observed).
-        # y.cov Rarefied coverage (corrected).
-        # y.sd Standard deviation of rarefied coverage.
-        # y.p25 Percentile 25 (1st quartile) of rarefied coverage.
-        # y.p50 Percentile 50 (median) of rarefied coverage.
-        # y.p75 Percentile 75 (3rd quartile) of rarefied coverage
-        if self.disp_type:
-            log.debug(f"Plotting dispersion for {self.disp_type}")
-
         # Rename samples, if label available
         for s_name in list(json_raw.keys()):
             s_label = json_raw[s_name].get("label")
@@ -112,24 +101,6 @@ class MultiqcModule(BaseMultiqcModule):
                 LRstar = data["LRstar"]
                 assert isinstance(LRstar, list) and len(LRstar) == 0, "there is no model, but LRstar is not empty"
                 data["LRstar"] = np.nan
-
-            # Calculate dispersion
-            # from https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L306-L318
-            disp_add = None
-            if self.disp_type == "sd":
-                disp_add = np.array(data["y.sd"])
-            elif self.disp_type == "ci95":
-                disp_add = np.array(data["y.sd"]) * 1.9
-            elif self.disp_type == "ci90":
-                disp_add = np.array(data["y.sd"]) * 1.64
-            elif self.disp_type == "ci50":
-                disp_add = np.array(data["y.sd"]) * 0.67
-            elif self.disp_type == "iq":
-                data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p75"])]
-                data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], data["y.p25"])]
-            if disp_add is not None:
-                data["disp_upper"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) + disp_add)]
-                data["disp_lower"] = [[x, y] for x, y in zip(data["x.adj"], np.array(data["y.cov"]) - disp_add)]
             # Add prefix to labels
             for key in list(data.keys()):
                 data["nonpareil_" + key] = data.pop(key)
@@ -338,38 +309,39 @@ class MultiqcModule(BaseMultiqcModule):
         esconfig = {
             "dashStyle": "Dash",
             "lineWidth": 2,
-            "color": "#000000",
             "marker": {"enabled": False},
-            "enableMouseTracking": False,
+            "enableMouseTracking": True,
             "showInLegend": False,
         }
-        disp_desc = {
-            "sd": "standard deviation",
-            "ci95": "confidence interval at 95%",
-            "ci90": "confidence interval at 90%",
-            "ci50": "confidence interval at 50%",
-            "iq": "inter-quartile range",
+
+        data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
+        data_colors = {
+            s_name: data.get("nonpareil_col", data_colors_default.pop(0))
+            for s_name, data in self.data_by_sample.items()
         }
 
+        data_labels = [{"name": "Observed"}, {"name": "Model"}, {"name": "Combined"}]
         data_plot = list()
-        data_labels = list()
         extra_series = list()
-        for s_name, data in sorted(self.data_by_sample.items()):
+        for idx, dataset in enumerate(data_labels):
             data_plot.append(dict())
-            if self.plot_observed:
-                data_plot[-1]["observed"] = data["nonpareil_observed"]
-            if self.plot_model and data["nonpareil_has.model"]:
-                data_plot[-1]["model"] = data["nonpareil_model"]
-            if self.disp_type:
-                extra_series.append([dict(esconfig), dict(esconfig)])
-                extra_series[-1][0]["name"] = f"{self.disp_type} Upper"
-                extra_series[-1][0]["data"] = data["nonpareil_disp_upper"]
-                extra_series[-1][1]["name"] = f"{self.disp_type} Lower"
-                extra_series[-1][1]["data"] = data["nonpareil_disp_lower"]
-            data_labels.append({"name": s_name})
+            extra_series.append(list())
+            for s_name, data in self.data_by_sample.items():
+                if dataset["name"] == "Observed":
+                    data_plot[idx][s_name] = data["nonpareil_observed"]
+                elif dataset["name"] == "Model" and data["nonpareil_has.model"]:
+                    data_plot[idx][s_name] = data["nonpareil_model"]
+                elif dataset["name"] == "Combined":
+                    data_plot[idx][s_name] = data["nonpareil_observed"]
+                    if data["nonpareil_has.model"]:
+                        extra_series[idx].append(dict(esconfig))
+                        extra_series[idx][-1]["name"] = s_name
+                        extra_series[idx][-1]["data"] = [[x, y] for x, y in data["nonpareil_model"].items()]
+                        extra_series[idx][-1]["color"] = data_colors[s_name]
 
         pconfig = {
             "id": "nonpareil-redundancy-plot",
+            "colors": data_colors,
             "title": "Nonpareil: Redundancy levels",
             "xlab": "Sequencing effort (Mbps)",
             "ylab": "Estimated Average Coverage",
@@ -388,8 +360,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Redundancy levels",
             anchor="nonpareil-redundancy",
-            description="Redundancy levels across samples"
-            + (f"; dashed black lines show the {disp_desc[self.disp_type]}" if self.disp_type else "")
-            + ".",
+            description="Redundancy levels across samples.",
             plot=linegraph.plot(data_plot, pconfig),
         )
