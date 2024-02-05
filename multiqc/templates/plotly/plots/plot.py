@@ -499,16 +499,15 @@ def _dataset_layout(
     """
     Sets dataset-specific number format layout and trace options.
     """
+    pconfig = pconfig.copy()
+    pconfig.update(dconfig)
+
     # Format on-hover tooltips
-    ysuffix = dconfig.get("ysuffix", dconfig.get("tt_suffix"))
-    if ysuffix is None:
-        ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
+    ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
     if pconfig.get("ylab_format") and "%" in pconfig["ylab_format"]:
         ysuffix = "%"
 
-    xsuffix = dconfig.get("xsuffix")
-    if xsuffix is None:
-        xsuffix = pconfig.get("xsuffix")
+    xsuffix = pconfig.get("xsuffix")
 
     if "tt_label" in pconfig:
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
@@ -518,10 +517,14 @@ def _dataset_layout(
         # if "%" character is inside the Y label, add suffix to the Y ticks as well
         parts = tt_label.split("%{")
         for part in parts:
-            if ysuffix is None and part.startswith("y"):
+            if ysuffix is None and part.startswith("y") and "}" in part:
                 ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-            elif xsuffix is None and part.startswith("x"):
+                if "," in ysuffix:
+                    ysuffix = ysuffix.split(",")[0]
+            elif xsuffix is None and part.startswith("x") and "}" in part:
                 xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
+                if "," in xsuffix:
+                    xsuffix = xsuffix.split(",")[0]
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
@@ -540,15 +543,15 @@ def _dataset_layout(
     else:
         hovertemplate = None
 
-    xlab = dconfig.get("xlab", pconfig.get("xlab"))
-    ylab = dconfig.get("ylab", pconfig.get("ylab"))
-    xmin = dconfig.get("xmin", pconfig.get("xmin"))
-    xmax = dconfig.get("xmax", pconfig.get("xmax"))
-    ymin = dconfig.get("ymin", pconfig.get("ymin"))
-    ymax = dconfig.get("ymax", pconfig.get("ymax"))
+    xlab = pconfig.get("xlab")
+    ylab = pconfig.get("ylab")
+    xmin = pconfig.get("xmin", pconfig.get("yFloor"))
+    xmax = pconfig.get("xmax", pconfig.get("yCeiling"))
+    ymin = pconfig.get("ymin", pconfig.get("yFloor"))
+    ymax = pconfig.get("ymax", pconfig.get("yCeiling"))
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = dconfig.get("tt_decimals", pconfig.get("tt_decimals"))
+    tt_decimals = pconfig.get("tt_decimals")
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
