@@ -55,6 +55,7 @@ class LinePlot(Plot):
             )
             dataset.dconfig["categories"] = dataset.dconfig.get("categories", pconfig.get("categories", []))
             if dataset.dconfig["categories"]:
+                # Prevent JavaScript from automatically parsing categorical values as numbers
                 dataset.layout["xaxis"]["type"] = "category"
                 # check that all lines have the same number of categories
                 assert all(
