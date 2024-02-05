@@ -319,7 +319,11 @@ function renderPlot(target) {
     plot.layout[axis].type = plot.lActive ? "log" : "linear";
     if (plot.pActive) {
       updateObject(plot.layout[axis], plot["pctAxisUpdate"], false);
-      plot.layout[axis]["range"] = dataset["pct_range"];
+      plot.layout[axis]["range"] = [...dataset["pct_range"]];
+    }
+    if (plot.lActive) {
+      // Plotly needs the range to be log-scaled as well :(
+      plot.layout[axis]["range"] = plot.layout[axis]["range"].map((v) => (v > 0 ? Math.log10(v) : 0));
     }
   });
 
@@ -384,7 +388,12 @@ function updateObject(target, source, nullOnly = false) {
   for (const key in source) {
     // Check if the value is not null
     // Check if the value is an object and not an array
-    if (typeof source[key] === "object" && !Array.isArray(source[key])) {
+    if (Array.isArray(source[key])) {
+      // Recursively update the array
+      if (!nullOnly || target[key] === undefined || target[key] === null) {
+        target[key] = [...source[key]];
+      }
+    } else if (typeof source[key] === "object") {
       // If the target doesn't have this key, or it's not an object, initialize it
       if (!target[key] || typeof target[key] !== "object") {
         target[key] = {};
