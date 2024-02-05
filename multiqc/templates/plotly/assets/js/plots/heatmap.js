@@ -24,15 +24,15 @@ class HeatmapPlot extends Plot {
       let xcatsSettings = applyToolboxSettings(xcats);
       if (xcatsSettings == null) return; // All series are hidden, do not render the graph.
 
-      // If sample is highlighted, make all values None except for the highlighted sample
-      // But only if it's not done for the Y
-      if (!this.ycats_samples) {
-        if (xcatsSettings.filter((s) => s.highlight).length > 0) {
-          rows = rows.map((row) => {
-            return row.map((val, x) => (xcatsSettings[x].highlight ? val : null));
-          });
-        }
-      }
+      // // If sample is highlighted, make all values None except for the highlighted sample
+      // // But only if it's not done for the Y
+      // if (!this.ycats_samples) {
+      //   if (xcatsSettings.filter((s) => s.highlight).length > 0) {
+      //     rows = rows.map((row) => {
+      //       return row.map((val, x) => (xcatsSettings[x].highlight ? val : null));
+      //     });
+      //   }
+      // }
       // Rename and filter samples:
       xcats = xcatsSettings.filter((s) => !s.hidden).map((s) => s.name);
       rows = rows.map((row) => row.filter((val, i) => !xcatsSettings[i].hidden));
@@ -42,12 +42,12 @@ class HeatmapPlot extends Plot {
       let ycatsSettings = applyToolboxSettings(ycats);
       if (ycatsSettings == null) return; // All series are hidden, do not render the graph.
 
-      // If sample is highlighted, make all values None except for the highlighted sample
-      if (ycatsSettings.filter((s) => s.highlight).length > 0) {
-        rows = rows.map((row, y) => {
-          return ycatsSettings[y].highlight ? row : row.map(() => null);
-        });
-      }
+      // // If sample is highlighted, make all values None except for the highlighted sample
+      // if (ycatsSettings.filter((s) => s.highlight).length > 0) {
+      //   rows = rows.map((row, y) => {
+      //     return ycatsSettings[y].highlight ? row : row.map(() => null);
+      //   });
+      // }
       // Rename and filter samples:
       ycats = ycatsSettings.filter((s) => !s.hidden).map((s) => s.name);
       rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
