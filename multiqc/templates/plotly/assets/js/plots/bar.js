@@ -41,19 +41,38 @@ class BarPlot extends Plot {
   }
 
   recalculateTicks() {
-    function subsample(values, num, start = 0) {
-      // Take ~`num` samples from values evenly, always include `start`
-      if (values.length <= num) return values;
+    function subsample(values, num, start = 0, roundBin = true) {
+      // Take ~`num` samples from values evenly, always include `start`.
+      // If `roundBin` is true, the bins will be rounded to the nearest integer,
+      // so the ticks will be evenly distributed, but the total number of ticks
+      // may be less than `num`.
 
+      if (values.length <= num) return values;
+      if (values.length <= 1) return values;
+      if (num === 0) return [];
+      if (num === 1) return [values[start]];
+
+      let binSize = (values.length - 1) / (num - 1);
+      if (roundBin) binSize = Math.ceil(binSize);
+
+      // Split into two halves: before and after pivot, including pivot into both. This way
+      // we want to make sure pivot is always included in the result.
       let indices = Array.from({ length: values.length }, (_, i) => i);
       let after = indices.slice(start);
       let before = indices.slice(0, start + 1); // including the pivot
-      before.reverse(); // will stepping back
-      let step = Math.floor(values.length / num);
-      before = before.filter((_, i) => i % step === 0);
-      after = after.filter((_, i) => i % step === 0);
+
+      // Stepping forward `binsize` steps, starting from the pivot
+      after = Array.from({ length: after.length }, (_, i) => Math.ceil(binSize * i))
+        .filter((index) => index < after.length)
+        .map((index) => after[index]);
+
+      before.reverse(); // Stepping back starting from the pivot
+      before = Array.from({ length: before.length }, (_, i) => Math.ceil(binSize * i))
+        .filter((index) => index < before.length)
+        .map((index) => before[index]);
       before.reverse();
       before = before.slice(0, before.length - 1); // remove the pivot
+
       indices = before.concat(after);
       return indices.map((i) => values[i]);
     }
@@ -74,7 +93,7 @@ class BarPlot extends Plot {
       if (this.layout.height === null || this.layout.height === undefined)
         console.error("BarPlot.recalculateTicks: this.layout.height is " + this.layout.height);
 
-      const maxTicks = (this.layout.height - 140) / 15; // 20px per tick
+      const maxTicks = (this.layout.height - 140) / 10; // 20px per tick
       let selected = subsample(this.filteredSettings, maxTicks, firstHighlightedSample);
 
       this.layout.yaxis.tickvals = selected.map((s) => s.name);

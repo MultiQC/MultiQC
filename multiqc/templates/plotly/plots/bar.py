@@ -119,7 +119,7 @@ class BarPlot(Plot):
 
         # Set height to be proportional to the number of samples
         PADDING = 140  # plot header and footer
-        height_per_bar = 40
+        height_per_bar = 35
         if max_n_samples > 5:
             height_per_bar = 30
         if max_n_samples > 10:
@@ -141,7 +141,7 @@ class BarPlot(Plot):
 
         # now, limit the max and min height (plotly will start to automatically skip
         # some of the ticks on the left when the plot is too high)
-        MIN_HEIGHT = 400
+        MIN_HEIGHT = 300
         MAX_HEIGHT = 2560
         height = min(MAX_HEIGHT, height)
         height = max(MIN_HEIGHT, height)
