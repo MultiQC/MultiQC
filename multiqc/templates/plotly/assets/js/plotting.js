@@ -312,13 +312,13 @@ function renderPlot(target) {
   }
 
   let dataset = plot.datasets[plot.activeDatasetIdx];
-  updateObject(plot.layout, dataset.layout);
+  updateObject(plot.layout, dataset.layout, false);
 
   // Apply pct/log toggle states
   plot.axisControlledBySwitches.map((axis) => {
     plot.layout[axis].type = plot.lActive ? "log" : "linear";
     if (plot.pActive) {
-      updateObject(plot.layout[axis], plot["pctAxisUpdate"]);
+      updateObject(plot.layout[axis], plot["pctAxisUpdate"], false);
       plot.layout[axis]["range"] = dataset["pct_range"];
     }
   });
@@ -379,7 +379,7 @@ function highlight_fade_text(obj) {
   }, 500);
 }
 
-function updateObject(target, source) {
+function updateObject(target, source, nullOnly = false) {
   // Iterate through all keys in the source object
   for (const key in source) {
     // Check if the value is not null
@@ -390,10 +390,12 @@ function updateObject(target, source) {
         target[key] = {};
       }
       // Recursively update the object
-      updateObject(target[key], source[key]);
+      updateObject(target[key], source[key], nullOnly);
     } else {
-      // Directly update the value
-      target[key] = source[key];
+      if (!nullOnly || target[key] === undefined || target[key] === null) {
+        // Directly update the value
+        target[key] = source[key];
+      }
     }
   }
 }

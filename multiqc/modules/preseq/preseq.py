@@ -296,7 +296,6 @@ def _get_counts_in_1x(data_is_basepairs):
 
 def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
     cov_suffix = "x"
-    cnt_suffix = config.read_count_prefix
 
     cov_lbl = None
     if x_axis == "coverage" or y_axis == "coverage":
@@ -308,10 +307,12 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         cov_lbl = "{value:,." + cov_precision + "f}x"
 
     cnt_lbl = "{value:,.2f} " + config.read_count_prefix
+    cnt_suffix = config.read_count_prefix
     if config.read_count_multiplier == 1:
         cnt_lbl = "{value:,.0f}"
     if is_basepairs:
         cnt_lbl = "{value:,.2f} " + config.base_count_prefix
+        cnt_suffix = "&nbsp;" + config.base_count_prefix
         if config.base_count_multiplier == 1:
             cnt_lbl = "{value:,.0f}"
 
@@ -323,7 +324,7 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         x_suffix = cnt_suffix
         x_tt_lbl = cnt_lbl.replace("value", "point.x")
         if is_basepairs:
-            x_tt_lbl += " base pairs (total)"
+            x_tt_lbl += " pairs (total)"
             x_axis_name = "Base pairs (total)"
         else:
             x_tt_lbl += " total molecules"
@@ -337,7 +338,7 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         y_suffix = cnt_suffix
         y_tt_lbl = cnt_lbl.replace("value", "point.y")
         if is_basepairs:
-            y_tt_lbl += " base pairs (unique)"
+            y_tt_lbl += " pairs (unique)"
             y_axis_name = "Base pairs (unique reads)"
         else:
             y_tt_lbl += " unique molecules"

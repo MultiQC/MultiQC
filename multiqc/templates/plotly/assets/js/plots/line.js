@@ -53,7 +53,7 @@ class LinePlot extends Plot {
         showlegend: line["showlegend"] ?? null,
         mode: line["mode"] ?? null,
       };
-      updateObject(params, dataset["trace_params"]);
+      updateObject(params, dataset["trace_params"], true);
 
       if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
       else params.marker.color = line.color;
@@ -107,26 +107,5 @@ class LinePlot extends Plot {
       });
     }
     return csv;
-  }
-}
-
-function updateObject(target, source, nullOnly = false) {
-  // Iterate through all keys in the source object
-  for (const key in source) {
-    // Check if the value is not null
-    // Check if the value is an object and not an array
-    if (typeof source[key] === "object" && !Array.isArray(source[key])) {
-      // If the target doesn't have this key, or it's not an object, initialize it
-      if (!target[key] || typeof target[key] !== "object") {
-        target[key] = {};
-      }
-      // Recursively update the object
-      updateObject(target[key], source[key]);
-    } else {
-      if ((nullOnly && target[key] === undefined) || target[key] === null) {
-        // Directly update the value
-        target[key] = source[key];
-      }
-    }
   }
 }
