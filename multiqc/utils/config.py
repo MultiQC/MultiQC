@@ -461,11 +461,11 @@ def update(u):
     return update_dict(globals(), u)
 
 
-def update_dict(d, u):
+def update_dict(target, source):
     """Recursively updates nested dict d from nested dict u"""
-    for key, val in u.items():
+    for key, val in source.items():
         if isinstance(val, dict):
-            d[key] = update_dict(d.get(key, {}), val)
+            target[key] = update_dict(target.get(key, {}), val)
         else:
-            d[key] = u[key]
-    return d
+            target[key] = source[key]
+    return target

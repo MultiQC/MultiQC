@@ -62,6 +62,36 @@ class LinePlot(Plot):
                     len(line["data"]) == len(dataset.dconfig["categories"]) for line in dataset.lines
                 ), dataset.uid
 
+            # convert HighCharts hardcoded trace parameters to Plotly
+            lines = []
+            for src_line in dataset.lines:
+                new_line = {
+                    "name": src_line["name"],
+                    "data": src_line["data"],
+                    "color": src_line.get("color"),
+                }
+                lines.append(new_line)
+                new_line["marker"] = {}
+                if "dashStyle" in src_line:
+                    new_line["line"] = new_line.get("line", {})
+                    new_line["line"]["dash"] = convert_dash_style(src_line["dashStyle"])
+                if "new_line" in src_line:
+                    new_line["line"] = new_line.get("line", {})
+                    new_line["line"]["width"] = src_line["lineWidth"]
+                if "showInLegend" in src_line:
+                    new_line["showlegend"] = src_line["showInLegend"]
+                if "marker" in src_line:
+                    new_line["marker"] = new_line.get("marker", {})
+                    new_line["marker"]["line"] = new_line["marker"].get("line", {})
+                    if "lineWidth" in src_line["marker"]:
+                        new_line["marker"]["line"]["width"] = src_line["marker"]["lineWidth"]
+                    if "lineColor" in src_line["marker"]:
+                        new_line["marker"]["line"]["color"] = src_line["marker"]["lineColor"]
+                    if "symbol" in src_line["marker"]:
+                        new_line["mode"] = "lines+markers"
+                        new_line["marker"]["symbol"] = src_line["marker"]["symbol"]
+            dataset.lines = lines
+            # Update default trace parameters
             dataset.trace_params.update(
                 mode="lines" if config.lineplot_style == "lines" else "lines+markers",
                 line={"width": 2 if config.lineplot_style == "lines" else 0.6},
@@ -97,6 +127,7 @@ class LinePlot(Plot):
                 params = copy.deepcopy(self.trace_params)
                 if "dashStyle" in line:
                     params["line"]["dash"] = convert_dash_style(line["dashStyle"].lower())
+                    del line["dashStyle"]
                 if "lineWidth" in line:
                     params["line"]["width"] = line["lineWidth"]
                 fig.add_trace(

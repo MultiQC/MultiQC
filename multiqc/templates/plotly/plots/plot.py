@@ -517,11 +517,11 @@ def _dataset_layout(
         tt_label = _clean_config_tt_label(tt_label)
 
         if ysuffix is None:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
-            m = re.search(r"\{y.*}(\S+)", tt_label)  # complex label format
+            m = re.search(r"\{y.*}(.+)((%\{)|$)", tt_label)  # complex label format
             if m:
                 ysuffix = m.group(1).rstrip()
         if xsuffix is None:
-            m = re.search(r"\{x.*}(.+)%\{", tt_label)
+            m = re.search(r"\{x.*}(.+)((%\{)|$)", tt_label)
             if m:
                 xsuffix = m.group(1).replace("</b>", "").replace(":", "").rstrip()
 
