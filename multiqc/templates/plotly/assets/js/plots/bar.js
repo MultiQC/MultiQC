@@ -97,7 +97,9 @@ class BarPlot extends Plot {
       let selected = subsample(this.filteredSettings, maxTicks, firstHighlightedSample);
 
       this.layout.yaxis.tickvals = selected.map((s) => s.name);
-      this.layout.yaxis.ticktext = selected.map((s) => "<span style='color:" + s.highlight + "'>" + s.name + "</span>");
+      this.layout.yaxis.ticktext = selected.map(
+        (s) => "<span style='color:" + (s.highlight ?? "#ccc") + "'>" + s.name + "</span>",
+      );
     }
   }
 
@@ -124,7 +126,7 @@ class BarPlot extends Plot {
       return filteredSettings.map((sample, sampleIdx) => {
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
-        let alpha = highlighted.length > 0 && !sample.highlight ? 0.1 : 1;
+        let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
         params.marker.color = "rgba(" + cat.color + "," + alpha + ")";
 
         return {
