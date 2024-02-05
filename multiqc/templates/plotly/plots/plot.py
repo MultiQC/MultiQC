@@ -3,7 +3,6 @@ import dataclasses
 import io
 import logging
 import random
-import re
 import string
 from abc import abstractmethod, ABC
 from enum import Enum
@@ -516,14 +515,13 @@ def _dataset_layout(
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
 
-        if ysuffix is None:  # if "%" character is inside the Y label, add suffix to the Y ticks as well
-            m = re.search(r"\{y.*}(.+)((%\{)|$)", tt_label)  # complex label format
-            if m:
-                ysuffix = m.group(1).rstrip()
-        if xsuffix is None:
-            m = re.search(r"\{x.*}(.+)((%\{)|$)", tt_label)
-            if m:
-                xsuffix = m.group(1).replace("</b>", "").replace(":", "").rstrip()
+        # if "%" character is inside the Y label, add suffix to the Y ticks as well
+        parts = tt_label.split("%{")
+        for part in parts:
+            if ysuffix is None and part.startswith("y"):
+                ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
+            elif xsuffix is None and part.startswith("x"):
+                xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
