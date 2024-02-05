@@ -146,7 +146,7 @@ setup(
             "malt = multiqc.modules.malt:MultiqcModule",
             "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "metaphlan = multiqc.modules.metaphlan:MultiqcModule",
-            "methylQA = multiqc.modules.methylQA:MultiqcModule",
+            "methylqa = multiqc.modules.methylqa:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",

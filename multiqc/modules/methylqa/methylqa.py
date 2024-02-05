@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
         super(MultiqcModule, self).__init__(
             name="methylQA",
             anchor="methylqa",
-            target="methylQA",
+            target="methylqa",
             href="http://methylqa.sourceforge.net/",
             info=" - a methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.methylqa_data = dict()
         self.methylqa_coverage_counts = dict()
         self.methylqa_coverage_percentages = dict()
-        for f in self.find_log_files("methylQA"):
+        for f in self.find_log_files("methylqa"):
             self.parse_methylqa_logs(f)
 
         # Filter to strip out ignored sample names

@@ -494,7 +494,7 @@ mapdamage:
 metaphlan:
   fn: "*.txt"
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
-methylQA:
+methylqa:
   fn: "*.report"
   shared: true
 minionqc:

@@ -393,7 +393,7 @@ module_order:
         - cancer
         - chip
         - RNA
-  - methylQA:
+  - methylqa:
       module_tag:
         - Methylation
         - DNA
