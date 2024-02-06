@@ -21,6 +21,7 @@
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
+- Support multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
 - Make the `default` template use Plotly. Add `highcharts` as a template ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 
 ### New modules

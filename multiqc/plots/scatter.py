@@ -144,20 +144,21 @@ def highcharts_scatter_plot(plotdata, pconfig=None):
         html += '<div class="btn-group hc_switch_group">\n'
         for k, p in enumerate(plotdata):
             active = "active" if k == 0 else ""
+            dls = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconfig.get("data_labels", [])]
             try:
-                name = pconfig["data_labels"][k]["name"]
+                name = dls[k]["name"]
             except Exception:
                 name = k + 1
             try:
-                ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
+                ylab = f"data-ylab=\"{dls[k]['ylab']}\""
             except Exception:
                 ylab = f'data-ylab="{name}"' if name != k + 1 else ""
             try:
-                ymax = f"data-ymax=\"{pconfig['data_labels'][k]['ymax']}\""
+                ymax = f"data-ymax=\"{dls[k]['ymax']}\""
             except Exception:
                 ymax = ""
             try:
-                xlab = f"data-xlab=\"{pconfig['data_labels'][k]['xlab']}\""
+                xlab = f"data-xlab=\"{dls[k]['xlab']}\""
             except Exception:
                 xlab = f'data-xlab="{name}"' if name != k + 1 else ""
             html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
