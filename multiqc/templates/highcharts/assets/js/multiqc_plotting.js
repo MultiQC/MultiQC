@@ -474,23 +474,6 @@ function plot_xy_line_graph(target, ds) {
     }
   }
 
-  // Toggle buttons for y-axis limis
-  // Handler for this is at top, so doesn't get created multiple times
-  if (config["ymax"] != undefined || config["ymin"] != undefined) {
-    var pgroup = $("#" + target).closest(".mqc_hcplot_plotgroup");
-    var wrapper = $('<div class="mqc_hcplot_yaxis_limit_toggle hidden-xs" />').prependTo(pgroup);
-    wrapper.append(
-      '<span class="mqc_switch_wrapper" data-ymax="' +
-        config["ymax"] +
-        '" data-ymin="' +
-        config["ymin"] +
-        '" data-target="#' +
-        target +
-        '">Y-Limits: <span class="mqc_switch on">on</span></span>',
-    );
-    wrapper.after('<div class="clearfix" />');
-  }
-
   // Make the highcharts plot
   Highcharts.chart(target, {
     chart: {
