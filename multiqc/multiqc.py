@@ -422,7 +422,7 @@ def run(
         analysis_dir = [analysis_dir]
     config.analysis_dir = analysis_dir
     if outdir is not None:
-        config.output_dir = outdir
+        config.output_dir = os.path.realpath(outdir)
     if use_filename_as_sample_name:
         config.use_filename_as_sample_name = True
         logger.info("Using log filenames for sample names")
