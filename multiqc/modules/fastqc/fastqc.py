@@ -418,6 +418,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Phred Score",
             "xlab": "Position (bp)",
             "ymin": 0,
+            "xmin": 0,
             "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             "colors": self.get_status_cols("per_base_sequence_quality"),
@@ -531,7 +532,6 @@ class MultiqcModule(BaseMultiqcModule):
                Click a sample row to see a line plot for that dataset.
             </div>
             <h5><span class="s_name text-primary"><span class="glyphicon glyphicon-info-sign"></span> Rollover for sample name</span></h5>
-            <button id="fastqc_per_base_sequence_content_export_btn"><span class="glyphicon glyphicon-download-alt"></span> Export Plot</button>
             <div class="fastqc_seq_heatmap_key">
                 Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
                 <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
@@ -624,7 +624,10 @@ class MultiqcModule(BaseMultiqcModule):
             "yDecimals": False,
             "tt_label": "<b>{point.x}% GC</b>: {point.y}",
             "colors": self.get_status_cols("per_sequence_gc_content"),
-            "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
+            "data_labels": [
+                {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
+                {"name": "Counts", "ylab": "Count", "tt_suffix": ""},
+            ],
         }
 
         # Try to find and plot a theoretical GC line
@@ -930,7 +933,6 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 2,
             "tt_suffix": "%",
             "tt_percentages": False,
-            "ylab_format": "{value}%",
             "cpswitch": False,
             "ylab": "Percentage of Total Sequences",
         }
@@ -1101,7 +1103,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="""The cumulative percentage count of the proportion of your
             library which has seen each of the adapter sequences at each position.""",
             helptext="""
-            Note that only samples with &ge; 0.1% adapter contamination are shown.
+            Note that only samples with ≥ 0.1% adapter contamination are shown.
 
             There may be several lines per sample, as one is shown for each adapter
             detected in the file.

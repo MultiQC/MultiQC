@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import json
 import traceback
 from urllib.request import urlopen
 
@@ -110,6 +111,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--development",
                 "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
@@ -237,6 +239,13 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
+    "--dev",
+    "--development",
+    "development",
+    is_flag=True,
+    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+)
+@click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
@@ -324,6 +333,7 @@ def run(
     plots_interactive=False,
     strict=False,
     lint=False,  # Deprecated since v1.17
+    development=False,
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -453,12 +463,15 @@ def run(
             "update your command line and/or configs."
         )
         strict = True
-    if os.environ.get("MULTIQC_STRICT"):
-        strict = True
     if strict:
         config.strict = True
         config.lint = True  # Deprecated since v1.17
         strict_helpers.run_tests()
+    if development:
+        config.development = True
+        config.export_plots = True
+        if "png" not in config.export_plot_formats:
+            config.export_plot_formats.append("png")
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
@@ -936,12 +949,18 @@ def run(
         if config.megaqc_url:
             megaqc.multiqc_api_post(multiqc_json_dump)
 
+    if config.development:
+        with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
+            f.write(json.dumps(report.plot_data))
+
     # Make the final report path & data directories
     if filename != "stdout":
         if config.make_report:
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        # del config.data_dir_name
+        # del config.plots_dir_name
         deleted_report = False
         deleted_data_dir = False
         deleted_export_plots = False
@@ -1060,6 +1079,7 @@ def run(
     # Generate report if required
     if config.make_report:
         # Load in parent template files first if a child theme
+        parent_template = None
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
         except AttributeError:
@@ -1076,11 +1096,35 @@ def run(
             try:
                 if fdir is None:
                     fdir = ""
+                path = os.path.join(fdir, name)
+
+                if config.development:
+                    if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+                    elif parent_template and os.path.exists(
+                        dev_path := os.path.join(parent_template.template_dir, name)
+                    ):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+
+                    if re.match(r".*\.min\.(js|css)$", name):
+                        unminimized_name = re.sub(r"\.min\.", ".", name)
+                        if os.path.exists(os.path.join(fdir, unminimized_name)):
+                            name = unminimized_name
+
+                    if name.endswith(".js"):
+                        return f'</script><script type="text/javascript" src="{name}">'
+                    if name.endswith(".css"):
+                        return f'</style><link rel="stylesheet" href="{name}">'
+
                 if b64:
-                    with io.open(os.path.join(fdir, name), "rb") as f:
+                    with io.open(path, "rb") as f:
                         return base64.b64encode(f.read()).decode("utf-8")
                 else:
-                    with io.open(os.path.join(fdir, name), "r", encoding="utf-8") as f:
+                    with io.open(path, "r", encoding="utf-8") as f:
                         return f.read()
             except (OSError, IOError) as e:
                 logger.error(f"Could not include file '{name}': {e}")
@@ -1089,7 +1133,7 @@ def run(
         try:
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
             env.globals["include_file"] = include_file
-            j_template = env.get_template(template_mod.base_fn)
+            j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
         except:  # noqa: E722
             raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
 
@@ -1110,7 +1154,7 @@ def run(
                 for f in template_mod.copy_files:
                     fn = os.path.join(tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                    shutil.copytree(fn, dest_dir)
+                    shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
             except AttributeError:
                 pass  # No files to copy
 

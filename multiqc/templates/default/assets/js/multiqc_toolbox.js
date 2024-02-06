@@ -2,9 +2,9 @@
 // MultiQC Report Toolbox Code
 ////////////////////////////////////////////////
 
-var mqc_colours_idx = 0;
-var mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"];
-var zip_threshold = 8;
+let mqc_colours_idx = 0;
+const mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#ffff33", "#a65628", "#f781bf", "#999999"];
+const zip_threshold = 8;
 
 //////////////////////////////////////////////////////
 // TOOLBOX LISTENERS
@@ -160,8 +160,10 @@ $(function () {
   // Highlight colour filters
   $("#mqc_color_form").submit(function (e) {
     e.preventDefault();
-    var f_text = $("#mqc_colour_filter").val().trim();
-    var f_col = $("#mqc_colour_filter_color").val().trim();
+    let mqc_colour_filter = $("#mqc_colour_filter");
+    let mqc_colour_filter_color = $("#mqc_colour_filter_color");
+    let f_text = mqc_colour_filter.val().trim();
+    let f_col = mqc_colour_filter_color.val().trim();
     $("#mqc_col_filters").append(
       '<li style="color:' +
         f_col +
@@ -174,12 +176,12 @@ $(function () {
         '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
     );
     $("#mqc_cols_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
-    $("#mqc_colour_filter").val("");
+    mqc_colour_filter.val("");
     mqc_colours_idx += 1;
     if (mqc_colours_idx >= mqc_colours.length) {
       mqc_colours_idx = 0;
     }
-    $("#mqc_colour_filter_color").val(mqc_colours[mqc_colours_idx]);
+    mqc_colour_filter_color.val(mqc_colours[mqc_colours_idx]);
   });
   $("#mqc_cols_apply").click(function (e) {
     if (apply_mqc_highlights()) {
@@ -188,19 +190,21 @@ $(function () {
   });
 
   // Rename samples
-  var mqc_renamesamples_idx = 300;
+  let mqc_renamesamples_idx = 300;
   $("#mqc_renamesamples_form").submit(function (event) {
     event.preventDefault();
 
-    var from_text = $("#mqc_renamesamples_from").val().trim();
-    var to_text = $("#mqc_renamesamples_to").val().trim();
+    let mqc_renamesamples_from = $("#mqc_renamesamples_from");
+    let mqc_renamesamples_to = $("#mqc_renamesamples_to");
+    let from_text = mqc_renamesamples_from.val().trim();
+    let to_text = mqc_renamesamples_to.val().trim();
 
-    if (from_text.length == 0) {
+    if (from_text.length === 0) {
       alert('Error - "From" text must not be blank.');
       return false;
     }
 
-    var li =
+    let li =
       '<li><input class="f_text from_text" value="' + from_text + '" tabindex="' + mqc_renamesamples_idx + '" />';
     li +=
       '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
@@ -214,8 +218,8 @@ $(function () {
     $("#mqc_rename_apply").attr("disabled", false).removeClass("btn-default").addClass("btn-primary");
 
     // Reset form
-    $("#mqc_renamesamples_from").val("");
-    $("#mqc_renamesamples_to").val("");
+    mqc_renamesamples_from.val("");
+    mqc_renamesamples_to.val("");
     mqc_renamesamples_idx += 2;
     $("#mqc_renamesamples_form input:first").focus();
   });
@@ -338,129 +342,136 @@ $(function () {
       }
     });
 
+    function data_url_to_blob(data_url, mime) {
+      // Split the data URL at the comma
+      const byte_str = atob(data_url.split(",")[1]);
+      const byte_numbers = new Array(byte_str.length);
+      for (let i = 0; i < byte_str.length; i++) {
+        byte_numbers[i] = byte_str.charCodeAt(i);
+      }
+      const byte_array = new Uint8Array(byte_numbers);
+      return new Blob([byte_array], { type: mime });
+    }
+
     // Export the plots
     $("#mqc_exportplots").submit(function (e) {
       e.preventDefault();
-      var checked_plots = $("#mqc_export_selectplots input:checked");
-      if (checked_plots.length > zip_threshold) {
-        var zip = new JSZip();
-      }
-      var skipped_plots = 0;
+      let checked_plots = $("#mqc_export_selectplots input:checked");
+      let zip = new JSZip();
+      let promises = [];
+      //////
       ////// EXPORT PLOT IMAGES
       //////
       if ($("#mqc_image_download").is(":visible")) {
-        var ft = $("#mqc_export_ft").val();
-        var f_scale = parseInt($("#mqc_export_scaling").val());
-        var f_width = parseInt($("#mqc_exp_width").val()) / f_scale;
-        var f_height = parseInt($("#mqc_exp_height").val()) / f_scale;
+        let mime = $("#mqc_export_ft").val();
+        let format = mime.replace("image/", "").split("+")[0];
+        const f_scale = parseInt($("#mqc_export_scaling").val());
+        const f_width = parseInt($("#mqc_exp_width").val()) * f_scale;
+        const f_height = parseInt($("#mqc_exp_height").val()) * f_scale;
         checked_plots.each(function () {
-          var fname = $(this).val();
-          var hc = $("#" + fname).highcharts();
-          var cfg = {
-            type: ft,
-            filename: fname,
-            sourceWidth: f_width,
-            sourceHeight: f_height,
-            scale: f_scale,
-          };
-          if (hc !== undefined) {
-            if (checked_plots.length <= zip_threshold) {
-              // Not many plots to export, just trigger a download for each
-              hc.exportChartLocal(cfg);
-            } else {
-              // Lots of plots - generate a zip file for download.
-              //   - add this svg to a zip archive
-              var svg = hc.getSVG();
-              zip.file(fname + ".svg", svg);
-            }
-          } else if ($("#" + fname).hasClass("has-custom-export")) {
-            $("#" + fname).trigger("mqc_plotexport_image", cfg);
+          const target = $(this).val();
+          if (checked_plots.length <= zip_threshold) {
+            // Not many plots to export, just trigger a download for each:"
+            Plotly.Snapshot.downloadImage(target, {
+              format: format,
+              width: f_width,
+              height: f_height,
+              filename: target,
+            });
           } else {
-            skipped_plots += 1;
+            // Lots of plots - add to a zip file for download:
+            promises.push(
+              Plotly.toImage(target, {
+                format: format,
+                width: f_width,
+                height: f_height,
+                imageDataOnly: true, // Otherwise will return a Data URL
+              }).then(function (content) {
+                const fname = target + "." + format;
+                zip.file(fname, content, { base64: format !== "svg" });
+              }),
+            );
           }
         });
-        if (skipped_plots > 0) {
-          alert(
-            "Warning: " +
-              skipped_plots +
-              " plots skipped.\n\nNote that it is not currently possible to export dot plot images from reports. Data exports do work.",
-          );
-        }
-        // Save the zip and trigger a download
         if (checked_plots.length > zip_threshold) {
-          zip.generateAsync({ type: "blob" }).then(function (content) {
-            saveAs(content, "multiqc_plots.zip");
+          // Wait for all promises to resolve
+          Promise.all(promises).then(() => {
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+              saveAs(content, "multiqc_plots.zip");
+            });
           });
         }
       }
+      //////
       ////// EXPORT PLOT DATA
       //////
       else if ($("#mqc_data_download").is(":visible")) {
+        const format = $("#mqc_export_data_ft").val();
+        console.log("Exporting data in " + format + " format");
+        const sep = format === "tsv" ? "\t" : ",";
+        let skipped_plots = 0;
         checked_plots.each(function () {
           try {
-            var target = $(this).val();
-            var ft = $("#mqc_export_data_ft").val();
-            var fname = target + "." + ft;
-            var sep = ft == "tsv" ? "\t" : ",";
+            const target = $(this).val();
+            const fname = target + "." + format;
             // Custom plot not in mqc_plots
-            if (mqc_plots[target] == undefined) {
-              if ($("#" + target).hasClass("has-custom-export")) {
-                $("#" + target).trigger("mqc_plotexport_data", { target: target, ft: ft, fname: fname, sep: sep });
+            if (mqc_plots[target] === undefined) {
+              const plot_div = $("#" + target);
+              if (plot_div.hasClass("has-custom-export")) {
+                plot_div.trigger("mqc_plotexport_data", { target: target, ft: format, fname: fname, sep: sep });
               } else {
                 skipped_plots += 1;
               }
             }
             // If JSON then just dump everything
-            else if (ft == "json") {
-              json_str = JSON.stringify(mqc_plots[target], null, 2);
-              var blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
+            else if (format === "json") {
+              const json_str = JSON.stringify(mqc_plots[target], null, 2);
+              const blob = new Blob([json_str], { type: "text/plain;charset=utf-8" });
               if (checked_plots.length <= zip_threshold) {
                 // Not many plots to export, just trigger a download for each
                 saveAs(blob, fname);
               } else {
-                // Lots of plots - generate a zip file for download.
-                // Add to a zip archive
+                // Lots of plots - add to a zip file for download
                 zip.file(fname, blob);
               }
             }
             // Beeswarm plots must be done manually
-            else if (mqc_plots[target]["plot_type"] == "beeswarm") {
+            else if (mqc_plots[target]["plot_type"] === "beeswarm") {
               // Header line
-              datastring = "Sample";
-              for (var j = 0; j < mqc_plots[target]["categories"].length; j++) {
-                datastring += sep + mqc_plots[target]["categories"][j]["description"];
+              let data_str = "Sample";
+              for (let j = 0; j < mqc_plots[target]["categories"].length; j++) {
+                data_str += sep + mqc_plots[target]["categories"][j]["description"];
               }
-              datastring += "\n";
+              data_str += "\n";
               // This assumes that the same samples are in all rows
               // TODO: Check and throw error if this isn't the case
-              var rows = Array();
-              for (var j = 0; j < mqc_plots[target]["samples"][0].length; j++) {
+              let rows = Array();
+              for (let j = 0; j < mqc_plots[target]["samples"][0].length; j++) {
                 rows[j] = Array(mqc_plots[target]["samples"][0][j]);
               }
-              for (var j = 0; j < mqc_plots[target]["datasets"].length; j++) {
-                for (var k = 0; k < mqc_plots[target]["datasets"][j].length; k++) {
+              for (let j = 0; j < mqc_plots[target]["datasets"].length; j++) {
+                for (let k = 0; k < mqc_plots[target]["datasets"][j].length; k++) {
                   rows[k].push(mqc_plots[target]["datasets"][j][k]);
                 }
               }
-              for (var j = 0; j < rows.length; j++) {
-                datastring += rows[j].join(sep) + "\n";
+              for (let j = 0; j < rows.length; j++) {
+                data_str += rows[j].join(sep) + "\n";
               }
-              var blob = new Blob([datastring], { type: "text/plain;charset=utf-8" });
+              let blob = new Blob([data_str], { type: "text/plain;charset=utf-8" });
               if (checked_plots.length <= zip_threshold) {
                 // Not many plots to export, just trigger a download for each
                 saveAs(blob, fname);
               } else {
-                // Lots of plots - generate a zip file for download.
-                // Add to a zip archive
+                // Lots of plots - add to a zip file for download
                 zip.file(fname, blob);
               }
             }
             // Normal plot - use HighCharts plugin to get the data from the plot
-            else if (ft == "tsv" || ft == "csv") {
+            else if (format === "tsv" || format === "csv") {
               var hc = $("#" + target).highcharts();
               if (hc !== undefined) {
                 hc.update({ exporting: { csv: { itemDelimiter: sep } } });
-                var blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
+                const blob = new Blob([hc.getCSV()], { type: "text/plain;charset=utf-8" });
                 if (checked_plots.length <= zip_threshold) {
                   // Not many plots to export, just trigger a download for each
                   saveAs(blob, fname);

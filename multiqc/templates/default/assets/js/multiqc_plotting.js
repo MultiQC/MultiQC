@@ -46,7 +46,7 @@ $(function () {
             $("#mqc_export_selectplots input").prop("checked", false);
             $('#mqc_export_selectplots input[value="' + this.renderTo.id + '"]').prop("checked", true);
             // Special case - Table scatter plots are in a modal, need to close this first
-            if (this.renderTo.id == "tableScatterPlot") {
+            if (this.renderTo.id === "tableScatterPlot") {
               $("#tableScatterModal").modal("hide");
             }
             mqc_toolbox_openclose("#mqc_exportplots", true);
@@ -114,7 +114,6 @@ $(function () {
     var action = $(this).data("action");
     // Switch between values and percentages
     if (action == "set_percent" || action == "set_numbers") {
-      var sym = action == "set_percent" ? "%" : "#";
       var stack_type = action == "set_percent" ? "percent" : "normal";
       mqc_plots[target]["config"]["stacking"] = stack_type;
       mqc_plots[target]["config"]["ytype"] = "linear";
@@ -342,7 +341,7 @@ function plot_xy_line_graph(target, ds) {
     config["tt_label"] = "{point.x}: {point.y:.2f}";
     if (config["categories"]) {
       config["tt_formatter"] = function () {
-        yval =
+        var yval =
           Highcharts.numberFormat(this.y, config["tt_decimals"] == undefined ? 0 : config["tt_decimals"]) +
           (config["tt_suffix"] || "");
         return (
@@ -855,6 +854,13 @@ function plot_scatter_plot(target, ds) {
   // Make a clone of the data, so that we can mess with it,
   // while keeping the original data in tact
   var data = JSON.parse(JSON.stringify(mqc_plots[target]["datasets"][ds]));
+
+  $.each(data, function (j, s) {
+    data[j]["marker"] = {
+      radius: data[j]["marker_size"] ?? config["marker_size"],
+      lineWidth: data[j]["marker_line_width"] ?? config["marker_line_width"],
+    };
+  });
 
   // Rename samples
   if (window.mqc_rename_f_texts.length > 0) {

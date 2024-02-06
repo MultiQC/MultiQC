@@ -450,7 +450,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cytosine Methylation",
             anchor="bismark-methylation",
-            plot=beeswarm.plot(self.bismark_data["methextract"], keys, {"id": "bismark-methylation-dp"}),
+            plot=beeswarm.plot(
+                self.bismark_data["methextract"],
+                keys,
+                {
+                    "id": "bismark-methylation-dp",
+                    "title": "Bismark: Cytosine Methylation",
+                },
+            ),
         )
 
     def bismark_mbias_plot(self):

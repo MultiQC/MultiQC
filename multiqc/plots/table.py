@@ -12,6 +12,17 @@ logger = logging.getLogger(__name__)
 
 letters = "abcdefghijklmnopqrstuvwxyz"
 
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+
+
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
 
 def plot(data, headers=None, pconfig=None):
     """Return HTML for a MultiQC table.
@@ -33,24 +44,36 @@ def plot(data, headers=None, pconfig=None):
         for s_name in d.keys():
             s_names.add(s_name)
 
+    mod = get_template_mod()
+    if "table" in mod.__dict__ and callable(mod.table):
+        # noinspection PyBroadException
+        try:
+            return mod.table(dt)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
+
     # Make a beeswarm plot if we have lots of samples
     if len(s_names) >= config.max_table_rows and pconfig.get("no_beeswarm") is not True:
         logger.debug(f"Plotting beeswarm instead of table, {len(s_names)} samples")
         warning = (
-            '<p class="text-muted"><span class="glyphicon glyphicon-exclamation-sign" '
+            '<p class="text-muted" id="table-violin-info-{}"><span class="glyphicon glyphicon-exclamation-sign" '
             'title="A beeswarm plot has been generated instead because of the large number of samples. '
             'See http://multiqc.info/docs/#tables--beeswarm-plots"'
-            ' data-toggle="tooltip"></span> Showing {} samples.</p>'.format(len(s_names))
+            ' data-toggle="tooltip"></span> Showing {} samples.</p>'.format(pconfig["id"], len(s_names))
         )
         return warning + beeswarm.make_plot(dt)
     else:
         return make_table(dt)
 
 
-def make_table(dt: table_object.DataTable):
+def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
+    :param violin_switch: Add a button to switch to violin plot
     """
 
     table_id = dt.pconfig["id"]
@@ -292,6 +315,13 @@ def make_table(dt: table_object.DataTable):
     # Buttons above the table
     html = ""
     if not config.simple_output:
+        if violin_switch:
+            html += """
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
+                <span class="glyphicon glyphicon-align-left"></span> Switch to violin plot
+            </button>
+            """.format(tid=table_id)
+
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
@@ -303,7 +333,7 @@ def make_table(dt: table_object.DataTable):
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
-                <span class="glyphicon glyphicon-th"></span> Configure Columns
+                <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """.format(tid=table_id)
 
@@ -318,7 +348,7 @@ def make_table(dt: table_object.DataTable):
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
-                <span class="glyphicon glyphicon glyphicon-stats"></span> Plot
+                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Plot
             </button>
             """.format(tid=table_id)
 
@@ -379,7 +409,19 @@ def make_table(dt: table_object.DataTable):
 
     # Build the bootstrap modal to customise columns and order
     if not config.simple_output:
-        html += """
+        html += _configuration_modal(table_id, table_title, "".join(t_modal_headers.values()))
+
+    # Save the raw values to a file if requested
+    if dt.pconfig.get("save_file") is True:
+        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
+        util_functions.write_data_file(dt.raw_vals, fn)
+        report.saved_raw_data[fn] = dt.raw_vals
+
+    return html
+
+
+def _configuration_modal(tid: str, title: str, trows: str) -> str:
+    return f"""
     <!-- MultiQC Table Columns Modal -->
     <div class="modal fade" id="{tid}_configModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
@@ -412,15 +454,7 @@ def make_table(dt: table_object.DataTable):
             </table>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> </div>
-    </div> </div> </div>""".format(tid=table_id, title=table_title, trows="".join(t_modal_headers.values()))
-
-    # Save the raw values to a file if requested
-    if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
-        util_functions.write_data_file(dt.raw_vals, fn)
-        report.saved_raw_data[fn] = dt.raw_vals
-
-    return html
+    </div> </div> </div>"""
 
 
 def _get_sortlist(dt: table_object.DataTable) -> str:

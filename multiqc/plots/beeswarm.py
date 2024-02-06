@@ -5,6 +5,7 @@
 import logging
 import random
 from collections import defaultdict
+from typing import List, Dict, Optional, Union
 
 from multiqc.plots import table_object
 from multiqc.utils import config, report, util_functions
@@ -14,7 +15,19 @@ logger = logging.getLogger(__name__)
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 
-def plot(data, headers=None, pconfig=None):
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
+
+
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
+
+def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
     """Helper HTML for a beeswarm plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
@@ -32,18 +45,33 @@ def plot(data, headers=None, pconfig=None):
         for k, v in config.custom_plot_config[pconfig["id"]].items():
             pconfig[k] = v
 
+    # Given one dataset - turn it into a list
+    if not isinstance(data, list):
+        data = [data]
+    if not isinstance(headers, list):
+        headers = [headers]
+
     # Make a datatable object
     dt = table_object.DataTable(data, headers, pconfig)
+
+    mod = get_template_mod()
+    if "violin" in mod.__dict__ and callable(mod.violin):
+        # noinspection PyBroadException
+        try:
+            return mod.violin(dt)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
 
     return make_plot(dt)
 
 
 def make_plot(dt: table_object.DataTable):
-    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
-
-    # Sanitise plot ID and check for duplicates
-    bs_id = report.save_htmlid(bs_id)
-
+    """
+    Make a plot - template custom, or interactive or flat
+    """
     categories = []
     s_names = []
     data = []
@@ -85,6 +113,11 @@ def make_plot(dt: table_object.DataTable):
     if len(s_names) == 0:
         logger.warning("Tried to make beeswarm plot, but had no data")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
+
+    bs_id = dt.pconfig.get("id", f"table_{''.join(random.sample(letters, 4))}")
+
+    # Sanitise plot ID and check for duplicates
+    bs_id = report.save_htmlid(bs_id)
 
     # Plot HTML
     html = """<div class="hc-plot-wrapper"{height}>

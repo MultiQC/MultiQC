@@ -60,6 +60,11 @@ plots_force_flat: false
 plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
+lineplot_style: lines # "lines+markers"
+lineplot_max_samples: 100 # turn into a violin plot if more than this number
+violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
+violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
+violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
 collapse_tables: true
 max_table_rows: 500
 table_columns_visible: {}
@@ -93,6 +98,7 @@ remove_sections: []
 section_comments: {}
 lint: False # Deprecated since v1.17
 strict: False
+development: False
 custom_plot_config: {}
 custom_table_header_config: {}
 software_versions: {}
@@ -136,6 +142,7 @@ disable_version_detection: false
 versions_table_group_header: "Group"
 data_format_extensions:
   tsv: "txt"
+  csv: "csv"
   json: "json"
   yaml: "yaml"
 export_plot_formats:
@@ -359,10 +366,11 @@ module_order:
   - lima
   - peddy
   - somalier
-  - methylQA
+  - methylqa
   - mosdepth
   - phantompeakqualtools
   - qualimap
+  - bamdst
   - preseq
   - hifiasm
   - quast
@@ -425,6 +433,7 @@ module_order:
   - snippy
   - umitools
   - truvari
+  - megahit
   # Alignment tool stats
   - bbmap
   - bismark
@@ -493,3 +502,4 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - seqwho

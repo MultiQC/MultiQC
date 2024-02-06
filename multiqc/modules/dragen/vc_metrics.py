@@ -61,6 +61,7 @@ class DragenVCMetrics(BaseMultiqcModule):
                 pconfig={
                     "id": "dragen-vc-metrics-table",
                     "namespace": NAMESPACE,
+                    "title": "DRAGEN: Variant calling metrics",
                 },
             ),
         )

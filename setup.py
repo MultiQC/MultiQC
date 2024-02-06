@@ -56,6 +56,7 @@ setup(
         "coloredlogs",
         "jinja2>=3.0.0",
         "markdown",
+        "plotly",
         "packaging",
         "pyyaml>=4",
         "requests",
@@ -147,7 +148,7 @@ setup(
             "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "megahit = multiqc.modules.megahit:MultiqcModule",
             "metaphlan = multiqc.modules.metaphlan:MultiqcModule",
-            "methylQA = multiqc.modules.methylQA:MultiqcModule",
+            "methylqa = multiqc.modules.methylqa:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
@@ -216,10 +217,10 @@ setup(
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",
-            "default_dev = multiqc.templates.default_dev",
             "sections = multiqc.templates.sections",
             "simple = multiqc.templates.simple",
             "gathered = multiqc.templates.gathered",
+            "plotly = multiqc.templates.plotly",
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation

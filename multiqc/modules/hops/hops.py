@@ -82,17 +82,21 @@ class MultiqcModule(BaseMultiqcModule):
             taxa.append(t.replace("_", " "))
 
         # Get values from named list into a list of lists required for heatmap
-        levels = []
-        for s in samples:
-            levels.append(self.hops_data[s].values())
+        data = []
+        for s, d in self.hops_data.items():
+            row = []
+            for val in d.values():
+                # Values can be lists of 1 element, so flattening to single value
+                if isinstance(val, list):
+                    val = val[0]
+                row.append(val)
+            data.append(row)
 
         pconfig = {
             "id": "hops-heatmap",
             "title": "HOPS: Potential Candidates",
             "xTitle": "Node",
             "yTitle": "Sample",
-            "min": 0,
-            "max": 1,
             "square": False,
             "colstops": [
                 [1, "#ededed"],
@@ -101,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
                 [4, "#AD2A2B"],
             ],
             "decimalPlaces": 0,
-            "legend": False,
+            "legend": True,
             "datalabels": False,
             "xcats_samples": False,
         }
@@ -138,5 +142,5 @@ class MultiqcModule(BaseMultiqcModule):
             A red category typically indicates a good candidate for further investigation
             in downstream analysis.
             """,
-            plot=heatmap.plot(levels, xcats=taxa, ycats=samples, pconfig=pconfig),
+            plot=heatmap.plot(data, xcats=taxa, ycats=samples, pconfig=pconfig),
         )
