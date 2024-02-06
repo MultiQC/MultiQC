@@ -86,9 +86,6 @@ class HeatmapPlot(Plot):
 
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
-        # Break up horizontal labels by space to make them fit better vertically
-        xcats = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
-
         # Extend each dataset object with a list of samples
         self.datasets: List[HeatmapPlot.Dataset] = [
             HeatmapPlot.Dataset.create(
@@ -126,9 +123,6 @@ class HeatmapPlot(Plot):
         MAX_WIDTH = 900  # default interactive width can be bigger
 
         font_size = 12
-        # Making sure all ticks are displayed
-        x_nticks = num_cols
-        y_nticks = num_rows
 
         # Number of samples to the desired size in pixel one sample will take on a screen
         def n_elements_to_size(n: int):
@@ -159,27 +153,31 @@ class HeatmapPlot(Plot):
             height = num_rows * px_per_elem
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
-            y_nticks = None  # allow skipping ticks to avoid making the font even smaller
-            x_nticks = None  # allow skipping ticks to avoid making the font even smaller
             px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
             width = num_cols * px_per_elem
             height = num_rows * px_per_elem
 
         width = int(width)
         height = int(height)
-        logger.debug(
-            f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
-        )
+        logger.debug(f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px")
 
-        # If the number of xcats is <= 15, leave them horizontal, otherwise, rotate 45 degrees
-        if num_cols > 15:
-            self.layout.xaxis.tickangle = 45
-        else:
+        # For not very large datasets, making sure all ticks are displayed:
+        if height <= MAX_HEIGHT:
+            self.layout.yaxis.tickmode = "array"
+            self.layout.yaxis.tickvals = list(range(len(ycats)))
+            self.layout.yaxis.ticktext = ycats
+        if width <= MAX_WIDTH:
+            self.layout.xaxis.tickmode = "array"
+            self.layout.xaxis.tickvals = list(range(len(xcats)))
+            # Break up the horizontal ticks by whitespace to make them fit better vertically:
+            self.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            # Leave x ticks horizontal:
             self.layout.xaxis.tickangle = 0
+        else:
+            # Rotate x-ticks to fit more of them on screen
+            self.layout.xaxis.tickangle = 45
 
         self.layout.font.size = font_size
-        self.layout.xaxis.nticks = x_nticks
-        self.layout.yaxis.nticks = y_nticks
         self.layout.height = pconfig.get("height") or (200 + height)
         self.layout.width = pconfig.get("width") or (200 + width) if self.square else None
         self.layout.xaxis.showgrid = False
