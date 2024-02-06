@@ -13,21 +13,6 @@ from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
-try:
-    # Import matplot lib but avoid default X environment
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    logger.debug(f"Using matplotlib version {matplotlib.__version__}")
-except Exception as e:
-    # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
-    # The lack of the library will be handled when plots are attempted
-    print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
-    print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
-    print(e)
-
 letters = "abcdefghijklmnopqrstuvwxyz"
 
 # Load the template so that we can access its configuration
@@ -82,6 +67,21 @@ def matplotlib_boxplot(plotdata, pconfig=None):
     encoded image within HTML or writes the plot and links to it. Should be called by
     plot_bargraph, which properly formats the input data.
     """
+    try:
+        # Import matplot lib but avoid default X environment
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        logger.debug(f"Using matplotlib version {matplotlib.__version__}")
+    except Exception as e:
+        # MatPlotLib can break in a variety of ways. Fake an error message and continue without it if so.
+        # The lack of the library will be handled when plots are attempted
+        print("##### ERROR! MatPlotLib library could not be loaded!    #####", file=sys.stderr)
+        print("##### Flat plots will instead be plotted as interactive #####", file=sys.stderr)
+        print(e)
+
     if pconfig is None:
         pconfig = {}
 
