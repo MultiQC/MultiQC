@@ -367,7 +367,7 @@ $(function () {
         let format = mime.replace("image/", "").split("+")[0];
         let f_width = parseInt($("#mqc_exp_width").val());
         let f_height = parseInt($("#mqc_exp_height").val());
-        const f_scale = parseInt($("#mqc_export_scaling").val());
+        const f_scale = parseFloat($("#mqc_export_scaling").val());
         checked_plots.each(function () {
           const target = $(this).val();
 
