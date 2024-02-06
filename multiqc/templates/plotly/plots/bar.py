@@ -88,10 +88,9 @@ class BarPlot(Plot):
             Create a Plotly figure for a dataset
             """
             fig = go.Figure(layout=layout)
+
             for cat in self.cats:
-                data = cat["data"]
-                if is_pct:
-                    data = cat["data_pct"]
+                data = cat["data_pct"] if is_pct else cat["data"]
 
                 params = copy.deepcopy(self.trace_params)
                 marker = params["marker"]

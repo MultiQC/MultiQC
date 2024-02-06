@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple
 
+import math
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour, config
@@ -390,9 +391,15 @@ class Plot(ABC):
         layout.update(**dataset.layout)
         layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
-            layout[axis].type = "log" if is_log else "linear"
             if is_pct:
                 layout[axis].update(self.pct_axis_update)
+                layout[axis].range = dataset.pct_range.copy()
+            if is_log:
+                layout[axis].range = [math.log10(x) if x > 0 else 0.0 for x in layout[axis].range]
+            layout[axis].type = "log" if is_log else "linear"
+
+        # TODO: sort out log % why doesn't start from 0???
+
         return dataset.create_figure(layout, is_log, is_pct)
 
     @staticmethod

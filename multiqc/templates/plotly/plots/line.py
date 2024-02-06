@@ -1,4 +1,3 @@
-import copy
 import dataclasses
 import io
 import logging
@@ -9,6 +8,7 @@ import plotly.graph_objects as go
 
 from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions, config
+from multiqc.utils.config import update_dict
 
 logger = logging.getLogger(__name__)
 
@@ -124,19 +124,21 @@ class LinePlot(Plot):
                     xs = [x for x in range(len(line["data"]))]
                     ys = line["data"]
 
-                params = copy.deepcopy(self.trace_params)
-                if "dashStyle" in line:
-                    params["line"]["dash"] = convert_dash_style(line["dashStyle"].lower())
-                    del line["dashStyle"]
-                if "lineWidth" in line:
-                    params["line"]["width"] = line["lineWidth"]
+                params = dict(
+                    marker=line.get("marker", {}),
+                    line=line.get("line", {}),
+                    showlegend=line.get("showlegend", None),
+                    mode=line.get("mode", None),
+                )
+                params = update_dict(params, self.trace_params, none_only=True)
+                params["marker"]["color"] = line.get("color")
+
                 fig.add_trace(
                     go.Scatter(
                         x=xs,
                         y=ys,
                         name=line["name"],
                         text=[line["name"]] * len(xs),
-                        marker_color=line.get("color"),
                         **params,
                     )
                 )
