@@ -140,9 +140,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Split pipe",
-            anchor="pb-split-pipe-stats",
+            anchor="parse-biosciences-split-pipe-stats",
             description="Summary QC metrics from Parse Biosciences Split pipeline",
-            plot=table.plot(data_by_sample, MultiqcModule.CSV_HEADERS, pconfig={"namespace": "Split pipe"}),
+            plot=table.plot(
+                data_by_sample,
+                MultiqcModule.CSV_HEADERS,
+                pconfig={
+                    "namespace": "Split pipe",
+                    "id": "parse-biosciences-split-pipe-stats-table",
+                },
+            ),
         )
         data_by_sample = self.ignore_samples(data_by_sample)
         self.write_data_file(data_by_sample, "multiqc_bp_split")
