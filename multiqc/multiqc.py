@@ -66,8 +66,6 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--module",
                 "--exclude",
-                "--tag",
-                "--view-tags",
             ],
         },
         {
@@ -155,15 +153,6 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("-o", "--outdir", type=str, help="Create report in the specified output directory.")
 @click.option(
     "-t", "--template", type=click.Choice(config.avail_templates), metavar=None, help="Report template to use."
-)
-@click.option("--tag", "module_tag", type=str, multiple=True, help="Use only modules which tagged with this keyword")
-@click.option(
-    "--view-tags",
-    is_flag=True,
-    callback=util_functions.view_all_tags,
-    expose_value=False,
-    is_eager=True,
-    help="View the available tags and which modules they load",
 )
 @click.option("-x", "--ignore", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore analysis files")
 @click.option(
@@ -311,7 +300,6 @@ def run(
     title=None,
     report_comment=None,
     template=None,
-    module_tag=(),
     module=(),
     require_logs=False,
     exclude=(),
@@ -485,8 +473,6 @@ def run(
     if sample_names:
         config.load_sample_names(sample_names)
     config.load_show_hide(sample_filters)
-    if module_tag is not None:
-        config.module_tag = module_tag
     if len(module) > 0:
         config.run_modules = module
     if len(exclude) > 0:
@@ -509,7 +495,6 @@ def run(
     del title
     del report_comment
     del template
-    del module_tag
     del module
     del require_logs
     del exclude
@@ -608,23 +593,6 @@ def run(
                 errmsg = f"LINT: Module '{m}' not found in config.module_order"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
-            else:
-                for mo in config.module_order:
-                    if m != "custom_content" and m in mo.keys() and "module_tag" not in mo[m]:
-                        errmsg = f"LINT: Module '{m}' in config.module_order did not have 'module_tag' config"
-                        logger.error(errmsg)
-                        report.lint_errors.append(errmsg)
-
-    # Get the available tags to decide which modules to run.
-    modules_from_tags = set()
-    if config.module_tag is not None:
-        tags = config.module_tag
-        for m in config.module_order:
-            module_name = list(m.keys())[0]  # only one name in each dict
-            for tag in tags:
-                for t in m[module_name].get("module_tag", []):
-                    if tag.lower() == t.lower():
-                        modules_from_tags.add(module_name)
 
     # Get the list of modules we want to run, in the order that we want them
     run_modules = [m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()]
@@ -641,9 +609,6 @@ def run(
     if len(getattr(config, "run_modules", {})) > 0:
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
-    elif modules_from_tags:
-        run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
-        logger.info(f"Only using modules with '{', '.join(config.module_tag)}' tag")
     if len(getattr(config, "exclude_modules", {})) > 0:
         logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
         if "general_stats" in config.exclude_modules:
