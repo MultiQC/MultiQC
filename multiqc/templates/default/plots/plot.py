@@ -551,9 +551,13 @@ def _dataset_layout(
     xlab = pconfig.get("xlab")
     ylab = pconfig.get("ylab")
     xmin = pconfig.get("xmin", pconfig.get("yFloor"))
-    xmax = pconfig.get("xmax", pconfig.get("yCeiling"))
     ymin = pconfig.get("ymin", pconfig.get("yFloor"))
-    ymax = pconfig.get("ymax", pconfig.get("yCeiling"))
+    xmax = pconfig.get("xmax")
+    if xmax is None and "yCeiling" in pconfig and "xMinRange" not in pconfig:
+        xmax = pconfig.get("yCeiling")
+    ymax = pconfig.get("ymax")
+    if ymax is None and "yCeiling" in pconfig and "yMinRange" not in pconfig:
+        ymax = pconfig.get("yCeiling")
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
     tt_decimals = pconfig.get("tt_decimals")
