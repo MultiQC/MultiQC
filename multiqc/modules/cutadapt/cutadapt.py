@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import shlex
+import json
 
 from packaging import version
 
@@ -39,10 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.cutadapt_length_counts = {"default": dict()}
         self.cutadapt_length_exp = {"default": dict()}
         self.cutadapt_length_obsexp = {"default": dict()}
-        self.ends = ["default"]
 
         for f in self.find_log_files("cutadapt"):
-            self.parse_cutadapt_logs(f)
+            self.parse_file(f)
 
         # Transform trimmed length data by type
         self.transform_trimming_length_data_for_plot()
@@ -67,7 +67,104 @@ class MultiqcModule(BaseMultiqcModule):
         # Trimming Length Profiles
         self.cutadapt_length_trimmed_plot()
 
-    def parse_cutadapt_logs(self, f):
+    def parse_file(self, f):
+        if f["fn"].endswith(".json"):
+            self.parse_json(f)
+        else:
+            self.parse_log(f)
+
+        # Calculate a few extra numbers of our own
+        for s_name, d in self.cutadapt_data.items():
+            # Percent trimmed
+            if d.get("bp_processed"):
+                if d.get("bp_written") is not None:
+                    self.cutadapt_data[s_name]["percent_trimmed"] = (
+                        float(d["bp_processed"] - d["bp_written"]) / d["bp_processed"]
+                    ) * 100
+                elif d.get("bp_trimmed") is not None:
+                    self.cutadapt_data[s_name]["percent_trimmed"] = (
+                        (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
+                    ) * 100
+            # Add missing filtering categories for pre-1.7 logs
+            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
+                if d.get("r_processed") is not None:
+                    r_filtered_unexplained = (
+                        d["r_processed"]
+                        - (d.get("r_too_short") or 0)
+                        - (d.get("r_too_long") or 0)
+                        - (d.get("r_too_many_N") or 0)
+                        - (d.get("r_written") or 0)
+                    )
+                    if r_filtered_unexplained > 0:
+                        self.cutadapt_data[s_name]["r_filtered_unexplained"] = r_filtered_unexplained
+                if d.get("pairs_processed") is not None:
+                    pairs_filtered_unexplained = (
+                        d["pairs_processed"]
+                        - (d.get("pairs_too_short") or 0)
+                        - (d.get("pairs_too_long") or 0)
+                        - (d.get("pairs_too_many_N") or 0)
+                        - (d.get("pairs_written") or 0)
+                    )
+                    if pairs_filtered_unexplained > 0:
+                        self.cutadapt_data[s_name]["pairs_filtered_unexplained"] = pairs_filtered_unexplained
+
+    def parse_json(self, f):
+        path = os.path.join(f["root"], f["fn"])
+        with open(path, "r") as fh:
+            data = json.load(fh)
+
+        s_name = self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f)
+        if s_name in self.cutadapt_data:
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+
+        self.add_software_version(data["cutadapt_version"], s_name)
+        self.add_data_source(f, s_name)
+
+        d = dict()
+        d["cutadapt_version"] = data["cutadapt_version"]
+        d["bp_processed"] = data["basepair_counts"]["input"]
+        d["bp_written"] = data["basepair_counts"]["output"]
+        d["quality_trimmed"] = data["basepair_counts"]["quality_trimmed"]
+        d["r_processed"] = data["read_counts"]["input"]
+        d["r1_with_adapters"] = data["read_counts"]["read1_with_adapter"]
+        d["r2_with_adapters"] = data["read_counts"]["read2_with_adapter"]
+        d["r_too_short"] = data["read_counts"]["filtered"]["too_short"]
+        d["r_too_long"] = data["read_counts"]["filtered"]["too_long"]
+        d["r_too_many_N"] = data["read_counts"]["filtered"]["too_many_n"]
+        d["r_written"] = data["read_counts"]["output"]
+        d = {k: v for k, v in d.items() if v is not None}
+        self.cutadapt_data[s_name] = d
+
+        for end, end_key in [("5", "five_prime_end"), ("3", "three_prime_end")]:
+            if end not in self.cutadapt_length_counts:
+                self.cutadapt_length_counts[end] = dict()
+                self.cutadapt_length_exp[end] = dict()
+                self.cutadapt_length_obsexp[end] = dict()
+            if s_name not in self.cutadapt_length_counts[end]:
+                self.cutadapt_length_counts[end][s_name] = dict()
+                self.cutadapt_length_exp[end][s_name] = dict()
+                self.cutadapt_length_obsexp[end][s_name] = dict()
+
+            for read in ["read1", "read2"]:
+                if f"input_{read}" not in data["basepair_counts"]:
+                    continue
+                for adapter_data in data[f"adapters_{read}"]:
+                    end_data = adapter_data.get(end_key)
+                    if end_data:
+                        for trimmed_length in end_data["trimmed_lengths"]:
+                            length = trimmed_length["len"]
+                            if length not in self.cutadapt_length_counts[end][s_name]:
+                                self.cutadapt_length_counts[end][s_name][length] = 0
+                                self.cutadapt_length_exp[end][s_name][length] = 0
+                                self.cutadapt_length_obsexp[end][s_name][length] = 0
+                            self.cutadapt_length_counts[end][s_name][length] += trimmed_length["counts"][0]
+                            self.cutadapt_length_exp[end][s_name][length] += trimmed_length["expect"]
+                            if trimmed_length["expect"] > 0:
+                                self.cutadapt_length_obsexp[end][s_name][length] += (
+                                    trimmed_length["counts"][0] / trimmed_length["expect"]
+                                )
+
+    def parse_log(self, f):
         """Go through log file looking for cutadapt output"""
         regexes = {
             "1.7": {
@@ -207,39 +304,6 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.cutadapt_length_obsexp[end][plot_sname][a_len] = float(r_seqs.group(2))
                         else:
                             break
-        # Calculate a few extra numbers of our own
-        for s_name, d in self.cutadapt_data.items():
-            # Percent trimmed
-            if "bp_processed" in d and "bp_written" in d:
-                self.cutadapt_data[s_name]["percent_trimmed"] = (
-                    float(d["bp_processed"] - d["bp_written"]) / d["bp_processed"]
-                ) * 100
-            elif "bp_processed" in d and "bp_trimmed" in d:
-                self.cutadapt_data[s_name]["percent_trimmed"] = (
-                    (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
-                ) * 100
-            # Add missing filtering categories for pre-1.7 logs
-            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
-                if "r_processed" in d:
-                    r_filtered_unexplained = (
-                        d["r_processed"]
-                        - d.get("r_too_short", 0)
-                        - d.get("r_too_long", 0)
-                        - d.get("r_too_many_N", 0)
-                        - d.get("r_written", 0)
-                    )
-                    if r_filtered_unexplained > 0:
-                        self.cutadapt_data[s_name]["r_filtered_unexplained"] = r_filtered_unexplained
-                if "pairs_processed" in d:
-                    pairs_filtered_unexplained = (
-                        d["pairs_processed"]
-                        - d.get("pairs_too_short", 0)
-                        - d.get("pairs_too_long", 0)
-                        - d.get("pairs_too_many_N", 0)
-                        - d.get("pairs_written", 0)
-                    )
-                    if pairs_filtered_unexplained > 0:
-                        self.cutadapt_data[s_name]["pairs_filtered_unexplained"] = pairs_filtered_unexplained
 
     def transform_trimming_length_data_for_plot(self):
         """Check if we parsed double ended data and transform it accordingly"""
@@ -256,8 +320,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.cutadapt_length_counts.pop("default")
             self.cutadapt_length_exp.pop("default")
             self.cutadapt_length_obsexp.pop("default")
-
-        self.ends = list(self.cutadapt_length_counts.keys())
 
     def cutadapt_general_stats_table(self):
         """Take the parsed stats from the Cutadapt report and add it to the
@@ -306,7 +368,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def cutadapt_length_trimmed_plot(self):
         """Generate the trimming length plot"""
-        for end in [x for x in ["default", "5", "3"] if x in self.ends]:
+        ends = [end for end, d_by_s in self.cutadapt_length_counts.items() if any(d_by_s.values())]
+        ends = [x for x in ["default", "5", "3"] if x in ends]  # enforcing order
+        for end in ends:
             pconfig = {
                 "id": f"cutadapt_trimmed_sequences_plot_{end}",
                 "title": "Cutadapt: Lengths of Trimmed Sequences{}".format(

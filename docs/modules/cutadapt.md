@@ -14,9 +14,11 @@ tails and other types of unwanted sequence from your high-throughput
 sequencing reads.
 
 This module should be able to parse logs from a wide range of versions of Cutadapt.
-It's been tested with log files from v1.2.1, 1.6 and 1.8. Note that you will need
-to change the search pattern for very old log files (such as v.1.2) with the following
-MultiQC config:
+It works with both the regular Cutadapt report output and also with
+[JSON reports (`--json`)](https://cutadapt.readthedocs.io/en/latest/guide.html#json-report).
+
+Although the module parsing code works with very old log files, if you are working with
+ancient versions (such as v1.2) you may need to change the search pattern to the following:
 
 ```yaml
 sp:
