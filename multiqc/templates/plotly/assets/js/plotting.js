@@ -322,8 +322,8 @@ function renderPlot(target) {
       plot.layout[axis]["range"] = [...dataset["pct_range"]];
     }
     if (plot.lActive) {
-      // Plotly needs the range to be log-scaled as well :(
-      plot.layout[axis]["range"] = plot.layout[axis]["range"].map((v) => (v > 0 ? Math.log10(v) : 0));
+      // otherwise Plotly will interpret the range as log10:
+      plot.layout[axis]["range"] = null;
     }
   });
 
