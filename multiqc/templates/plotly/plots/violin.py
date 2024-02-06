@@ -239,8 +239,6 @@ class ViolinPlot(Plot):
                     "hoverformat": layout["yaxis"]["hoverformat"],
                     "tickfont": copy.deepcopy(layout["yaxis"]["tickfont"]),
                 }
-                if "hoverformat" in header:
-                    layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
 
                 title = header["title"] + "  "
                 if header.get("namespace"):
@@ -252,6 +250,10 @@ class ViolinPlot(Plot):
                         "ticktext": [title],
                     }
                 )
+
+                if "hoverformat" in header:
+                    layout[f"xaxis{metric_idx + 1}"]["hoverformat"] = header["hoverformat"]
+
                 if header.get("color"):
                     layout[f"yaxis{metric_idx + 1}"]["tickfont"] = {
                         "color": f"rgb({header['color']})",

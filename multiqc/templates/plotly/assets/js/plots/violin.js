@@ -114,6 +114,8 @@ class ViolinPlot extends Plot {
 
       // Set layouts for each violin individually
       layout["xaxis" + (metricIdx + 1)] = {
+        automargin: layout["xaxis"]["automargin"],
+        color: layout["xaxis"]["color"],
         gridcolor: layout["xaxis"]["gridcolor"],
         zerolinecolor: layout["xaxis"]["zerolinecolor"],
         hoverformat: layout["xaxis"]["hoverformat"],
@@ -123,22 +125,32 @@ class ViolinPlot extends Plot {
         },
       };
       layout["yaxis" + (metricIdx + 1)] = {
+        automargin: true,
+        color: layout["yaxis"]["color"],
         gridcolor: layout["yaxis"]["gridcolor"],
         zerolinecolor: layout["yaxis"]["zerolinecolor"],
         hoverformat: layout["yaxis"]["hoverformat"],
-        automargin: true,
+        tickfont: {
+          size: layout["yaxis"]["tickfont"]["size"],
+          color: layout["yaxis"]["tickfont"]["color"],
+        },
       };
       if (header["xaxis"] !== undefined) {
         layout["xaxis" + (metricIdx + 1)] = Object.assign(layout["xaxis" + (metricIdx + 1)], header["xaxis"]);
       }
-      layout["yaxis" + (metricIdx + 1)]["tickmode"] = "array";
-      layout["yaxis" + (metricIdx + 1)]["tickvals"] = [metricIdx];
       let title = header.title + "  ";
       if (header["namespace"]) title = header["namespace"] + "  <br>" + title;
+      layout["yaxis" + (metricIdx + 1)]["tickmode"] = "array";
+      layout["yaxis" + (metricIdx + 1)]["tickvals"] = [metricIdx];
       layout["yaxis" + (metricIdx + 1)]["ticktext"] = [title];
 
       if (header["hoverformat"] !== undefined) {
         layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
+      }
+
+      // Set color for each violin individually
+      if (header["color"] !== undefined) {
+        layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
       }
     });
 
@@ -152,7 +164,6 @@ class ViolinPlot extends Plot {
 
       // Set color for each violin individually
       if (header["color"] !== undefined) {
-        layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
         params["fillcolor"] = "rgb(" + header["color"] + ")";
         params["line"]["color"] = "rgb(" + header["color"] + ")";
       }
