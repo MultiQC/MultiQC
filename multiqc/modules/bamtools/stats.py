@@ -5,6 +5,7 @@ import logging
 import re
 
 from multiqc.plots import beeswarm
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -90,8 +91,18 @@ def parse_reports(self):
 
     # Make dot plot of counts
     keys = {}
-    defaults = {"min": 0, "max": 100, "decimalPlaces": 2, "suffix": "%"}
-    num_defaults = {"min": 0, "modify": lambda x: float(x) / 1000000.0, "decimalPlaces": 2}
+    defaults = {
+        "min": 0,
+        "max": 100,
+        "decimalPlaces": 2,
+        "suffix": "%",
+    }
+    num_defaults = {
+        "min": 0,
+        "modify": lambda x: x * config.read_count_multiplier,
+        "suffix": config.read_count_prefix,
+        "decimalPlaces": 2,
+    }
 
     keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
     keys["mapped_reads_pct"] = dict(defaults, **{"title": "Mapped reads"})
@@ -109,7 +120,14 @@ def parse_reports(self):
     self.add_section(
         name="Bamtools Stats",
         anchor="bamtools-stats",
-        plot=beeswarm.plot(self.bamtools_stats_data, keys, pconfig={"id": "bamtools-stats-plot"}),
+        plot=beeswarm.plot(
+            self.bamtools_stats_data,
+            keys,
+            pconfig={
+                "id": "bamtools-stats-plot",
+                "title": "Bamtools Stats",
+            },
+        ),
     )
 
     # Return number of samples found

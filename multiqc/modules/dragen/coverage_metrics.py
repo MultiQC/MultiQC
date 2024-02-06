@@ -251,13 +251,6 @@ USER_CONFIGS_ENABLED = True
 
 V2 = " pct"  # Used to create a unique ID if a metric has two values.
 
-""" GTQ is the "greater than or equal to" sign.
-Other types can be found in the "Extra Info" comment above.
-GTQ is used by setting automatic titles for the metric:
-PCT of region with coverage [ix: inf)
-"""
-GTQ = "&ge;"
-
 METRICS = {
     "aligned reads": {
         "order_priority": 0,
@@ -422,7 +415,7 @@ METRICS = {
         "extra": {
             # "PCT of region with coverage [0x: inf)" metric.
             ("0x", "inf"): {
-                "title": GTQ + "0x" + 8 * "&nbsp;",
+                "title": "≥0x" + 8 * "&nbsp;",
                 # Simple example of colors with rules.
                 # "cond_formatting_rules": {
                 #    "red_bad": [{"s_contains": ""}], # Each value is red by default.
@@ -1622,7 +1615,7 @@ def create_coverage_headers_handler():
             JX = entity_match.group(2)
             description = "Percentage of sites in " + region
             if JX == "inf":
-                title = GTQ + IX + "x"
+                title = "≥" + IX + "x"
                 # Add extra html entities to widen the title.
                 if len(IX) < 6:
                     title += "&nbsp;" * (6 - len(IX))

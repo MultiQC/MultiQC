@@ -915,6 +915,9 @@ tbody .sorthandle {
   border-bottom: 1px solid #ccc;
   margin-top: 15px;
 }
+.hc-violin-wrapper {
+  margin-top: 0;
+}
 .hc-plot-handle {
   position: absolute;
   bottom: 0;
@@ -957,24 +960,17 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders input.form-control {
   width: 100px;
 }
-.mqc_hcplot_yaxis_limit_toggle {
-  float: right;
-  font-size: 11px;
-  margin-top: -30px;
-}
-.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
-  margin-left: 20px;
-}
 
 .beeswarm-hovertext {
   height: 29px;
   padding: 5px 8px;
   font-size: 13px;
-  border-left: 2px solid #46b8da;
-  border-bottom: 1px solid #dedede;
+  /*border-left: 2px solid #46b8da;*/
+  border-top: 1px solid #dedede;
   background-color: #d9edf7;
   color: #31708f;
 }
+
 .beeswarm-plots {
   height: calc(100% - 25px);
 }
@@ -993,4 +989,8 @@ tbody .sorthandle {
 
 .mqc_versions_table tbody:nth-child(even) {
   background-color: #f2f2f2;
+}
+
+g.annotation {
+  position: absolute !important;
 }

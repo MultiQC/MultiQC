@@ -27,11 +27,9 @@ it prints the contents of these files into the report.
       url(data:image/svg;base64,{{ include_file('assets/fonts/glyphicons-halflings-regular.svg', b64=True) }}) format('svg');
 }
 </style>
-<style type="text/css">
-    {{ include_file('assets/css/bootstrap.min.css') }}
-    {{ include_file('assets/css/default_multiqc.css') }}
-    {{ include_file('assets/css/jquery.toast.css') }}
-</style>
+<style>{{ include_file('assets/css/bootstrap.min.css') }}</style>
+<style>{{ include_file('assets/css/default_multiqc.css') }}</style>
+<style>{{ include_file('assets/css/jquery.toast.css') }}</style>
 {% for css_href in config.custom_css_files %}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {% endfor %}
@@ -58,6 +56,7 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/packages/lz-string.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.toast.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_tables.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>

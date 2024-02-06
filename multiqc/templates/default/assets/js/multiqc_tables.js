@@ -331,7 +331,7 @@ $(function () {
     if (isNaN(col2_min)) {
       col2_min = undefined;
     }
-    if (col1 != "" && col2 != "") {
+    if (col1 !== "" && col2 !== "") {
       $("#tableScatterPlot").html("<small>loading..</small>");
       if ($(tid).attr("data-title")) {
         plot_title = $(tid).attr("data-title");

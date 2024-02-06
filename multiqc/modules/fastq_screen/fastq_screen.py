@@ -1,14 +1,11 @@
 """ MultiQC module to parse output from FastQ Screen """
 
 
-import json
 import logging
 import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -48,21 +45,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {len(self.fq_screen_data)} reports")
 
-        # Check whether we have a consistent number of organisms across all samples
-        num_orgs = set([len(orgs) for orgs in self.fq_screen_data.values()])
-
         # Section 1 - Alignment Profiles
-        # Posh plot only works for around 20 samples, 8 organisms. If all samples have the same number of organisms.
-        if (
-            len(num_orgs) == 1
-            and len(self.fq_screen_data) * self.num_orgs <= 160
-            and not config.plots_force_flat
-            and not getattr(config, "fastqscreen_simpleplot", False)
-        ):
-            self.add_section(name="Mapped Reads", anchor="fastq_screen_mapped_reads", content=self.fqscreen_plot())
-        # Use simpler plot that works with many samples
-        else:
-            self.add_section(name="Mapped Reads", anchor="fastq_screen_mapped_reads", plot=self.fqscreen_simple_plot())
+        self.add_section(name="Mapped Reads", anchor="fastq_screen_mapped_reads", plot=self.fqscreen_simple_plot())
 
         # Section 2 - Optional bisfulfite plot
         self.fqscreen_bisulfite_plot()
@@ -168,92 +152,6 @@ class MultiqcModule(BaseMultiqcModule):
                     pass
         return totals
 
-    def fqscreen_plot(self):
-        """Makes a fancy custom plot which replicates the plot seen in the main
-        FastQ Screen program. Not useful if lots of samples as gets too wide."""
-
-        categories = list()
-        getCats = True
-        data = list()
-        p_types = {
-            "multiple_hits_multiple_libraries": {"col": "#7f0000", "name": "Multiple Hits, Multiple Genomes"},
-            "one_hit_multiple_libraries": {"col": "#ff0000", "name": "One Hit, Multiple Genomes"},
-            "multiple_hits_one_library": {"col": "#00007f", "name": "Multiple Hits, One Genome"},
-            "one_hit_one_library": {"col": "#0000ff", "name": "One Hit, One Genome"},
-        }
-        for k, t in p_types.items():
-            first = True
-            for s in sorted(self.fq_screen_data.keys()):
-                thisdata = list()
-                if len(categories) > 0:
-                    getCats = False
-                for org in sorted(self.fq_screen_data[s]):
-                    if org == "total_reads":
-                        continue
-                    try:
-                        thisdata.append(self.fq_screen_data[s][org]["percentages"][k])
-                    except KeyError:
-                        thisdata.append(None)
-                    if getCats:
-                        categories.append(org)
-                td = {"name": t["name"], "stack": s, "data": thisdata, "color": t["col"]}
-                if first:
-                    first = False
-                else:
-                    td["linkedTo"] = ":previous"
-                data.append(td)
-
-        plot_id = report.save_htmlid("fq_screen_plot")
-        html = """<div id={plot_id} class="fq_screen_plot hc-plot"></div>
-        <script type="application/json" class="fq_screen_dict">{dict}</script>
-        """.format(
-            plot_id=json.dumps(plot_id),
-            dict=json.dumps({"plot_id": plot_id, "data": data, "categories": categories}),
-        )
-
-        html += """<script type="text/javascript">
-            fq_screen_dict = { }; // { <plot_id>: data, categories }
-            $('.fq_screen_dict').each(function (i, elem) {
-                var dict = JSON.parse(elem.innerHTML);
-                fq_screen_dict[dict.plot_id] = dict;
-            });
-
-            $(function () {
-                // In case of repeated modules: #fq_screen_plot, #fq_screen_plot-1, ..
-                $(".fq_screen_plot").each(function () {
-                    var plot_id = $(this).attr('id');
-
-                    $(this).highcharts({
-                        chart: { type: "column", backgroundColor: null },
-                        title: { text: "FastQ Screen Results" },
-                        xAxis: { categories: fq_screen_dict[plot_id].categories },
-                        yAxis: {
-                            max: 100,
-                            min: 0,
-                            title: { text: "Percentage Aligned" }
-                        },
-                        tooltip: {
-                            formatter: function () {
-                                return "<b>" + this.series.stackKey.replace("column","") + " - " + this.x + "</b><br/>" +
-                                    this.series.name + ": " + this.y + "%<br/>" +
-                                    "Total Alignment: " + this.point.stackTotal + "%";
-                            },
-                        },
-                        plotOptions: {
-                            column: {
-                                pointPadding: 0,
-                                groupPadding: 0.02,
-                                stacking: "normal"
-                            }
-                        },
-                        series: fq_screen_dict[plot_id].data
-                    });
-                });
-            });
-        </script>"""
-
-        return html
-
     def fqscreen_simple_plot(self):
         """Makes a simple bar plot with summed alignment counts for
         each species, stacked."""
@@ -302,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "fastq_screen_plot",
             "title": "FastQ Screen: Mapped Reads",
             "cpswitch_c_active": False,
-            "ylab": "Percentages",
+            "ylab": "Mapped reads",
         }
         cats["Multiple Genomes"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["No hits"] = {"name": "No hits", "color": "#cccccc"}

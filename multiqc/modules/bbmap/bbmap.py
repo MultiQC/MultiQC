@@ -191,7 +191,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
             table_headers[column_header].update(header_options)
 
-        tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools"}
+        tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools", "title": "BBTools " + file_type}
         for sample in table_data:
             for key, value in table_data[sample].items():
                 try:

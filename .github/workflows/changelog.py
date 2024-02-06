@@ -319,7 +319,7 @@ def _skip_existing_entry_for_this_pr(line, same_section=True):
 
 
 # Find the next line in the change log that matches the pattern "## MultiQC v.*dev"
-# If it doesn't exist, exist with code 1 (let's assume that a new section is added
+# If it doesn't exist, exit with code 1 (let's assume that a new section is added
 # manually or by CI when a release is pushed).
 # Else, find the next line that matches the `section` variable, and insert a new line
 # under it (we also assume that section headers are added already).
