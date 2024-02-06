@@ -2,7 +2,6 @@
 import copy
 import dataclasses
 import logging
-import re
 from collections import defaultdict
 from typing import Dict, List
 
@@ -10,7 +9,7 @@ import math
 import plotly.graph_objects as go
 import spectra
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ class BarPlot(Plot):
                 # Split long category names
                 if "name" not in cat:
                     raise ValueError(f"Bar plot {dataset.plot.id}: missing 'name' key in category")
-                cat["name"] = "<br>".join(_split_long_string(cat["name"]))
+                cat["name"] = "<br>".join(split_long_string(cat["name"]))
 
                 # Reformat color to be ready to add alpha in Plotly-JS
                 color = spectra.html(cat["color"])
@@ -294,24 +293,3 @@ class BarPlot(Plot):
     def tt_label() -> str:
         """Default tooltip label"""
         return "%{meta}: <b>%{x}</b>"
-
-
-def _split_long_string(s: str, max_width=80) -> List[str]:
-    """
-    Split string into lines of max_width characters
-    """
-    lines = []
-    current_line = ""
-    words = re.split(r"(\W+)", s)
-    for word in words:
-        if len(current_line + word) <= max_width:
-            current_line += word
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = word
-
-    if current_line:
-        lines.append(current_line)
-
-    return lines

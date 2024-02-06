@@ -3,6 +3,7 @@ import dataclasses
 import io
 import logging
 import random
+import re
 import string
 from abc import abstractmethod, ABC
 from enum import Enum
@@ -596,3 +597,24 @@ def _clean_config_tt_label(tt_label: str) -> str:
     for k, v in replace_d.items():
         tt_label = tt_label.replace(k, v)
     return tt_label
+
+
+def split_long_string(s: str, max_width=80) -> List[str]:
+    """
+    Split string into lines of max_width characters
+    """
+    lines = []
+    current_line = ""
+    words = re.split(r"(\W+)", s)
+    for word in words:
+        if len(current_line + word) <= max_width:
+            current_line += word
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+
+    if current_line:
+        lines.append(current_line)
+
+    return lines

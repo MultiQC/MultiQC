@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -85,6 +85,9 @@ class HeatmapPlot(Plot):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
 
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
+
+        # Break up horizontal labels by space to make them fit better vertically
+        xcats = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
 
         # Extend each dataset object with a list of samples
         self.datasets: List[HeatmapPlot.Dataset] = [
@@ -168,7 +171,12 @@ class HeatmapPlot(Plot):
             f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
         )
 
-        self.layout.xaxis.tickangle = 45
+        # If the number of xcats is <= 15, leave them horizontal, otherwise, rotate 45 degrees
+        if num_cols > 15:
+            self.layout.xaxis.tickangle = 45
+        else:
+            self.layout.xaxis.tickangle = 0
+
         self.layout.font.size = font_size
         self.layout.xaxis.nticks = x_nticks
         self.layout.yaxis.nticks = y_nticks
