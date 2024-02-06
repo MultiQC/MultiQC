@@ -75,7 +75,7 @@ def parse_numerals(
                         return {}
                     decimalcomma = True
     if decimalcomma is None:
-        log.warning(f"Couldn't determine decimal separator for file {fpath}")
+        log.debug(f"Couldn't determine decimal separator for file {fpath}")
 
     d = {}
     for k, v in preparsed_d.items():
