@@ -140,7 +140,7 @@ def plot(data, cats=None, pconfig=None):
         hc_samples = list(d.keys())
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
-            # want to keep the sample order https://github.com/ewels/MultiQC/issues/2204
+            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
         elif pconfig.get("sort_samples", True):
             hc_samples = sorted(list(d.keys()))

@@ -52,7 +52,7 @@ def highcharts_heatmap(data, xcats, ycats, pconfig=None):
     for i, arr in enumerate(data):
         for j, val in enumerate(arr):
             pdata.append([j, i, val])
-            if val is not None:
+            if isinstance(val, (int, float)):
                 if minval is None or val < minval:
                     minval = val
                 if maxval is None or val > maxval:

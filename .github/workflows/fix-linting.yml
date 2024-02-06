@@ -8,12 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
     if: >
-      github.repository_owner == 'ewels' &&
+      github.repository_owner == 'MultiQC' &&
       github.event.issue.pull_request &&
       startsWith(github.event.comment.body, '@multiqc-bot fix linting')
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
 
@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.issue.number }}
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
 
       - name: Install pre-commit
         run: |

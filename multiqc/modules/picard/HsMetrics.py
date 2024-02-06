@@ -75,7 +75,7 @@ def parse_reports(module):
     data_by_bait_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/hsmetrics", filehandles=True):
+    for f in module.find_log_files("picard/hsmetrics", filehandles=True):
         s_name = f["s_name"]
         keys = None
         commadecimal = None
