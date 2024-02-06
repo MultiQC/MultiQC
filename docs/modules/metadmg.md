@@ -12,6 +12,7 @@ reference genomes or to speed up analysis for damage estimation for a single gen
 
 This module can read both plain text and gzipped files. If the latter, to allow reading
 the gz archives, run with `ignore_images: false` in the config, e.g.:
+
 ```
 multiqc . --cl-config 'ignore_images: false'
 ```

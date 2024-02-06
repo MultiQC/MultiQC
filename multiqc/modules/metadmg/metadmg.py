@@ -55,11 +55,22 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Get all taxa
-        self.taxa = sorted(list(set([str(taxon) for s_name, s_data in self.metadmg_data.items() for v_name, v_data in s_data.items() for taxon in v_data])))
+        self.taxa = sorted(
+            list(
+                set(
+                    [
+                        str(taxon)
+                        for s_name, s_data in self.metadmg_data.items()
+                        for v_name, v_data in s_data.items()
+                        for taxon in v_data
+                    ]
+                )
+            )
+        )
 
         # Plots section
         self.barplot_section()
-        #self.dfitplot_samples_section()
+        # self.dfitplot_samples_section()
         self.dfitplot_taxa_section()
 
     def metadmg_read_data(self):
@@ -83,11 +94,11 @@ class MultiqcModule(BaseMultiqcModule):
             f["s_name"] = f["s_name"][:-5]
             # Read DF
             df_dfit = pd.read_table(
-                    f["fn"],
-                    sep="\t",
-                    index_col="taxid",
-                    comment="#",
-                )
+                f["fn"],
+                sep="\t",
+                index_col="taxid",
+                comment="#",
+            )
             # Join DFs
             df_metadmg[f["s_name"]] = df_metadmg[f["s_name"]].join(df_dfit) if f["s_name"] in df_metadmg else df_dfit
             # Add data
@@ -140,11 +151,13 @@ class MultiqcModule(BaseMultiqcModule):
             "A": "Damage estimate",
             "A_b": "Damage estimate (bootstrap)",
         }
-        
+
         data_plot = list()
         data_labels = list()
         for stat_type in stat_labels.keys():
-            data_plot.append({s_name: data[stat_type] for s_name, data in self.metadmg_data.items() if stat_type in data})
+            data_plot.append(
+                {s_name: data[stat_type] for s_name, data in self.metadmg_data.items() if stat_type in data}
+            )
             data_labels.append({"name": stat_labels[stat_type]})
 
         # Plot config
@@ -153,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             "hide_zero_cats": False,
             "title": "metaDMG: read statistics",
             "ylab": None,
-#            "use_legend": False,
+            #            "use_legend": False,
             "tt_decimals": 3,
             "tt_percentages": False,
             "data_labels": data_labels,
@@ -167,12 +180,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def dfitplot_samples_section(self):
-	# Convert data
+        # Convert data
         data_plot = list()
         data_labels = list()
         for s_name, s_data in sorted(self.metadmg_data.items()):
             taxa = s_data[list(s_data.keys())[0]].keys()
-            data_plot.append({taxon: {pos: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions)} for taxon in taxa})
+            data_plot.append(
+                {taxon: {pos: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions)} for taxon in taxa}
+            )
             data_labels.append({"name": s_name})
 
         # Config for the plot
@@ -190,7 +205,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(data_plot, pconfig=pconfig),
         )
 
-
     def dfitplot_taxa_section(self):
         esconfig = {
             "dashStyle": "Dash",
@@ -201,12 +215,12 @@ class MultiqcModule(BaseMultiqcModule):
             "showInLegend": False,
         }
 
-	# Convert data
+        # Convert data
         data_plot = list()
         data_labels = list()
         extra_series = list()
         for taxon in self.taxa:
-            #data_plot.append({s_name: {pos+1: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions) if "fwdx0" in s_data and taxon in s_data[f"fwdx{pos}"]} for s_name, s_data in self.metadmg_data.items()})
+            # data_plot.append({s_name: {pos+1: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions) if "fwdx0" in s_data and taxon in s_data[f"fwdx{pos}"]} for s_name, s_data in self.metadmg_data.items()})
             data_plot.append(list())
             data_plot[-1] = dict()
             data_labels.append({"name": taxon})
@@ -215,14 +229,26 @@ class MultiqcModule(BaseMultiqcModule):
                 if "fwdx0" not in s_data:
                     log.warning(f"Cannot find dfit data for sample {s_name}")
                     continue
-                data_plot[-1][s_name] = {pos+1: s_data[f"fwdx{pos}"][taxon] for pos in range(self.n_positions) if taxon in s_data[f"fwdx{pos}"]}
+                data_plot[-1][s_name] = {
+                    pos + 1: s_data[f"fwdx{pos}"][taxon]
+                    for pos in range(self.n_positions)
+                    if taxon in s_data[f"fwdx{pos}"]
+                }
                 # Add CI
                 extra_series[-1].append(dict(esconfig))
                 extra_series[-1][-1]["name"] = f"{s_name} CI Upper"
-                extra_series[-1][-1]["data"] = [[pos+1, min(1, s_data[f"fwdx{pos}"][taxon] + s_data[f"fwdxConf{pos}"][taxon])] for pos in range(self.n_positions) if taxon in s_data[f"fwdx{pos}"]]
+                extra_series[-1][-1]["data"] = [
+                    [pos + 1, min(1, s_data[f"fwdx{pos}"][taxon] + s_data[f"fwdxConf{pos}"][taxon])]
+                    for pos in range(self.n_positions)
+                    if taxon in s_data[f"fwdx{pos}"]
+                ]
                 extra_series[-1].append(dict(esconfig))
                 extra_series[-1][-1]["name"] = f"{s_name} CI Lower"
-                extra_series[-1][-1]["data"] = [[pos+1, max(0, s_data[f"fwdx{pos}"][taxon] - s_data[f"fwdxConf{pos}"][taxon])] for pos in range(self.n_positions) if taxon in s_data[f"fwdx{pos}"]]
+                extra_series[-1][-1]["data"] = [
+                    [pos + 1, max(0, s_data[f"fwdx{pos}"][taxon] - s_data[f"fwdxConf{pos}"][taxon])]
+                    for pos in range(self.n_positions)
+                    if taxon in s_data[f"fwdx{pos}"]
+                ]
         # Config for the plot
         pconfig = {
             "id": "metadmg_dfit_taxa_plot",
