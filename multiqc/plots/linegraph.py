@@ -305,7 +305,10 @@ def highcharts_linegraph(plotdata, pconfig=None):
             try:
                 name = pconfig["data_labels"][k]["name"]
             except Exception:
-                name = k + 1
+                try:
+                    name = pconfig["data_labels"][k]
+                except Exception:
+                    name = k + 1
             try:
                 ylab = f"data-ylab=\"{pconfig['data_labels'][k]['ylab']}\""
             except Exception:

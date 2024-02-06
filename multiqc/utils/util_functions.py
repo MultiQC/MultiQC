@@ -140,29 +140,6 @@ def write_data_file(
     log.debug(f"Wrote data file {fn}")
 
 
-def view_all_tags(ctx, param, value):
-    """List available tags and associated modules
-    Called by eager click option: --view-tags
-    """
-    # To make sure this function executed only when the flag was called
-    if not value or ctx.resilient_parsing:
-        return
-    avail_tags = dict()
-    print("\nMultiQC Available module tag groups:\n")
-    for mod_dict in filter(lambda mod: isinstance(mod, dict), config.module_order):
-        mod_key, mod_val = list(mod_dict.items())[0]
-        tags = list(mod_val.get("module_tag", []))
-        for t in tags:
-            if t not in avail_tags:
-                avail_tags[t] = []
-            avail_tags[t].append(mod_key)
-    for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print(f" - {t}:")
-        for ttgs in avail_tags[t]:
-            print(f"   - {ttgs}")
-    ctx.exit()
-
-
 def force_term_colors():
     """
     Check if any environment variables are set to force Rich to use coloured output

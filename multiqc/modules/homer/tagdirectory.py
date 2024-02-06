@@ -145,6 +145,7 @@ class TagDirReportMixin:
         self.tagdir_data["taginfo_total_norm"] = self.ignore_samples(self.tagdir_data["taginfo_total_norm"])
         self.tagdir_data["taginfo_uniq"] = self.ignore_samples(self.tagdir_data["taginfo_uniq"])
         self.tagdir_data["taginfo_uniq_norm"] = self.ignore_samples(self.tagdir_data["taginfo_uniq_norm"])
+        self.tagdir_data["header"] = self.ignore_samples(self.tagdir_data["header"])
 
         if len(self.tagdir_data["taginfo_total"]) > 0:
             self.add_section(
