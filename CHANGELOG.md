@@ -19,6 +19,7 @@
 - Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
+- Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
 
 ### New modules
 

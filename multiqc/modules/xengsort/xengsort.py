@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             "host": {"name": "Host", "color": "#e41a1c"},  # red
             "both": {"name": "Both", "color": "#984ea3"},  # purple
             "ambiguous": {"name": "Ambiguous", "color": "#616161"},  # grey
-            "neither": {"name": "Neither", "color": "b3b3b3"},  # light grey
+            "neither": {"name": "Neither", "color": "#b3b3b3"},  # light grey
         }
         self.add_section(
             description=f"This plot shows the number of reads classified by {self.name}",
