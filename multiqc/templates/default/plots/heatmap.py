@@ -157,7 +157,6 @@ class HeatmapPlot(Plot):
             px_per_elem = MIN_SIZE / max(num_rows, num_cols)
             width = num_cols * px_per_elem
             height = num_rows * px_per_elem
-            logger.debug(f"Resized to {width}x{height}")
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             y_nticks = None  # allow skipping ticks to avoid making the font even smaller
@@ -165,8 +164,9 @@ class HeatmapPlot(Plot):
             px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
             width = num_cols * px_per_elem
             height = num_rows * px_per_elem
-            logger.debug(f"Resized to {width}x{height}")
 
+        width = int(width)
+        height = int(height)
         logger.debug(
             f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
         )
