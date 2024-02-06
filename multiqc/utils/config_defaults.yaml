@@ -367,6 +367,7 @@ module_order:
   - mosdepth
   - phantompeakqualtools
   - qualimap
+  - bamdst
   - preseq
   - hifiasm
   - quast
@@ -430,6 +431,7 @@ module_order:
   - snippy
   - umitools
   - truvari
+  - megahit
   # Alignment tool stats
   - bbmap
   - bismark
@@ -498,3 +500,4 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - seqwho
