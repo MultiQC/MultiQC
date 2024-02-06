@@ -48,13 +48,13 @@ class MultiqcModule(BaseMultiqcModule):
                 if f["s_name"] in self.filtlong_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 target_bases = line.lstrip().split(" ")[1]
-                # Remove . thousand separators - see ewels/MultiQC#1843
+                # Remove . thousand separators - see MultiQC/MultiQC#1843
                 target_bases = float(target_bases.replace(".", ""))
                 self.filtlong_data[f["s_name"]] = {"Target bases": target_bases}
 
             elif "keeping" in line and f["s_name"] in self.filtlong_data:
                 bases_kept = line.lstrip().split(" ")[1]
-                # Remove . thousand separators - see ewels/MultiQC#1843
+                # Remove . thousand separators - see MultiQC/MultiQC#1843
                 bases_kept = float(bases_kept.replace(".", ""))
                 self.filtlong_data[f["s_name"]]["Bases kept"] = bases_kept
 

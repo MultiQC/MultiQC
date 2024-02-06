@@ -4,16 +4,16 @@ PR_TITLE, PR_NUMBER, GITHUB_WORKSPACE.
 
 Adds a line into the CHANGELOG.md:
 * If a PR title starts with "New module: ", checks that a single module is added,
- and appends an entry under the ""### New modules" section. 
+ and appends an entry under the ""### New modules" section.
 * If a single module was modified, checks that the PR starts with a name of the
  modified module (e.g. "FastQC: new stuff") and adds a line under "### Module updates".
 * All other change will go under the "### MultiQC updates" section.
 * If an entry for the PR is already added, will replace it.
 
 Other assumptions:
-- CHANGELOG.md has a running section for an ongoing "dev" version 
+- CHANGELOG.md has a running section for an ongoing "dev" version
 (i.e. titled "## MultiQC vX.Ydev").
-- Under that section, there are sections "### MultiQC updates", "### New modules" 
+- Under that section, there are sections "### MultiQC updates", "### New modules"
 and "### Module updates".
 - For module's info, checks the file multiqc/modules/<module_name>/<module_name>.py.
 """
@@ -26,7 +26,7 @@ from pathlib import Path
 
 import yaml
 
-REPO_URL = "https://github.com/ewels/MultiQC"
+REPO_URL = "https://github.com/MultiQC/MultiQC"
 MODULES_DIR = Path("multiqc/modules")
 
 # Assumes the environment is set by the GitHub action.
@@ -37,11 +37,25 @@ workspace_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 assert pr_title, pr_title
 assert pr_number, pr_number
+assert pr_number.isdigit(), pr_number
 
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
+
+if any(
+    line in pr_title.lower()
+    for line in [
+        "skip changelog",
+        "skip change log",
+        "no changelog",
+        "no change log",
+        "bump version",
+    ]
+):
+    print("Skipping changelog update")
+    sys.exit(0)
 
 
 def _run_cmd(cmd):
@@ -154,17 +168,6 @@ def _modules_added_by_pr(pr_number) -> list[str]:
     return added_modules
 
 
-def _load_file_content_after_pr(path) -> str:
-    """
-    Returns the contents of the file changed by the PR.
-    """
-    _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
-    with (workspace_path / path).open() as f:
-        text = f.read()
-    _run_cmd(f"cd {workspace_path} && git checkout master")
-    return text
-
-
 def _modules_modified_by_pr(pr_number) -> set[str]:
     """
     Returns paths to the "<module>.py" files of the altered modules.
@@ -181,9 +184,13 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
         #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
         #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
         #   num_lines: 1
+        _run_cmd(f"cd {workspace_path} && git checkout main")
         with (workspace_path / sp_path).open() as f:
             old_text = f.read()
-        new_text = _load_file_content_after_pr(sp_path)
+        # Get contents of the file changed by the PR.
+        _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
+        with (workspace_path / sp_path).open() as f:
+            new_text = f.read()
         if old_text != new_text:
             old_data = yaml.safe_load(old_text)
             new_data = yaml.safe_load(new_text)
@@ -273,10 +280,9 @@ else:
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
 if not new_lines:
-    if "skip changelog" not in pr_title and "no changelog" not in pr_title:
-        new_lines = [
-            f"- {pr_title} {pr_link}\n",
-        ]
+    new_lines = [
+        f"- {pr_title} {pr_link}\n",
+    ]
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
@@ -329,7 +335,7 @@ while orig_lines:
         updated_lines.append(line)
 
         # Parse version from the line ## MultiQC v1.10dev or
-        # ## [MultiQC v1.15](https://github.com/ewels/MultiQC/releases/tag/v1.15) ...
+        # ## [MultiQC v1.15](https://github.com/MultiQC/MultiQC/releases/tag/v1.15) ...
         if not (m := re.match(r".*MultiQC (v\d+\.\d+(dev)?).*", line)):
             print(f"Cannot parse version from line {line.strip()}.", file=sys.stderr)
             sys.exit(1)

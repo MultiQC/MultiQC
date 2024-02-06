@@ -2,7 +2,7 @@
 
 # Test runner for MultiQC.
 if [ -z "${MULTIQC_TEST_ROOT:-}" ] ; then
-    MULTIQC_TEST_ROOT="$(dirname $0)"/../../MultiQC_TestData
+    MULTIQC_TEST_ROOT="$(dirname $0)"/../../test-data
 fi
 
 # Canonicalize it
@@ -19,7 +19,7 @@ Error: $MULTIQC_TEST_ROOT was not found or does not contain a
        unit_tests/ subdirectory.
 
 To reduce bloat of the main GIT repository, the tests and test data are kept
-in the MultiQC_TestData repository, which you need to check out from GitHub.
+in the test-data repository, which you need to check out from GitHub.
 
 If the test data is somewhere other than the path above, set \$MULTIQC_TEST_ROOT
 to the correct directory and retry.

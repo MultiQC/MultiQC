@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Duplicate sample name found in {f['root']}! Overwriting: {f['s_name']}")
         self.happy_raw_sample_names.add(f["s_name"])
 
-        rdr = csv.DictReader(f["f"])
+        rdr: csv.DictReader = csv.DictReader(f["f"])
         for row in rdr:
             row_id = f"{f['s_name']}_{row['Type']}_{row['Filter']}"
             if row["Type"] == "INDEL":

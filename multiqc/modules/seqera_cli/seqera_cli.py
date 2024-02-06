@@ -4,6 +4,7 @@ import datetime as dt
 import json
 import logging
 import os
+import re
 import tarfile
 from collections import defaultdict
 
@@ -68,6 +69,9 @@ class MultiqcModule(BaseMultiqcModule):
                 if "service-info.json" in tar_file.getnames():
                     d.update(_read_json_from_tar_gz(tar_file, "service-info.json"))
 
+                if "workflow-metadata.json" in tar_file.getnames():
+                    d.update(_read_json_from_tar_gz(tar_file, "workflow-metadata.json"))
+
                 d = self._parse_data(d)
                 if d:
                     self.add_data_source(f, s_name=d["id_repository"])
@@ -90,6 +94,11 @@ class MultiqcModule(BaseMultiqcModule):
                 with open(service_info_path) as fh:
                     d.update(json.load(fh))
 
+            workflow_metadata_path = os.path.join(f["root"], "workflow-metadata.json")
+            if os.path.isfile(workflow_metadata_path):
+                with open(workflow_metadata_path) as fh:
+                    d.update(json.load(fh))
+
             d = self._parse_data(d)
             if d:
                 self.add_data_source(f, s_name=d["id_repository"])
@@ -98,6 +107,18 @@ class MultiqcModule(BaseMultiqcModule):
                     self.add_data_source(source=load_path, s_name=d["id_repository"])
                 if os.path.isfile(service_info_path):
                     self.add_data_source(source=service_info_path, s_name=d["id_repository"])
+
+        # Figure out the org/workspace and save as a separate field
+        # Needed so that we can have it as a separate column in the table
+        for d in data_by_run.values():
+            runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
+            if d["runUrl"]:
+                m = runUrl_re.search(d["runUrl"])
+                if m:
+                    org, workspace, run = m.groups()
+                    d["org"] = org
+                    d["workspace"] = workspace
+                    d["org_workspace"] = f"{org}/{workspace}"
 
         # Filter to strip out ignored sample names
         data_by_run = self.ignore_samples(data_by_run)
@@ -116,6 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = [
             # workflow.json
             "id",
+            "runUrl",
             "repository",
             "start",
             "complete",
@@ -149,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
         # parse them with a library, take the difference "complete" - "start" to get the
         # wall time, and convert the wall time it to a human-readable format.
-        if "start" in d and "complete" in d:
+        if "start" in d and "complete" in d and d["complete"] is not None:
             start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
             complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
             wall_time = complete - start
@@ -182,13 +204,29 @@ class MultiqcModule(BaseMultiqcModule):
             {v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(seqera_versions + nextflow_versions)
         ]
         repositories = list(set(d.get("repository") for d in data_by_run.values()))
+
+        def format_runUrl(x):
+            runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
+            if x:
+                m = runUrl_re.search(x)
+                if m:
+                    org, workspace, run = m.groups()
+                    return f'<a href="{x}" style="white-space: nowrap;" target="_blank">{run}</a>'
+            return str(x)
+
         headers = {
+            "runUrl": {"title": "Run ID", "description": "Workflow run ID", "scale": False, "format": format_runUrl},
+            "org_workspace": {
+                "title": "Workspace",
+                "description": "Organisation and workspace",
+                "scale": False,
+            },
             "repository": {
                 "title": "Repository",
                 "description": "Name of the repository",
                 "scale": "Accent",
                 "modify": lambda x: repositories.index(x),
-                "format": lambda x: f'<a href="{repositories[x]}">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
+                "format": lambda x: f'<a href="{repositories[x]}" style="white-space: nowrap;">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>',
             },
             "revision": {
                 "title": "Version",
