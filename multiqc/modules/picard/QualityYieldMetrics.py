@@ -34,7 +34,7 @@ def parse_reports(module):
     expected_header = list(DESC.keys())
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/quality_yield_metrics", filehandles=True):
+    for f in module.find_log_files("picard/quality_yield_metrics", filehandles=True):
         # Sample name from input file name by default.
         s_name = f["s_name"]
 
@@ -84,8 +84,8 @@ def parse_reports(module):
     # Add to the general stats table
     headers = {
         "TOTAL_READS": {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "The total number of reads in the input file ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Reads",
+            "description": f"The total number of reads in the input file ({config.read_count_desc})",
             "modify": lambda x: x * config.read_count_multiplier,
             "scale": "Blues",
             "shared_key": "read_count",

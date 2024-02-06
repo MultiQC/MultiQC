@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse MultiVCFAnalyzer JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse MultiVCFAnalyzer JSON: '{f['fn']}'")
             return
 
         version = data.get("metadata", {}).get("version", None)
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, metrics in data.get("metrics", {}).items():
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
 
             if version is not None:
                 self.add_software_version(version, s_clean)
@@ -122,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             "SNP Calls (all)": {
                 "title": "SNPs",
                 "description": "Total number of non-reference calls",
-                "scale": "RdGn",
+                "scale": "RdBu",
                 "shared_key": "snp_call",
                 "format": "{:,.0f}",
             },

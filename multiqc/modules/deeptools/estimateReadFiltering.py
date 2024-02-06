@@ -16,7 +16,7 @@ class EstimateReadFilteringMixin:
             parsed_data = self.parse_estimate_read_filtering_file(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_estimateReadFiltering:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_estimateReadFiltering[k] = v
 
             if len(parsed_data) > 0:
@@ -124,7 +124,10 @@ class EstimateReadFilteringMixin:
                 "pct_Strand_Filtered": 100.0 * v["strand"] / float(v["total"]),
             }
 
-        config = {"namespace": "deepTools bamPEFragmentSize"}
+        config = {
+            "namespace": "deepTools bamPEFragmentSize",
+            "id": "deeptools_estimate_read_filtering_table",
+        }
         self.add_section(
             name="Filtering metrics",
             anchor="estimateReadFiltering",
@@ -154,7 +157,7 @@ class EstimateReadFilteringMixin:
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
-                log.debug("Replacing duplicate sample {}.".format(s_name))
+                log.debug(f"Replacing duplicate sample {s_name}.")
             d[s_name] = dict()
 
             try:

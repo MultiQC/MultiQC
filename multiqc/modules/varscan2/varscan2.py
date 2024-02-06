@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Found reports or not?
-        log.info("Found {} reports".format(len(self.varscan2_data)))
+        log.info(f"Found {len(self.varscan2_data)} reports")
 
         # Basic Stats Table
         self.varscan2_general_stats_table()
@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "SNPs",
                 "description": "Total number of SNPs detected",
                 "min": 0,
-                "scale": "BrBg",
+                "scale": "BrBG",
                 "format": "{:,.0f}",
                 "shared_key": "snps",
                 "hidden": True,
@@ -165,7 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "INDELs",
                 "description": "Total number of INDELs detected",
                 "min": 0,
-                "scale": "BrBg",
+                "scale": "BrBG",
                 "format": "{:,.0f}",
                 "shared_key": "indels",
                 "hidden": True,
@@ -174,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Variants",
                 "description": "Total number of variants detected",
                 "min": 0,
-                "scale": "BrBg",
+                "scale": "BrBG",
                 "format": "{:,.0f}",
                 "shared_key": "variants",
                 "hidden": True,
@@ -189,8 +189,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "bases_in_pileup": {
-                "title": "{} Bases in Pileup".format(config.base_count_prefix),
-                "description": "Number of bases in pileup input for VarScan2 ()".format(),
+                "title": f"{config.base_count_prefix} Bases in Pileup",
+                "description": "Number of bases in pileup input for VarScan2 ()",
                 "scale": "Greens",
                 "modify": lambda x: x * config.base_count_multiplier,
                 "shared_key": "base_count",

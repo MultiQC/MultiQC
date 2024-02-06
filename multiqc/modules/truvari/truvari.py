@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """ MultiQC module to parse output from truvari """
-from __future__ import print_function
-
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -34,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
         # Call submodule functions
         n["bench"] = self.parse_bench_stats()
         if n["bench"] > 0:
-            log.info("Found {} truvari bench reports".format(n["bench"]))
+            log.info(f"Found {n['bench']} truvari bench reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

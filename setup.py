@@ -23,8 +23,8 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.18dev"
-dl_version = "master" if "dev" in version else "v{}".format(version)
+version = "1.20dev"
+dl_version = "main" if "dev" in version else f"v{version}"
 
 print(
     f"""-----------------------------------
@@ -43,7 +43,7 @@ setup(
     long_description=__doc__,
     keywords=["bioinformatics", "biology", "sequencing", "NGS", "next generation sequencing", "quality control"],
     url="http://multiqc.info",
-    download_url="https://github.com/ewels/MultiQC/tarball/{}".format(dl_version),
+    download_url=f"https://github.com/MultiQC/MultiQC/tarball/{dl_version}",
     license="GPLv3",
     packages=find_packages(),
     include_package_data=True,
@@ -54,7 +54,6 @@ setup(
         "numpy",
         "click",
         "coloredlogs",
-        "future>0.14.0",
         "jinja2>=3.0.0",
         "markdown",
         "packaging",
@@ -76,6 +75,7 @@ setup(
             "afterqc = multiqc.modules.afterqc:MultiqcModule",
             "anglerfish = multiqc.modules.anglerfish:MultiqcModule",
             "bakta = multiqc.modules.bakta:MultiqcModule",
+            "bamdst = multiqc.modules.bamdst:MultiqcModule",
             "bamtools = multiqc.modules.bamtools:MultiqcModule",
             "bbduk = multiqc.modules.bbduk:MultiqcModule",
             "bbmap = multiqc.modules.bbmap:MultiqcModule",
@@ -145,6 +145,8 @@ setup(
             "macs2 = multiqc.modules.macs2:MultiqcModule",
             "malt = multiqc.modules.malt:MultiqcModule",
             "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
+            "megahit = multiqc.modules.megahit:MultiqcModule",
+            "metaphlan = multiqc.modules.metaphlan:MultiqcModule",
             "methylQA = multiqc.modules.methylQA:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
@@ -186,6 +188,7 @@ setup(
             "samtools = multiqc.modules.samtools:MultiqcModule",
             "sargasso = multiqc.modules.sargasso:MultiqcModule",
             "seqyclean = multiqc.modules.seqyclean:MultiqcModule",
+            "seqwho = multiqc.modules.seqwho:MultiqcModule",
             "sexdeterrmine = multiqc.modules.sexdeterrmine:MultiqcModule",
             "sickle = multiqc.modules.sickle:MultiqcModule",
             "skewer = multiqc.modules.skewer:MultiqcModule",
@@ -210,6 +213,7 @@ setup(
             "verifybamid = multiqc.modules.verifybamid:MultiqcModule",
             "whatshap = multiqc.modules.whatshap:MultiqcModule",
             "xenome = multiqc.modules.xenome:MultiqcModule",
+            "xengsort = multiqc.modules.xengsort:MultiqcModule",
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",

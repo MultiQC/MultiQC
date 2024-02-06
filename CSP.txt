@@ -2,6 +2,10 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.19
+    'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # jquery.tablesorter.min.js
+    'sha256-/C57+E7g4T7gJpkhM4cBNKuHqniEVV8thOcQDOUy640=' # multiqc/templates/default/assets/js/multiqc_plotting.js
+
     # 1.18
     'sha256-aY1YMeLr1IxkwxjBe0x60QzbuT4u5Mh/QC6brcAN9Do=' # multiqc/templates/default/assets/js/multiqc_tables.js
 

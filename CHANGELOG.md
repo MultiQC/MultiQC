@@ -1,24 +1,128 @@
 # MultiQC Version History
 
-## MultiQC v1.18dev
-
-Highlights:
-
-- Picard module refactored and better generalized for other Picard-based software, like Sentieon and Parabricks. Consequently, the standalone Sentieon module was removed. Sentieon QC files will be interpreted directly as Picard QC files. If you were using the Sentieon module in your pipelines, make sure to update any places that reference the module name:
-  - MultiQC command line (e.g. replace `--module sentieon` with `--module picard`).
-  - MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`).
-  - Downstream code that relies on names of the files in `multiqc_data` or `multiqc_plots` saves (e.g., `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`).
-  - Code that parses data files like `multiqc_data/multiqc_data.json`.
-  - Custom plugins and templates that rely on HTML anchors (e.g. `#sentieon_aligned_reads` becomes `#picard_AlignmentSummaryMetrics`).
-  - Also, note that Picard fetches sample names from the commands it finds inside the QC headers (e.g. `# net.sf.picard.analysis.CollectMultipleMetrics INPUT=Szabo_160930_SN583_0215_AC9H20ACXX.bam ...` -> `Szabo_160930_SN583_0215_AC9H20ACXX`), whereas the removed Sentieon module prioritized the QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
+## MultiQC v1.20dev
 
 ### MultiQC updates
 
-- Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
+- Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
+- Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
+- Seqera CLI: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
+- Fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
+- BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
+- Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
+- Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
+- Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
+- Unicode file reading errors: attempt to skip non-unicode characters ([#2275](https://github.com/MultiQC/MultiQC/pull/2275))
+- Heatmap: check if value is numeric when calculating min and max ([#2276](https://github.com/MultiQC/MultiQC/pull/2276))
+- Add `filesearch_file_shared` config option, remove unnecessary per-module `shared` flags in search patterns ([#2227](https://github.com/ewels/MultiQC/pull/2227))
+- Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
+- Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
+- Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
+- Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
+
+### New modules
+
+- [**Bamdst**](https://https://github.com/shiquan/bamdst) ([#2161](https://github.com/MultiQC/MultiQC/pull/2161))
+  - Bamdst is a lightweight tool to stat the depth coverage of target regions of bam file(s).
+- [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
+  - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
+- [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
+  - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
+- [**Parse Biosciences**](https://www.parsebiosciences.com/) ([#2180](https://github.com/ewels/MultiQC/pull/2180))
+  - Parse Biosciences provides single cell RNA-Seq pipelines
+
+### Module updates
+
+- **Bcftools**: order variant depths plot categories ([#2289](https://github.com/MultiQC/MultiQC/pull/2289))
+- **Bcftools**: add missing `self.ignore_samples` in stats ([#2288](https://github.com/MultiQC/MultiQC/pull/2288))
+- **BCLConvert**: Add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
+- **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
+- **Cutadapt**: support JSON format ([#2281](https://github.com/MultiQC/MultiQC/pull/2281))
+- **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
+- **HUMID**: Add cluster statistics ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
+- **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
+- **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
+- **QualiMap**: address NBSP as thousand separators ([#2282](https://github.com/MultiQC/MultiQC/pull/2282))
+- **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
+
+## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
+
+### MultiQC updates
+
+- Add missing table `id` in DRAGEN modules, and require `id` in plot configs in strict mode ([#2228](https://github.com/ewels/MultiQC/pull/2228))
+- Config `table_columns_visible` and `table_columns_name`: support flat config and `table_id` as a group ([#2191](https://github.com/ewels/MultiQC/pull/2191))
+- Add `sort_samples: false` config option for bar graphs ([#2210](https://github.com/ewels/MultiQC/pull/2210))
+- Upgrade the jQuery tablesorter plugin to v2 ([#1666](https://github.com/ewels/MultiQC/pull/1666))
+- Refactor pre-Python-3.6 code, prefer f-strings over `.format()` calls ([#2224](https://github.com/ewels/MultiQC/pull/2224))
+- Allow specifying default sort columns for tables with `defaultsort` ([#1667](https://github.com/ewels/MultiQC/pull/1667))
+- Create CODE_OF_CONDUCT.md ([#2195](https://github.com/ewels/MultiQC/pull/2195))
+- Add `.cram` to sample name cleaning defaults ([#2209](https://github.com/ewels/MultiQC/pull/2209))
+
+### MultiQC bug fixes
+
+- Re-add `run` into the `multiqc` namespace ([#2202](https://github.com/ewels/MultiQC/pull/2202))
+- Fix the `"square": True` flag to scatter plot to actually make the plot square ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- Fix running with the `--no-report` flag ([#2212](https://github.com/ewels/MultiQC/pull/2212))
+- Fix guessing custom content plot type: do not assume first row of a bar plot data are sample names ([#2208](https://github.com/ewels/MultiQC/pull/2208))
+- Fix detection of changed specific module in Changelog CI ([#2234](https://github.com/ewels/MultiQC/pull/2234))
+
+### Module updates
+
+- **BCLConvert**: fix mean quality, fix count-per-lane bar plot ([#2197](https://github.com/ewels/MultiQC/pull/2197))
+- **deepTools**: handle missing data in `plotProfile` ([#2229](https://github.com/ewels/MultiQC/pull/2229))
+- **Fastp**: search content instead of file name ([#2213](https://github.com/ewels/MultiQC/pull/2213))
+- **GATK**: square the `BaseRecalibrator` scatter plot ([#2189](https://github.com/ewels/MultiQC/pull/2189))
+- **HiC-Pro**: add missing search patterns and better handling of missing data ([#2233](https://github.com/ewels/MultiQC/pull/2233))
+- **Kraken**: fix `UnboundLocalError` ([#2230](https://github.com/ewels/MultiQC/pull/2230))
+- **Kraken**: fixed column keys in genstats ([#2205](https://github.com/ewels/MultiQC/pull/2205))
+- **QualiMap**: fix `BamQC` for global-only stats ([#2207](https://github.com/ewels/MultiQC/pull/2207))
+- **Picard**: add more search patterns for `MarkDuplicates`, including `MarkDuplicatesSpark` ([#2226](https://github.com/ewels/MultiQC/pull/2226))
+- **Salmon**: add `library_types`, `compatible_fragment_ratio`, `strand_mapping_bias` to the general stats table ([#1485](https://github.com/ewels/MultiQC/pull/1485))
+
+## [MultiQC v1.18](https://github.com/ewels/MultiQC/releases/tag/v1.18) - 2023-11-17
+
+### Highlights
+
+#### Better configs
+
+As of this release, you can now set all of your config variables via environment variables! (see [docs](https://multiqc.info/docs/getting_started/config/#config-with-environment-variables)).
+
+Better still, YAML config files can now use string interpolation to parse environment variables within strings (see [docs](https://multiqc.info/docs/getting_started/config/#referencing-environment-variables-in-yaml-configs)), eg:
+
+```yaml
+report_header_info:
+  - Contact E-mail: !ENV "${NAME:info}@${DOMAIN:example.com}"
+```
+
+#### Picard refactoring
+
+In this release, there was a significant refactoring of the Picard module.
+It has been generalized for better code sharing with other Picard-based software, like Sentieon and Parabricks.
+As a result of this, the standalone Sentieon module was removed: Sentieon QC files will be interpreted directly as Picard QC files.
+
+If you were using the Sentieon module in your pipelines, make sure to update any places that reference the module name:
+
+- MultiQC command line (e.g. replace `--module sentieon` with `--module picard`).
+- MultiQC configs (e.g. replace `sentieon` with `picard` in options like `run_modules`, `exclude_modules`, `module_order`).
+- Downstream code that relies on names of the files in `multiqc_data` or `multiqc_plots` saves (e.g., `multiqc_data/multiqc_sentieon_AlignmentSummaryMetrics.txt` becomes `multiqc_data/multiqc_picard_AlignmentSummaryMetrics.txt`).
+- Code that parses data files like `multiqc_data/multiqc_data.json`.
+- Custom plugins and templates that rely on HTML anchors (e.g. `#sentieon_aligned_reads` becomes `#picard_AlignmentSummaryMetrics`).
+- Also, note that Picard fetches sample names from the commands it finds inside the QC headers (e.g. `# net.sf.picard.analysis.CollectMultipleMetrics INPUT=Szabo_160930_SN583_0215_AC9H20ACXX.bam ...` -> `Szabo_160930_SN583_0215_AC9H20ACXX`), whereas the removed Sentieon module prioritized the QC file names. To revert to the old Sentieon approach, use the [`use_filename_as_sample_name` config flag](https://multiqc.info/docs/getting_started/config/#using-log-filenames-as-sample-names).
+
+### MultiQC updates
+
+- Config can be set with environment variables, including env var interpolation ([#2178](https://github.com/ewels/MultiQC/pull/2178))
+- Try find config in `~/.config` or `$XDG_CONFIG_HOME` ([#2183](https://github.com/ewels/MultiQC/pull/2183))
+- Better sample name cleaning with pairs of input filenames ([#2181](https://github.com/ewels/MultiQC/pull/2181))
 - Software versions: allow any string as a version tag ([#2166](https://github.com/ewels/MultiQC/pull/2166))
-- Remove position:absolute from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
+- Table columns with non-numeric values and now trigger a linting error if `scale` is set ([#2176](https://github.com/ewels/MultiQC/pull/2176))
+- Stricter config variable typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
+- Remove `position:absolute` CSS from table values ([#2169](https://github.com/ewels/MultiQC/pull/2169))
+- Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
-- Fix logging spillover ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Fix logging spillover bug ([#2174](https://github.com/ewels/MultiQC/pull/2174))
 - Config with environment variables, and config strict typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
 
 ### New Modules
@@ -27,18 +131,21 @@ Highlights:
   - Seqera Platform CLI reports statistics generated by the Seqera Platform CLI.
 - [**Xenome**](https://github.com/data61/gossamer/blob/master/docs/xenome.md) ([#1860](https://github.com/ewels/MultiQC/pull/1860))
   - A tool for classifying reads from xenograft sources.
-- [**Parse Biosciences**](https://www.parsebiosciences.com/) ([#2180](https://github.com/ewels/MultiQC/pull/2180))
-  - Parse Biosciences provides single cell RNA-Seq pipelines
+- [**xengsort**](https://gitlab.com/genomeinformatics/xengsort) ([#2168](https://github.com/ewels/MultiQC/pull/2168))
+  - xengsort is a fast xenograft read sorter based on space-efficient k-mer hashing
 
 ### Module updates
 
 - **fastp**: add version parsing ([#2159](https://github.com/ewels/MultiQC/pull/2159))
-- **fastp**: correctly parse sample name from --in1/--in2 command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
-- **Kaiju**: fix "division by zero" ([#2179](https://github.com/ewels/MultiQC/pull/2179))
-- **Nanostat**: account for both tab and spaces in v1.41+ search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
+- **fastp**: correctly parse sample name from `--in1`/`--in2` in bash command. Prefer file name if not `fastp.json`; fallback to file name when error ([#2139](https://github.com/ewels/MultiQC/pull/2139))
+- **Kaiju**: fix `division by zero` error ([#2179](https://github.com/ewels/MultiQC/pull/2179))
+- **Nanostat**: account for both tab and spaces in `v1.41+` search pattern ([#2155](https://github.com/ewels/MultiQC/pull/2155))
 - **Pangolin**: update for v4: add QC Note , update tool versions columns ([#2157](https://github.com/ewels/MultiQC/pull/2157))
 - **Picard**: Generalize to directly support Sentieon and Parabricks outputs ([#2110](https://github.com/ewels/MultiQC/pull/2110))
-- **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module. Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work, the exported plot and data files will be prefixed as `picard` instead of `sentieon`, etc. Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+- **Sentieon**: Removed the module in favour of directly supporting parsing by the **Picard** module ([#2110](https://github.com/ewels/MultiQC/pull/2110))
+  - Note that any code that relies on the module name needs to be updated, e.g. `-m sentieon` will no longer work
+  - The exported plot and data files will be now be prefixed as `picard` instead of `sentieon`, etc.
+  - Note that the Sentieon module used to fetch the sample names from the file names by default, and now it follows the Picard module's logic, and prioritizes the commands recorded in the logs. To override, use the `use_filename_as_sample_name` config flag
 
 ## [MultiQC v1.17](https://github.com/ewels/MultiQC/releases/tag/v1.17) - 2023-10-17
 
@@ -425,6 +532,8 @@ for more information.
   - Mark duplicate reads from PacBio sequencing of an amplified library
 - [**WhatsHap**](https://whatshap.readthedocs.io)
   - WhatsHap is a software for phasing genomic variants using DNA sequencing reads
+- [**SeqWho**](https://daehwankimlab.github.io/seqwho/)
+  - Tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.
 
 ### Module feature additions
 

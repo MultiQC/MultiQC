@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.sargasso_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.sargasso_files)))
+        log.info(f"Found {len(self.sargasso_files)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                     new_sample_name = self.clean_s_name(new_sample_name, f)
 
                     if new_sample_name in self.sargasso_data.keys():
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {new_sample_name}")
 
                     try:
                         self.sargasso_data[new_sample_name] = dict(zip(items, map(int, v)))
@@ -131,8 +131,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "Assigned-Reads": {
-                "title": "{} Assigned".format(config.read_count_prefix),
-                "description": "Sargasso Assigned reads ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Assigned",
+                "description": f"Sargasso Assigned reads ({config.read_count_desc})",
                 "min": 0,
                 "scale": "PuBu",
                 "modify": lambda x: float(x) * config.read_count_multiplier,

@@ -37,13 +37,13 @@ def read_config():
         cfg["ychr"] = None
 
     if cfg["include_contigs"]:
-        log.debug("Trying to include these contigs in mosdepth: {}".format(", ".join(cfg["include_contigs"])))
+        log.debug(f"Trying to include these contigs in mosdepth: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
-        log.debug("Excluding these contigs from mosdepth: {}".format(", ".join(cfg["exclude_contigs"])))
+        log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
     if cfg["xchr"]:
-        log.debug('Using "{}" as X chromosome name'.format(cfg["xchr"]))
+        log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
     if cfg["ychr"]:
-        log.debug('Using "{}" as Y chromosome name'.format(cfg["ychr"]))
+        log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
     try:
@@ -134,7 +134,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # assume it will override the information collected for "total":
                 if line.startswith("total\t") or line.startswith("total_region\t"):
                     contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                    genstats[s_name]["mean_coverage"] = mean
+                    genstats[s_name]["mean_coverage"] = float(mean)
+                    genstats[s_name]["min_coverage"] = float(min_cov)
+                    genstats[s_name]["max_coverage"] = float(max_cov)
+                    genstats[s_name]["coverage_bases"] = int(bases)
+                    genstats[s_name]["length"] = int(length)
                     self.add_data_source(f, s_name=s_name, section="summary")
 
         # Filter out any samples from --ignore-samples
@@ -320,13 +324,44 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
-        # Add mean coverage to General Stats
-        genstats_headers["mean_coverage"] = {
-            "title": "Mean Cov.",
-            "description": "Mean coverage",
-            "min": 0,
-            "suffix": "X",
-            "scale": "BuPu",
+        # Add mosdepth summary to General Stats
+        genstats_headers = {
+            "mean_coverage": {
+                "title": "Mean Cov.",
+                "description": "Mean coverage",
+                "min": 0,
+                "scale": "BuPu",
+            },
+            "min_coverage": {
+                "title": "Min Cov.",
+                "description": "Minimum coverage",
+                "min": 0,
+                "scale": "BuPu",
+                "hidden": True,
+            },
+            "max_coverage": {
+                "title": "Max Cov.",
+                "description": "Maximum coverage",
+                "min": 0,
+                "scale": "BuPu",
+                "hidden": True,
+            },
+            "coverage_bases": {
+                "title": f"{config.base_count_prefix} Total Coverage Bases",
+                "description": f"Total coverage of bases ({config.base_count_desc})",
+                "min": 0,
+                "shared_key": "base_count",
+                "scale": "Greens",
+                "hidden": True,
+            },
+            "length": {
+                "title": "Genome length",
+                "description": "Total length of the genome",
+                "min": 0,
+                "scale": "Greys",
+                "format": "{:,d}",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(genstats, genstats_headers)
 
@@ -511,15 +546,15 @@ def get_cov_thresholds():
         assert isinstance(threshs, list)
         assert len(threshs) > 0
         threshs = [int(t) for t in threshs]
-        log.debug("Custom coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
+        log.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in threshs])}")
     except (KeyError, AttributeError, TypeError, AssertionError):
         threshs = [1, 5, 10, 30, 50]
-        log.debug("Using default coverage thresholds: {}".format(", ".join([str(t) for t in threshs])))
+        log.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in threshs])}")
 
     try:
         hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
         assert isinstance(hidden_threshs, list)
-        log.debug("Hiding coverage thresholds: {}".format(", ".join([str(t) for t in hidden_threshs])))
+        log.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_threshs])}")
     except (KeyError, AttributeError, TypeError, AssertionError):
         hidden_threshs = [t for t in threshs if t != 30]
 

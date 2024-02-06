@@ -58,7 +58,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
         # append the data
         if sample_data:
             if s_name in all_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
             all_data[s_name] = sample_data
 
             module.add_data_source(f, s_name, section="Histogram")

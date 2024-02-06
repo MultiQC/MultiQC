@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
         if num_results_found == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(num_results_found))
+        log.info(f"Found {num_results_found} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -139,7 +139,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             sample_name = self.clean_s_name(row.get("File"), found_file)
             if sample_name in sample_dict:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(sample_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {sample_name}")
 
             sample_dict[sample_name] = row
             self.add_data_source(f=found_file, s_name=sample_name)
@@ -165,6 +165,7 @@ class MultiqcModule(BaseMultiqcModule):
             "predicted": {
                 "title": "Strandedness",
                 "description": "Predicted strandedness from ngsderive",
+                "scale": False,
             }
         }
         self.general_stats_addcols(data, headers)
@@ -193,7 +194,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.instrument, "ngsderive_instrument")
 
-        bgcols = {"low confidence": "#f8d7da", "medium confidence": "#fff3cd", "high confidence": "#d1e7dd"}
+        bgcols = {
+            "low confidence": "#f8d7da",
+            "medium confidence": "#fff3cd",
+            "high confidence": "#d1e7dd",
+        }
         cond_formatting_rules = {
             "pass": [{"s_eq": "high confidence"}],
             "warn": [{"s_eq": "medium confidence"}],
@@ -257,6 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "ngsderive_instruments_plot",
             "title": "ngsderive: Instruments",
+            "scale": False,
         }
 
         self.add_section(

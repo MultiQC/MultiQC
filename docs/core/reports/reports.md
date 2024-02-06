@@ -14,7 +14,7 @@ line, or double clicking the file in a file browser.
 
 MultiQC reports should work in any modern browser. They have been tested
 using OSX Chrome, Firefox and Safari. If you find any report bugs, please
-report them as a [GitHub issue](https://github.com/ewels/MultiQC/issues).
+report them as a [GitHub issue](https://github.com/MultiQC/MultiQC/issues).
 
 ## Report layout
 

@@ -518,8 +518,8 @@ headers = {
         'format': '{:,.0f}' # No decimal places please
     },
     "aligned": {
-        'title': '{} Aligned'.format(config.read_count_prefix),
-        'description': 'Aligned Reads ({})'.format(config.read_count_desc),
+        'title': f'{config.read_count_prefix} Aligned',
+        'description': f'Aligned Reads ({config.read_count_desc})',
         'shared_key': 'read_count',
         'modify': lambda x: x * config.read_count_multiplier
     },
@@ -636,6 +636,28 @@ headers[tablecol] = {
     ]
 }
 ```
+
+### Specifying sorting of columns
+
+By default, each table is sorted by sample name alphabetically. You can override the
+sorting order using the `defaultsort` option. Here is an example:
+
+```yaml
+custom_plot_config:
+  general_stats_table:
+    defaultsort:
+      - column: "Mean Insert Length"
+        direction: asc
+      - column: "Starting Amount (ng)"
+  quast_table:
+    defaultsort:
+      - column: "Largest contig"
+```
+
+In this case, the general stats table will be sorted by "Mean Insert Length" first,
+in ascending order, then by "Starting Amount (ng)", in descending (default) order. The
+table with the ID `quast_table` (which you can find by clicking the "Configure Columns"
+button above the table in the report) will be sorted by "Largest contig".
 
 ## Beeswarm plots (dot plots)
 
@@ -835,7 +857,7 @@ Data and configuration must be added to the document level
 `mqc_plots` variable on page load, using the target as the key.
 The variables used are as follows:
 
-```javascript
+```js
 mqc_plots[target]["plot_type"] = "bar_graph";
 mqc_plots[target]["config"];
 mqc_plots[target]["datasets"];
@@ -844,7 +866,7 @@ mqc_plots[target]["samples"];
 
 All available config options with default vars:
 
-```javascript
+```js
 config = {
   title: undefined, // Plot title
   xlab: undefined, // X axis label
@@ -860,6 +882,7 @@ config = {
   cursor: undefined, // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
   tt_percentages: true, // Show the percentages of each count in the tooltip
   reversedStacks: false, // Reverse the order of the categories in the stack.
+  sort_samples: true, // Sort samples alphanumerically
 };
 ```
 

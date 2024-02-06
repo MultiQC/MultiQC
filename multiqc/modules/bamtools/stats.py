@@ -49,7 +49,7 @@ def parse_reports(self):
 
         if len(d) > 0:
             if f["s_name"] in self.bamtools_stats_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f, section="stats")
             self.bamtools_stats_data[f["s_name"]] = d
 
@@ -106,7 +106,11 @@ def parse_reports(self):
     keys["bt_read_2"] = dict(num_defaults, **{"title": "Read 2", "description": "Read 2 (millions)"})
     keys["singletons_pct"] = dict(defaults, **{"title": "Singletons"})
 
-    self.add_section(name="Bamtools Stats", anchor="bamtools-stats", plot=beeswarm.plot(self.bamtools_stats_data, keys))
+    self.add_section(
+        name="Bamtools Stats",
+        anchor="bamtools-stats",
+        plot=beeswarm.plot(self.bamtools_stats_data, keys, pconfig={"id": "bamtools-stats-plot"}),
+    )
 
     # Return number of samples found
     return len(self.bamtools_stats_data)

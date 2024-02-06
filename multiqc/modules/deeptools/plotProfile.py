@@ -16,7 +16,7 @@ class plotProfileMixin:
             parsed_data, bin_labels, converted_bin_labels = self.parsePlotProfileData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotProfile:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotProfile[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotProfile")
@@ -115,6 +115,7 @@ class plotProfileMixin:
         d = dict()
         bin_labels = []
         bins = []
+        converted_bin_labels = []
         for line in f["f"].splitlines():
             cols = line.rstrip().split("\t")
             if cols[0] == "bin labels":
@@ -148,6 +149,11 @@ class plotProfileMixin:
                     converted_bin_labels = bins
 
                 for i in bins:
-                    d[s_name].update({converted_bin_labels[i - 1]: float(cols[i + 1])})
+                    v = cols[i + 1]
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        v = None
+                    d[s_name].update({converted_bin_labels[i - 1]: v})
 
         return d, bin_labels, converted_bin_labels

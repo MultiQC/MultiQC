@@ -16,7 +16,7 @@ class PlotEnrichmentMixin:
             parsed_data = self.parsePlotEnrichment(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotEnrichment:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotEnrichment[k] = v
 
             if len(parsed_data) > 0:
@@ -84,7 +84,7 @@ class PlotEnrichmentMixin:
                 d[s_name] = dict()
             cols[1] = str(cols[1])
             if cols[1] in d[s_name]:
-                log.warning("Replacing duplicate sample:featureType {}:{}.".format(s_name, cols[1]))
+                log.warning(f"Replacing duplicate sample:featureType {s_name}:{cols[1]}.")
             d[s_name][cols[1]] = dict()
 
             try:

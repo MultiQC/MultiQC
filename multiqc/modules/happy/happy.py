@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # print number of happy reports found and parsed
-        log.info("Found {} reports".format(len(self.happy_raw_sample_names)))
+        log.info(f"Found {len(self.happy_raw_sample_names)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -53,7 +53,11 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             """,
-            plot=table.plot(self.happy_indel_data, self.gen_headers("_indel")),
+            plot=table.plot(
+                self.happy_indel_data,
+                self.gen_headers("_indel"),
+                pconfig={"id": "happy_indel_plot"},
+            ),
         )
 
         self.add_section(
@@ -65,7 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Ideally, precision, recall and F1 Score should all be as close to 1 as possible.
             """,
-            plot=table.plot(self.happy_snp_data, self.gen_headers("_snp")),
+            plot=table.plot(
+                self.happy_snp_data,
+                self.gen_headers("_snp"),
+                pconfig={"id": "happy_snp_plot"},
+            ),
         )
 
     def parse_file(self, f):
@@ -74,12 +82,12 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         if f["s_name"] in self.happy_raw_sample_names:
-            log.warning("Duplicate sample name found in {}! Overwriting: {}".format(f["root"], f["s_name"]))
+            log.warning(f"Duplicate sample name found in {f['root']}! Overwriting: {f['s_name']}")
         self.happy_raw_sample_names.add(f["s_name"])
 
-        rdr = csv.DictReader(f["f"])
+        rdr: csv.DictReader = csv.DictReader(f["f"])
         for row in rdr:
-            row_id = "{}_{}_{}".format(f["s_name"], row["Type"], row["Filter"])
+            row_id = f"{f['s_name']}_{row['Type']}_{row['Filter']}"
             if row["Type"] == "INDEL":
                 if row_id not in self.happy_indel_data:
                     self.happy_indel_data[row_id] = {"sample_id": f["s_name"]}

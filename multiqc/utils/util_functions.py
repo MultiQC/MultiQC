@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import time
+import datetime
 
 import yaml
 
@@ -28,11 +29,11 @@ def robust_rmtree(path, logger=None, max_retries=10):
             return
         except OSError:
             if logger:
-                logger.info("Unable to remove path: {}".format(path))
-                logger.info("Retrying after {} seconds".format(i**2))
+                logger.info(f"Unable to remove path: {path}")
+                logger.info(f"Retrying after {i**2} seconds")
             else:
-                print("Unable to remove path: {}".format(path), file=sys.stderr)
-                print("Retrying after {} seconds".format(i**2), file=sys.stderr)
+                print(f"Unable to remove path: {path}", file=sys.stderr)
+                print(f"Retrying after {i**2} seconds", file=sys.stderr)
             time.sleep(i**2)
 
     # Final attempt, pass any Exceptions up to caller.
@@ -97,7 +98,7 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
                 config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
 
         # Add relevant file extension to filename, save file.
-        fn = "{}.{}".format(fn, config.data_format_extensions[data_format])
+        fn = f"{fn}.{config.data_format_extensions[data_format]}"
         with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
             if data_format == "json":
                 jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
@@ -107,29 +108,6 @@ def write_data_file(data, fn, sort_cols=False, data_format=None):
             else:
                 # Default - tab separated output
                 print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
-
-
-def view_all_tags(ctx, param, value):
-    """List available tags and associated modules
-    Called by eager click option: --view-tags
-    """
-    # To make sure this function executed only when the flag was called
-    if not value or ctx.resilient_parsing:
-        return
-    avail_tags = dict()
-    print("\nMultiQC Available module tag groups:\n")
-    for mod_dict in filter(lambda mod: isinstance(mod, dict), config.module_order):
-        mod_key, mod_val = list(mod_dict.items())[0]
-        tags = list(mod_val.get("module_tag", []))
-        for t in tags:
-            if t not in avail_tags:
-                avail_tags[t] = []
-            avail_tags[t].append(mod_key)
-    for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print(" - {}:".format(t))
-        for ttgs in avail_tags[t]:
-            print("   - {}".format(ttgs))
-    ctx.exit()
 
 
 def force_term_colors():
@@ -160,4 +138,26 @@ def strtobool(val) -> bool:
     elif val in ("n", "no", "f", "false", "off", "0"):
         return False
     else:
-        raise ValueError("invalid truth value %r" % (val,))
+        raise ValueError(f"invalid truth value {val!r}")
+
+
+def choose_emoji():
+    """Choose an emoji to use in the report header."""
+    # NB: We haven't parsed the config yet, so can't disable via config
+    today = datetime.date.today()
+    emojis = {
+        "bottle_with_popping_cork": (1, 1, 1, 5),  # New Year's Day
+        "rose": (2, 14, 0, 0),  # Valentine's Day
+        "four_leaf_clover": (3, 17, 0, 0),  # St Patrick's Day
+        "globe_showing_asia-australia": (4, 22, 0, 0),  # Earth Day
+        "jack-o-lantern": (10, 31, 5, 0),  # Halloween
+        "santa": (12, 25, 0, 0),  # Christmas Day
+        "christmas_tree": (12, 25, 7, 7),  # Christmas
+    }
+    for emoji, (month, day, days_before, days_after) in emojis.items():
+        special_date = datetime.date(today.year, month, day)
+        date_range_start = special_date - datetime.timedelta(days=days_before)
+        date_range_end = special_date + datetime.timedelta(days=days_after)
+        if date_range_start <= today <= date_range_end:
+            return emoji
+    return "mag"

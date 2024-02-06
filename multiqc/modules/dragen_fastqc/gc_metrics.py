@@ -36,7 +36,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
 
                 # First figure out the baseline
                 max_len = 0
@@ -105,7 +105,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         data = dict()
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
 
                 for key, value in self.dragen_fastqc_data[s_name][mate][GROUP].items():
@@ -157,7 +157,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = defaultdict(float)
                 for metric, value in self.dragen_fastqc_data[s_name][mate][GC_GROUP].items():
                     pct = percentage_from_content_metric(metric)
@@ -180,7 +180,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
-                "scale": "Set1",
+                "scale": "PuRd",
                 "format": "{:,.0f}",
             }
         }

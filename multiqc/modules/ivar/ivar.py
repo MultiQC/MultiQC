@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Log number of reports
-        log.info("Found {} reports".format(num_samples))
+        log.info(f"Found {num_samples} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if parsed_data is not None and len(parsed_data) > 0:
             if f["s_name"] in self.ivar_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ivar_data[f["s_name"]] = parsed_data
             self.add_data_source(f, section="trimming")
 
@@ -102,7 +102,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             "reads_too_short_after_trimming": {
-                "title": "{} Too short".format(config.read_count_prefix),
+                "title": f"{config.read_count_prefix} Too short",
                 "description": "Number of reads too short (<30bp) after primer trimming ({})".format(
                     config.read_count_desc
                 ),
@@ -111,14 +111,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "reads_outside_primer_region": {
-                "title": "{} Outside primer".format(config.read_count_prefix),
-                "description": "Number of reads outside the primer region ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Outside primer",
+                "description": f"Number of reads outside the primer region ({config.read_count_desc})",
                 "scale": "YlOrBr",
                 "shared_key": "read_counts",
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "trimmed_reads": {
-                "title": "{} Primer trimmed".format(config.read_count_prefix),
+                "title": f"{config.read_count_prefix} Primer trimmed",
                 "description": "Total number of reads where primer trimming was performed. ({})".format(
                     config.read_count_desc
                 ),
@@ -127,8 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
             },
             "mapped_reads": {
-                "title": "{} Mapped".format(config.read_count_prefix),
-                "description": "Total number of mapped reads in iVar input. ({})".format(config.read_count_desc),
+                "title": f"{config.read_count_prefix} Mapped",
+                "description": f"Total number of mapped reads in iVar input. ({config.read_count_desc})",
                 "scale": "PuBu",
                 "shared_key": "read_counts",
                 "modify": lambda x: x * config.read_count_multiplier,
