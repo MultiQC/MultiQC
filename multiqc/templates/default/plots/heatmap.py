@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset, split_long_string
+from .plot import Plot, PlotType, BaseDataset, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
