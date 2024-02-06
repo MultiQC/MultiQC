@@ -66,6 +66,7 @@ setup(
         "importlib-metadata",
         "humanize",
         "pyaml-env",
+        "kaleido",
     ],
     entry_points={
         "console_scripts": [
