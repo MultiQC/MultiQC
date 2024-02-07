@@ -118,7 +118,6 @@ class HeatmapPlot(Plot):
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
         num_rows = len(ycats)
         num_cols = len(xcats)
-        MIN_SIZE = 300
         MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
@@ -134,39 +133,47 @@ class HeatmapPlot(Plot):
                 return 26
             if n >= 15:
                 return 30
+            if n >= 10:
+                return 35
+            if n >= 5:
+                return 40
+            if n >= 3:
+                return 50
+            return 80
 
-        x_px_per_elem = n_elements_to_size(num_cols) or MIN_SIZE / num_cols
-        y_px_per_elem = n_elements_to_size(num_rows) or MIN_SIZE / num_rows
-        px_per_elem = min(x_px_per_elem, y_px_per_elem)
-        if px_per_elem and px_per_elem <= 18:
+        x_px_per_elem = n_elements_to_size(num_cols)
+        y_px_per_elem = n_elements_to_size(num_rows)
+        min_px_per_elem = min(x_px_per_elem, y_px_per_elem)
+        if self.square:
+            x_px_per_elem = y_px_per_elem = min_px_per_elem
+        if min_px_per_elem <= 18:
             font_size = 10
-        if px_per_elem and px_per_elem <= 13:
+        if min_px_per_elem <= 13:
             font_size = 8
 
-        height = num_rows * px_per_elem
-        width = num_cols * px_per_elem
+        width = pconfig.get("width") or int(num_cols * x_px_per_elem)
+        height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
-        if width < MIN_SIZE and height < MIN_SIZE:
-            logger.debug(f"Resizing from {width}x{height} to fit the minimum size {MIN_SIZE}")
-            px_per_elem = MIN_SIZE / max(num_rows, num_cols)
-            width = num_cols * px_per_elem
-            height = num_rows * px_per_elem
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
-            px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
-            width = num_cols * px_per_elem
-            height = num_rows * px_per_elem
-
-        width = int(width)
-        height = int(height)
-        logger.debug(f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px")
+            if self.square:
+                px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
+                width = height = int(num_rows * px_per_elem)
+            else:
+                x_px_per_elem = MAX_WIDTH / num_cols
+                y_px_per_elem = MAX_HEIGHT / num_rows
+                width = int(num_cols * x_px_per_elem)
+                height = int(num_rows * y_px_per_elem)
+        logger.debug(
+            f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem}x{y_px_per_elem}, font: {font_size}px"
+        )
 
         # For not very large datasets, making sure all ticks are displayed:
-        if height <= MAX_HEIGHT:
+        if y_px_per_elem > 10:
             self.layout.yaxis.tickmode = "array"
             self.layout.yaxis.tickvals = list(range(len(ycats)))
             self.layout.yaxis.ticktext = ycats
-        if width <= MAX_WIDTH:
+        if x_px_per_elem > 30:
             self.layout.xaxis.tickmode = "array"
             self.layout.xaxis.tickvals = list(range(len(xcats)))
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
@@ -178,8 +185,9 @@ class HeatmapPlot(Plot):
             self.layout.xaxis.tickangle = 45
 
         self.layout.font.size = font_size
-        self.layout.height = pconfig.get("height") or (200 + height)
-        self.layout.width = pconfig.get("width") or (200 + width) if self.square else None
+        self.layout.height = 200 + height
+        self.layout.width = (250 + width) if self.square else None
+
         self.layout.xaxis.showgrid = False
         self.layout.yaxis.showgrid = False
         self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
