@@ -36,20 +36,22 @@ class Plot {
     throw new Error("activeDatasetSize() not implemented");
   }
 
-  resize(newHeight) {
+  resize(newHeight, newWidth) {
     if (newHeight === null || newHeight === undefined) {
       console.error("Plot.resize: newHeight is " + newHeight);
       return;
     }
     this.layout.height = newHeight;
     this.layout.autosize = true;
-    if (!this.square) {
-      this.layout.width = null;
-      // Plotly.relayout(this.target, { autosize: true, height: newHeight });
-    } else {
+
+    if (newWidth !== null && newWidth !== undefined) {
+      this.layout.width = newWidth;
+      this.layout.autosize = false;
+    } else if (this.square) {
       // noinspection JSSuspiciousNameCombination
       this.layout.width = newHeight;
-      // Plotly.relayout(this.target, { autosize: true, height: newHeight, width: newHeight });
+    } else {
+      this.layout.width = null;
     }
     Plotly.relayout(this.target, this.layout);
   }

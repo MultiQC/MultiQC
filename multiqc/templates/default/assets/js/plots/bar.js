@@ -34,8 +34,6 @@ class BarPlot extends Plot {
   }
 
   resize(newHeight) {
-    if (newHeight === null || newHeight === undefined) console.error("BarPlot.resize: newHeight is " + newHeight);
-
     this.layout.height = newHeight;
 
     const maxTicks = (this.layout.height - 140) / 12;

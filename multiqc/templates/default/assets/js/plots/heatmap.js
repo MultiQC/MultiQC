@@ -81,14 +81,19 @@ class HeatmapPlot extends Plot {
   }
 
   resize(newHeight) {
-    if (newHeight === null || newHeight === undefined) console.error("BarPlot.resize: newHeight is " + newHeight);
-
     this.layout.height = newHeight;
 
     const maxYTicks = (this.layout.height - 200) / 12;
     this.recalculateTicks(this.filtYCatsSettings, this.layout.yaxis, maxYTicks);
 
-    super.resize(newHeight);
+    let dataset = this.datasets[this.activeDatasetIdx];
+    let xcats = dataset["xcats"];
+    let ycats = dataset["ycats"];
+    let pxPerElem = (newHeight - 200) / ycats.length;
+    let newWidth = null;
+    if (this.square) newWidth = pxPerElem * xcats.length + 250;
+
+    super.resize(newHeight, newWidth);
   }
 }
 
