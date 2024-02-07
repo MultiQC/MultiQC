@@ -112,7 +112,10 @@ def write_data_file(
                 if headers:
                     line = [str(d.get(h, "")) for h in headers]
                 else:
-                    line = [str(item) for item in (d.values() if isinstance(d, dict) else d)]
+                    line = [
+                        str(item)
+                        for item in (d.values() if isinstance(d, dict) else (d if isinstance(d, list) else [d]))
+                    ]
                 if isinstance(data, dict):
                     # Add Sample header as a first element
                     line.insert(0, str(key))
