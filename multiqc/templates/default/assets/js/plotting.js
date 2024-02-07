@@ -54,7 +54,7 @@ class Plot {
     Plotly.relayout(this.target, this.layout);
   }
 
-  buildTraces(layout) {
+  buildTraces() {
     throw new Error("buildTraces() not implemented");
   }
 

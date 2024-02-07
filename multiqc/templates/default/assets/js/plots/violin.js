@@ -76,7 +76,7 @@ class ViolinPlot extends Plot {
   }
 
   // Constructs and returns traces for the Plotly plot
-  buildTraces(layout) {
+  buildTraces() {
     let dataset = this.datasets[this.activeDatasetIdx];
     let [
       metrics,
@@ -99,6 +99,7 @@ class ViolinPlot extends Plot {
     if (outliersWarning)
       $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
 
+    let layout = this.layout;
     layout.height = this.violinHeight * metrics.length + this.extraHeight;
     $("#" + this.target + "-wrapper").css("height", layout.height + "px");
     if (metrics.length === 0) return [];

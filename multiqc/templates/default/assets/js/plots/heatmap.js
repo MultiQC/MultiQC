@@ -42,7 +42,7 @@ class HeatmapPlot extends Plot {
     return [rows, xcats, ycats];
   }
 
-  buildTraces(layout) {
+  buildTraces() {
     let [rows, xcats, ycats] = this.prepData();
     if (rows.length === 0 || xcats.length === 0 || ycats.length === 0) return [];
 
@@ -55,8 +55,6 @@ class HeatmapPlot extends Plot {
       this.recalculateTicks(this.filtXCatsSettings, this.layout.xaxis, maxXTicks);
     }
 
-    let yHighlighted = this.filtYCatsSettings.filter((s) => s.highlight);
-    let xHighlighted = this.filtXCatsSettings.filter((s) => s.highlight);
     let dataset = this.datasets[this.activeDatasetIdx];
     let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
