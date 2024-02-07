@@ -150,7 +150,7 @@ class HeatmapPlot(Plot):
             x_px_per_elem = y_px_per_elem = min_px_per_elem
         if min_px_per_elem <= 18:
             font_size = 10
-        if min_px_per_elem <= 13:
+        if min_px_per_elem <= 12:
             font_size = 8
 
         width = pconfig.get("width") or int(num_cols * x_px_per_elem)
@@ -171,7 +171,7 @@ class HeatmapPlot(Plot):
         )
 
         # For not very large datasets, making sure all ticks are displayed:
-        if y_px_per_elem > 13:
+        if y_px_per_elem > 12:
             self.layout.yaxis.tickmode = "array"
             self.layout.yaxis.tickvals = list(range(len(ycats)))
             self.layout.yaxis.ticktext = ycats

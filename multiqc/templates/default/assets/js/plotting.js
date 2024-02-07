@@ -61,6 +61,72 @@ class Plot {
   afterPlotCreated() {
     // Do nothing
   }
+
+  recalculateTicks(filteredSettings, axis, maxTicks) {
+    // Recalculate tick settings (array or auto; highlight color) for the axis,
+    // based on the desired number of ticks and the sample toolbox settings.
+    function subsample(values, num, start = 0, roundBin = true) {
+      // Take ~`num` samples from values evenly, always include `start`.
+      // If `roundBin` is true, the bins will be rounded to the nearest integer,
+      // so the ticks will be evenly distributed, but the total number of ticks
+      // may be less than `num`.
+
+      if (values.length <= num) return values;
+      if (values.length <= 1) return values;
+      if (num === 0) return [];
+      if (num === 1) return [values[start]];
+
+      let binSize = (values.length - 1) / (num - 1);
+      if (roundBin) binSize = Math.ceil(binSize);
+
+      // Split into two halves: before and after pivot, including pivot into both. This way
+      // we want to make sure pivot is always included in the result.
+      let indices = Array.from({ length: values.length }, (_, i) => i);
+      let after = indices.slice(start);
+      let before = indices.slice(0, start + 1); // including the pivot
+
+      // Stepping forward `binsize` steps, starting from the pivot
+      after = Array.from({ length: after.length }, (_, i) => Math.ceil(binSize * i))
+        .filter((index) => index < after.length)
+        .map((index) => after[index]);
+
+      before.reverse(); // Stepping back starting from the pivot
+      before = Array.from({ length: before.length }, (_, i) => Math.ceil(binSize * i))
+        .filter((index) => index < before.length)
+        .map((index) => before[index]);
+      before.reverse();
+      before = before.slice(0, before.length - 1); // remove the pivot
+
+      indices = before.concat(after);
+      return indices.map((i) => values[i]);
+    }
+
+    let highlighted = filteredSettings.filter((s) => s.highlight);
+    let firstHighlightedSample = this.firstHighlightedSample(filteredSettings);
+
+    if (highlighted.length === 0) {
+      axis.tickmode = null;
+      axis.tickvals = null;
+      axis.ticktext = null;
+    } else {
+      // Have to switch to tickmode=array to set colors to ticks. however, this way plotly will try
+      // to fit _all_ ticks on the screen, and if there are too many, they will overlap. to prevent that,
+      // if there are too many samples, we will show only highlighted samples plus a subsampled number
+      // of ticks, but up to a constant:
+      axis.tickmode = "array";
+      let selected = subsample(filteredSettings, maxTicks, firstHighlightedSample);
+
+      axis.tickvals = selected.map((s) => s.name);
+      axis.ticktext = selected.map((s) => "<span style='color:" + (s.highlight ?? "#ccc") + "'>" + s.name + "</span>");
+    }
+  }
+
+  firstHighlightedSample(sampleSettings) {
+    let index = 0;
+    let highlighted = sampleSettings.filter((s) => s.highlight);
+    if (highlighted.length > 0) index = sampleSettings.findIndex((s) => s.highlight);
+    return index;
+  }
 }
 
 function initPlot(dump) {
@@ -327,7 +393,7 @@ function renderPlot(target) {
     }
   });
 
-  let traces = plot.buildTraces(plot.layout);
+  let traces = plot.buildTraces();
   if (traces.length > 0 && traces[0].constructor === Array) traces = [].concat.apply([], traces); // if list of lists, flatten
   if (traces.length === 0) {
     // All series hidden. Hide the graph.
