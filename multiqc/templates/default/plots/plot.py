@@ -434,14 +434,13 @@ class Plot(ABC):
                     img_buffer.close()
 
         # Now writing the PNGs for the HTML
-
         if config.development:
             # Using file written in the config.export_plots block above
             img_src = Path(config.plots_dir_name) / "png" / f"{uid}.png"
         else:
             img_buffer = io.BytesIO()
             fig.write_image(img_buffer, **write_kwargs)
-            img_buffer = Plot.add_logo(img_buffer, "PNG")
+            img_buffer = Plot.add_logo(img_buffer, format="PNG")
             # Convert to a base64 encoded string
             b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
             img_src = f"data:image/png;base64,{b64_img}"
@@ -458,8 +457,13 @@ class Plot(ABC):
         )
 
     @staticmethod
-    def add_logo(img_buffer: io.BytesIO, format: str) -> io.BytesIO:
-        from PIL import Image, ImageDraw, ImageFont
+    def add_logo(
+        img_buffer: io.BytesIO,
+        format: str = "png",
+        text: str = "Created with MultiQC",
+        font_size: int = 16,
+    ) -> io.BytesIO:
+        from PIL import Image, ImageDraw
 
         # Load the image from the BytesIO object
         image = Image.open(img_buffer)
@@ -467,15 +471,14 @@ class Plot(ABC):
         # Create a drawing context
         draw = ImageDraw.Draw(image)
 
-        font = ImageFont.truetype("Arial", 16)
-
-        # Define text and position
-        text = "Created with MultiQC"
-        text_width = draw.textlength(text, font=font)
-        position = (image.width - text_width - 3, image.height - 30)
+        # Define the text position. In order to do that, first calculate the expected
+        # text block width, given the font size.
+        # noinspection PyArgumentList
+        text_width: float = draw.textlength(text, font_size=font_size)
+        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
 
         # Draw the text
-        draw.text(position, text, fill="#9f9f9f", font=font)
+        draw.text(position, text, fill="#9f9f9f", font_size=font_size)
 
         # Save the image to a BytesIO object
         output_buffer = io.BytesIO()
