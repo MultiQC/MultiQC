@@ -17,6 +17,10 @@ docs/templates.md
 
 """
 import os
+from ...utils import config
 
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
+
+if config.development:
+    copy_files = ["assets"]

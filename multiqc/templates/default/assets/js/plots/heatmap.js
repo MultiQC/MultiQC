@@ -89,14 +89,19 @@ class HeatmapPlot extends Plot {
     let xcats = dataset["xcats"];
     let ycats = dataset["ycats"];
 
-    let pxPerElem = newHeight / ycats.length;
-    let newWidth = pxPerElem * xcats.length;
-    newWidth = this.square ? newWidth : null;
+    let pxPerElem = (newHeight - 200) / ycats.length;
+    let newWidth = this.square ? pxPerElem * xcats.length + 250 : null;
 
-    if (newHeight < this.layout.height) {
-      // We're shrinking the plot, so we need to allow plotly to skip ticks
-      dataset.layout.xaxis.nticks = null;
-      dataset.layout.yaxis.nticks = null;
+    if (pxPerElem < 10) {
+      // Allow plotly to skip ticks
+      this.layout.yaxis.tickmode = "auto";
+      this.layout.yaxis.tickvals = null;
+      this.layout.yaxis.ticktext = null;
+    } else {
+      // Restore original ticks
+      this.layout.yaxis.tickmode = "array";
+      this.layout.yaxis.tickvals = Array.from(Array(ycats.length).keys());
+      this.layout.yaxis.ticktext = ycats;
     }
 
     Plotly.relayout(this.target, { height: newHeight, width: newWidth });

@@ -66,6 +66,7 @@ setup(
         "importlib-metadata",
         "humanize",
         "pyaml-env",
+        "kaleido",
     ],
     entry_points={
         "console_scripts": [
@@ -220,7 +221,7 @@ setup(
             "sections = multiqc.templates.sections",
             "simple = multiqc.templates.simple",
             "gathered = multiqc.templates.gathered",
-            "plotly = multiqc.templates.plotly",
+            "highcharts = multiqc.templates.highcharts",
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation

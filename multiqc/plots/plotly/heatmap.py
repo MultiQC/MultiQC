@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset, split_long_string
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -86,9 +86,6 @@ class HeatmapPlot(Plot):
 
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
-        # Break up horizontal labels by space to make them fit better vertically
-        xcats = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
-
         # Extend each dataset object with a list of samples
         self.datasets: List[HeatmapPlot.Dataset] = [
             HeatmapPlot.Dataset.create(
@@ -121,14 +118,10 @@ class HeatmapPlot(Plot):
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
         num_rows = len(ycats)
         num_cols = len(xcats)
-        MIN_SIZE = 300
         MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
         font_size = 12
-        # Making sure all ticks are displayed
-        x_nticks = num_cols
-        y_nticks = num_rows
 
         # Number of samples to the desired size in pixel one sample will take on a screen
         def n_elements_to_size(n: int):
@@ -140,48 +133,65 @@ class HeatmapPlot(Plot):
                 return 26
             if n >= 15:
                 return 30
+            if n >= 10:
+                return 35
+            if n >= 5:
+                return 40
+            if n >= 3:
+                return 50
+            if n >= 2:
+                return 80
+            return 100
 
-        x_px_per_elem = n_elements_to_size(num_cols) or MIN_SIZE / num_cols
-        y_px_per_elem = n_elements_to_size(num_rows) or MIN_SIZE / num_rows
-        px_per_elem = min(x_px_per_elem, y_px_per_elem)
-        if px_per_elem and px_per_elem <= 18:
+        x_px_per_elem = n_elements_to_size(num_cols)
+        y_px_per_elem = n_elements_to_size(num_rows)
+        min_px_per_elem = min(x_px_per_elem, y_px_per_elem)
+        if self.square:
+            x_px_per_elem = y_px_per_elem = min_px_per_elem
+        if min_px_per_elem <= 18:
             font_size = 10
-        if px_per_elem and px_per_elem <= 13:
+        if min_px_per_elem <= 13:
             font_size = 8
 
-        height = num_rows * px_per_elem
-        width = num_cols * px_per_elem
+        width = pconfig.get("width") or int(num_cols * x_px_per_elem)
+        height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
-        if width < MIN_SIZE and height < MIN_SIZE:
-            logger.debug(f"Resizing from {width}x{height} to fit the minimum size {MIN_SIZE}")
-            px_per_elem = MIN_SIZE / max(num_rows, num_cols)
-            width = num_cols * px_per_elem
-            height = num_rows * px_per_elem
-            logger.debug(f"Resized to {width}x{height}")
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
-            y_nticks = None  # allow skipping ticks to avoid making the font even smaller
-            x_nticks = None  # allow skipping ticks to avoid making the font even smaller
-            px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
-            width = num_cols * px_per_elem
-            height = num_rows * px_per_elem
-            logger.debug(f"Resized to {width}x{height}")
-
+            if self.square:
+                px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
+                width = height = int(num_rows * px_per_elem)
+            else:
+                x_px_per_elem = MAX_WIDTH / num_cols
+                y_px_per_elem = MAX_HEIGHT / num_rows
+                width = int(num_cols * x_px_per_elem)
+                height = int(num_rows * y_px_per_elem)
         logger.debug(
-            f"Heatmap size: {width}x{height}, px per element: {px_per_elem}, font: {font_size}px, xticks: {x_nticks}, yticks: {y_nticks}"
+            f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem}x{y_px_per_elem}, font: {font_size}px"
         )
 
-        # If the number of xcats is <= 15, leave them horizontal, otherwise, rotate 45 degrees
-        if num_cols > 15:
-            self.layout.xaxis.tickangle = 45
-        else:
+        # For not very large datasets, making sure all ticks are displayed:
+        if y_px_per_elem > 13:
+            self.layout.yaxis.tickmode = "array"
+            self.layout.yaxis.tickvals = list(range(len(ycats)))
+            self.layout.yaxis.ticktext = ycats
+        if x_px_per_elem > 18:
+            self.layout.xaxis.tickmode = "array"
+            self.layout.xaxis.tickvals = list(range(len(xcats)))
+            self.layout.xaxis.ticktext = xcats
+        if pconfig.get("angled_xticks", True) is False and x_px_per_elem > 40:
+            # Break up the horizontal ticks by whitespace to make them fit better vertically:
+            self.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            # And leave x ticks horizontal:
             self.layout.xaxis.tickangle = 0
+        else:
+            # Rotate x-ticks to fit more of them on screen
+            self.layout.xaxis.tickangle = 45
 
         self.layout.font.size = font_size
-        self.layout.xaxis.nticks = x_nticks
-        self.layout.yaxis.nticks = y_nticks
-        self.layout.height = pconfig.get("height") or (200 + height)
-        self.layout.width = pconfig.get("width") or (200 + width) if self.square else None
+        self.layout.height = 200 + height
+        self.layout.width = (250 + width) if self.square else None
+
         self.layout.xaxis.showgrid = False
         self.layout.yaxis.showgrid = False
         self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top

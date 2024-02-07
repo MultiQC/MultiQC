@@ -7,7 +7,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)

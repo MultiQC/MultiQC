@@ -4,7 +4,8 @@
 
 ### MultiQC updates
 
-- Use Plotly as a backend for plots. Make legacy Highcharts/Matplotlib an optional template ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
+- Support Plotly as a backend for plots ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
+- Remove legacy Highcharts/Matplotlib code an optional template `highcharts` ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
 - Seqera CLI: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
@@ -21,7 +22,7 @@
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
-- Multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
+- Support multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
 
 ### New modules
 
