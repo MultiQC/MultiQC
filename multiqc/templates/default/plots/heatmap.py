@@ -139,7 +139,9 @@ class HeatmapPlot(Plot):
                 return 40
             if n >= 3:
                 return 50
-            return 80
+            if n >= 2:
+                return 80
+            return 100
 
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
@@ -169,16 +171,18 @@ class HeatmapPlot(Plot):
         )
 
         # For not very large datasets, making sure all ticks are displayed:
-        if y_px_per_elem > 10:
+        if y_px_per_elem > 13:
             self.layout.yaxis.tickmode = "array"
             self.layout.yaxis.tickvals = list(range(len(ycats)))
             self.layout.yaxis.ticktext = ycats
-        if x_px_per_elem > 30:
+        if x_px_per_elem > 18:
             self.layout.xaxis.tickmode = "array"
             self.layout.xaxis.tickvals = list(range(len(xcats)))
+            self.layout.xaxis.ticktext = xcats
+        if pconfig.get("angled_xticks", True) is False and x_px_per_elem > 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
             self.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
-            # Leave x ticks horizontal:
+            # And leave x ticks horizontal:
             self.layout.xaxis.tickangle = 0
         else:
             # Rotate x-ticks to fit more of them on screen

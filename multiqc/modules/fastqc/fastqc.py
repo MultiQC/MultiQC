@@ -1157,6 +1157,7 @@ class MultiqcModule(BaseMultiqcModule):
             "legend": False,
             "datalabels": False,
             "xcats_samples": False,
+            "angled_xticks": False,
         }
 
         self.add_section(
