@@ -239,8 +239,8 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
-    "--dev",
     "--development",
+    "--dev",
     "development",
     is_flag=True,
     help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
@@ -544,7 +544,10 @@ def run(
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug(f"Template    : {config.template}")
     if config.strict:
-        logger.info("--strict specified. Being strict with validation.")
+        logger.info(
+            "Strict mode specified. Will exit early if a module or a template crashed, and will "
+            "give warnings if anything is not optimally configured in a module or a template."
+        )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 
