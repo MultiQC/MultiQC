@@ -36,19 +36,19 @@ $(function () {
 
     $(".mqc-table-to-violin").click(function (e) {
       e.preventDefault();
-      let target = $(this).data("pid");
-      if (mqc_plots[target]) mqc_plots[target].static = false;
-      $("#mqc-table-" + target).hide();
-      $("#mqc-violin-" + target).show();
-      renderPlot(target);
+      let tableId = $(this).data("table-id");
+      let violinId = $(this).data("violin-id");
+      $("#mqc_violintable_wrapper_" + tableId).hide();
+      $("#mqc_violintable_wrapper_" + violinId).show();
+      renderPlot(violinId);
     });
 
     $(".mqc-violin-to-table").click(function (e) {
       e.preventDefault();
-      let target = $(this).data("pid");
-      if (mqc_plots[target]) mqc_plots[target].static = true;
-      $("#mqc-violin-" + target).hide();
-      $("#mqc-table-" + target).show();
+      let tableId = $(this).data("table-id");
+      let violinId = $(this).data("violin-id");
+      $("#mqc_violintable_wrapper_" + tableId).show();
+      $("#mqc_violintable_wrapper_" + violinId).hide();
     });
 
     // Copy table contents to clipboard
@@ -89,18 +89,22 @@ $(function () {
     /////// COLUMN CONFIG
     // show + hide columns
     $(".mqc_table_col_visible").change(function () {
-      let target = $(this).data("target");
-      mqc_table_col_updateVisible(target);
+      let tableId = $(this).data("table-id");
+      let violinId = $(this).data("violin-id");
+      mqc_table_col_updateVisible(tableId, violinId);
     });
     // Bulk set visible / hidden
     $(".mqc_configModal_bulkVisible").click(function (e) {
       e.preventDefault();
-      let target = $(this).data("target");
+      let tableId = $(this).data("table-id");
+      let violinId = $(this).data("violin-id");
       let visible = $(this).data("action") === "showAll";
-      $(target + "_configModal_table tbody .mqc_table_col_visible").prop("checked", visible);
-      mqc_table_col_updateVisible(target);
+      $("#" + tableId + "_configModal_table tbody .mqc_table_col_visible").prop("checked", visible);
+      mqc_table_col_updateVisible(tableId, violinId);
     });
-    function mqc_table_col_updateVisible(target) {
+    function mqc_table_col_updateVisible(tableId, violinId) {
+      let target = "#" + tableId;
+
       let metricsHidden = {};
       $(target + "_configModal_table .mqc_table_col_visible").each(function () {
         let metric = $(this).val();
@@ -121,7 +125,7 @@ $(function () {
       $(target + " tbody tr").each(function () {
         let hasVal = false;
         $(this)
-          .find("td:visible")
+          .find("td")
           .each(function () {
             if (!$(this).hasClass("sorthandle") && $(this).text() !== "") {
               hasVal = true;
@@ -136,15 +140,14 @@ $(function () {
       $(target + "_numcols").text($(target + " thead th:visible").length - 1);
 
       // Also update the violin plot
-      let pid = target.replace("#", "");
-      let plot = mqc_plots[pid];
-      if (plot !== undefined) {
+      if (violinId !== undefined) {
+        let plot = mqc_plots[violinId];
         plot.datasets.map((dataset) => {
           dataset["metrics"].map((metric) => {
             dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
           });
         });
-        renderPlot(pid);
+        renderPlot(violinId);
       }
     }
 
@@ -429,16 +432,16 @@ $(function () {
 // button is only visible when this is hidden. Ace!
 function change_mqc_table_col_order(table) {
   // Find the targets of this sorting
-  let tid = table.attr("id");
-  let target = tid.replace("_configModal_table", "");
+  let elemId = table.attr("id");
+  let tableId = elemId.replace("_configModal_table", "");
 
   // Collect the desired order of columns
   let classes = [];
-  $("#" + tid + " tbody tr").each(function () {
+  $("#" + elemId + " tbody tr").each(function () {
     classes.push($(this).attr("class"));
   });
   // Go through each row
-  $("#" + target + " tr").each(function () {
+  $("#" + tableId + " tr").each(function () {
     let cols = {};
     let row = $(this);
     // Detach any cell that matches a known class from above
@@ -451,7 +454,7 @@ function change_mqc_table_col_order(table) {
       });
     });
     // Insert detached cells back in the order given in the sorted table
-    for (var idx in classes) {
+    for (let idx in classes) {
       let c = classes[idx];
       if (cols[c] !== undefined) {
         row.append(cols[c]);

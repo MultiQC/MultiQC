@@ -27,8 +27,8 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
 
 
 class ViolinPlot(Plot):
-    VIOLIN_HEIGHT = 70
-    EXTRA_HEIGHT = 50
+    VIOLIN_HEIGHT = 70  # single violin height
+    EXTRA_HEIGHT = 63  # extra space for the title and footer
 
     @dataclasses.dataclass
     class Dataset(BaseDataset):
@@ -154,7 +154,7 @@ class ViolinPlot(Plot):
                 max_violin_points = config.violin_downsample_after
                 if max_violin_points is not None and len(violin_values_by_sample) > max_violin_points:
                     logger.debug(
-                        f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)} > {max_violin_points}. "
+                        f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)}. "
                         f"Will downsample to max {max_violin_points} points."
                     )
                     samples = list(violin_values_by_sample.keys())
@@ -232,7 +232,7 @@ class ViolinPlot(Plot):
                 }
                 layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
                 layout[f"yaxis{metric_idx + 1}"] = {
-                    "automargin": True,
+                    "automargin": layout["yaxis"]["automargin"],
                     "color": layout["yaxis"]["color"],
                     "gridcolor": layout["yaxis"]["gridcolor"],
                     "zerolinecolor": layout["yaxis"]["zerolinecolor"],
@@ -321,11 +321,17 @@ class ViolinPlot(Plot):
         assert len(list_of_values_by_sample_by_metric) == len(list_of_header_by_metric)
         assert len(list_of_values_by_sample_by_metric) > 0
 
-        super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_sample_by_metric))
-
         self.dt = dt
         self.show_table_by_default = dt is not None and show_table_by_default
         self.show_table = dt is not None
+
+        super().__init__(
+            PlotType.VIOLIN,
+            pconfig,
+            n_datasets=len(list_of_values_by_sample_by_metric),
+            # To make sure we use a different ID for the table and the violin plot
+            id=f"violin-{dt.id}" if self.show_table else None,
+        )
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -336,13 +342,16 @@ class ViolinPlot(Plot):
             )
         ]
 
+        # Violin-specific layout parameters
         self.layout.update(
             margin=dict(
                 pad=0,
                 b=40,
             ),
             xaxis=dict(
-                automargin=True,
+                # so Plotly doesn't try to fit the ticks the on the most bottom violin,
+                # and squish the other violins
+                automargin=False,
                 tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
@@ -440,16 +449,17 @@ class ViolinPlot(Plot):
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
 
-        html = (
-            f"<div id='mqc-violin-{self.id}' style='{'display: none;' if (self.show_table and self.show_table_by_default) else ''}'>"
-            + f"{warning}"
-            + f"{violin_html}"
-            + "</div>"
-        )
-        if self.dt:
-            table_html, configuration_modal = make_table(self.dt, violin_switch=True)
+        if not self.show_table:
+            # Show violin alone
+            html = warning + violin_html
+        else:
+            # Switch between table and violin
+            table_html, configuration_modal = make_table(self.dt, violin_id=self.id)
+            visibility = "style='display: none;'" if self.show_table_by_default else ""
+            html = f"<div id='mqc_violintable_wrapper_{self.id}' {visibility}>{warning}{violin_html}</div>"
             if self.show_table:
-                html += f"<div id='mqc-table-{self.id}' style='{'display: none;' if not self.show_table_by_default else ''}'>{table_html}</div>"
+                visibility = "style='display: none;'" if not self.show_table_by_default else ""
+                html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {visibility}>{table_html}</div>"
             html += configuration_modal
         return html
 
@@ -468,12 +478,12 @@ class ViolinPlot(Plot):
     def buttons(self) -> []:
         """Add a control panel to the plot"""
         buttons = []
-        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets):
+        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.dt.id is not None:
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"#{self.id}_configModal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.dt.id}_configModal"},
                 )
             )
         if self.show_table:
@@ -481,6 +491,7 @@ class ViolinPlot(Plot):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
+                    data_attrs={"table-id": self.dt.id, "violin-id": self.id},
                 )
             )
 

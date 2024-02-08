@@ -61,11 +61,17 @@ class Plot(ABC):
     # Default width for flat plots
     FLAT_PLOT_WIDTH = 1100
 
-    def __init__(self, plot_type: PlotType, pconfig: Dict, n_datasets: int):
+    def __init__(
+        self,
+        plot_type: PlotType,
+        pconfig: Dict,
+        n_datasets: int,
+        id: Optional[str] = None,
+    ):
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
 
-        self.id = pconfig.get("id")
+        self.id = id or pconfig.get("id")
         if self.id is None:  # ID of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
             is_static_suf = "static_" if config.plots_force_flat else ""
