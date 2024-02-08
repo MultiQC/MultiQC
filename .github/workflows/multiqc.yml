@@ -186,4 +186,4 @@ jobs:
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
         run: |
-          multiqc "${{ needs.changes.outputs.single_module '-m samtools' }}" --strict test_data\test-data-main\data\modules\ \--filename full_report.html
+          multiqc "${{ needs.changes.outputs.single_module || '-m samtools' }}" --strict test_data\test-data-main\data\modules\ \--filename full_report.html
