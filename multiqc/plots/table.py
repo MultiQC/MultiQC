@@ -30,11 +30,6 @@ def plot(data, headers=None, pconfig=None):
     :param headers: list of optional dicts with column config in key:value pairs.
     :return: HTML ready to be inserted into the page
     """
-    if headers is None:
-        headers = []
-    if pconfig is None:
-        pconfig = {}
-
     # Make a datatable object
     dt = table_object.DataTable(data, headers, pconfig)
 

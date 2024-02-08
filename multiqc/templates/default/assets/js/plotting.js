@@ -362,9 +362,6 @@ function renderPlot(target) {
   if (plot === undefined) return false;
   if (plot.datasets.length === 0) return false;
 
-  // Useful for default views like a table that can be switched to a Violin plot.
-  if (plot.static) return;
-
   let container = $("#" + target);
 
   // When the plot was already rendered, it's faster to call react, using the same signature

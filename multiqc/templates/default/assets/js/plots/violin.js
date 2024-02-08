@@ -86,8 +86,6 @@ class ViolinPlot extends Plot {
       violinValuesBySampleByMetric,
       scatterValuesBySampleByMetric,
     ] = this.prepData();
-    if (metrics.length === 0) return [];
-    if (sampleSettings.filter((s) => !s.hidden).length === 0) return [];
 
     let outliersWarning = true;
     metrics.forEach((metric) => {
