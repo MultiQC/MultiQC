@@ -599,7 +599,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # "one_mismatch_index_reads": sample['one_mismatch_index_reads'],
                 "perfect_pecent": perfect_percent,
                 "one_mismatch_pecent": one_mismatch_pecent,
-                "mean_quality": sample["mean_quality"],
+                "mean_quality": sample.get("mean_quality"),
                 "index": sample["index"],
             }
             if sample["depth"] != "NA":
