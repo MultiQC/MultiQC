@@ -112,6 +112,17 @@ class ViolinPlot extends Plot {
       let header = headerByMetric[metric];
 
       // Set layouts for each violin individually
+      layout["yaxis" + (metricIdx + 1)] = {
+        automargin: layout["yaxis"]["automargin"],
+        color: layout["yaxis"]["color"],
+        gridcolor: layout["yaxis"]["gridcolor"],
+        zerolinecolor: layout["yaxis"]["zerolinecolor"],
+        hoverformat: layout["yaxis"]["hoverformat"],
+        tickfont: {
+          size: layout["yaxis"]["tickfont"]["size"],
+          color: layout["yaxis"]["tickfont"]["color"],
+        },
+      };
       layout["xaxis" + (metricIdx + 1)] = {
         automargin: layout["xaxis"]["automargin"],
         color: layout["xaxis"]["color"],
@@ -121,17 +132,6 @@ class ViolinPlot extends Plot {
         tickfont: {
           size: layout["xaxis"]["tickfont"]["size"],
           color: layout["xaxis"]["tickfont"]["color"],
-        },
-      };
-      layout["yaxis" + (metricIdx + 1)] = {
-        automargin: true,
-        color: layout["yaxis"]["color"],
-        gridcolor: layout["yaxis"]["gridcolor"],
-        zerolinecolor: layout["yaxis"]["zerolinecolor"],
-        hoverformat: layout["yaxis"]["hoverformat"],
-        tickfont: {
-          size: layout["yaxis"]["tickfont"]["size"],
-          color: layout["yaxis"]["tickfont"]["color"],
         },
       };
       if (header["xaxis"] !== undefined) {

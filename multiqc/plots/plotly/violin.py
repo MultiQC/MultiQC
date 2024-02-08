@@ -232,7 +232,7 @@ class ViolinPlot(Plot):
                 }
                 layout[f"xaxis{metric_idx + 1}"].update(header.get("xaxis", {}))
                 layout[f"yaxis{metric_idx + 1}"] = {
-                    "automargin": True,
+                    "automargin": layout["yaxis"]["automargin"],
                     "color": layout["yaxis"]["color"],
                     "gridcolor": layout["yaxis"]["gridcolor"],
                     "zerolinecolor": layout["yaxis"]["zerolinecolor"],
@@ -342,13 +342,16 @@ class ViolinPlot(Plot):
             )
         ]
 
+        # Violin-specific layout parameters
         self.layout.update(
             margin=dict(
                 pad=0,
                 b=40,
             ),
             xaxis=dict(
-                automargin=True,
+                # so Plotly doesn't try to fit the ticks the on the most bottom violin,
+                # and squish the other violins
+                automargin=False,
                 tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
                 gridcolor="rgba(0,0,0,0.1)",
                 zerolinecolor="rgba(0,0,0,0.1)",
