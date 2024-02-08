@@ -189,6 +189,6 @@ jobs:
           $single_module = "${{ needs.changes.outputs.single_module }}"
           # want to run on just one module to avoid the windows job to time out:
           if (-not $single_module) {
-              multiqc -m samtools --strict test_data\test-data-main\data\modules\ \--filename full_report.html
+              multiqc -m samtools --strict test_data\test-data-main\data\modules\ --filename full_report.html
           }
-          multiqc $single_module --strict test_data\test-data-main\data\modules\ \--filename full_report.html
+          multiqc $single_module --strict test_data\test-data-main\data\modules\ --filename full_report.html
