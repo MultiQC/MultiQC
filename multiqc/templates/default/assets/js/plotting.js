@@ -363,7 +363,7 @@ function renderPlot(target) {
   if (plot.datasets.length === 0) return false;
 
   // Useful for default views like a table that can be switched to a Violin plot.
-  if (plot.static) return;
+  // if (plot.static) return;
 
   let container = $("#" + target);
 
