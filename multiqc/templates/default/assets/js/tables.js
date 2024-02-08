@@ -125,7 +125,7 @@ $(function () {
       $(target + " tbody tr").each(function () {
         let hasVal = false;
         $(this)
-          .find("td:visible")
+          .find("td")
           .each(function () {
             if (!$(this).hasClass("sorthandle") && $(this).text() !== "") {
               hasVal = true;
