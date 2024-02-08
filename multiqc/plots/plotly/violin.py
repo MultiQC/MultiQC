@@ -7,10 +7,10 @@ import math
 import numpy as np
 import plotly.graph_objects as go
 
-from multiqc.plots.table_object import DataTable
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import config, util_functions
-from .table import make_table
+from multiqc.plots.table_object import DataTable
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
+from multiqc.plots.plotly.table import make_table
 
 logger = logging.getLogger(__name__)
 

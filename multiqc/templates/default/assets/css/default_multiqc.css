@@ -883,10 +883,12 @@ tbody .sorthandle {
 /* Flat MatPlotLib plots */
 .mqc_mplplot {
   border: 1px solid #dedede;
-  margin-top: 15px;
+  margin-top: 0;
+  width: 100%;
 }
 .mqc_mplplot img {
   max-width: 100%;
+  height: auto;
 }
 
 /* Draggable height bar for HighCharts Plots */
@@ -912,24 +914,21 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  border-bottom: 1px solid #ccc;
-  margin-top: 15px;
-}
-.hc-violin-wrapper {
-  margin-top: 0;
+  margin-top: 5px;
 }
 .hc-plot-handle {
   position: absolute;
-  bottom: 0;
   width: 100%;
   height: 10px;
   background-color: #dedede;
   cursor: row-resize;
-  padding: 1px 0;
   border-top: 1px solid #ededed;
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
+  /* two lines below are a hack to hide hanging plotly long vertical tick labels */
+  border-bottom: 2px solid white;
+  bottom: -3px;
 }
 .hc-plot-handle span {
   display: block;
@@ -951,7 +950,6 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders div {
   display: inline-block;
   white-space: nowrap;
-  margin-left: 30px;
 }
 .mqc_hcplot_range_sliders input {
   display: inline-block;
@@ -960,17 +958,24 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders input.form-control {
   width: 100px;
 }
+.mqc_hcplot_yaxis_limit_toggle {
+  float: right;
+  font-size: 11px;
+  margin-top: -26px;
+}
+.mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
+  margin-left: 20px;
+}
 
 .beeswarm-hovertext {
   height: 29px;
   padding: 5px 8px;
   font-size: 13px;
-  /*border-left: 2px solid #46b8da;*/
-  border-top: 1px solid #dedede;
+  border-left: 2px solid #46b8da;
+  border-bottom: 1px solid #dedede;
   background-color: #d9edf7;
   color: #31708f;
 }
-
 .beeswarm-plots {
   height: calc(100% - 25px);
 }
@@ -993,4 +998,32 @@ tbody .sorthandle {
 
 g.annotation {
   position: absolute !important;
+}
+
+.export-plot {
+  float: right;
+}
+
+.col-xs-12 button {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+hr {
+  border-top: 0;
+}
+
+.mqc-section-description > p {
+  margin-bottom: 4px;
+}
+
+.created-with-multiqc {
+  position: absolute;
+  bottom: 7px;
+  right: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  color: #999999;
+  font-size: 8px;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 }

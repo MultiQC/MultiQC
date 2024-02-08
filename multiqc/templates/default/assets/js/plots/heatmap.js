@@ -1,9 +1,11 @@
 class HeatmapPlot extends Plot {
   constructor(dump) {
     super(dump);
-    this.xcats_samples = dump["xcats_samples"];
-    this.ycats_samples = dump["ycats_samples"];
+    this.xCatsAreSamples = dump["xcats_samples"];
+    this.yCatsAreSamples = dump["ycats_samples"];
     this.square = dump["square"];
+    this.filtXCatsSettings = [];
+    this.filtYCatsSettings = [];
   }
 
   activeDatasetSize() {
@@ -20,44 +22,38 @@ class HeatmapPlot extends Plot {
     let xcats = dataset["xcats"];
     let ycats = dataset["ycats"];
 
-    if (this.xcats_samples) {
+    if (this.xCatsAreSamples) {
       let xcatsSettings = applyToolboxSettings(xcats);
-      if (xcatsSettings == null) return; // All series are hidden, do not render the graph.
+      if (xcatsSettings === null) return; // All series are hidden, do not render the graph.
 
-      // // If sample is highlighted, make all values None except for the highlighted sample
-      // // But only if it's not done for the Y
-      // if (!this.ycats_samples) {
-      //   if (xcatsSettings.filter((s) => s.highlight).length > 0) {
-      //     rows = rows.map((row) => {
-      //       return row.map((val, x) => (xcatsSettings[x].highlight ? val : null));
-      //     });
-      //   }
-      // }
-      // Rename and filter samples:
-      xcats = xcatsSettings.filter((s) => !s.hidden).map((s) => s.name);
       rows = rows.map((row) => row.filter((val, i) => !xcatsSettings[i].hidden));
+      this.filtXCatsSettings = xcatsSettings.filter((s) => !s.hidden);
+      xcats = this.filtXCatsSettings.map((s) => s.name);
     }
 
-    if (this.ycats_samples) {
-      let ycatsSettings = applyToolboxSettings(ycats);
-      if (ycatsSettings == null) return; // All series are hidden, do not render the graph.
+    if (this.yCatsAreSamples) {
+      let yCatsSettings = applyToolboxSettings(ycats);
+      if (yCatsSettings === null) return; // All series are hidden, do not render the graph.
 
-      // // If sample is highlighted, make all values None except for the highlighted sample
-      // if (ycatsSettings.filter((s) => s.highlight).length > 0) {
-      //   rows = rows.map((row, y) => {
-      //     return ycatsSettings[y].highlight ? row : row.map(() => null);
-      //   });
-      // }
-      // Rename and filter samples:
-      ycats = ycatsSettings.filter((s) => !s.hidden).map((s) => s.name);
-      rows = rows.filter((row, i) => !ycatsSettings[i].hidden);
+      rows = rows.filter((row, i) => !yCatsSettings[i].hidden);
+      this.filtYCatsSettings = yCatsSettings.filter((s) => !s.hidden);
+      ycats = this.filtYCatsSettings.map((s) => s.name);
     }
-
     return [rows, xcats, ycats];
   }
 
-  buildTraces(layout) {
+  buildTraces() {
     let [rows, xcats, ycats] = this.prepData();
+    if (rows.length === 0 || xcats.length === 0 || ycats.length === 0) return [];
+
+    if (this.filtYCatsSettings.length > 0) {
+      const maxYTicks = (this.layout.height - 200) / 12;
+      this.recalculateTicks(this.filtYCatsSettings, this.layout.yaxis, maxYTicks);
+    }
+    if (this.filtXCatsSettings.length > 0) {
+      const maxXTicks = (this.layout.width - 250) / 18;
+      this.recalculateTicks(this.filtXCatsSettings, this.layout.xaxis, maxXTicks);
+    }
 
     let dataset = this.datasets[this.activeDatasetIdx];
     let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
@@ -85,21 +81,19 @@ class HeatmapPlot extends Plot {
   }
 
   resize(newHeight) {
+    this.layout.height = newHeight;
+
+    const maxYTicks = (this.layout.height - 200) / 12;
+    this.recalculateTicks(this.filtYCatsSettings, this.layout.yaxis, maxYTicks);
+
     let dataset = this.datasets[this.activeDatasetIdx];
     let xcats = dataset["xcats"];
     let ycats = dataset["ycats"];
+    let pxPerElem = (newHeight - 200) / ycats.length;
+    let newWidth = null;
+    if (this.square) newWidth = pxPerElem * xcats.length + 250;
 
-    let pxPerElem = newHeight / ycats.length;
-    let newWidth = pxPerElem * xcats.length;
-    newWidth = this.square ? newWidth : null;
-
-    if (newHeight < this.layout.height) {
-      // We're shrinking the plot, so we need to allow plotly to skip ticks
-      dataset.layout.xaxis.nticks = null;
-      dataset.layout.yaxis.nticks = null;
-    }
-
-    Plotly.relayout(this.target, { height: newHeight, width: newWidth });
+    super.resize(newHeight, newWidth);
   }
 }
 

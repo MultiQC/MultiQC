@@ -22,7 +22,7 @@ class LinePlot extends Plot {
     return [samples, lines];
   }
 
-  buildTraces(layout) {
+  buildTraces() {
     let dataset = this.datasets[this.activeDatasetIdx];
 
     let [samples, lines] = this.prepData();

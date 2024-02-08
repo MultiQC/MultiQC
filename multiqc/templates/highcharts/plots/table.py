@@ -1,19 +1,45 @@
+#!/usr/bin/env python
+
+""" MultiQC functions to plot a table """
+
 import logging
 from collections import defaultdict
-from typing import Tuple
 
-from multiqc.plots import table_object
-from multiqc.utils import config, mqc_colour, util_functions, report
-from . import violin
+from multiqc.plots import beeswarm, table_object
+from multiqc.utils import config, mqc_colour, report, util_functions
 
 logger = logging.getLogger(__name__)
 
+letters = "abcdefghijklmnopqrstuvwxyz"
 
-def plot(dt: table_object.DataTable) -> str:
-    return violin.plot(dt, show_table_by_default=True)
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
 
 
-def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, str]:
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
+
+def plot(dt, s_names, pconfig):
+    # Make a beeswarm plot if we have lots of samples
+    if len(s_names) >= config.max_table_rows and pconfig.get("no_beeswarm") is not True:
+        logger.debug(f"Plotting beeswarm instead of table, {len(s_names)} samples")
+        warning = (
+            '<p class="text-muted" id="table-violin-info-{}"><span class="glyphicon glyphicon-exclamation-sign" '
+            'title="A beeswarm plot has been generated instead because of the large number of samples. '
+            'See http://multiqc.info/docs/#tables--beeswarm-plots"'
+            ' data-toggle="tooltip"></span> Showing {} samples.</p>'.format(pconfig["id"], len(s_names))
+        )
+        return warning + beeswarm.plot(dt)
+    else:
+        return make_table(dt)
+
+
+def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
@@ -259,6 +285,13 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
     # Buttons above the table
     html = ""
     if not config.simple_output:
+        if violin_switch:
+            html += """
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
+                <span class="glyphicon glyphicon-align-left"></span> Switch to violin plot
+            </button>
+            """.format(tid=table_id)
+
         # Copy Table Button
         html += """
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
@@ -285,14 +318,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
         if len(t_headers) > 1:
             html += """
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
-                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
-            </button>
-            """.format(tid=table_id)
-
-        if violin_switch:
-            html += """
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
-                <span class="glyphicon glyphicon-align-left"></span> Violin plot
+                <span class="glyphicon glyphicon glyphicon-equalizer"></span> Plot
             </button>
             """.format(tid=table_id)
 
@@ -351,18 +377,17 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
         html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
     html += "</div>"
 
+    # Build the bootstrap modal to customise columns and order
+    if not config.simple_output:
+        html += _configuration_modal(table_id, table_title, "".join(t_modal_headers.values()))
+
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
         fn = dt.pconfig.get("raw_data_fn", f"multiqc_{table_id}")
         util_functions.write_data_file(dt.raw_vals, fn)
         report.saved_raw_data[fn] = dt.raw_vals
 
-    # Build the bootstrap modal to customise columns and order
-    modal = ""
-    if not config.simple_output:
-        modal = _configuration_modal(table_id, table_title, "".join(t_modal_headers.values()))
-
-    return html, modal
+    return html
 
 
 def _configuration_modal(tid: str, title: str, trows: str) -> str:

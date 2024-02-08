@@ -9,7 +9,7 @@ import math
 import plotly.graph_objects as go
 import spectra
 
-from multiqc.templates.plotly.plots.plot import Plot, PlotType, BaseDataset, split_long_string
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -117,16 +117,19 @@ class BarPlot(Plot):
 
         # Set height to be proportional to the number of samples
         PADDING = 140  # plot header and footer
-        height_per_bar = 35
-        if max_n_samples > 5:
-            height_per_bar = 30
-        if max_n_samples > 10:
-            height_per_bar = 25
-        if max_n_samples > 20:
-            height_per_bar = 20
-        if max_n_samples > 30:
-            height_per_bar = 15
-        height = max_n_samples * height_per_bar + PADDING
+
+        def n_elements_to_size(n: int):
+            if n >= 30:
+                return 15
+            if n >= 20:
+                return 20
+            if n >= 10:
+                return 25
+            if n >= 5:
+                return 30
+            return 35
+
+        height = max_n_samples * n_elements_to_size(max_n_samples) + PADDING
 
         # Set height to also be proportional to the number of cats to fit a legend
         HEIGHT_PER_LEGEND_ITEM = 19
