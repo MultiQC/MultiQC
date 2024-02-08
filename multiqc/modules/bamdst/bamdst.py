@@ -253,7 +253,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Coverage metrics",
             anchor="bamdst-coverage",
-            plot=table.plot(data_by_sample, headers, pconfig={"id": "bamdst-coverage-table"}),
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                pconfig={
+                    "id": "bamdst-coverage-table",
+                    "title": "Bamdst: coverage metrics",
+                },
+            ),
         )
 
         genstats_headers = {
