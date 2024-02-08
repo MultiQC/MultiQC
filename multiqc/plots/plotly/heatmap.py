@@ -121,8 +121,6 @@ class HeatmapPlot(Plot):
         MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
-        font_size = 12
-
         # Number of samples to the desired size in pixel one sample will take on a screen
         def n_elements_to_size(n: int):
             if n >= 50:
@@ -148,13 +146,14 @@ class HeatmapPlot(Plot):
         min_px_per_elem = min(x_px_per_elem, y_px_per_elem)
         if self.square:
             x_px_per_elem = y_px_per_elem = min_px_per_elem
-        if min_px_per_elem <= 18:
-            font_size = 10
-        if min_px_per_elem <= 13:
-            font_size = 8
 
         width = pconfig.get("width") or int(num_cols * x_px_per_elem)
         height = pconfig.get("height") or int(num_rows * y_px_per_elem)
+
+        if not self.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
+            logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
+            width = MAX_WIDTH
+            x_px_per_elem = width / num_cols
 
         if height > MAX_HEIGHT or width > MAX_WIDTH:
             logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
@@ -166,12 +165,11 @@ class HeatmapPlot(Plot):
                 y_px_per_elem = MAX_HEIGHT / num_rows
                 width = int(num_cols * x_px_per_elem)
                 height = int(num_rows * y_px_per_elem)
-        logger.debug(
-            f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem}x{y_px_per_elem}, font: {font_size}px"
-        )
+
+        logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
         # For not very large datasets, making sure all ticks are displayed:
-        if y_px_per_elem > 13:
+        if y_px_per_elem > 12:
             self.layout.yaxis.tickmode = "array"
             self.layout.yaxis.tickvals = list(range(len(ycats)))
             self.layout.yaxis.ticktext = ycats
@@ -179,7 +177,7 @@ class HeatmapPlot(Plot):
             self.layout.xaxis.tickmode = "array"
             self.layout.xaxis.tickvals = list(range(len(xcats)))
             self.layout.xaxis.ticktext = xcats
-        if pconfig.get("angled_xticks", True) is False and x_px_per_elem > 40:
+        if pconfig.get("angled_xticks", True) is False and x_px_per_elem >= 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
             self.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
             # And leave x ticks horizontal:
@@ -188,7 +186,6 @@ class HeatmapPlot(Plot):
             # Rotate x-ticks to fit more of them on screen
             self.layout.xaxis.tickangle = 45
 
-        self.layout.font.size = font_size
         self.layout.height = 200 + height
         self.layout.width = (250 + width) if self.square else None
 

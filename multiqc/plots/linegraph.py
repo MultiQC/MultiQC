@@ -221,7 +221,7 @@ def plot(data, pconfig=None):
                 # debugging of modules
                 raise
 
-    line.plot(plotdata, pconfig)
+    return line.plot(plotdata, pconfig)
 
 
 def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[int, int]]:

@@ -28,7 +28,7 @@ class ScatterPlot extends Plot {
     return [samples, points];
   }
 
-  buildTraces(layout) {
+  buildTraces() {
     let dataset = this.datasets[this.activeDatasetIdx];
 
     let [samples, points] = this.prepData();

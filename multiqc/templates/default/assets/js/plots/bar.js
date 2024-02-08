@@ -18,7 +18,8 @@ class BarPlot extends Plot {
     let samplesSettings = applyToolboxSettings(samples);
 
     // Rename and filter samples:
-    let filteredSettings = samplesSettings.filter((s) => !s.hidden);
+    this.filteredSettings = samplesSettings.filter((s) => !s.hidden);
+    samples = this.filteredSettings.map((s) => s.name);
 
     cats = cats.map((cat) => {
       let data = this.pActive ? cat["data_pct"] : cat.data;
@@ -29,101 +30,32 @@ class BarPlot extends Plot {
       };
     });
 
-    return [cats, filteredSettings];
+    return [cats, samples];
   }
 
   resize(newHeight) {
-    if (newHeight === null || newHeight === undefined) console.error("BarPlot.resize: newHeight is " + newHeight);
-
     this.layout.height = newHeight;
-    this.recalculateTicks();
+
+    const maxTicks = (this.layout.height - 140) / 12;
+    this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
+
     super.resize(newHeight);
   }
 
-  recalculateTicks() {
-    function subsample(values, num, start = 0, roundBin = true) {
-      // Take ~`num` samples from values evenly, always include `start`.
-      // If `roundBin` is true, the bins will be rounded to the nearest integer,
-      // so the ticks will be evenly distributed, but the total number of ticks
-      // may be less than `num`.
-
-      if (values.length <= num) return values;
-      if (values.length <= 1) return values;
-      if (num === 0) return [];
-      if (num === 1) return [values[start]];
-
-      let binSize = (values.length - 1) / (num - 1);
-      if (roundBin) binSize = Math.ceil(binSize);
-
-      // Split into two halves: before and after pivot, including pivot into both. This way
-      // we want to make sure pivot is always included in the result.
-      let indices = Array.from({ length: values.length }, (_, i) => i);
-      let after = indices.slice(start);
-      let before = indices.slice(0, start + 1); // including the pivot
-
-      // Stepping forward `binsize` steps, starting from the pivot
-      after = Array.from({ length: after.length }, (_, i) => Math.ceil(binSize * i))
-        .filter((index) => index < after.length)
-        .map((index) => after[index]);
-
-      before.reverse(); // Stepping back starting from the pivot
-      before = Array.from({ length: before.length }, (_, i) => Math.ceil(binSize * i))
-        .filter((index) => index < before.length)
-        .map((index) => before[index]);
-      before.reverse();
-      before = before.slice(0, before.length - 1); // remove the pivot
-
-      indices = before.concat(after);
-      return indices.map((i) => values[i]);
-    }
-
-    let highlighted = this.filteredSettings.filter((s) => s.highlight);
-    let firstHighlightedSample = this.firstHighlightedSample();
-
-    if (highlighted.length === 0) {
-      this.layout.yaxis.tickmode = null;
-      this.layout.yaxis.tickvals = null;
-      this.layout.yaxis.ticktext = null;
-    } else {
-      // Have to switch to tickmode=array to set colors to ticks. however, this way plotly will try
-      // to fit _all_ ticks on the screen, and if there are too many, they will overlap. to prevent that,
-      // if there are too many samples, we will show only highlighted samples plus a subsampled number
-      // of ticks, but up to a constant:
-      this.layout.yaxis.tickmode = "array";
-      if (this.layout.height === null || this.layout.height === undefined)
-        console.error("BarPlot.recalculateTicks: this.layout.height is " + this.layout.height);
-
-      const maxTicks = (this.layout.height - 140) / 10; // 20px per tick
-      let selected = subsample(this.filteredSettings, maxTicks, firstHighlightedSample);
-
-      this.layout.yaxis.tickvals = selected.map((s) => s.name);
-      this.layout.yaxis.ticktext = selected.map(
-        (s) => "<span style='color:" + (s.highlight ?? "#ccc") + "'>" + s.name + "</span>",
-      );
-    }
-  }
-
-  firstHighlightedSample() {
-    let index = 0;
-    let highlighted = this.filteredSettings.filter((s) => s.highlight);
-    if (highlighted.length > 0) index = this.filteredSettings.findIndex((s) => s.highlight);
-    return index;
-  }
-
   // Constructs and returns traces for the Plotly plot
-  buildTraces(layout) {
-    let [cats, filteredSettings] = this.prepData();
-    if (cats.length === 0 || filteredSettings.length === 0) return [];
-    this.filteredSettings = filteredSettings;
+  buildTraces() {
+    let [cats, samples] = this.prepData();
+    if (cats.length === 0 || samples.length === 0) return [];
 
-    this.recalculateTicks();
+    const maxTicks = (this.layout.height - 140) / 12;
+    this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
 
-    let highlighted = filteredSettings.filter((s) => s.highlight);
-    let firstHighlightedSample = this.firstHighlightedSample();
+    let highlighted = this.filteredSettings.filter((s) => s.highlight);
+    let firstHighlightedSample = this.firstHighlightedSample(this.filteredSettings);
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
     return cats.map((cat) => {
-      return filteredSettings.map((sample, sampleIdx) => {
+      return this.filteredSettings.map((sample, sampleIdx) => {
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
         let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
