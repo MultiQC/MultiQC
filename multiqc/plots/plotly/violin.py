@@ -154,7 +154,7 @@ class ViolinPlot(Plot):
                 max_violin_points = config.violin_downsample_after
                 if max_violin_points is not None and len(violin_values_by_sample) > max_violin_points:
                     logger.debug(
-                        f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)} > {max_violin_points}. "
+                        f"Violin for '{header['title']}': sample number is {len(violin_values_by_sample)}. "
                         f"Will downsample to max {max_violin_points} points."
                     )
                     samples = list(violin_values_by_sample.keys())
@@ -446,7 +446,7 @@ class ViolinPlot(Plot):
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
 
-        if not self.dt:
+        if not self.show_table:
             # Show violin alone
             html = warning + violin_html
         else:
