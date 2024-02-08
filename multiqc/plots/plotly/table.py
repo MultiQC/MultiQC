@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Tuple
+from typing import Tuple, Optional
 
 from multiqc.plots import table_object
 from multiqc.utils import config, mqc_colour, util_functions, report
@@ -14,14 +14,15 @@ def plot(dt: table_object.DataTable) -> str:
     return violin.plot(dt, show_table_by_default=True)
 
 
-def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, str]:
+def make_table(dt: table_object.DataTable, table_id: Optional[str], violin_switch=False) -> Tuple[str, str]:
     """
     Build the HTML needed for a MultiQC table.
     :param dt: MultiQC datatable object
+    :param table_id: Optional, override the table ID (default from pconfig["id"])
     :param violin_switch: Add a button to switch to violin plot
     """
 
-    table_id = dt.pconfig["id"]
+    table_id = table_id or dt.pconfig["id"]
     t_headers = dict()
     t_modal_headers = dict()
     t_rows = dict()
@@ -261,73 +262,67 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
     html = ""
     if not config.simple_output:
         # Copy Table Button
-        html += """
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{tid}">
+        html += f"""
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{table_id}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
-        """.format(tid=table_id)
+        """
 
         # Configure Columns Button
         if len(t_headers) > 1:
-            html += """
-            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{tid}_configModal">
+            html += f"""
+            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{table_id}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
-            """.format(tid=table_id)
+            """
 
         # Sort By Highlight button
-        html += """
-        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{tid}" data-direction="desc" style="display:none;">
+        html += f"""
+        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{table_id}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
-        """.format(tid=table_id)
+        """
 
         # Scatter Plot Button
         if len(t_headers) > 1:
-            html += """
-            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{tid}">
+            html += f"""
+            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{table_id}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
-            """.format(tid=table_id)
+            """
 
         if violin_switch:
-            html += """
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{tid}">
+            html += f"""
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" data-pid="{table_id}">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
-            """.format(tid=table_id)
+            """
 
         # "Showing x of y columns" text
         row_visibilities = [all(t_rows_empty[s_name].values()) for s_name in t_rows_empty]
         visible_rows = [x for x in row_visibilities if not x]
 
         # Visible rows
-        t_showing_rows_txt = (
-            'Showing <sup id="{tid}_numrows" class="mqc_table_numrows">{nvisrows}</sup>/<sub>{nrows}</sub> rows'.format(
-                tid=table_id, nvisrows=len(visible_rows), nrows=len(t_rows)
-            )
-        )
+        t_showing_rows_txt = f'Showing <sup id="{table_id}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(t_rows)}</sub> rows'
 
         # How many columns are visible?
         ncols_vis = (len(t_headers) + 1) - hidden_cols
         t_showing_cols_txt = ""
         if len(t_headers) > 1:
-            t_showing_cols_txt = ' and <sup id="{tid}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{ncols}</sub> columns'.format(
-                tid=table_id, ncols_vis=ncols_vis, ncols=len(t_headers)
-            )
+            t_showing_cols_txt = f' and <sup id="{table_id}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{len(t_headers)}</sub> columns'
 
         # Build table header text
-        html += """
-        <small id="{tid}_numrows_text" class="mqc_table_numrows_text">{rows}{cols}.</small>
-        """.format(tid=table_id, rows=t_showing_rows_txt, cols=t_showing_cols_txt)
+        html += f"""
+        <small id="{table_id}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
+        """
 
     # Build the table itself
     collapse_class = "mqc-table-collapse" if len(t_rows) > 10 and config.collapse_tables else ""
-    html += """
-        <div id="{tid}_container" class="mqc_table_container">
-            <div class="table-responsive mqc-table-responsive {cc}">
-                <table id="{tid}" class="table table-condensed mqc_table" data-title="{title}" data-sortlist="{sortlist}">
-        """.format(tid=table_id, title=table_title, cc=collapse_class, sortlist=_get_sortlist(dt))
+    html += f"""
+        <div id="{table_id}_container" class="mqc_table_container">
+            <div class="table-responsive mqc-table-responsive {collapse_class}">
+                <table id="{table_id}" class="table table-condensed mqc_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
+        """
 
     # Build the header row
     col1_header = dt.pconfig.get("col1_header", "Sample Name")
@@ -343,7 +338,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> Tuple[str, st
         row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else ""
         html += f"<tr{row_hidden}>"
         # Sample name row header
-        html += '<th class="rowheader" data-original-sn="{sn}">{sn}</th>'.format(sn=s_name)
+        html += f'<th class="rowheader" data-original-sn="{s_name}">{s_name}</th>'
         for k in t_headers:
             html += t_rows[s_name].get(k, empty_cells[k])
         html += "</tr>"

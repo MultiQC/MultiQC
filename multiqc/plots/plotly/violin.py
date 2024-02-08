@@ -1,5 +1,6 @@
 import dataclasses
 import logging
+import re
 from typing import Dict, List, Union, Any, Optional
 import copy
 
@@ -321,11 +322,17 @@ class ViolinPlot(Plot):
         assert len(list_of_values_by_sample_by_metric) == len(list_of_header_by_metric)
         assert len(list_of_values_by_sample_by_metric) > 0
 
-        super().__init__(PlotType.VIOLIN, pconfig, len(list_of_values_by_sample_by_metric))
-
         self.dt = dt
         self.show_table_by_default = dt is not None and show_table_by_default
         self.show_table = dt is not None
+
+        super().__init__(
+            PlotType.VIOLIN,
+            pconfig,
+            n_datasets=len(list_of_values_by_sample_by_metric),
+            # To make sure we use a different ID for the table and the violin plot
+            id="violin-" + pconfig["id"],
+        )
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -447,9 +454,11 @@ class ViolinPlot(Plot):
             + "</div>"
         )
         if self.dt:
-            table_html, configuration_modal = make_table(self.dt, violin_switch=True)
+            table_id = re.sub("^violin-", "table-", self.id)
+            table_html, configuration_modal = make_table(self.dt, table_id=table_id, violin_switch=True)
             if self.show_table:
-                html += f"<div id='mqc-table-{self.id}' style='{'display: none;' if not self.show_table_by_default else ''}'>{table_html}</div>"
+                visibility = "style='display: none;'" if not self.show_table_by_default else ""
+                html += f"<div id='mqc-{table_id}' {visibility}>{table_html}</div>"
             html += configuration_modal
         return html
 
