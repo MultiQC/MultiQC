@@ -27,8 +27,8 @@ def plot(dt: DataTable, show_table_by_default=False) -> str:
 
 
 class ViolinPlot(Plot):
-    VIOLIN_HEIGHT = 70
-    EXTRA_HEIGHT = 50
+    VIOLIN_HEIGHT = 70  # single violin height
+    EXTRA_HEIGHT = 63  # extra space for the title and footer
 
     @dataclasses.dataclass
     class Dataset(BaseDataset):
