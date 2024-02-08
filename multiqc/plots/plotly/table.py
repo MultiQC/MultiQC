@@ -261,14 +261,16 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
         # Configure Columns Button
         if len(t_headers) > 1:
             html += f"""
-            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" data-target="#{dt.id}_configModal">
+            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" 
+                data-target="#{dt.id}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
 
         # Sort By Highlight button
         html += f"""
-        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" data-target="#{dt.id}" data-direction="desc" style="display:none;">
+        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" 
+            data-target="#{dt.id}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
@@ -276,7 +278,8 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
         # Scatter Plot Button
         if len(t_headers) > 1:
             html += f"""
-            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
+            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" 
+                data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
