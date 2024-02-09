@@ -164,6 +164,7 @@ class Plot(ABC):
             )
             if self.flat
             else None,
+            autotypenumbers="strict",  # do not convert strings to numbers
         )
         # Layout update for the counts/percentage switch
         self.pct_axis_update = dict(
@@ -505,13 +506,27 @@ class Plot(ABC):
         return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
 
 
+def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
+    """
+    Rename the deprecated HighCharts-specific terminology in a config.
+    """
+    conf = conf.copy()
+    if "yCeiling" in conf:
+        conf["yaxis"] = conf.pop("y_ceiling")
+    if "xAxis" in conf:
+        conf["xaxis"] = conf.pop("xAxis")
+    if "tooltip" in conf:
+        conf["hovertemplate"] = conf.pop("tooltip")
+    return conf
+
+
 def _dataset_layout(
     pconfig: Dict,
     dconfig: Dict,
     default_tt_label: Optional[str],
 ) -> Tuple[Dict, Dict]:
     """
-    Sets dataset-specific number format layout and trace options.
+    Given plot config and dataset config, set layout and trace params.
     """
     pconfig = pconfig.copy()
     pconfig.update(dconfig)
@@ -557,17 +572,6 @@ def _dataset_layout(
     else:
         hovertemplate = None
 
-    xlab = pconfig.get("xlab")
-    ylab = pconfig.get("ylab")
-    xmin = pconfig.get("xmin", pconfig.get("yFloor"))
-    ymin = pconfig.get("ymin", pconfig.get("yFloor"))
-    xmax = pconfig.get("xmax")
-    if xmax is None and "yCeiling" in pconfig and "xMinRange" not in pconfig:
-        xmax = pconfig.get("yCeiling")
-    ymax = pconfig.get("ymax")
-    if ymax is None and "yCeiling" in pconfig and "yMinRange" not in pconfig:
-        ymax = pconfig.get("yCeiling")
-
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
     tt_decimals = pconfig.get("tt_decimals")
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
@@ -576,16 +580,26 @@ def _dataset_layout(
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",
-            title=dict(text=xlab),
-            range=[xmin, xmax],
-            rangemode="tozero" if xmin == 0 else "normal",
+            title=dict(text=pconfig.get("xlab")),
+            rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("xFloor"),
+                clipmax=pconfig.get("xCeiling"),
+                minallowed=pconfig.get("xmin"),
+                maxallowed=pconfig.get("xmax"),
+            ),
         ),
         yaxis=dict(
             hoverformat=y_hoverformat,
             ticksuffix=ysuffix or "",
-            title=dict(text=ylab),
-            range=[ymin, ymax],
-            rangemode="tozero" if ymin == 0 else "normal",
+            title=dict(text=pconfig.get("ylab")),
+            rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("yFloor"),
+                clipmax=pconfig.get("yCeiling"),
+                minallowed=pconfig.get("ymin"),
+                maxallowed=pconfig.get("ymax"),
+            ),
         ),
     )
 
