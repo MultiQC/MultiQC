@@ -253,7 +253,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     if not config.simple_output:
         # Copy Table Button
         html += f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{dt.id}">
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.id}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
