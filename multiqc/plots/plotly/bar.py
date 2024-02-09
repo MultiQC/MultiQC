@@ -115,10 +115,19 @@ class BarPlot(Plot):
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
-        # Set height to be proportional to the number of samples
-        PADDING = 140  # plot header and footer
+        # Set the barmode
+        barmode = "relative"  # stacking, but drawing negative values below zero
+        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
+            barmode = "group"  # side by side
 
-        def n_elements_to_size(n: int):
+        max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
+
+        n_bars = max_n_samples
+        # Group mode puts each category in a separate bar, so need to multiply by the number of categories
+        if barmode == "group":
+            n_bars *= max_n_cats
+
+        def n_bars_to_size(n: int):
             if n >= 30:
                 return 15
             if n >= 20:
@@ -129,16 +138,18 @@ class BarPlot(Plot):
                 return 30
             return 35
 
-        height = max_n_samples * n_elements_to_size(max_n_samples) + PADDING
+        # Set height to be proportional to the number of samples
+        height = n_bars * n_bars_to_size(n_bars)
 
         # Set height to also be proportional to the number of cats to fit a legend
         HEIGHT_PER_LEGEND_ITEM = 19
-        n_cats = max([len(dataset.cats) for dataset in self.datasets])
-        legend_height = HEIGHT_PER_LEGEND_ITEM * n_cats + PADDING
+        legend_height = HEIGHT_PER_LEGEND_ITEM * max_n_cats
         # expand the plot to fit the legend:
         height = max(height, max(height, legend_height))
         # but not too much - if there are only 2 samples, we don't want the plot to be too high:
-        height = min(800, max(height, legend_height))
+        height = min(660, max(height, legend_height))
+
+        height += 140  # Add space for the title and footer
 
         # now, limit the max and min height (plotly will start to automatically skip
         # some of the ticks on the left when the plot is too high)
@@ -147,15 +158,12 @@ class BarPlot(Plot):
         height = min(MAX_HEIGHT, height)
         height = max(MIN_HEIGHT, height)
 
-        # Set the barmode
-        barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
-            barmode = "group"  # side by side
-
         self.layout.update(
             height=height,
             showlegend=True,
             barmode=barmode,
+            bargroupgap=0,
+            bargap=0.2,
             yaxis=dict(
                 showgrid=False,
                 categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
