@@ -46,7 +46,8 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
     :param violin_switch: Add a button to switch to violin plot
     """
 
-    table_id = dt.pconfig["id"]
+    table_id = dt.id
+
     t_headers = dict()
     t_modal_headers = dict()
     t_rows = dict()

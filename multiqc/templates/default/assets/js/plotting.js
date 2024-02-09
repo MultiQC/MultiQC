@@ -391,8 +391,8 @@ function renderPlot(target) {
     if (plot.lActive) {
       plot.layout[axis].type = "log";
       // otherwise Plotly will interpret the range as log10:
-      min = min > 0 ? Math.log10(min) : null;
-      max = max > 0 ? Math.log10(max) : null;
+      min = min && min > 0 ? Math.log10(min) : null;
+      max = min && max > 0 ? Math.log10(max) : null;
     }
     plot.layout[axis]["autorangeoptions"]["minallowed"] = min;
     plot.layout[axis]["autorangeoptions"]["maxallowed"] = max;
