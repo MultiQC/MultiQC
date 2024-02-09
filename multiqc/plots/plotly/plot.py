@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple
 
+import math
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour, config
@@ -41,7 +42,7 @@ class BaseDataset(ABC):
     dconfig: Dict  # user dataset-specific configuration
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
-    pct_range = [None, None]  # range of the percentage view
+    pct_range: Dict
 
     def dump_for_javascript(self) -> Dict:
         d = {k: v for k, v in self.__dict__.items()}
@@ -98,6 +99,10 @@ class Plot(ABC):
                 dconfig=dict(),
                 layout=dict(),
                 trace_params=dict(),
+                pct_range=dict(  # range for the percentage view for each axis
+                    xaxis=dict(min=0, max=100),
+                    yaxis=dict(min=0, max=100),
+                ),
             )
             for i in range(n_datasets)
         ]
@@ -164,6 +169,7 @@ class Plot(ABC):
             )
             if self.flat
             else None,
+            autotypenumbers="strict",  # do not convert strings to numbers
         )
         # Layout update for the counts/percentage switch
         self.pct_axis_update = dict(
@@ -397,13 +403,19 @@ class Plot(ABC):
         layout.update(**dataset.layout)
         layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
+            layout[axis].type = "linear"
+            minval = layout[axis].autorangeoptions["minallowed"]
+            maxval = layout[axis].autorangeoptions["maxallowed"]
             if is_pct:
                 layout[axis].update(self.pct_axis_update)
-                layout[axis].range = dataset.pct_range.copy()
+                minval = dataset.pct_range.get(axis, {}).get("min", 0)
+                maxval = dataset.pct_range.get(axis, {}).get("max", 100)
             if is_log:
-                layout[axis].range = None
-            layout[axis].type = "log" if is_log else "linear"
-
+                layout[axis].type = "log"
+                minval = math.log10(minval) if minval > 0 else None
+                maxval = math.log10(maxval) if maxval > 0 else None
+            layout[axis].autorangeoptions["minallowed"] = minval
+            layout[axis].autorangeoptions["maxallowed"] = maxval
         return dataset.create_figure(layout, is_log, is_pct)
 
     @staticmethod
@@ -505,13 +517,27 @@ class Plot(ABC):
         return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
 
 
+def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
+    """
+    Rename the deprecated HighCharts-specific terminology in a config.
+    """
+    conf = conf.copy()
+    if "yCeiling" in conf:
+        conf["yaxis"] = conf.pop("y_ceiling")
+    if "xAxis" in conf:
+        conf["xaxis"] = conf.pop("xAxis")
+    if "tooltip" in conf:
+        conf["hovertemplate"] = conf.pop("tooltip")
+    return conf
+
+
 def _dataset_layout(
     pconfig: Dict,
     dconfig: Dict,
     default_tt_label: Optional[str],
 ) -> Tuple[Dict, Dict]:
     """
-    Sets dataset-specific number format layout and trace options.
+    Given plot config and dataset config, set layout and trace params.
     """
     pconfig = pconfig.copy()
     pconfig.update(dconfig)
@@ -557,17 +583,6 @@ def _dataset_layout(
     else:
         hovertemplate = None
 
-    xlab = pconfig.get("xlab")
-    ylab = pconfig.get("ylab")
-    xmin = pconfig.get("xmin", pconfig.get("yFloor"))
-    ymin = pconfig.get("ymin", pconfig.get("yFloor"))
-    xmax = pconfig.get("xmax")
-    if xmax is None and "yCeiling" in pconfig and "xMinRange" not in pconfig:
-        xmax = pconfig.get("yCeiling")
-    ymax = pconfig.get("ymax")
-    if ymax is None and "yCeiling" in pconfig and "yMinRange" not in pconfig:
-        ymax = pconfig.get("yCeiling")
-
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
     tt_decimals = pconfig.get("tt_decimals")
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
@@ -576,16 +591,26 @@ def _dataset_layout(
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",
-            title=dict(text=xlab),
-            range=[xmin, xmax],
-            rangemode="tozero" if xmin == 0 else "normal",
+            title=dict(text=pconfig.get("xlab")),
+            rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("xFloor"),
+                clipmax=pconfig.get("xCeiling"),
+                minallowed=pconfig.get("xmin"),
+                maxallowed=pconfig.get("xmax"),
+            ),
         ),
         yaxis=dict(
             hoverformat=y_hoverformat,
             ticksuffix=ysuffix or "",
-            title=dict(text=ylab),
-            range=[ymin, ymax],
-            rangemode="tozero" if ymin == 0 else "normal",
+            title=dict(text=pconfig.get("ylab")),
+            rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("yFloor"),
+                clipmax=pconfig.get("yCeiling"),
+                minallowed=pconfig.get("ymin"),
+                maxallowed=pconfig.get("ymax"),
+            ),
         ),
     )
 

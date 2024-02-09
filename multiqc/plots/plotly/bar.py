@@ -199,13 +199,12 @@ class BarPlot(Plot):
                     for i in range(len(dataset.samples))
                 )
 
-            xmin_cnt = self.pconfig.get("ymin", xmin_cnt)
-            xmax_cnt = self.pconfig.get("ymax", xmax_cnt)
             dataset.layout.update(
                 yaxis=dict(
                     title=None,
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
+                    autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
                     # Prevent JavaScript from automatically parsing categorical values as numbers:
                     type="category",
                 ),
@@ -213,7 +212,10 @@ class BarPlot(Plot):
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
-                    range=[xmin_cnt, xmax_cnt],
+                    autorangeoptions={
+                        "minallowed": xmin_cnt,
+                        "maxallowed": xmax_cnt,
+                    },
                 ),
             )
             dataset.trace_params.update(
@@ -261,13 +263,14 @@ class BarPlot(Plot):
 
                 if barmode == "group":
                     # calculating the min percentage range as well because it will be negative for negative values
-                    xmin_pct = min(min(cat["data_pct"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                    dataset.pct_range["xaxis"]["min"] = min(
+                        min(cat["data_pct"][i] for cat in dataset.cats) for i in range(len(dataset.samples))
+                    )
                 else:
-                    xmin_pct = min(
+                    dataset.pct_range["xaxis"]["min"] = min(
                         sum(cat["data_pct"][i] if cat["data_pct"][i] < 0 else 0 for cat in dataset.cats)
                         for i in range(len(dataset.samples))
                     )
-                dataset.pct_range = [xmin_pct, 100]
 
         if self.add_log_tab:
             # Sorting from small to large so the log switch makes sense
