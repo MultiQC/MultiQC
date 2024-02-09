@@ -169,7 +169,6 @@ class Plot(ABC):
             )
             if self.flat
             else None,
-            autotypenumbers="strict",  # do not convert strings to numbers
         )
         # Layout update for the counts/percentage switch
         self.pct_axis_update = dict(
