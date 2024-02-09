@@ -115,9 +115,6 @@ config = {
     'ylab': None,                           # Y axis label
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
-    'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
-    'yFloor': None,                         # Minimum value for automatic axis limit
-    'yMinRange': None,                      # Minimum range for axis
     'tt_label': '{x}: {y:.2f}%',            # Customise tooltip label
     'xsuffix': "%",                         # Suffix for the x-axis values and labels. Parsed from tt_label by default
     'ysuffix': "%",                         # Suffix for the y-axis values and labels. Parsed from tt_label by default

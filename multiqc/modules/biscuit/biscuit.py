@@ -1215,10 +1215,8 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 100,
             "yCeiling": 110,
             "stacking": None,
-            "use_legend": True,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False,
         }
 
         self.add_section(
