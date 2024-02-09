@@ -25,6 +25,7 @@
 - Support multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
 - BclConvert: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
 - CI: test Windows on a single module to avoid timing out ([#2304](https://github.com/MultiQC/MultiQC/pull/2304))
+- Use Plotly `autorangeoptions` instead of `range`. Properly apply floor and ceiling ([#2306](https://github.com/MultiQC/MultiQC/pull/2306))
 
 ### New modules
 
