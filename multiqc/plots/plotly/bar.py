@@ -217,6 +217,7 @@ class BarPlot(Plot):
                         "maxallowed": xmax_cnt,
                     },
                 ),
+                showlegend=len(dataset.cats) > 1,
             )
             dataset.trace_params.update(
                 orientation="h",
