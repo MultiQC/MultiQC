@@ -412,8 +412,8 @@ class Plot(ABC):
                 maxval = dataset.pct_range.get(axis, {}).get("max", 100)
             if is_log:
                 layout[axis].type = "log"
-                minval = math.log10(minval) if minval > 0 else None
-                maxval = math.log10(maxval) if maxval > 0 else None
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
             layout[axis].autorangeoptions["minallowed"] = minval
             layout[axis].autorangeoptions["maxallowed"] = maxval
         return dataset.create_figure(layout, is_log, is_pct)
