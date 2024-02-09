@@ -940,7 +940,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biscuit_cumulative",
             "title": "BISCUIT: Cumulative Coverage",
             "ymin": 0,
-            "xLabelFormat": "{value}X",
             "tt_label": "<strong>{point.x}X:</strong> {point.y:.2f}M",
             "xlab": "Coverage",
             "ylab": "Millions of Bases",
