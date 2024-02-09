@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple
 
+import math
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour, config
@@ -41,7 +42,7 @@ class BaseDataset(ABC):
     dconfig: Dict  # user dataset-specific configuration
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
-    pct_range = [None, None]  # range of the percentage view
+    pct_range: Dict
 
     def dump_for_javascript(self) -> Dict:
         d = {k: v for k, v in self.__dict__.items()}
@@ -98,6 +99,10 @@ class Plot(ABC):
                 dconfig=dict(),
                 layout=dict(),
                 trace_params=dict(),
+                pct_range=dict(  # range for the percentage view for each axis
+                    xaxis=dict(min=0, max=100),
+                    yaxis=dict(min=0, max=100),
+                ),
             )
             for i in range(n_datasets)
         ]
@@ -398,13 +403,19 @@ class Plot(ABC):
         layout.update(**dataset.layout)
         layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
+            layout[axis].type = "linear"
+            minval = layout[axis].autorangeoptions["minallowed"]
+            maxval = layout[axis].autorangeoptions["maxallowed"]
             if is_pct:
                 layout[axis].update(self.pct_axis_update)
-                layout[axis].range = dataset.pct_range.copy()
+                minval = dataset.pct_range.get(axis, {}).get("min", 0)
+                maxval = dataset.pct_range.get(axis, {}).get("max", 100)
             if is_log:
-                layout[axis].range = None
-            layout[axis].type = "log" if is_log else "linear"
-
+                layout[axis].type = "log"
+                minval = math.log10(minval) if minval > 0 else None
+                maxval = math.log10(maxval) if maxval > 0 else None
+            layout[axis].autorangeoptions["minallowed"] = minval
+            layout[axis].autorangeoptions["maxallowed"] = maxval
         return dataset.create_figure(layout, is_log, is_pct)
 
     @staticmethod
