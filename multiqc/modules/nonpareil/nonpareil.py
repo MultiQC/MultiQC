@@ -359,7 +359,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Estimated Average Coverage",
             "xmin": 1e-3,
             "ymin": 0,
-            "yCeiling": 100,
+            "ymax": 100,
             "xDecimals": True,
             "yDecimals": True,
             "xLog": True,
