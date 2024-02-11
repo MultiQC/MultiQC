@@ -118,7 +118,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
                 "scale": "RdYlGn",
-                "format": "{:,.2f} " + config.read_count_prefix,
                 "shared_key": "read_count",
                 "hidden": True,
             },
@@ -128,7 +127,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "Blues",
-                "format": "{:,.2f} " + config.base_count_prefix,
                 "shared_key": "base_count",
                 "hidden": True,
             },
@@ -140,7 +138,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn-rev",
-                "format": "{:,.2f}",
             },
             "nonpareil_C": {
                 "title": "Coverage",
@@ -150,14 +147,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn",
-                "format": "{:,.2f}",
             },
             "nonpareil_diversity": {
                 "title": "Diversity",
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
                 "scale": "GnBu-rev",
-                "format": "{:,.2f}",
             },
         }
 
@@ -171,17 +166,17 @@ class MultiqcModule(BaseMultiqcModule):
             "nonpareil_L": {
                 "title": "Read Length",
                 "min": 0,
-                "suffix": " bps",
+                "suffix": " bp",
                 "scale": "GnBu",
                 "format": "{:,.3f}",
                 "hidden": True,
             },
             "nonpareil_AL": {
                 "title": "Adjusted read length",
-                "description": "Adjusted read length (if using kmers)",
+                "description": "Adjusted read length (if using kmers - same as read length for alignment)",
                 "min": 0,
                 "scale": "GnBu",
-                "suffix": " bps",
+                "suffix": " bp",
                 "format": "{:,.3f}",
                 "hidden": True,
             },
@@ -191,9 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.read_count_multiplier,
                 "min": 0,
                 "scale": "RdYlGn",
-                "format": "{:,.2f} " + config.read_count_prefix,
                 "shared_key": "read_count",
-                "hidden": True,
             },
             "nonpareil_LR": {
                 "title": f"{config.base_count_prefix} Seq. effort",
@@ -201,15 +194,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "Blues",
-                "format": "{:,.2f} " + config.base_count_prefix,
                 "shared_key": "base_count",
-                "hidden": True,
             },
             "nonpareil_overlap": {
                 "title": "Read overlap",
                 "description": "Minimum read overlap",
                 "min": 0,
-                "suffix": " bps",
+                "suffix": " bp",
                 "hidden": True,
                 "format": "{:,.0f}",
             },
@@ -219,7 +210,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 1,
                 "min": 0,
                 "hidden": True,
-                "format": "{:,.2f}",
             },
             "nonpareil_kappa": {
                 "title": "Redundancy",
@@ -229,7 +219,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn-rev",
-                "format": "{:,.2f}",
             },
             "nonpareil_C": {
                 "title": "Coverage",
@@ -239,14 +228,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn",
-                "format": "{:,.2f}",
             },
             "nonpareil_consistent": {
                 "title": "Consistent Data?",
                 "description": "Is the data sufficient for accurate estimation?",
                 "modify": lambda x: "Yes" if x == 1 else "No",
                 "scale": False,
-                "hidden": True,
             },
             "nonpareil_star": {
                 "title": "Ideal coverage",
@@ -270,7 +257,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * config.base_count_multiplier,
                 "min": 0,
                 "scale": "RdYlGn-rev",
-                "format": "{:,.2f} " + config.base_count_prefix,
                 "shared_key": "base_count",
             },
             "nonpareil_modelR": {
@@ -287,7 +273,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Dataset Nd index of sequence diversity",
                 "min": 0,
                 "scale": "GnBu-rev",
-                "format": "{:,.2f}",
             },
         }
 
@@ -299,7 +284,30 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Statistics",
             anchor="nonpareil-table",
-            description="General statistics.",
+            description="""
+            Nonpareil uses the redundancy of the reads in metagenomic datasets to
+            estimate the average coverage and predict the amount of sequences that
+            will be required to achieve "nearly complete coverage".
+            """,
+            helptext="""
+            From the Nonpareil [FAQ](http://enve-omics.ce.gatech.edu/nonpareil/faq):
+
+            **What is the Nonpareil diversity index?**
+
+            We haven't yet published a formal description of the "diversity" reported by Nonpareil, which we internally refer to as Nonpareil diversity. The Nonpareil diversity is a measurement of how complex a community is in "sequence space". Graphically, the index is a measurement of "how much to the right the Nonpareil curve is".
+
+            **What's the expected range of the Nonpareil diversity index?**
+
+            We've found that the Nonpareil diversity index ranks communities very
+            reliably in terms of diversity, and can even detect small seasonal
+            variations in bacterial communities.
+            For reference: an environment largely dominated by a single bacterial
+            species like human posterior fornix or the Acid Mine Drainage gets
+            values around 15 to 16, human stool samples around 17 to 19, freshwater
+            and sandy soils around 20 to 22, and marine and other soils around
+            21 to 25. This index has a logarithmic scale, to allow meaningful
+            comparisons between extreme cases, like single species vs soil.
+            """,
             plot=table.plot(self.data_by_sample, headers, pconfig),
         )
 
@@ -320,7 +328,11 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, data in self.data_by_sample.items()
         }
 
-        data_labels = [{"name": "Observed"}, {"name": "Model"}, {"name": "Combined"}]
+        data_labels = [
+            {"name": "Combined"},
+            {"name": "Observed"},
+            {"name": "Model"},
+        ]
         data_plot = list()
         extra_series = list()
         for idx, dataset in enumerate(data_labels):
@@ -343,16 +355,15 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "nonpareil-redundancy-plot",
             "colors": data_colors,
             "title": "Nonpareil: Redundancy levels",
-            "xlab": "Sequencing effort (Mbps)",
+            "xlab": "Sequencing effort (Mbp)",
             "ylab": "Estimated Average Coverage",
             "xmin": 1e-3,
             "ymin": 0,
-            "ymax": 100,
             "yCeiling": 100,
             "xDecimals": True,
             "yDecimals": True,
             "xLog": True,
-            "tt_label": "{point.x:.2f} Mbps: {point.y:.2f}",
+            "tt_label": "{point.x:.2f} Mbp: {point.y:.2f}",
             "extra_series": extra_series,
             "data_labels": data_labels,
         }
@@ -360,6 +371,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Redundancy levels",
             anchor="nonpareil-redundancy",
-            description="Redundancy levels across samples.",
+            description="Observed and modelled redundancy levels across samples.",
+            helptext="""
+            The estimation of the Redundancy is at the core of Nonpareil,
+            but it's when those values are transformed into average coverage
+            that they become comparable across samples, and become useful for
+            project design and sample evaluation.
+            """,
             plot=linegraph.plot(data_plot, pconfig),
         )

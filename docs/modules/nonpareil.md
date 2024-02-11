@@ -1,8 +1,7 @@
 ---
 name: Nonpareil
 url: https://github.com/lmrodriguezr/nonpareil
-description: >
-  Estimate metagenomic coverage and sequence diversity.
+description: Estimate metagenomic coverage and sequence diversity.
 ---
 
 Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
@@ -14,43 +13,43 @@ auxiliary `R` plot functions and save the `curves` object as a `JSON` file. Brie
 call function `export_curve()` on object `curves` (for an example, see [snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/nonpareil/plot.html#code)):
 
 ```r
-  base::library("jsonlite")
-  base::message("Exporting model as JSON")
+base::library("jsonlite")
+base::message("Exporting model as JSON")
 
-  export_curve <- function(object){
-    # Extract variables
-    n <- names(attributes(object))[c(1:12,21:29)]
-    x <- sapply(n, function(v) attr(object,v))
-    names(x) <- n
-    # Extract vectors
-    n <- names(attributes(object))[13:20]
-    y <- lapply(n, function(v) attr(object,v))
-    names(y) <- n
-    curve_json <- c(x, y)
+export_curve <- function(object){
+  # Extract variables
+  n <- names(attributes(object))[c(1:12,21:29)]
+  x <- sapply(n, function(v) attr(object,v))
+  names(x) <- n
+  # Extract vectors
+  n <- names(attributes(object))[13:20]
+  y <- lapply(n, function(v) attr(object,v))
+  names(y) <- n
+  curve_json <- c(x, y)
 
-    # Add model
-    if (object$has.model) {
-      # https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L330-L332
-      x_min <- 1e3
-      x_max <- signif(tail(attr(object,"x.adj"), n=1)*10, 1)
-      x.model <- exp(seq(log(x_min), log(x_max), length.out=1e3))
-      y.model <- predict(object, lr=x.model)
-      curve_json <- append(curve_json, list(x.model=x.model))
-      curve_json <- append(curve_json, list(y.model=y.model))
-    }
-
-    base::print(curve_json)
-    curve_json
+  # Add model
+  if (object$has.model) {
+    # https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L330-L332
+    x_min <- 1e3
+    x_max <- signif(tail(attr(object,"x.adj"), n=1)*10, 1)
+    x.model <- exp(seq(log(x_min), log(x_max), length.out=1e3))
+    y.model <- predict(object, lr=x.model)
+    curve_json <- append(curve_json, list(x.model=x.model))
+    curve_json <- append(curve_json, list(y.model=y.model))
   }
 
-  export_set <- function(object){
-    y <- lapply(object$np.curves, "export_curve")
-    names(y) <- sapply(object$np.curves, function(n) n$label)
-    jsonlite::prettify(toJSON(y, auto_unbox=TRUE))
-  }
+  base::print(curve_json)
+  curve_json
+}
 
-  y <- export_set(curves)
-  write(y, "output.json")
+export_set <- function(object){
+  y <- lapply(object$np.curves, "export_curve")
+  names(y) <- sapply(object$np.curves, function(n) n$label)
+  jsonlite::prettify(toJSON(y, auto_unbox=TRUE))
+}
+
+y <- export_set(curves)
+write(y, "output.json")
 ```
 
 ### Module config options
