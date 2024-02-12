@@ -579,19 +579,18 @@ def run(
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
     else:
-        if filename is None:
-            if config.output_fn_name is not None:
-                filename = config.output_fn_name
-            elif config.title is not None:
-                filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
-                filename += "_multiqc_report"
+        if filename is not None and filename.endswith(".html"):
+            filename = config.output_fn_name[:-5]
+        if filename is None and config.title is not None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+            filename += "_multiqc"
         if filename is not None:
-            if filename.endswith(".html"):
-                filename = config.output_fn_name[:-5]
-            if config.output_fn_name is None:
-                config.output_fn_name = filename
-            config.data_dir_name = f"{filename}_data"
-            config.plots_dir_name = f"{filename}_plots"
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}_report.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
         if not config.output_fn_name.endswith(".html"):
             config.output_fn_name = f"{config.output_fn_name}.html"
 
