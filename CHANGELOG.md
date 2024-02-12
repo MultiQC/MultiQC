@@ -26,6 +26,7 @@
 - BclConvert: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
 - CI: test Windows on a single module to avoid timing out ([#2304](https://github.com/MultiQC/MultiQC/pull/2304))
 - Use Plotly `autorangeoptions` instead of `range`. Properly apply floor and ceiling ([#2306](https://github.com/MultiQC/MultiQC/pull/2306))
+- Pin `Pillow` package, wrap add_logo in try-except ([#2312](https://github.com/MultiQC/MultiQC/pull/2312))
 
 ### New modules
 
