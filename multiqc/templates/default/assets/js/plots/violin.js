@@ -176,13 +176,14 @@ class ViolinPlot extends Plot {
         values.push(value);
       });
 
+      let axisKey = metricIdx === 0 ? "" : metricIdx + 1;
       traces.push({
         type: "violin",
         x: values,
         name: metricIdx, // headerByMetric[metric].title + "  ",
         text: samples, // sample names
-        xaxis: "x" + (metricIdx === 0 ? "" : metricIdx + 1),
-        yaxis: "y" + (metricIdx === 0 ? "" : metricIdx + 1),
+        xaxis: "x" + axisKey,
+        yaxis: "y" + axisKey,
         ...params,
       });
     });
@@ -214,11 +215,11 @@ class ViolinPlot extends Plot {
 
     let highlightingEnabled = sampleSettings.filter((s) => s.highlight).length > 0;
 
-    let seed = 1;
+    let seed = 42.1231;
     function random() {
       // Math.random does not have a seed, so we use this
       let x = Math.sin(seed++) * 10000;
-      return x - Math.floor(x);
+      return x - Math.round(x);
     }
     let scatters = [];
     // Add scatter plots on top of violins to show individual points
@@ -251,7 +252,7 @@ class ViolinPlot extends Plot {
         scatters.push({
           type: "scatter",
           x: [value],
-          y: [metricIdx + random() * jitter - jitter / 2], // add vertical jitter
+          y: [metricIdx + random() * jitter], // add vertical jitter
           text: [state.name ?? sample],
           xaxis: "x" + axisKey,
           yaxis: "y" + axisKey,

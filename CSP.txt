@@ -15,7 +15,8 @@ script-src 'self'
     'sha256-MaWOHt3Ypx+T0eaSaDVcZaqFeYuyvtYPok/th8uU/1s=' # class LinePlot extends Plot {  activeDatasetSize() {    if (this.datasets.length
     'sha256-MoNMGbvzqWOC7dSfxHbJJYTdku35WXwcFpx5auIgvwI=' # class ScatterPlot extends Plot {  activeDatasetSize() {    if (this.datasets.len
     'sha256-4o06/K8XbqKEjPmqX0NFpD63VEZGYlgmb3wTZGE3DXE=' # class HeatmapPlot extends Plot {  constructor(dump) {    super(dump);    this.xC
-    'sha256-lU9nANX+BDx4HvhiaGlnHBQoHQNid5SVGaY+rz21/Lc=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-J1hk+IJNtxaSYwkdE/OOMkkcGHFLfsxqVIcK/jAkymU=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-L0eGKfzVDFdE34HopbSv113Z4Qv7z22YyZ3aCfFB1D4=' # // Return JS code required for plotting a single sample// RSeQC plot. Attempt to
 
     # 1.19
     'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # jquery.tablesorter.min.js

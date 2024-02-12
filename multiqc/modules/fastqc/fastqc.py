@@ -802,8 +802,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "ylab": "Read Count",
                 "xlab": "Sequence Length (bp)",
                 "ymin": 0,
-                "yMinTickInterval": 0.1,
-                "xDecimals": False,
                 "colors": self.get_status_cols("sequence_length_distribution"),
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }
@@ -845,8 +843,6 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Sequence Duplication Level",
             "ymax": 100 if max_dupval <= 100.0 else None,
             "ymin": 0,
-            "yMinTickInterval": 0.1,
-            "yLabelFormat": "{value:.0f}%",
             "colors": self.get_status_cols("sequence_duplication_levels"),
             "tt_decimals": 2,
             "tt_suffix": "%",
