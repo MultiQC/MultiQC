@@ -169,7 +169,6 @@ class Plot(ABC):
             )
             if self.flat
             else None,
-            autotypenumbers="strict",  # do not convert strings to numbers
         )
         # Layout update for the counts/percentage switch
         self.pct_axis_update = dict(
@@ -544,10 +543,14 @@ def _dataset_layout(
 
     # Format on-hover tooltips
     ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    if pconfig.get("ylab_format") and "%" in pconfig["ylab_format"]:
+    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
+    if ylabformat and "%" in ylabformat:
         ysuffix = "%"
 
     xsuffix = pconfig.get("xsuffix")
+    xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
+    if xlabformat and "%" in xlabformat:
+        xsuffix = "%"
 
     if "tt_label" in pconfig:
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
@@ -584,7 +587,7 @@ def _dataset_layout(
         hovertemplate = None
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = pconfig.get("tt_decimals")
+    tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
