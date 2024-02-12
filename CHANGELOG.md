@@ -2,27 +2,43 @@
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
+### Highlights
+
+#### New plotting library
+
+MultiQC v1.20 comes with totally new plotting code for MultiQC reports. This is a huge change to the report output. We've done our best to maintain feature parity with the previous plotting code, but please do let us know if you spot any bugs or changes in behaviour by creating a GitHub issue.
+
+This change comes with many improvements and new features, and paves the way for more in the future. To find out more, read the [associated blog post](https://seqera.io/blog/multiqc-plotly/).
+
+For now, you can revert to the previous plotting code by using the `highcharts` report template (`multiqc --template highcharts`). This will be removed in v1.21.
+
+Note that there are several plotting configuration options which have been removed:
+
+- `click_func`
+- `cursor`
+- `tt_percentages` (use `tt_suffix: "%"`)
+- Bar plot:
+  - `use_legend` (automatically hidden if there is only 1 category)
+- Line plot:
+  - `labelSize`
+  - `xDecimals`, `yDecimals` (automatic if all values can be cast to int)
+  - `xLabelFormat`, `yLabelFormat` (use `tt_label`)
+  - `pointFormat`
+- Heatmap:
+  - `datalabel_colour`
+  - `borderWidth`
+
+#### Moved GitHub and docker repositories
+
+The v1.20 release is also the first release we've had since we moved the MultiQC repositories. Please note that the code is now at [MultiQC/MultiQC](https://github.com/MultiQC/MultiQC) (formerly [ewels/MultiQC](https://github.com/ewels/MultiQC)) and the same for the Docker repository. The GitHub repo should automatically redirect, but it's still good to update any references you may have.
+
 ### MultiQC updates
 
 - Support Plotly as a new backend for plots ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
   - The default template now uses Plotly for all plots
   - Added a new plot type `violin` (replaces `beeswarm`)
   - Moved legacy Highcharts/Matplotlib code under an optional template `highcharts`
-    (e.g. `multiqc --template highcharts`) ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
-  - Note that there are several plotting configuration option that the new Plotly core doesn't support anymore, namely:
-    - `click_func`
-    - `cursor`
-    - `tt_percentages` (use `tt_suffix: "%"`)
-    - Bar plot:
-      - `use_legend` (automatically hidden if there is only 1 category)
-    - Line plot:
-      - `labelSize`
-      - `xDecimals`, `yDecimals` (automatic if all values can be cast to int)
-      - `xLabelFormat`, `yLabelFormat` (use `tt_label`)
-      - `pointFormat`
-    - Heatmap:
-      - `datalabel_colour`
-      - `borderWidth`
+    ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
 - Update docs to work with Astro 4 ([#2256](https://github.com/MultiQC/MultiQC/pull/2256))
@@ -47,6 +63,8 @@
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
 - [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
   - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
+- [**Nonpareil**](https://github.com/lmrodriguezr/nonpareil) ([#2215](https://github.com/MultiQC/MultiQC/pull/2215))
+  - Estimate metagenomic coverage and sequence diversity.
 
 ### Module updates
 
