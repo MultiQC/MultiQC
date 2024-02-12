@@ -5,22 +5,24 @@
 ### MultiQC updates
 
 - Support Plotly as a new backend for plots ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
-- Move legacy Highcharts/Matplotlib code under an optional template `highcharts`
-  (e.g. `multiqc --template highcharts`) ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
-  There are several plotting configuration option that we don't support with Plotly, namely.
-  - `click_func`
-  - `cursor`
-  - `tt_percentages` (use `tt_suffix: "%"`)
-  - Bar plot:
-    - `use_legend` (automatically hidden if there is only 1 category)
-  - Line plot:
-    - `labelSize`
-    - `xDecimals`, `yDecimals` (automatic if all values can be cast to int)
-    - `xLabelFormat`, `yLabelFormat` (use `tt_label`)
-    - `pointFormat`
-  - Heatmap:
-    - `datalabel_colour`
-    - `borderWidth`
+  - The default template now uses Plotly for all plots
+  - Added a new plot type `violin` (replaces `beeswarm`)
+  - Moved legacy Highcharts/Matplotlib code under an optional template `highcharts`
+    (e.g. `multiqc --template highcharts`) ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
+  - Note that there are several plotting configuration option that the new Plotly core doesn't support anymore, namely:
+    - `click_func`
+    - `cursor`
+    - `tt_percentages` (use `tt_suffix: "%"`)
+    - Bar plot:
+      - `use_legend` (automatically hidden if there is only 1 category)
+    - Line plot:
+      - `labelSize`
+      - `xDecimals`, `yDecimals` (automatic if all values can be cast to int)
+      - `xLabelFormat`, `yLabelFormat` (use `tt_label`)
+      - `pointFormat`
+    - Heatmap:
+      - `datalabel_colour`
+      - `borderWidth`
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
