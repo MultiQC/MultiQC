@@ -213,8 +213,8 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
 
     # Now adding module-specific files
     for path in altered_files:
-        if str(path).startswith(f"{MODULES_DIR}/"):
-            mod_name = path.parent.name
+        if path.is_relative_to(MODULES_DIR):
+            mod_name = path.relative_to(MODULES_DIR).parts[0]
             mod_names.add(mod_name)
 
     return mod_names
