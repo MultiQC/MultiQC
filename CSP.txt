@@ -8,7 +8,7 @@ script-src 'self'
     'sha256-bEI7fmPkynn/19cr8rouPnov+ZbZ7P8bsWO2AiSfIGM=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
     'sha256-s+I8RWf3BWIpPmzCGLcbThkbBqyCu0jQ6bYb3ES1iDA=' # /*** plotly.js v2.27.0* Copyright 2012-2023, Plotly, Inc.* All rights reserved.*
     'sha256-eiGS4SJ1q6AOA5XgpkbRE5+XO2rNz+D2JjZ6lY57uwg=' # ////////////////////////////////////////////////// Flat plots controls//////////
-    'sha256-bfZnWs5fBuHQjRdWoZnyYPvE8Yt72b6ZR3djAP5Rf9k=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
+    'sha256-VQVaSCWx7Tw7JDkvFSYrZog9dle5pp+JncGkAdO1JHQ=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
     'sha256-1OBEUwtItTLX7y6ruLkqRS+jj5o2XKFAF6Z8mp+Y/U0=' # ////////////////////////////////////////////////// MultiQC Table code///////////
     'sha256-f8lyyCxWBLVPbYs/tVc1OEs3glMEm8wimK2K0SZprlM=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
     'sha256-ASQylzECdP7VNkxfkmQwDp4jNK9wdjolkizZgk2Zen0=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
