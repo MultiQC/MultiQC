@@ -143,22 +143,24 @@ class DataTable:
                 shared_key = headers[idx][k].get("shared_key", None)
                 suffix = None
                 if shared_key in ["read_count", "long_read_count", "base_count"]:
-                    if shared_key == "read_count":
+                    if shared_key == "read_count" and config.read_count_prefix:
                         multiplier = config.read_count_multiplier
                         suffix = " " + config.read_count_prefix
-                    elif shared_key == "long_read_count":
+                    elif shared_key == "long_read_count" and config.long_read_count_prefix:
                         multiplier = config.long_read_count_multiplier
                         suffix = " " + config.long_read_count_prefix
-                    elif shared_key == "base_count":
+                    elif shared_key == "base_count" and config.base_count_prefix:
                         multiplier = config.base_count_multiplier
                         suffix = " " + config.base_count_prefix
+                    else:
+                        multiplier = 1
                     if headers[idx][k].get("modify") is None:
                         headers[idx][k]["modify"] = lambda x: x * multiplier
                     if headers[idx][k].get("min") is None:
                         headers[idx][k]["min"] = 0
                     if headers[idx][k].get("format") is None:
                         if multiplier == 1:
-                            headers[idx][k]["format"] = "{:,.0f}"
+                            headers[idx][k]["format"] = "{:,d}"
                 if suffix:
                     suffix = suffix.replace(" ", "&nbsp;")
                     if "suffix" not in headers[idx][k]:
