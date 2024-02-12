@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
+
 ### New modules
 
 ### Module updates
