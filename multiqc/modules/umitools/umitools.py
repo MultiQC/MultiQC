@@ -109,11 +109,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Calculate a few simple supplementary stats
             try:
-                data["percent_passing"] = round(((data["dedup_output_reads"] / data["dedup_input_reads"]) * 100.0), 2)
+                data["dedup_percent_passing"] = round(
+                    ((data["dedup_output_reads"] / data["dedup_input_reads"]) * 100.0), 2
+                )
             except (KeyError, ZeroDivisionError):
                 pass
             try:
-                data["removed_reads"] = data["dedup_input_reads"] - data["dedup_output_reads"]
+                data["dedup_removed_reads"] = data["dedup_input_reads"] - data["dedup_output_reads"]
             except KeyError:
                 pass
 
@@ -149,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report
         """
         headers = {
-            "output_reads": {
+            "dedup_output_reads": {
                 "title": f"{config.read_count_prefix} Unique Reads",
                 "description": f"Reads remaining after deduplication ({config.read_count_desc})",
                 "min": 0,
@@ -157,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "scale": "PuRd",
             },
-            "percent_passing": {
+            "dedup_percent_passing": {
                 "title": "% Pass Dedup",
                 "description": "% processed reads that passed deduplication",
                 "max": 100,
@@ -170,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def extract_general_stats_table(self, data_by_sample):
         headers = {
-            "output_reads": {
+            "extract_output_reads": {
                 "title": f"{config.read_count_prefix} Extracted Reads",
                 "description": f"Reads remaining after extraction ({config.read_count_desc})",
                 "min": 0,
@@ -186,8 +188,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = {
-            "output_reads": {"color": "#7fc97f", "name": "Reads remaining"},
-            "removed_reads": {"color": "#fdc086", "name": "Reads removed"},
+            "dedup_output_reads": {"color": "#7fc97f", "name": "Reads remaining"},
+            "dedup_removed_reads": {"color": "#fdc086", "name": "Reads removed"},
         }
 
         return self.add_section(
