@@ -115,10 +115,19 @@ class BarPlot(Plot):
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 
-        # Set height to be proportional to the number of samples
-        PADDING = 140  # plot header and footer
+        # Set the barmode
+        barmode = "relative"  # stacking, but drawing negative values below zero
+        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
+            barmode = "group"  # side by side
 
-        def n_elements_to_size(n: int):
+        max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
+
+        n_bars = max_n_samples
+        # Group mode puts each category in a separate bar, so need to multiply by the number of categories
+        if barmode == "group":
+            n_bars *= max_n_cats
+
+        def n_bars_to_size(n: int):
             if n >= 30:
                 return 15
             if n >= 20:
@@ -129,16 +138,18 @@ class BarPlot(Plot):
                 return 30
             return 35
 
-        height = max_n_samples * n_elements_to_size(max_n_samples) + PADDING
+        # Set height to be proportional to the number of samples
+        height = n_bars * n_bars_to_size(n_bars)
 
         # Set height to also be proportional to the number of cats to fit a legend
         HEIGHT_PER_LEGEND_ITEM = 19
-        n_cats = max([len(dataset.cats) for dataset in self.datasets])
-        legend_height = HEIGHT_PER_LEGEND_ITEM * n_cats + PADDING
+        legend_height = HEIGHT_PER_LEGEND_ITEM * max_n_cats
         # expand the plot to fit the legend:
         height = max(height, max(height, legend_height))
         # but not too much - if there are only 2 samples, we don't want the plot to be too high:
-        height = min(800, max(height, legend_height))
+        height = min(660, max(height, legend_height))
+
+        height += 140  # Add space for the title and footer
 
         # now, limit the max and min height (plotly will start to automatically skip
         # some of the ticks on the left when the plot is too high)
@@ -147,15 +158,12 @@ class BarPlot(Plot):
         height = min(MAX_HEIGHT, height)
         height = max(MIN_HEIGHT, height)
 
-        # Set the barmode
-        barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
-            barmode = "group"  # side by side
-
         self.layout.update(
             height=height,
             showlegend=True,
             barmode=barmode,
+            bargroupgap=0,
+            bargap=0.2,
             yaxis=dict(
                 showgrid=False,
                 categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
@@ -199,13 +207,12 @@ class BarPlot(Plot):
                     for i in range(len(dataset.samples))
                 )
 
-            xmin_cnt = self.pconfig.get("ymin", xmin_cnt)
-            xmax_cnt = self.pconfig.get("ymax", xmax_cnt)
             dataset.layout.update(
                 yaxis=dict(
                     title=None,
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
+                    autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
                     # Prevent JavaScript from automatically parsing categorical values as numbers:
                     type="category",
                 ),
@@ -213,8 +220,12 @@ class BarPlot(Plot):
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
-                    range=[xmin_cnt, xmax_cnt],
+                    autorangeoptions={
+                        "minallowed": xmin_cnt,
+                        "maxallowed": xmax_cnt,
+                    },
                 ),
+                showlegend=len(dataset.cats) > 1,
             )
             dataset.trace_params.update(
                 orientation="h",
@@ -261,13 +272,14 @@ class BarPlot(Plot):
 
                 if barmode == "group":
                     # calculating the min percentage range as well because it will be negative for negative values
-                    xmin_pct = min(min(cat["data_pct"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
+                    dataset.pct_range["xaxis"]["min"] = min(
+                        min(cat["data_pct"][i] for cat in dataset.cats) for i in range(len(dataset.samples))
+                    )
                 else:
-                    xmin_pct = min(
+                    dataset.pct_range["xaxis"]["min"] = min(
                         sum(cat["data_pct"][i] if cat["data_pct"][i] < 0 else 0 for cat in dataset.cats)
                         for i in range(len(dataset.samples))
                     )
-                dataset.pct_range = [xmin_pct, 100]
 
         if self.add_log_tab:
             # Sorting from small to large so the log switch makes sense

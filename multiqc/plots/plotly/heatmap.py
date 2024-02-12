@@ -224,6 +224,7 @@ class HeatmapPlot(Plot):
                 [0.9, "#d73027"],
                 [1, "#a50026"],
             ]
+        decimal_places = pconfig.get("decimalPlaces", 2)
         for ds in self.datasets:
             ds.trace_params = {
                 "colorscale": colorscale,
@@ -234,7 +235,7 @@ class HeatmapPlot(Plot):
             }
             # Enable datalabels if there are less than 20x20 cells, unless heatmap_config.datalabels is set explicitly
             if pconfig.get("datalabels") is None and num_rows * num_cols < 400:
-                ds.trace_params["texttemplate"] = "%{z:.2f}"
+                ds.trace_params["texttemplate"] = "%{z:." + str(decimal_places) + "f}"
 
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in JavaScript"""

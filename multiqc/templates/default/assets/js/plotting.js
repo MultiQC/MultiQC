@@ -208,9 +208,7 @@ $(function () {
     mqc_plots[target].lActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    mqc_plots[target].axisControlledBySwitches.map((axis) => {
-      Plotly.relayout(target, axis + ".type", mqc_plots[target].lActive ? "log" : "linear");
-    });
+    renderPlot(target);
   });
 
   // Switch data source
@@ -381,15 +379,23 @@ function renderPlot(target) {
 
   // Apply pct/log toggle states
   plot.axisControlledBySwitches.map((axis) => {
-    plot.layout[axis].type = plot.lActive ? "log" : "linear";
+    // Setting range explicitly just for the bar plot:
+    plot.layout[axis].type = "linear";
+    let min = plot.layout[axis]["autorangeoptions"]["minallowed"];
+    let max = plot.layout[axis]["autorangeoptions"]["maxallowed"];
     if (plot.pActive) {
-      updateObject(plot.layout[axis], plot["pctAxisUpdate"], false);
-      plot.layout[axis]["range"] = [...dataset["pct_range"]];
+      updateObject(plot.layout[axis], plot.pctAxisUpdate, false);
+      min = dataset["pct_range"][axis]["min"];
+      max = dataset["pct_range"][axis]["max"];
     }
     if (plot.lActive) {
+      plot.layout[axis].type = "log";
       // otherwise Plotly will interpret the range as log10:
-      plot.layout[axis]["range"] = null;
+      min = min && min > 0 ? Math.log10(min) : null;
+      max = min && max > 0 ? Math.log10(max) : null;
     }
+    plot.layout[axis]["autorangeoptions"]["minallowed"] = min;
+    plot.layout[axis]["autorangeoptions"]["maxallowed"] = max;
   });
 
   let traces = plot.buildTraces();

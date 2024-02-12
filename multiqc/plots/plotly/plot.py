@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple
 
+import math
 import plotly.graph_objects as go
 
 from multiqc.utils import mqc_colour, config
@@ -41,7 +42,7 @@ class BaseDataset(ABC):
     dconfig: Dict  # user dataset-specific configuration
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
     trace_params: Dict
-    pct_range = [None, None]  # range of the percentage view
+    pct_range: Dict
 
     def dump_for_javascript(self) -> Dict:
         d = {k: v for k, v in self.__dict__.items()}
@@ -98,6 +99,10 @@ class Plot(ABC):
                 dconfig=dict(),
                 layout=dict(),
                 trace_params=dict(),
+                pct_range=dict(  # range for the percentage view for each axis
+                    xaxis=dict(min=0, max=100),
+                    yaxis=dict(min=0, max=100),
+                ),
             )
             for i in range(n_datasets)
         ]
@@ -397,13 +402,19 @@ class Plot(ABC):
         layout.update(**dataset.layout)
         layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches():
+            layout[axis].type = "linear"
+            minval = layout[axis].autorangeoptions["minallowed"]
+            maxval = layout[axis].autorangeoptions["maxallowed"]
             if is_pct:
                 layout[axis].update(self.pct_axis_update)
-                layout[axis].range = dataset.pct_range.copy()
+                minval = dataset.pct_range.get(axis, {}).get("min", 0)
+                maxval = dataset.pct_range.get(axis, {}).get("max", 100)
             if is_log:
-                layout[axis].range = None
-            layout[axis].type = "log" if is_log else "linear"
-
+                layout[axis].type = "log"
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            layout[axis].autorangeoptions["minallowed"] = minval
+            layout[axis].autorangeoptions["maxallowed"] = maxval
         return dataset.create_figure(layout, is_log, is_pct)
 
     @staticmethod
@@ -469,27 +480,32 @@ class Plot(ABC):
         text: str = "Created with MultiQC",
         font_size: int = 16,
     ) -> io.BytesIO:
-        from PIL import Image, ImageDraw
+        try:
+            from PIL import Image, ImageDraw
 
-        # Load the image from the BytesIO object
-        image = Image.open(img_buffer)
+            # Load the image from the BytesIO object
+            image = Image.open(img_buffer)
 
-        # Create a drawing context
-        draw = ImageDraw.Draw(image)
+            # Create a drawing context
+            draw = ImageDraw.Draw(image)
 
-        # Define the text position. In order to do that, first calculate the expected
-        # text block width, given the font size.
-        # noinspection PyArgumentList
-        text_width: float = draw.textlength(text, font_size=font_size)
-        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
+            # Define the text position. In order to do that, first calculate the expected
+            # text block width, given the font size.
+            # noinspection PyArgumentList
+            text_width: float = draw.textlength(text, font_size=font_size)
+            position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
 
-        # Draw the text
-        draw.text(position, text, fill="#9f9f9f", font_size=font_size)
+            # Draw the text
+            draw.text(position, text, fill="#9f9f9f", font_size=font_size)
 
-        # Save the image to a BytesIO object
-        output_buffer = io.BytesIO()
-        image.save(output_buffer, format=format)
-        output_buffer.seek(0)
+            # Save the image to a BytesIO object
+            output_buffer = io.BytesIO()
+            image.save(output_buffer, format=format)
+            output_buffer.seek(0)
+
+        except Exception as e:
+            logger.warning(f"Failure adding logo to the plot: {e}")
+            output_buffer = img_buffer
 
         return output_buffer
 
@@ -505,23 +521,41 @@ class Plot(ABC):
         return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
 
 
+def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
+    """
+    Rename the deprecated HighCharts-specific terminology in a config.
+    """
+    conf = conf.copy()
+    if "yCeiling" in conf:
+        conf["yaxis"] = conf.pop("y_ceiling")
+    if "xAxis" in conf:
+        conf["xaxis"] = conf.pop("xAxis")
+    if "tooltip" in conf:
+        conf["hovertemplate"] = conf.pop("tooltip")
+    return conf
+
+
 def _dataset_layout(
     pconfig: Dict,
     dconfig: Dict,
     default_tt_label: Optional[str],
 ) -> Tuple[Dict, Dict]:
     """
-    Sets dataset-specific number format layout and trace options.
+    Given plot config and dataset config, set layout and trace params.
     """
     pconfig = pconfig.copy()
     pconfig.update(dconfig)
 
     # Format on-hover tooltips
     ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    if pconfig.get("ylab_format") and "%" in pconfig["ylab_format"]:
+    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
+    if ylabformat and "%" in ylabformat:
         ysuffix = "%"
 
     xsuffix = pconfig.get("xsuffix")
+    xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
+    if xlabformat and "%" in xlabformat:
+        xsuffix = "%"
 
     if "tt_label" in pconfig:
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
@@ -557,35 +591,34 @@ def _dataset_layout(
     else:
         hovertemplate = None
 
-    xlab = pconfig.get("xlab")
-    ylab = pconfig.get("ylab")
-    xmin = pconfig.get("xmin", pconfig.get("yFloor"))
-    ymin = pconfig.get("ymin", pconfig.get("yFloor"))
-    xmax = pconfig.get("xmax")
-    if xmax is None and "yCeiling" in pconfig and "xMinRange" not in pconfig:
-        xmax = pconfig.get("yCeiling")
-    ymax = pconfig.get("ymax")
-    if ymax is None and "yCeiling" in pconfig and "yMinRange" not in pconfig:
-        ymax = pconfig.get("yCeiling")
-
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = pconfig.get("tt_decimals")
+    tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",
-            title=dict(text=xlab),
-            range=[xmin, xmax],
-            rangemode="tozero" if xmin == 0 else "normal",
+            title=dict(text=pconfig.get("xlab")),
+            rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("xFloor"),
+                clipmax=pconfig.get("xCeiling"),
+                minallowed=pconfig.get("xmin"),
+                maxallowed=pconfig.get("xmax"),
+            ),
         ),
         yaxis=dict(
             hoverformat=y_hoverformat,
             ticksuffix=ysuffix or "",
-            title=dict(text=ylab),
-            range=[ymin, ymax],
-            rangemode="tozero" if ymin == 0 else "normal",
+            title=dict(text=pconfig.get("ylab")),
+            rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
+            autorangeoptions=dict(
+                clipmin=pconfig.get("yFloor"),
+                clipmax=pconfig.get("yCeiling"),
+                minallowed=pconfig.get("ymin"),
+                maxallowed=pconfig.get("ymax"),
+            ),
         ),
     )
 

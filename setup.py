@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.20dev"
+version = "1.21dev"
 dl_version = "main" if "dev" in version else f"v{version}"
 
 print(
@@ -57,6 +57,8 @@ setup(
         "jinja2>=3.0.0",
         "markdown",
         "plotly",
+        "kaleido",  # for flat plot export
+        "Pillow>=10",  # to add logo to flat plots
         "packaging",
         "pyyaml>=4",
         "requests",
@@ -66,7 +68,6 @@ setup(
         "importlib-metadata",
         "humanize",
         "pyaml-env",
-        "kaleido",
     ],
     entry_points={
         "console_scripts": [
@@ -160,6 +161,7 @@ setup(
             "nanostat = multiqc.modules.nanostat:MultiqcModule",
             "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
+            "nonpareil = multiqc.modules.nonpareil:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
