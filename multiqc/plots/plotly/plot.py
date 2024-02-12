@@ -480,27 +480,32 @@ class Plot(ABC):
         text: str = "Created with MultiQC",
         font_size: int = 16,
     ) -> io.BytesIO:
-        from PIL import Image, ImageDraw
+        try:
+            from PIL import Image, ImageDraw
 
-        # Load the image from the BytesIO object
-        image = Image.open(img_buffer)
+            # Load the image from the BytesIO object
+            image = Image.open(img_buffer)
 
-        # Create a drawing context
-        draw = ImageDraw.Draw(image)
+            # Create a drawing context
+            draw = ImageDraw.Draw(image)
 
-        # Define the text position. In order to do that, first calculate the expected
-        # text block width, given the font size.
-        # noinspection PyArgumentList
-        text_width: float = draw.textlength(text, font_size=font_size)
-        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
+            # Define the text position. In order to do that, first calculate the expected
+            # text block width, given the font size.
+            # noinspection PyArgumentList
+            text_width: float = draw.textlength(text, font_size=font_size)
+            position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
 
-        # Draw the text
-        draw.text(position, text, fill="#9f9f9f", font_size=font_size)
+            # Draw the text
+            draw.text(position, text, fill="#9f9f9f", font_size=font_size)
 
-        # Save the image to a BytesIO object
-        output_buffer = io.BytesIO()
-        image.save(output_buffer, format=format)
-        output_buffer.seek(0)
+            # Save the image to a BytesIO object
+            output_buffer = io.BytesIO()
+            image.save(output_buffer, format=format)
+            output_buffer.seek(0)
+
+        except Exception as e:
+            logger.warning(f"Failure adding logo to the plot: {e}")
+            output_buffer = img_buffer
 
         return output_buffer
 

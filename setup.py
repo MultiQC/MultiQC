@@ -57,6 +57,8 @@ setup(
         "jinja2>=3.0.0",
         "markdown",
         "plotly",
+        "kaleido",  # for flat plot export
+        "Pillow>=10",  # to add logo to flat plots
         "packaging",
         "pyyaml>=4",
         "requests",
@@ -66,7 +68,6 @@ setup(
         "importlib-metadata",
         "humanize",
         "pyaml-env",
-        "kaleido",
     ],
     entry_points={
         "console_scripts": [
