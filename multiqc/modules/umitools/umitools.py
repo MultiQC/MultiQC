@@ -61,27 +61,11 @@ class MultiqcModule(BaseMultiqcModule):
         # write data to the general statistics table
         self.umitools_general_stats_table()
 
-        # add a section with a deduplicated reads plot to the report
-        self.add_section(
-            name="Deduplicated Reads",
-            anchor="umitools-dedup-plot",
-            plot=self.umitools_deduplication_plot(),
-        )
+        self.umitools_deduplication_plot()
 
-        # add a section with a beeswarm plot of UMI stats to the report
-        self.add_section(
-            name="UMI Stats",
-            anchor="umitools-umi-stats",
-            description="Statistics from running `umi_tools dedup` or `umi_tools extract`",
-            helptext="""
-            - **Positions Dedup**: Total number of positions deduplicated
-            - **Total UMIs**: Total UMIs found in sample
-            - **Unique UMIs**: Unique UMIs found in sample
-            - **Mean #UMI**: Mean number of unique UMIs per position
-            - **Max #UMI**: Max number of unique UMIs per position
-            """,
-            plot=self.umitools_umi_stats_swarm(),
-        )
+        self.umitools_extract_barplot()
+
+        self.umitools_umi_stats_violin()
 
     @staticmethod
     def parse_logs(f):
@@ -174,18 +158,48 @@ class MultiqcModule(BaseMultiqcModule):
             "removed_reads": {"color": "#fdc086", "name": "Reads removed"},
         }
 
-        # Config for the plot
-        config = {
-            "id": "umitools_deduplication",
-            "title": "UMI-tools: Deduplication Counts",
-            "ylab": "# Reads",
-            "cpswitch_counts_label": "Number of Reads",
+        return self.add_section(
+            name="Deduplicated Reads",
+            anchor="umitools-dedup-plot",
+            plot=bargraph.plot(
+                self.umitools_data,
+                keys,
+                {
+                    "id": "umitools_deduplication_barplot",
+                    "title": "UMI-tools: Deduplication Counts",
+                    "ylab": "# Reads",
+                    "cpswitch_counts_label": "Number of Reads",
+                },
+            ),
+        )
+
+    def umitools_extract_barplot(self):
+        keys = {
+            "read1_match": {"color": "#7fc97f", "name": "Read1 Match"},
+            "read2_match": {"color": "#7fa2c9", "name": "Read2 Match"},
+            "read1_mismatch": {"color": "#fdc086", "name": "Read1 Mismatch"},
+            "read2_mismatch": {"color": "#fd868e", "name": "Read2 Mismatch"},
         }
 
-        return bargraph.plot(self.umitools_data, keys, config)
+        # add a section with a beeswarm plot of UMI stats to the report
+        self.add_section(
+            name="Extract Stats",
+            anchor="umitools_extract",
+            description="Read stats from `umi_tools extract`",
+            plot=bargraph.plot(
+                self.umitools_data,
+                keys,
+                {
+                    "id": "umitools_extract_barplot",
+                    "title": "UMI-tools: Extract Stats",
+                    "ylab": "# Reads",
+                    "cpswitch_counts_label": "Number of Reads",
+                },
+            ),
+        )
 
-    def umitools_umi_stats_swarm(self):
-        """Generate a swarmplot of umi stats for the main report"""
+    def umitools_umi_stats_violin(self):
+        """Generate a violin of UMI stats for the main report"""
 
         headers = {
             "positions_deduplicated": {
@@ -253,10 +267,24 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        # Config for the table
-        config = {
-            "id": "umitools_stats_swarmplot",
-            "table_title": "UMI-tools: UMI stats",
-        }
-
-        return beeswarm.plot(self.umitools_data, headers, config)
+        # add a section with a beeswarm plot of UMI stats to the report
+        self.add_section(
+            name="UMI Stats",
+            anchor="umitools-umi-stats",
+            description="Statistics from running `umi_tools dedup` or `umi_tools extract`",
+            helptext="""
+            - **Positions Dedup**: Total number of positions deduplicated
+            - **Total UMIs**: Total UMIs found in sample
+            - **Unique UMIs**: Unique UMIs found in sample
+            - **Mean #UMI**: Mean number of unique UMIs per position
+            - **Max #UMI**: Max number of unique UMIs per position
+            """,
+            plot=beeswarm.plot(
+                self.umitools_data,
+                headers,
+                {
+                    "id": "umitools_stats_violin",
+                    "table_title": "UMI-tools: UMI stats",
+                },
+            ),
+        )
