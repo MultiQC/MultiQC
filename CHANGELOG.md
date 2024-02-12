@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
+
 ### New modules
 
 ### Module updates
