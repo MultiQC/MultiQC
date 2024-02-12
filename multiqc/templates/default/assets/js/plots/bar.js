@@ -82,6 +82,8 @@ class BarPlot extends Plot {
         // separate trace. Sacrificing dimming the de-highlighted bars to get rid of this gap.
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
         samples = this.filteredSettings.map((s) => s.name);
+        params.marker.color = "rgba(" + cat.color + ")";
+
         return {
           type: "bar",
           x: cat.data,
