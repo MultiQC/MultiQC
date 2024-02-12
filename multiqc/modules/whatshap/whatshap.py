@@ -442,6 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "WhatsHap",
                     "id": "whatshap-stats-table",
+                    "title": "WhatsHap Statistics",
                 },
             ),
         )

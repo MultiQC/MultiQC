@@ -241,7 +241,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc . --title "My amaz
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
 To use the most recent development code, use `multiqc/multiqc:dev`.
-You can also specify specific versions, eg: `multiqc/multiqc:1.20`.
+You can also specify specific versions, eg: `multiqc/multiqc:v1.20`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
@@ -297,7 +297,7 @@ This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewel
 To build a singularity container image from the docker image, use the following command: _(change `1.20` to the current MultiQC version)_
 
 ```bash
-singularity build multiqc-1.20.sif docker://multiqc/multiqc:1.20
+singularity build multiqc-1.20.sif docker://multiqc/multiqc:v1.20
 ```
 
 Then, use `singularity run` to run the image with the normal MultiQC arguments:

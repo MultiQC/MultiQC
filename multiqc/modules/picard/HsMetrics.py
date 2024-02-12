@@ -181,6 +181,7 @@ def parse_reports(module):
                 "namespace": "HsMetrics",
                 "scale": "RdYlGn",
                 "min": 0,
+                "title": "Picard HsMetrics",
             },
         ),
     )
@@ -254,8 +255,8 @@ def _general_stats_table(module, data):
         for c in covs:
             headers[f"PCT_TARGET_BASES_{c}X"] = {
                 "id": f"{module.anchor}_target_bases_{c}X",
-                "title": f"Target Bases &ge; {c}X",
-                "description": f"Percent of target bases with coverage &ge; {c}X",
+                "title": f"Target Bases ≥ {c}X",
+                "description": f"Percent of target bases with coverage ≥ {c}X",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",

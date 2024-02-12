@@ -100,8 +100,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # Special case
                 if occurrence == "rest":
                     continue
-                # Count of the occurrence
-                count = int(spline[3])
+                # Count of the occurrence, checking for lines with no asterisk before count.
+                if "*" in spline[2]:
+                    count = int(spline[3])
+                else:
+                    count = int(spline[2])
                 data[int(occurrence)] = count
             # If we are no longer in the histogram
             elif found_histogram:

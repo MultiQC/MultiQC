@@ -2,7 +2,7 @@
 
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 import inspect
 
@@ -71,7 +71,6 @@ output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
 data_format: str
-module_tag: List[str]
 force: bool
 no_ansi: bool
 quiet: bool
@@ -93,6 +92,11 @@ plots_force_flat: bool
 plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
+lineplot_style: str
+lineplot_max_samples: int
+violin_downsample_after: int
+violin_min_threshold_outliers: int
+violin_min_threshold_no_points: int
 collapse_tables: bool
 max_table_rows: int
 table_columns_visible: Dict
@@ -106,6 +110,7 @@ remove_sections: List
 section_comments: Dict
 lint: bool  # Deprecated since v1.17
 strict: bool
+development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
 software_versions: Dict
@@ -135,6 +140,7 @@ disable_version_detection: int
 versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
+filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
@@ -142,7 +148,7 @@ fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List
-module_order: List
+module_order: List[Union[str, Dict]]
 
 # Populating the variables above from the default MultiQC config
 config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
@@ -455,11 +461,15 @@ def update(u):
     return update_dict(globals(), u)
 
 
-def update_dict(d, u):
+def update_dict(target, source, none_only=False):
     """Recursively updates nested dict d from nested dict u"""
-    for key, val in u.items():
+    for key, val in source.items():
         if isinstance(val, dict):
-            d[key] = update_dict(d.get(key, {}), val)
+            target[key] = update_dict(target.get(key, {}), val)
         else:
-            d[key] = u[key]
-    return d
+            if not none_only or target.get(key) is None:
+                if isinstance(val, list):
+                    target[key] = val.copy()
+                else:
+                    target[key] = val
+    return target

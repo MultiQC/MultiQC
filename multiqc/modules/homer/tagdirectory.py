@@ -16,9 +16,9 @@ class TagDirReportMixin:
         """Find HOMER tagdirectory logs and parse their data"""
         self.parse_gc_content()
         self.parse_re_dist()
-        self.parse_tagLength_dist()
+        self.parse_tag_length_dist()
         self.parse_tagInfo_data()
-        self.parse_FreqDistribution_data()
+        self.parse_freq_distribution_data()
         self.homer_stats_table_tagInfo()
 
         # Superfluous function call to confirm that it is used in this module
@@ -60,9 +60,9 @@ class TagDirReportMixin:
         if len(self.tagdir_data["GCcontent"]) > 0:
             self.add_section(
                 name="Per Sequence GC Content",
-                anchor="homer_per_sequence_gc_content",
+                anchor="homer-tag-directory-gc-content-section",
                 description="This plot shows the distribution of GC content.",
-                plot=self.GCcontent_plot(),
+                plot=self.gc_content_plot(),
             )
 
     def parse_re_dist(self):
@@ -86,7 +86,7 @@ class TagDirReportMixin:
         if len(self.tagdir_data["restriction"]) > 0:
             self.add_section(
                 name="Restriction Site Tag Dist",
-                anchor="homer-restrictionDist",
+                anchor="homer-petag-restriction-dist-section",
                 description="This plot shows the distribution of tags around restriction enzyme cut sites.",
                 helptext="""Hi-C data often involves the digestion of DNA using a restriction enzyme.
                     A good quality control for the experiment is the centering of reads around the
@@ -94,7 +94,7 @@ class TagDirReportMixin:
                 plot=self.restriction_dist_chart(),
             )
 
-    def parse_tagLength_dist(self):
+    def parse_tag_length_dist(self):
         """parses and plots tag length distribution files"""
         # Find and parse homer tag length distribution reports
         for f in self.find_log_files("homer/LengthDistribution", filehandles=True):
@@ -111,7 +111,7 @@ class TagDirReportMixin:
         if len(self.tagdir_data["length"]) > 0:
             self.add_section(
                 name="Tag Length Distribution",
-                anchor="homer-tagLength",
+                anchor="homer-tag-length-dist-section",
                 description="This plot shows the distribution of tag length.",
                 helptext="This is a good quality control for tag length inputed into Homer.",
                 plot=self.length_dist_chart(),
@@ -145,18 +145,19 @@ class TagDirReportMixin:
         self.tagdir_data["taginfo_total_norm"] = self.ignore_samples(self.tagdir_data["taginfo_total_norm"])
         self.tagdir_data["taginfo_uniq"] = self.ignore_samples(self.tagdir_data["taginfo_uniq"])
         self.tagdir_data["taginfo_uniq_norm"] = self.ignore_samples(self.tagdir_data["taginfo_uniq_norm"])
+        self.tagdir_data["header"] = self.ignore_samples(self.tagdir_data["header"])
 
         if len(self.tagdir_data["taginfo_total"]) > 0:
             self.add_section(
                 name="Chromosomal Coverage",
-                anchor="homer-tagInfo",
+                anchor="homer-tag-info-dist-section",
                 description="This plot shows the distribution of tags along chromosomes.",
                 helptext="""This is a good quality control for tag distribution and
                         could be a good indication of large duplications or deletions.""",
                 plot=self.tag_info_chart(),
             )
 
-    def parse_FreqDistribution_data(self):
+    def parse_freq_distribution_data(self):
         """parses and plots taginfo files"""
         # Find and parse homer tag FreqDistribution_1000 reports
         for f in self.find_log_files("homer/FreqDistribution", filehandles=True):
@@ -175,12 +176,12 @@ class TagDirReportMixin:
         if len(self.tagdir_data["FreqDistribution"]) > 0:
             self.add_section(
                 name="Frequency Distribution",
-                anchor="homer-FreqDistribution",
+                anchor="homer-freq-distribution-section",
                 description="This plot shows the distribution of distance between PE tags.",
                 helptext="""It is expected the the frequency of PE tags decays with
                     increasing distance between the PE tags. This plot gives an idea
                      of the proportion of short-range versus long-range interactions.""",
-                plot=self.FreqDist_chart(),
+                plot=self.freq_dist_chart(),
             )
 
     def homer_stats_table_tagInfo(self):
@@ -388,7 +389,7 @@ class TagDirReportMixin:
         """Make the petagRestrictionDistribution plot"""
 
         pconfig = {
-            "id": "petagRestrictionDistribution",
+            "id": "homer-petag-restriction-dist",
             "title": "HOMER: Restriction Distribution",
             "ylab": "Reads",
             "xlab": "Distance from cut site (bp)",
@@ -402,7 +403,7 @@ class TagDirReportMixin:
         """Make the tagLengthDistribution plot"""
 
         pconfig = {
-            "id": "tagLengthDistribution",
+            "id": "homer-tag-length-dist",
             "cpswitch": True,
             "title": "HOMER: Tag Length Distribution",
             "ylab": "Fraction of Tags",
@@ -410,7 +411,7 @@ class TagDirReportMixin:
         }
         return linegraph.plot(self.tagdir_data["length"], pconfig)
 
-    def GCcontent_plot(self):
+    def gc_content_plot(self):
         """Create the HTML for the Homer GC content plot"""
 
         pconfig = {
@@ -436,7 +437,7 @@ class TagDirReportMixin:
         ucsc = ["chr" + str(i) for i in range(1, 23)].append(["chrX", "chrY", "chrM"])
         ensembl = list(range(1, 23)).append(["X", "Y", "MT"])
         pconfig = {
-            "id": "tagInfo",
+            "id": "homer-tag-info-dist",
             "title": "HOMER: Tag Info Distribution",
             "ylab": "Tags",
             "cpswitch_counts_label": "Number of Tags",
@@ -453,7 +454,7 @@ class TagDirReportMixin:
 
         return bargraph.plot(self.tagdir_data["taginfo_total"], chrs, pconfig)
 
-    def FreqDist_chart(self):
+    def freq_dist_chart(self):
         """Make the petag.FreqDistribution_1000 plot"""
         # Take a log of the data before plotting so that we can
         # reduce the number of points to plot evenly
@@ -466,7 +467,7 @@ class TagDirReportMixin:
                 except ValueError:
                     pass
         pconfig = {
-            "id": "FreqDistribution",
+            "id": "homer-freq-distribution",
             "title": "HOMER: Frequency Distribution",
             "ylab": "Fraction of Reads",
             "xlab": "Log10(Distance between regions)",

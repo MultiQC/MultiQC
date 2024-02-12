@@ -100,6 +100,11 @@ class MultiqcModule(BaseMultiqcModule):
                 sample["mean_quality"] = sample["_quality_score_sum"] / sample["yield"]
             del sample["_quality_score_sum"]
 
+        for lane_id, lane in bclconvert_by_lane.items():
+            if lane["yield"] > 0:
+                lane["mean_quality"] = lane["_quality_score_sum"] / lane["yield"]
+            del lane["_quality_score_sum"]
+
         self.write_data_file(bclconvert_by_lane, "multiqc_bclconvert_bylane")
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
 
@@ -384,13 +389,21 @@ class MultiqcModule(BaseMultiqcModule):
                     sample["_calculated_yield"] += int(row["# Reads"]) * demux_file["cluster_length"]
                     sample["perfect_index_reads"] += int(row["# Perfect Index Reads"])
                     sample["one_mismatch_index_reads"] += int(row["# One Mismatch Index Reads"])
+                    sample["index"] = str(row["Index"])
+                    try:
+                        # Not all demux files have Sample_Project column
+                        sample["sample_project"] = str(row["Sample_Project"])
+                    except KeyError:
+                        pass
 
                     # columns only present pre v3.9.3, after they moved to quality_metrics
                     sample["basesQ30"] += int(row.get("# of >= Q30 Bases (PF)", 0))
                     # Collecting to re-calculate mean_quality:
-                    sample["_calculated_quality_score_sum"] += (
+                    calculated_quality_score_sum = (
                         float(row.get("Mean Quality Score (PF)", 0)) * sample["_calculated_yield"]
                     )
+                    sample["_calculated_quality_score_sum"] += calculated_quality_score_sum
+                    lane["_calculated_quality_score_sum"] += calculated_quality_score_sum
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
@@ -426,10 +439,12 @@ class MultiqcModule(BaseMultiqcModule):
                 lane_sample = run_data[lane_id]["samples"][sample]  # this sample in this lane
 
                 # Parse the stats that moved to this file in v3.9.3
+                lane["yield"] += int(row["Yield"])
                 lane["basesQ30"] += int(row["YieldQ30"])
                 lane_sample["yield"] += int(row["Yield"])
                 lane_sample["basesQ30"] += int(row["YieldQ30"])
                 # Collecting to re-calculate mean_quality:
+                lane["_quality_score_sum"] += float(row["QualityScoreSum"])
                 lane_sample["_quality_score_sum"] += float(row["QualityScoreSum"])
 
     def _parse_top_unknown_barcodes(self, bclconvert_data, last_run_id):
@@ -502,6 +517,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "percent_perfectIndex": lane["percent_perfectIndex"],
                     "percent_oneMismatch": lane["percent_oneMismatch"],
                     "top_unknown_barcodes": lane["top_unknown_barcodes"] if "top_unknown_barcodes" in lane else {},
+                    "_quality_score_sum": lane["_quality_score_sum"] or lane["_calculated_quality_score_sum"],
                 }
 
                 # now set stats for each sample (across all lanes) in bclconvert_bysample dictionary
@@ -517,6 +533,12 @@ class MultiqcModule(BaseMultiqcModule):
                     s["basesQ30"] += sample["basesQ30"]
                     s["cluster_length"] = lane["cluster_length"]
                     s["_quality_score_sum"] += sample["_quality_score_sum"] or sample["_calculated_quality_score_sum"]
+                    s["index"] = sample["index"]
+                    try:
+                        # Not all demux files have Sample_Project column
+                        s["sample_project"] = sample["sample_project"]
+                    except KeyError:
+                        pass
 
                     if not self._get_genome_size():
                         s["depth"] = "NA"
@@ -577,10 +599,14 @@ class MultiqcModule(BaseMultiqcModule):
                 # "one_mismatch_index_reads": sample['one_mismatch_index_reads'],
                 "perfect_pecent": perfect_percent,
                 "one_mismatch_pecent": one_mismatch_pecent,
-                "mean_quality": sample["mean_quality"],
+                "mean_quality": sample.get("mean_quality"),
+                "index": sample["index"],
             }
             if sample["depth"] != "NA":
                 depth_available = True
+            # Not all demux files have Sample_Project column
+            if "sample_project" in sample:
+                sample_stats_data[sample_id]["sample_project"] = sample["sample_project"]
 
         headers = {}
         if depth_available:
@@ -632,7 +658,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["basesQ30"] = {
-            "title": f"Bases ({config.base_count_prefix}) &ge; Q30 (PF)",
+            "title": f"Bases ({config.base_count_prefix}) ≥ Q30 (PF)",
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -640,7 +666,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
         }
         headers["yield_q30_percent"] = {
-            "title": "% Bases &ge; Q30 (PF)",
+            "title": "% Bases ≥ Q30 (PF)",
             "description": "Percent of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -671,6 +697,18 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "max": 40,
             "scale": "RdYlGn",
+        }
+        headers["index"] = {
+            "title": "Index",
+            "description": "Sample index",
+            "scale": False,
+            "hidden": True,
+        }
+        headers["sample_project"] = {
+            "title": "Project",
+            "description": "Sample project",
+            "scale": False,
+            "hidden": True,
         }
 
         # Table config
@@ -727,7 +765,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
         }
         headers["basesQ30-lane"] = {
-            "title": f"Bases ({config.base_count_prefix}) &ge; Q30 (PF)",
+            "title": f"Bases ({config.base_count_prefix}) ≥ Q30 (PF)",
             "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
                 config.base_count_desc
             ),
@@ -735,7 +773,7 @@ class MultiqcModule(BaseMultiqcModule):
             "shared_key": "base_count",
         }
         headers["yield_q30_percent-lane"] = {
-            "title": "% Bases &ge; Q30 (PF)",
+            "title": "% Bases ≥ Q30 (PF)",
             "description": "Percent of bases with a Phred score of 30 or higher, passing filter",
             "max": 100,
             "min": 0,
@@ -769,6 +807,13 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "scale": "RdYlGn",
             "suffix": "%",
+        }
+        headers["mean_quality-lane"] = {
+            "title": "Mean Quality Score",
+            "description": "Mean quality score of bases",
+            "min": 0,
+            "max": 40,
+            "scale": "PiYG",
         }
 
         # Table config

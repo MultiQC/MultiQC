@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tagging_SNPs_stored": {
                 "title": "SNPs stored",
                 "description": "Total number of SNPs used for the analysis",
-                "scale": "PrGn",
+                "scale": "PRGn",
                 "format": "{:,.0f}",
                 "hidden": True,
             },

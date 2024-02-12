@@ -71,7 +71,6 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "purple_summary",
-                    "namespace": "PURPLE",
                     "title": "PURPLE summary",
                 },
             ),

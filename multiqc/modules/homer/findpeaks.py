@@ -13,7 +13,7 @@ class FindPeaksReportMixin:
 
         self.homer_findpeaks = dict()
         for f in self.find_log_files("homer/findpeaks", filehandles=True):
-            self.parse_findPeaks(f)
+            self.parse_find_peaks(f)
 
         # Filter to strip out ignored sample names
         self.homer_findpeaks = self.ignore_samples(self.homer_findpeaks)
@@ -55,7 +55,7 @@ class FindPeaksReportMixin:
 
         return len(self.homer_findpeaks)
 
-    def parse_findPeaks(self, f):
+    def parse_find_peaks(self, f):
         """Parse HOMER findPeaks file headers."""
         parsed_data = dict()
         s_name = f["s_name"]

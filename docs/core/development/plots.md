@@ -101,7 +101,7 @@ the plot. The defaults are as follows:
 ```python
 config = {
     # Building the plot
-    'id': '<random string>',                # HTML ID used for plot
+    'id': '<random string>',                # HTML ID used for the plot
     'cpswitch': True,                       # Show the 'Counts / Percentages' switch?
     'cpswitch_c_active': True,              # Initial display with 'Counts' specified? False for percentages.
     'cpswitch_counts_label': 'Counts',      # Label for 'Counts' button
@@ -112,24 +112,16 @@ config = {
     'hide_zero_cats': True,                 # Hide categories where data for all samples is 0
     # Customising the plot
     'title': None,                          # Plot title - should be in format "Module Name: Plot Title"
-    'xlab': None,                           # X axis label
     'ylab': None,                           # Y axis label
-    'labelSize': 8,                         # Axis label font size
     'ymax': None,                           # Max y limit
     'ymin': None,                           # Min y limit
-    'yCeiling': None,                       # Maximum value for automatic axis limit (good for percentages)
-    'yFloor': None,                         # Minimum value for automatic axis limit
-    'yMinRange': None,                      # Minimum range for axis
-    'yDecimals': True,                      # Set to False to only show integer labels
-    'ylab_format': None,                    # Format string for x axis labels. Defaults to {value}
+    'tt_label': '{x}: {y:.2f}%',            # Customise tooltip label
+    'xsuffix': "%",                         # Suffix for the x-axis values and labels. Parsed from tt_label by default
+    'ysuffix': "%",                         # Suffix for the y-axis values and labels. Parsed from tt_label by default
     'stacking': 'normal',                   # Set to None to have category bars side by side
-    'use_legend': True,                     # Show / hide the legend
-    'click_func': None,                     # Javascript function to be called when a point is clicked
-    'cursor': None,                         # CSS mouse cursor type.
     'tt_decimals': 0,                       # Number of decimal places to use in the tooltip number
     'tt_suffix': '',                        # Suffix to add after tooltip number
-    'tt_percentages': True,                 # Show the percentages of each count in the tooltip
-    'height': 512                           # The default height of the plot, in pixels
+    'height': 500                           # The default height of the plot, in pixels
 }
 ```
 
@@ -151,16 +143,16 @@ datasets. To do this, give a list of data objects to the `plot` function
 and specify the `data_labels` config option with the text to be used for the buttons:
 
 ```python
-config = {
+pconfig = {
     'data_labels': ['Reads', 'Bases']
 }
-html_content = bargraph.plot([data1, data2], pconfig=config)
+html_content = bargraph.plot([data1, data2], pconfig=pconfig)
 ```
 
 You can also customise the y-axis label and min/max values for each dataset:
 
 ```python
-config = {
+pconfig = {
     'data_labels': [
         {'name': 'Reads', 'ylab': 'Number of Reads'},
         {'name': 'Bases', 'ylab': 'Number of Base Pairs', 'ymax':100}
@@ -197,7 +189,7 @@ cats = [
         "unaligned_base_pairs": {"name": "Unaligned Base Pairs", "color": "#f7a35c"},
     },
 ]
-html_content = bargraph.plot([data, data], cats, config)
+html_content = bargraph.plot([data, data], cats, pconfig)
 ```
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
@@ -237,11 +229,11 @@ Additionally, a configuration dict can be supplied. The defaults are as follows:
 
 ```python
 from multiqc.plots import linegraph
-config = {
+pconfig = {
     # Building the plot
     'id': '<random string>',     # HTML ID used for plot
     'categories': False,         # Set to True to use x values as categories instead of numbers.
-    'colors': dict()             # Provide dict with keys = sample names and values colours
+    'colors': dict(),            # Provide dict with keys = sample names and values colours
     'smooth_points': None,       # Supply a number to limit number of points / smooth data
     'smooth_points_sumcounts': True, # Sum counts in bins, or average? Can supply list for multiple datasets
     'logswitch': False,          # Show the 'Log10' switch?
@@ -252,37 +244,28 @@ config = {
     'title': None,               # Plot title - should be in format "Module Name: Plot Title"
     'xlab': None,                # X axis label
     'ylab': None,                # Y axis label
-    'labelSize': 8,              # Axis label font size
     'xCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'xFloor': None,              # Minimum value for automatic axis limit
     'xMinRange': None,           # Minimum range for axis
     'xmax': None,                # Max x limit
     'xmin': None,                # Min x limit
     'xLog': False,               # Use log10 x axis?
-    'xDecimals': True,           # Set to False to only show integer labels
     'yCeiling': None,            # Maximum value for automatic axis limit (good for percentages)
     'yFloor': None,              # Minimum value for automatic axis limit
     'yMinRange': None,           # Minimum range for axis
     'ymax': None,                # Max y limit
     'ymin': None,                # Min y limit
     'yLog': False,               # Use log10 y axis?
-    'yDecimals': True,           # Set to False to only show integer labels
     'yPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
     'xPlotBands': None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
     'yPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
     'xPlotLines': None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
-    'xLabelFormat': '{value}',   # Format string for the axis labels
-    'yLabelFormat': '{value}',   # Format string for the axis labels
-    'tt_label': '{point.x}: {point.y:.2f}', # Use to customise tooltip label, e.g. '{point.x} base pairs'
+    'tt_label': '{x}: {y:.2f}', # Use to customise tooltip label, e.g. '{point.x} base pairs'
     'tt_decimals': None,         # Tooltip decimals when categories = True (when false use tt_label)
     'tt_suffix': None,           # Tooltip suffix when categories = True (when false use tt_label)
-    'pointFormat': None,         # Replace the default HTML for the entire tooltip label
-    'click_func': function(){},  # Javascript function to be called when a point is clicked
-    'cursor': None,              # CSS mouse cursor type. Defaults to pointer when 'click_func' specified
-    'reversedStacks': False,     # Reverse the order of the category stacks. Defaults True for plots with Log10 option
-    'height': 512                # The default height of the plot, in pixels
+    'height': 500                # The default height of the plot, in pixels
 }
-html_content = linegraph.plot(data, config)
+html_content = linegraph.plot(..., pconfig)
 ```
 
 :::note
@@ -341,7 +324,7 @@ For example, to add a dotted `x = y` reference line:
 
 ```python
 from multiqc.plots import linegraph
-config = {
+pconfig = {
     'extra_series': {
         'name': 'x = y',
         'data': [[0, 0], [max_x_val, max_y_val]],
@@ -353,7 +336,7 @@ config = {
         'showInLegend': False,
     }
 }
-html_content = linegraph.plot(data, config)
+html_content = linegraph.plot(data, pconfig)
 ```
 
 ## Scatter Plots
@@ -365,12 +348,12 @@ config options are shared between the two. The data structure is similar but not
 from multiqc.plots import scatter
 data = {
     'sample 1': {
-        x: '<x val>',
-        y: '<y val>'
+        "x": '<x val>',
+        "y": '<y val>'
     },
     'sample 2': {
-        x: '<x val>',
-        y: '<y val>'
+        "x": '<x val>',
+        "y": '<y val>'
     }
 }
 html_content = scatter.plot(data)
@@ -385,12 +368,12 @@ sample name suffixes (these are appended to the sample name):
 ```python
 data = {
     'sample 1': [
-        { x: '<x val>', y: '<y val>', color: '#a6cee3', name: 'Type 1' },
-        { x: '<x val>', y: '<y val>', color: '#1f78b4', name: 'Type 2' }
+        { "x": '<x val>', "y": '<y val>', "color": '#a6cee3', "name": 'Type 1' },
+        { "x": '<x val>', "y": '<y val>', "color": '#1f78b4', "name": 'Type 2' }
     ],
     'sample 2': [
-        { x: '<x val>', y: '<y val>', color: '#b2df8a', name: 'Type 1' },
-        { x: '<x val>', y: '<y val>', color: '#33a02c', name: 'Type 2' }
+        { "x": '<x val>', "y": '<y val>', "color": '#b2df8a', "name": 'Type 1' },
+        { "x": '<x val>', "y": '<y val>', "color": '#33a02c', "name": 'Type 2' }
     ]
 }
 ```
@@ -716,16 +699,14 @@ pconfig = {
     'min': None,                   # Minimum value (default: auto)
     'max': None,                   # Maximum value (default: auto)
     'square': True,                # Force the plot to stay square? (Maintain aspect ratio)
-    'xcats_samples': True,         # Is the x-axis sample names? Set to False to prevent report toolbox from affecting.
-    'ycats_samples': True,         # Is the y-axis sample names? Set to False to prevent report toolbox from affecting.
+    'xcats_samples': True,         # Is the x-axis sample names? Set to "False" to prevent report toolbox from affecting.
+    'ycats_samples': True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
     'colstops': [],                # Scale colour stops. See below.
     'reverseColors': False,        # Reverse the order of the colour axis
     'decimalPlaces': 2,            # Number of decimal places for tooltip
     'legend': True,                # Colour axis key enabled or not
-    'borderWidth': 0,              # Border width between cells
     'datalabels': True,            # Show values in each cell. Defaults True when less than 20 samples.
-    'datalabel_colour': '<auto>',  # Colour of text for values. Defaults to auto contrast.
-    'height': 512                  # The default height of the interactive plot, in pixels
+    'height': 500                  # The default height of the interactive plot, in pixels
 }
 ```
 
@@ -735,7 +716,7 @@ and a HTML colour. The default is `RdYlBu` from [ColorBrewer](http://colorbrewer
 
 ```python
 pconfig = {
-    'colstops' = [
+    'colstops': [
         [0, '#313695'],
         [0.1, '#4575b4'],
         [0.2, '#74add1'],
@@ -794,19 +775,16 @@ config = {
   xMinRange: undefined, // Minimum range for axis
   xmax: undefined, // Max x limit
   xmin: undefined, // Min x limit
-  xDecimals: true, // Set to false to only show integer labels
   yCeiling: undefined, // Maximum value for automatic axis limit (good for percentages)
   yFloor: undefined, // Minimum value for automatic axis limit
   yMinRange: undefined, // Minimum range for axis
   ymax: undefined, // Max y limit
   ymin: undefined, // Min y limit
-  yDecimals: true, // Set to false to only show integer labels
   yPlotBands: undefined, // Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
   xPlotBands: undefined, // Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
-  tt_label: "{point.x}: {point.y:.2f}", // Use to customise tooltip label, e.g. '{point.x} base pairs'
-  pointFormat: undefined, // Replace the default HTML for the entire tooltip label
-  click_func: function () {}, // Javascript function to be called when a point is clicked
-  cursor: undefined, // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
+  tt_label: "{x}: {y:.2f}%", // Use to customise tooltip label, e.g. '{x} base pairs'
+  xsuffix: undefined, // Suffix for the x-axis values and labels. Parsed from tt_label by default
+  ysuffix: undefined, // Suffix for the y-axis values and labels. Parsed from tt_label by default
 };
 ```
 
@@ -867,21 +845,13 @@ mqc_plots[target]["samples"];
 All available config options with default vars:
 
 ```js
-config = {
+pconfig = {
   title: undefined, // Plot title
   xlab: undefined, // X axis label
   ylab: undefined, // Y axis label
   ymax: undefined, // Max y limit
   ymin: undefined, // Min y limit
-  yDecimals: true, // Set to false to only show integer labels
-  ylab_format: undefined, // Format string for x axis labels. Defaults to {value}
   stacking: "normal", // Set to null to have category bars side by side (None in python)
-  xtype: "linear", // Axis type. 'linear' or 'logarithmic'
-  use_legend: true, // Show / hide the legend
-  click_func: undefined, // Javascript function to be called when a point is clicked
-  cursor: undefined, // CSS mouse cursor type. Defaults to pointer when 'click_func' specified
-  tt_percentages: true, // Show the percentages of each count in the tooltip
-  reversedStacks: false, // Reverse the order of the categories in the stack.
   sort_samples: true, // Sort samples alphanumerically
 };
 ```
