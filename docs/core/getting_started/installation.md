@@ -164,7 +164,7 @@ pip install --user multiqc
 
 MultiQC [is available on spack](https://packages.spack.io/package.html?name=py-multiqc) as `py-multiqc`:
 
-```
+```bash
 spack install py-multiqc
 ```
 

@@ -108,6 +108,7 @@ class CellRangerCountMixin:
                     {
                         "namespace": "Count",
                         "id": "cellranger-count-warnings-table",
+                        "title": "Cellranger Count: Warnings",
                     },
                 ),
             )
@@ -122,6 +123,7 @@ class CellRangerCountMixin:
                 {
                     "namespace": "Count",
                     "id": "cellranger-count-stats-table",
+                    "title": "Cellranger Count: Summary Stats",
                 },
             ),
         )
@@ -167,6 +169,7 @@ class CellRangerCountMixin:
                     {
                         "namespace": "Antibody",
                         "id": "cellranger-antibody-stats-table",
+                        "title": "Cellranger Antibody: Summary Stats",
                     },
                 ),
             )

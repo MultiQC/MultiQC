@@ -529,7 +529,7 @@ function fastqc_module(module_element, module_key) {
     e.preventDefault();
     // Find next / prev sample name
     var idx = sample_names.indexOf(current_single_plot);
-    if ($(this).data("action") == "next") {
+    if ($(this).data("action") === "next") {
       idx++;
     } else {
       idx--;
@@ -557,12 +557,7 @@ function fastqc_module(module_element, module_key) {
       plot_data[3].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["g"]]);
     }
     // Update the chart
-    var hc = module_element.find("#fastqc_sequence_content_single").highcharts();
-    for (i = 0; i < plot_data.length; i++) {
-      hc.series[i].setData(plot_data[i], false);
-    }
-    hc.setTitle({ text: s_name });
-    hc.redraw({ duration: 200 });
+    plot_single_seqcontent(s_name);
   });
   module_element.on("click", "#fastqc_sequence_content_single_back", function (e) {
     e.preventDefault();
@@ -605,7 +600,7 @@ function fastqc_module(module_element, module_key) {
     }
 
     // Create plot div if it doesn't exist, and hide overview
-    if (module_element.find("#fastqc_sequence_content_single_wrapper").length == 0) {
+    if (module_element.find("#fastqc_sequence_content_single_wrapper").length === 0) {
       var plot_div = module_element.find("#fastqc_per_base_sequence_content_plot_div");
       plot_div.slideUp();
       var newplot =
@@ -621,92 +616,49 @@ function fastqc_module(module_element, module_key) {
       $(newplot).insertAfter(plot_div).hide().slideDown();
     }
 
-    module_element.find("#fastqc_sequence_content_single").highcharts({
-      chart: {
+    let target = "fastqc_sequence_content_single";
+    let traces = plot_data.map((d) => {
+      return {
         type: "line",
-        zoomType: "x",
-      },
-      colors: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
-      title: {
-        text: s_name,
-        x: 30, // fudge to center over plot area rather than whole plot
-      },
-      xAxis: {
-        title: { text: "Position (bp)" },
-        allowDecimals: false,
-      },
-      yAxis: {
-        title: { text: "% Reads" },
-        max: 100,
-        min: 0,
-      },
-      legend: {
-        floating: true,
-        layout: "vertical",
-        align: "right",
-        verticalAlign: "top",
-        y: 40,
-      },
-      tooltip: {
-        backgroundColor: "#FFFFFF",
-        borderColor: "#CCCCCC",
-        formatter: function () {
-          var texts = [];
-          var bars = [];
-          var xlabel = this.x;
-          $.each(this.points, function () {
-            texts.push(
-              '<span style="display: inline-block; border-left: 3px solid ' +
-                this.color +
-                '; padding-left:5px; margin-bottom: 2px;"></div>' +
-                this.y.toFixed(1) +
-                this.series.name +
-                "</span>",
-            );
-            bars.push(
-              '<div class="progress-bar" style="width:' +
-                this.y +
-                "%; float:left; font-size:8px; line-height:12px; padding:0; background-color:" +
-                this.color +
-                ';">' +
-                this.series.name.replace("%", "").trim() +
-                "</div>",
-            );
-            if (this.point.name) {
-              xlabel = this.point.name;
-            }
-          });
-          return (
-            '<p style="font-weight:bold; text-decoration: underline;">Position: ' +
-            xlabel +
-            " bp</p>\
-                            <p>" +
-            texts.join("<br>") +
-            '</p><div class="progress" style="height: 12px; width: 150px; margin:0;">' +
-            bars.join("") +
-            "</div>"
-          );
-        },
-        useHTML: true,
-        crosshairs: true,
-        shared: true,
-      },
-      plotOptions: {
-        series: {
-          animation: false,
-          marker: { enabled: false },
-        },
-      },
-      exporting: {
-        buttons: {
-          contextButton: {
-            menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
-            onclick: window.HCDefaults.exporting.buttons.contextButton.onclick,
-          },
-        },
-      },
-      series: plot_data,
+        x: d["data"].map((val) => val.x),
+        y: d["data"].map((val) => val.y),
+        mode: "lines",
+        name: d["name"],
+        hovertemplate: "%{y:.1f}%",
+      };
     });
+    let layout = {
+      title: s_name,
+      colorway: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
+      xaxis: {
+        title: "Position",
+        ticksuffix: " bp",
+      },
+      yaxis: {
+        title: "% Reads",
+        range: [0, 100],
+        ticksuffix: "%",
+      },
+      hovermode: "x unified",
+    };
+    let config = {
+      responsive: true,
+      displaylogo: false,
+      displayModeBar: true,
+      toImageButtonOptions: { filename: target },
+      modeBarButtonsToRemove: [
+        "lasso2d",
+        "autoScale2d",
+        "pan2d",
+        "select2d",
+        "zoom2d",
+        "zoomIn2d",
+        "zoomOut2d",
+        "resetScale2d",
+        "toImage",
+      ],
+    };
+    Plotly.newPlot(target, traces, layout, config);
   }
 }
 

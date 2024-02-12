@@ -405,7 +405,13 @@ class MultiqcModule(BaseMultiqcModule):
         return s.split()[-1]
 
     def bam_runtime_table(self):
-        config = {"id": "qc3C_bam_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
+        config = {
+            "id": "qc3C_bam_runtime_table",
+            "namespace": "qc3C",
+            "col1_header": "Sample",
+            "scale": False,
+            "title": "qc3C: BAM mode runtime parameters",
+        }
 
         headers = {
             "b_run_timestamp": {
@@ -677,7 +683,13 @@ class MultiqcModule(BaseMultiqcModule):
         return linegraph.plot(data, config)
 
     def kmer_runtime_table(self):
-        config = {"id": "qc3C_kmer_runtime_table", "namespace": "qc3C", "col1_header": "Sample", "scale": False}
+        config = {
+            "id": "qc3C_kmer_runtime_table",
+            "namespace": "qc3C",
+            "col1_header": "Sample",
+            "scale": False,
+            "title": "qc3C: K-mer mode runtime parameters",
+        }
 
         headers = {
             "k_run_timestamp": {
@@ -731,7 +743,12 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["kmer"], headers, config)
 
     def kmer_signal_table(self):
-        config = {"id": "qc3C_kmer_signal_table", "namespace": "qc3C", "col1_header": "Sample"}
+        config = {
+            "id": "qc3C_kmer_signal_table",
+            "namespace": "qc3C",
+            "col1_header": "Sample",
+            "title": "qc3C: K-mer mode Hi-C fraction",
+        }
 
         headers = {
             "k_raw_fraction": {

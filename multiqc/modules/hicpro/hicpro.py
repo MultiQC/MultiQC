@@ -243,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total number of read pairs ({}) passing the mapping filters".format(
                     config.read_count_desc
                 ),
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
             "mapped_R2": {
                 "title": "Aligned [R2]",
                 "description": f"Total number of aligned reads [R2] ({config.read_count_desc})",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -278,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
             "mapped_R1": {
                 "title": "Aligned [R1]",
                 "description": f"Total number of aligned reads [R1] ({config.read_count_desc})",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -287,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
             "total_R1": {
                 "title": "Total",
                 "description": "Total Number of Read Pairs",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
