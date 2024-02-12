@@ -72,7 +72,9 @@ The v1.20 release is also the first release we've had since we moved the MultiQC
 - [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
 
   - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
+
 - [**Nonpareil**](https://github.com/lmrodriguezr/nonpareil) ([#2215](https://github.com/MultiQC/MultiQC/pull/2215))
+
   - Estimate metagenomic coverage and sequence diversity.
 
 - [**ngs-bits**](https://github.com/imgag/ngs-bits) ([#2231](https://github.com/ewels/MultiQC/pull/2231))
