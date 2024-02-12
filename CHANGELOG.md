@@ -18,6 +18,7 @@
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
 - Custom content: support multiple datasets ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
+- Minor Plotly cleanup and fixes ([#2313](https://github.com/MultiQC/MultiQC/pull/2313))
 
 ### New modules
 
