@@ -23,7 +23,7 @@ MultiQC was written by Phil Ewels (http://phil.ewels.co.uk) at Seqera Labs (http
 
 from setuptools import find_packages, setup
 
-version = "1.20dev"
+version = "1.21dev"
 dl_version = "main" if "dev" in version else f"v{version}"
 
 print(
@@ -56,6 +56,9 @@ setup(
         "coloredlogs",
         "jinja2>=3.0.0",
         "markdown",
+        "plotly",
+        "kaleido",  # for flat plot export
+        "Pillow>=10",  # to add logo to flat plots
         "packaging",
         "pyyaml>=4",
         "requests",
@@ -147,7 +150,7 @@ setup(
             "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "megahit = multiqc.modules.megahit:MultiqcModule",
             "metaphlan = multiqc.modules.metaphlan:MultiqcModule",
-            "methylQA = multiqc.modules.methylQA:MultiqcModule",
+            "methylqa = multiqc.modules.methylqa:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",
             "mirtop = multiqc.modules.mirtop:MultiqcModule",
             "mirtrace = multiqc.modules.mirtrace:MultiqcModule",
@@ -159,6 +162,7 @@ setup(
             "nextclade = multiqc.modules.nextclade:MultiqcModule",
             "ngsderive = multiqc.modules.ngsderive:MultiqcModule",
             "ngsbits = multiqc.modules.ngsbits:MultiqcModule",
+            "nonpareil = multiqc.modules.nonpareil:MultiqcModule",
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
@@ -217,10 +221,10 @@ setup(
         ],
         "multiqc.templates.v1": [
             "default = multiqc.templates.default",
-            "default_dev = multiqc.templates.default_dev",
             "sections = multiqc.templates.sections",
             "simple = multiqc.templates.simple",
             "gathered = multiqc.templates.gathered",
+            "highcharts = multiqc.templates.highcharts",
             "geo = multiqc.templates.geo",
         ],
         ## See https://multiqc.info/docs/#multiqc-plugins for documentation

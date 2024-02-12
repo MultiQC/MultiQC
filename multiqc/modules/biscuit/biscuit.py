@@ -940,7 +940,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biscuit_cumulative",
             "title": "BISCUIT: Cumulative Coverage",
             "ymin": 0,
-            "xLabelFormat": "{value}X",
             "tt_label": "<strong>{point.x}X:</strong> {point.y:.2f}M",
             "xlab": "Coverage",
             "ylab": "Millions of Bases",
@@ -1216,10 +1215,8 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 100,
             "yCeiling": 110,
             "stacking": None,
-            "use_legend": True,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False,
         }
 
         self.add_section(

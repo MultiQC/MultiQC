@@ -179,7 +179,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(sumstats_data, "multiqc_stacks_sumstats")
 
         # Write the sample table
-        config_table = {"id": "gstacks_table", "namespace": "stacks"}
+        config_table = {
+            "id": "gstacks_table",
+            "namespace": "stacks",
+            "title": "Stacks: Sample statistics",
+        }
         self.add_section(
             name="Sample statistics",
             anchor="stacks-gstacks",
@@ -191,7 +195,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(cov_data, gsheaders, config_table),
         )
         # Write population sumstats table
-        config_table = {"id": "sumstats_table", "namespace": "stacks"}
+        config_table = {
+            "id": "sumstats_table",
+            "namespace": "stacks",
+            "title": "Stacks: Population summary statistics",
+        }
         self.add_section(
             name="Population summary statistics",
             anchor="stacks-sumstats",
