@@ -33,6 +33,7 @@
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
 - Pin `Pillow` package, wrap add_logo in try-except ([#2312](https://github.com/MultiQC/MultiQC/pull/2312))
 - Custom content: support multiple datasets ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
+- Configuration: fix reading config.output_fn_name and --filename ([#2314](https://github.com/MultiQC/MultiQC/pull/2314))
 
 ### New modules
 
