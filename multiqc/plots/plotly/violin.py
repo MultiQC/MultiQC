@@ -541,7 +541,7 @@ def find_outliers(
     mean = np.mean(values)
     std_dev = np.std(values)
     if std_dev == 0:
-        logger.warning(f"All {len(values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
+        logger.debug(f"All {len(values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
         return np.zeros(len(values), dtype=bool)
 
     # Calculate Z-scores (measures of "outlyingness")
@@ -555,7 +555,7 @@ def find_outliers(
         indices = np.where(z_scores > z_cutoff)[0]
         while len(indices) <= len(added_values) and z_cutoff > 1.0:
             new_z_cutoff = z_cutoff - 0.2
-            logger.warning(
+            logger.debug(
                 f"No outliers found with Z-score cutoff {z_cutoff:.1f}, trying a lower cutoff: {new_z_cutoff:.1f}"
                 + (f", metric: '{metric}'" if metric else "")
             )

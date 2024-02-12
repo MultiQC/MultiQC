@@ -8,10 +8,6 @@
 - Remove legacy Highcharts/Matplotlib code an optional template `highcharts` ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
-- Seqera CLI: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
-- Fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
-- BclConvert: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
-- Picard: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
 - Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
@@ -20,11 +16,8 @@
 - Add `filesearch_file_shared` config option, remove unnecessary per-module `shared` flags in search patterns ([#2227](https://github.com/ewels/MultiQC/pull/2227))
 - Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
-- Seqera Platform CLI: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
-- Support multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
-- BclConvert: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
-- CI: test Windows on a single module to avoid timing out ([#2304](https://github.com/MultiQC/MultiQC/pull/2304))
+- Custom content: support multiple datasets ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
 
 ### New modules
 
@@ -39,16 +32,19 @@
 
 - **Bcftools**: order variant depths plot categories ([#2289](https://github.com/MultiQC/MultiQC/pull/2289))
 - **Bcftools**: add missing `self.ignore_samples` in stats ([#2288](https://github.com/MultiQC/MultiQC/pull/2288))
-- **BCLConvert**: Add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
-- **BclConvert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- **BCL Convert**: add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
+- **BCL Convert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
+- **BCL Convert**: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
+- **Bismark**: fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - **Cutadapt**: support JSON format ([#2281](https://github.com/MultiQC/MultiQC/pull/2281))
 - **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))
-- **HUMID**: Add cluster statistics ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
-- **mosdepth**: Add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
+- **HUMID**: add cluster statistics ([#2265](https://github.com/MultiQC/MultiQC/pull/2265))
+- **mosdepth**: add additional summaries to general stats #2257 ([#2257](https://github.com/MultiQC/MultiQC/pull/2257))
 - **Picard**: fix using multiple times in report: do not pass `module.anchor` to `self.find_log_files` ([#2255](https://github.com/MultiQC/MultiQC/pull/2255))
-- **QualiMap**: address NBSP as thousand separators ([#2282](https://github.com/MultiQC/MultiQC/pull/2282))
-- **Seqera Platform CLI**: Updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
+- **QualiMap**: address NBSP as thousands separators ([#2282](https://github.com/MultiQC/MultiQC/pull/2282))
+- **Seqera Platform CLI**: updates for v0.9.2 ([#2248](https://github.com/MultiQC/MultiQC/pull/2248))
+- **Seqera Platform CLI**: handle failed tasks ([#2286](https://github.com/MultiQC/MultiQC/pull/2286))
 
 ## [MultiQC v1.19](https://github.com/ewels/MultiQC/releases/tag/v1.19) - 2023-12-18
 
