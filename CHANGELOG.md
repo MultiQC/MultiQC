@@ -31,10 +31,6 @@
 - Use alternative method to walk directory using pathlib ([#2277](https://github.com/MultiQC/MultiQC/pull/2277))
 - Export `config.output_dir` in MegaQC JSON ([#2287](https://github.com/MultiQC/MultiQC/pull/2287))
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
-- Support multiple datasets in custom content ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
-- BclConvert: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
-- CI: test Windows on a single module to avoid timing out ([#2304](https://github.com/MultiQC/MultiQC/pull/2304))
-- Use Plotly `autorangeoptions` instead of `range`. Properly apply floor and ceiling ([#2306](https://github.com/MultiQC/MultiQC/pull/2306))
 - Pin `Pillow` package, wrap add_logo in try-except ([#2312](https://github.com/MultiQC/MultiQC/pull/2312))
 - Custom content: support multiple datasets ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
 
