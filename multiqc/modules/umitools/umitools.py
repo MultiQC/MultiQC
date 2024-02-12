@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
                 dedup_data_by_sample[f["s_name"]] = data
                 self.add_data_source(f)  # Add the log file information to the multiqc_sources.txt
                 if "version" in data:  # Add version info
-                    self.add_software_version(data["version"], f["s_name"])
+                    self.add_software_version(data.pop("version"), f["s_name"])
 
         extract_data_by_sample = dict()
         for f in self.find_log_files("umitools/extract"):
@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
                 extract_data_by_sample[f["s_name"]] = data
                 self.add_data_source(f)  # Add the log file information to the multiqc_sources.txt
                 if "version" in data:  # Add version info
-                    self.add_software_version(data["version"], f["s_name"])
+                    self.add_software_version(data.pop("version"), f["s_name"])
 
         # Check the log files against the user supplied list of samples to ignore
         dedup_data_by_sample = self.ignore_samples(dedup_data_by_sample)
@@ -89,8 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
         regexes = [
             (int, "total_umis", r"INFO total_umis (\d+)"),
             (int, "unique_umis", r"INFO #umis (\d+)"),
-            (int, "input_reads", r"INFO Reads: Input Reads: (\d+)"),
-            (int, "output_reads", r"INFO Number of reads out: (\d+)"),
+            (int, "dedup_input_reads", r"INFO Reads: Input Reads: (\d+)"),
+            (int, "dedup_output_reads", r"INFO Number of reads out: (\d+)"),
             (int, "positions_deduplicated", r"INFO Total number of positions deduplicated: (\d+)"),
             (float, "mean_umi_per_pos", r"INFO Mean number of unique UMIs per position: ([\d\.]+)"),
             (float, "max_umi_per_pos", r"INFO Max. number of unique UMIs per position: (\d+)"),
@@ -109,11 +109,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Calculate a few simple supplementary stats
             try:
-                data["percent_passing"] = round(((data["output_reads"] / data["input_reads"]) * 100.0), 2)
+                data["percent_passing"] = round(((data["dedup_output_reads"] / data["dedup_input_reads"]) * 100.0), 2)
             except (KeyError, ZeroDivisionError):
                 pass
             try:
-                data["removed_reads"] = data["input_reads"] - data["output_reads"]
+                data["removed_reads"] = data["dedup_input_reads"] - data["dedup_output_reads"]
             except KeyError:
                 pass
 
@@ -122,12 +122,12 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def parse_extract_logs(f) -> Dict:
         regexes = [
-            (int, "input_reads", r"INFO Input Reads: (\d+)"),
+            (int, "extract_input_reads", r"INFO Input Reads: (\d+)"),
             (int, "read1_mismatch", r"INFO regex does not match read1: (\d+)"),
             (int, "read1_match", r"INFO regex matches read1: (\d+)"),
             (int, "read2_mismatch", r"INFO regex does not match read2: (\d+)"),
             (int, "read2_match", r"INFO regex matches read2: (\d+)"),
-            (int, "output_reads", r"INFO Reads output: (\d+)"),
+            (int, "extract_output_reads", r"INFO Reads output: (\d+)"),
             (str, "version", r"# UMI-tools version: ([\d\.]+)"),
         ]
 
@@ -140,12 +140,6 @@ class MultiqcModule(BaseMultiqcModule):
                     data[key] = re_matches.group(1)
                 else:
                     data[key] = type_(re_matches.group(1))
-
-            # Calculate a few simple supplementary stats
-            try:
-                data["removed_reads"] = data["input_reads"] - data["output_reads"]
-            except KeyError:
-                pass
 
         return data
 
