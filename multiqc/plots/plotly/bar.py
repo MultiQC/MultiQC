@@ -92,9 +92,7 @@ class BarPlot(Plot):
                 data = cat["data_pct"] if is_pct else cat["data"]
 
                 params = copy.deepcopy(self.trace_params)
-                marker = params["marker"]
-                marker["color"] = f"rgb({cat['color']})"
-
+                params["marker"]["color"] = f"rgb({cat['color']})"
                 fig.add_trace(
                     go.Bar(
                         y=self.samples,
@@ -166,7 +164,8 @@ class BarPlot(Plot):
             bargap=0.2,
             yaxis=dict(
                 showgrid=False,
-                categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
+                # Otherwise the bars will be in reversed order to sample order:
+                categoryorder="category descending",
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
                 hoverformat=self.layout.xaxis.hoverformat,
@@ -183,6 +182,9 @@ class BarPlot(Plot):
                 # like we had a standard bar graph without subplots. We need to remove the space
                 # between the legend groups to make it look like a single legend.
                 tracegroupgap=0,
+                # Plotly plots the grouped bar graph in a reversed order in respect to
+                # the legend, so reversing the legend to match it:
+                traceorder="normal" if barmode != "group" else "reversed",
             ),
             hovermode="y unified",
             hoverlabel=dict(
