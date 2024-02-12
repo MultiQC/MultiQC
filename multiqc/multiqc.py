@@ -436,8 +436,6 @@ def run(
     if use_filename_as_sample_name:
         config.use_filename_as_sample_name = True
         logger.info("Using log filenames for sample names")
-    if filename is not None:
-        config.output_fn_name = filename
     if make_data_dir:
         config.make_data_dir = True
     if no_data_dir:
@@ -515,7 +513,6 @@ def run(
     del exclude
     del outdir
     del use_filename_as_sample_name
-    del filename
     del replace_names
     del sample_names
     del sample_filters
@@ -578,20 +575,24 @@ def run(
     if len(ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
         config.sample_names_ignore.extend(ignore_samples)
-    if config.output_fn_name == "stdout":
+    if filename == "stdout":
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
     else:
-        if config.title is not None and config.output_fn_name is None:
-            config.output_fn_name = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
-            config.output_fn_name += "_multiqc_report"
-        if config.output_fn_name is not None:
-            if config.output_fn_name.endswith(".html"):
-                config.output_fn_name = config.output_fn_name[:-5]
-            config.output_fn_name = config.output_fn_name
-            config.data_dir_name = f"{config.output_fn_name}_data"
-            config.plots_dir_name = f"{config.output_fn_name}_plots"
-        if not config.output_fn_name.endswith(".html") and config.make_report:
+        if filename is None:
+            if config.output_fn_name is not None:
+                filename = config.output_fn_name
+            elif config.title is not None:
+                filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+                filename += "_multiqc_report"
+        if filename is not None:
+            if filename.endswith(".html"):
+                filename = config.output_fn_name[:-5]
+            if config.output_fn_name is None:
+                config.output_fn_name = filename
+            config.data_dir_name = f"{filename}_data"
+            config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
             config.output_fn_name = f"{config.output_fn_name}.html"
 
     # Print some status updates
@@ -644,13 +645,13 @@ def run(
     tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory for creating report: {tmp_dir}")
     config.data_tmp_dir = os.path.join(tmp_dir, "multiqc_data")
-    if config.output_fn_name != "stdout" and config.make_data_dir is True:
+    if filename != "stdout" and config.make_data_dir is True:
         config.data_dir = config.data_tmp_dir
         os.makedirs(config.data_dir)
     else:
         config.data_dir = None
     config.plots_tmp_dir = os.path.join(tmp_dir, "multiqc_plots")
-    if config.output_fn_name != "stdout" and config.export_plots is True:
+    if filename != "stdout" and config.export_plots is True:
         config.plots_dir = config.plots_tmp_dir
         os.makedirs(config.plots_dir)
     else:
@@ -960,7 +961,7 @@ def run(
             f.write(json.dumps(report.plot_data))
 
     # Make the final report path & data directories
-    if config.output_fn_name != "stdout":
+    if filename != "stdout":
         if config.make_report:
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
@@ -1146,7 +1147,7 @@ def run(
         # Use jinja2 to render the template and overwrite
         config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
         report_output = j_template.render(report=report, config=config)
-        if config.output_fn_name == "stdout":
+        if filename == "stdout":
             print(report_output.encode("utf-8"), file=sys.stdout)
         else:
             try:
