@@ -580,13 +580,13 @@ def run(
         logger.info("Printing report to stdout")
     else:
         if filename is not None and filename.endswith(".html"):
-            filename = config.output_fn_name[:-5]
+            filename = filename[:-5]
         if filename is None and config.title is not None:
             filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
-            filename += "_multiqc"
+            filename += "_multiqc_report"
         if filename is not None:
             if "output_fn_name" not in config.nondefault_config:
-                config.output_fn_name = f"{filename}_report.html"
+                config.output_fn_name = f"{filename}.html"
             if "data_dir_name" not in config.nondefault_config:
                 config.data_dir_name = f"{filename}_data"
             if "plots_dir_name" not in config.nondefault_config:
