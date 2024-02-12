@@ -116,6 +116,7 @@ class CellRangerVdjMixin:
                         {
                             "namespace": "VDJ",
                             "id": "cellranger-vdj-warnings-table",
+                            "title": "Cellranger VDJ: Warnings",
                         },
                     ),
                 )
@@ -130,6 +131,7 @@ class CellRangerVdjMixin:
                     {
                         "namespace": "VDJ",
                         "id": "cellranger-vdj-stats-table",
+                        "title": "Cellranger VDJ: Summary stats",
                     },
                 ),
             )
@@ -144,6 +146,7 @@ class CellRangerVdjMixin:
                     {
                         "namespace": "VDJ",
                         "id": "cellranger-vdj-annot-table",
+                        "title": "Cellranger VDJ: Annotations",
                     },
                 ),
             )

@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "ylab": "Count",
                     "tt_percentages": False,
                     "use_legend": True,
-                    "tt_suffix": "reads",
+                    "tt_suffix": " reads",
                 },
             ),
         )
@@ -386,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
             },
             "yieldQ30": {
-                "title": f"Yield ({config.base_count_prefix}) &ge; Q30",
+                "title": f"Yield ({config.base_count_prefix}) ≥ Q30",
                 "description": f"Number of bases with a Phred score of 30 or higher ({config.base_count_desc})",
                 "scale": "Greens",
                 "shared_key": "base_count",
@@ -395,7 +395,7 @@ class MultiqcModule(BaseMultiqcModule):
         # If no data for a column, header will be automatically ignored
         for r in range(1, 5):
             headers[f"percent_R{r}_Q30"] = {
-                "title": f"% R{r} Yield &ge; Q30",
+                "title": f"% R{r} Yield ≥ Q30",
                 "description": f"Percent of bases in R{r} with a Phred score of 30 or higher",
                 "scale": "RdYlGn",
                 "max": 100,
@@ -447,7 +447,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
             },
             "percent_Q30": {
-                "title": "% bases &ge; Q30",
+                "title": "% bases ≥ Q30",
                 "description": "Percentage of bases with greater than or equal to Q30 quality score",
                 "suffix": "%",
                 "max": 100,

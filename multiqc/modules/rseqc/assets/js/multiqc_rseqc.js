@@ -30,7 +30,7 @@ function is_name_hidden(name) {
   // some local vars to make the code readable
   const hiddenText = window.mqc_hide_f_texts;
   const regexp_mode = window.mqc_hide_regex_mode;
-  const hide_show_mode = window.mqc_hide_mode == "show";
+  const hide_show_mode = window.mqc_hide_mode === "show";
   var match = false;
   // check hidden status for "name"
   if (hiddenText.length > 0) {
@@ -79,25 +79,25 @@ function get_highlight_color(name) {
 
 function single_sample_plot(e) {
   // In case of repeated modules: #rseqc_junction_saturation_plot, #rseqc_junction_saturation_plot-1, ..
-  var rseqc_junction_saturation_plot = $(e.currentTarget).closest(".hc-plot");
-  var rseqc_junction_saturation_plot_id = rseqc_junction_saturation_plot.attr("id");
-  var junction_sat_single_hint = rseqc_junction_saturation_plot
+  let rseqc_junction_saturation_plot = $(e.currentTarget).closest(".hc-plot");
+  let rseqc_junction_saturation_plot_id = rseqc_junction_saturation_plot.attr("id");
+  let junction_sat_single_hint = rseqc_junction_saturation_plot
     .closest(".mqc-section")
     .find("#junction_sat_single_hint");
-  var highlight_enabled = is_highlight_enabled();
-  var sample_color = "";
+  let highlight_enabled = is_highlight_enabled();
+  let sample_color = "";
 
   // Get the three datasets for this sample
-  var data = [{ name: "All Junctions" }, { name: "Known Junctions" }, { name: "Novel Junctions" }];
+  let data = [{ name: "All Junctions" }, { name: "Known Junctions" }, { name: "Novel Junctions" }];
 
-  var k = 0;
-  for (var i = 0; i < 3; i++) {
-    var ds = mqc_plots[rseqc_junction_saturation_plot_id]["datasets"][i];
+  let k = 0;
+  for (let i = 0; i < 3; i++) {
+    let ds = mqc_plots[rseqc_junction_saturation_plot_id]["datasets"][i];
     for (k = 0; k < ds.length; k++) {
       // explicitly take renaming into account, however
       // there is no protection against degenerate renaming:
       let current_sample_name = get_current_name(ds[k]["name"]);
-      if (current_sample_name == this.series.name) {
+      if (current_sample_name === this.series.name) {
         if (highlight_enabled) {
           sample_color = get_highlight_color(current_sample_name);
         }
@@ -108,7 +108,7 @@ function single_sample_plot(e) {
   }
 
   // Create single plot div, and hide overview
-  var newplot = $(
+  let newplot = $(
     '<div id="rseqc_junction_saturation_single"> \
         <div id="rseqc_junction_saturation_single_controls"> \
           <button class="btn btn-primary btn-sm" id="rseqc-junction_sat_single_return"> \
@@ -126,7 +126,7 @@ function single_sample_plot(e) {
         </div> \
       </div>',
   );
-  var pwrapper = rseqc_junction_saturation_plot.parent().parent();
+  let pwrapper = rseqc_junction_saturation_plot.parent().parent();
   newplot.insertAfter(pwrapper).hide().slideDown();
   pwrapper.slideUp();
   junction_sat_single_hint.slideUp();
@@ -155,12 +155,12 @@ function single_sample_plot(e) {
   // Listeners for previous / next plot
   newplot.find(".rseqc-junction_sat_single_prevnext").click(function (e) {
     e.preventDefault();
-    var current_sample_name;
-    var sample_is_hidden = true;
+    let current_sample_name;
+    let sample_is_hidden = true;
     // this shouldn't result in infinite loop, as there has to be
     // at least one sample non-hidden to activate single-sample view:
     while (sample_is_hidden) {
-      if ($(this).data("action") == "prev") {
+      if ($(this).data("action") === "prev") {
         k--;
         if (k < 0) {
           k = mqc_plots[rseqc_junction_saturation_plot_id]["datasets"][0].length - 1;
@@ -176,11 +176,11 @@ function single_sample_plot(e) {
       current_sample_name = get_current_name(mqc_plots[rseqc_junction_saturation_plot_id]["datasets"][0][k]["name"]);
       sample_is_hidden = is_name_hidden(current_sample_name);
     }
-    var hc = newplot.find(".hc-plot").highcharts();
-    for (var i = 0; i < 3; i++) {
+    let hc = newplot.find(".hc-plot").highcharts();
+    for (let i = 0; i < 3; i++) {
       hc.series[i].setData(mqc_plots[rseqc_junction_saturation_plot_id]["datasets"][i][k]["data"], false);
     }
-    var ptitle = "RSeQC Junction Saturation: " + current_sample_name;
+    let ptitle = "RSeQC Junction Saturation: " + current_sample_name;
     if (highlight_enabled) {
       sample_color = get_highlight_color(current_sample_name);
     }

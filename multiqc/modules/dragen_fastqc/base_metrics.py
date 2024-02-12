@@ -2,11 +2,10 @@ import copy
 import logging
 from collections import defaultdict
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import boxplot, linegraph
+from multiqc.plots import linegraph
 
-from .util import average_from_range, sortPosQualTableKeys
+from .util import average_from_range
 
 log = logging.getLogger(__name__)
 
@@ -19,70 +18,8 @@ class DragenBaseMetrics(BaseMultiqcModule):
     """
 
     def add_base_metrics(self):
-        num_samples = len(self.dragen_fastqc_data.keys())
-        # Add each section in order
-        dragen_fastqc_config = getattr(config, "dragen_fastqc", {})
-        quality_range_boxplots_max_samples = dragen_fastqc_config.get("quality_range_boxplots_max_samples", 2)
-        force_boxplots = dragen_fastqc_config.get("force_quality_range_boxplots", False)
-        if num_samples <= quality_range_boxplots_max_samples or force_boxplots:
-            self.positional_quality_range_plot()
-        else:
-            log.debug(
-                f"Skipping DRAGEN-FastQC quality range boxplots as > {quality_range_boxplots_max_samples} samples ({num_samples}). See docs for how to override this behaviour using a config."
-            )
         self.positional_mean_quality_plot()
-
         return self.dragen_fastqc_data.keys()
-
-    def positional_quality_range_plot(self):
-        """Box plot image showing range of quality scores at each position"""
-
-        data = dict()
-        data_labels = []
-        GROUP = "POSITIONAL QUALITY"
-        for s_name in sorted(self.dragen_fastqc_data):
-            for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = f"{s_name}_{mate}"
-                data[r_name] = defaultdict(float)
-                data_labels.append({"name": r_name})
-
-                sorted_keys = sortPosQualTableKeys(self.dragen_fastqc_data[s_name][mate][GROUP])
-                for key in sorted_keys:
-                    value = int(self.dragen_fastqc_data[s_name][mate][GROUP][key])
-                    parts = key.split()
-                    pos = average_from_range(parts[1])
-                    quantile = int(parts[2][:-1])
-                    qv = int(value)
-
-                    try:
-                        data[r_name][pos][quantile] = qv
-                    except Exception:
-                        data[r_name][pos] = {}
-                        data[r_name][pos][quantile] = qv
-
-        pconfig = {
-            "id": "dragen_fastqc_per_base_sequence_quality_range_plot",
-            "title": "DRAGEN-QC: Per-Position Quality Range",
-            "ylab": "Phred Quality Score",
-            "xlab": "Position (bp)",
-            "ymin": 0,
-            "ymax": 43,
-            "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
-            # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            "yPlotBands": [
-                {"from": 28, "to": 100, "color": "#c3e6c3"},
-                {"from": 20, "to": 28, "color": "#e6dcc3"},
-                {"from": 0, "to": 20, "color": "#e6c3c3"},
-            ],
-            "data_labels": data_labels,
-        }
-
-        self.add_section(
-            name="Per-Position Quality Score Ranges",
-            anchor="dragen_fastqc_pos_qual_ranges",
-            description="The range of quality value across each base position in each sample or read",
-            plot=boxplot.plot(data, pconfig),
-        )
 
     def positional_mean_quality_plot(self):
         """Create the HTML for the positional mean-quality score plot"""

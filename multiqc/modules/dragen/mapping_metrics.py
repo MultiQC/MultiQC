@@ -115,6 +115,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 pconfig={
                     "id": "dragen-mapping-metrics-table",
                     "namespace": NAMESPACE,
+                    "title": "DRAGEN: Mapping metrics",
                 },
             ),
         )
