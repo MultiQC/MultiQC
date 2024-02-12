@@ -43,13 +43,13 @@ module produced the data. Clicking a header will sort the table by that value.
 Clicking it again will change the sort direction. You can shift-click multiple
 headers to sort by multiple columns.
 
-![sort column](../../images/genstats_sort.png)
+![sort column](../../../docs/images/genstats_sort.png)
 
 Above the table there is a button called 'Configure Columns'. Clicking this
 will launch a modal window with more detailed information about each column,
 plus options to show/hide and change the order of columns.
 
-![configure columns](../../images/genstats_config_cols.png)
+![configure columns](../../../docs/images/genstats_config_cols.png)
 
 ## Plots
 
@@ -64,16 +64,16 @@ Plots in MultiQC reports are usually interactive, using the
 You can hover the mouse over data to see a tooltip with more information
 about that dataset. Clicking and dragging on line graphs will zoom into that area.
 
-![plot zoom](../../images/plot_zoom.png)
+![plot zoom](../../../docs/images/plot_zoom.png)
 
 To reset the zoom, use the button in the top right:
 
-![reset zoom](../../images/plot_reset_zoom.png)
+![reset zoom](../../../docs/images/plot_reset_zoom.png)
 
 Plots have a grey bar along their base; clicking and dragging this will
 resize the plot's height:
 
-![plot zoom](../../images/plot_height.png)
+![plot zoom](../../../docs/images/plot_height.png)
 
 You can force reports to use interactive plots instead of flat by specifying
 the `--interactive` command line option (see below).
@@ -102,7 +102,7 @@ If you want to use the plot elsewhere (_eg._ in a presentation or paper),
 you can export it in a range of formats. Just click the menu button in
 the top right of the plot:
 
-![plot zoom](../../images/plot_export.png)
+![plot zoom](../../../docs/images/plot_export.png)
 
 This opens the MultiQC Toolbox _Export Plots_ panel with the current plot
 selected. You have a range of export options here. When deciding on output
@@ -118,14 +118,14 @@ Some plots have buttons above them which allow you to change the data
 that they show or their axis. For example, many bar plots have the option
 to show the data as percentages instead of counts:
 
-![percentage button](../../images/plot_percentage_button.png)
+![percentage button](../../../docs/images/plot_percentage_button.png)
 
 ## Toolbox
 
 MultiQC reports come with a 'toolbox', accessible by clicking the buttons
 on the right hand side of the report:
 
-![toolbox buttons](../../images/toolbox_buttons.png)
+![toolbox buttons](../../../docs/images/toolbox_buttons.png)
 
 Active toolbox panels have their button highlighted with a blue outline.
 You can hide the toolbox by clicking the open panel button a second time,
@@ -142,7 +142,7 @@ of interest. Simply enter some text which will match the samples you want to
 highlight and press enter (or click the add button). If you like, you can also
 customise the highlight colour.
 
-![toolbox highlight](../../images/toolbox_highlight.png)
+![toolbox highlight](../../../docs/images/toolbox_highlight.png)
 
 To make it easier to match groups of samples, you can use a regular expressions
 by turning on 'Regex mode'. You can test regexes using a nice tool at
@@ -152,7 +152,7 @@ delimiters are not needed (use `pattern`, not `/pattern/`).
 
 Here, we highlight any sample names that end in `_1`:
 
-![highligh regex](../../images/toolbox_highlight_regex.png)
+![highligh regex](../../../docs/images/toolbox_highlight_regex.png)
 
 Note that a new button appears above the General Statistics table when samples
 are highlighted, allowing you to sort the table according to highlights.
@@ -169,7 +169,7 @@ file names are not always informative. To help with this, you can do a search
 and replace within sample names. Here, we remove the `SRR1067` and `_1` parts
 of the sample names, which are the same for all samples:
 
-![rename samples](../../images/toolbox_rename.png)
+![rename samples](../../../docs/images/toolbox_rename.png)
 
 Again, regular expressions can be used. See above for details. Note that
 regex groups can be used - define a group match with parentheses and
@@ -181,7 +181,7 @@ Often, you may have a spreadsheet with filenames and informative sample
 names. To avoid having to manually enter each name, you can paste from a
 spreadsheet using the 'bulk import' tool:
 
-![bulk rename](../../images/toolbox_bulk_rename.png)
+![bulk rename](../../../docs/images/toolbox_bulk_rename.png)
 
 ### Hiding Samples
 
@@ -192,7 +192,7 @@ the 'Hide Samples' toolbox panel.
 Here, we hide all samples with `_trimmed` in their sample name:
 _(Note that plots will tell you how many samples have been hidden)_
 
-![hide samples](../../images/toolbox_hide_samples.png)
+![hide samples](../../../docs/images/toolbox_hide_samples.png)
 
 ### Export
 

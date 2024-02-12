@@ -25,6 +25,7 @@
       - `borderWidth`
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
+- Update docs to work with Astro 4 ([#2256](https://github.com/MultiQC/MultiQC/pull/2256))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
 - Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
@@ -36,6 +37,7 @@
 - Drop support for module tags ([#2278](https://github.com/MultiQC/MultiQC/pull/2278))
 - Pin `Pillow` package, wrap add_logo in try-except ([#2312](https://github.com/MultiQC/MultiQC/pull/2312))
 - Custom content: support multiple datasets ([#2291](https://github.com/MultiQC/MultiQC/pull/2291))
+- Configuration: fix reading config.output_fn_name and --filename ([#2314](https://github.com/MultiQC/MultiQC/pull/2314))
 
 ### New modules
 
