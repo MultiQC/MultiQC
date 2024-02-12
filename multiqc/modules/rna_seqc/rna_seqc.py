@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_names is None:
                 s_names = [x for x in s if x != ""]
             else:
-                data.append(s[1:])
+                data.append([float(val) for val in s[1:]])
 
         # Filter for ignored sample names
         filtered_s_names = list()
@@ -194,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "# Genes",
                 "description": "Number of genes detected with at least 5 reads",
                 "min": 0,
-                "scale": "Bu",
+                "scale": "Blues",
                 "format": "{:,.0f}",
             },
             "rRNA rate": {

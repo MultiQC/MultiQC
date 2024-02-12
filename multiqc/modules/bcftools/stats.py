@@ -91,7 +91,7 @@ class StatsReportMixin:
                     s_name = s_names[int(s[1])]
                     field = s[2].strip()[:-1]
                     field = field.replace(" ", "_")
-                    value = float(s[3].strip())
+                    value = int(s[3].strip())
                     self.bcftools_stats[s_name][field] = value
 
                 # Parse transitions/transversions stats
@@ -99,8 +99,11 @@ class StatsReportMixin:
                     s_name = s_names[int(s[1])]
                     fields = ["ts", "tv", "tstv", "ts_1st_ALT", "tv_1st_ALT", "tstv_1st_ALT"]
                     for i, field in enumerate(fields):
-                        value = float(s[i + 2].strip())
-
+                        value = s[i + 2].strip()
+                        if "tstv" in field:
+                            value = float(value)
+                        else:
+                            value = int(value)
                         self.bcftools_stats[s_name][field] = value
 
                 # Parse substitution types
@@ -113,7 +116,7 @@ class StatsReportMixin:
                         change = ">".join(rc[n] for n in change.split(">"))
 
                     field = f"substitution_type_{change}"
-                    value = float(s[3].strip())
+                    value = int(s[3].strip())
                     if field not in self.bcftools_stats[s_name]:
                         self.bcftools_stats[s_name][field] = 0
                     self.bcftools_stats[s_name][field] += value
@@ -121,8 +124,8 @@ class StatsReportMixin:
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    length = float(s[2].strip())
-                    count = float(s[3].strip())
+                    length = int(s[2].strip())
+                    count = int(s[3].strip())
                     self.bcftools_stats_indels[s_name][length] = count
 
                 # Per-sample counts

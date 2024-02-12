@@ -341,15 +341,22 @@ class MultiqcModule(BaseMultiqcModule):
         plot = None
         content = None
 
-        # Save the data if it's not a html string
-        if not isinstance(mod["data"], str):
-            self.write_data_file(mod["data"], f"multiqc_{pconfig['id']}")
-            pconfig["save_data_file"] = False
+        if not isinstance(mod["data"], list):
+            mod["data"] = [mod["data"]]
 
-        # Try to cooerce x-axis to numeric
+        for i, ds in enumerate(mod["data"]):
+            # Save the data if it's not a html string
+            if not isinstance(ds, str):
+                did = pconfig["id"]
+                if i > 0:
+                    did = f"{did}_{i}"
+                self.write_data_file(ds, f"multiqc_{did}")
+                pconfig["save_data_file"] = False
+
+        # Try to coerce x-axis to numeric
         if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
             try:
-                mod["data"] = {k: {float(x): v[x] for x in v} for k, v in mod["data"].items()}
+                mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
             except ValueError:
                 pass
 
@@ -361,7 +368,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Bar plot
         elif mod["config"].get("plot_type") == "bargraph":
-            mod["data"] = {str(k): v for k, v in mod["data"].items()}
+            mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
             plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
 
         # Line plot
@@ -382,11 +389,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raw HTML
         elif mod["config"].get("plot_type") == "html":
-            content = mod["data"]
+            if len(mod["data"]) > 1:
+                log.warning(f"HTML plot type found with more than one dataset in {c_id}")
+            content = mod["data"][0]
 
         # Raw image file as html
         elif mod["config"].get("plot_type") == "image":
-            content = mod["data"]
+            if len(mod["data"]) > 1:
+                log.warning(f"Image plot type found with more than one dataset in {c_id}")
+            content = mod["data"][0]
 
         # Not supplied
         elif mod["config"].get("plot_type") is None:

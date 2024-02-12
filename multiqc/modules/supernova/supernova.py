@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Write the report
         self.write_data_file(reports, "multiqc_supernova")
-        config_table = {"id": "supernova_table", "namespace": "supernova"}
+        config_table = {"id": "supernova_table", "namespace": "supernova", "title": "Supernova: Assembly statistics"}
         self.add_section(
             name="Assembly statistics",
             anchor="supernova-table",
