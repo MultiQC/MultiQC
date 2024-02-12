@@ -457,7 +457,12 @@ def load_show_hide(sh_file):
         show_hide_regex.insert(0, False)
 
 
+# Keep track of all changes to the config
+nondefault_config = dict()
+
+
 def update(u):
+    update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 
 
