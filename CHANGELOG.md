@@ -22,6 +22,7 @@
 - Remove legacy Highcharts/Matplotlib code an optional template `highcharts` ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
+- Update docs to work with Astro 4 ([#2256](https://github.com/MultiQC/MultiQC/pull/2256))
 - Remove unused dependency on `future` library ([#2258](https://github.com/MultiQC/MultiQC/pull/2258))
 - Fix incorrect scale IDs caught by linting ([#2272](https://github.com/MultiQC/MultiQC/pull/2272))
 - Docs: fix missing `v` prefix in docker image tags ([#2273](https://github.com/MultiQC/MultiQC/pull/2273))
