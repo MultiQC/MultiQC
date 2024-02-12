@@ -1,5 +1,13 @@
 # MultiQC Version History
 
+## MultiQC v1.21dev
+
+### MultiQC updates
+
+### New modules
+
+### Module updates
+
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
 ### Highlights
