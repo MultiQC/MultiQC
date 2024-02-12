@@ -5,6 +5,20 @@
 ### MultiQC updates
 
 - Support Plotly as a backend for plots ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
+  - Deprecated plotting configuration options.
+    - `click_func`
+    - `cursor`
+    - `tt_percentages` (use `tt_suffix: "%"`)
+    - Bar plot:
+      - `use_legend` (automatically hidden if there is only 1 category)
+    - Line plot:
+      - `labelSize`
+      - `xDecimals`, `yDecimals` (automatic if all values can be cast to int)
+      - `xLabelFormat`, `yLabelFormat` (use `tt_label`)
+      - `pointFormat`
+    - Heatmap:
+      - `datalabel_colour`
+      - `borderWidth`
 - Remove legacy Highcharts/Matplotlib code an optional template `highcharts` ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
