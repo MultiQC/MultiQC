@@ -13,6 +13,7 @@ from typing import Dict, Union, List, Optional, Tuple
 import math
 import plotly.graph_objects as go
 
+from multiqc.plots.plotly import check_plotly_version
 from multiqc.utils import mqc_colour, config
 
 logger = logging.getLogger(__name__)
@@ -69,6 +70,8 @@ class Plot(ABC):
         n_datasets: int,
         id: Optional[str] = None,
     ):
+        check_plotly_version()
+
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
 
