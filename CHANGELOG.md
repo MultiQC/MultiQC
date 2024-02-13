@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
+- Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
 
 ### New modules
 
