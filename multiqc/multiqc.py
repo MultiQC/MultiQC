@@ -425,13 +425,13 @@ def run(
                         level = "info"
                     getattr(logger, level)(msg["message"])
             # Available update log if newer
-            remote_version = release_info["latest_release"]
-            if version.parse(re.sub(r"[^0-9.]", "", remote_version["version"])) > version.parse(
-                re.sub(r"[^0-9.]", "", config.short_version)
-            ):
-                logger.warning(f"MultiQC Version {remote_version['version']} now available!")
+            remove_version = version.parse(re.sub(r"[^0-9.]", "", release_info["latest_release"]["version"]))
+            this_version = version.parse(re.sub(r"[^0-9.]", "", config.short_version))
+            if remove_version > this_version:
+                logger.warning(f"MultiQC Version {release_info['latest_release']['version']} now available!")
             logger.debug(
-                f"Latest MultiQC version is {remote_version['version']}, released {remote_version['release_date']}"
+                f"Latest MultiQC version is {release_info['latest_release']['version']}, "
+                f"released {release_info['latest_release']['release_date']}"
             )
         except Exception as e:
             logger.debug(f"Could not connect to multiqc.info for version check: {e}")
