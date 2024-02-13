@@ -56,7 +56,7 @@ setup(
         "coloredlogs",
         "jinja2>=3.0.0",
         "markdown",
-        "plotly",
+        "plotly>=5.18",
         "kaleido",  # for flat plot export
         "Pillow>=10",  # to add logo to flat plots
         "packaging",

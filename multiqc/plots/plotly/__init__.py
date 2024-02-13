@@ -1,12 +1,27 @@
-from multiqc.utils import config
+"""
+Check that Plotly version is supported, and show an error and exit if it isn't.
+"""
 
-# Load the template so that we can access its configuration
-# Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+import logging
+import sys
+
+from packaging import version
+
+logger = logging.getLogger(__name__)
 
 
-def get_template_mod():
-    global _template_mod
-    if not _template_mod:
-        _template_mod = config.avail_templates[config.template].load()
-    return _template_mod
+LATEST_SUPPORTED = "5.17"
+
+
+def check_plotly_version():
+    try:
+        import plotly
+    except ImportError:
+        logger.error("ERROR: Could not import Plotly")
+        sys.exit(1)
+    if version.parse(plotly.__version__) < version.parse(LATEST_SUPPORTED):
+        logger.error(
+            f"ERROR: found Plotly version {plotly.__version__}, but MultiQC needs at least {LATEST_SUPPORTED}. "
+            f'Please upgrade: pip install "plotly>={LATEST_SUPPORTED}"'
+        )
+        sys.exit(1)
