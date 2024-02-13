@@ -12,6 +12,8 @@
 
 ### Module updates
 
+- **DRAGEN**: support `gvcf_metrics` ([#2327](https://github.com/MultiQC/MultiQC/pull/2327))
+
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
 ### Highlights
