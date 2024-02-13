@@ -46,8 +46,8 @@ prepend_dirs: false
 prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
 file_list: false
-version_check_url: https://api.multiqc.info/version
 require_logs: false
+version_check_url: https://api.multiqc.info/version
 
 make_data_dir: true
 zip_data_dir: false
