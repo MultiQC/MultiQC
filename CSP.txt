@@ -2,6 +2,9 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.21
+    'sha256-dwM1eUjdMDMsOAYMmE9F86/zv3Zme5VSXoLlJMHLrtg=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+
     # 1.20
     'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
     'sha256-GklszK6SQ46EiosR+K0skEd4P6blQVwOIWIXI2k1JkI=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
