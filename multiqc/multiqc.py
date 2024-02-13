@@ -625,7 +625,15 @@ def run(
         ]
     )
 
+    # Check the module names that were requested to run explicitly
     if len(getattr(config, "run_modules", {})) > 0:
+        unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
+        if unknown_modules:
+            logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
+        if len(unknown_modules) == len(config.run_modules):
+            logger.critical("No available modules to run!")
+            return {"report": report, "config": config, "sys_exit_code": 1}
+        config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
     if len(getattr(config, "exclude_modules", {})) > 0:
