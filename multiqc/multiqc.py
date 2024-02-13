@@ -629,7 +629,7 @@ def run(
     if len(getattr(config, "run_modules", {})) > 0:
         unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
         if unknown_modules:
-            logger.warning(f"Module(s) are unknown: {', '.join(unknown_modules)}")
+            logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
         if len(unknown_modules) == len(config.run_modules):
             logger.critical("No available modules to run!")
             return {"report": report, "config": config, "sys_exit_code": 1}
