@@ -3,9 +3,9 @@
 
 import logging
 import os
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -32,22 +32,22 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = defaultdict(lambda: dict())
         n = dict()
 
         # Call submodule functions
         n["BamQC"] = QM_BamQC.parse_reports(self)
         if n["BamQC"] > 0:
-            log.info("Found {} BamQC reports".format(n["BamQC"]))
+            log.info(f"Found {n['BamQC']} BamQC reports")
 
         n["RNASeq"] = QM_RNASeq.parse_reports(self)
         if n["RNASeq"] > 0:
-            log.info("Found {} RNASeq reports".format(n["RNASeq"]))
+            log.info(f"Found {n['RNASeq']} RNASeq reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Remove filtered samples from general stats table
         self.general_stats_data = self.ignore_samples(self.general_stats_data)

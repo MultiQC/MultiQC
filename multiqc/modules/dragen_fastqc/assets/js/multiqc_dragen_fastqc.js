@@ -115,17 +115,15 @@ function fastqc_module(module_element, module_key) {
         .prepend('<p class="fastqc-heatmap-no-samples text-muted">No samples found.</p>');
     }
     if (hidden_samples > 0) {
-      module_element
-        .find("#fastqc_seq_heatmap_div")
-        .prepend(
-          '<div class="samples-hidden-warning alert alert-warning"> \
+      module_element.find("#fastqc_seq_heatmap_div").prepend(
+        '<div class="samples-hidden-warning alert alert-warning"> \
                 <span class="glyphicon glyphicon-info-sign"></span> \
                 <strong>Warning:</strong> ' +
-            hidden_samples +
-            ' samples hidden in toolbox. \
+          hidden_samples +
+          ' samples hidden in toolbox. \
                 <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose(\'#mqc_hidesamples\', true); return false;">See toolbox.</a>\
-            </div>'
-        );
+            </div>',
+      );
     }
     if (num_samples == 0) {
       return;
@@ -355,7 +353,7 @@ function fastqc_module(module_element, module_key) {
           f_col +
           ';"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
           f_text +
-          '"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '"/><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
     // Apply highlights and open toolbox
@@ -393,7 +391,7 @@ function fastqc_module(module_element, module_key) {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           f_text +
-          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+          '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
     // Apply highlights and open toolbox
@@ -421,7 +419,7 @@ function fastqc_module(module_element, module_key) {
   // Export plot
   module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_image", function (e, cfg) {
     alert(
-      "Apologies, it's not yet possible to export the DRAGEN-FastQC per-base sequence content plot.\nPlease take a screengrab or export the JSON data."
+      "Apologies, it's not yet possible to export the DRAGEN-FastQC per-base sequence content plot.\nPlease take a screengrab or export the JSON data.",
     );
   });
   module_element.find(".dragen_fastqc_per_base_sequence_content_plot").on("mqc_plotexport_data", function (e, cfg) {
@@ -470,7 +468,7 @@ function fastqc_module(module_element, module_key) {
           s_status_class +
           '">' +
           s_status +
-          "</span>"
+          "</span>",
       );
 
     // Update the key with the raw data for this position
@@ -622,92 +620,49 @@ function fastqc_module(module_element, module_key) {
       $(newplot).insertAfter(plot_div).hide().slideDown();
     }
 
-    module_element.find("#fastqc_sequence_content_single").highcharts({
-      chart: {
+    let target = "fastqc_sequence_content_single";
+    let traces = plot_data.map((d) => {
+      return {
         type: "line",
-        zoomType: "x",
-      },
-      colors: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
-      title: {
-        text: s_name,
-        x: 30, // fudge to center over plot area rather than whole plot
-      },
-      xAxis: {
-        title: { text: "Position (bp)" },
-        allowDecimals: false,
-      },
-      yAxis: {
-        title: { text: "% Reads" },
-        max: 100,
-        min: 0,
-      },
-      legend: {
-        floating: true,
-        layout: "vertical",
-        align: "right",
-        verticalAlign: "top",
-        y: 40,
-      },
-      tooltip: {
-        backgroundColor: "#FFFFFF",
-        borderColor: "#CCCCCC",
-        formatter: function () {
-          var texts = [];
-          var bars = [];
-          var xlabel = this.x;
-          $.each(this.points, function () {
-            texts.push(
-              '<span style="display: inline-block; border-left: 3px solid ' +
-                this.color +
-                '; padding-left:5px; margin-bottom: 2px;"></div>' +
-                this.y.toFixed(1) +
-                this.series.name +
-                "</span>"
-            );
-            bars.push(
-              '<div class="progress-bar" style="width:' +
-                this.y +
-                "%; float:left; font-size:8px; line-height:12px; padding:0; background-color:" +
-                this.color +
-                ';">' +
-                this.series.name.replace("%", "").trim() +
-                "</div>"
-            );
-            if (this.point.name) {
-              xlabel = this.point.name;
-            }
-          });
-          return (
-            '<p style="font-weight:bold; text-decoration: underline;">Position: ' +
-            xlabel +
-            " bp</p>\
-                            <p>" +
-            texts.join("<br>") +
-            '</p><div class="progress" style="height: 12px; width: 150px; margin:0;">' +
-            bars.join("") +
-            "</div>"
-          );
-        },
-        useHTML: true,
-        crosshairs: true,
-        shared: true,
-      },
-      plotOptions: {
-        series: {
-          animation: false,
-          marker: { enabled: false },
-        },
-      },
-      exporting: {
-        buttons: {
-          contextButton: {
-            menuItems: window.HCDefaults.exporting.buttons.contextButton.menuItems,
-            onclick: window.HCDefaults.exporting.buttons.contextButton.onclick,
-          },
-        },
-      },
-      series: plot_data,
+        x: d["data"].map((val) => val.x),
+        y: d["data"].map((val) => val.y),
+        mode: "lines",
+        name: d["name"],
+        hovertemplate: "%{y:.1f}%",
+      };
     });
+    let layout = {
+      title: s_name,
+      colorway: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
+      xaxis: {
+        title: "Position",
+        ticksuffix: " bp",
+      },
+      yaxis: {
+        title: "% Reads",
+        range: [0, 100],
+        ticksuffix: "%",
+      },
+      hovermode: "x unified",
+    };
+    let config = {
+      responsive: true,
+      displaylogo: false,
+      displayModeBar: true,
+      toImageButtonOptions: { filename: target },
+      modeBarButtonsToRemove: [
+        "lasso2d",
+        "autoScale2d",
+        "pan2d",
+        "select2d",
+        "zoom2d",
+        "zoomIn2d",
+        "zoomOut2d",
+        "resetScale2d",
+        "toImage",
+      ],
+    };
+    Plotly.newPlot(target, traces, layout, config);
   }
 }
 

@@ -20,24 +20,28 @@ The MultiQC changelog bot works by using the pull-request title.
 
 - `New module: XYZ` - adding a new module named `XYZ`
 - `XYZ: Change something in this existing module` - updating module `XYZ`
-- `Some other change` - anything else, eg. core MultiQC changes
+- `Some other change` - anything else, e.g. core MultiQC changes
+- `Typo in docs [skip changelog]` - a change so minor that we don't want to log it at all
 
 The MultiQC bot will automatically build a proper changelog entry based on this title
 and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
 
-The MultiQC bot is triggered by adding the following comment on an open pull request:
+When a pull request is opened, a GitHub Action script is triggered, that inspects
+the PR, updates the changelog and commits the update back to your PR. If your
+pull request is not worth a change log entry (i.e. a minor documentation update),
+you can append `[skip changelog]` to the PR title.
+
+The action can also be triggered manually by adding the following comment on an open
+pull request:
 
 ```md
 @multiqc-bot changelog
 ```
 
-This triggers a GitHub Action script which inspects the PR, updates the changelog
-and commits the update back to your PR.
-
-:::tip
-Whilst you can trigger the bot yourself, it's expected that the core MultiQC
-maintainers will do this for you immediately prior to merging.
-:::
+It will replace the automatically added changelog entry if the pull request title
+was updated after the initial commit. And finally, if you forgot to initially append
+`[skip changelog]` and you did it after the initial commit, triggering the bot with a
+comment will assure that the changelog line is removed.
 
 ## Admonitions
 

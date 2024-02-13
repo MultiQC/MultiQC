@@ -1,6 +1,6 @@
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -18,12 +18,12 @@ class DragenCoveragePerContig(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in perchrom_data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="wgs_contig_mean_cov")
             perchrom_data_by_phenotype_by_sample[s_name].update(perchrom_data_by_phenotype)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names:
         perchrom_data_by_phenotype_by_sample = self.ignore_samples(perchrom_data_by_phenotype_by_sample)
@@ -154,13 +154,13 @@ def parse_wgs_contig_mean_cov(f):
             # sex and other chromosomes go in the end
             return 1
 
-    main_contig_perchrom_data = OrderedDict(
+    main_contig_perchrom_data = dict(
         sorted(
             main_contig_perchrom_data.items(),
             key=lambda key_val: chrom_order(key_val[0]),
         )
     )
-    other_contig_perchrom_data = OrderedDict(
+    other_contig_perchrom_data = dict(
         sorted(
             other_contig_perchrom_data.items(),
             key=lambda key_val: chrom_order(key_val[0]),

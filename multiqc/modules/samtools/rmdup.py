@@ -2,7 +2,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -20,52 +19,55 @@ class RmdupReportMixin:
             # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
             dups_regex = "\[bam_rmdups?e?_core\] (\d+) / (\d+) = (\d+\.\d+) in library '(.*)'"
             s_name = f["s_name"]
-            for l in f["f"]:
-                match = re.search(dups_regex, l)
+            for line in f["f"]:
+                match = re.search(dups_regex, line)
                 if match:
                     library_name = match.group(4).strip()
                     if library_name != "":
                         s_name = library_name
                     if s_name in self.samtools_rmdup:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
+                        log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
-                    self.samtools_rmdup[s_name] = dict()
+                    self.samtools_rmdup[s_name] = {}
                     self.samtools_rmdup[s_name]["n_dups"] = int(match.group(1))
                     self.samtools_rmdup[s_name]["n_tot"] = int(match.group(2))
                     self.samtools_rmdup[s_name]["n_unique"] = int(match.group(2)) - int(match.group(1))
                     self.samtools_rmdup[s_name]["pct_dups"] = float(match.group(3)) * 100
 
-                    # Superfluous function call to confirm that it is used in this module
-                    # Replace None with actual version if it is available
-                    self.add_software_version(None, s_name)
-
         # Filter to strip out ignored sample names
         self.samtools_rmdup = self.ignore_samples(self.samtools_rmdup)
 
-        if len(self.samtools_rmdup) > 0:
-            # Write parsed report data to a file
-            self.write_data_file(self.samtools_rmdup, "multiqc_samtools_rmdup")
+        if len(self.samtools_rmdup) == 0:
+            return 0
 
-            # Make a bar plot showing duplicates
-            keys = OrderedDict()
-            keys["n_unique"] = {"name": "Non-duplicated reads"}
-            keys["n_dups"] = {"name": "Duplicated reads"}
-            pconfig = {
-                "id": "samtools_rmdup_plot",
-                "title": "Samtools rmdup: Duplicate alignments",
-                "ylab": "Number of reads",
-                "yDecimals": False,
-            }
-            self.add_section(
-                name="Duplicates removed",
-                anchor="samtools-rmdup",
-                plot=bargraph.plot(self.samtools_rmdup, keys, pconfig),
-            )
+        # Write parsed report data to a file
+        self.write_data_file(self.samtools_rmdup, "multiqc_samtools_rmdup")
 
-            # Add a column to the General Stats table
-            # General Stats Table
-            stats_headers = OrderedDict()
-            stats_headers["pct_dups"] = {
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        # Make a bar plot showing duplicates
+        keys = {
+            "n_unique": {"name": "Non-duplicated reads"},
+            "n_dups": {"name": "Duplicated reads"},
+        }
+        pconfig = {
+            "id": "samtools_rmdup_plot",
+            "title": "Samtools rmdup: Duplicate alignments",
+            "ylab": "Number of reads",
+            "yDecimals": False,
+        }
+        self.add_section(
+            name="Duplicates removed",
+            anchor="samtools-rmdup",
+            plot=bargraph.plot(self.samtools_rmdup, keys, pconfig),
+        )
+
+        # Add a column to the General Stats table
+        # General Stats Table
+        stats_headers = {
+            "pct_dups": {
                 "title": "% Dups",
                 "description": "Percent of duplicate alignments",
                 "min": 0,
@@ -73,6 +75,7 @@ class RmdupReportMixin:
                 "suffix": "%",
                 "scale": "OrRd",
             }
-            self.general_stats_addcols(self.samtools_rmdup, stats_headers)
+        }
+        self.general_stats_addcols(self.samtools_rmdup, stats_headers)
 
         return len(self.samtools_rmdup)

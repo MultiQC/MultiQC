@@ -3,7 +3,6 @@
 """ MultiQC submodule to parse output from GATK varianteval """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph, table
 
@@ -20,74 +19,76 @@ class VariantEvalMixin:
             parsed_data = parse_single_report(f["f"])
             if len(parsed_data) > 1:
                 if f["s_name"] in self.gatk_varianteval:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="varianteval")
                 self.gatk_varianteval[f["s_name"]] = parsed_data
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Filter to strip out ignored sample names
         self.gatk_varianteval = self.ignore_samples(self.gatk_varianteval)
 
         n_reports_found = len(self.gatk_varianteval)
-        if n_reports_found > 0:
-            log.info("Found {} VariantEval reports".format(n_reports_found))
+        if n_reports_found == 0:
+            return 0
 
-            # Write parsed report data to a file (restructure first)
-            self.write_data_file(self.gatk_varianteval, "multiqc_gatk_varianteval")
+        log.info(f"Found {n_reports_found} VariantEval reports")
 
-            # Get consensus TiTv references
-            titv_ref = None
-            for s_name in self.gatk_varianteval:
-                if titv_ref is None:
-                    titv_ref = self.gatk_varianteval[s_name]["titv_reference"]
-                elif titv_ref != self.gatk_varianteval[s_name]["titv_reference"]:
-                    titv_ref = "Multiple"
-                    break
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
-            # General Stats Table
-            varianteval_headers = dict()
-            varianteval_headers["known_titv"] = {
-                "title": "TiTV ratio (known)",
-                "description": "TiTV ratio from variants found in '{}'".format(titv_ref),
-                "min": 0,
-                "scale": "Blues",
-                "shared_key": "titv_ratio",
-            }
-            varianteval_headers["novel_titv"] = {
-                "title": "TiTV ratio (novel)",
-                "description": "TiTV ratio from variants NOT found in '{}'".format(titv_ref),
-                "min": 0,
-                "scale": "Blues",
-                "shared_key": "titv_ratio",
-            }
-            varianteval_headers["called_titv"] = {
-                "title": "TiTV ratio (called)",
-                "description": "TiTV ratio from variants found in '{}'".format(titv_ref),
-                "min": 0,
-                "scale": "Blues",
-                "shared_key": "titv_ratio",
-            }
-            varianteval_headers["filtered_titv"] = {
-                "title": "TiTV ratio (filtered)",
-                "description": "TiTV ratio from variants NOT found in '{}'".format(titv_ref),
-                "min": 0,
-                "scale": "Blues",
-                "shared_key": "titv_ratio",
-            }
-            self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, "GATK VariantEval")
+        # Write parsed report data to a file (restructure first)
+        self.write_data_file(self.gatk_varianteval, "multiqc_gatk_varianteval")
 
-            # Variant Counts plot
-            self.add_section(
-                name="Variant Counts", anchor="gatk-count-variants", plot=count_variants_barplot(self.gatk_varianteval)
-            )
+        # Get consensus TiTv references
+        titv_ref = None
+        for s_name in self.gatk_varianteval:
+            if titv_ref is None:
+                titv_ref = self.gatk_varianteval[s_name]["titv_reference"]
+            elif titv_ref != self.gatk_varianteval[s_name]["titv_reference"]:
+                titv_ref = "Multiple"
+                break
 
-            # Compare Overlap Table
-            self.add_section(
-                name="Compare Overlap", anchor="gatk-compare-overlap", plot=comp_overlap_table(self.gatk_varianteval)
-            )
+        # General Stats Table
+        varianteval_headers = dict()
+        varianteval_headers["known_titv"] = {
+            "title": "TiTV ratio (known)",
+            "description": f"TiTV ratio from variants found in '{titv_ref}'",
+            "min": 0,
+            "scale": "Blues",
+            "shared_key": "titv_ratio",
+        }
+        varianteval_headers["novel_titv"] = {
+            "title": "TiTV ratio (novel)",
+            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
+            "min": 0,
+            "scale": "Blues",
+            "shared_key": "titv_ratio",
+        }
+        varianteval_headers["called_titv"] = {
+            "title": "TiTV ratio (called)",
+            "description": f"TiTV ratio from variants found in '{titv_ref}'",
+            "min": 0,
+            "scale": "Blues",
+            "shared_key": "titv_ratio",
+        }
+        varianteval_headers["filtered_titv"] = {
+            "title": "TiTV ratio (filtered)",
+            "description": f"TiTV ratio from variants NOT found in '{titv_ref}'",
+            "min": 0,
+            "scale": "Blues",
+            "shared_key": "titv_ratio",
+        }
+        self.general_stats_addcols(self.gatk_varianteval, varianteval_headers, "GATK VariantEval")
+
+        # Variant Counts plot
+        self.add_section(
+            name="Variant Counts", anchor="gatk-count-variants", plot=count_variants_barplot(self.gatk_varianteval)
+        )
+
+        # Compare Overlap Table
+        self.add_section(
+            name="Compare Overlap", anchor="gatk-compare-overlap", plot=comp_overlap_table(self.gatk_varianteval)
+        )
 
         return n_reports_found
 
@@ -100,25 +101,25 @@ def parse_single_report(f):
     in_CompOverlap = False
     in_CountVariants = False
     in_TiTv = False
-    for l in f:
+    for line in f:
         # Detect section headers
-        if "#:GATKTable:CompOverlap" in l:
+        if "#:GATKTable:CompOverlap" in line:
             in_CompOverlap = True
-        elif "#:GATKTable:CountVariants" in l:
+        elif "#:GATKTable:CountVariants" in line:
             in_CountVariants = True
-        elif "#:GATKTable:TiTvVariantEvaluator" in l:
+        elif "#:GATKTable:TiTvVariantEvaluator" in line:
             in_TiTv = True
         else:
             # Parse contents using nested loops
             if in_CompOverlap:
-                headers = l.split()
+                headers = line.split()
                 while in_CompOverlap:
-                    l = f.readline().strip("\n")
-                    if len(l) < len(headers):
+                    line = f.readline().strip("\n")
+                    if len(line) < len(headers):
                         in_CompOverlap = False
                         break
                     d = dict()
-                    for i, s in enumerate(l.split()):
+                    for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "all" or d.get("Filter") == "raw":
                         if "CompFeatureInput" in d:
@@ -138,14 +139,14 @@ def parse_single_report(f):
                             data["known_sites"] = int(d["nEvalVariants"])
 
             elif in_CountVariants:
-                headers = l.split()
+                headers = line.split()
                 while in_CountVariants:
-                    l = f.readline().strip("\n")
-                    if len(l) < len(headers):
+                    line = f.readline().strip("\n")
+                    if len(line) < len(headers):
                         in_CountVariants = False
                         break
                     d = dict()
-                    for i, s in enumerate(l.split()):
+                    for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "all" or d.get("Filter") == "raw":
                         if "nSNPs" in d:
@@ -165,15 +166,15 @@ def parse_single_report(f):
                         if "nNoCalls" in d:
                             data["nocalls"] = int(d["nNoCalls"])
             elif in_TiTv:
-                headers = l.split()
+                headers = line.split()
                 data["titv_reference"] = "unknown"
                 while in_TiTv:
-                    l = f.readline().strip("\n")
-                    if len(l) < len(headers):
+                    line = f.readline().strip("\n")
+                    if len(line) < len(headers):
                         in_TiTv = False
                         break
                     d = dict()
-                    for i, s in enumerate(l.split()):
+                    for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "known":
                         if "CompFeatureInput" in d:
@@ -205,15 +206,16 @@ def parse_single_report(f):
 
 def count_variants_barplot(data):
     """Return HTML for the Variant Counts barplot"""
-    keys = OrderedDict()
-    keys["snps"] = {"name": "SNPs"}
-    keys["mnps"] = {"name": "MNPs"}
-    keys["insertions"] = {"name": "Insertions"}
-    keys["deletions"] = {"name": "Deletions"}
-    keys["complex"] = {"name": "Complex"}
-    keys["symbolic"] = {"name": "Symbolic"}
-    keys["mixed"] = {"name": "Mixed"}
-    keys["nocalls"] = {"name": "No-calls"}
+    keys = {
+        "snps": {"name": "SNPs"},
+        "mnps": {"name": "MNPs"},
+        "insertions": {"name": "Insertions"},
+        "deletions": {"name": "Deletions"},
+        "complex": {"name": "Complex"},
+        "symbolic": {"name": "Symbolic"},
+        "mixed": {"name": "Mixed"},
+        "nocalls": {"name": "No-calls"},
+    }
 
     plot_conf = {
         "id": "gatk_varianteval_variant_plot",
@@ -226,47 +228,48 @@ def count_variants_barplot(data):
 
 def comp_overlap_table(data):
     """Build a table from the comp overlaps output."""
-    headers = OrderedDict()
-    headers["comp_rate"] = {
-        "title": "Compare rate",
-        "description": "Ratio of known variants found in the reference set.",
-        "namespace": "GATK",
-        "min": 0,
-        "max": 100,
-        "suffix": "%",
-        "format": "{:,.2f}",
-        "scale": "Blues",
-    }
-    headers["concordant_rate"] = {
-        "title": "Concordant rate",
-        "description": "Ratio of variants matching alleles in the reference set.",
-        "namespace": "GATK",
-        "min": 0,
-        "max": 100,
-        "suffix": "%",
-        "format": "{:,.2f}",
-        "scale": "Blues",
-    }
-    headers["eval_variants"] = {
-        "title": "M Evaluated variants",
-        "description": "Number of called variants (millions)",
-        "namespace": "GATK",
-        "min": 0,
-        "modify": lambda x: float(x) / 1000000.0,
-    }
-    headers["known_sites"] = {
-        "title": "M Known sites",
-        "description": "Number of known variants (millions)",
-        "namespace": "GATK",
-        "min": 0,
-        "modify": lambda x: float(x) / 1000000.0,
-    }
-    headers["novel_sites"] = {
-        "title": "M Novel sites",
-        "description": "Number of novel variants (millions)",
-        "namespace": "GATK",
-        "min": 0,
-        "modify": lambda x: float(x) / 1000000.0,
+    headers = {
+        "comp_rate": {
+            "title": "Compare rate",
+            "description": "Ratio of known variants found in the reference set.",
+            "namespace": "GATK",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "scale": "Blues",
+        },
+        "concordant_rate": {
+            "title": "Concordant rate",
+            "description": "Ratio of variants matching alleles in the reference set.",
+            "namespace": "GATK",
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "scale": "Blues",
+        },
+        "eval_variants": {
+            "title": "M Evaluated variants",
+            "description": "Number of called variants (millions)",
+            "namespace": "GATK",
+            "min": 0,
+            "modify": lambda x: float(x) / 1000000.0,
+        },
+        "known_sites": {
+            "title": "M Known sites",
+            "description": "Number of known variants (millions)",
+            "namespace": "GATK",
+            "min": 0,
+            "modify": lambda x: float(x) / 1000000.0,
+        },
+        "novel_sites": {
+            "title": "M Novel sites",
+            "description": "Number of novel variants (millions)",
+            "namespace": "GATK",
+            "min": 0,
+            "modify": lambda x: float(x) / 1000000.0,
+        },
     }
     table_html = table.plot(data, headers, {"id": "gatk_compare_overlap", "table_title": "GATK - Compare Overlap"})
     return table_html

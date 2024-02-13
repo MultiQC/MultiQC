@@ -8,7 +8,7 @@ function notEmptyObj(obj) {
     if (obj === undefined) {
       return false;
     }
-    if (obj.length == 0) {
+    if (obj.length === 0) {
       return false;
     }
   } catch (e) {
@@ -45,7 +45,7 @@ $(function () {
     console.log(
       "Could not access localStorage: " +
         e +
-        "\nPlease disable 'Block third-party cookies and site data' or browser equivalent."
+        "\nPlease disable 'Block third-party cookies and site data' or browser equivalent.",
     );
   }
   $("#mqc_hide_welcome_btn, #mqc_welcome .close").click(function (e) {

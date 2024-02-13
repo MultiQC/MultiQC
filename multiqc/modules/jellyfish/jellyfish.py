@@ -3,7 +3,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -40,12 +40,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_data = self.ignore_samples(self.jellyfish_data)
 
         if len(self.jellyfish_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.jellyfish_data, "jellyfish")
 
-        log.info("Found {} reports".format(len(self.jellyfish_data)))
+        log.info(f"Found {len(self.jellyfish_data)} reports")
 
         self.frequencies_plot(xmax=self.jellyfish_max_x)
 
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.jellyfish_max_x = max(self.jellyfish_max_x, self.max_key)
         if len(histogram) > 0:
             if f["s_name"] in self.jellyfish_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.add_data_source(f)
             self.jellyfish_data[f["s_name"]] = histogram
 

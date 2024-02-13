@@ -3,7 +3,7 @@
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -30,8 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # If we found no data
         if not self.hifiasm_data:
-            raise UserWarning
-        log.info("Found {} reports".format(len(self.hifiasm_data)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.hifiasm_data)} reports")
 
         self.write_data_file(self.hifiasm_data, "multiqc_hifiasm_report")
         self.add_sections()
@@ -100,8 +100,11 @@ class MultiqcModule(BaseMultiqcModule):
                 # Special case
                 if occurrence == "rest":
                     continue
-                # Count of the occurrence
-                count = int(spline[3])
+                # Count of the occurrence, checking for lines with no asterisk before count.
+                if "*" in spline[2]:
+                    count = int(spline[3])
+                else:
+                    count = int(spline[2])
                 data[int(occurrence)] = count
             # If we are no longer in the histogram
             elif found_histogram:

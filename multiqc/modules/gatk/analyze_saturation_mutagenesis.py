@@ -3,7 +3,7 @@
 """ MultiQC submodule to parse output from GATK tool AnalyzeSaturationMutagenesis """
 
 import logging
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -28,10 +28,6 @@ class AnalyzeSaturationMutagenesisMixin:
                 self.add_data_source(file_handle, section="analyze_saturation_mutagenesis")
                 self.gatk_analyze_saturation_mutagenesis[file_handle["s_name"]] = parsed_data
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, file_handle["s_name"])
-
         # Filter to strip out ignored sample names
         self.gatk_analyze_saturation_mutagenesis = self.ignore_samples(self.gatk_analyze_saturation_mutagenesis)
 
@@ -40,6 +36,10 @@ class AnalyzeSaturationMutagenesisMixin:
             return 0
 
         log.info("Found %d AnalyzeSaturationMutagenesis reports", n_reports_found)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file (restructure first)
         self.write_data_file(self.gatk_analyze_saturation_mutagenesis, "multiqc_gatk_analyze_saturation_mutagenesis")
@@ -112,11 +112,12 @@ class AnalyzeSaturationMutagenesisMixin:
 
     def gatk_analyze_saturation_mutagenesis_plot_reads(self, data):
         """Make the plot for GATK AnalyzeSaturationMutagenesis read counts and add the section."""
-        cats = OrderedDict()
+        cats = {
+            "filtered_reads": {"name": "Filtered reads"},
+            "wt_total_reads": {"name": "WT reads"},
+            "variants_total_reads": {"name": "Variant reads"},
+        }
 
-        cats["filtered_reads"] = {"name": "Filtered reads"}
-        cats["wt_total_reads"] = {"name": "WT reads"}
-        cats["variants_total_reads"] = {"name": "Variant reads"}
         pconfig = {
             "id": "gatk_ASM_reads_plot",
             "title": "GATK AnalyzeSaturationMutagenesis: Read counts",
@@ -135,10 +136,11 @@ class AnalyzeSaturationMutagenesisMixin:
 
     def gatk_analyze_saturation_mutagenesis_plot_base_calls(self, data):
         """Make the plot for GATK AnalyzeSaturationMutagenesis base calls and add the section."""
-        cats = OrderedDict()
+        cats = {
+            "evaluated_base_calls": {"name": "Base calls evaluated for variants"},
+            "unevaluated_base_calls": {"name": "Base calls not evaluated for variants"},
+        }
 
-        cats["evaluated_base_calls"] = {"name": "Base calls evaluated for variants"}
-        cats["unevaluated_base_calls"] = {"name": "Base calls not evaluated for variants"}
         pconfig = {
             "id": "gatk_ASM_base_calls_plot",
             "title": "GATK AnalyzeSaturationMutagenesis: Base calls",
@@ -157,226 +159,225 @@ class AnalyzeSaturationMutagenesisMixin:
 
     def gatk_analyze_saturation_mutagenesis_table(self, data):
         """Make the table for GATK AnalyzeSaturationMutagenesis and add the section."""
-        asm_headers = {}
+        asm_headers = {
+            "total_reads": {
+                "title": f"Total reads ({config.read_count_prefix})",
+                "description": f"Total reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Greys",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "wt_total_reads": {
+                "title": f"WT reads ({config.read_count_prefix})",
+                "description": f"Total evaluated reads mapped to WT ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "variants_total_reads": {
+                "title": f"Variant reads ({config.read_count_prefix})",
+                "description": f"Reads with a variant called ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "filtered_reads": {
+                "title": f"Filtered reads ({config.read_count_prefix})",
+                "description": f"Reads filtered from sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Reds-rev",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "unmapped_reads": {
+                "title": f"Unmapped ({config.read_count_prefix})",
+                "description": f"Unmapped reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Purples-rev",
+                "shared_key": "read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "lowq_reads": {
+                "title": f"LowQ ({config.read_count_prefix})",
+                "description": f"Low quality reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues-rev",
+                "shared_key": "read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "evaluable_reads": {
+                "title": f"Evaluable ({config.read_count_prefix})",
+                "description": f"Evaluable reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Greys",
+                "shared_key": "read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "disjoint_pairs": {
+                "title": f"Disjoint ({config.read_count_prefix})",
+                "description": f"Reads from disjoint (non-overlapping) paired-end reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Oranges",
+                "shared_key": "read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "wt_reads_disjoint": {
+                "title": f"WT (disjoint) ({config.read_count_prefix})",
+                "description": f"WT reads called from disjoint pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Purples",
+                "shared_key": "disjoint_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "called_variants_disjoint": {
+                "title": f"Called variants (disjoint) ({config.read_count_prefix})",
+                "description": f"Reads with variants called from disjoint pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues",
+                "shared_key": "disjoint_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "mate_ignored_disjoint": {
+                "title": f"Mateless ({config.read_count_prefix})",
+                "description": f"Reads with ignored mates called from disjoint pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Greens-rev",
+                "shared_key": "disjoint_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "low_quality_variation_disjoint": {
+                "title": f"LowQ (disjoint) ({config.read_count_prefix})",
+                "description": f"Reads with low quality variation from disjoint pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Reds-rev",
+                "shared_key": "disjoint_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "insufficient_flank_disjoint": {
+                "title": f"No flank (disjoint) ({config.read_count_prefix})",
+                "description": f"Reads with insufficient flank from disjoint pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues-rev",
+                "shared_key": "disjoint_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "overlapping_pairs": {
+                "title": f"Overlapping ({config.read_count_prefix})",
+                "description": f"Reads from overlapping paired-end reads in sample ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Oranges",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "wt_reads_overlapping": {
+                "title": f"WT (overlapping) ({config.read_count_prefix})",
+                "description": f"WT reads called from overlapping pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Purples",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "called_variants_overlapping": {
+                "title": f"Called variants (overlapping) ({config.read_count_prefix})",
+                "description": f"Reads with variants called from overlapping pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "inconsistent_overlapping": {
+                "title": f"Inconsistent (overlapping) ({config.read_count_prefix})",
+                "description": f"Reads with inconsistent pairs from overlapping pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Greens-rev",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "low_quality_variation_overlapping": {
+                "title": f"Low quality reads (overlapping) ({config.read_count_prefix})",
+                "description": f"Reads with low quality variation from overlapping pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Reds-rev",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "insufficient_flank_overlapping": {
+                "title": f"No flank (overlapping) ({config.read_count_prefix})",
+                "description": f"Reads with insufficient flank from overlapping pairs ({config.read_count_desc})",
+                "min": 0,
+                "scale": "Blues-rev",
+                "shared_key": "overlapping_read_count",
+                "hidden": True,
+                "modify": lambda x: x * config.read_count_multiplier,
+                "namespace": "GATK",
+            },
+            "total_base_calls": {
+                "title": f"Total bases ({config.base_count_prefix})",
+                "description": f"Total base calls in sample ({config.base_count_desc})",
+                "min": 0,
+                "scale": "Greys",
+                "shared_key": "base_calls",
+                "hidden": True,
+                "modify": lambda x: x * config.base_count_multiplier,
+                "namespace": "GATK",
+            },
+            "evaluated_base_calls": {
+                "title": f"Evaluated bases ({config.base_count_prefix})",
+                "description": f"Evaluated base calls in sample ({config.base_count_desc})",
+                "min": 0,
+                "scale": "Blues",
+                "hidden": True,
+                "shared_key": "base_calls",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "namespace": "GATK",
+            },
+            "unevaluated_base_calls": {
+                "title": f"Unevaluated bases ({config.base_count_prefix})",
+                "description": f"Unevaluated base calls in sample ({config.base_count_desc})",
+                "min": 0,
+                "scale": "Reds-rev",
+                "hidden": True,
+                "shared_key": "base_calls",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "namespace": "GATK",
+            },
+        }
 
-        asm_headers["total_reads"] = {
-            "title": f"Total reads ({config.read_count_prefix})",
-            "description": f"Total reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Greys",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["wt_total_reads"] = {
-            "title": f"WT reads ({config.read_count_prefix})",
-            "description": f"Total evaluated reads mapped to WT ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["variants_total_reads"] = {
-            "title": f"Variant reads ({config.read_count_prefix})",
-            "description": f"Reads with a variant called ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["filtered_reads"] = {
-            "title": f"Filtered reads ({config.read_count_prefix})",
-            "description": f"Reads filtered from sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Reds-rev",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["unmapped_reads"] = {
-            "title": f"Unmapped ({config.read_count_prefix})",
-            "description": f"Unmapped reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Purples-rev",
-            "shared_key": "read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["lowq_reads"] = {
-            "title": f"LowQ ({config.read_count_prefix})",
-            "description": f"Low quality reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues-rev",
-            "shared_key": "read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["evaluable_reads"] = {
-            "title": f"Evaluable ({config.read_count_prefix})",
-            "description": f"Evaluable reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Greys",
-            "shared_key": "read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["disjoint_pairs"] = {
-            "title": f"Disjoint ({config.read_count_prefix})",
-            "description": f"Reads from disjoint (non-overlapping) paired-end reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Oranges",
-            "shared_key": "read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["wt_reads_disjoint"] = {
-            "title": f"WT (disjoint) ({config.read_count_prefix})",
-            "description": f"WT reads called from disjoint pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Purples",
-            "shared_key": "disjoint_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["called_variants_disjoint"] = {
-            "title": f"Called variants (disjoint) ({config.read_count_prefix})",
-            "description": f"Reads with variants called from disjoint pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "disjoint_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["mate_ignored_disjoint"] = {
-            "title": f"Mateless ({config.read_count_prefix})",
-            "description": f"Reads with ignored mates called from disjoint pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Greens-rev",
-            "shared_key": "disjoint_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["low_quality_variation_disjoint"] = {
-            "title": f"LowQ (disjoint) ({config.read_count_prefix})",
-            "description": f"Reads with low quality variation from disjoint pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Reds-rev",
-            "shared_key": "disjoint_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["insufficient_flank_disjoint"] = {
-            "title": f"No flank (disjoint) ({config.read_count_prefix})",
-            "description": f"Reads with insufficient flank from disjoint pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues-rev",
-            "shared_key": "disjoint_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-
-        asm_headers["overlapping_pairs"] = {
-            "title": f"Overlapping ({config.read_count_prefix})",
-            "description": f"Reads from overlapping paired-end reads in sample ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Oranges",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["wt_reads_overlapping"] = {
-            "title": f"WT (overlapping) ({config.read_count_prefix})",
-            "description": f"WT reads called from overlapping pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Purples",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["called_variants_overlapping"] = {
-            "title": f"Called variants (overlapping) ({config.read_count_prefix})",
-            "description": f"Reads with variants called from overlapping pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["inconsistent_overlapping"] = {
-            "title": f"Inconsistent (overlapping) ({config.read_count_prefix})",
-            "description": f"Reads with inconsistent pairs from overlapping pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Greens-rev",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["low_quality_variation_overlapping"] = {
-            "title": f"Low quality reads (overlapping) ({config.read_count_prefix})",
-            "description": f"Reads with low quality variation from overlapping pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Reds-rev",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["insufficient_flank_overlapping"] = {
-            "title": f"No flank (overlapping) ({config.read_count_prefix})",
-            "description": f"Reads with insufficient flank from overlapping pairs ({config.read_count_desc})",
-            "min": 0,
-            "scale": "Blues-rev",
-            "shared_key": "overlapping_read_count",
-            "hidden": True,
-            "modify": lambda x: x * config.read_count_multiplier,
-            "namespace": "GATK",
-        }
-
-        asm_headers["total_base_calls"] = {
-            "title": f"Total bases ({config.base_count_prefix})",
-            "description": f"Total base calls in sample ({config.base_count_desc})",
-            "min": 0,
-            "scale": "Greys",
-            "shared_key": "base_calls",
-            "hidden": True,
-            "modify": lambda x: x * config.base_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["evaluated_base_calls"] = {
-            "title": f"Evaluated bases ({config.base_count_prefix})",
-            "description": f"Evaluated base calls in sample ({config.base_count_desc})",
-            "min": 0,
-            "scale": "Blues",
-            "hidden": True,
-            "shared_key": "base_calls",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "namespace": "GATK",
-        }
-        asm_headers["unevaluated_base_calls"] = {
-            "title": f"Unevaluated bases ({config.base_count_prefix})",
-            "description": f"Unevaluated base calls in sample ({config.base_count_desc})",
-            "min": 0,
-            "scale": "Reds-rev",
-            "hidden": True,
-            "shared_key": "base_calls",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "namespace": "GATK",
-        }
         # Add module specific prefix to all keys to be safe
         prefix = "gatk_ask_"
         asm_headers = {f"{prefix}{k}": v for k, v in asm_headers.items()}

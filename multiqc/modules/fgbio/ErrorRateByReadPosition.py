@@ -1,9 +1,8 @@
 """ MultiQC submodule to parse output from fgbio ErrorRateByReadPosition """
 
 
-from distutils.util import strtobool
-
 from multiqc.plots import linegraph
+from multiqc.utils.util_functions import strtobool
 
 
 def parse_reports(self):
@@ -55,12 +54,12 @@ def parse_reports(self):
         errors = 0
         for line in fh:
             fields = line.rstrip("\r\n").split("\t")
-            assert len(fields) == len(header), "Missing fields in line: `{}`".format(line)
+            assert len(fields) == len(header), f"Missing fields in line: `{line}`"
             fields[1:4] = [int(field) for field in fields[1:4]]
             fields[4:11] = [float(field) for field in fields[4:11]]
             if is_new_format:
                 # Check if collapse was true or false
-                fields[-1] = bool(strtobool(fields[-1]))
+                fields[-1] = strtobool(fields[-1])
                 collapse = fields[-1]
                 if not collapse:
                     # Substitutions types were not collapsed, parse them

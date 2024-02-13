@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from deepTools plotFingerprint """
 
 import logging
-from collections import OrderedDict
 
 import numpy as np
 
@@ -11,7 +10,7 @@ from multiqc.plots import linegraph
 log = logging.getLogger(__name__)
 
 
-class plotFingerprintMixin:
+class PlotFingerprintMixin:
     def parse_plotFingerprint(self):
         """Find plotFingerprint output. Both --outQualityMetrics and --outRawCounts"""
         self.deeptools_plotFingerprintOutQualityMetrics = dict()
@@ -19,27 +18,27 @@ class plotFingerprintMixin:
             parsed_data = self.parsePlotFingerprintOutQualityMetrics(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutQualityMetrics:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 # Values are fractions - convert to percentages for consistency with other MultiQC output
                 self.deeptools_plotFingerprintOutQualityMetrics[k] = {i: float(j) * 100.0 for i, j in v.items()}
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotFingerprint")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         self.deeptools_plotFingerprintOutRawCounts = dict()
         for f in self.find_log_files("deeptools/plotFingerprintOutRawCounts"):
             parsed_data = self.parsePlotFingerprintOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotFingerprintOutRawCounts:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotFingerprintOutRawCounts[k] = v
 
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotFingerprint")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.deeptools_plotFingerprintOutRawCounts = self.ignore_samples(self.deeptools_plotFingerprintOutRawCounts)
         self.deeptools_plotFingerprintOutQualityMetrics = self.ignore_samples(
@@ -117,8 +116,8 @@ class plotFingerprintMixin:
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
-                log.warning("Replacing duplicate sample {}.".format(s_name))
-            d[s_name] = OrderedDict()
+                log.warning(f"Replacing duplicate sample {s_name}.")
+            d[s_name] = dict()
 
             try:
                 for i, c in enumerate(cols[1:]):
@@ -132,7 +131,7 @@ class plotFingerprintMixin:
                     if header[i] == "AUC" or header[i] == "Synthetic AUC":
                         continue
                     d[s_name][header[i]] = float(c)
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the output from plotFingerprint --outQualityMetrics, but that seems to not be the case. Skipping...".format(
                         f["fn"]

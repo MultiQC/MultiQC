@@ -4,7 +4,7 @@
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -44,9 +44,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.conpair_data = self.ignore_samples(self.conpair_data)
 
         if len(self.conpair_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.conpair_data)))
+        log.info(f"Found {len(self.conpair_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.conpair_data, "multiqc_conpair")
@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
                 match = re.search(r, f["f"])
                 if match:
                     parsed_data[k] = float(match.group(1))
-                    if k == "concordance_concordance" and not "Concordance" in r:
+                    if k == "concordance_concordance" and "Concordance" not in r:
                         parsed_data[k] = 100.0 * float(parsed_data[k])
                     break
 
@@ -88,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(parsed_data) > 0:
             if f["s_name"] in self.conpair_data:
                 if _cp_type(self.conpair_data[f["s_name"]]) == _cp_type(parsed_data):
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             else:
                 self.conpair_data[f["s_name"]] = dict()
             self.add_data_source(f, section=_cp_type(parsed_data))

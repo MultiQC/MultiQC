@@ -2,7 +2,7 @@
 """
 Helper functions to manipulate colours and colour scales
 """
-
+import hashlib
 
 # Default logger will be replaced by caller
 import logging
@@ -348,13 +348,17 @@ class mqc_colour_scale(object):
     def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
         """Given a value, return a colour within the colour scale"""
 
+        if val is None:
+            return ""
+
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        rgb_converter = lambda x: max(0, min(1, 1 + ((x - 1) * lighten)))
+        def rgb_converter(x):
+            return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
-                if config.lint:
+                if config.strict:
                     sequential_scales = [
                         s for s in mqc_colour_scale.COLORBREWER_SCALES if s not in mqc_colour_scale.qualitative_scales
                     ]
@@ -371,12 +375,12 @@ class mqc_colour_scale(object):
                     # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
                     # values assigned with the same color. But instead we will get a hash from a string to hope to assign
                     # a unique color for each possible enumeration value.
-                    val = hash(val)
+                    val = deterministic_hash(val)
                 thecolour = spectra.html(self.colours[val % len(self.colours)])
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
                 return thecolour.hexcode
 
-            # When there is only 1 color in scale, spectra.scale() will crash with DevisionByZero
+            # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
             elif len(self.colours) == 1:
                 thecolour = spectra.html(self.colours[0])
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
@@ -384,23 +388,29 @@ class mqc_colour_scale(object):
 
             else:
                 # Sanity checks
-                val = re.sub(r"[^0-9\.\-e]", "", str(val))
-                if val == "":
-                    val = self.minval
-                val = float(val)
-                val = max(val, self.minval)
-                val = min(val, self.maxval)
+                val_stripped = re.sub(r"[^0-9\.\-e]", "", str(val))
+                val_float: float
+                if val_stripped == "":
+                    val_float = self.minval
+                else:
+                    try:
+                        val_float = float(val_stripped)
+                    except ValueError:
+                        return ""
+                    val_float = max(val_float, self.minval)
+                    val_float = min(val_float, self.maxval)
 
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
                 my_scale = spectra.scale(self.colours).domain(domain_nums)
 
                 # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val).rgb])
+                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val_float).rgb])
 
                 return thecolour.hexcode
 
-        except:
+        except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
+            logger.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
             return ""
 
     def get_colours(self, name="GnBu"):
@@ -423,8 +433,8 @@ class mqc_colour_scale(object):
 
         # Default colour scale
         if name not in mqc_colour_scale.COLORBREWER_SCALES:
-            errmsg = f"{self.id+': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
-            if config.lint:
+            errmsg = f"{self.id + ': ' if self.id else ''}Colour scale {name} not found - defaulting to GnBu"
+            if config.strict:
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
             else:
@@ -589,3 +599,14 @@ class mqc_colour_scale(object):
         "lightyellow": "#FFFFE0",
         "ivory": "#FFFFF0",
     }
+
+
+def deterministic_hash(x):
+    """
+    Deterministic hash function for strings. This is useful for assigning a unique color
+    to each possible value of a categorical variable.
+
+    Unlike the built-in hash function, this function always returns the same value for
+    the same input string (see https://docs.python.org/3/using/cmdline.html#cmdoption-R)
+    """
+    return int(hashlib.sha1(x.encode("utf-8")).hexdigest(), 16) % (10**8)

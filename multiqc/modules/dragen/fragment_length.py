@@ -21,7 +21,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="fragment_length_hist")
 
             for rg, data in data_by_rg.items():
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
@@ -60,9 +60,7 @@ class DragenFragmentLength(BaseMultiqcModule):
             Distribution of estimated fragment lengths of mapped reads per read group.
             Only points supported by at least {} reads are shown to prevent long flat tail.
             The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
-            """.format(
-                MIN_CNT_TO_SHOW_ON_PLOT
-            ),
+            """.format(MIN_CNT_TO_SHOW_ON_PLOT),
             plot=linegraph.plot(
                 data_by_rg,
                 {

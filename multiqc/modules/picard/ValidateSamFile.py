@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard ValidateSamFile """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import table
 
@@ -10,56 +9,62 @@ log = logging.getLogger(__name__)
 
 # Possible warnings and descriptions
 WARNING_DESCRIPTIONS = {
-    "ADJACENT_INDEL_IN_CIGAR": "CIGAR string contains an insertion (I) followed by deletion (D), or vice versa",
-    "BAM_FILE_MISSING_TERMINATOR_BLOCK": "BAM appears to be healthy, but is an older file so doesn't have terminator block",
-    "E2_BASE_EQUALS_PRIMARY_BASE": "Secondary base calls should not be the same as primary, unless one or the other is N",
+    "ADJACENT_INDEL_IN_CIGAR": "CIGAR string contains an insertion (I) followed by " "deletion (D), or vice versa",
+    "BAM_FILE_MISSING_TERMINATOR_BLOCK": "BAM appears to be healthy, but is an older "
+    "file so doesn't have terminator block",
+    "E2_BASE_EQUALS_PRIMARY_BASE": "Secondary base calls should not be the same as "
+    "primary, unless one or the other is N",
     "INVALID_DATE_STRING": "Date string is not ISO-8601",
-    "INVALID_QUALITY_FORMAT": "Quality encodings out of range; appear to be Solexa or Illumina when Phred expected. Avoid exception being thrown as a result of no qualities being read.",
+    "INVALID_QUALITY_FORMAT": "Quality encodings out of range; appear to be Solexa or "
+    "Illumina when Phred expected. Avoid exception being "
+    "thrown as a result of no qualities being read.",
     "MISSING_TAG_NM": "The NM tag (nucleotide differences) is missing",
-    "PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND": "Pair flag set but not marked as first or second of pair",
+    "PAIRED_READ_NOT_MARKED_AS_FIRST_OR_SECOND": "Pair flag set but not marked as " "first or second of pair",
     "RECORD_MISSING_READ_GROUP": "A SAMRecord is found with no read group id",
 }
 
 # All possible errors and descriptions
 ERROR_DESCRIPTIONS = {
-    "CIGAR_MAPS_OFF_REFERENCE": "Bases corresponding to M operator in CIGAR extend beyond reference",
+    "CIGAR_MAPS_OFF_REFERENCE": "Bases corresponding to M operator in CIGAR extend " "beyond reference",
     "DUPLICATE_PROGRAM_GROUP_ID": "Same program group id appears more than once",
     "DUPLICATE_READ_GROUP_ID": "Same read group id appears more than once",
-    "EMPTY_READ": "Indicates that a read corresponding to the first strand has a length of zero and/or lacks flow signal intensities (FZ)",
+    "EMPTY_READ": "Indicates that a read corresponding to the first strand has a "
+    "length of zero and/or lacks flow signal intensities (FZ)",
     "HEADER_RECORD_MISSING_REQUIRED_TAG": "Header tag missing in header line",
-    "HEADER_TAG_MULTIPLY_DEFINED": "Header tag appears more than once in header line with different value",
+    "HEADER_TAG_MULTIPLY_DEFINED": "Header tag appears more than once in header line " "" "" "with different value",
     "INVALID_ALIGNMENT_START": "Alignment start position is incorrect",
     "INVALID_CIGAR": "CIGAR string error for either read or mate",
     "INVALID_FLAG_FIRST_OF_PAIR": "First of pair flag set for unpaired read",
     "INVALID_FLAG_MATE_NEG_STRAND": "Mate negative strand flag set for unpaired read",
     "INVALID_FLAG_MATE_UNMAPPED": "Mate unmapped flag is incorrectly set",
-    "INVALID_FLAG_NOT_PRIM_ALIGNMENT": "Not primary alignment flag set for unmapped read",
+    "INVALID_FLAG_NOT_PRIM_ALIGNMENT": "Not primary alignment flag set for unmapped " "read",
     "INVALID_FLAG_PROPER_PAIR": "Proper pair flag set for unpaired read",
     "INVALID_FLAG_READ_UNMAPPED": "Mapped read flat not set for mapped read",
     "INVALID_FLAG_SECOND_OF_PAIR": "Second of pair flag set for unpaired read",
-    "INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT": "Supplementary alignment flag set for unmapped read",
+    "INVALID_FLAG_SUPPLEMENTARY_ALIGNMENT": "Supplementary alignment flag set for " "unmapped read",
     "INVALID_INDEX_FILE_POINTER": "Invalid virtualFilePointer in index",
-    "INVALID_INDEXING_BIN": "Indexing bin set on SAMRecord does not agree with computed value",
+    "INVALID_INDEXING_BIN": "Indexing bin set on SAMRecord does not agree with " "computed value",
     "INVALID_INSERT_SIZE": "Inferred insert size is out of range",
     "INVALID_MAPPING_QUALITY": "Mapping quality set for unmapped read or is >= 256",
     "INVALID_MATE_REF_INDEX": "Mate reference index (MRNM) set for unpaired read",
-    "INVALID_PLATFORM_VALUE": "The read group has an invalid value set for its PL field",
+    "INVALID_PLATFORM_VALUE": "The read group has an invalid value set for its PL " "field",
     "INVALID_PREDICTED_MEDIAN_INSERT_SIZE": "PI tag value is not numeric",
     "INVALID_REFERENCE_INDEX": "Reference index not found in sequence dictionary",
     "INVALID_TAG_NM": "The NM tag (nucleotide differences) is incorrect",
     "INVALID_VERSION_NUMBER": "Does not match any of the acceptable versions",
-    "MATE_CIGAR_STRING_INVALID_PRESENCE": "A cigar string for a read whose mate is NOT mapped",
+    "MATE_CIGAR_STRING_INVALID_PRESENCE": "A cigar string for a read whose mate is " "NOT mapped",
     "MATE_FIELD_MISMATCH": "Read alignment fields do not match its mate",
     "MATE_NOT_FOUND": "Read is marked as paired, but its pair was not found",
-    "MATES_ARE_SAME_END": "Both mates of a pair are marked either as first or second mates",
-    "MISMATCH_FLAG_MATE_NEG_STRAND": "Mate negative strand flag does not match read strand flag",
-    "MISMATCH_FLAG_MATE_UNMAPPED": "Mate unmapped flag does not match read unmapped flag of mate",
-    "MISMATCH_MATE_ALIGNMENT_START": "Mate alignment does not match alignment start of mate",
-    "MISMATCH_MATE_CIGAR_STRING": "The mate cigar tag does not match its mate's cigar string",
-    "MISMATCH_MATE_REF_INDEX": "Mate reference index (MRNM) does not match reference index of mate",
-    "MISMATCH_READ_LENGTH_AND_E2_LENGTH": "Lengths of secondary base calls tag values and read should match",
-    "MISMATCH_READ_LENGTH_AND_QUALS_LENGTH": "Length of sequence string and length of base quality string do not match",
-    "MISMATCH_READ_LENGTH_AND_U2_LENGTH": "Secondary base quals tag values should match read length",
+    "MATES_ARE_SAME_END": "Both mates of a pair are marked either as first or second " "" "" "mates",
+    "MISMATCH_FLAG_MATE_NEG_STRAND": "Mate negative strand flag does not match read " "strand flag",
+    "MISMATCH_FLAG_MATE_UNMAPPED": "Mate unmapped flag does not match read unmapped " "flag of mate",
+    "MISMATCH_MATE_ALIGNMENT_START": "Mate alignment does not match alignment start " "of mate",
+    "MISMATCH_MATE_CIGAR_STRING": "The mate cigar tag does not match its mate's cigar " "" "" "string",
+    "MISMATCH_MATE_REF_INDEX": "Mate reference index (MRNM) does not match reference " "" "" "index of mate",
+    "MISMATCH_READ_LENGTH_AND_E2_LENGTH": "Lengths of secondary base calls tag " "values" " and read should match",
+    "MISMATCH_READ_LENGTH_AND_QUALS_LENGTH": "Length of sequence string and length of"
+    " base quality string do not match",
+    "MISMATCH_READ_LENGTH_AND_U2_LENGTH": "Secondary base quals tag values should " "match read length",
     "MISSING_HEADER": "The SAM/BAM file is missing the header",
     "MISSING_PLATFORM_VALUE": "The read group is missing its PL (platform unit) field",
     "MISSING_READ_GROUP": "The header is missing read group information",
@@ -68,7 +73,7 @@ ERROR_DESCRIPTIONS = {
     "POORLY_FORMATTED_HEADER_TAG": "Header tag does not have colon",
     "READ_GROUP_NOT_FOUND": "A read group ID on a SAMRecord is not found in the header",
     "RECORD_OUT_OF_ORDER": "The record is out of order",
-    "TAG_VALUE_TOO_LARGE": "Unsigned integer tag value is deprecated in BAM. Template length",
+    "TAG_VALUE_TOO_LARGE": "Unsigned integer tag value is deprecated in BAM. Template " "" "" "length",
     "TRUNCATED_FILE": "BAM file does not have terminator block",
     "UNRECOGNIZED_HEADER_TYPE": "Header record is not one of the standard types",
 }
@@ -78,66 +83,66 @@ def _default_data_entry():
     return {"WARNING_count": 0, "ERROR_count": 0, "file_validation_status": "pass"}
 
 
-def parse_reports(self):
+def parse_reports(module):
     """
     Find Picard ValidateSamFile reports and parse their data based on wether we
     think it's a VERBOSE or SUMMARY report
     """
 
     # Get data
-    data = _parse_reports_by_type(self)
+    data = _parse_reports_by_type(module)
 
     if data:
         #  Filter to strip out ignored sample names (REQUIRED)
-        data = self.ignore_samples(data)
+        data = module.ignore_samples(data)
 
         # Populate the general stats table
-        _add_data_to_general_stats(self, data)
+        module.general_stats_addcols(data, _get_general_stats_headers(), namespace="ValidateSamFile")
 
         # Add any found data to the report
-        _add_section_to_report(self, data)
+        _add_section_to_report(module, data)
 
         # Write parsed data to a file
-        self.write_data_file(data, "multiqc_picard_validatesamfile")
+        module.write_data_file(data, "multiqc_picard_validatesamfile")
 
-    self.picard_ValidateSamFile_data = data  # Seems like the right thing to do
     return len(data)
 
 
-def _parse_reports_by_type(self):
+def _parse_reports_by_type(module):
     """Returns a data dictionary
 
-    Goes through logs and parses them based on 'No errors found', VERBOSE or SUMMARY type.
+    Goes through logs and parses them based on 'No errors found', VERBOSE or SUMMARY
+    type.
     """
 
-    data = dict()
+    data_by_sample = dict()
 
-    for file_meta in self.find_log_files("picard/sam_file_validation", filehandles=True):
-        self.add_data_source(file_meta, "ValidateSamFile")
+    for f in module.find_log_files("picard/sam_file_validation", filehandles=True):
+        module.add_data_source(f, "ValidateSamFile")
 
-        sample = file_meta["s_name"]
+        s_name = f["s_name"]
 
-        if sample in data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(sample))
+        if s_name in data_by_sample:
+            log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
-        filehandle = file_meta["f"]
-        first_line = filehandle.readline().rstrip()
-        filehandle.seek(0)  # Rewind reading of the file
+        fh = f["f"]
+        first_line = fh.readline().rstrip()
+        fh.seek(0)  # Rewind reading of the file
 
         if "No errors found" in first_line:
             sample_data = _parse_no_error_report()
         elif first_line.startswith("ERROR") or first_line.startswith("WARNING"):
-            sample_data = _parse_verbose_report(filehandle)
+            sample_data = _parse_verbose_report(fh)
         else:
-            sample_data = _parse_summary_report(filehandle)
+            sample_data = _parse_summary_report(fh)
 
-        data[sample] = sample_data
+        data_by_sample[s_name] = sample_data
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
-        self.add_software_version(None, sample)
+        module.add_software_version(None, s_name)
 
-    return data
+    return data_by_sample
 
 
 def _parse_no_error_report():
@@ -182,25 +187,29 @@ def _histogram_data(iterator):
     """Yields only the row contents that contain the histogram entries"""
     histogram_started = False
     header_passed = False
-    for l in iterator:
-        if "## HISTOGRAM" in l:
+    for line in iterator:
+        if "## HISTOGRAM" in line:
             histogram_started = True
         elif histogram_started:
             if header_passed:
-                values = l.rstrip().split("\t")
+                values = line.rstrip().split("\t")
                 if len(values) == 1:
                     continue
                 try:
                     problem_type, name = values[0].split(":")
-                except ValueError as e:
-                    log.warn("Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0]))
+                except ValueError:
+                    log.warning(
+                        "Line did not look like normal picard 'ERROR:NAME' format, " "" "" "ignoring: {}".format(
+                            values[0]
+                        )
+                    )
                     continue
                 yield problem_type, name, int(values[1])
-            elif l.startswith("Error Type"):
+            elif line.startswith("Error Type"):
                 header_passed = True
 
 
-def _add_section_to_report(self, data):
+def _add_section_to_report(module, data):
     """
     Adds found data to the report via several HTML generators
     """
@@ -228,73 +237,60 @@ def _add_section_to_report(self, data):
         plot_html.append(table_html)
 
     # Finally, add the html to the report as a section
-    self.add_section(
+    module.add_section(
         name="SAM/BAM File Validation",
         anchor="picard_validatesamfile",
         description=(
-            "This tool reports on the validity of a SAM or BAM " "file relative to the SAM-format specification."
+            "This tool reports on the validity of a SAM or BAM " "file relative to " "the SAM-format specification."
         ),
         helptext="""
-            A detailed table is only shown if errors or warnings are found. Details about the errors and warnings are only shown if a `SUMMARY` report was parsed.
+            A detailed table is only shown if errors or warnings are found. Details 
+            about the errors and warnings are only shown if a `SUMMARY` report was 
+            parsed.
 
-            For more information on the warnings, errors and possible fixes please read [this broadinstitute article](https://software.broadinstitute.org/gatk/documentation/article.php?id=7571).""",
+            For more information on the warnings, errors and possible fixes please 
+            read [this broadinstitute article](
+            https://software.broadinstitute.org/gatk/documentation/article.php?id
+            =7571).""",
         plot="\n".join(plot_html),
     )
 
 
-def _add_data_to_general_stats(self, data):
-    """
-    Add data for the general stats in a Picard-module specific manner
-    """
-    headers = _get_general_stats_headers()
-
-    self.general_stats_headers.update(headers)
-
-    header_names = ("ERROR_count", "WARNING_count", "file_validation_status")
-
-    general_data = dict()
-    for sample in data:
-        general_data[sample] = {column: data[sample][column] for column in header_names}
-        if sample not in self.general_stats_data:
-            self.general_stats_data[sample] = dict()
-        if data[sample]["file_validation_status"] != "pass":
-            headers["file_validation_status"]["hidden"] = False
-        self.general_stats_data[sample].update(general_data[sample])
-
-
 def _get_general_stats_headers():
     """
-    Returns a header dict for the general stats collumns
+    Returns a header dict for the general stats columns
     """
-    headers = OrderedDict()
-
-    headers["file_validation_status"] = {"title": "Validation", "description": "ValidateSamFile (File Validation)"}
-
-    headers["WARNING_count"] = {
-        "title": "# Warnings",
-        "description": "ValidateSamFile (number of warnings)",
-        "scale": "Oranges",
-        "shared_key": "ValidateSamEntries",
-        "colour": "255,237,160",
-        "format": "{:.0f}",
-        "hidden": True,
-    }
-
-    headers["ERROR_count"] = {
-        "title": "# Errors",
-        "description": "ValidateSamFile (number of errors)",
-        "scale": "Reds",
-        "shared_key": "ValidateSamEntries",
-        "colour": "252,146,114",
-        "format": "{:.0f}",
-        "hidden": True,
+    headers = {
+        "file_validation_status": {
+            "title": "Validation",
+            "description": "ValidateSamFile (File Validation)",
+        },
+        "WARNING_count": {
+            "title": "# Warnings",
+            "description": "ValidateSamFile (number of warnings)",
+            "scale": "Oranges",
+            "shared_key": "ValidateSamEntries",
+            "colour": "255,237,160",
+            "format": "{:.0f}",
+            "hidden": True,
+        },
+        "ERROR_count": {
+            "title": "# Errors",
+            "description": "ValidateSamFile (number of errors)",
+            "scale": "Reds",
+            "shared_key": "ValidateSamEntries",
+            "colour": "252,146,114",
+            "format": "{:.0f}",
+            "hidden": True,
+        },
     }
 
     return headers
 
 
 def _generate_overview_note(pass_count, only_warning_count, error_count, total_count):
-    """Generates and returns the HTML note that provides a summary of validation status."""
+    """Generates and returns the HTML note that provides a summary of validation
+    status."""
 
     note_html = ['<div class="progress">']
     pbars = [
@@ -305,7 +301,9 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     for b in pbars:
         if b[0]:
             note_html.append(
-                '<div class="progress-bar progress-bar-{pbcol}" style="width: {pct}%" data-toggle="tooltip" title="{count} {sample} {txt}">{count}</div>'.format(
+                '<div class="progress-bar progress-bar-{pbcol}" style="width: {pct}%" '
+                'data-toggle="tooltip" title="{count} {sample} {txt}">{'
+                "count}</div>".format(
                     pbcol=b[1],
                     count=int(b[0]),
                     pct=(b[0] / float(total_count)) * 100.0,
@@ -320,7 +318,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
 
 def _generate_detailed_table(data):
     """
-    Generates and retuns the HTML table that overviews the details found.
+    Generates and returns the HTML table that overviews the details found.
     """
     headers = _get_general_stats_headers()
 
@@ -350,6 +348,7 @@ def _generate_detailed_table(data):
 
     table_config = {
         "table_title": "Picard: SAM/BAM File Validation",
+        "id": "picard_validatesamfile_table",
     }
 
     return table.plot(data=data, headers=headers, pconfig=table_config)

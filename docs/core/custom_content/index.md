@@ -16,7 +16,7 @@ Custom content parsing is a little more restricted than standard modules. Specif
 - Plot customisation is more limited
 
 All plot types can be generated using custom content - see the
-[test files](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content)
+[test files](https://github.com/MultiQC/test-data/tree/main/data/custom_content)
 for examples of how data should be structured.
 
 :::note
@@ -147,7 +147,7 @@ description: 'This section is created using a custom HTML file'
 
 If no configuration is given, MultiQC will do its best to guess how to visualise your data appropriately.
 To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+[test data](https://github.com/MultiQC/test-data/tree/main/data/custom_content/no_config)
 used to develop this code. Something will be probably be shown, but it may produce unexpected results.
 
 :::note
@@ -257,7 +257,7 @@ custom_data:
   example_files:
     file_format: "tsv"
     section_name: "Coverage Decay"
-    description: "This plot comes from files acommpanied by a mutliqc_config.yaml file for configuration"
+    description: "This plot comes from files acommpanied by a multiqc_config.yaml file for configuration"
     plot_type: "linegraph"
     pconfig:
       id: "example_coverage_lineplot"
@@ -294,7 +294,7 @@ custom_data:
 
 If no configuration is given, MultiQC will do its best to guess how to visualise
 your data appropriately. To see examples of typical file structures which are understood, see the
-[test data](https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content/no_config)
+[test data](https://github.com/MultiQC/test-data/tree/main/data/custom_content/no_config)
 used to develop this code.
 
 # Configuration
@@ -407,7 +407,7 @@ Wherever you see `pconfig`, any key can be used within the above syntax.
 ## Tricky extras
 
 Because of the way this module works, there are a few specifics that can trip you up.
-Most of these should probably be fixed one day. Feel free to complain on gitter or submit a pull request!
+Most of these should probably be fixed one day. Feel free to ask for help on the [community forum](https://community.seqera.io/c/multiqc/6), or submit a pull request!
 I'll try to keep a list here to help the wary...
 
 ### Differences between Tables and General Stats
@@ -430,12 +430,15 @@ MultiQC has been developed to be as forgiving as possible and will handle lots o
 invalid or ignored configurations. This is useful for most users but can make life
 difficult when getting MultiQC to work with a new custom content format.
 
-To help with this, you can run with the `--lint` flag, which will give explicit
-warnings about anything that is not optimally configured. For example:
+To help with this, you can run MultiQC with the `--strict` flag, which will give
+explicit warnings about anything that is not optimally configured. For example:
 
 ```bash
-multiqc --lint test_data
+multiqc --strict test_data
 ```
+
+You can alternatively enable the strict mode by setting the environment variable
+`MULTIQC_STRICT`, or by setting it into the [config](http://multiqc.info/docs/#configuring-multiqc): `strict: true`.
 
 # Examples
 
@@ -443,7 +446,7 @@ Probably the best way to get to grips with Custom Content is to see some example
 The MultiQC automated testing runs with a bunch of different files, and I try to add to
 these all the time.
 
-You can see these examples here: <https://github.com/ewels/MultiQC_TestData/tree/master/data/custom_content>
+You can see these examples here: <https://github.com/MultiQC/test-data/tree/main/data/custom_content>
 
 For example, to see a file which generates a table in a report by itself, you can
-have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/ewels/MultiQC_TestData/blob/master/data/custom_content/embedded_config/table_headers_mqc.txt)).
+have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_mqc.txt)).
