@@ -55,7 +55,7 @@ class BarPlot extends Plot {
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
     return cats.map((cat) => {
-      if (this.layout.barmode === "stack") {
+      if (this.layout.barmode !== "group") {
         // Plotting each sample as a separate trace to be able to set alpha for each
         // sample color separately, so we can dim the de-highlighted samples.
         return this.filteredSettings.map((sample, sampleIdx) => {
