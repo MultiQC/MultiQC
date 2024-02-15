@@ -16,6 +16,7 @@
 ### Module updates
 
 - **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
+- **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
