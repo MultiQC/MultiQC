@@ -41,7 +41,8 @@ class DataTable:
         if not isinstance(headers, list):
             headers = [headers]
 
-        self.id = pconfig.pop("id")
+        if pconfig and "id" in pconfig:
+            self.id = pconfig.pop("id")
         if not self.id:
             if config.strict:
                 errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
