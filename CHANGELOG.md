@@ -9,6 +9,7 @@
 - Pin Plotly package and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
 - Always create JSON even when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
 - Fix gettng id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
+- Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 
 ### New modules
 

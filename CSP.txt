@@ -3,7 +3,7 @@
 
 script-src 'self'
     # 1.21
-    'sha256-dwM1eUjdMDMsOAYMmE9F86/zv3Zme5VSXoLlJMHLrtg=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
 
     # 1.20
     'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
