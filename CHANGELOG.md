@@ -7,6 +7,7 @@
 - Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
 - Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
 - Pin Plotly package and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
+- fix: JSON not being created when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
 
 ### New modules
 
