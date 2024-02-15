@@ -14,7 +14,7 @@ import math
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.utils import mqc_colour, config
+from multiqc.utils import mqc_colour, config, report
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,10 @@ class Plot(ABC):
 
         title = self.pconfig.get("table_title", self.pconfig.get("title"))
         if not title:
-            logger.error(f"Plot title is not set for {self.id}")
+            if config.strict:
+                errmsg = f"LINT: 'title' is missing from plot config for plot '{self.id}'"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
 
         self.layout = go.Layout(
             title=go.layout.Title(

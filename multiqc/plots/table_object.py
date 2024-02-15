@@ -43,7 +43,7 @@ class DataTable:
 
         if pconfig and "id" in pconfig:
             self.id = pconfig.pop("id")
-        if not self.id:
+        else:
             if config.strict:
                 errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
                 logger.error(errmsg)
