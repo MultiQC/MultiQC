@@ -61,6 +61,8 @@ def parse_ploidy_estimation_metrics_file(f):
 
     for line in f["f"].splitlines():
         _, _, metric, stat = line.split(",")
+        if stat.strip() == "":
+            continue
         try:
             stat = float(stat)
         except ValueError:

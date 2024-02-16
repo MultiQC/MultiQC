@@ -268,6 +268,7 @@ METRICS = {
         "suffix": " %",
         "scale": "Purples",
         "colour": "255, 0, 0",
+        "exclude": False,
     },
     "aligned bases": {
         "order_priority": 0.3,
@@ -293,6 +294,7 @@ METRICS = {
         "scale": "Greens",
         "suffix": " %",
         "bgcols": {"NA": "#00FFFF"},
+        "exclude": False,
     },
     "average chr x coverage over region": {
         "order_priority": 1.0,
@@ -323,6 +325,7 @@ METRICS = {
         "order_priority": 3,
         "exclude": False,
         "hidden_own": False,
+        "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
         "colour": "0, 255, 255",
@@ -353,6 +356,7 @@ METRICS = {
         "title": "Med aut cov",
         "suffix": " x",
         "scale": "Greens",
+        "exclude": False,
     },
     "mean/median autosomal coverage ratio over region": {
         "order_priority": 7.1,
@@ -367,6 +371,7 @@ METRICS = {
     "uniformity of coverage (pct > d.d*mean) over region": {
         "suffix": " %",
         "colour": "55, 255, 55",
+        "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
             "0.2": {
@@ -406,6 +411,7 @@ METRICS = {
         "scale": "Purples",
         "suffix": " %",
         "colour": "255, 50, 25",
+        "exclude": False,
         WGS: {
             # "scale": "Reds",
         },
@@ -772,6 +778,7 @@ def create_table_handlers():
                         m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
+                        del gen_headers[m_id]["colour"]
                         """
                         Some modifications are necessary to improve informativeness
                         of the general table, because several/many familiar tables

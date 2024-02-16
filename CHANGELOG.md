@@ -7,10 +7,18 @@
 - Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
 - Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
 - Pin Plotly package and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
+- Always create JSON even when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
+- Fix gettng id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
+- Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
+- MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 
 ### New modules
 
 ### Module updates
+
+- **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
+- **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
+- **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
