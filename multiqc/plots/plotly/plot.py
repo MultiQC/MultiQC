@@ -392,6 +392,7 @@ class Plot(ABC):
             "p_active": self.p_active,
             "l_active": self.l_active,
             "square": self.pconfig.get("square"),
+            "config": self.pconfig,  # for megaqc
         }
 
     @abstractmethod
