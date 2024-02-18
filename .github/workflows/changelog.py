@@ -225,35 +225,34 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     Determine the type of the PR: new module, module update, or core update.
     Returns a tuple of the section name and the module info.
     """
+    added_modules = _modules_added_by_pr(pr_number)
+    modified_modules = _modules_modified_by_pr(pr_number)
 
+    # Sanity check PR name suggesting a newly added module
     if pr_title.lower().capitalize().startswith("New module: "):
-        added_modules = _modules_added_by_pr(pr_number)
         if len(added_modules) == 0:
             raise RuntimeError(
                 f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
             )
         if len(added_modules) > 1:
             RuntimeError(f"Found multiple added modules: {added_modules}")
-        else:
-            mod_info = _find_module_info(added_modules[0])
-            proper_pr_title = f"New module: {mod_info['name']}"
-            if pr_title != proper_pr_title:
-                try:
-                    _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
-                except (RuntimeError, subprocess.CalledProcessError) as e:
-                    print(
-                        f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
-                        file=sys.stderr,
-                    )
-            return "### New modules", mod_info
 
-    # Check what modules were changed by the PR, and if the title starts with one
-    # of the names of the changed modules, assume it's a module update.
-    modified_modules = _modules_modified_by_pr(pr_number)
-    if len(modified_modules) == 1:
+    if len(added_modules) == 1 and len(modified_modules) == 0:
+        mod_info = _find_module_info(added_modules[0])
+        proper_pr_title = f"New module: {mod_info['name']}"
+        if pr_title != proper_pr_title:
+            try:
+                _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
+            except (RuntimeError, subprocess.CalledProcessError) as e:
+                print(
+                    f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
+                    file=sys.stderr,
+                )
+        return "### New modules", mod_info
+
+    elif len(modified_modules) == 1 and len(added_modules) == 0:
         mod_info = _find_module_info(modified_modules.pop())
-        if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
-            return "### Module updates", mod_info
+        return "### Module updates", mod_info
 
     section = "### MultiQC updates"  # Default section for non-module (core) updates.
     return section, {}
