@@ -72,10 +72,14 @@ jobs:
 
       # For CSP checking
       - name: Install dependencies for CI tests
-        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
+        run: |
+          VIRTUAL_ENV=$(python -c "import sys; print(sys.prefix)") 
+          uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       - name: Install MultiQC
-        run: uv pip install .
+        run: |
+          VIRTUAL_ENV=$(python -c "import sys; print(sys.prefix)")
+          pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -171,11 +175,11 @@ jobs:
 
       # Update core packages
       - name: Install dependencies for CI tests
-        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
+        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
 
       # Install MultiQC
       - name: Install MultiQC
-        run: uv pip install .
+        run: pip install .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
