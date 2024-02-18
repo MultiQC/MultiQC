@@ -68,10 +68,11 @@ jobs:
 
       - uses: yezz123/setup-uv@v1
 
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
+
       - name: Install MultiQC
         run: |
-          # Set the VIRTUAL_ENV variable for uv to work
-          VIRTUAL_ENV=${Python_ROOT_DIR}
           # Temporary hack to remove duplicated pip package (hopefully will be addressed in uv or GitHub)
           rm -rf ${VIRTUAL_ENV}/lib/python3.*/site-packages/pip-23.*
           uv pip install -e .
@@ -172,12 +173,12 @@ jobs:
 
       - uses: yezz123/setup-uv@v1
 
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=$env:Python_ROOT_DIR" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       # Install MultiQC
       - name: Install MultiQC
-        run: |
-          # Set the VIRTUAL_ENV variable for uv to work
-          $VIRTUAL_ENV = ${$env:Python_ROOT_DIR}
-          uv pip install -e .
+        run: uv pip install -e .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
