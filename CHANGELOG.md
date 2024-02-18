@@ -13,6 +13,7 @@
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
 - Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
+- Changelog bot: do not require PR title start with module name before checking if it is a module change ([#2351](https://github.com/MultiQC/MultiQC/pull/2351))
 
 ### New modules
 
