@@ -327,7 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
         # Add mosdepth summary to General Stats
-        genstats_headers = {
+        genstats_headers.update({
             "mean_coverage": {
                 "title": "Mean Cov.",
                 "description": "Mean coverage",
@@ -364,7 +364,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "format": "{:,d}",
                 "hidden": True,
             },
-        }
+        })
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
