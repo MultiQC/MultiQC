@@ -147,7 +147,7 @@ jobs:
       - name: Test for missing CSPs
         if: matrix.python-version == env.latest_python
         run: |
-          uv pip install --upgrade beautifulsoup4
+          uv pip install beautifulsoup4
           python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
 
   run_windows:
@@ -173,10 +173,6 @@ jobs:
       - uses: yezz123/setup-uv@v1
       - name: Set the VIRTUAL_ENV variable for uv to work
         run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
-
-      # Update core packages
-      - name: Install dependencies for CI tests
-        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       # Install MultiQC
       - name: Install MultiQC
