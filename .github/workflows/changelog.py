@@ -228,8 +228,8 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     added_modules = _modules_added_by_pr(pr_number)
     modified_modules = _modules_modified_by_pr(pr_number)
 
+    # Sanity check PR name suggesting a newly added module
     if pr_title.lower().capitalize().startswith("New module: "):
-        # Sanity check PR name suggesting a newly added module
         if len(added_modules) == 0:
             raise RuntimeError(
                 f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
