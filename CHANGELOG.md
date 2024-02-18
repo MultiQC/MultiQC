@@ -22,6 +22,7 @@
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: Fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
