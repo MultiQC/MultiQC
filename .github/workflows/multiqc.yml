@@ -69,17 +69,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - uses: yezz123/setup-uv@v1
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
 
       # For CSP checking
       - name: Install dependencies for CI tests
-        run: |
-          VIRTUAL_ENV=$(python -c "import sys; print(sys.prefix)") 
-          uv pip install --upgrade ${{ env.core_python_dependencies }}
+        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       - name: Install MultiQC
-        run: |
-          VIRTUAL_ENV=$(python -c "import sys; print(sys.prefix)")
-          pip install .
+        run: uv pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -173,13 +171,17 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: yezz123/setup-uv@v1
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
+
       # Update core packages
       - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       # Install MultiQC
       - name: Install MultiQC
-        run: pip install .
+        run: uv pip install .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
