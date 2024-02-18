@@ -71,7 +71,10 @@ jobs:
         run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
 
       - name: Install MultiQC
-        run: uv pip install -e .
+        run: |
+          # Temporary hack to remove duplicated pip package (hopefully will be addressed in uv or GitHub)
+          rm -rf ${VIRTUAL_ENV}/lib/python3.*/site-packages/pip-23.*
+          uv pip install -e .
 
       - name: Download test data
         uses: actions/checkout@v4
