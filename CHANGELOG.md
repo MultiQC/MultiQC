@@ -12,7 +12,7 @@
 - Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
-- Interop: do not set `scale: False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
+- Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 
 ### New modules
 
@@ -23,6 +23,7 @@
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 - **mosdepth**: Fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **Interop**: Do not set `scale: False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
