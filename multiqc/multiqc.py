@@ -31,6 +31,7 @@ from rich.syntax import Syntax
 from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
+from .utils.util_functions import strtobool
 
 # Set up logging
 start_execution_time = time.time()
@@ -413,7 +414,7 @@ def run(
                 "is_docker": os.path.exists("/.dockerenv"),
                 "is_singularity": os.path.exists("/.singularity.d"),
                 "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
-                "ci_environment": os.getenv("CI", False),
+                "ci_environment": strtobool(os.getenv("CI", False)),
             }
             r = requests.get(config.version_check_url, params=meta)
             release_info = r.json()
