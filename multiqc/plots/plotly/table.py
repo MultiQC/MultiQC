@@ -204,33 +204,32 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 except TypeError:
                     hashable = False
                     print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
-                if hashable:
-                    # Categorical background colours supplied
-                    if val in header.get("bgcols", {}).keys():
-                        col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
-                        if s_name not in t_rows:
-                            t_rows[s_name] = dict()
-                        t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
-                            val=val, rid=rid, h=hide, c=col, v=valstring
-                        )
+                # Categorical background colours supplied
+                if hashable and val in header.get("bgcols", {}).keys():
+                    col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
+                    if s_name not in t_rows:
+                        t_rows[s_name] = dict()
+                    t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
+                        val=val, rid=rid, h=hide, c=col, v=valstring
+                    )
 
-                    # Build table cell background colour bar
-                    elif header["scale"]:
-                        if c_scale is not None:
-                            col = " background-color:{} !important;".format(
-                                c_scale.get_colour(val, source=f'Table "{dt.id}", column "{k}"')
-                            )
-                        else:
-                            col = ""
-                        bar_html = f'<span class="bar" style="width:{percentage}%;{col}"></span>'
-                        val_html = f'<span class="val">{valstring}</span>'
-                        wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
-
-                        if s_name not in t_rows:
-                            t_rows[s_name] = dict()
-                        t_rows[s_name][rid] = '<td val="{val}" class="data-coloured {rid} {h}">{c}</td>'.format(
-                            val=val, rid=rid, h=hide, c=wrapper_html
+                # Build table cell background colour bar
+                elif hashable and header["scale"]:
+                    if c_scale is not None:
+                        col = " background-color:{} !important;".format(
+                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{k}"')
                         )
+                    else:
+                        col = ""
+                    bar_html = f'<span class="bar" style="width:{percentage}%;{col}"></span>'
+                    val_html = f'<span class="val">{valstring}</span>'
+                    wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
+
+                    if s_name not in t_rows:
+                        t_rows[s_name] = dict()
+                    t_rows[s_name][rid] = '<td val="{val}" class="data-coloured {rid} {h}">{c}</td>'.format(
+                        val=val, rid=rid, h=hide, c=wrapper_html
+                    )
 
                 # Scale / background colours are disabled
                 else:
