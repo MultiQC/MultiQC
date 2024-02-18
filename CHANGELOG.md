@@ -8,10 +8,9 @@
 - Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
 - Pin Plotly package and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
 - Always create JSON even when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
-- Fix gettng id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
+- Fix getting id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
 - Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
-- fix general stats for mosdepth ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
 
 ### New modules
 
@@ -21,6 +20,7 @@
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing number of samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **mosdepth**: Fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
