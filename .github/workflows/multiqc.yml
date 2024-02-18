@@ -71,7 +71,7 @@ jobs:
         run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
 
       - name: Install MultiQC
-        run: uv pip install .
+        run: uv pip install -e .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -177,7 +177,7 @@ jobs:
 
       # Install MultiQC
       - name: Install MultiQC
-        run: uv pip install .
+        run: uv pip install -e .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
