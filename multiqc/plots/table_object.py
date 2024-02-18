@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 """ MultiQC datatable class, used by tables and beeswarm plots """
+import math
 
 import logging
 import random
@@ -273,10 +274,11 @@ class DataTable:
                             val = float(samp[k])
                             if callable(headers[idx][k]["modify"]):
                                 val = float(headers[idx][k]["modify"](val))
-                            if setdmax:
-                                headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
-                            if setdmin:
-                                headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
+                            if math.isfinite(val) and not math.isnan(val):
+                                if setdmax:
+                                    headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
+                                if setdmin:
+                                    headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
                         except (ValueError, TypeError):
                             val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
