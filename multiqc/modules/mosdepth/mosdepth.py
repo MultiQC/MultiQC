@@ -327,44 +327,46 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
         # Add mosdepth summary to General Stats
-        genstats_headers = {
-            "mean_coverage": {
-                "title": "Mean Cov.",
-                "description": "Mean coverage",
-                "min": 0,
-                "scale": "BuPu",
+        genstats_headers.update(
+            {
+                "mean_coverage": {
+                    "title": "Mean Cov.",
+                    "description": "Mean coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                },
+                "min_coverage": {
+                    "title": "Min Cov.",
+                    "description": "Minimum coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "max_coverage": {
+                    "title": "Max Cov.",
+                    "description": "Maximum coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "coverage_bases": {
+                    "title": f"{config.base_count_prefix} Total Coverage Bases",
+                    "description": f"Total coverage of bases ({config.base_count_desc})",
+                    "min": 0,
+                    "shared_key": "base_count",
+                    "scale": "Greens",
+                    "hidden": True,
+                },
+                "length": {
+                    "title": "Genome length",
+                    "description": "Total length of the genome",
+                    "min": 0,
+                    "scale": "Greys",
+                    "format": "{:,d}",
+                    "hidden": True,
+                },
             },
-            "min_coverage": {
-                "title": "Min Cov.",
-                "description": "Minimum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "max_coverage": {
-                "title": "Max Cov.",
-                "description": "Maximum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "coverage_bases": {
-                "title": f"{config.base_count_prefix} Total Coverage Bases",
-                "description": f"Total coverage of bases ({config.base_count_desc})",
-                "min": 0,
-                "shared_key": "base_count",
-                "scale": "Greens",
-                "hidden": True,
-            },
-            "length": {
-                "title": "Genome length",
-                "description": "Total length of the genome",
-                "min": 0,
-                "scale": "Greys",
-                "format": "{:,d}",
-                "hidden": True,
-            },
-        }
+        )
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
