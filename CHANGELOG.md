@@ -12,6 +12,7 @@
 - Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
+- Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 
 ### New modules
 
