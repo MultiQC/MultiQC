@@ -68,12 +68,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - uses: yezz123/setup-uv@v1
+
       # For CSP checking
       - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       - name: Install MultiQC
-        run: pip install .
+        run: uv pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -169,11 +171,11 @@ jobs:
 
       # Update core packages
       - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+        run: uv pip install --upgrade ${{ env.core_python_dependencies }}
 
       # Install MultiQC
       - name: Install MultiQC
-        run: pip install .
+        run: uv pip install .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
