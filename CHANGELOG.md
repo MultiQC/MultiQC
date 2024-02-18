@@ -12,6 +12,7 @@
 - Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
+- Interop: do not set `scale: False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 
 ### New modules
 
