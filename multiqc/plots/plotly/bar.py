@@ -177,6 +177,8 @@ class BarPlot(Plot):
                 title=None,
                 hoverformat=self.layout.xaxis.hoverformat,
                 ticksuffix=self.layout.xaxis.ticksuffix,
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
             ),
             xaxis=dict(
                 title=dict(text=self.layout.yaxis.title.text),
@@ -222,8 +224,6 @@ class BarPlot(Plot):
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
                     autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
-                    # Prevent JavaScript from automatically parsing categorical values as numbers:
-                    type="category",
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
