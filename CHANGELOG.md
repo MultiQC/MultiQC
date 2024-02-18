@@ -11,6 +11,7 @@
 - Fix gettng id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
 - Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
 - MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
+- fix general stats for mosdepth ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
 
 ### New modules
 
