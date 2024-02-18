@@ -165,10 +165,10 @@ def strtobool(val) -> bool:
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
     """
-    val = str(val).lower()
-    if val in ("y", "yes", "t", "true", "on", "1"):
+    val_str = str(val).lower()
+    if val_str in ("y", "yes", "t", "true", "on", "1"):
         return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    elif val_str in ("n", "no", "f", "false", "off", "0"):
         return False
     else:
         raise ValueError(f"invalid truth value {val!r}")
