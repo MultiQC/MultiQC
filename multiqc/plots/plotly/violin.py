@@ -91,7 +91,7 @@ class ViolinPlot(Plot):
                 values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
                 values_are_integer = all(isinstance(v, int) for v in value_by_sample.values())
                 if values_are_numeric:
-                    # Keep non-NaN values
+                    # Remove NaN values
                     value_by_sample = {s: v for s, v in value_by_sample.items() if not math.isnan(v)}
                     if not value_by_sample:
                         logger.warning(f"All values are NaN for metric: {header['title']}")

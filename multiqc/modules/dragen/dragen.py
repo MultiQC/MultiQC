@@ -116,4 +116,4 @@ class MultiqcModule(
 
         if len(samples_found) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(samples_found)} reports")
+        log.info(f"Found samples: {len(samples_found)}")

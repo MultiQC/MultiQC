@@ -268,6 +268,7 @@ METRICS = {
         "suffix": " %",
         "scale": "Purples",
         "colour": "255, 0, 0",
+        "exclude": False,
     },
     "aligned bases": {
         "order_priority": 0.3,
@@ -293,6 +294,7 @@ METRICS = {
         "scale": "Greens",
         "suffix": " %",
         "bgcols": {"NA": "#00FFFF"},
+        "exclude": False,
     },
     "average chr x coverage over region": {
         "order_priority": 1.0,
@@ -323,6 +325,7 @@ METRICS = {
         "order_priority": 3,
         "exclude": False,
         "hidden_own": False,
+        "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
         "colour": "0, 255, 255",
@@ -353,6 +356,7 @@ METRICS = {
         "title": "Med aut cov",
         "suffix": " x",
         "scale": "Greens",
+        "exclude": False,
     },
     "mean/median autosomal coverage ratio over region": {
         "order_priority": 7.1,
@@ -367,6 +371,7 @@ METRICS = {
     "uniformity of coverage (pct > d.d*mean) over region": {
         "suffix": " %",
         "colour": "55, 255, 55",
+        "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
             "0.2": {
@@ -406,6 +411,7 @@ METRICS = {
         "scale": "Purples",
         "suffix": " %",
         "colour": "255, 50, 25",
+        "exclude": False,
         WGS: {
             # "scale": "Reds",
         },
@@ -542,7 +548,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
                 cov_data[cleaned_sample][phenotype] = out["data"]  # Add/overwrite the sample.
 
-                all_samples[cleaned_sample + "." + phenotype].append(file)
+                all_samples[cleaned_sample].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
 
@@ -557,7 +563,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         cov_headers = make_coverage_headers(all_metrics)
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples, log, "dragen/coverage_metrics")
+        check_duplicate_samples(all_samples, log)
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
@@ -585,7 +591,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 helptext=cov_section["helptext"],
                 plot=cov_section["plot"],
             )
-        return {sample + phenotype for sample in cov_data for phenotype in cov_data[sample]}
+        return cov_data.keys()
 
 
 def make_data_for_txt_reports(coverage_data, metrics):
@@ -772,6 +778,7 @@ def create_table_handlers():
                         m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
+                        del gen_headers[m_id]["colour"]
                         """
                         Some modifications are necessary to improve informativeness
                         of the general table, because several/many familiar tables
