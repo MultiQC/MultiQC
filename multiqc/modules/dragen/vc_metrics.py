@@ -32,54 +32,48 @@ class DragenVCMetrics(BaseMultiqcModule):
             self.add_data_source(f, s_name=s_name, section="gvcf_metrics")
             gvcf_data_by_sample[s_name] = data
 
-        # Merge vc and gvcf data
-        data_by_sample = vc_data_by_sample
-        for s_name, gvcf_data in gvcf_data_by_sample.items():
-            if s_name in vc_data_by_sample:
-                log.debug(
-                    f"For sample {s_name}, both vc_metrics and gvcf_metrics files are found. "
-                    f"Using gvcf_metrics over vc_metrics data when metric names match."
-                )
-                data_by_sample[s_name].update(gvcf_data)
-            else:
-                data_by_sample[s_name] = gvcf_data
-
         # Filter to strip out ignored sample names:
-        data_by_sample = self.ignore_samples(data_by_sample)
-        if not data_by_sample:
+        vc_data_by_sample = self.ignore_samples(vc_data_by_sample)
+        gvcf_data_by_sample = self.ignore_samples(gvcf_data_by_sample)
+        if not vc_data_by_sample:
             return set()
 
         # Write data to file
-        self.write_data_file(data_by_sample, "dragen_vc_metrics")
+        self.write_data_file(vc_data_by_sample, "dragen_vc_metrics")
+        if gvcf_data_by_sample:
+            self.write_data_file(gvcf_data_by_sample, "dragen_gvcf_metrics")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
         all_metric_names = set()
-        for sn, sdata in data_by_sample.items():
+        for sn, sdata in vc_data_by_sample.items():
             for m in sdata.keys():
                 all_metric_names.add(m)
 
-        gen_stats_headers, vc_table_headers = make_headers(all_metric_names, VC_METRICS)
+        gen_stats_headers, table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
+        # For general stats, prioritizing GVCF metrics if available, else showing VCF metrics
+        gen_data_by_sample = dict(vc_data_by_sample, **gvcf_data_by_sample)
+        self.general_stats_addcols(gen_data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name="Variant calling",
             anchor="dragen-vc-metrics",
-            description="""
-            Variant calling metrics. Metrics are reported for each sample in multi sample VCF
-            and gVCF files. Based on the run case, metrics are reported either as standard
-            VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs or GVCFs,
+            helptext="""
+            Metrics are reported for each sample in multi sample VCF
+            files. Based on the run case, metrics are reported either as standard
+            VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs,
             except for the "Filtered" metrics which represent how many variants were filtered out
-            from pre-filter VCF to generate the post-filter VCF.
+            from pre-filter VCF to generate the post-filter VCF. 
             
-            Note that if both vc_metrics and gvcf_metrics are available, the gvcf_metrics will be used.
+            Unless GVCF metrics are available,
+            the variant calling metrics in the general stats table are based on the VCF metrics.
             """,
             plot=table.plot(
-                data_by_sample,
-                vc_table_headers,
+                vc_data_by_sample,
+                table_headers,
                 pconfig={
                     "id": "dragen-vc-metrics-table",
                     "namespace": NAMESPACE,
@@ -87,7 +81,28 @@ class DragenVCMetrics(BaseMultiqcModule):
                 },
             ),
         )
-        return data_by_sample.keys()
+
+        self.add_section(
+            name="GVCF metrics",
+            anchor="dragen-gvcf-metrics",
+            helptext="""
+            Metrics are calculated for each sample in a corresponding GVCF file.
+            
+            The variant calling metrics in the general stats table are based on the GVCF metrics 
+            if available, otherwise, they are based on the VCF metrics.
+            """,
+            plot=table.plot(
+                gvcf_data_by_sample,
+                table_headers,
+                pconfig={
+                    "id": "dragen-gvcf-metrics-table",
+                    "namespace": NAMESPACE,
+                    "title": "DRAGEN: GVCF metrics",
+                },
+            ),
+        )
+
+        return vc_data_by_sample.keys()
 
 
 VC_METRICS = [
