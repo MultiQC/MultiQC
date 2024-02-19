@@ -456,6 +456,7 @@ module_order:
   - bowtie1
   - cellranger
   - snpsplit
+  - parse_biosciences
   - odgi
   - pangolin
   - nextclade

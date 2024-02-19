@@ -165,6 +165,7 @@ setup(
             "odgi = multiqc.modules.odgi:MultiqcModule",
             "optitype = multiqc.modules.optitype:MultiqcModule",
             "pangolin = multiqc.modules.pangolin:MultiqcModule",
+            "parse_biosciences = multiqc.modules.parse_biosciences:MultiqcModule",
             "pbmarkdup = multiqc.modules.pbmarkdup:MultiqcModule",
             "peddy = multiqc.modules.peddy:MultiqcModule",
             "phantompeakqualtools = multiqc.modules.phantompeakqualtools:MultiqcModule",

@@ -17,6 +17,9 @@
 
 ### New modules
 
+- [**Parse Biosciences**](https://www.parsebiosciences.com/) ([#2180](https://github.com/ewels/MultiQC/pull/2180))
+  - Parse Biosciences provides single cell RNA-Seq pipelines
+
 ### Module updates
 
 - **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
@@ -187,6 +190,7 @@ If you were using the Sentieon module in your pipelines, make sure to update any
 - Fix column sorting in exported TSV files from a matplotlib linegraph plot ([#2143](https://github.com/ewels/MultiQC/pull/2143))
 - Fix custom anchors for kraken ([#2170](https://github.com/ewels/MultiQC/pull/2170))
 - Fix logging spillover bug ([#2174](https://github.com/ewels/MultiQC/pull/2174))
+- Config with environment variables, and config strict typing ([#2178](https://github.com/ewels/MultiQC/pull/2178))
 
 ### New Modules
 
