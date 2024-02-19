@@ -13,7 +13,8 @@ from typing import Dict, Union, List, Optional, Tuple
 import math
 import plotly.graph_objects as go
 
-from multiqc.utils import mqc_colour, config
+from multiqc.plots.plotly import check_plotly_version
+from multiqc.utils import mqc_colour, config, report
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,8 @@ class Plot(ABC):
         n_datasets: int,
         id: Optional[str] = None,
     ):
+        check_plotly_version()
+
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
 
@@ -114,7 +117,10 @@ class Plot(ABC):
 
         title = self.pconfig.get("table_title", self.pconfig.get("title"))
         if not title:
-            logger.error(f"Plot title is not set for {self.id}")
+            if config.strict:
+                errmsg = f"LINT: 'title' is missing from plot config for plot '{self.id}'"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
 
         self.layout = go.Layout(
             title=go.layout.Title(
@@ -386,6 +392,7 @@ class Plot(ABC):
             "p_active": self.p_active,
             "l_active": self.l_active,
             "square": self.pconfig.get("square"),
+            "config": self.pconfig,  # for megaqc
         }
 
     @abstractmethod

@@ -283,6 +283,7 @@ fn_clean_exts:
   - ".wgs_coverage_metrics"
   - ".wgs_hist"
   - ".vc_metrics"
+  - ".gvcf_metrics"
   - ".ploidy_estimation_metrics"
   - "_overall_mean_cov"
   - ".fragment_length_hist"

@@ -55,6 +55,14 @@ class BarPlot(Plot):
             cats: List[Dict],
             samples: List[str],
         ) -> "BarPlot.Dataset":
+            # Need to reverse samples as the bar plot will show them reversed
+            samples = list(reversed(samples))
+            for cat in cats:
+                # Reverse the data to match the reversed samples
+                cat["data"] = list(reversed(cat["data"]))
+                if "data_pct" in cat:
+                    cat["data_pct"] = list(reversed(cat["data_pct"]))
+
             # Post-process categories
             for cat in cats:
                 # Split long category names
@@ -92,9 +100,7 @@ class BarPlot(Plot):
                 data = cat["data_pct"] if is_pct else cat["data"]
 
                 params = copy.deepcopy(self.trace_params)
-                marker = params["marker"]
-                marker["color"] = f"rgb({cat['color']})"
-
+                params["marker"]["color"] = f"rgb({cat['color']})"
                 fig.add_trace(
                     go.Bar(
                         y=self.samples,
@@ -166,11 +172,13 @@ class BarPlot(Plot):
             bargap=0.2,
             yaxis=dict(
                 showgrid=False,
-                categoryorder="category descending",  # otherwise the bars will be in reversed order to sample order
+                categoryorder="trace",  # keep sample order
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
                 hoverformat=self.layout.xaxis.hoverformat,
                 ticksuffix=self.layout.xaxis.ticksuffix,
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
             ),
             xaxis=dict(
                 title=dict(text=self.layout.yaxis.title.text),
@@ -183,6 +191,9 @@ class BarPlot(Plot):
                 # like we had a standard bar graph without subplots. We need to remove the space
                 # between the legend groups to make it look like a single legend.
                 tracegroupgap=0,
+                # Plotly plots the grouped bar graph in a reversed order in respect to
+                # the legend, so reversing the legend to match it:
+                traceorder="normal" if barmode != "group" else "reversed",
             ),
             hovermode="y unified",
             hoverlabel=dict(
@@ -213,8 +224,6 @@ class BarPlot(Plot):
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
                     autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
-                    # Prevent JavaScript from automatically parsing categorical values as numbers:
-                    type="category",
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
