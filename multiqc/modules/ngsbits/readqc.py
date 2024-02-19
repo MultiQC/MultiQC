@@ -133,6 +133,7 @@ def parse_reports(self):
             pconfig={
                 "namespace": "ngsbits_readqc",
                 "id": "ngsbits_readqc_table",
+                "title": "ngs-bits: ReadQC Summary",
             },
         ),
     )

@@ -115,6 +115,7 @@ def parse_reports(self):
             pconfig={
                 "namespace": "ngsbits_mappingqc",
                 "id": "ngsbits_mappingqc_table",
+                "title": "ngs-bits: MappingQC Summary",
             },
         ),
     )
