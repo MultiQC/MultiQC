@@ -548,7 +548,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
                 cov_data[cleaned_sample][phenotype] = out["data"]  # Add/overwrite the sample.
 
-                all_samples[cleaned_sample + "." + phenotype].append(file)
+                all_samples[cleaned_sample].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
 
@@ -563,7 +563,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         cov_headers = make_coverage_headers(all_metrics)
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples, log, "dragen/coverage_metrics")
+        check_duplicate_samples(all_samples, log)
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
@@ -591,7 +591,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 helptext=cov_section["helptext"],
                 plot=cov_section["plot"],
             )
-        return {sample + phenotype for sample in cov_data for phenotype in cov_data[sample]}
+        return cov_data.keys()
 
 
 def make_data_for_txt_reports(coverage_data, metrics):

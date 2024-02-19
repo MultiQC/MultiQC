@@ -84,6 +84,17 @@ class HeatmapPlot(Plot):
     ):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
 
+        self.layout.update(
+            yaxis=dict(
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
+            ),
+            xaxis=dict(
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
+            ),
+        )
+
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
         # Extend each dataset object with a list of samples

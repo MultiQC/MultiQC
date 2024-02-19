@@ -196,8 +196,16 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 if badge_col is not None:
                     valstring = f'<span class="badge" style="background-color:{badge_col}">{valstring}</span>'
 
+                # Determine background color based on scale. Only relevant for hashable values. If value is for some
+                # reason a dict or a list, it's not hashable and the logic determining the color will not work.
+                hashable = True
+                try:
+                    hash(val)
+                except TypeError:
+                    hashable = False
+                    print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
                 # Categorical background colours supplied
-                if val in header.get("bgcols", {}).keys():
+                if hashable and val in header.get("bgcols", {}).keys():
                     col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
@@ -206,7 +214,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                     )
 
                 # Build table cell background colour bar
-                elif header["scale"]:
+                elif hashable and header["scale"]:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
                             c_scale.get_colour(val, source=f'Table "{dt.id}", column "{k}"')
@@ -227,9 +235,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 else:
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}">{v}</td>'.format(
-                        val=val, rid=rid, h=hide, v=valstring
-                    )
+                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}">{valstring}</td>'
 
                 # Is this cell hidden or empty?
                 if s_name not in t_rows_empty:
