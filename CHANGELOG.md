@@ -16,6 +16,9 @@
 
 ### New modules
 
+- [**ngs-bits**](https://github.com/imgag/ngs-bits) ([#2231](https://github.com/ewels/MultiQC/pull/2231))
+  - ngs-bits is a collection of short-read sequencing tools.
+
 ### Module updates
 
 - **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
@@ -88,15 +91,9 @@ The v1.20 release is also the first release we've had since we moved the MultiQC
 - [**MetaPhlAn**](https://github.com/biobakery/MetaPhlAn) ([#2262](https://github.com/MultiQC/MultiQC/pull/2262))
   - MetaPhlAn is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.
 - [**MEGAHIT**](https://github.com/voutcn/megahit) ([#2222](https://github.com/ewels/MultiQC/pull/2222))
-
   - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
-
 - [**Nonpareil**](https://github.com/lmrodriguezr/nonpareil) ([#2215](https://github.com/MultiQC/MultiQC/pull/2215))
-
-  - Estimate metagenomic coverage and sequence diversity.
-
-- [**ngs-bits**](https://github.com/imgag/ngs-bits) ([#2231](https://github.com/ewels/MultiQC/pull/2231))
-  - ngs-bits is a collection of short-read sequencing tools.
+- Estimate metagenomic coverage and sequence diversity.
 
 ### Module updates
 
