@@ -54,22 +54,17 @@ class DragenVCMetrics(BaseMultiqcModule):
 
         gen_stats_headers, table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        # For general stats, prioritizing GVCF metrics if available, else showing VCF metrics
-        gen_data_by_sample = dict(vc_data_by_sample, **gvcf_data_by_sample)
-        self.general_stats_addcols(gen_data_by_sample, gen_stats_headers, namespace=NAMESPACE)
+        self.general_stats_addcols(vc_data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name="Variant calling",
             anchor="dragen-vc-metrics",
-            helptext="""
+            description="""
             Metrics are reported for each sample in multi sample VCF
             files. Based on the run case, metrics are reported either as standard
             VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs,
             except for the "Filtered" metrics which represent how many variants were filtered out
             from pre-filter VCF to generate the post-filter VCF. 
-            
-            Unless GVCF metrics are available,
-            the variant calling metrics in the general stats table are based on the VCF metrics.
             """,
             plot=table.plot(
                 vc_data_by_sample,
@@ -82,25 +77,23 @@ class DragenVCMetrics(BaseMultiqcModule):
             ),
         )
 
-        self.add_section(
-            name="GVCF metrics",
-            anchor="dragen-gvcf-metrics",
-            helptext="""
-            Metrics are calculated for each sample in a corresponding GVCF file.
-            
-            The variant calling metrics in the general stats table are based on the GVCF metrics 
-            if available, otherwise, they are based on the VCF metrics.
-            """,
-            plot=table.plot(
-                gvcf_data_by_sample,
-                table_headers,
-                pconfig={
-                    "id": "dragen-gvcf-metrics-table",
-                    "namespace": NAMESPACE,
-                    "title": "DRAGEN: GVCF metrics",
-                },
-            ),
-        )
+        if gvcf_data_by_sample:
+            self.add_section(
+                name="GVCF metrics",
+                anchor="dragen-gvcf-metrics",
+                description="""
+                Metrics are calculated for each sample in a corresponding GVCF file.
+                """,
+                plot=table.plot(
+                    gvcf_data_by_sample,
+                    table_headers,
+                    pconfig={
+                        "id": "dragen-gvcf-metrics-table",
+                        "namespace": NAMESPACE,
+                        "title": "DRAGEN: GVCF metrics",
+                    },
+                ),
+            )
 
         return vc_data_by_sample.keys()
 
