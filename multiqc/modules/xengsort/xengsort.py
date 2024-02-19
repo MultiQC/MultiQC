@@ -121,8 +121,8 @@ class MultiqcModule(BaseMultiqcModule):
                 detail_headers,
                 {
                     "id": "xengsort-summary-table",
-                    "title": "Xengsort: summary classification",
                     "namespace": "Xengsort",
+                    "title": "Xengsort: Summary",
                 },
             ),
         )
