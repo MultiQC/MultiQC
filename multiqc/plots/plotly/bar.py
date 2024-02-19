@@ -55,6 +55,14 @@ class BarPlot(Plot):
             cats: List[Dict],
             samples: List[str],
         ) -> "BarPlot.Dataset":
+            # Need to reverse samples as the bar plot will show them reversed
+            samples = list(reversed(samples))
+            for cat in cats:
+                # Reverse the data to match the reversed samples
+                cat["data"] = list(reversed(cat["data"]))
+                if "data_pct" in cat:
+                    cat["data_pct"] = list(reversed(cat["data_pct"]))
+
             # Post-process categories
             for cat in cats:
                 # Split long category names
@@ -164,12 +172,13 @@ class BarPlot(Plot):
             bargap=0.2,
             yaxis=dict(
                 showgrid=False,
-                # Otherwise the bars will be in reversed order to sample order:
-                categoryorder="category descending",
+                categoryorder="trace",  # keep sample order
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
                 hoverformat=self.layout.xaxis.hoverformat,
                 ticksuffix=self.layout.xaxis.ticksuffix,
+                # Prevent JavaScript from automatically parsing categorical values as numbers:
+                type="category",
             ),
             xaxis=dict(
                 title=dict(text=self.layout.yaxis.title.text),
@@ -215,8 +224,6 @@ class BarPlot(Plot):
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
                     autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
-                    # Prevent JavaScript from automatically parsing categorical values as numbers:
-                    type="category",
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),

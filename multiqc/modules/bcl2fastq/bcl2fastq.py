@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add section with undetermined barcodes
         self.add_section(
             name="Undetermined barcodes by lane",
-            anchor="undetermine_by_lane",
+            anchor="undetermined_by_lane",
             description="Count of the top twenty most abundant undetermined barcodes by lanes",
             plot=bargraph.plot(
                 self.get_bar_data_from_undetermined(self.bcl2fastq_bylane),
@@ -128,10 +128,10 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "bcl2fastq_undetermined",
                     "title": "bcl2fastq: Undetermined barcodes by lane",
-                    "ylab": "Count",
+                    "ylab": "Reads",
                     "tt_percentages": False,
                     "use_legend": True,
-                    "tt_suffix": " reads",
+                    "sort_samples": False,  # keep top barcode on top
                 },
             ),
         )
@@ -483,27 +483,30 @@ class MultiqcModule(BaseMultiqcModule):
         return str(runId) + " - " + str(rest)
 
     @staticmethod
-    def get_bar_data_from_counts(counts):
+    def get_bar_data_from_counts(data_by_flowcell):
         bar_data = {}
-        for key, value in counts.items():
-            bar_data[key] = {
-                "perfect": value["perfectIndex"],
-                "imperfect": value["total"] - value["perfectIndex"],
+        for flowcell_id, data in data_by_flowcell.items():
+            bar_data[flowcell_id] = {
+                "perfect": data["perfectIndex"],
+                "imperfect": data["total"] - data["perfectIndex"],
             }
-            if "undetermined" in value:
-                bar_data[key]["undetermined"] = value["undetermined"]
+            if "undetermined" in data:
+                bar_data[flowcell_id]["undetermined"] = data["undetermined"]
         return bar_data
 
     @staticmethod
-    def get_bar_data_from_undetermined(flowcells):
+    def get_bar_data_from_undetermined(data_by_flowcell):
         """Get data to plot for undetermined barcodes."""
         bar_data = defaultdict(dict)
         # get undetermined barcodes for each lanes
-        for lane_id, lane in flowcells.items():
+        for flowcell_id, data in data_by_flowcell.items():
             try:
-                for barcode, count in islice(lane["unknown_barcodes"].items(), 20):
-                    bar_data[barcode][lane_id] = count
+                for barcode, count in islice(data["unknown_barcodes"].items(), 20):
+                    bar_data[barcode][flowcell_id] = count
             except AttributeError:
                 pass
 
-        return {key: value for key, value in islice(bar_data.items(), 20)}
+        sorted_items = sorted(bar_data.items(), key=lambda kv: sum(kv[1].values()), reverse=True)
+        if len(sorted_items) > 20:
+            sorted_items = sorted_items[:20]
+        return dict(sorted_items)
