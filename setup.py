@@ -51,6 +51,7 @@ setup(
     install_requires=[
         "matplotlib>=2.1.1",
         "networkx>=2.5.1",
+        "pandas",
         "numpy",
         "click",
         "coloredlogs",
@@ -149,6 +150,7 @@ setup(
             "malt = multiqc.modules.malt:MultiqcModule",
             "mapdamage = multiqc.modules.mapdamage:MultiqcModule",
             "megahit = multiqc.modules.megahit:MultiqcModule",
+            "metadmg = multiqc.modules.metadmg:MultiqcModule",
             "metaphlan = multiqc.modules.metaphlan:MultiqcModule",
             "methylqa = multiqc.modules.methylqa:MultiqcModule",
             "minionqc = multiqc.modules.minionqc:MultiqcModule",

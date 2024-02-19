@@ -401,6 +401,7 @@ module_order:
   - homer
   - hops
   - macs2
+  - metadmg
   - theta2
   - snpeff
   - gatk
