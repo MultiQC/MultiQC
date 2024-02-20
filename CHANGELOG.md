@@ -23,10 +23,10 @@
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **DRAGEN**: support `gvcf_metrics` ([#2327](https://github.com/MultiQC/MultiQC/pull/2327))
-- **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
-- **mosdepth**: Fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
-- **Samtools**: Samtools `coverage` submodule ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
+- **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **Samtools**: support `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
 - **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
