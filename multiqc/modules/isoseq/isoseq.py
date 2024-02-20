@@ -167,6 +167,26 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
+        # boxplot_data = {
+        #     sname: list(cnt_by_cluster_id.values()) for sname, cnt_by_cluster_id in cnt_by_cluster_id_by_sample.items()
+        # }
+        # self.add_section(
+        #     name="Cluster size distribution",
+        #     anchor="isoseq-cluster-size-distribution",
+        #     description="A distribution of cluster size (number of CC clustered to form one Hifi read).",
+        #     helptext="""
+        #     The csv file produced by Iso-Seq cluster shows which CCS have been clustered together to form
+        #     one Hifi reads.
+        #     """,
+        #     plot=box.plot(
+        #         boxplot_data,
+        #         pconfig={
+        #             "id": "isoseq-cluster-size-distribution-barplot",  # HTML ID used for plot
+        #             "title": "Iso-Seq cluster: Histogram of cluster size.",
+        #         },
+        #     ),
+        # )
+
     def _add_general_stats_refine(self, data_by_sample):
         headers = {
             "num_reads_fl": {
