@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, OrderedDict
 
 import inspect
 import logging
@@ -33,6 +33,15 @@ def plot(list_of_data_by_sample: Union[Dict[str, Dict], List[Dict[str, Dict]]], 
     # Given one dataset - turn it into a list
     if not isinstance(list_of_data_by_sample, list):
         list_of_data_by_sample = [list_of_data_by_sample]
+
+    for i in range(len(list_of_data_by_sample)):
+        if isinstance(list_of_data_by_sample[0], OrderedDict):
+            # Legacy: users assumed that passing an OrderedDict indicates that we
+            # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
+            pass
+        elif pconfig.get("sort_samples", True):
+            samples = sorted(list(list_of_data_by_sample[0].keys()))
+            list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
     # Allow user to overwrite any given config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
