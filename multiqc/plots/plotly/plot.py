@@ -211,7 +211,8 @@ class Plot(ABC):
             dataset.label = dconfig.get("name", idx + 1)
             if "label" in dconfig:
                 dataset.label = dconfig["label"]
-                dconfig["ylab"] = dconfig["label"]
+            if "ylab" not in dconfig:
+                dconfig["ylab"] = dataset.label
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
@@ -603,6 +604,7 @@ def _dataset_layout(
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
+        title=dict(text=pconfig.get("title")),
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",
