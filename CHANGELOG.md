@@ -14,6 +14,7 @@
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
 - Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 - Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
+- Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 
 ### New modules
 
