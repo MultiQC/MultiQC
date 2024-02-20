@@ -28,6 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
         if not cnt_by_cluster_id_by_sample and not refine_json_data_by_sample and not refine_csv_data_by_sample:
             raise UserWarning
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         if refine_json_data_by_sample:
             self._add_general_stats_refine(refine_json_data_by_sample)
             self._add_refine_plot(refine_csv_data_by_sample)
