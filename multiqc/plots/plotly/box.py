@@ -48,6 +48,10 @@ class BoxPlot(Plot):
                 data=list(data_by_sample.values()),
                 samples=list(data_by_sample.keys()),
             )
+            # Need to reverse samples as the box plot will show them reversed
+            dataset.samples = list(reversed(dataset.samples))
+            dataset.data = list(reversed(dataset.data))
+
             dataset.trace_params.update(
                 boxpoints="outliers",
                 jitter=0.5,
@@ -119,6 +123,7 @@ class BoxPlot(Plot):
             boxgap=0.2,
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
+                categoryorder="trace",  # keep sample order
                 hoverformat=self.layout.xaxis.hoverformat,
                 ticksuffix=self.layout.xaxis.ticksuffix,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
