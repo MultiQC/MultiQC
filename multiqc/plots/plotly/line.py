@@ -165,15 +165,21 @@ class LinePlot(Plot):
             # before we add the bands, and then force set the calculated range.
             for dataset in self.datasets:
                 layout = go.Layout(self.layout.to_plotly_json()).update(**dataset.layout)
-                dev_fig = dataset.create_figure(layout).full_figure_for_development(warn=False)
-                dataset.layout["yaxis"]["range"] = dev_fig.layout.yaxis.range
-                dataset.layout["xaxis"]["range"] = dev_fig.layout.xaxis.range
-                if y_min_range:
-                    if dataset.layout["yaxis"]["range"][1] - dataset.layout["yaxis"]["range"][0] < y_min_range:
-                        dataset.layout["yaxis"]["range"] = [
-                            dataset.layout["yaxis"]["range"][0],
-                            dataset.layout["yaxis"]["range"][0] + y_min_range,
-                        ]
+                try:
+                    dev_fig = dataset.create_figure(layout).full_figure_for_development(warn=False)
+                except ValueError:
+                    # ValueError: Failed to start Kaleido subprocess
+                    # E.g. https://github.com/MultiQC/MultiQC/issues/2357
+                    continue
+                else:
+                    dataset.layout["yaxis"]["range"] = dev_fig.layout.yaxis.range
+                    dataset.layout["xaxis"]["range"] = dev_fig.layout.xaxis.range
+                    if y_min_range:
+                        if dataset.layout["yaxis"]["range"][1] - dataset.layout["yaxis"]["range"][0] < y_min_range:
+                            dataset.layout["yaxis"]["range"] = [
+                                dataset.layout["yaxis"]["range"][0],
+                                dataset.layout["yaxis"]["range"][0] + y_min_range,
+                            ]
 
         self.layout.shapes = (
             [
