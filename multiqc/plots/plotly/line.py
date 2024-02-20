@@ -4,7 +4,7 @@ import logging
 import os
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
-
+import plotly.io as pio
 
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions, config
@@ -166,6 +166,10 @@ class LinePlot(Plot):
             for dataset in self.datasets:
                 layout = go.Layout(self.layout.to_plotly_json()).update(**dataset.layout)
                 try:
+                    # Get around /tmp write issue https://github.com/plotly/Kaleido/issues/90
+                    pio.kaleido.scope.chromium_args = tuple(
+                        [arg for arg in pio.kaleido.scope.chromium_args if arg != "--disable-dev-shm-usage"]
+                    )
                     dev_fig = dataset.create_figure(layout).full_figure_for_development(warn=False)
                 except ValueError:
                     # ValueError: Failed to start Kaleido subprocess
