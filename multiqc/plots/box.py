@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import inspect
 import logging
@@ -21,7 +21,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(list_of_data_by_sample: Dict[str, Dict] | List[Dict[str, Dict]], pconfig=None):
+def plot(list_of_data_by_sample: Union[Dict[str, Dict], List[Dict[str, Dict]]], pconfig=None):
     """
     Plot a box plot. Expects either:
     - a dict mapping sample names to data point lists (numbers),

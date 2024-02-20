@@ -14,6 +14,7 @@
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
 - Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 - Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
+- Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
 
 ### New modules
 
