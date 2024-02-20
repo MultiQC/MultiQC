@@ -29,6 +29,7 @@ class PlotType(Enum):
     BAR = "bar_graph"
     SCATTER = "scatter"
     HEATMAP = "heatmap"
+    BOX = "box"
 
 
 @dataclasses.dataclass
