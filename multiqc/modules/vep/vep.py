@@ -4,7 +4,6 @@
 import ast
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -43,24 +42,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Add version information
         for sample, data in self.vep_data.items():
             if "VEP run statistics" not in data:
-                print(data.keys())
                 continue
 
-            print(data["VEP run statistics"]["VEP version (API)"])
             vep_version, api_version = data["VEP run statistics"]["VEP version (API)"].strip().split(" ")
             api_version = api_version.replace("(", "").replace(")", "")
             self.add_software_version(vep_version, sample)
             # Only add API version if it's different to VEP version
             if vep_version != api_version:
                 self.add_software_version(api_version, sample, "VEP API")
-            print()
         # Filter to strip out ignored sample names
         self.vep_data = self.ignore_samples(self.vep_data)
 
         # Stop if we didn't get any samples
         if len(self.vep_data) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} VEP summaries".format(len(self.vep_data)))
+        log.info(f"Found {len(self.vep_data)} VEP summaries")
 
         # Write data to file
         self.write_data_file(self.vep_data, "vep")
@@ -78,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def extract_vep_html_data(self, chart_title, html_content):
         """Function for finding and extracting VEP stats that were stored as javascript arrays"""
-        found_matches = re.findall("{}.*google.visualization.*;".format(chart_title), html_content)
+        found_matches = re.findall(f"{chart_title}.*google.visualization.*;", html_content)
         if len(found_matches) > 0:
             array_content = re.search(r"\[\[.*]]", found_matches[0])
             if array_content:
@@ -103,8 +99,8 @@ class MultiqcModule(BaseMultiqcModule):
         # The tables with the titles given below have common format inside the javascript section
         titles = [
             "Variant classes",
-            "Consequences \(most severe\)",
-            "Consequences \(all\)",
+            r"Consequences \(most severe\)",
+            r"Consequences \(all\)",
             "Coding consequences",
             "SIFT summary",
             "PolyPhen summary",
@@ -204,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Lines of input read",
         ]
         # Set up the base config for each column
-        table_cats = OrderedDict()
+        table_cats = dict()
         color_list = ["Oranges", "Reds", "Blues", "Greens"]
         for order, header in enumerate(cat_names):
             table_cats[header] = {
@@ -229,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variant_classes(self):
         title = "Variant classes"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -267,16 +263,17 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_sift(self):
         title = "SIFT summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
         # Customise order and colours of categories
-        p_cats = OrderedDict()
-        p_cats["tolerated"] = {"color": "#59ae61"}
-        p_cats["tolerated_low_confidence"] = {"color": "#a6db9f"}
-        p_cats["deleterious_low_confidence"] = {"color": "#fec44f"}
-        p_cats["deleterious"] = {"color": "#d53e4f"}
+        p_cats = {
+            "tolerated": {"color": "#59ae61"},
+            "tolerated_low_confidence": {"color": "#a6db9f"},
+            "deleterious_low_confidence": {"color": "#fec44f"},
+            "deleterious": {"color": "#d53e4f"},
+        }
         for c, cat in plot_cats.items():
             if c not in p_cats:
                 p_cats[c] = cat
@@ -295,16 +292,17 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_polyphen(self):
         title = "PolyPhen summary"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
         # Customise order and colours of categories
-        p_cats = OrderedDict()
-        p_cats["benign"] = {"color": "#a6db9f"}
-        p_cats["possibly_damaging"] = {"color": "#fec44f"}
-        p_cats["probably_damaging"] = {"color": "#d53e4f"}
-        p_cats["unknown"] = {"color": "#d9d9d9"}
+        p_cats = {
+            "benign": {"color": "#a6db9f"},
+            "possibly_damaging": {"color": "#fec44f"},
+            "probably_damaging": {"color": "#d53e4f"},
+            "unknown": {"color": "#d9d9d9"},
+        }
         for c, cat in plot_cats.items():
             if c not in p_cats:
                 p_cats[c] = cat
@@ -323,13 +321,13 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_variants_by_chromosome(self):
         title = "Variants by chromosome"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
         # Sort the chromosomes numerically (almost - feel free to improve)
         chrs = {chr: k["name"].replace("chr", "").split("_")[0].rjust(20, "0") for chr, k in plot_cats.items()}
-        p_cats = OrderedDict()
+        p_cats = {}
         for chr in sorted(chrs, key=chrs.get):
             p_cats[chr] = plot_cats[chr]
 
@@ -345,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bar_graph_position_in_protein(self):
         title = "Position in protein"
         plot_data, plot_cats, plot_config = self._prep_bar_graph(title)
-        htmlid = re.sub("\W+", "_", title).lower()
+        htmlid = re.sub(r"\W+", "_", title).lower()
         if len(plot_data) == 0:
             return
 
@@ -364,16 +362,16 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _prep_bar_graph(self, title):
-        plot_data = OrderedDict()
+        plot_data = dict()
         for s_name in self.vep_data:
             if title in self.vep_data[s_name]:
                 plot_data[s_name] = self.vep_data[s_name][title]
-        plot_cats = OrderedDict()
-        htmlid = re.sub("\W+", "_", title).lower()
-        plotid = "{}_plot".format(htmlid)
+        plot_cats = dict()
+        htmlid = re.sub(r"\W+", "_", title).lower()
+        plotid = f"{htmlid}_plot"
         plot_config = {
             "id": plotid,
-            "title": "VEP: {}".format(title),
+            "title": f"VEP: {title}",
             "ylab": "Number of variants",
         }
         if len(plot_data) == 0:

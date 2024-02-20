@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from Kaiju """
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -67,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(num_samples))
+        log.info(f"Found {num_samples} reports")
 
         self.kaiju_total_pct = dict()
         self.kaiju_sample_total_readcounts = dict()
@@ -82,10 +81,10 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         taxo_rank = None
 
-        for l in f["f"]:
-            if l.startswith("file\t"):
+        for line in f["f"]:
+            if line.startswith("file\t"):
                 continue
-            (s_file, pct, reads, taxon_id, taxon_names) = l.rstrip().split("\t")
+            (s_file, pct, reads, taxon_id, taxon_names) = line.rstrip().split("\t")
             s_name = self.clean_s_name(s_file, f)
             if s_name not in parsed_data.keys():
                 parsed_data[s_name] = {"assigned": {}}
@@ -108,6 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Allows us to pick top-5 for each rank
         # Use percentages instead of counts so that deeply-sequences samples
         # are not unfairly over-represented
+        first_pass_total = False
 
         for rank_name, data in self.kaiju_data.items():
             for s_name, samples_values in data.items():
@@ -141,22 +141,20 @@ class MultiqcModule(BaseMultiqcModule):
         taxo_ranks = sorted(self.kaiju_data)
         # print only assigned at phylum rank in general table or the first available.
         if len(taxo_ranks) >= 1 and "phylum" in taxo_ranks:
-            general_data = self.kaiju_data["phylum"]
             general_taxo_rank = "Phylum"
         else:
-            general_data = self.kaiju_data[taxo_ranks[0]]
             general_taxo_rank = taxo_ranks[0].capitalize()
 
         headers["% Assigned"] = {
             "title": "% Reads assigned",
-            "description": "Percentage of reads assigned at {} rank".format(general_taxo_rank),
+            "description": f"Percentage of reads assigned at {general_taxo_rank} rank",
             "min": 0,
             "max": 100,
             "suffix": "%",
             "scale": "RdYlGn",
         }
         headers["assigned"] = {
-            "title": "{} Reads assigned".format(config.read_count_prefix),
+            "title": f"{config.read_count_prefix} Reads assigned",
             "description": "Number of reads assigned ({})  at {} rank".format(
                 config.read_count_desc, general_taxo_rank
             ),
@@ -172,23 +170,22 @@ class MultiqcModule(BaseMultiqcModule):
         }
         tdata = {}
         for s_name, d in self.kaiju_sample_total_readcounts.items():
-            tdata[s_name] = {}
-            tdata[s_name]["% Unclassified"] = (
-                self.kaiju_sample_unclassified[s_name] * 100 / self.kaiju_sample_total_readcounts[s_name]
-            )
+            tdata[s_name] = {
+                # Default values in case if data is not available for this sample at this rank
+                "assigned": 0,
+                "% Assigned": 0,
+            }
+            total = self.kaiju_sample_total_readcounts[s_name]
+            if total == 0:
+                continue
+            tdata[s_name]["% Unclassified"] = self.kaiju_sample_unclassified[s_name] * 100 / total
             if s_name in self.kaiju_data[general_taxo_rank.lower()]:
                 tdata[s_name]["assigned"] = (
-                    self.kaiju_sample_total_readcounts[s_name]
+                    total
                     - self.kaiju_sample_unclassified[s_name]
                     - self.kaiju_data[general_taxo_rank.lower()][s_name]["cannot be assigned"]["count"]
                 )
-                tdata[s_name]["% Assigned"] = (
-                    tdata[s_name]["assigned"] * 100 / self.kaiju_sample_total_readcounts[s_name]
-                )
-            else:
-                # don't have the value for this samples at this rank
-                tdata[s_name]["assigned"] = 0
-                tdata[s_name]["% Assigned"] = 0
+                tdata[s_name]["% Assigned"] = tdata[s_name]["assigned"] * 100 / total
         self.general_stats_addcols(tdata, headers)
 
     def top_five_barplot(self):
@@ -206,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
             "data_labels": [
-                {"name": rank.capitalize(), "ylab": "Number of Reads at {} rank".format(rank.capitalize())}
+                {"name": rank.capitalize(), "ylab": f"Number of Reads at {rank.capitalize()} rank"}
                 for rank in rank_used
             ],
         }
@@ -215,8 +212,8 @@ class MultiqcModule(BaseMultiqcModule):
         cats = []
 
         for rank_name in rank_used:
-            rank_cats = OrderedDict()
-            rank_data = dict()
+            rank_cats = {}
+            rank_data = {}
             # Loop through the summed tax percentages to get the top 5 across all samples
 
             top_five_sorted_pct = sorted(self.kaiju_total_pct[rank_name].items(), key=lambda x: x[1], reverse=True)[0:5]
@@ -259,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
                         rank_data[s_name]["other"] = 0
 
                 else:
-                    rank_data[s_name] = dict()
+                    rank_data[s_name] = {}
                     rank_data[s_name]["other"] = 0
                     rank_data[s_name]["missing info"] = (
                         self.kaiju_sample_total_readcounts[s_name] - self.kaiju_sample_unclassified[s_name]

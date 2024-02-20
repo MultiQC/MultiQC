@@ -2,7 +2,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 from pathlib import Path
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if parsed is not None:
                 if f["s_name"] in self.gopeaks_data:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], f["s_name"]))
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
 
                 if "gopeaks_version" in parsed:
                     self.add_software_version(parsed["gopeaks_version"], f["s_name"])
@@ -53,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.gopeaks_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(len(self.gopeaks_data)))
+        log.info(f"Found {len(self.gopeaks_data)} samples")
 
         self.write_data_file(self.gopeaks_data, "multiqc_gopeaks")
 
@@ -79,13 +78,14 @@ class MultiqcModule(BaseMultiqcModule):
         Put peak counts to the general table.
         """
 
-        headers = OrderedDict()
-        headers["peak_counts"] = {
-            "title": "Peak Counts",
-            "description": "Number of peaks per sample",
-            "min": 0,
-            "scale": "YlGnBu",
-            "format": "{:,.0f}",
+        headers = {
+            "peak_counts": {
+                "title": "Peak Counts",
+                "description": "Number of peaks per sample",
+                "min": 0,
+                "scale": "YlGnBu",
+                "format": "{:,.0f}",
+            }
         }
         self.general_stats_addcols(self.gopeaks_data, headers)
 

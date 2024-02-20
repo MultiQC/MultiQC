@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -31,14 +30,14 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
 
         # Call submodule functions
         n["stats"] = self.parse_bcftools_stats()
         if n["stats"] > 0:
-            log.info("Found {} stats reports".format(n["stats"]))
+            log.info(f"Found {n['stats']} stats reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

@@ -3,7 +3,6 @@
 import logging
 import re
 import traceback
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -42,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_flash(self):
         # Find all log files with flash msgs
-        flash_data = OrderedDict()
+        flash_data = {}
         for logfile in self.find_log_files("flash/log"):
             flash_data.update(self.parse_flash_log(logfile))
             self.add_data_source(logfile)
@@ -99,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_flash_log(self, logf):
         """parse flash logs"""
-        data = OrderedDict()
+        data = {}
         samplelogs = self.split_log(logf["f"])
         version_match = re.search(VERSION_REGEX, logf["f"])
 
@@ -127,35 +126,35 @@ class MultiqcModule(BaseMultiqcModule):
 
                 data[s_name] = sample
             except Exception as err:
-                log.warning("Error parsing record in {}. {}".format(logf["fn"], err))
+                log.warning(f"Error parsing record in {logf['fn']}. {err}")
                 log.debug(traceback.format_exc())
                 continue
         return data
 
     def general_stats_table(self, data):
         """Add percent combined to general stats table"""
-        headers = OrderedDict()
-        headers["combopairs"] = {
-            "title": "Combined pairs",
-            "description": "Num read pairs combined",
-            "shared_key": "read_count",
-            "hidden": True,
-            "scale": False,
-        }
-        headers["perccombo"] = {
-            "title": "% Combined",
-            "description": "% read pairs combined",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "PiYG",
+        headers = {
+            "combopairs": {
+                "title": "Combined pairs",
+                "description": "Num read pairs combined",
+                "shared_key": "read_count",
+                "hidden": True,
+                "scale": False,
+            },
+            "perccombo": {
+                "title": "% Combined",
+                "description": "% read pairs combined",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "PiYG",
+            },
         }
         self.general_stats_addcols(data, headers)
 
     @staticmethod
     def summary_plot(data):
         """Barplot of combined pairs"""
-        cats = OrderedDict()
         cats = {
             "combopairs": {"name": "Combined pairs", "color": "#191970"},
             "inniepairs": {"name": "Combined innie pairs", "color": "#191970"},
@@ -181,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
         nameddata = dict()
         data = dict()
         try:
-            for l in histf["f"].splitlines():
-                s = l.split()
+            for line in histf["f"].splitlines():
+                s = line.split()
                 if s:
                     if len(s) != 2:
                         raise RuntimeError(
@@ -238,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def freqpoly_plot(data):
         """make freqpoly plot of merged read lengths"""
-        rel_data = OrderedDict()
+        rel_data = {}
         for key, val in data.items():
             tot = sum(val.values(), 0)
             rel_data[key] = {k: v / tot for k, v in val.items()}
@@ -257,7 +256,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hist_results(self):
         """process flash numeric histograms"""
-        hist_data = OrderedDict()
+        hist_data = {}
         for f in self.find_log_files("flash/hist"):
             hist_data.update(self.parse_hist_files(f))
 

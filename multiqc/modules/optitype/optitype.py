@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -36,15 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
             cols = rows[1].split("\t")[1:]
 
             if f["s_name"] in self.optitype_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.optitype_data[f["s_name"]] = dict()
             for header, col in zip(headers, cols):
                 self.optitype_data[f["s_name"]][header] = col
             self.add_data_source(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Filter to strip out ignored sample names
         self.optitype_data = self.ignore_samples(self.optitype_data)
@@ -52,67 +47,71 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.optitype_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.optitype_data)))
+        log.info(f"Found {len(self.optitype_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.optitype_data, "multiqc_optitype")
 
         # Create OptiType overview table
-        self.addSummaryMetrics()
+        self.add_summary_metrics()
 
         # Create bar graph of subtype sample counts
         self.summary_barplot()
 
-    def addSummaryMetrics(self):
+    def add_summary_metrics(self):
         """Take the parsed entries from OptiType and add them to the main plot"""
         # A1, A2, B1, B2, C1, C2, Reads, Objective
-        headers = OrderedDict()
-
-        headers["A1"] = {
-            "title": "HLA-A1",
-            "description": "First HLA-A allele",
-            "scale": False,
-        }
-        headers["A2"] = {
-            "title": "HLA-A2",
-            "description": "Second HLA-A allele",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["B1"] = {
-            "title": "HLA-B1",
-            "description": "First HLA-B allele",
-            "scale": False,
-        }
-        headers["B2"] = {
-            "title": "HLA-B2",
-            "description": "Second HLA-B allele",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["C1"] = {
-            "title": "HLA-C1",
-            "description": "First HLA-C allele",
-            "scale": False,
-        }
-        headers["C2"] = {
-            "title": "HLA-C2",
-            "description": "Second HLA-C allele",
-            "scale": False,
-            "hidden": True,
-        }
-        headers["Reads"] = {
-            "title": "Reads",
-            "description": "Number of reads covering the HLA",
-            "scale": "YlGnBu",
-            "hidden": True,
-            "format": "{:,.0f}",
-        }
-        headers["Objective"] = {
-            "title": "Objective Score",
-            "description": "Score of the objective function for the prediction.",
-            "scale": "BuGn",
-            "hidden": True,
+        headers = {
+            "A1": {
+                "title": "HLA-A1",
+                "description": "First HLA-A allele",
+                "scale": False,
+            },
+            "A2": {
+                "title": "HLA-A2",
+                "description": "Second HLA-A allele",
+                "scale": False,
+                "hidden": True,
+            },
+            "B1": {
+                "title": "HLA-B1",
+                "description": "First HLA-B allele",
+                "scale": False,
+            },
+            "B2": {
+                "title": "HLA-B2",
+                "description": "Second HLA-B allele",
+                "scale": False,
+                "hidden": True,
+            },
+            "C1": {
+                "title": "HLA-C1",
+                "description": "First HLA-C allele",
+                "scale": False,
+            },
+            "C2": {
+                "title": "HLA-C2",
+                "description": "Second HLA-C allele",
+                "scale": False,
+                "hidden": True,
+            },
+            "Reads": {
+                "title": "Reads",
+                "description": "Number of reads covering the HLA",
+                "scale": "YlGnBu",
+                "hidden": True,
+                "format": "{:,.0f}",
+            },
+            "Objective": {
+                "title": "Objective Score",
+                "description": "Score of the objective function for the prediction.",
+                "scale": "BuGn",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(self.optitype_data, headers)
 

@@ -4,7 +4,6 @@
 
 import csv
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 from multiqc.utils import config
@@ -38,14 +37,14 @@ class GatherMixin:
                 self.gather_raw_data[f["s_name"]] = data
             self.add_data_source(f, section="gather")
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         self.gather_raw_data = self.ignore_samples(self.gather_raw_data)
 
         if len(self.gather_raw_data) == 0:
             return 0
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.write_data_file(self.gather_raw_data, "multiqc_sourmash_gather")
 
@@ -123,21 +122,21 @@ class GatherMixin:
         add columns to the general statistics table for % top matches and % unclassified
         """
         # Column headers
-        headers = OrderedDict()
-        headers[f"% Top {self.top_n}"] = {
-            "title": f"% Top {self.top_n} Genomes",
-            "description": f"Percentage of sample that was classified as one of the top {self.top_n} genomes ({', '.join(self.gather_top_five_matches)})",
-            "suffix": "%",
-            "max": 100,
-            "scale": "PuBu",
-        }
-
-        headers["% Unclassified"] = {
-            "title": "% Unclassified",
-            "description": "Percentage of sample that was unclassified",
-            "suffix": "%",
-            "max": 100,
-            "scale": "OrRd",
+        headers = {
+            f"% Top {self.top_n}": {
+                "title": f"% Top {self.top_n} Genomes",
+                "description": f"Percentage of sample that was classified as one of the top {self.top_n} genomes ({', '.join(self.gather_top_five_matches)})",
+                "suffix": "%",
+                "max": 100,
+                "scale": "PuBu",
+            },
+            "% Unclassified": {
+                "title": "% Unclassified",
+                "description": "Percentage of sample that was unclassified",
+                "suffix": "%",
+                "max": 100,
+                "scale": "OrRd",
+            },
         }
 
         # set table data
@@ -171,8 +170,8 @@ class GatherMixin:
         }
 
         # create dictionaries for plot fill names and data (match percentages)
-        match_cats = OrderedDict()
-        match_data = dict()
+        match_cats = {}
+        match_data = {}
 
         pct_shown = {}
         for match_name in self.gather_top_five_matches:

@@ -4,7 +4,6 @@ import copy
 import logging
 import os
 import re
-from collections import OrderedDict
 
 import yaml
 
@@ -35,26 +34,19 @@ class MultiqcModule(BaseMultiqcModule):
             # get sample name
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
-
             # parses minionqc summary data
-            parsed_dict = self.parse_minionqc_report(s_name, f["f"])
-
-            if parsed_dict is not None:
-                if s_name in self.minionqc_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-
-                # adds files used in MultiQC report
-                self.add_data_source(f, s_name)
+            self.parse_minionqc_report(s_name, f)
 
         # Filter to strip out ignored sample names
         self.minionqc_data = self.ignore_samples(self.minionqc_data)
         if len(self.minionqc_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.minionqc_data)))
+        log.info(f"Found {len(self.minionqc_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # columns to present in MultiQC summary table
         headers = self.headers_to_use()
@@ -76,16 +68,13 @@ class MultiqcModule(BaseMultiqcModule):
         Uses only the "All reads" stats. Ignores "Q>=x" part.
         """
         try:
-            # Parsing as OrderedDict is slightly messier with YAML
-            # http://stackoverflow.com/a/21048064/713980
-            def dict_constructor(loader, node):
-                return OrderedDict(loader.construct_pairs(node))
-
-            yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, dict_constructor)
-            summary_dict = yaml.safe_load(f)
+            summary_dict = yaml.safe_load(f["f"])
         except Exception as e:
-            log.error("Error parsing MinIONQC input file: {}".format(f))
+            log.error(f"Error parsing MinIONQC input file {f['f']}: {e}")
             return
+
+        # adds files used in MultiQC report
+        self.add_data_source(f, s_name)
 
         # Do a deep copy as dicts are immutable
         self.minionqc_raw_data[s_name] = copy.deepcopy(summary_dict)
@@ -96,80 +85,82 @@ class MultiqcModule(BaseMultiqcModule):
             if k.startswith("Q>="):
                 q_threshold = k
 
-        data_dict = {}
-        data_dict["all"] = summary_dict["All reads"]  # all reads
-        data_dict["q_filt"] = summary_dict[q_threshold]  # quality filtered reads
+        data_dict = {"all": summary_dict["All reads"], "q_filt": summary_dict[q_threshold]}
 
         for q_key in ["all", "q_filt"]:
             for key_1 in ["reads", "gigabases"]:
                 for key_2 in data_dict[q_key][key_1]:
-                    new_key = "{} {}".format(key_1, key_2)
+                    new_key = f"{key_1} {key_2}"
                     data_dict[q_key][new_key] = data_dict[q_key][key_1][key_2]
                 data_dict[q_key].pop(key_1)  # removes key after flattening
+
+        if s_name in self.minionqc_data:
+            log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
         self.minionqc_data[s_name] = data_dict["all"]  # stats for all reads
         self.qfilt_data[s_name] = data_dict["q_filt"]  # stats for q-filtered reads
         self.q_threshold_list.add(q_threshold)  # quality threshold used in this file
 
-    def headers_to_use(self):
+    @staticmethod
+    def headers_to_use():
         """
         Defines features of columns to be used in multiqc table
         """
-        headers = OrderedDict()
-
-        headers["total.reads"] = {
-            "title": "Total reads",
-            "description": "Total number of reads",
-            "format": "{:,.0f}",
-            "scale": "Greys",
-        }
-        headers["total.gigabases"] = {
-            "title": "Total bases (GB)",
-            "description": "Total bases",
-            "format": "{:,.2f}",
-            "scale": "Blues",
-        }
-        headers["N50.length"] = {
-            "title": "Reads N50",
-            "description": "Minimum read length needed to cover 50% of all reads",
-            "format": "{:,.0f}",
-            "scale": "Purples",
-        }
-        headers["mean.q"] = {
-            "title": "Mean Q score",
-            "description": "Mean quality of reads",
-            "min": 0,
-            "max": 15,
-            "format": "{:,.1f}",
-            "hidden": True,
-            "scale": "Greens",
-        }
-        headers["median.q"] = {
-            "title": "Median Q score",
-            "description": "Median quality of reads",
-            "min": 0,
-            "max": 15,
-            "format": "{:,.1f}",
-            "scale": "Greens",
-        }
-        headers["mean.length"] = {
-            "title": "Mean length (bp)",
-            "description": "Mean read length",
-            "format": "{:,.0f}",
-            "hidden": True,
-            "scale": "Blues",
-        }
-        headers["median.length"] = {
-            "title": "Median length (bp)",
-            "description": "Median read length",
-            "format": "{:,.0f}",
-            "scale": "Blues",
+        headers = {
+            "total.reads": {
+                "title": "Total reads",
+                "description": "Total number of reads",
+                "format": "{:,.0f}",
+                "scale": "Greys",
+            },
+            "total.gigabases": {
+                "title": "Total bases (GB)",
+                "description": "Total bases",
+                "format": "{:,.2f}",
+                "scale": "Blues",
+            },
+            "N50.length": {
+                "title": "Reads N50",
+                "description": "Minimum read length needed to cover 50% of all reads",
+                "format": "{:,.0f}",
+                "scale": "Purples",
+            },
+            "mean.q": {
+                "title": "Mean Q score",
+                "description": "Mean quality of reads",
+                "min": 0,
+                "max": 15,
+                "format": "{:,.1f}",
+                "hidden": True,
+                "scale": "Greens",
+            },
+            "median.q": {
+                "title": "Median Q score",
+                "description": "Median quality of reads",
+                "min": 0,
+                "max": 15,
+                "format": "{:,.1f}",
+                "scale": "Greens",
+            },
+            "mean.length": {
+                "title": "Mean length (bp)",
+                "description": "Mean read length",
+                "format": "{:,.0f}",
+                "hidden": True,
+                "scale": "Blues",
+            },
+            "median.length": {
+                "title": "Median length (bp)",
+                "description": "Median read length",
+                "format": "{:,.0f}",
+                "scale": "Blues",
+            },
         }
 
         # Add row ID to avoid duplicates
         for k in headers:
             h_id = re.sub("[^0-9a-zA-Z]+", "_", headers[k]["title"])
-            headers[k]["rid"] = "rid_{}".format(h_id)
+            headers[k]["rid"] = f"rid_{h_id}"
 
         return headers
 
@@ -250,8 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
                 )
                 pconfig["data_labels"].extend(
                     [
-                        {"name": "{}: Num reads".format(qfilt), "ylab": "# reads"},
-                        {"name": "{}: Num gigabases".format(qfilt), "ylab": "# gigabases"},
+                        {"name": f"{qfilt}: Num reads", "ylab": "# reads"},
+                        {"name": f"{qfilt}: Num gigabases", "ylab": "# gigabases"},
                     ]
                 )
             except KeyError:

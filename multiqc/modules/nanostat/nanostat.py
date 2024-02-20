@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -74,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.nanostat_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.nanostat_data)))
+        log.info(f"Found {len(self.nanostat_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.nanostat_data, "multiqc_nanostat")
@@ -169,7 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
         if f["s_name"] in self.nanostat_data:
             # Only if the same has some keys in common
             if not set(self.nanostat_data[f["s_name"]].keys()).isdisjoint(out_d.keys()):
-                log.debug("Duplicate sample data found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
 
         self.nanostat_data.setdefault(f["s_name"], {}).update(out_d)
 
@@ -179,92 +178,93 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Kallisto report and add it to the
         basic stats table at the top of the report"""
 
-        headers_base = OrderedDict()
-        headers_base["Active channels"] = {
-            "title": "Active channels",
-            "description": "Active channels",
-            "scale": "Greens",
-            "format": "{:,.0f}",
-        }
-        headers_base["Median read length"] = {
-            "title": f"Median length",
-            "description": f"Median read length (bp)",
-            "suffix": " bp",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-            "scale": "BuPu",
-        }
-        headers_base["Mean read length"] = {
-            "title": f"Mean length",
-            "description": f"Mean read length (bp)",
-            "suffix": " bp",
-            "scale": "Purples",
-            "format": "{:,.0f}",
-            "shared_key": "nucleotides",
-            "hidden": True,
-        }
-        headers_base["Read length N50"] = {
-            "title": "Read N50",
-            "description": "Read length N50",
-            "format": "{:,.0f}",
-            "suffix": " bp",
-            "scale": "RdPu",
-        }
-        headers_base["Median read quality"] = {
-            "title": "Median Qual",
-            "description": "Median read quality (Phred scale)",
-            "shared_key": "phred_score",
-            "scale": "RdYlGn",
-        }
-        headers_base["Mean read quality"] = {
-            "title": "Mean Qual",
-            "description": "Mean read quality (Phred scale)",
-            "scale": "PiYG",
-            "shared_key": "phred_score",
-            "hidden": True,
-        }
-        headers_base["Median percent identity"] = {
-            "title": "Median Identity",
-            "description": "Median percent identity",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "RdYlBu",
-            "shared_key": "percent_identity",
-        }
-        headers_base["Average percent identity"] = {
-            "title": "Mean Identity",
-            "description": "Average percent identity",
-            "max": 100,
-            "suffix": "%",
-            "scale": "Spectral",
-            "shared_key": "percent_identity",
-            "hidden": True,
-        }
-        headers_base["Number of reads"] = {
-            "title": f"# Reads ({config.long_read_count_prefix})",
-            "description": f"Number of reads ({config.long_read_count_desc})",
-            "modify": lambda x: x * config.long_read_count_multiplier,
-            "shared_key": "long_read_count",
-            "scale": "YlGn",
-        }
-        headers_base["Total bases"] = {
-            "title": f"Total Bases ({config.base_count_prefix})",
-            "description": f"Total bases ({config.base_count_desc})",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
-            "scale": "BrBG",
-        }
-        headers_base["Total bases aligned"] = {
-            "title": f"Aligned Bases ({config.base_count_prefix})",
-            "description": f"Total bases aligned ({config.base_count_desc})",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
-            "scale": "PuOr",
+        headers_base = {
+            "Active channels": {
+                "title": "Active channels",
+                "description": "Active channels",
+                "scale": "Greens",
+                "format": "{:,.0f}",
+            },
+            "Median read length": {
+                "title": "Median length",
+                "description": "Median read length (bp)",
+                "suffix": " bp",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+                "scale": "BuPu",
+            },
+            "Mean read length": {
+                "title": "Mean length",
+                "description": "Mean read length (bp)",
+                "suffix": " bp",
+                "scale": "Purples",
+                "format": "{:,.0f}",
+                "shared_key": "nucleotides",
+                "hidden": True,
+            },
+            "Read length N50": {
+                "title": "Read N50",
+                "description": "Read length N50",
+                "format": "{:,.0f}",
+                "suffix": " bp",
+                "scale": "RdPu",
+            },
+            "Median read quality": {
+                "title": "Median Qual",
+                "description": "Median read quality (Phred scale)",
+                "shared_key": "phred_score",
+                "scale": "RdYlGn",
+            },
+            "Mean read quality": {
+                "title": "Mean Qual",
+                "description": "Mean read quality (Phred scale)",
+                "scale": "PiYG",
+                "shared_key": "phred_score",
+                "hidden": True,
+            },
+            "Median percent identity": {
+                "title": "Median Identity",
+                "description": "Median percent identity",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "RdYlBu",
+                "shared_key": "percent_identity",
+            },
+            "Average percent identity": {
+                "title": "Mean Identity",
+                "description": "Average percent identity",
+                "max": 100,
+                "suffix": "%",
+                "scale": "Spectral",
+                "shared_key": "percent_identity",
+                "hidden": True,
+            },
+            "Number of reads": {
+                "title": f"# Reads ({config.long_read_count_prefix})",
+                "description": f"Number of reads ({config.long_read_count_desc})",
+                "modify": lambda x: x * config.long_read_count_multiplier,
+                "shared_key": "long_read_count",
+                "scale": "YlGn",
+            },
+            "Total bases": {
+                "title": f"Total Bases ({config.base_count_prefix})",
+                "description": f"Total bases ({config.base_count_desc})",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
+                "scale": "BrBG",
+            },
+            "Total bases aligned": {
+                "title": f"Aligned Bases ({config.base_count_prefix})",
+                "description": f"Total bases aligned ({config.base_count_desc})",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
+                "scale": "PuOr",
+            },
         }
 
         # Add the stat_type suffix
-        headers = OrderedDict()
+        headers = {}
         for k in headers_base:
             key = f"{k}_{stat_type}"
             headers[key] = headers_base.get(k, dict()).copy()
@@ -272,14 +272,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Table config
         table_config = {
             "namespace": "NanoStat",
-            "id": "nanostat_{}_stats_table".format(stat_type.replace(" ", "_")),
+            "id": f"nanostat_{stat_type.replace(' ', '_')}_stats_table",
             "table_title": f"NanoStat {stat_type}",
         }
 
         # Add the report section
         self.add_section(
             name="Summary Statistics",
-            anchor="nanostat_{}_stats".format(stat_type.replace(" ", "_")),
+            anchor=f"nanostat_{stat_type.replace(' ', '_')}_stats",
             plot=table.plot(self.nanostat_data, headers, table_config),
         )
 
@@ -332,7 +332,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_key = f">Q15_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
-        cats = OrderedDict()
+        cats = {}
         keys = reversed(list(_range_names.values()))
         colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(_range_names))
         for idx, k in enumerate(keys):
@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add the report section
         self.add_section(
             name="Reads by quality",
-            anchor=f"nanostat_read_qualities",
+            anchor="nanostat_read_qualities",
             description="Read counts categorised by read quality (Phred score).",
             helptext="""
             Sequencing machines assign each generated read a quality score using the

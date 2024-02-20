@@ -55,7 +55,7 @@ to MultiQC:
 
 Any python program can create entry points with the same name, once installed
 MultiQC will find these and run them accordingly. For an example of this in
-action, see the [MultiQC_NGI](https://github.com/ewels/MultiQC_NGI/blob/master/setup.py)
+action, see the [MultiQC_NGI](https://github.com/MultiQC/MultiQC_NGI/blob/master/setup.py)
 setup file:
 
 ```python
@@ -146,6 +146,6 @@ log = logging.getLogger('multiqc')
 def after_modules():
   """ Plugin code to run when MultiQC modules have completed  """
   num_modules = len(report.modules_output)
-  status_string = "MultiQC hook - {} modules reported!".format(num_modules)
+  status_string = f"MultiQC hook - {num_modules} modules reported!"
   log.critical(status_string)
 ```

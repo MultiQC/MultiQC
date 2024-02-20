@@ -21,4 +21,5 @@ class MultiqcModule(KrakenModule):
             href="https://ccb.jhu.edu/software/bracken/",
             info="is a highly accurate statistical method that computes the abundance of species in DNA sequences from a metagenomics sample.",
             doi="10.7717/peerj-cs.104",
+            sp_key="bracken",
         )

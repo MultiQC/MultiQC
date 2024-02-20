@@ -79,7 +79,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](../../images/report_proj_info.png)
+![report project info](../../../docs/images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
@@ -723,11 +723,11 @@ The first key is the table ID, the second is the header ID for the column you wa
 :::tip
 The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
 
-![Table: configure columns button](../../images/table_configure_columns.png)
+![Table: configure columns button](../../../docs/images/table_configure_columns.png)
 
 The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
 
-![Table: configure columns button](../../images/table_header_ids.png)
+![Table: configure columns button](../../../docs/images/table_header_ids.png)
 :::
 
 ### Hiding columns
@@ -759,6 +759,27 @@ table_columns_visible:
 
 Note that you can set these values to `True` to show columns that would otherwise be hidden
 by default.
+
+It can also be done for other module-specific tables in the report, where instead of
+the _Group_, you'd need to specify the table ID. To get the table ID, click
+_Configure Columns_ above the table, and look for the first line above the table contents.
+It should say something like "Uncheck the tick box ... Table ID: `quast_table`".
+
+For example, to hide the _# misassemblies_ column in the _Assembly Statistics_ table
+from QUAST, you would use the following config:
+
+```yaml
+table_columns_visible:
+  quast_table:
+    "# misassemblies": false
+```
+
+Or you can pass the column ID directly:
+
+```yaml
+table_columns_visible:
+  "# misassemblies": false
+```
 
 ### Column order
 
@@ -795,6 +816,9 @@ table_columns_name:
   FastQC:
     percent_gc: "Percent of bases that are GC"
 ```
+
+It will also work for module-specific tables by using the table ID instead of the module name, and specifying the column ID directly.
+See the [Hiding columns](#hiding-columns) section above for more details.
 
 ### Conditional formatting
 

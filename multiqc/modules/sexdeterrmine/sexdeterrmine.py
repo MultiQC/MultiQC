@@ -3,7 +3,6 @@
 
 import json
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
@@ -56,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse SexDeterrmine JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse SexDeterrmine JSON: '{f['fn']}'")
             return
 
         # Get the version
@@ -69,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.sexdet_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
 
             self.add_data_source(f, s_clean)
             self.add_software_version(version, s_clean)
@@ -84,44 +83,49 @@ class MultiqcModule(BaseMultiqcModule):
     def addSummaryMetrics(self):
         """Take the parsed stats from SexDetErrmine and add it to the main plot"""
 
-        headers = OrderedDict()
-        headers["RateErrX"] = {
-            "title": "Err Rate X",
-            "description": "Rate of Error for Chr X",
-            "scale": "OrRd",
-            "hidden": True,
-            "shared_key": "snp_err_rate",
-        }
-        headers["RateErrY"] = {
-            "title": "Err Rate Y",
-            "description": "Rate of Error for Chr Y",
-            "scale": "OrRd",
-            "hidden": True,
-            "shared_key": "snp_err_rate",
-        }
-        headers["RateX"] = {
-            "title": "Rate X",
-            "description": "Number of positions on Chromosome X vs Autosomal positions.",
-            "scale": "PuBuGn",
-            "shared_key": "snp_count",
-        }
-        headers["RateY"] = {
-            "title": "Rate Y",
-            "description": "Number of positions on Chromosome Y vs Autosomal positions.",
-            "scale": "BuPu",
-            "shared_key": "snp_count",
+        headers = {
+            "RateErrX": {
+                "title": "Err Rate X",
+                "description": "Rate of Error for Chr X",
+                "scale": "OrRd",
+                "hidden": True,
+                "shared_key": "snp_err_rate",
+            },
+            "RateErrY": {
+                "title": "Err Rate Y",
+                "description": "Rate of Error for Chr Y",
+                "scale": "OrRd",
+                "hidden": True,
+                "shared_key": "snp_err_rate",
+            },
+            "RateX": {
+                "title": "Rate X",
+                "description": "Number of positions on Chromosome X vs Autosomal positions.",
+                "scale": "PuBuGn",
+                "shared_key": "snp_count",
+            },
+            "RateY": {
+                "title": "Rate Y",
+                "description": "Number of positions on Chromosome Y vs Autosomal positions.",
+                "scale": "BuPu",
+                "shared_key": "snp_count",
+            },
         }
 
         self.general_stats_addcols(self.sexdet_data, headers)
 
     def read_count_barplot(self):
         """Make a bar plot showing read counts on Autosomal, X and Y chr"""
-        cats = OrderedDict()
-        cats["NR Aut"] = {"name": "Autosomal Reads"}
-        cats["NrX"] = {"name": "Reads on X"}
-        cats["NrY"] = {"name": "Reads on Y"}
-
-        config = {"id": "sexdeterrmine-readcounts-plot", "title": "SexDetErrmine: Read Counts", "ylab": "# Reads"}
+        cats = {
+            "NR Aut": {"name": "Autosomal Reads"},
+            "NrX": {"name": "Reads on X"},
+            "NrY": {"name": "Reads on Y"},
+        }
+        config = {
+            "id": "sexdeterrmine-readcounts-plot",
+            "title": "SexDetErrmine: Read Counts",
+            "ylab": "# Reads",
+        }
 
         self.add_section(
             name="Read Counts",
@@ -132,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def snp_rate_scatterplot(self):
         """Make a scatter plot showing relative coverage on X and Y chr"""
-        data = OrderedDict()
+        data = {}
         for sample in self.sexdet_data:
             try:
                 data[sample] = {"x": self.sexdet_data[sample]["RateX"], "y": self.sexdet_data[sample]["RateY"]}
@@ -160,12 +164,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     def snp_count_barplot(self):
         """Make a bar plot showing read counts on Autosomal, X and Y chr"""
-        cats = OrderedDict()
-        cats["Snps Autosomal"] = {"name": "Autosomal SNPs"}
-        cats["XSnps"] = {"name": "SNPs on X"}
-        cats["YSnps"] = {"name": "SNPs on Y"}
+        cats = {
+            "Snps Autosomal": {"name": "Autosomal SNPs"},
+            "XSnps": {"name": "SNPs on X"},
+            "YSnps": {"name": "SNPs on Y"},
+        }
 
-        config = {"id": "sexdeterrmine-snps-plot", "title": "SexDetErrmine: SNP Counts", "ylab": "# Reads"}
+        config = {
+            "id": "sexdeterrmine-snps-plot",
+            "title": "SexDetErrmine: SNP Counts",
+            "ylab": "# Reads",
+        }
 
         self.add_section(
             name="SNP Counts",

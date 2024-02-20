@@ -1,6 +1,5 @@
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -32,7 +31,11 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.porechop_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.porechop_data)))
+        log.info(f"Found {len(self.porechop_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write data to file
         self.write_data_file(self.porechop_data, "porechop")
@@ -44,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.middle_split_barplot()
         self.no_adapters_found()
 
-    def parse_logs(self, logfile):
+    def parse_logs(self, f):
         """Parsing Logs. Note: careful of ANSI formatting log"""
 
         def get_float(val):
@@ -55,32 +58,28 @@ class MultiqcModule(BaseMultiqcModule):
             except ValueError:
                 return val
 
-        file_content = logfile["f"]
-        for l in file_content:
-            ## Find line after loading reads, and remove suffixes for sample name
-            if "Loading reads" in l:
-                s_name = next(file_content).rstrip()
-                s_name = self.clean_s_name(s_name, logfile)
-                self.add_data_source(logfile, s_name=s_name)
+        for line in f["f"]:
+            # Find line after loading reads, and remove suffixes for sample name
+            if "Loading reads" in line:
+                s_name = next(f["f"]).rstrip()
+                s_name = self.clean_s_name(s_name, f)
+                self.add_data_source(f, s_name=s_name)
                 if s_name in self.porechop_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.porechop_data[s_name] = {}
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, s_name)
-
-            ## Find each valid metric, clean up for plain integer
+            # Find each valid metric, clean up for plain integer
             # 10,000 reads loaded
-            if "reads loaded" in l:
-                reads_loaded = re.search(r"([\d,]+)\s*reads loaded", l)
+            if "reads loaded" in line:
+                reads_loaded = re.search(r"([\d,]+)\s*reads loaded", line)
                 if reads_loaded:
                     self.porechop_data[s_name]["Input Reads"] = get_float(reads_loaded.group(1))
 
             # 7,100 / 10,000 reads had adapters trimmed from their start (425,196 bp removed)
-            if "reads had adapters trimmed from their start" in l:
+            if "reads had adapters trimmed from their start" in line:
                 adapter_start = re.search(
-                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their start \(([\d,]+) bp removed\)", l
+                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their start \(([\d,]+) bp removed\)",
+                    line,
                 )
                 if adapter_start:
                     self.porechop_data[s_name]["Start Trimmed"] = get_float(adapter_start.group(1))
@@ -98,9 +97,9 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
             # 4,849 / 10,000 reads had adapters trimmed from their end (283,192 bp removed)'
-            if "reads had adapters trimmed from their end" in l:
+            if "reads had adapters trimmed from their end" in line:
                 end_trimmed = re.search(
-                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their end \(([\d,]+) bp removed\)", l
+                    r"([\d,]+)\s*/\s*([\d,]+)\s*reads had adapters trimmed from their end \(([\d,]+) bp removed\)", line
                 )
                 if end_trimmed:
                     self.porechop_data[s_name]["End Trimmed"] = get_float(end_trimmed.group(1))
@@ -119,8 +118,8 @@ class MultiqcModule(BaseMultiqcModule):
                         pass
 
             # 7 / 10,000 reads were split based on middle adapters
-            if "reads were split based on middle adapters" in l:
-                split_stats = re.search(r"([\d,]+)\s*/\s*([\d,]+)\s*reads were split based on middle adapters", l)
+            if "reads were split based on middle adapters" in line:
+                split_stats = re.search(r"([\d,]+)\s*/\s*([\d,]+)\s*reads were split based on middle adapters", line)
                 if split_stats:
                     self.porechop_data[s_name]["Middle Split"] = get_float(split_stats.group(1))
                     self.porechop_data[s_name]["Middle Split Total"] = get_float(split_stats.group(2))
@@ -138,71 +137,73 @@ class MultiqcModule(BaseMultiqcModule):
 
     def porechop_general_stats(self):
         """Porechop General Stats Table"""
-        headers = OrderedDict()
-        headers["Input Reads"] = {
-            "title": "Input Reads ({})".format(config.read_count_prefix),
-            "description": "Number of reads loaded into Porechop ({})".format(config.read_count_prefix),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["Start Trimmed"] = {
-            "title": "Start Trimmed ({})".format(config.read_count_prefix),
-            "description": "Number of reads that had adapters trimmed from the start ({})".format(
-                config.read_count_prefix
-            ),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Start Trimmed Percent"] = {
-            "title": "Start Trimmed",
-            "description": "Percent of reads that had adapters trimmed from the start",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["End Trimmed"] = {
-            "title": "End Trimmed ({})".format(config.read_count_prefix),
-            "description": "Number of reads that had adapters trimmed from the end ({})".format(
-                config.read_count_prefix
-            ),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["End Trimmed Percent"] = {
-            "title": "End Trimmed",
-            "description": "Percent of reads that had adapters trimmed from the end",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["Middle Split"] = {
-            "title": "Middle Split ({})".format(config.read_count_prefix),
-            "description": "Number of reads split based on middle adapters ({})".format(config.read_count_prefix),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Middle Split Percent"] = {
-            "title": "Middle Split",
-            "description": "Percent of reads that were split based on middle adapters",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
+        headers = {
+            "Input Reads": {
+                "title": f"Input Reads ({config.read_count_prefix})",
+                "description": f"Number of reads loaded into Porechop ({config.read_count_prefix})",
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "Start Trimmed": {
+                "title": f"Start Trimmed ({config.read_count_prefix})",
+                "description": "Number of reads that had adapters trimmed from the start ({})".format(
+                    config.read_count_prefix
+                ),
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "Start Trimmed Percent": {
+                "title": "Start Trimmed",
+                "description": "Percent of reads that had adapters trimmed from the start",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "End Trimmed": {
+                "title": f"End Trimmed ({config.read_count_prefix})",
+                "description": "Number of reads that had adapters trimmed from the end ({})".format(
+                    config.read_count_prefix
+                ),
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "End Trimmed Percent": {
+                "title": "End Trimmed",
+                "description": "Percent of reads that had adapters trimmed from the end",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "Middle Split": {
+                "title": f"Middle Split ({config.read_count_prefix})",
+                "description": f"Number of reads split based on middle adapters ({config.read_count_prefix})",
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "Middle Split Percent": {
+                "title": "Middle Split",
+                "description": "Percent of reads that were split based on middle adapters",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
         }
 
         self.general_stats_addcols(self.porechop_data, headers)
 
     def start_trim_barplot(self):
         """Barplot of number of reads adapter trimmed at read start"""
-        cats = OrderedDict()
-        cats["Start Trimmed"] = {"name": "Start Trimmed", "color": "#7cb5ec"}
-        cats["Start Untrimmed"] = {"name": "Start Untrimmed", "color": "#f7a35c"}
+        cats = {
+            "Start Trimmed": {"name": "Start Trimmed", "color": "#7cb5ec"},
+            "Start Untrimmed": {"name": "Start Untrimmed", "color": "#f7a35c"},
+        }
         config = {
             "id": "porechop-starttrim-barplot",
             "title": "Porechop: Read Start Adapter Timmed",
@@ -217,9 +218,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def end_trim_barplot(self):
         """Barplot of number of reads adapter trimmed at read end"""
-        cats = OrderedDict()
-        cats["End Trimmed"] = {"name": "End Trimmed", "color": "#7cb5ec"}
-        cats["End Untrimmed"] = {"name": "End Untrimmed", "color": "#f7a35c"}
+        cats = {
+            "End Trimmed": {"name": "End Trimmed", "color": "#7cb5ec"},
+            "End Untrimmed": {"name": "End Untrimmed", "color": "#f7a35c"},
+        }
         config = {
             "id": "porechop-endtrim-barplot",
             "title": "Porechop: Read End Adapter Timmed",
@@ -234,9 +236,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def middle_split_barplot(self):
         """Barplot of number of reads adapter trimmed at read end"""
-        cats = OrderedDict()
-        cats["Middle Split"] = {"name": "Split Reads", "color": "#7cb5ec"}
-        cats["Middle Not-Split"] = {"name": "Unsplit Reads", "color": "#f7a35c"}
+        cats = {
+            "Middle Split": {"name": "Split Reads", "color": "#7cb5ec"},
+            "Middle Not-Split": {"name": "Unsplit Reads", "color": "#f7a35c"},
+        }
         config = {
             "id": "porechop-middlesplit-barplot",
             "title": "Porechop: Middle Split",

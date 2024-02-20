@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.gffcompare_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.gffcompare_data)))
+        log.info(f"Found {len(self.gffcompare_data)} reports")
 
         # Add nothing to general statistics table
 
@@ -211,7 +211,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_novel_plot",
             "title": "Gffcompare: Novel features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 
@@ -246,7 +245,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_missing_plot",
             "title": "Gffcompare: Missing features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 

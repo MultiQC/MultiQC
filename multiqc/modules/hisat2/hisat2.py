@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -32,17 +31,17 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("hisat2", filehandles=True):
             self.parse_hisat2_logs(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.hisat2_data = self.ignore_samples(self.hisat2_data)
 
         if len(self.hisat2_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.hisat2_data)))
+        log.info(f"Found {len(self.hisat2_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None, f["s_name"])
 
         # Write parsed report data to a file
         self.write_data_file(self.hisat2_data, "multiqc_hisat2")
@@ -79,27 +78,27 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         parsed_data = {}
 
-        for l in f["f"]:
+        for line in f["f"]:
             # Attempt in vain to find original hisat2 command, logged by another program
-            hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", l)
+            hscmd = re.search(r"hisat2 .+ -[1U] ([^\s,]+)", line)
             if hscmd:
                 s_name = self.clean_s_name(hscmd.group(1), f)
-                log.debug("Found a HISAT2 command, updating sample name to '{}'".format(s_name))
+                log.debug(f"Found a HISAT2 command, updating sample name to '{s_name}'")
 
             # Run through all regexes
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = int(match.group(1))
 
             # Overall alignment rate
-            overall = re.search(r"Overall alignment rate: ([\d\.]+)%", l)
+            overall = re.search(r"Overall alignment rate: ([\d\.]+)%", line)
             if overall:
                 parsed_data["overall_alignment_rate"] = float(overall.group(1))
 
                 # Save parsed data
                 if s_name in self.hisat2_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.hisat2_data[s_name] = parsed_data
 
@@ -111,14 +110,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the HISAT2 report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["overall_alignment_rate"] = {
-            "title": "% Aligned",
-            "description": "overall alignment rate",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
+        headers = {
+            "overall_alignment_rate": {
+                "title": "% Aligned",
+                "description": "overall alignment rate",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            }
         }
         self.general_stats_addcols(self.hisat2_data, headers)
 
@@ -141,10 +141,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Two plots, don't mix SE with PE
         if len(sedata) > 0:
-            sekeys = OrderedDict()
-            sekeys["unpaired_aligned_one"] = {"color": "#20568f", "name": "SE mapped uniquely"}
-            sekeys["unpaired_aligned_multi"] = {"color": "#f7a35c", "name": "SE multimapped"}
-            sekeys["unpaired_aligned_none"] = {"color": "#981919", "name": "SE not aligned"}
+            sekeys = {
+                "unpaired_aligned_one": {"color": "#20568f", "name": "SE mapped uniquely"},
+                "unpaired_aligned_multi": {"color": "#f7a35c", "name": "SE multimapped"},
+                "unpaired_aligned_none": {"color": "#981919", "name": "SE not aligned"},
+            }
             pconfig = {
                 "id": "hisat2_se_plot",
                 "title": "HISAT2: SE Alignment Scores",
@@ -154,13 +155,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(plot=bargraph.plot(sedata, sekeys, pconfig))
 
         if len(pedata) > 0:
-            pekeys = OrderedDict()
-            pekeys["paired_aligned_one"] = {"color": "#20568f", "name": "PE mapped uniquely"}
-            pekeys["paired_aligned_discord_one"] = {"color": "#5c94ca", "name": "PE mapped discordantly uniquely"}
-            pekeys["unpaired_aligned_one"] = {"color": "#95ceff", "name": "PE one mate mapped uniquely"}
-            pekeys["paired_aligned_multi"] = {"color": "#f7a35c", "name": "PE multimapped"}
-            pekeys["unpaired_aligned_multi"] = {"color": "#ffeb75", "name": "PE one mate multimapped"}
-            pekeys["unpaired_aligned_none"] = {"color": "#981919", "name": "PE neither mate aligned"}
+            pekeys = {
+                "paired_aligned_one": {"color": "#20568f", "name": "PE mapped uniquely"},
+                "paired_aligned_discord_one": {"color": "#5c94ca", "name": "PE mapped discordantly uniquely"},
+                "unpaired_aligned_one": {"color": "#95ceff", "name": "PE one mate mapped uniquely"},
+                "paired_aligned_multi": {"color": "#f7a35c", "name": "PE multimapped"},
+                "unpaired_aligned_multi": {"color": "#ffeb75", "name": "PE one mate multimapped"},
+                "unpaired_aligned_none": {"color": "#981919", "name": "PE neither mate aligned"},
+            }
             pconfig = {
                 "id": "hisat2_pe_plot",
                 "title": "HISAT2: PE Alignment Scores",

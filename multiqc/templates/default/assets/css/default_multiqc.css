@@ -183,7 +183,7 @@ kbd {
   margin: 0 0 20px;
 }
 #page_title img {
-  max-width: 260px;
+  max-width: 320px;
 }
 .report_comment,
 .mqc-section-comment {
@@ -247,6 +247,16 @@ h2.mqc-module-title {
 .footer a {
   color: #999;
   text-decoration: underline;
+}
+.footer .seqera-logo img {
+  height: 24px;
+  padding-right: 30px;
+  margin-top: 8px;
+  opacity: 80%;
+  transition: opacity 0.2s;
+}
+.footer .seqera-logo:hover img {
+  opacity: 100%;
 }
 
 /* Epic scroll bar of joy */
@@ -649,6 +659,17 @@ input.form-control[type="color"] {
   font-family: "Consolas", "Monaco", "Courier New", Courier, monospace;
 }
 
+.mqc-toolbox-wrapper .seqera-logo img {
+  height: 24px;
+  max-width: 80%;
+  opacity: 60%;
+  margin-top: 10px;
+  transition: opacity 0.2s;
+}
+.mqc-toolbox-wrapper .seqera-logo a:hover img {
+  opacity: 100%;
+}
+
 /* MultiQC tables */
 .table tr td {
   font-size: 0.9em;
@@ -684,7 +705,7 @@ input.form-control[type="color"] {
 .mqc_table thead td {
   background-color: #ffffff;
 }
-.mqc_table thead th:after {
+.mqc_table thead th .tablesorter-header-inner:after {
   content: "";
   display: inline-block;
   width: 0;
@@ -694,14 +715,14 @@ input.form-control[type="color"] {
   border-right: 4px solid transparent;
   border-left: 4px solid transparent;
 }
-.mqc_table thead th.headerSortDown:after {
+.mqc_table thead th.tablesorter-headerAsc .tablesorter-header-inner:after {
   border-bottom: 4px dashed;
 }
-.mqc_table thead th.headerSortUp:after {
+.mqc_table thead th.tablesorter-headerDesc .tablesorter-header-inner:after {
   border-top: 4px dashed;
 }
-.mqc_table thead th.headerSortDown,
-.mqc_table thead th.headerSortUp {
+.mqc_table thead th.tablesorter-headerAsc,
+.mqc_table thead th.tablesorter-headerDesc {
   background-color: #ededed;
   color: #1ca8dd;
   border-bottom: 2px solid #1ca8dd;
@@ -855,7 +876,6 @@ tbody .sorthandle {
 }
 .mqc_table .val {
   display: block;
-  position: absolute;
   padding: 5px;
   left: 0;
 }
@@ -863,10 +883,12 @@ tbody .sorthandle {
 /* Flat MatPlotLib plots */
 .mqc_mplplot {
   border: 1px solid #dedede;
-  margin-top: 15px;
+  margin-top: 0;
+  width: 100%;
 }
 .mqc_mplplot img {
   max-width: 100%;
+  height: auto;
 }
 
 /* Draggable height bar for HighCharts Plots */
@@ -892,21 +914,21 @@ tbody .sorthandle {
   height: 512px;
   position: relative;
   border: 1px solid #dedede;
-  border-bottom: 1px solid #ccc;
-  margin-top: 15px;
+  margin-top: 5px;
 }
 .hc-plot-handle {
   position: absolute;
-  bottom: 0;
   width: 100%;
   height: 10px;
   background-color: #dedede;
   cursor: row-resize;
-  padding: 1px 0;
   border-top: 1px solid #ededed;
   -moz-transition: background-color 0.1s;
   -webkit-transition: background-color 0.1s;
   transition: background-color 0.1s;
+  /* two lines below are a hack to hide hanging plotly long vertical tick labels */
+  border-bottom: 2px solid white;
+  bottom: -3px;
 }
 .hc-plot-handle span {
   display: block;
@@ -928,7 +950,6 @@ tbody .sorthandle {
 .mqc_hcplot_range_sliders div {
   display: inline-block;
   white-space: nowrap;
-  margin-left: 30px;
 }
 .mqc_hcplot_range_sliders input {
   display: inline-block;
@@ -940,7 +961,7 @@ tbody .sorthandle {
 .mqc_hcplot_yaxis_limit_toggle {
   float: right;
   font-size: 11px;
-  margin-top: -30px;
+  margin-top: -26px;
 }
 .mqc_hcplot_yaxis_limit_toggle .mqc_switch_wrapper {
   margin-left: 20px;
@@ -973,4 +994,36 @@ tbody .sorthandle {
 
 .mqc_versions_table tbody:nth-child(even) {
   background-color: #f2f2f2;
+}
+
+g.annotation {
+  position: absolute !important;
+}
+
+.export-plot {
+  float: right;
+}
+
+.col-xs-12 button {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+hr {
+  border-top: 0;
+}
+
+.mqc-section-description > p {
+  margin-bottom: 4px;
+}
+
+.created-with-multiqc {
+  position: absolute;
+  bottom: 7px;
+  right: 4px;
+  margin-bottom: 0;
+  padding: 0;
+  color: #999999;
+  font-size: 8px;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Helvetica, sans-serif;
 }

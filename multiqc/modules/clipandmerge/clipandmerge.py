@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -37,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.clipandmerge_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.clipandmerge_data)))
+        log.info(f"Found {len(self.clipandmerge_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.clipandmerge_data, "multiqc_clipandmerge")
@@ -89,15 +88,16 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the ClipAndMerge report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["percentage"] = {
-            "title": "% Merged",
-            "description": "Percentage of reads merged",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "Greens",
-            "format": "{:,.2f}",
+        headers = {
+            "percentage": {
+                "title": "% Merged",
+                "description": "Percentage of reads merged",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "Greens",
+                "format": "{:,.2f}",
+            }
         }
         self.general_stats_addcols(self.clipandmerge_data, headers)
 
@@ -105,12 +105,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the duplication rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["merged_reads"] = {"name": "Merged Reads"}
-        keys["usable_not_merged_forward"] = {"name": "Usable, not merged (forward)"}
-        keys["usable_not_merged_reverse"] = {"name": "Usable, not merged (reverse)"}
-        keys["usable_forward_no_pairing_reverse"] = {"name": "Usable forward-only"}
-        keys["usable_reverse_no_pairing_forward"] = {"name": "Usable reverse-only"}
+        keys = {
+            "merged_reads": {"name": "Merged Reads"},
+            "usable_not_merged_forward": {"name": "Usable, not merged (forward)"},
+            "usable_not_merged_reverse": {"name": "Usable, not merged (reverse)"},
+            "usable_forward_no_pairing_reverse": {"name": "Usable forward-only"},
+            "usable_reverse_no_pairing_forward": {"name": "Usable reverse-only"},
+        }
 
         # Config for the plot
         config = {

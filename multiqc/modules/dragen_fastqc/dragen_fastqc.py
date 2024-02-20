@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import logging
 import os
 
@@ -14,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics, DragenContentMetrics):
-    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """DRAGEN provides a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
@@ -65,8 +63,8 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             del new_s_name
 
             if s_name in data_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+            self.add_data_source(f, s_name)
             data_by_sample.update(data_by_mate)
 
             # Superfluous function call to confirm that it is used in this module
@@ -96,4 +94,4 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
 
         if len(samples_found) == 0:
             raise ModuleNoSamplesFound
-        log.info("Found {} reports".format(len(samples_found)))
+        log.info(f"Found {len(samples_found)} reports")

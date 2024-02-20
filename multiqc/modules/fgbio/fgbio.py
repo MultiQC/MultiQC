@@ -1,6 +1,5 @@
 """ MultiQC module to parse output from fgbio """
 import logging
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -29,19 +28,19 @@ class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
+        self.general_stats_headers = dict()
         self.general_stats_data = dict()
 
         # GroupReadsByUmi
         n = dict()
         n["groupreadsbyumi"] = self.parse_groupreadsbyumi()
         if n["groupreadsbyumi"] > 0:
-            log.info("Found {} groupreadsbyumi reports".format(n["groupreadsbyumi"]))
+            log.info(f"Found {n['groupreadsbyumi']} groupreadsbyumi reports")
 
         # ErrorRateByReadPoosition
         n["errorratebyreadposition"] = ErrorRateByReadPosition.parse_reports(self)
         if n["errorratebyreadposition"] > 0:
-            log.info("Found {} errorratebyreadposition reports".format(n["errorratebyreadposition"]))
+            log.info(f"Found {n['errorratebyreadposition']} errorratebyreadposition reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:

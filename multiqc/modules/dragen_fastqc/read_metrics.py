@@ -1,10 +1,7 @@
 import logging
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.modules.dragen.utils import Metric
-from multiqc.plots import bargraph, boxplot, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.plots import linegraph
 
 from .util import average_pos_from_size
 
@@ -35,11 +32,11 @@ class DragenReadMetrics(BaseMultiqcModule):
         max_non_zero = 0
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
                 for qv in range(MAX_QV):
-                    metric = "Q{0} Reads".format(qv)
+                    metric = f"Q{qv} Reads"
                     count = group_data[metric]
                     if count > 0:
                         max_non_zero = max(qv, max_non_zero)
@@ -93,7 +90,7 @@ class DragenReadMetrics(BaseMultiqcModule):
         GROUP = "READ LENGTHS"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
-                r_name = "{}_{}".format(s_name, mate)
+                r_name = f"{s_name}_{mate}"
                 data[r_name] = dict()
 
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
@@ -113,14 +110,14 @@ class DragenReadMetrics(BaseMultiqcModule):
             return None
 
         if not multiple_lenths:
-            lengths = "bp , ".join([str(l) for l in list(seq_lengths)])
-            desc = "All samples have sequences within a single length bin ({}bp).".format(lengths)
+            lengths = "bp , ".join([str(line) for line in list(seq_lengths)])
+            desc = f"All samples have sequences within a single length bin ({lengths}bp)."
             if len(seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="dragenqc_sequence_length_distribution",
-                description='<div class="alert alert-info">{}</div>'.format(desc),
+                description=f'<div class="alert alert-info">{desc}</div>',
             )
         else:
             pconfig = {

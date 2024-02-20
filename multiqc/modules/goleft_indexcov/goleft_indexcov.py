@@ -42,13 +42,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Parse BIN data
         self.bin_plot_data = {}
+        self.bin_plot_data_empty_samples = []
         for f in self.find_log_files("goleft_indexcov/ped", filehandles=True):
             self.parse_bin_plot_data(f)
             self.add_data_source(f)
-
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
 
         # Filter to strip out ignored sample names
         self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
@@ -61,7 +58,11 @@ class MultiqcModule(BaseMultiqcModule):
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} samples".format(num_samples))
+        log.info(f"Found {num_samples} samples")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add sections to the report
         self.roc_plot()
@@ -73,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         Allows specification from a list of chromosomes via config
         for non-standard genomes.
         """
-        default_allowed = set(["X"])
+        default_allowed = {"X"}
         allowed_chroms = set(getattr(config, "goleft_indexcov_config", {}).get("chromosomes", []))
 
         chrom_clean = chrom.replace("chr", "")
@@ -92,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_roc_plot_data(self, f):
         header = f["f"].readline()
         sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
-        for parts in (l.rstrip().split() for l in f["f"]):
+        for parts in (line.rstrip().split() for line in f["f"]):
             if len(parts) > 2:
                 chrom, cov = parts[:2]
                 sample_vals = parts[2:]
@@ -113,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         max_chroms = getattr(config, "goleft_indexcov_config", {}).get("max_chroms", 50)
         if len(chroms) > max_chroms:
-            log.warning("Too many chromosomes found: %s, limiting to %s" % (len(chroms), max_chroms))
+            log.warning(f"Too many chromosomes found: {len(chroms)}, limiting to {max_chroms}")
             chroms = chroms[:max_chroms]
 
         pconfig = {
@@ -130,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Scaled coverage ROC plot",
             anchor="goleft_indexcov-roc",
-            description="Coverage (ROC) plot that shows genome coverage at at given (scaled) depth.",
+            description="Coverage (ROC) plot that shows genome coverage at given (scaled) depth.",
             helptext="""
                 Lower coverage samples have shorter curves where the proportion of regions covered
                 drops off more quickly. This indicates a higher fraction of low coverage regions.
@@ -140,8 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_bin_plot_data(self, f):
         header = f["f"].readline()[1:].strip().split("\t")
-        self.bin_plot_data_empty_samples = []
-        for sample_parts in (l.split("\t") for l in f["f"]):
+        for sample_parts in (line.split("\t") for line in f["f"]):
             cur = dict(zip(header, sample_parts))
             cur["sample_id"] = self.clean_s_name(cur["sample_id"], f)
             total = float(cur["bins.in"]) + float(cur["bins.out"])
@@ -152,6 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except ZeroDivisionError:
                 self.bin_plot_data_empty_samples.append(cur["sample_id"])
+        return self.bin_plot_data_empty_samples
 
     def bin_plot(self):
         pconfig = {

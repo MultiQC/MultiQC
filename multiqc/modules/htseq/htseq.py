@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -34,17 +33,17 @@ class MultiqcModule(BaseMultiqcModule):
                 self.htseq_data[f["s_name"]] = parsed_data
                 self.add_data_source(f)
 
-                # Superfluous function call to confirm that it is used in this module
-                # Replace None with actual version if it is available
-                self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.htseq_data = self.ignore_samples(self.htseq_data)
 
         if len(self.htseq_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.htseq_data)))
+        log.info(f"Found {len(self.htseq_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.htseq_data, "multiqc_htseq")
@@ -55,13 +54,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Assignment bar plot
         self.add_section(plot=self.htseq_counts_chart())
 
-    def parse_htseq_report(self, f):
+    @staticmethod
+    def parse_htseq_report(f):
         """Parse the HTSeq Count log file."""
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
         parsed_data = dict()
         assigned_counts = 0
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             if s[0] in keys:
                 parsed_data[s[0][2:]] = int(s[-1])
             else:
@@ -85,34 +85,36 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the HTSeq Count report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["percent_assigned"] = {
-            "title": "% Assigned",
-            "description": "% Assigned reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-        }
-        headers["assigned"] = {
-            "title": "{} Assigned".format(config.read_count_prefix),
-            "description": "Assigned Reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuBu",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "percent_assigned": {
+                "title": "% Assigned",
+                "description": "% Assigned reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+            "assigned": {
+                "title": f"{config.read_count_prefix} Assigned",
+                "description": f"Assigned Reads ({config.read_count_desc})",
+                "min": 0,
+                "scale": "PuBu",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.htseq_data, headers)
 
     def htseq_counts_chart(self):
         """Make the HTSeq Count assignment rates plot"""
-        cats = OrderedDict()
-        cats["assigned"] = {"name": "Assigned"}
-        cats["ambiguous"] = {"name": "Ambiguous"}
-        cats["alignment_not_unique"] = {"name": "Alignment Not Unique"}
-        cats["no_feature"] = {"name": "No Feature"}
-        cats["too_low_aQual"] = {"name": "Too Low aQual"}
-        cats["not_aligned"] = {"name": "Not Aligned"}
+        cats = {
+            "assigned": {"name": "Assigned"},
+            "ambiguous": {"name": "Ambiguous"},
+            "alignment_not_unique": {"name": "Alignment Not Unique"},
+            "no_feature": {"name": "No Feature"},
+            "too_low_aQual": {"name": "Too Low aQual"},
+            "not_aligned": {"name": "Not Aligned"},
+        }
         config = {
             "id": "htseq_assignment_plot",
             "title": "HTSeq: Count Assignments",

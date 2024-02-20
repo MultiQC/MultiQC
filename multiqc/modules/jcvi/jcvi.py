@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from collections import OrderedDict
 
 import numpy as np
 
@@ -28,35 +27,36 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("jcvi", filehandles=True):
             self.parse_jcvi(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.jcvi = self.ignore_samples(self.jcvi)
 
         if len(self.jcvi) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.jcvi)))
+        log.info(f"Found {len(self.jcvi)} logs")
         self.write_data_file(self.jcvi, "multiqc_jcvi")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Add most important JCVI annotation stats to the general table
-        headers = OrderedDict()
-        headers["genes"] = {
-            "title": "Number of genes",
-            "description": "Number of genes",
-            "format": "{:i}",
-        }
-        headers["transcripts"] = {
-            "title": "Number of transcripts",
-            "description": "Number of transcripts",
-            "format": "{:i}",
-        }
-        headers["mean_gene_size"] = {
-            "title": "Mean gene length (bp)",
-            "description": "Mean gene length",
-            "format": "{:i}",
+        headers = {
+            "genes": {
+                "title": "Number of genes",
+                "description": "Number of genes",
+                "format": "{:i}",
+            },
+            "transcripts": {
+                "title": "Number of transcripts",
+                "description": "Number of transcripts",
+                "format": "{:i}",
+            },
+            "mean_gene_size": {
+                "title": "Mean gene length (bp)",
+                "description": "Mean gene length",
+                "format": "{:i}",
+            },
         }
         self.general_stats_addcols(self.jcvi, headers)
 
@@ -113,8 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def parse_jcvi(self, f):
-        s_name = None
-
         # Look at the first three lines, they are always the same
         first_line = f["f"].readline()
         second_line = f["f"].readline()
@@ -133,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Set up sample dict
         s_name = f["s_name"]
         if s_name in self.jcvi:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.jcvi[s_name] = dict()
 
         # Define parsing regexes
@@ -219,8 +217,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if required_val not in stat_table:
                     stat_table[required_val] = 0
 
-        stat_table = OrderedDict(sorted(stat_table.items()))
-
         return stat_table
 
     def jcvi_barplot_feature_counts(self):
@@ -234,13 +230,14 @@ class MultiqcModule(BaseMultiqcModule):
                 {"name": "Exons", "ylab": "Number of Exons"},
             ],
         }
-
-        cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-        cats[0]["multiexon_genes"] = {"name": "Multi-exon"}
-        cats[0]["singleexon_genes"] = {"name": "Single-exon"}
-        cats[1]["transcripts"] = {"name": "transcripts"}
-        cats[2]["exons"] = {"name": "exons"}
-
+        cats = [
+            {
+                "multiexon_genes": {"name": "Multi-exon"},
+                "singleexon_genes": {"name": "Single-exon"},
+            },
+            {"transcripts": {"name": "Transcripts"}},
+            {"exons": {"name": "Exons"}},
+        ]
         return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_feature_lengths(self):
@@ -256,20 +253,21 @@ class MultiqcModule(BaseMultiqcModule):
                 {"name": "Exons", "ylab": "Base pairs"},
             ],
         }
-
-        cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-        cats[0]["mean_gene_size"] = {"name": "Mean gene size"}
-        cats[1]["mean_transcript_size"] = {"name": "Mean transcript size"}
-        cats[2]["mean_exons_size"] = {"name": "Mean exons size"}
-
+        cats = [
+            {"mean_gene_size": {"name": "Mean gene size"}},
+            {"mean_transcript_size": {"name": "Mean transcript size"}},
+            {"mean_exons_size": {"name": "Mean exons size"}},
+        ]
         return bargraph.plot([self.jcvi, self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_features_per_gene(self):
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["mean_transcript_number"] = {"name": "Mean transcripts per gene"}
-        cats[0]["transcripts_per_gene"] = {"name": "Maximum transcripts per gene"}
-        cats[1]["mean_exon_number"] = {"name": "Mean exons per genes"}
-
+        cats = [
+            {
+                "mean_transcript_number": {"name": "Mean transcripts per gene"},
+                "transcripts_per_gene": {"name": "Maximum transcripts per gene"},
+            },
+            {"mean_exon_number": {"name": "Mean exons per genes"}},
+        ]
         plot_config = {
             "id": "jcvi_plot_features_per_genes",
             "title": "JCVI: Features per gene",
@@ -285,8 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot([self.jcvi, self.jcvi], cats, plot_config)
 
     def jcvi_barplot_isoforms(self):
-        keys = OrderedDict()
-        keys["genes_with_alt"] = {"name": "Genes with multiple isoforms"}
+        keys = {"genes_with_alt": {"name": "Genes with multiple isoforms"}}
 
         plot_config = {
             "id": "jcvi_plot_isoforms",

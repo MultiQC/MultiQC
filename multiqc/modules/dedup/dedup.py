@@ -2,7 +2,7 @@
 
 import json
 import logging
-from collections import OrderedDict
+from json import JSONDecodeError
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning("Error loading file {}".format(f["fn"]))
+                logging.warning(f"Error loading file {f['fn']}")
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.dedup_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.dedup_data)))
+        log.info(f"Found {len(self.dedup_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.dedup_data, "multiqc_dedup")
@@ -61,10 +61,10 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
             # Check for Keys existing
             if "metrics" not in parsed_json or "metadata" not in parsed_json:
-                log.debug("DeDup JSON missing essential keys - skipping sample: '{}'".format(f["fn"]))
+                log.debug(f"DeDup JSON missing essential keys - skipping sample: '{f['fn']}'")
                 return None
         except JSONDecodeError as e:
-            log.debug("Could not parse DeDup JSON: '{}'".format(f["fn"]))
+            log.debug(f"Could not parse DeDup JSON: '{f['fn']}'")
             log.debug(e)
             return None
 
@@ -112,39 +112,40 @@ class MultiqcModule(BaseMultiqcModule):
         ancient_read_count_desc = getattr(config, "ancient_read_count_desc", "thousands")
         ancient_read_count_multiplier = getattr(config, "ancient_read_count_multiplier", 0.001)
 
-        headers = OrderedDict()
-        headers["dup_rate"] = {
-            "title": "Duplication Rate",
-            "description": "Percentage of reads categorised as a technical duplicate",
-            "min": 0,
-            "max": 100,
-            "suffix": "%",
-            "scale": "OrRd",
-            "format": "{:,.0f}",
-            "modify": lambda x: x * 100.0,
-        }
-        headers["clusterfactor"] = {
-            "title": "ClusterFactor",
-            "description": "CF~1 means high library complexity. Large CF means not worth sequencing deeper.",
-            "min": 1,
-            "max": 100,
-            "scale": "OrRd",
-            "format": "{:,.2f}",
-        }
-        headers["reads_removed"] = {
-            "title": "{} Reads Removed".format(ancient_read_count_prefix),
-            "description": "Non-unique reads removed after deduplication ({})".format(ancient_read_count_desc),
-            "modify": lambda x: x * ancient_read_count_multiplier,
-            "shared_key": "read_count",
-            "min": 0,
-            "hidden": True,
-        }
-        headers["mapped_after_dedup"] = {
-            "title": "{} Post-DeDup Mapped Reads".format(ancient_read_count_prefix),
-            "description": "Unique mapping reads after deduplication ({})".format(ancient_read_count_desc),
-            "modify": lambda x: x * ancient_read_count_multiplier,
-            "shared_key": "read_count",
-            "min": 0,
+        headers = {
+            "dup_rate": {
+                "title": "Duplication Rate",
+                "description": "Percentage of reads categorised as a technical duplicate",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "format": "{:,.0f}",
+                "modify": lambda x: x * 100.0,
+            },
+            "clusterfactor": {
+                "title": "ClusterFactor",
+                "description": "CF~1 means high library complexity. Large CF means not worth sequencing deeper.",
+                "min": 1,
+                "max": 100,
+                "scale": "OrRd",
+                "format": "{:,.2f}",
+            },
+            "reads_removed": {
+                "title": f"{ancient_read_count_prefix} Reads Removed",
+                "description": f"Non-unique reads removed after deduplication ({ancient_read_count_desc})",
+                "modify": lambda x: x * ancient_read_count_multiplier,
+                "shared_key": "read_count",
+                "min": 0,
+                "hidden": True,
+            },
+            "mapped_after_dedup": {
+                "title": f"{ancient_read_count_prefix} Post-DeDup Mapped Reads",
+                "description": f"Unique mapping reads after deduplication ({ancient_read_count_desc})",
+                "modify": lambda x: x * ancient_read_count_multiplier,
+                "shared_key": "read_count",
+                "min": 0,
+            },
         }
         self.general_stats_addcols(self.dedup_data, headers)
 
@@ -152,12 +153,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the HighCharts HTML to plot the duplication rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["mapped_after_dedup"] = {"name": "Unique Retained"}
-        keys["not_removed"] = {"name": "Not Removed"}
-        keys["reverse_removed"] = {"name": "Reverse Removed"}
-        keys["forward_removed"] = {"name": "Forward Removed"}
-        keys["merged_removed"] = {"name": "Merged Removed"}
+        keys = {
+            "mapped_after_dedup": {"name": "Unique Retained"},
+            "not_removed": {"name": "Not Removed"},
+            "reverse_removed": {"name": "Reverse Removed"},
+            "forward_removed": {"name": "Forward Removed"},
+            "merged_removed": {"name": "Merged Removed"},
+        }
 
         # Config for the plot
         config = {

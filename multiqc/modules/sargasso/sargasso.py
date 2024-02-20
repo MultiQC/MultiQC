@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -33,17 +32,17 @@ class MultiqcModule(BaseMultiqcModule):
             self.sargasso_files.append(f)
             self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # log.info('Removing ignored samples...')
         self.sargasso_data = self.ignore_samples(self.sargasso_data)
 
         if len(self.sargasso_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.sargasso_files)))
+        log.info(f"Found {len(self.sargasso_files)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.sargasso_data, "multiqc_sargasso")
@@ -54,16 +53,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Assignment bar plot
         self.add_section(plot=self.sargasso_chart())
 
-        # log.info('done')
-
     def parse_sargasso_logs(self, f):
         """Parse the sargasso log file."""
         species_name = list()
         items = list()
-        header = list()
         is_first_line = True
-        for l in f["f"].splitlines():
-            s = l.split(",")
+        for line in f["f"].splitlines():
+            s = line.split(",")
             # Check that this actually is a Sargasso file
             if is_first_line and s[0] != "Sample":
                 return None
@@ -96,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                     new_sample_name = self.clean_s_name(new_sample_name, f)
 
                     if new_sample_name in self.sargasso_data.keys():
-                        log.debug("Duplicate sample name found! Overwriting: {}".format(new_sample_name))
+                        log.debug(f"Duplicate sample name found! Overwriting: {new_sample_name}")
 
                     try:
                         self.sargasso_data[new_sample_name] = dict(zip(items, map(int, v)))
@@ -125,22 +121,23 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the sargasso report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["sargasso_percent_assigned"] = {
-            "title": "% Assigned",
-            "description": "Sargasso % Assigned reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlGn",
-        }
-        headers["Assigned-Reads"] = {
-            "title": "{} Assigned".format(config.read_count_prefix),
-            "description": "Sargasso Assigned reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuBu",
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "sargasso_percent_assigned": {
+                "title": "% Assigned",
+                "description": "Sargasso % Assigned reads",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
+            "Assigned-Reads": {
+                "title": f"{config.read_count_prefix} Assigned",
+                "description": f"Sargasso Assigned reads ({config.read_count_desc})",
+                "min": 0,
+                "scale": "PuBu",
+                "modify": lambda x: float(x) * config.read_count_multiplier,
+                "shared_key": "read_count",
+            },
         }
         self.general_stats_addcols(self.sargasso_data, headers)
 

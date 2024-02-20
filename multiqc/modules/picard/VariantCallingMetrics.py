@@ -1,7 +1,6 @@
 """ MultiQC submodule to parse output from Picard VariantCallingMetrics """
 
 import logging
-from collections import OrderedDict
 
 from multiqc.plots import bargraph
 
@@ -9,121 +8,116 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(parent_module):
+def parse_reports(module):
     """Find Picard VariantCallingMetrics reports and process their data"""
 
     # get data
-    data = collect_data(parent_module)
+    data_by_sample = collect_data(module)
 
     # Filter to strip out ignored sample names
-    data = parent_module.ignore_samples(data)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    if len(data_by_sample) == 0:
+        return 0
 
-    # Reference data in parent module
-    parent_module.picard_variantCalling_data = data
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-    if len(data) > 0:
-        derive_data(data)
+    derive_data(data_by_sample)
 
-        # Write parsed data to a file
-        parent_module.write_data_file(data, "multiqc_picard_variantCalling")
+    # Write parsed data to a file
+    module.write_data_file(data_by_sample, "multiqc_picard_variantCalling")
 
-        parent_module.general_stats_headers["DBSNP_TITV"] = {
+    headers = {
+        "DBSNP_TITV": {
             "title": "TiTV ratio (known)",
             "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at SNP-database sites.",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",
-        }
-
-        parent_module.general_stats_headers["NOVEL_TITV"] = {
+        },
+        "NOVEL_TITV": {
             "title": "TiTV ratio (novel)",
             "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at non-SNP-database sites.",
             "min": 0,
             "scale": "Blues",
             "shared_key": "titv_ratio",
-        }
-
-        parent_module.general_stats_headers["DBSNP_INS_DEL_RATIO"] = {
+        },
+        "DBSNP_INS_DEL_RATIO": {
             "title": "InDel ratio (known)",
             "description": "The Insertion / Deletion ratio of the passing bi-allelic SNP calls made at SNP-database sites.",
             "min": 0,
             "scale": "Greens",
             "shared_key": "indel_ratio",
             "hidden": True,
-        }
-
-        parent_module.general_stats_headers["NOVEL_INS_DEL_RATIO"] = {
+        },
+        "NOVEL_INS_DEL_RATIO": {
             "title": "InDel ratio (novel)",
             "description": "The Insertion / Deletion ratio of the passing bi-allelic SNP calls made at non-SNP-database sites.",
             "min": 0,
             "scale": "Greens",
             "shared_key": "indel_ratio",
             "hidden": True,
-        }
-
-        parent_module.general_stats_headers["total_called_variants_known"] = {
+        },
+        "total_called_variants_known": {
             "title": "Called Variants (known)",
             "description": "Total counts of variants in SNP-database sites.",
             "shared_key": "variant_count",
             "min": 0,
             "format": "{0:,.0f}",
             "hidden": True,
-        }
-
-        parent_module.general_stats_headers["total_called_variants_novel"] = {
+        },
+        "total_called_variants_novel": {
             "title": "Called Variants (novel)",
             "description": "Total counts of variants in non-SNP-database sites.",
             "shared_key": "variant_count",
             "min": 0,
             "format": "{0:,.0f}",
             "hidden": True,
-        }
+        },
+    }
+    module.general_stats_addcols(data_by_sample, headers, namespace="VariantCallingMetrics")
 
-        for s_name in data:
-            if s_name not in parent_module.general_stats_data:
-                parent_module.general_stats_data[s_name] = dict()
-            parent_module.general_stats_data[s_name].update(data[s_name])
+    # Variant Counts Bargraph
+    module.add_section(
+        name="Variant Types",
+        anchor="picard-variants-types",
+        description="Variants that have been called, looking at variant types. Optionally filtered on label.",
+        helptext="""
+        Only passing variants are shown (i.e. non-filtered).\n
+        SNPs are bi-allelic.\n
+        Complex InDels are both an insertion and a deletion.
+        """,
+        plot=compare_variant_type_plot(data_by_sample),
+    )
 
-        # Variant Counts Bargraph
-        parent_module.add_section(
-            name="Variant Types",
-            anchor="picard-variants-types",
-            description="Variants that have been called, looking at variant types. Optionally filtered on label.",
-            helptext="""
-            Only passing variants are shown (i.e. non-filtered).\n
-            SNPs are bi-allelic.\n
-            Complex InDels are both an insertion and a deletion.
-            """,
-            plot=compare_variant_type_plot(data),
-        )
+    # Variant Counts Table
+    module.add_section(
+        name="Variant Labels",
+        anchor="picard-variants-labels",
+        description="Variants that have been called, comparing with known variant sites.",
+        helptext="""
+        Only passing variants are shown (i.e. non-filtered).\n
+        Variants contain bi-allelic SNPs, multi-allelic SNPs, simple and complex inserts and deletions.
+        """,
+        plot=compare_variants_label_plot(data_by_sample),
+    )
 
-        # Variant Counts Table
-        parent_module.add_section(
-            name="Variant Labels",
-            anchor="picard-variants-labels",
-            description="Variants that have been called, comparing with known variant sites.",
-            helptext="""
-            Only passing variants are shown (i.e. non-filtered).\n
-            Variants contain bi-allelic SNPs, multi-allelic SNPs, simple and complex inserts and deletions.
-            """,
-            plot=compare_variants_label_plot(data),
-        )
-
-    return len(data)
+    return len(data_by_sample)
 
 
-def collect_data(parent_module):
+def collect_data(module):
     """Find Picard VariantCallingMetrics reports and parse their data"""
 
     data = dict()
-    for file_meta in parent_module.find_log_files("picard/variant_calling_metrics", filehandles=True):
+    for f in module.find_log_files("picard/variant_calling_metrics", filehandles=True):
         s_name = None
-        for header, value in table_in(file_meta["f"], pre_header_string="## METRICS CLASS"):
+        for header, value in table_in(f["f"], pre_header_string="## METRICS CLASS"):
             if header == "SAMPLE_ALIAS":
                 s_name = value
                 if s_name in data:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(file_meta["fn"], s_name))
-                data[s_name] = OrderedDict()
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                data[s_name] = dict()
             else:
                 data[s_name][header] = value
     return data
@@ -182,7 +176,7 @@ def stripped(iterator):
 
 def compare_variant_type_plot(data):
     """Return HTML for the Variant Counts barplot"""
-    keys = OrderedDict()
+    keys = dict()
     keys["snps"] = {"name": "SNPs", "color": "#7cb5ec"}
     keys["indels"] = {"name": "InDels", "color": "#90ed7d"}
     keys["multiallelic_snps"] = {"name": "multi-allelic SNP", "color": "orange"}
@@ -227,8 +221,7 @@ def compare_variant_type_plot(data):
 
 def compare_variants_label_plot(data):
     """Return HTML for the Compare variants plot"""
-    keys = OrderedDict()
-
+    keys = dict()
     keys["total_called_variants_known"] = {"name": "Known Variants"}
     keys["total_called_variants_novel"] = {"name": "Novel Variants"}
 

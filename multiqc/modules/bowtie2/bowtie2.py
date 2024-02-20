@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -37,17 +36,17 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("bowtie2", filehandles=True):
             self.parse_bowtie2_logs(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.bowtie2_data = self.ignore_samples(self.bowtie2_data)
 
         if len(self.bowtie2_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.bowtie2_data)))
+        log.info(f"Found {len(self.bowtie2_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.bowtie2_data, "multiqc_bowtie2")
@@ -133,50 +132,50 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         parsed_data = {}
 
-        for l in f["f"]:
+        for line in f["f"]:
             # Attempt in vain to find original bowtie2 command, logged by another program
-            btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", l)
+            btcmd = re.search(r"bowtie2 .+ -[1U] ([^\s,]+)", line)
             if btcmd:
                 s_name = self.clean_s_name(btcmd.group(1), f)
-                log.debug("Found a bowtie2 command, updating sample name to '{}'".format(s_name))
+                log.debug(f"Found a bowtie2 command, updating sample name to '{s_name}'")
 
             # Total reads
-            total = re.search(r"(\d+) reads; of these:", l)
+            total = re.search(r"(\d+) reads; of these:", line)
             if total:
                 parsed_data["total_reads"] = int(total.group(1))
 
             # Single end reads
-            unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", l)
+            unpaired = re.search(r"(\d+) \([\d\.]+%\) were unpaired; of these:", line)
             if unpaired:
                 parsed_data["unpaired_total"] = int(unpaired.group(1))
                 self.num_se += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f["f"].readline()
-                while l.startswith("    "):
+                line = f["f"].readline()
+                while line.startswith("    "):
                     for k, r in regexes["unpaired"].items():
-                        match = re.search(r, l)
+                        match = re.search(r, line)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f["f"].readline()
+                    line = f["f"].readline()
 
             # Paired end reads
-            paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", l)
+            paired = re.search(r"(\d+) \([\d\.]+%\) were paired; of these:", line)
             if paired:
                 parsed_data["paired_total"] = int(paired.group(1))
                 self.num_pe += 1
 
                 # Do nested loop whilst we have this level of indentation
-                l = f["f"].readline()
-                while l.startswith("    "):
+                line = f["f"].readline()
+                while line.startswith("    "):
                     for k, r in regexes["paired"].items():
-                        match = re.search(r, l)
+                        match = re.search(r, line)
                         if match:
                             parsed_data[k] = int(match.group(1))
-                    l = f["f"].readline()
+                    line = f["f"].readline()
 
             # Overall alignment rate
-            overall = re.search(r"([\d\.]+)% overall alignment rate", l)
+            overall = re.search(r"([\d\.]+)% overall alignment rate", line)
             if overall:
                 parsed_data["overall_alignment_rate"] = float(overall.group(1))
 
@@ -184,17 +183,17 @@ class MultiqcModule(BaseMultiqcModule):
                 # Save half 'pairs' of mate counts
                 for k in ["paired_aligned_mate_multi", "paired_aligned_mate_none", "paired_aligned_mate_one"]:
                     if k in parsed_data:
-                        parsed_data["{}_halved".format(k)] = float(parsed_data[k]) / 2.0
+                        parsed_data[f"{k}_halved"] = float(parsed_data[k]) / 2.0
 
                 # HiSAT2 has PE data doesn't have the mate-specific stats.
                 # To avoid missing unaligned counts in the barplot, fake the "_halved" key.
-                # See https://github.com/ewels/MultiQC/issues/1230
+                # See https://github.com/MultiQC/MultiQC/issues/1230
                 if "paired_aligned_mate_none_halved" not in parsed_data and "paired_aligned_none" in parsed_data:
                     parsed_data["paired_aligned_mate_none_halved"] = parsed_data["paired_aligned_none"]
 
                 # Save parsed data
                 if s_name in self.bowtie2_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.bowtie2_data[s_name] = parsed_data
                 # Reset in case we find more in this log file
@@ -205,14 +204,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Bowtie 2 report and add it to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["overall_alignment_rate"] = {
-            "title": "% Aligned",
-            "description": "overall alignment rate",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
+        headers = {
+            "overall_alignment_rate": {
+                "title": "% Aligned",
+                "description": "overall alignment rate",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            }
         }
         self.general_stats_addcols(self.bowtie2_data, headers)
 
@@ -236,10 +236,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Two plots, don't mix SE with PE
         if self.num_se > 0:
-            sekeys = OrderedDict()
-            sekeys["unpaired_aligned_one"] = {"color": "#20568f", "name": "SE mapped uniquely"}
-            sekeys["unpaired_aligned_multi"] = {"color": "#f7a35c", "name": "SE multimapped"}
-            sekeys["unpaired_aligned_none"] = {"color": "#981919", "name": "SE not aligned"}
+            sekeys = {
+                "unpaired_aligned_one": {"color": "#20568f", "name": "SE mapped uniquely"},
+                "unpaired_aligned_multi": {"color": "#f7a35c", "name": "SE multimapped"},
+                "unpaired_aligned_none": {"color": "#981919", "name": "SE not aligned"},
+            }
             config["id"] = "bowtie2_se_plot"
             config["title"] = "Bowtie 2: SE Alignment Scores"
             self.add_section(
@@ -257,14 +258,15 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         if self.num_pe > 0:
-            pekeys = OrderedDict()
-            pekeys["paired_aligned_one"] = {"color": "#20568f", "name": "PE mapped uniquely"}
-            pekeys["paired_aligned_discord_one"] = {"color": "#5c94ca", "name": "PE mapped discordantly uniquely"}
-            pekeys["paired_aligned_mate_one_halved"] = {"color": "#95ceff", "name": "PE one mate mapped uniquely"}
-            pekeys["paired_aligned_multi"] = {"color": "#f7a35c", "name": "PE multimapped"}
-            pekeys["paired_aligned_discord_multi"] = {"color": "#dce333", "name": "PE discordantly multimapped"}
-            pekeys["paired_aligned_mate_multi_halved"] = {"color": "#ffeb75", "name": "PE one mate multimapped"}
-            pekeys["paired_aligned_mate_none_halved"] = {"color": "#981919", "name": "PE neither mate aligned"}
+            pekeys = {
+                "paired_aligned_one": {"color": "#20568f", "name": "PE mapped uniquely"},
+                "paired_aligned_discord_one": {"color": "#5c94ca", "name": "PE mapped discordantly uniquely"},
+                "paired_aligned_mate_one_halved": {"color": "#95ceff", "name": "PE one mate mapped uniquely"},
+                "paired_aligned_multi": {"color": "#f7a35c", "name": "PE multimapped"},
+                "paired_aligned_discord_multi": {"color": "#dce333", "name": "PE discordantly multimapped"},
+                "paired_aligned_mate_multi_halved": {"color": "#ffeb75", "name": "PE one mate multimapped"},
+                "paired_aligned_mate_none_halved": {"color": "#981919", "name": "PE neither mate aligned"},
+            }
             config["id"] = "bowtie2_pe_plot"
             config["title"] = "Bowtie 2: PE Alignment Scores"
             self.add_section(

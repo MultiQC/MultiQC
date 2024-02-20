@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -48,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.busco_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.busco_data)))
+        log.info(f"Found {len(self.busco_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.busco_data, "multiqc_busco")
@@ -57,25 +56,25 @@ class MultiqcModule(BaseMultiqcModule):
         lineages = set([self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data.keys()])
         for lin in lineages:
             self.add_section(
-                name="Lineage Assessment" if lin is None else "Lineage: {}".format(lin),
-                anchor="busco-lineage-{}".format(re.sub("\W+", "_", str(lin))),
+                name="Lineage Assessment" if lin is None else f"Lineage: {lin}",
+                anchor="busco-lineage-" + re.sub(r"\W+", "_", str(lin)),
                 plot=self.busco_plot(lin),
             )
 
     def parse_busco_log(self, f):
         parsed_data = {}
-        for l in f["f"].splitlines():
-            if l.startswith("# BUSCO version is"):
-                version_match = re.search(VERSION_REGEX, l)
+        for line in f["f"].splitlines():
+            if line.startswith("# BUSCO version is"):
+                version_match = re.search(VERSION_REGEX, line)
                 if version_match:
                     self.add_software_version(version_match.group(1), f["s_name"])
 
             for key, string in self.busco_keys.items():
-                if string in l:
-                    s = l.strip().split("\t")
+                if string in line:
+                    s = line.strip().split("\t")
                     parsed_data[key] = float(s[0])
-            if "The lineage dataset is:" in l:
-                s = l.replace("# The lineage dataset is: ", "").split(" (Creation date:", 1)
+            if "The lineage dataset is:" in line:
+                s = line.replace("# The lineage dataset is: ", "").split(" (Creation date:", 1)
                 parsed_data["lineage_dataset"] = str(s[0])
 
         if len(parsed_data) > 0:
@@ -92,14 +91,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
         plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
-        keys = OrderedDict()
+        keys = dict()
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}
 
         # Config for the plot
         config = {
-            "id": "busco_plot_{}".format(re.sub("\W+", "_", str(lin))),
-            "title": "BUSCO: Assessment Results" if lin is None else "BUSCO Assessment Results: {}".format(lin),
+            "id": "busco_plot_" + re.sub(r"\W+", "_", str(lin)),
+            "title": "BUSCO: Assessment Results" if lin is None else f"BUSCO Assessment Results: {lin}",
             "ylab": "# BUSCOs",
             "cpswitch_counts_label": "Number of BUSCOs",
         }

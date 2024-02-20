@@ -2,7 +2,6 @@
 
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -28,42 +27,44 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("prokka", filehandles=True):
             self.parse_prokka(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
-
         # Filter to strip out ignored sample names
         self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.prokka)))
+        log.info(f"Found {len(self.prokka)} logs")
+
         self.write_data_file(self.prokka, "multiqc_prokka")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Add most important Prokka annotation stats to the general table
-        headers = OrderedDict()
-        headers["organism"] = {
-            "title": "Organism",
-            "description": "Organism",
-        }
-        headers["contigs"] = {
-            "title": "Contigs",
-            "description": "Number of contigs",
-            "min": 0,
-        }
-        headers["bases"] = {
-            "title": "Bases",
-            "description": "Number of bases",
-            "min": 0,
-            "format": "{:i}%",
-            "hidden": True,
-        }
-        headers["CDS"] = {
-            "title": "CDS",
-            "description": "Number of CDS",
-            "min": 0,
-            "format": "{:i}%",
+        headers = {
+            "organism": {
+                "title": "Organism",
+                "description": "Organism",
+            },
+            "contigs": {
+                "title": "Contigs",
+                "description": "Number of contigs",
+                "min": 0,
+            },
+            "bases": {
+                "title": "Bases",
+                "description": "Number of bases",
+                "min": 0,
+                "format": "{:i}%",
+                "hidden": True,
+            },
+            "CDS": {
+                "title": "CDS",
+                "description": "Number of CDS",
+                "min": 0,
+                "format": "{:i}%",
+            },
         }
         self.general_stats_addcols(self.prokka, headers)
 
@@ -125,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
 
         if s_name in self.prokka:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.prokka[s_name] = dict()
         self.prokka[s_name]["organism"] = organism
         self.prokka[s_name]["contigs"] = int(contigs_line.split(":")[1])
@@ -145,55 +146,56 @@ class MultiqcModule(BaseMultiqcModule):
         """Make basic table of the annotation stats"""
 
         # Specify the order of the different possible categories
-        headers = OrderedDict()
-        headers["organism"] = {
-            "title": "Organism",
-            "description": "Organism name",
-        }
-        headers["contigs"] = {
-            "title": "# contigs",
-            "description": "Number of contigs in assembly",
-            "format": "{:i}",
-        }
-        headers["bases"] = {
-            "title": "# bases",
-            "description": "Number of nucleotide bases in assembly",
-            "format": "{:i}",
-        }
-        headers["CDS"] = {
-            "title": "# CDS",
-            "description": "Number of annotated CDS",
-            "format": "{:i}",
-        }
-        headers["rRNA"] = {
-            "title": "# rRNA",
-            "description": "Number of annotated rRNA",
-            "format": "{:i}",
-        }
-        headers["tRNA"] = {
-            "title": "# tRNA",
-            "description": "Number of annotated tRNA",
-            "format": "{:i}",
-        }
-        headers["tmRNA"] = {
-            "title": "# tmRNA",
-            "description": "Number of annotated tmRNA",
-            "format": "{:i}",
-        }
-        headers["misc_RNA"] = {
-            "title": "# misc RNA",
-            "description": "Number of annotated misc. RNA",
-            "format": "{:i}",
-        }
-        headers["sig_peptide"] = {
-            "title": "# sig_peptide",
-            "description": "Number of annotated sig_peptide",
-            "format": "{:i}",
-        }
-        headers["repeat_region"] = {
-            "title": "# CRISPR arrays",
-            "description": "Number of annotated CRSIPR arrays",
-            "format": "{:i}",
+        headers = {
+            "organism": {
+                "title": "Organism",
+                "description": "Organism name",
+            },
+            "contigs": {
+                "title": "# contigs",
+                "description": "Number of contigs in assembly",
+                "format": "{:i}",
+            },
+            "bases": {
+                "title": "# bases",
+                "description": "Number of nucleotide bases in assembly",
+                "format": "{:i}",
+            },
+            "CDS": {
+                "title": "# CDS",
+                "description": "Number of annotated CDS",
+                "format": "{:i}",
+            },
+            "rRNA": {
+                "title": "# rRNA",
+                "description": "Number of annotated rRNA",
+                "format": "{:i}",
+            },
+            "tRNA": {
+                "title": "# tRNA",
+                "description": "Number of annotated tRNA",
+                "format": "{:i}",
+            },
+            "tmRNA": {
+                "title": "# tmRNA",
+                "description": "Number of annotated tmRNA",
+                "format": "{:i}",
+            },
+            "misc_RNA": {
+                "title": "# misc RNA",
+                "description": "Number of annotated misc. RNA",
+                "format": "{:i}",
+            },
+            "sig_peptide": {
+                "title": "# sig_peptide",
+                "description": "Number of annotated sig_peptide",
+                "format": "{:i}",
+            },
+            "repeat_region": {
+                "title": "# CRISPR arrays",
+                "description": "Number of annotated CRSIPR arrays",
+                "format": "{:i}",
+            },
         }
         table_config = {
             "namespace": "prokka",
@@ -206,14 +208,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Make a basic plot of the annotation stats"""
 
         # Specify the order of the different categories
-        keys = OrderedDict()
-        keys["CDS"] = {"name": "CDS"}
-        keys["rRNA"] = {"name": "rRNA"}
-        keys["tRNA"] = {"name": "tRNA"}
-        keys["tmRNA"] = {"name": "tmRNA"}
-        keys["misc_RNA"] = {"name": "misc RNA"}
-        keys["sig_peptide"] = {"name": "Signal peptides"}
-        keys["repeat_region"] = {"name": "CRISPR array"}
+        keys = {
+            "CDS": {"name": "CDS"},
+            "rRNA": {"name": "rRNA"},
+            "tRNA": {"name": "tRNA"},
+            "tmRNA": {"name": "tmRNA"},
+            "misc_RNA": {"name": "misc RNA"},
+            "sig_peptide": {"name": "Signal peptides"},
+            "repeat_region": {"name": "CRISPR array"},
+        }
 
         plot_config = {
             "id": "prokka_plot",

@@ -4,7 +4,6 @@ https://cs.wellesley.edu/~btjaden/Rockhopper/ """
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.rh_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.rh_data)))
+        log.info(f"Found {len(self.rh_data)} reports")
 
         # Write to file
         self.write_data_file(self.rh_data, "multiqc_rockhopper")
@@ -68,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         results["unaligned"] = results["total-reads"] - total_mapped_reads
 
         if s_name in self.rh_data:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.add_data_source(f, s_name)
         self.rh_data[s_name] = results
 
@@ -144,16 +143,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers["mRNA-sense"] = {
-            "title": "CDS Reads ({})".format(config.read_count_prefix),
-            "description": "Reads aligned to coding regions ({})".format(config.read_count_desc),
+            "title": f"CDS Reads ({config.read_count_prefix})",
+            "description": f"Reads aligned to coding regions ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
         }
         headers["mRNA-antisense"] = {
-            "title": "CDS Reads (a/s, {})".format(config.read_count_prefix),
-            "description": "Antisense reads aligned to coding regions ({})".format(config.read_count_desc),
+            "title": f"CDS Reads (a/s, {config.read_count_prefix})",
+            "description": f"Antisense reads aligned to coding regions ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -161,16 +160,16 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         headers["rRNA-sense"] = {
-            "title": "rRNA Reads ({})".format(config.read_count_prefix),
-            "description": "Reads aligned to rRNA ({})".format(config.read_count_desc),
+            "title": f"rRNA Reads ({config.read_count_prefix})",
+            "description": f"Reads aligned to rRNA ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
         }
         headers["rRNA-antisense"] = {
-            "title": "rRNA Reads (a/s, {})".format(config.read_count_prefix),
-            "description": "Antisense reads aligned to rRNA ({})".format(config.read_count_desc),
+            "title": f"rRNA Reads (a/s, {config.read_count_prefix})",
+            "description": f"Antisense reads aligned to rRNA ({config.read_count_desc})",
             "min": 0,
             "scale": "Blues",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -190,17 +189,18 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Plot bar graph of groups
-        keys = OrderedDict()
-        keys["mRNA-sense"] = {"name": "mRNA (Sense)"}
-        keys["mRNA-antisense"] = {"name": "mRNA (Antisense)"}
-        keys["rRNA-sense"] = {"name": "rRNA (Sense)"}
-        keys["rRNA-antisense"] = {"name": "rRNA (Antisense)"}
-        keys["tRNA-sense"] = {"name": "tRNA (Sense)"}
-        keys["tRNA-antisense"] = {"name": "tRNA (Antisense)"}
-        keys["ncRNA-sense"] = {"name": "ncRNA (Sense)"}
-        keys["ncRNA-antisense"] = {"name": "ncRNA (Antisense)"}
-        keys["unannotated"] = {"name": "Unannotated"}
-        keys["unaligned"] = {"name": "Unaligned"}
+        keys = {
+            "mRNA-sense": {"name": "mRNA (Sense)"},
+            "mRNA-antisense": {"name": "mRNA (Antisense)"},
+            "rRNA-sense": {"name": "rRNA (Sense)"},
+            "rRNA-antisense": {"name": "rRNA (Antisense)"},
+            "tRNA-sense": {"name": "tRNA (Sense)"},
+            "tRNA-antisense": {"name": "tRNA (Antisense)"},
+            "ncRNA-sense": {"name": "ncRNA (Sense)"},
+            "ncRNA-antisense": {"name": "ncRNA (Antisense)"},
+            "unannotated": {"name": "Unannotated"},
+            "unaligned": {"name": "Unaligned"},
+        }
 
         self.add_section(
             name="Rockhopper",

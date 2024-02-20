@@ -3,7 +3,6 @@
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -35,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.macs_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.macs_data)))
+        log.info(f"Found {len(self.macs_data)} logs")
         self.write_data_file(self.macs_data, "multiqc_macs")
 
         self.macs_general_stats()
@@ -76,36 +75,37 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) > 0:
             if s_name in self.macs_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.macs_data[s_name] = parsed_data
             if version is not None:
                 self.add_software_version(version, s_name)
 
     def macs_general_stats(self):
         """Add columns to General Statistics table"""
-        headers = OrderedDict()
-        headers["d"] = {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"}
-        headers["treatment_redundant_rate"] = {
-            "title": "Treatment Redundancy",
-            "description": "Redundant rate in treatment",
-            "max": 1,
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "RdYlBu-rev",
-        }
-        headers["control_redundant_rate"] = {
-            "title": "Control Redundancy",
-            "description": "Redundant rate in control",
-            "max": 1,
-            "min": 0,
-            "format": "{:,.2f}",
-            "scale": "RdYlBu-rev",
-        }
-        headers["peak_count"] = {
-            "title": "Number of Peaks",
-            "description": "Total number of peaks",
-            "min": 0,
-            "format": "{:,.0f}",
+        headers = {
+            "d": {"title": "Fragment Length", "min": 0, "format": "{:,.0f}"},
+            "treatment_redundant_rate": {
+                "title": "Treatment Redundancy",
+                "description": "Redundant rate in treatment",
+                "max": 1,
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "RdYlBu-rev",
+            },
+            "control_redundant_rate": {
+                "title": "Control Redundancy",
+                "description": "Redundant rate in control",
+                "max": 1,
+                "min": 0,
+                "format": "{:,.2f}",
+                "scale": "RdYlBu-rev",
+            },
+            "peak_count": {
+                "title": "Number of Peaks",
+                "description": "Total number of peaks",
+                "min": 0,
+                "format": "{:,.0f}",
+            },
         }
         self.general_stats_addcols(self.macs_data, headers)
 
@@ -120,27 +120,26 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         for s_name, d in self.macs_data.items():
             if all([c in d for c in req_cats]):
-                data["{}: Control".format(s_name)] = dict()
-                data["{}: Treatment".format(s_name)] = dict()
-                data["{}: Control".format(s_name)]["fragments_filtered"] = (
+                data[f"{s_name}: Control"] = dict()
+                data[f"{s_name}: Treatment"] = dict()
+                data[f"{s_name}: Control"]["fragments_filtered"] = (
                     d["control_fragments_total"] - d["control_fragments_after_filtering"]
                 )
-                data["{}: Control".format(s_name)]["fragments_not_filtered"] = d["control_fragments_after_filtering"]
-                data["{}: Treatment".format(s_name)]["fragments_filtered"] = (
+                data[f"{s_name}: Control"]["fragments_not_filtered"] = d["control_fragments_after_filtering"]
+                data[f"{s_name}: Treatment"]["fragments_filtered"] = (
                     d["treatment_fragments_total"] - d["treatment_fragments_after_filtering"]
                 )
-                data["{}: Treatment".format(s_name)]["fragments_not_filtered"] = d[
-                    "treatment_fragments_after_filtering"
-                ]
+                data[f"{s_name}: Treatment"]["fragments_not_filtered"] = d["treatment_fragments_after_filtering"]
 
         # Check that we have something to plot
         if len(data) == 0:
             return
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["fragments_not_filtered"] = {"color": "#437BB1", "name": "Remaining fragments"}
-        keys["fragments_filtered"] = {"color": "#B1084C", "name": "Filtered fragments"}
+        keys = {
+            "fragments_not_filtered": {"color": "#437BB1", "name": "Remaining fragments"},
+            "fragments_filtered": {"color": "#B1084C", "name": "Filtered fragments"},
+        }
 
         # Config for the plot
         pconfig = {
