@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if cnt_by_cluster_id_by_sample:
             self._add_general_stats_cluster(cnt_by_cluster_id_by_sample)
-            self._add_cluster_size_bargraph(cnt_by_cluster_id_by_sample)
+            self._add_cluster_size_plot(cnt_by_cluster_id_by_sample)
 
     def _parse_refine(self):
         refine_json_data_by_sample = dict()
@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(gstats_data, headers)
 
-    def _add_cluster_size_bargraph(self, cnt_by_cluster_id_by_sample):
+    def _add_cluster_size_plot(self, cnt_by_cluster_id_by_sample):
         plot_data = dict()
 
         for s_name, size_by_cluster_id in cnt_by_cluster_id_by_sample.items():
@@ -149,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Cluster size distribution",
-            anchor="cluster-distribution",
+            anchor="isoseq-cluster-size-distribution",
             description="A distribution of cluster size (number of CC clustered to form one Hifi read).",
             helptext="""
             The csv file produced by Iso-Seq cluster shows which CCS have been clustered together to form 
@@ -160,9 +160,8 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data,
                 cats,
                 {
-                    "id": "isoseq_cluster_cluster_size_histogram",  # HTML ID used for plot
-                    "title": "Iso-Seq cluster: Histogram of cluster size.",  # Plot title - should be in format "Module Name: Plot Title"
-                    "xlab": "Cluster size",  # X axis label
+                    "id": "isoseq-cluster-size-distribution-barplot",
+                    "title": "Iso-Seq cluster: Histogram of cluster size.",
                     "ylab": "Count",  # Y axis label
                 },
             ),
