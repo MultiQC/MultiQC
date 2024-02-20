@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
+        log = logging.getLogger(__name__)
+
         # Parse data
         self.runSummary = {}
         self.indexSummary = {}
