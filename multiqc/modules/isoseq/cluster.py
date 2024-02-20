@@ -17,7 +17,7 @@ class ClusterMixin:
 
         for f in self.find_log_files("isoseq/cluster-csv", filehandles=True):
             d = defaultdict(int)
-            reader = csv.DictReader(f["f"])
+            reader: csv.DictReader = csv.DictReader(f["f"])
             for row in reader:
                 cluster_id = row.get("cluster_id", None)
                 if cluster_id is not None:

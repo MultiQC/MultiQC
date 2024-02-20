@@ -33,7 +33,7 @@ class RefineMixin:
             primer_counts = defaultdict(int)
 
             # Read the CSV file
-            reader = csv.DictReader(f["f"])
+            reader: csv.DictReader = csv.DictReader(f["f"])
             for row in reader:
                 # Process columns of interest
                 for column in ["fivelen", "threelen", "polyAlen", "insertlen"]:
@@ -67,9 +67,9 @@ class RefineMixin:
 
         if config.use_filename_as_sample_name:
             logger.error(
-                f"Iso-Seq refine won't work properly with --fn_as_s_name / config.use_filename_as_sample_name, "
-                f"as it uses the file name cleaning patterns to get the sample names "
-                f"from the file names, and it needs to match JSON and CSV files"
+                "Iso-Seq refine won't work properly with --fn_as_s_name / config.use_filename_as_sample_name, "
+                "as it uses the file name cleaning patterns to get the sample names "
+                "from the file names, and it needs to match JSON and CSV files"
             )
         elif json_data.keys() != csv_data.keys():
             logger.error(
