@@ -68,7 +68,7 @@ class RmdupReportMixin:
         # General Stats Table
         stats_headers = {
             "pct_dups": {
-                "title": "% Dups",
+                "title": "Dups",
                 "description": "Percent of duplicate alignments",
                 "min": 0,
                 "max": 100,
@@ -76,6 +76,6 @@ class RmdupReportMixin:
                 "scale": "OrRd",
             }
         }
-        self.general_stats_addcols(self.samtools_rmdup, stats_headers)
+        self.general_stats_addcols(self.samtools_rmdup, stats_headers, namespace="rmdup")
 
         return len(self.samtools_rmdup)

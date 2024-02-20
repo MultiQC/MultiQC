@@ -780,6 +780,9 @@ samtools/idxstats:
   fn: "*idxstat*"
 samtools/rmdup:
   contents: "[bam_rmdup"
+samtools/coverage:
+  contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
+  num_lines: 10
 sargasso:
   fn: "overall_filtering_summary.txt"
 seqwho:
