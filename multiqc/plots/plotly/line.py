@@ -159,8 +159,8 @@ class LinePlot(Plot):
         x_lines = pconfig.get("xPlotLines")
         y_lines = pconfig.get("yPlotLines")
         if y_min_range or y_bands or y_lines:
-            # We don't want the bands to affect the calculated y-axis range, so we
-            # manually calculate the y-axis min and max values and set the autorangeoptions
+            # We don't want the bands to affect the calculated axis range, so we
+            # find the min and the max from data points, and manually set the range
             for dataset in self.datasets:
                 ymin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
                 if ymin is None:
@@ -182,6 +182,7 @@ class LinePlot(Plot):
                 dataset.layout["yaxis"]["range"] = [ymin, ymax]
 
         if x_bands or x_lines:
+            # same as above but for x-axis
             for dataset in self.datasets:
                 xmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 if xmin is None:
