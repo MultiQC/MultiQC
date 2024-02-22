@@ -20,7 +20,6 @@
 
 ### Module updates
 
-- **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 - **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
@@ -28,6 +27,8 @@
 - **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **PURPLE**: support v4.0.1 output without version column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
+- **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 - **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
