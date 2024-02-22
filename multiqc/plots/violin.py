@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC functions to plot a beeswarm group """
+""" MultiQC functions to plot a violin group """
 
 import logging
 from typing import List, Dict, Optional, Union
@@ -27,7 +27,7 @@ def get_template_mod():
 
 
 def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
-    """Helper HTML for a beeswarm plot.
+    """Helper HTML for a violin plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
