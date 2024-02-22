@@ -205,16 +205,6 @@ html = bargraph.plot([data, data], cats, pconfig=...)
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
-### Interactive / Flat image plots
-
-Note that the `bargraph.plot()` function can generate both interactive
-JavaScript (HighCharts) powered report plots _and_ flat image plots made using
-MatPlotLib. This choice is made within the function based on config variables
-such as number of data series and command line flags.
-
-Note that both plot types should come out looking pretty much identical. If
-you spot something that's missing in the flat image plots, let me know.
-
 ## Line graphs
 
 This base function works much like the above, but for two-dimensional
@@ -267,10 +257,10 @@ pconfig = {
     "ymax": None,                # Max y limit
     "ymin": None,                # Min y limit
     "yLog": False,               # Use log10 y axis?
-    "yPlotBands": None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#yAxis.plotBands
-    "xPlotBands": None,          # Highlighted background bands. See http://api.highcharts.com/highcharts#xAxis.plotBands
-    "yPlotLines": None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#yAxis.plotLines
-    "xPlotLines": None,          # Highlighted background lines. See http://api.highcharts.com/highcharts#xAxis.plotLines
+    "yPlotBands": None,          # Highlighted background bands
+    "xPlotBands": None,          # Highlighted background bands
+    "yPlotLines": None,          # Highlighted background lines
+    "xPlotLines": None,          # Highlighted background lines
     "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
@@ -799,3 +789,12 @@ pconfig = {
     ]
 }
 ```
+
+## Interactive / Flat image plots
+
+Note that the all plotting functions except for `table` can generate both interactive
+JavaScript-powered report plots _and_ flat image plots. This choice is made
+depending on the presence of the `--flat` (`config.plots_flat`) flag.
+
+Note that both plot types should come out looking pretty much identical. If
+you spot something that's missing in the flat image plots, let me know.
