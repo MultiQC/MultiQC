@@ -25,7 +25,10 @@ dependencies = [
     "spectra>=0.0.10",
 ]
 requires-python = ">=3.8"
-authors = [{name = "Phil Ewels", email = "phil.ewels@seqera.io"}]
+authors = [
+    {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
+    {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
+]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
 license = {file = "LICENSE"}
