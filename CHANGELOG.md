@@ -14,6 +14,8 @@
 - Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
 - Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 - Replace `setup.py` with `pyproject.toml` ([#2353](https://github.com/MultiQC/MultiQC/pull/2353))
+- Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
+- Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 
 ### New modules
 
@@ -22,8 +24,14 @@
 - **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
-- **fastp**: Improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
-- **mosdepth**: Fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **DRAGEN**: support `gvcf_metrics` ([#2327](https://github.com/MultiQC/MultiQC/pull/2327))
+- **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **HTSeq Count**: robust file reading loop, ignore `.parquet` files ([#2364](https://github.com/MultiQC/MultiQC/pull/2364))
+- **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
+- **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
+- **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
+- **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
@@ -98,7 +106,6 @@ The v1.20 release is also the first release we've had since we moved the MultiQC
 - **BCL Convert**: add index, project names to sample statistics and calculate mean quality for lane statistics. ([#2261](https://github.com/MultiQC/MultiQC/pull/2261))
 - **BCL Convert**: fix duplicated `yield` for 3.9.3+ when the yield is provided explicitly in Quality_Metrics ([#2253](https://github.com/MultiQC/MultiQC/pull/2253))
 - **BCL Convert**: handle samples with zero yield ([#2297](https://github.com/MultiQC/MultiQC/pull/2297))
-- **Bismark**: fix old link in Bismark docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - **Bismark**: fix old link in docs ([#2252](https://github.com/MultiQC/MultiQC/pull/2252))
 - **Cutadapt**: support JSON format ([#2281](https://github.com/MultiQC/MultiQC/pull/2281))
 - **HiFiasm**: account for lines with no asterisk ([#2268](https://github.com/MultiQC/MultiQC/pull/2268))

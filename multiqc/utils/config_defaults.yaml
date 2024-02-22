@@ -282,6 +282,7 @@ fn_clean_exts:
   - ".wgs_coverage_metrics"
   - ".wgs_hist"
   - ".vc_metrics"
+  - ".gvcf_metrics"
   - ".ploidy_estimation_metrics"
   - "_overall_mean_cov"
   - ".fragment_length_hist"
@@ -349,6 +350,7 @@ fn_ignore_files:
   - "*.txt.gz"
   - "*.pdf"
   - "*.md5"
+  - "*.parquet"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
   - multiqc_data.json
 

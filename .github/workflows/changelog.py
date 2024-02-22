@@ -274,7 +274,9 @@ else:
         ]
     elif section == "### Module updates":
         assert mod is not None
-        descr = pr_title.split(":", maxsplit=1)[1].strip()
+        descr = pr_title
+        if ":" in descr:
+            descr = descr.split(":", maxsplit=1)[1].strip()
         new_lines = [
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
