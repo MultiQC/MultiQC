@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
                 linedata = {}
                 # Check if "surface" is total (-) else skip
                 if data[1] == "-":
-                    metrics["details"][f"{read} - Lane {data[0]}"] = {}
+                    metrics["details"][f"Lane {data[0]} - {read}"] = {}
                 else:
                     continue
                 for idx in range(2, len(data)):
@@ -401,7 +401,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "interop-runmetrics-detail-table",
             "table_title": "Sequencing Lane Statistics",
             "col1_header": "Run - Lane - Read",
-            "scale": False,
         }
 
         tdata = {}

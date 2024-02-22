@@ -89,6 +89,7 @@ class bamPEFragmentSizeTableMixin:
         config = {
             "namespace": "deepTools bamPEFragmentSize",
             "id": "deeptools_readlengths_table",
+            "title": "deepTools: Read length metrics",
         }
         self.add_section(
             name="Read length metrics",
@@ -160,6 +161,7 @@ class bamPEFragmentSizeTableMixin:
             config = {
                 "namespace": "deepTools bamPEFragmentSize",
                 "id": "deeptools_fragmentlengths_table",
+                "title": "deepTools: Fragment length metrics",
             }
             self.add_section(
                 name="Fragment length metrics",

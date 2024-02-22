@@ -16,9 +16,11 @@ anglerfish:
 bakta:
   fn: "*.txt"
   contents: "Bakta:"
+bamdst/coverage:
+  contents: "## The file was created by bamdst"
+  num_lines: 5
 bamtools/stats:
   contents: "Stats for BAM file(s):"
-  shared: true
   num_lines: 10
 bbduk:
   contents: "Executing jgi.BBDuk"
@@ -88,7 +90,6 @@ bbmap/statsfile:
   num_lines: 1
 bcftools/stats:
   contents: "This file was produced by bcftools stats"
-  shared: true
 bcl2fastq:
   fn: "Stats.json"
   contents: "DemuxResults"
@@ -242,9 +243,10 @@ conpair/contamination:
   contents: "Tumor sample contamination level: "
   num_lines: 3
 cutadapt:
-  contents: "This is cutadapt"
-  # contents: 'cutadapt version' # Use this instead if using very old versions of cutadapt (eg. v1.2)
-  shared: true
+  - contents: "This is cutadapt"
+    num_lines: 100
+  - fn: "*.json"
+    contents: "Cutadapt report"
 damageprofiler:
   fn: "*dmgprof.json"
 dedup:
@@ -286,6 +288,8 @@ diamond:
   fn: "diamond.log"
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
+dragen/gvcf_metrics:
+  fn: "*.gvcf_metrics.csv"
 dragen/ploidy_estimation_metrics:
   fn: "*.ploidy_estimation_metrics.csv"
 dragen/wgs_contig_mean_cov:
@@ -323,7 +327,7 @@ eigenstratdatabasetools:
 fastp:
   fn: "*.json"
   contents: '"before_filtering": {'
-  num_lines: 10
+  num_lines: 50
 fastq_screen:
   fn: "*_screen.txt"
 fastqc/data:
@@ -347,19 +351,16 @@ filtlong:
   num_lines: 5
 flash/log:
   contents: "[FLASH]"
-  shared: true
 flash/hist:
   fn: "*flash*.hist"
 flexbar:
   contents: "Flexbar - flexible barcode and adapter removal"
-  shared: true
 freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
-  shared: true
 gatk/base_recalibrator:
   contents: "#:GATKTable:Arguments:Recalibration"
   num_lines: 3
@@ -411,7 +412,6 @@ hifiasm:
   num_lines: 1
 hisat2:
   contents: "HISAT2 summary stats:"
-  shared: true
 homer/findpeaks:
   contents: "# HOMER Peaks"
   num_lines: 3
@@ -429,9 +429,21 @@ homer/FreqDistribution:
   fn: "petag.FreqDistribution_1000.txt"
 hops:
   fn: "heatmap_overview_Wevid.json"
-humid:
+humid/stats:
   fn: "stats.dat"
   contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: "neigh.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: "counts.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: "clusters.dat"
+  contents_re: "[0-9]+ [0-9]+"
   num_lines: 1
 interop/summary:
   contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
@@ -449,7 +461,6 @@ kaiju:
   num_lines: 1
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
-  shared: true
 nanostat:
   max_filesize: 4096
   contents_re: "Metrics\\s+dataset\\s*"
@@ -467,7 +478,7 @@ librarian:
   fn: "librarian_heatmap.txt"
 leehom:
   contents: "Adapter dimers/chimeras"
-  shared: true
+  num_lines: 100
 lima/summary:
   contents: "ZMWs above all thresholds"
   num_lines: 2
@@ -492,7 +503,13 @@ mapdamage:
   - fn: "3p*_freq.txt"
   - fn: "5p*_freq.txt"
   - fn: "lgdistribution.txt"
-methylQA:
+megahit:
+  contents: " - MEGAHIT v"
+  num_lines: 5
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methylqa:
   fn: "*.report"
   shared: true
 minionqc:
@@ -542,6 +559,11 @@ ngsderive/encoding:
 ngsderive/junction_annotation:
   contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
   num_lines: 1
+nonpareil:
+  - fn: "*.json"
+    contents: "LRstar"
+    num_lines: 50
+    max_filesize: 1048576
 optitype:
   contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"
   num_lines: 1
@@ -691,15 +713,14 @@ qualimap/rnaseq/coverage:
   fn: "coverage_profile_along_genes_(total).txt"
 quast:
   fn: "report.tsv"
-  shared: true
+  contents: "Assembly	"
+  num_lines: 2
 rna_seqc/metrics_v1:
   fn: "*metrics.tsv"
   contents: "Sample	Note	"
-  shared: true
 rna_seqc/metrics_v2:
   fn: "*metrics.tsv"
   contents: "High Quality Ambiguous Alignment Rate"
-  shared: true
 rna_seqc/coverage:
   fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
 rna_seqc/correlation:
@@ -751,20 +772,19 @@ sambamba/markdup:
   num_lines: 50
 samblaster:
   contents: "samblaster: Version"
-  shared: true
 samtools/stats:
   contents: "This file was produced by samtools stats"
-  shared: true
 samtools/flagstat:
   contents: "in total (QC-passed reads + QC-failed reads)"
-  shared: true
 samtools/idxstats:
   fn: "*idxstat*"
 samtools/rmdup:
   contents: "[bam_rmdup"
-  shared: true
 sargasso:
   fn: "overall_filtering_summary.txt"
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
 seqyclean:
   fn: "*_SummaryStatistics.tsv"
 sexdeterrmine:
@@ -774,7 +794,6 @@ sickle:
   num_lines: 2
 skewer:
   contents: "maximum error ratio allowed (-r):"
-  shared: true
 slamdunk/summary:
   contents: "# slamdunk summary"
   num_lines: 1
@@ -811,7 +830,6 @@ software_versions:
   fn_re: ".+_mqc_versions\\.(yaml|yml)"
 sortmerna:
   contents: "Minimal SW score based on E-value"
-  shared: true
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
@@ -849,13 +867,15 @@ tophat:
   shared: true
 trimmomatic:
   contents: "Trimmomatic"
-  shared: true
 truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"
   num_lines: 2
-umitools:
-  contents: "# UMI-tools version:"
+umitools/extract:
+  contents: "# output generated by extract"
+  num_lines: 3
+umitools/dedup:
+  contents: "# output generated by dedup"
   num_lines: 3
 varscan2/mpileup2snp:
   contents: "Only SNPs will be reported"

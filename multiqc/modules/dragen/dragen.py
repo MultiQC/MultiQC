@@ -37,19 +37,19 @@ class MultiqcModule(
     DragenScRnaMetrics,
     DragenScAtacMetrics,
 ):
-    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """DRAGEN provides a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
     place it accordingly in the module_order list, in docs, etc.
 
     The QC metrics DRAGEN generates resemble those of samtools-stats, qualimap, mosdepth, bcftools-stats and alike.
-    Whenver possible, the visual output is made similar to those modules.
+    Whenever possible, the visual output is made similar to those modules.
 
     Note that this MultiQC module supports some of DRAGEN output but not all. Contributions are welcome!
 
     The code is structured in a way so every mix-in parses one type of QC file that DRAGEN generates
-    (e.g. *.mapping_metrics.csv, *.wgs_fine_hist_normal.csv, etc). If a corresponding file is found, a mix-in adds
+    (e.g. *.mapping_metrics.csv, *.wgs_fine_hist_normal.csv, etc.). If a corresponding file is found, a mix-in adds
     a section into the report.
     """
 
@@ -116,4 +116,4 @@ class MultiqcModule(
 
         if len(samples_found) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(samples_found)} reports")
+        log.info(f"Found samples: {len(samples_found)}")

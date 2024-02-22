@@ -251,13 +251,6 @@ USER_CONFIGS_ENABLED = True
 
 V2 = " pct"  # Used to create a unique ID if a metric has two values.
 
-""" GTQ is the "greater than or equal to" sign.
-Other types can be found in the "Extra Info" comment above.
-GTQ is used by setting automatic titles for the metric:
-PCT of region with coverage [ix: inf)
-"""
-GTQ = "&ge;"
-
 METRICS = {
     "aligned reads": {
         "order_priority": 0,
@@ -275,6 +268,7 @@ METRICS = {
         "suffix": " %",
         "scale": "Purples",
         "colour": "255, 0, 0",
+        "exclude": False,
     },
     "aligned bases": {
         "order_priority": 0.3,
@@ -300,6 +294,7 @@ METRICS = {
         "scale": "Greens",
         "suffix": " %",
         "bgcols": {"NA": "#00FFFF"},
+        "exclude": False,
     },
     "average chr x coverage over region": {
         "order_priority": 1.0,
@@ -330,6 +325,7 @@ METRICS = {
         "order_priority": 3,
         "exclude": False,
         "hidden_own": False,
+        "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
         "colour": "0, 255, 255",
@@ -360,6 +356,7 @@ METRICS = {
         "title": "Med aut cov",
         "suffix": " x",
         "scale": "Greens",
+        "exclude": False,
     },
     "mean/median autosomal coverage ratio over region": {
         "order_priority": 7.1,
@@ -374,6 +371,7 @@ METRICS = {
     "uniformity of coverage (pct > d.d*mean) over region": {
         "suffix": " %",
         "colour": "55, 255, 55",
+        "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
             "0.2": {
@@ -413,6 +411,7 @@ METRICS = {
         "scale": "Purples",
         "suffix": " %",
         "colour": "255, 50, 25",
+        "exclude": False,
         WGS: {
             # "scale": "Reds",
         },
@@ -422,7 +421,7 @@ METRICS = {
         "extra": {
             # "PCT of region with coverage [0x: inf)" metric.
             ("0x", "inf"): {
-                "title": GTQ + "0x" + 8 * "&nbsp;",
+                "title": "≥0x" + 8 * "&nbsp;",
                 # Simple example of colors with rules.
                 # "cond_formatting_rules": {
                 #    "red_bad": [{"s_contains": ""}], # Each value is red by default.
@@ -549,7 +548,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
                 cov_data[cleaned_sample][phenotype] = out["data"]  # Add/overwrite the sample.
 
-                all_samples[cleaned_sample + "." + phenotype].append(file)
+                all_samples[cleaned_sample].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
 
@@ -564,7 +563,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         cov_headers = make_coverage_headers(all_metrics)
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples, log, "dragen/coverage_metrics")
+        check_duplicate_samples(all_samples, log)
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
@@ -592,7 +591,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 helptext=cov_section["helptext"],
                 plot=cov_section["plot"],
             )
-        return {sample + phenotype for sample in cov_data for phenotype in cov_data[sample]}
+        return cov_data.keys()
 
 
 def make_data_for_txt_reports(coverage_data, metrics):
@@ -779,6 +778,7 @@ def create_table_handlers():
                         m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
+                        del gen_headers[m_id]["colour"]
                         """
                         Some modifications are necessary to improve informativeness
                         of the general table, because several/many familiar tables
@@ -1622,7 +1622,7 @@ def create_coverage_headers_handler():
             JX = entity_match.group(2)
             description = "Percentage of sites in " + region
             if JX == "inf":
-                title = GTQ + IX + "x"
+                title = "≥" + IX + "x"
                 # Add extra html entities to widen the title.
                 if len(IX) < 6:
                     title += "&nbsp;" * (6 - len(IX))

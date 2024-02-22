@@ -37,11 +37,25 @@ workspace_path = Path(os.environ.get("GITHUB_WORKSPACE", ""))
 
 assert pr_title, pr_title
 assert pr_number, pr_number
+assert pr_number.isdigit(), pr_number
 
 # Trim the PR number added when GitHub squashes commits, e.g. "Module: Updated (#2026)"
 pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
+
+if any(
+    line in pr_title.lower()
+    for line in [
+        "skip changelog",
+        "skip change log",
+        "no changelog",
+        "no change log",
+        "bump version",
+    ]
+):
+    print("Skipping changelog update")
+    sys.exit(0)
 
 
 def _run_cmd(cmd):
@@ -154,17 +168,6 @@ def _modules_added_by_pr(pr_number) -> list[str]:
     return added_modules
 
 
-def _load_file_content_after_pr(path) -> str:
-    """
-    Returns the contents of the file changed by the PR.
-    """
-    _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
-    with (workspace_path / path).open() as f:
-        text = f.read()
-    _run_cmd(f"cd {workspace_path} && git checkout main")
-    return text
-
-
 def _modules_modified_by_pr(pr_number) -> set[str]:
     """
     Returns paths to the "<module>.py" files of the altered modules.
@@ -181,9 +184,13 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
         #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
         #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
         #   num_lines: 1
+        _run_cmd(f"cd {workspace_path} && git checkout main")
         with (workspace_path / sp_path).open() as f:
             old_text = f.read()
-        new_text = _load_file_content_after_pr(sp_path)
+        # Get contents of the file changed by the PR.
+        _run_cmd(f"cd {workspace_path} && gh pr checkout {pr_number}")
+        with (workspace_path / sp_path).open() as f:
+            new_text = f.read()
         if old_text != new_text:
             old_data = yaml.safe_load(old_text)
             new_data = yaml.safe_load(new_text)
@@ -206,8 +213,8 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
 
     # Now adding module-specific files
     for path in altered_files:
-        if str(path).startswith(f"{MODULES_DIR}/"):
-            mod_name = path.parent.name
+        if path.is_relative_to(MODULES_DIR):
+            mod_name = path.relative_to(MODULES_DIR).parts[0]
             mod_names.add(mod_name)
 
     return mod_names
@@ -218,35 +225,34 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     Determine the type of the PR: new module, module update, or core update.
     Returns a tuple of the section name and the module info.
     """
+    added_modules = _modules_added_by_pr(pr_number)
+    modified_modules = _modules_modified_by_pr(pr_number)
 
+    # Sanity check PR name suggesting a newly added module
     if pr_title.lower().capitalize().startswith("New module: "):
-        added_modules = _modules_added_by_pr(pr_number)
         if len(added_modules) == 0:
             raise RuntimeError(
                 f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
             )
         if len(added_modules) > 1:
             RuntimeError(f"Found multiple added modules: {added_modules}")
-        else:
-            mod_info = _find_module_info(added_modules[0])
-            proper_pr_title = f"New module: {mod_info['name']}"
-            if pr_title != proper_pr_title:
-                try:
-                    _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
-                except (RuntimeError, subprocess.CalledProcessError) as e:
-                    print(
-                        f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
-                        file=sys.stderr,
-                    )
-            return "### New modules", mod_info
 
-    # Check what modules were changed by the PR, and if the title starts with one
-    # of the names of the changed modules, assume it's a module update.
-    modified_modules = _modules_modified_by_pr(pr_number)
-    if len(modified_modules) == 1:
+    if len(added_modules) == 1 and len(modified_modules) == 0:
+        mod_info = _find_module_info(added_modules[0])
+        proper_pr_title = f"New module: {mod_info['name']}"
+        if pr_title != proper_pr_title:
+            try:
+                _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
+            except (RuntimeError, subprocess.CalledProcessError) as e:
+                print(
+                    f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
+                    file=sys.stderr,
+                )
+        return "### New modules", mod_info
+
+    elif len(modified_modules) == 1 and len(added_modules) == 0:
         mod_info = _find_module_info(modified_modules.pop())
-        if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
-            return "### Module updates", mod_info
+        return "### Module updates", mod_info
 
     section = "### MultiQC updates"  # Default section for non-module (core) updates.
     return section, {}
@@ -268,15 +274,16 @@ else:
         ]
     elif section == "### Module updates":
         assert mod is not None
-        descr = pr_title.split(":", maxsplit=1)[1].strip()
+        descr = pr_title
+        if ":" in descr:
+            descr = descr.split(":", maxsplit=1)[1].strip()
         new_lines = [
             f"- **{mod['name']}**: {descr} {pr_link}\n",
         ]
 if not new_lines:
-    if "skip changelog" not in pr_title and "no changelog" not in pr_title:
-        new_lines = [
-            f"- {pr_title} {pr_link}\n",
-        ]
+    new_lines = [
+        f"- {pr_title} {pr_link}\n",
+    ]
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
@@ -313,7 +320,7 @@ def _skip_existing_entry_for_this_pr(line, same_section=True):
 
 
 # Find the next line in the change log that matches the pattern "## MultiQC v.*dev"
-# If it doesn't exist, exist with code 1 (let's assume that a new section is added
+# If it doesn't exist, exit with code 1 (let's assume that a new section is added
 # manually or by CI when a release is pushed).
 # Else, find the next line that matches the `section` variable, and insert a new line
 # under it (we also assume that section headers are added already).

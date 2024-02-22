@@ -239,6 +239,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x / 1000000,
                 "min": 0,
                 "format": "{:,.2f}",
+                "suffix": "M",
             },
         }
         self.general_stats_addcols(self.snpeff_data, headers)
@@ -253,7 +254,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Make nicer label names
         pkeys = dict()
         for k in sorted_keys:
-            pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
+            key = k.replace("_", " ").title().replace("Utr", "UTR")
+            if key == "None":
+                key = "Unknown"
+            pkeys[k] = {"name": key}
 
         # Config for the plot
         pconfig = {
@@ -339,6 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Values",
             "xDecimals": False,
             "ymin": 0,
+            "xmin": 0,
         }
 
         return linegraph.plot(self.snpeff_qualities, pconfig)

@@ -56,7 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_indel_data,
                 self.gen_headers("_indel"),
-                pconfig={"id": "happy_indel_plot"},
+                pconfig={
+                    "id": "happy_indel_plot",
+                    "title": "Happy: INDEL",
+                },
             ),
         )
 
@@ -72,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_snp_data,
                 self.gen_headers("_snp"),
-                pconfig={"id": "happy_snp_plot"},
+                pconfig={"id": "happy_snp_plot", "title": "Happy: SNP"},
             ),
         )
 
@@ -85,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Duplicate sample name found in {f['root']}! Overwriting: {f['s_name']}")
         self.happy_raw_sample_names.add(f["s_name"])
 
-        rdr = csv.DictReader(f["f"])
+        rdr: csv.DictReader = csv.DictReader(f["f"])
         for row in rdr:
             row_id = f"{f['s_name']}_{row['Type']}_{row['Filter']}"
             if row["Type"] == "INDEL":

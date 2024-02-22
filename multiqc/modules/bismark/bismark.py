@@ -450,14 +450,21 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cytosine Methylation",
             anchor="bismark-methylation",
-            plot=beeswarm.plot(self.bismark_data["methextract"], keys, {"id": "bismark-methylation-dp"}),
+            plot=beeswarm.plot(
+                self.bismark_data["methextract"],
+                keys,
+                {
+                    "id": "bismark-methylation-dp",
+                    "title": "Bismark: Cytosine Methylation",
+                },
+            ),
         )
 
     def bismark_mbias_plot(self):
         """Make the M-Bias plot"""
 
         description = '<p>This plot shows the average percentage methylation and coverage across reads. See the \n\
-        <a href="https://rawgit.com/FelixKrueger/Bismark/master/Docs/Bismark_User_Guide.html#m-bias-plot" target="_blank">bismark user guide</a> \n\
+        <a href="https://felixkrueger.github.io/Bismark/bismark/methylation_extraction/#m-bias-plot" target="_blank">bismark user guide</a> \n\
         for more information on how these numbers are generated.</p>'
 
         pconfig = {

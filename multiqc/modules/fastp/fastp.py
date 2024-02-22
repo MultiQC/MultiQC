@@ -88,9 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "ylab": "Read percent",
                         "yCeiling": 100,
                         "ymin": 0,
-                        "yLabelFormat": "{value}%",
                         "tt_label": "{point.x}: {point.y:.2f}%",
-                        "xDecimals": False,
                     },
                 ),
             )
@@ -110,9 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "ylab": "Read percent",
                         "yCeiling": 100,
                         "ymin": 0,
-                        "yLabelFormat": "{value}%",
                         "tt_label": "{point.x}: {point.y:.2f}%",
-                        "xDecimals": False,
                         "smooth_points": 300,
                         "smooth_points_sumcounts": False,
                     },
@@ -433,7 +429,6 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Read Position",
             "ylab": "R1 Before filtering: Sequence Quality",
             "ymin": 0,
-            "xDecimals": False,
             "data_labels": data_labels,
         }
         return linegraph.plot(pdata, pconfig)
@@ -448,8 +443,6 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "R1 Before filtering: Base Content Percent",
             "ymax": 100,
             "ymin": 0,
-            "xDecimals": False,
-            "yLabelFormat": "{value}%",
             "tt_label": "{point.x}: {point.y:.2f}%",
             "data_labels": data_labels,
         }
@@ -466,8 +459,6 @@ class MultiqcModule(BaseMultiqcModule):
             "yCeiling": 100,
             "yMinRange": 5,
             "ymin": 0,
-            "xDecimals": False,
-            "yLabelFormat": "{value}%",
             "tt_label": "{point.x}: {point.y:.2f}%",
             "data_labels": data_labels,
         }

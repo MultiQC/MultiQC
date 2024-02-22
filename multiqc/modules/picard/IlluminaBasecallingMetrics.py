@@ -15,7 +15,7 @@ def parse_reports(module):
     data_by_sample = dict()
 
     # Go through logs and find Metrics
-    for f in module.find_log_files(f"{module.anchor}/collectilluminabasecallingmetrics", filehandles=True):
+    for f in module.find_log_files("picard/collectilluminabasecallingmetrics", filehandles=True):
         keys = None
 
         for line in f["f"]:

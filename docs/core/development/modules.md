@@ -406,7 +406,7 @@ The following search criteria sub-keys can then be used:
 - `num_lines`
   - The number of lines to search through for the `contents` string. Defaults to 1000 (configurable via `filesearch_lines_limit`).
 - `shared`
-  - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file can be shared between multiple tools (for example, part of a `stdout` stream).
+  - By default, once a file has been assigned to a module it is not searched again. Specify `shared: true` when your file is likely to be shared between multiple tools.
 - `max_filesize`
   - Files larger than the `log_filesize_limit` config key (default: 50MB) are skipped. If you know your files will be smaller than this and need to search by contents, you can specify this value (in bytes) to skip any files smaller than this limit.
 
@@ -859,7 +859,7 @@ Colour scales can be reversed by adding the suffix `-rev` to the name. For examp
 
 The following scales are available:
 
-![color brewer](../../images/cbrewer_scales.png)
+![color brewer](../../../docs/images/cbrewer_scales.png)
 
 For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
 

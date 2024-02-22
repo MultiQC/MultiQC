@@ -141,7 +141,7 @@ def exist_and_number(data, *metrics):
     return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
 
 
-def check_duplicate_samples(sample_names, logger, module):
+def check_duplicate_samples(sample_names, logger):
     """Check samples for duplicate names. Warn about found ones."""
     message = ""
     line1 = "\n  {} was built from the following samples:"
