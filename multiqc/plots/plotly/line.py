@@ -5,7 +5,6 @@ import os
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
 from multiqc.utils import util_functions, config
 from multiqc.utils.config import update_dict
@@ -159,21 +158,49 @@ class LinePlot(Plot):
         x_bands = pconfig.get("xPlotBands")
         x_lines = pconfig.get("xPlotLines")
         y_lines = pconfig.get("yPlotLines")
-        if y_min_range or y_bands or x_bands or x_lines or y_lines:
-            # We don't want the bands to affect the calculated y-axis range. So we
-            # call `fig.full_figure_for_development` to force-calculate the figure size
-            # before we add the bands, and then force set the calculated range.
+        if y_min_range or y_bands or y_lines:
+            # We don't want the bands to affect the calculated axis range, so we
+            # find the min and the max from data points, and manually set the range
             for dataset in self.datasets:
-                layout = go.Layout(self.layout.to_plotly_json()).update(**dataset.layout)
-                dev_fig = dataset.create_figure(layout).full_figure_for_development(warn=False)
-                dataset.layout["yaxis"]["range"] = dev_fig.layout.yaxis.range
-                dataset.layout["xaxis"]["range"] = dev_fig.layout.xaxis.range
-                if y_min_range:
-                    if dataset.layout["yaxis"]["range"][1] - dataset.layout["yaxis"]["range"][0] < y_min_range:
-                        dataset.layout["yaxis"]["range"] = [
-                            dataset.layout["yaxis"]["range"][0],
-                            dataset.layout["yaxis"]["range"][0] + y_min_range,
-                        ]
+                ymin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+                if ymin is None:
+                    ymin = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                ymax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+                if ymax is None:
+                    ymax = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+                if ymin is None or ymax is None:
+                    for line in dataset.lines:
+                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                            ys = [x[1] for x in line["data"]]
+                        else:
+                            ys = line["data"]
+                        if ymin is None:
+                            ymin = min(ys)
+                        if ymax is None:
+                            ymax = max(ys)
+                            ymax += (ymax - ymin) * 0.05
+                dataset.layout["yaxis"]["range"] = [ymin, ymax]
+
+        if x_bands or x_lines:
+            # same as above but for x-axis
+            for dataset in self.datasets:
+                xmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+                if xmin is None:
+                    xmin = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                xmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+                if xmax is None:
+                    xmax = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+                if xmin is None or xmax is None:
+                    for line in dataset.lines:
+                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                            xs = [x[0] for x in line["data"]]
+                        else:
+                            xs = [x for x in range(len(line["data"]))]
+                        if xmin is None:
+                            xmin = min(xs)
+                        if xmax is None:
+                            xmax = max(xs)
+                dataset.layout["xaxis"]["range"] = [xmin, xmax]
 
         self.layout.shapes = (
             [
