@@ -236,11 +236,11 @@ class ViolinPlot extends Plot {
         let state = sampleSettings[allSamples.indexOf(sample)];
         let params = JSON.parse(JSON.stringify(dataset["scatter_trace_params"])); // deep copy
 
-        let color = "black"; // trace_params["marker"]["color"];
+        let color = params.marker.color;
         let size = params.marker.size;
         if (highlightingEnabled) {
-          color = state.highlight ?? "#cccccc";
-          size = state.highlight !== null ? 10 : size;
+          color = state.highlight ?? "#ddd";
+          size = state.highlight !== null ? 8 : size;
         }
 
         let customData = {
