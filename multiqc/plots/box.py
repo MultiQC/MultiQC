@@ -1,3 +1,5 @@
+""" MultiQC functions to plot a box plot """
+
 from typing import List, Dict, Union, OrderedDict
 
 import inspect

@@ -38,7 +38,7 @@ self.add_section(
     anchor="mymod_section",
     description="This plot shows some really nice data.",
     helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
-    plot=bargraph.plot(data, categories, pconfig)
+    plot=bargraph.plot(data, cats=..., pconfig=...)
 )
 ```
 
@@ -70,7 +70,7 @@ data = {
         'aligned': 1275,
     }
 }
-html = bargraph.plot(data)
+html = bargraph.plot(data, pconfig=...)
 ```
 
 To specify the order of categories in the plot, you can supply a list of
@@ -78,7 +78,7 @@ dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
 cats = ['aligned', 'not_aligned']
-html = bargraph.plot(data, cats)
+html = bargraph.plot(data, cats, pconfig=...)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name

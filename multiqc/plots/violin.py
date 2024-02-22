@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-""" MultiQC functions to plot a violin group """
+""" MultiQC functions to plot a violin plot """
 
 import logging
 from typing import List, Dict, Optional, Union
