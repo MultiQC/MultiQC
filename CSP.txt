@@ -5,7 +5,8 @@ script-src 'self'
     # 1.21
     'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
     'sha256-yRjvY4tSJ5z2ggAL/i5pJj+peALSAG9PD51Z0Hf7wzQ=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
-    'sha256-az74ueShpjkk2DuURkv/5TV3/Mxy2K0z00jsa3TPM1k=' # class BoxPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-OzhPBnFiZsSBpwe4cpwbOg4/dYQSPNXG20bECdDtONM=' # class BoxPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-mVO5Pel/niJHZXAV5BhYrr15QkRTeRFbjRpIVLbBsb4=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
 
     # 1.20
     'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
