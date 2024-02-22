@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+""" MultiQC datatable class, used by tables and violin plots """
 
-""" MultiQC datatable class, used by tables and beeswarm plots """
 import math
 
 import logging
