@@ -224,10 +224,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_labels = [
             {
-                "label": label,
-                "title": "Iso-Seq refine: " + label,
+                "label": title,
+                "title": "Iso-Seq refine: " + title,
             }
-            for label in data_labels
+            for metric, title in data_labels.items()
         ]
 
         self.add_section(
