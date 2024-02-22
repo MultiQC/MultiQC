@@ -25,6 +25,7 @@
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **DRAGEN**: support `gvcf_metrics` ([#2327](https://github.com/MultiQC/MultiQC/pull/2327))
 - **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **HTSeq Count**: robust file reading loop, ignore `.parquet` files ([#2364](https://github.com/MultiQC/MultiQC/pull/2364))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
 - **Samtools**: support `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
