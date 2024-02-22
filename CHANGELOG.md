@@ -27,7 +27,7 @@
 - **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
-- **PURPLE**: support v4.0.1 output without version column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
+- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
 - **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 - **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
 
