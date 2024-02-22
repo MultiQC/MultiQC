@@ -29,6 +29,7 @@ class PlotType(Enum):
     BAR = "bar_graph"
     SCATTER = "scatter"
     HEATMAP = "heatmap"
+    BOX = "box"
 
 
 @dataclasses.dataclass
@@ -603,6 +604,7 @@ def _dataset_layout(
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
+        title=dict(text=pconfig.get("title")),
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",

@@ -193,9 +193,15 @@ class ViolinPlot(Plot):
                 hoveron="points",
             )
 
+            # If all violins are grey, make the dots blue to make it more clear that it's interactive
+            # if some violins are color-coded, make the dots black to make them less distracting
+            marker_color = "black" if any(h.get("color") for h in ds.header_by_metric.values()) else "#0b79e6"
             ds.scatter_trace_params = {
                 "mode": "markers",
-                "marker": {"size": 4, "color": "rgba(0,0,0,1)"},
+                "marker": {
+                    "size": 4,
+                    "color": marker_color,
+                },
                 "showlegend": False,
                 "hovertemplate": ds.trace_params["hovertemplate"],
                 "hoverlabel": {"bgcolor": "white"},

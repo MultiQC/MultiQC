@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC functions to plot a heatmap """
 
 

@@ -134,6 +134,7 @@ class Plot {
 function initPlot(dump) {
   if (dump["plot_type"] === "xy_line") return new LinePlot(dump);
   if (dump["plot_type"] === "bar_graph") return new BarPlot(dump);
+  if (dump["plot_type"] === "box") return new BoxPlot(dump);
   if (dump["plot_type"] === "scatter") return new ScatterPlot(dump);
   if (dump["plot_type"] === "heatmap") return new HeatmapPlot(dump);
   if (dump["plot_type"] === "violin") return new ViolinPlot(dump);
