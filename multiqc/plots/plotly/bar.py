@@ -124,7 +124,7 @@ class BarPlot(Plot):
 
         # Set the barmode
         barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
+        if "stacking" in pconfig and (pconfig["stacking"] in ["group", None]):
             barmode = "group"  # side by side
 
         max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
