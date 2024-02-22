@@ -40,10 +40,19 @@ class BoxPlot extends Plot {
     const maxTicks = (this.layout.height - 140) / 12;
     this.recalculateTicks(this.filteredSettings, this.layout.yaxis, maxTicks);
 
+    let highlighted = this.filteredSettings.filter((s) => s.highlight);
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
     return this.filteredSettings.map((sample, sampleIdx) => {
       let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
+
+      if (highlighted.length > 0) {
+        if (sample.highlight !== null) {
+          params.marker.color = sample.highlight;
+        } else {
+          params.marker.color = "grey";
+        }
+      }
 
       let values = data[sampleIdx];
       // Regular box plot: data provided directly, statistics are calculated dynamically

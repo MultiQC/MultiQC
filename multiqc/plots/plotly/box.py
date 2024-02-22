@@ -56,6 +56,9 @@ class BoxPlot(Plot):
                 boxpoints="outliers",
                 jitter=0.5,
                 orientation="h",
+                marker=dict(
+                    color="#4899e8",  # just use blue to indicate interactivity
+                ),
             )
             dataset.layout["yaxis"]["title"] = None
             return dataset
@@ -121,6 +124,7 @@ class BoxPlot(Plot):
             showlegend=False,
             boxgroupgap=0.1,
             boxgap=0.2,
+            colorway=[],  # no need to color code
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
