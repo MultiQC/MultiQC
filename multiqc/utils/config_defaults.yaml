@@ -352,6 +352,7 @@ fn_ignore_files:
   - "*.txt.gz"
   - "*.pdf"
   - "*.md5"
+  - "*.parquet"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
   - "multiqc_data.json"
 
