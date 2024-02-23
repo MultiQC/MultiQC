@@ -148,7 +148,7 @@ class Plot(ABC):
             width=width,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="Black", family="Lucida Grande"),
+            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
