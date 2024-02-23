@@ -20,6 +20,7 @@
 - Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
 - Put matplotlib back into main deps ([#2370](https://github.com/MultiQC/MultiQC/pull/2370))
 - Update `modules.md`: `pyproject.toml`, `"shared_key": "read_count"`, ruffify ([#2371](https://github.com/MultiQC/MultiQC/pull/2371))
+- Fix `no_violin`/`no_beeswarm` flag to table ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
 
 ### New modules
 
