@@ -13,6 +13,7 @@ dependencies = [
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
     "markdown",
+    "matplotlib>=2.1.1",  # Only needed for highcharts, remove soon
     "numpy",
     "packaging",
     "requests",
@@ -51,9 +52,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-matplotlib = [
-    "matplotlib>=2.1.1",
-]
 dev = [
     "pre-commit",
     "ruff",
