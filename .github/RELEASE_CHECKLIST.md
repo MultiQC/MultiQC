@@ -2,10 +2,10 @@
 
 This checklist is for my own reference, as I forget the steps every time.
 
-1. Check that everything is up to date and ready to go
+1. Check that everything is up-to-date and ready to go
 2. Figure out what this release should be called
-3. Update version numbers in code: `setup.py`, `CHANGELOG.md`
-4. Link the changelog subheading to the as yet non-existant release URL. Add date.
+3. Update version numbers in code: `pyproject.toml`, `CHANGELOG.md`
+4. Link the changelog subheading to the as yet non-existent release URL. Add date.
 5. Install the package again in `install` mode:
 
    ```bash
