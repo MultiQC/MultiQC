@@ -17,6 +17,7 @@
 - Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
 - Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 - Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
+- Put matplotlib back into main deps ([#2370](https://github.com/MultiQC/MultiQC/pull/2370))
 
 ### New modules
 
