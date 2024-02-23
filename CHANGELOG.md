@@ -17,6 +17,8 @@
 - Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
 - Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 - Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
+- Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
+- Put matplotlib back into main deps ([#2370](https://github.com/MultiQC/MultiQC/pull/2370))
 
 ### New modules
 
@@ -33,9 +35,10 @@
 - **HTSeq Count**: robust file reading loop, ignore `.parquet` files ([#2364](https://github.com/MultiQC/MultiQC/pull/2364))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
-- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
+- **Samtools**: support `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
 - **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 - **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
+- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
