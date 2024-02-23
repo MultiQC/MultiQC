@@ -12,7 +12,26 @@ from multiqc.utils import util_functions
 logger = logging.getLogger(__name__)
 
 
-def plot(list_of_data_by_sample: List[Dict[str, Union[Dict, List]]], pconfig: Dict) -> str:
+class BoxPlotStats:
+    """
+    Pre-calculated statistics for a box plot.
+    """
+
+    def __init__(self, **kwargs):
+        self.median = kwargs.get("median", kwargs.get("mean"))
+        self.q1 = kwargs.get("q1", self.median)
+        self.q3 = kwargs.get("q3", self.median)
+        self.mean = kwargs.get("mean", self.median)
+        self.sd = kwargs.get("std", kwargs.get("stddev", kwargs.get("sd")))
+        self.lowerfence = kwargs.get("min", kwargs.get("lowerfence"))
+        self.upperfence = kwargs.get("max", kwargs.get("upperfence"))
+
+
+# Type of single box (matching one sample)
+BoxT = Union[List[Union[int, float]], BoxPlotStats]
+
+
+def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:
@@ -35,13 +54,13 @@ def plot(list_of_data_by_sample: List[Dict[str, Union[Dict, List]]], pconfig: Di
 class BoxPlot(Plot):
     @dataclasses.dataclass
     class Dataset(BaseDataset):
-        data: List[Union[Dict, List]]
+        data: List[BoxT]
         samples: List[str]
 
         @staticmethod
         def create(
             dataset: BaseDataset,
-            data_by_sample: Dict[str, Union[Dict, List]],
+            data_by_sample: Dict[str, BoxT],
         ) -> "BoxPlot.Dataset":
             dataset = BoxPlot.Dataset(
                 **dataset.__dict__,
@@ -59,9 +78,17 @@ class BoxPlot(Plot):
                 marker=dict(
                     color="#4899e8",  # just use blue to indicate interactivity
                 ),
+                # to remove the redundant sample name before "median" in the unified hover box
+                hoverinfo="x",
             )
             dataset.layout["yaxis"]["title"] = None
             return dataset
+
+        def dump_for_javascript(self) -> Dict:
+            d = super().dump_for_javascript()
+            # Convert BoxPlotStats to dict
+            d["data"] = [el if isinstance(el, dict | list) else el.__dict__ for el in self.data]
+            return d
 
         def create_figure(
             self,
@@ -77,7 +104,6 @@ class BoxPlot(Plot):
             for sname, values in zip(self.samples, self.data):
                 params = copy.deepcopy(self.trace_params)
                 if isinstance(values, list):
-                    # Regular box plot: data provided directly, statistics are calculated dynamically
                     fig.add_trace(
                         go.Box(
                             x=values,
@@ -85,29 +111,25 @@ class BoxPlot(Plot):
                             **params,
                         ),
                     )
-                else:
+                elif isinstance(values, BoxPlotStats):
                     # Box plot with pre-calculated statistics, without data points
-                    median = values.get("median", values.get("mean"))
                     fig.add_trace(
                         go.Box(
-                            q1=[values.get("q1", median)],
-                            q3=[values.get("q3", median)],
-                            median=[median],
-                            mean=[values.get("mean", median)],
-                            sd=[values.get("std", values.get("stddev", values.get("sd")))],
-                            lowerfence=[values.get("min", values.get("lowerfence"))],
-                            upperfence=[values.get("max", values.get("upperfence"))],
-                            orientation="h",
+                            **{k: [v] for k, v in values.__dict__},
                             name=sname,
                             **params,
                         )
+                    )
+                else:
+                    raise ValueError(
+                        f"Unexpected type of box plot data item: {type(values)}. " f"Expected: list or BoxPlotStats"
                     )
             return fig
 
     def __init__(
         self,
         pconfig: Dict,
-        list_of_data_by_sample: List[Dict[str, Union[Dict, List]]],
+        list_of_data_by_sample: List[Dict[str, BoxT]],
         max_n_samples: int,
     ):
         super().__init__(PlotType.BOX, pconfig, n_datasets=len(list_of_data_by_sample))
