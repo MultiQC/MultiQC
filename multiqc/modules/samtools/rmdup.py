@@ -68,7 +68,7 @@ class RmdupReportMixin:
         # General Stats Table
         stats_headers = {
             "pct_dups": {
-                "title": "Dups",
+                "title": "Duplicates",
                 "description": "Percent of duplicate alignments",
                 "min": 0,
                 "max": 100,
