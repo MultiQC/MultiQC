@@ -716,7 +716,7 @@ class MultiqcModule(BaseMultiqcModule):
             "namespace": "bclconvert",
             "id": "bclconvert-sample-stats-table",
             "table_title": "bclconvert Sample Statistics",
-            "no_beeswarm": True,
+            "no_violin": True,
         }
 
         return table.plot(sample_stats_data, headers, table_config)
@@ -822,7 +822,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "bclconvert-lane-stats-table",
             "table_title": "bclconvert Lane Statistics",
             "col1_header": "Run ID - Lane",
-            "no_beeswarm": True,
+            "no_violin": True,
         }
 
         # new dict with matching keys for plotting (this avoids duplicate html id linting errors)
