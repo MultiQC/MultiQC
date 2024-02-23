@@ -12,8 +12,6 @@ on:
       - "*.md"
 
 env:
-  # To reduce code duplication between Win and Linux jobs
-  core_python_dependencies: "pip setuptools beautifulsoup4"
   # No need to run test variations across all Python versions
   latest_python: "3.12"
 
@@ -68,12 +66,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # For CSP checking
-      - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+      - uses: yezz123/setup-uv@v1
+
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
 
       - name: Install MultiQC
-        run: pip install .
+        run: |
+          # Temporary hack to remove duplicated pip package (hopefully will be addressed in uv or GitHub)
+          rm -rf ${VIRTUAL_ENV}/lib/python3.*/site-packages/pip-23.*
+          uv pip install -e .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -145,7 +147,9 @@ jobs:
 
       - name: Test for missing CSPs
         if: matrix.python-version == env.latest_python
-        run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
+        run: |
+          uv pip install beautifulsoup4
+          python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
 
   run_windows:
     name: Windows
@@ -167,13 +171,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      # Update core packages
-      - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+      - uses: yezz123/setup-uv@v1
 
       # Install MultiQC
       - name: Install MultiQC
-        run: pip install .
+        run: pip install -e .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
