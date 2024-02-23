@@ -212,7 +212,8 @@ class Plot(ABC):
             dataset.label = dconfig.get("name", idx + 1)
             if "label" in dconfig:
                 dataset.label = dconfig["label"]
-                dconfig["ylab"] = dconfig["label"]
+            if "ylab" not in dconfig:
+                dconfig["ylab"] = dataset.label
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
