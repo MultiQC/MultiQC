@@ -194,7 +194,7 @@ you will need to edit or create are as follows:
 │   └── utils
 │       └── search_patterns.yaml
 ├── CHANGELOG.md
-└── setup.py
+└── pyproject.toml
 ```
 
 These files are described in more detail below.
@@ -209,24 +209,22 @@ name, i.e. `multiqc/modname/modname.py`) which is then imported by the
 `__init__.py` file with:
 
 ```python
-
 from .modname import MultiqcModule
+
+__all__ = ["MultiqcModule"]
 ```
 
 ### Entry points
 
 Once your submodule files are in place, you need to tell MultiQC that they
-are available as an analysis module. This is done within `setup.py` using
-[entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
-In `setup.py` you will see some code that looks like this:
+are available as an analysis module. This is done within `pyproject.toml` using
+[entry points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html).
+In `pyproject.toml` you will see some code that looks like this:
 
-```python
-entry_points = {
-    'multiqc.modules.v1': [
-        'bismark = multiqc.modules.bismark:MultiqcModule',
-        [...]
-    ]
-}
+```toml
+[project.entry-points."multiqc.modules.v1"]
+bismark = "multiqc.modules.bismark:MultiqcModule"
+[...]
 ```
 
 Copy one of the existing module lines and change it to use your module name.
@@ -242,9 +240,9 @@ pip install -e .
 So that MultiQC knows what order modules should be run in, you need to add
 your module to the core config file.
 
-In `multiqc/utils/config_defaults.yaml` you should see a list variable called `module_order`.
-This contains the name of modules in order of precedence. Add your module here
-in an appropriate position.
+In `multiqc/utils/config_defaults.yaml` you should see a list variable called
+`module_order`. This contains the name of modules in order of precedence. Add your
+module here in an appropriate position.
 
 ### Documentation
 
@@ -833,13 +831,17 @@ headers['name'] = {
 
 The typical use for the `modify` string is to divide large numbers such as read counts,
 to make them easier to interpret. If handling read counts, there are three config variables
-that should be used to allow users to change the multiplier for read counts: `read_count_multiplier`,
-`read_count_prefix` and `read_count_desc`. For example:
+that should be used to allow users to change the multiplier for read counts:
+`read_count_multiplier`, `read_count_prefix` and `read_count_desc`. For example:
 
 ```python
-'title': f'{config.read_count_prefix} Reads',
-'description': f'Number of reads ({config.read_count_desc})',
-'modify': lambda x: x * config.read_count_multiplier,
+pconfig = {
+    "title": "Reads",
+    "description": f"Number of reads ({config.read_count_desc})",
+    "modify": lambda x: x * config.read_count_multiplier,
+    "suffix": f" {config.read_count_prefix}",
+    ...
+}
 ```
 
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
@@ -847,6 +849,24 @@ Similar config options apply for base pairs: `base_count_multiplier`, `base_coun
 
 And for the read count of long reads: `long_read_count_multiplier`, `long_read_count_prefix` and
 `long_read_count_desc`.
+
+Note that adding e.g. `"shared_key": "read_count"` will automatically add corresponding
+`description`, `modify`, and `suffix` into the column, so in most cases the following
+will be sufficient:
+
+```python
+pconfig = {
+    "title": "Reads",
+    "shared_key": "read_count",
+    ...
+}
+...
+pconfig2 = {
+    "title": "Base pairs",
+    "shared_key": "base_count",
+    ...
+}
+```
 
 A third parameter can be passed to this function, `namespace`. This is usually
 not needed - MultiQC automatically takes the name of the module that is calling
@@ -875,16 +895,16 @@ with a dictionary and a filename:
 
 ```python
 data = {
-    'sample_1': {
-        'first_col': 91.4,
-        'second_col': '78.2%'
+    "sample_1": {
+        "first_col": 91.4,
+        "second_col": "78.2%",
     },
-    'sample_2': {
-        'first_col': 138.3,
-        'second_col': '66.3%'
-    }
+    "sample_2": {
+        "first_col": 138.3,
+        "second_col": "66.3%",
+    },
 }
-self.write_data_file(data, 'multiqc_mymod')
+self.write_data_file(data, "multiqc_mymod")
 ```
 
 If your output has a lot of columns, you can supply the additional
@@ -917,9 +937,12 @@ For example:
 
 ```python
 self.add_section (
-    name = 'Second Module Section',
-    anchor = 'mymod-second',
-    plot = linegraph.plot(data2)
+    name="Second Module Section",
+    anchor="mymod-second",
+    plot=linegraph.plot(data2, pconfig={
+        "id": "mymod-second",
+        "title": "My Module: Duplication Rate"
+    }),
 )
 self.add_section (
     name = 'First Module Section',
@@ -935,7 +958,10 @@ self.add_section (
         * Are
         * `Great`
     """,
-    plot = bargraph.plot(data)
+    plot = bargraph.plot(data, pconfig={
+        "id": "mymod-first",
+        "title": "My Module: Read Counts"
+    })
 )
 self.add_section (
     content = '<p>Some custom HTML.</p>'
@@ -1038,11 +1064,9 @@ the path to the desired file. For example, see how it's done in the FastQC modul
 
 ```python
 self.css = {
-    'assets/css/multiqc_fastqc.css' :
-        os.path.join(os.path.dirname(__file__), 'assets', 'css', 'multiqc_fastqc.css')
+    "assets/css/multiqc_fastqc.css": os.path.join(os.path.dirname(__file__), "assets", "css", "multiqc_fastqc.css")
 }
 self.js = {
-    'assets/js/multiqc_fastqc.js' :
-        os.path.join(os.path.dirname(__file__), 'assets', 'js', 'multiqc_fastqc.js')
+    "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
 }
 ```
