@@ -221,7 +221,7 @@ are available as an analysis module. This is done within `pyproject.toml` using
 [entry points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html).
 In `pyproject.toml` you will see some code that looks like this:
 
-```python
+```toml
 [project.entry-points."multiqc.modules.v1"]
 bismark = "multiqc.modules.bismark:MultiqcModule"
 [...]
@@ -851,8 +851,8 @@ And for the read count of long reads: `long_read_count_multiplier`, `long_read_c
 `long_read_count_desc`.
 
 Note that adding e.g. `"shared_key": "read_count"` will automatically add corresponding
-`description`, `modify`, and `suffix` into the column, so in usual cases this specifications
-would be sufficient:
+`description`, `modify`, and `suffix` into the column, so in most cases the following
+will be sufficient:
 
 ```python
 pconfig = {
