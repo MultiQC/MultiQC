@@ -17,7 +17,7 @@
 - Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 - Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
 - Replace `setup.py` with `pyproject.toml` ([#2353](https://github.com/MultiQC/MultiQC/pull/2353))
-- CI: use uv pip to install environment ([#2352](https://github.com/MultiQC/MultiQC/pull/2352))
+- CI: use uv pip ([#2352](https://github.com/MultiQC/MultiQC/pull/2352))
 
 ### New modules
 
