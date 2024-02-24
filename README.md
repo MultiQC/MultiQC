@@ -24,7 +24,7 @@ it ideal for routine fast quality control.
 A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://multiqc.info/modules/).
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://multiqc.info/docs/custom_content/).
 
-More modules are being written all of the time. Please suggest any ideas as a new
+More modules are being written all the time. Please suggest any ideas as a new
 [issue](https://github.com/MultiQC/MultiQC/issues) _(please include example log files)_.
 
 ## Installation

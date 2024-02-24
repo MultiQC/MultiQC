@@ -79,6 +79,7 @@ prepend_dirs_depth: int
 prepend_dirs_sep: str
 file_list: bool
 require_logs: bool
+version_check_url: str
 
 make_data_dir: bool
 zip_data_dir: bool
