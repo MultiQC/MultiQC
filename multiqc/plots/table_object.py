@@ -64,15 +64,15 @@ class DataTable:
                 pconfig[k] = v
 
         SECTION_COLORS = [
-            "55,126,184",
-            "77,175,74",
-            "152,78,163",
-            "255,127,0",
-            "228,26,28",
-            "179,179,50",
-            "166,86,40",
-            "247,129,191",
-            "153,153,153",
+            "55,126,184",  # Blue
+            "77,175,74",  # Green
+            "152,78,163",  # Purple
+            "255,127,0",  # Orange
+            "228,26,28",  # Red
+            "179,179,50",  # Olive
+            "166,86,40",  # Brown
+            "247,129,191",  # Pink
+            "153,153,153",  # Grey
         ]
 
         # Go through each table section
@@ -142,17 +142,17 @@ class DataTable:
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get("shared_key", None)
-                suffix = None
+                shared_key_suffix = None
                 if shared_key in ["read_count", "long_read_count", "base_count"]:
                     if shared_key == "read_count" and config.read_count_prefix:
                         multiplier = config.read_count_multiplier
-                        suffix = " " + config.read_count_prefix
+                        shared_key_suffix = config.read_count_prefix
                     elif shared_key == "long_read_count" and config.long_read_count_prefix:
                         multiplier = config.long_read_count_multiplier
-                        suffix = " " + config.long_read_count_prefix
+                        shared_key_suffix = config.long_read_count_prefix
                     elif shared_key == "base_count" and config.base_count_prefix:
                         multiplier = config.base_count_multiplier
-                        suffix = " " + config.base_count_prefix
+                        shared_key_suffix = config.base_count_prefix
                     else:
                         multiplier = 1
                     if headers[idx][k].get("modify") is None:
@@ -162,10 +162,12 @@ class DataTable:
                     if headers[idx][k].get("format") is None:
                         if multiplier == 1:
                             headers[idx][k]["format"] = "{:,d}"
-                if suffix:
+                suffix = headers[idx][k].get("suffix")
+                if suffix is None and shared_key_suffix is not None:
+                    suffix = " " + shared_key_suffix
+                if suffix is not None:
                     suffix = suffix.replace(" ", "&nbsp;")
-                    if "suffix" not in headers[idx][k]:
-                        headers[idx][k]["suffix"] = suffix
+                    headers[idx][k]["suffix"] = suffix
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))
