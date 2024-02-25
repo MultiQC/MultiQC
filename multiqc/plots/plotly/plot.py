@@ -42,7 +42,7 @@ class BaseDataset(ABC):
     label: str
     uid: str
     dconfig: Dict  # user dataset-specific configuration
-    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
+    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict
     pct_range: Dict
 
