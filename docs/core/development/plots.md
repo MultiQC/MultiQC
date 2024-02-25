@@ -465,7 +465,7 @@ single_header = {
     "cond_formatting_colours": None, # Styles for conditional formatting of table cell values
     "shared_key": None,              # See below for description
     "modify": None,                  # Lambda function to modify values
-    "hidden": False                  # Set to True to hide the column on page load
+    "hidden": False,                 # Set to True to hide the column on page load
 }
 ```
 
@@ -481,7 +481,7 @@ table_config = {
     "sortRows": True,                          # Whether to sort rows alphabetically
     "only_defined_headers": True,              # Only show columns that are defined in the headers config
     "col1_header": "Sample Name",              # The header used for the first column
-    "no_beeswarm": False,                      # Force a table to always be plotted (beeswarm by default if many rows)
+    "no_violin": False,                        # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
 
