@@ -7,7 +7,7 @@ import json
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, box
+from multiqc.plots import bargraph, box, table
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
             # doi=,  # Not published
         )
 
-        refine_json_data_by_sample, refine_csv_data_by_sample = self._parse_refine()
         cnt_by_cluster_id_by_sample = self._parse_cluster()
+        refine_json_data_by_sample, refine_csv_data_by_sample = self._parse_refine()
 
         if not cnt_by_cluster_id_by_sample and not refine_json_data_by_sample and not refine_csv_data_by_sample:
             raise UserWarning
@@ -40,13 +40,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        if refine_json_data_by_sample:
-            self._add_general_stats_refine(refine_json_data_by_sample)
-            self._add_refine_box_plots(refine_csv_data_by_sample)
-
         if cnt_by_cluster_id_by_sample:
             self._add_general_stats_cluster(cnt_by_cluster_id_by_sample)
             self._add_cluster_size_plot(cnt_by_cluster_id_by_sample)
+
+        if refine_json_data_by_sample:
+            self._add_refine_table(refine_json_data_by_sample)
+            self._add_refine_box_plots(refine_csv_data_by_sample)
 
     def _parse_refine(self):
         refine_json_data_by_sample = dict()
@@ -165,24 +165,24 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cluster size distribution",
             anchor="isoseq-cluster-size-distribution",
-            description="A distribution of cluster size (number of CC clustered to form one Hifi read).",
+            description="A distribution of cluster size (number of CC clustered to form one Hifi read)",
             helptext="""
-            The csv file produced by Iso-Seq cluster shows which CCS have been clustered together to form 
-            one Hifi reads. The bargraph represent the distribution of the cluster size using four 
-            categories : -2, 3-10, 11-100, >100.
+            The CSV report <code>*.cluster_report.csv</code> files produced by Iso-Seq <code>cluster</code> 
+            shows which CCS have been clustered together to form one Hifi reads. The bargraph represent the 
+            distribution of the cluster size using four categories : -2, 3-10, 11-100, >100.
             """,
             plot=bargraph.plot(
                 plot_data,
                 cats,
                 {
                     "id": "isoseq-cluster-size-distribution-barplot",
-                    "title": "Iso-Seq cluster: Histogram of cluster size.",
+                    "title": "Iso-Seq cluster: Histogram of cluster size",
                     "ylab": "Count",  # Y axis label
                 },
             ),
         )
 
-    def _add_general_stats_refine(self, data_by_sample):
+    def _add_refine_table(self, data_by_sample):
         headers = {
             "num_reads_fl": {
                 "title": "Full-length",
@@ -198,12 +198,32 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "num_reads_flnc_polya": {
                 "title": "Poly(A) free non-chimeric full-length",
-                "description": "Number of non-chimeric CCS where both primers have been detected and the poly(A) tail has been removed",
+                "description": (
+                    "Number of non-chimeric CCS where both primers have been detected and the poly(A) "
+                    "tail has been removed"
+                ),
                 "scale": "GnBu",
                 "format": "{:,.d}",
             },
         }
-        self.general_stats_addcols(data_by_sample, headers, namespace="refine")
+        return self.add_section(
+            name="CCS statistics",
+            anchor="insert-refine-stats",
+            description="Statistics from the Iso-Seq <code>refine</code> summary JSON files.",
+            helptext="""
+            Iso-Seq <code>refine</code> performs the full-length read refinement by trimming poly(A) tails and
+            removing concatemers. It also outputs a summary JSON file <code>*.filter_summary.json</code> per each 
+            CCS file with statistics of refined full-length non-concatemer reads.
+            """,
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                {
+                    "id": "isoseq_refine_bargraph",
+                    "title": "Iso-Seq refine: filter summary",
+                },
+            ),
+        )
 
     def _add_refine_box_plots(self, values_by_metric_by_sample):
         data_by_sample_by_metric = {k: {} for k in REFINE_CATEGORIES.keys()}
@@ -216,10 +236,11 @@ class MultiqcModule(BaseMultiqcModule):
                 name=f"{REFINE_CATEGORIES[metric]}",
                 anchor=f"insert-refine-stats-{metric}",
                 helptext="""
-                Statistics from the Iso-Seq <code>refine</code> file <code>.report.csv</code>. The file contains 
-                information about 5' prime and 3' primers length, insert length, poly(A) length, and couple of 
-                primers detected for each CCS. The box plots present the distribution based on the known min, max, 
-                mean, standard deviation statistics for each parameter.
+                Iso-Seq <code>refine</code> performs the full-length read refinement by trimming poly(A) tails and
+                removing concatemers. It also outputs a report table <code>*.report.csv</code> per each CCS file,
+                providing statistics on each CCS: 5' prime and 3' primer lengths, insert length, poly(A) length, 
+                and couple of primers detected for each CCS. The box plots present the distribution showing the 
+                min, max, mean, standard deviation statistics for each metric.
                 """,
                 plot=box.plot(
                     list_of_data_by_sample=data_by_sample,
