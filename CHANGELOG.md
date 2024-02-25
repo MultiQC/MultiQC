@@ -19,6 +19,7 @@
 - Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
 - Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
 - Put matplotlib back into main deps ([#2370](https://github.com/MultiQC/MultiQC/pull/2370))
+- Update `modules.md`: `pyproject.toml`, `"shared_key": "read_count"`, ruffify ([#2371](https://github.com/MultiQC/MultiQC/pull/2371))
 
 ### New modules
 
