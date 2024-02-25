@@ -9,9 +9,6 @@ import re
 from multiqc.plots.plotly.box import BoxT
 from multiqc.utils import config, report
 from multiqc.plots.plotly import box
-from multiqc.plots.plotly.box import BoxPlotStats
-
-__all__ = ["BoxPlotStats", "plot"]
 
 logger = logging.getLogger(__name__)
 

@@ -12,23 +12,8 @@ from multiqc.utils import util_functions
 logger = logging.getLogger(__name__)
 
 
-class BoxPlotStats:
-    """
-    Pre-calculated statistics for a box plot.
-    """
-
-    def __init__(self, **kwargs):
-        self.median = kwargs.get("median", kwargs.get("mean"))
-        self.q1 = kwargs.get("q1", self.median)
-        self.q3 = kwargs.get("q3", self.median)
-        self.mean = kwargs.get("mean", self.median)
-        self.sd = kwargs.get("std", kwargs.get("stddev", kwargs.get("sd")))
-        self.lowerfence = kwargs.get("min", kwargs.get("lowerfence"))
-        self.upperfence = kwargs.get("max", kwargs.get("upperfence"))
-
-
 # Type of single box (matching one sample)
-BoxT = Union[List[Union[int, float]], BoxPlotStats]
+BoxT = List[Union[int, float]]
 
 
 def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
@@ -103,27 +88,13 @@ class BoxPlot(Plot):
 
             for sname, values in zip(self.samples, self.data):
                 params = copy.deepcopy(self.trace_params)
-                if isinstance(values, list):
-                    fig.add_trace(
-                        go.Box(
-                            x=values,
-                            name=sname,
-                            **params,
-                        ),
-                    )
-                elif isinstance(values, BoxPlotStats):
-                    # Box plot with pre-calculated statistics, without data points
-                    fig.add_trace(
-                        go.Box(
-                            **{k: [v] for k, v in values.__dict__},
-                            name=sname,
-                            **params,
-                        )
-                    )
-                else:
-                    raise ValueError(
-                        f"Unexpected type of box plot data item: {type(values)}. " f"Expected: list or BoxPlotStats"
-                    )
+                fig.add_trace(
+                    go.Box(
+                        x=values,
+                        name=sname,
+                        **params,
+                    ),
+                )
             return fig
 
     def __init__(
@@ -160,7 +131,7 @@ class BoxPlot(Plot):
                 hoverformat=self.layout.yaxis.hoverformat,
                 ticksuffix=self.layout.yaxis.ticksuffix,
             ),
-            hovermode="y unified",
+            hovermode="y",
             hoverlabel=dict(
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
