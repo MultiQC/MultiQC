@@ -69,12 +69,6 @@ class BoxPlot(Plot):
             dataset.layout["yaxis"]["title"] = None
             return dataset
 
-        def dump_for_javascript(self) -> Dict:
-            d = super().dump_for_javascript()
-            # Convert BoxPlotStats to dict
-            d["data"] = [el if isinstance(el, dict | list) else el.__dict__ for el in self.data]
-            return d
-
         def create_figure(
             self,
             layout: go.Layout,

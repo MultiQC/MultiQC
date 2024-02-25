@@ -21,6 +21,9 @@
 
 ### New modules
 
+- [**IsoSeq**](https://github.com/PacificBiosciences/IsoSeq)
+  - Iso-Seq contains the newest tools to identify transcripts in PacBio single-molecule sequencing data (HiFi reads).
+
 ### Module updates
 
 - **bcl2fastq**: fix the top undetermined barcodes plot ([#2340](https://github.com/MultiQC/MultiQC/pull/2340))
