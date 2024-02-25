@@ -3,3 +3,5 @@ The project is configured in pyproject.toml. This script is left for the editabl
 """
 
 from setuptools import setup
+
+setup()
