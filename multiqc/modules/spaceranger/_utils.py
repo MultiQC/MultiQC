@@ -1,7 +1,7 @@
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
-    for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
-        title = title.replace(str, str.upper())
+    for _str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
+        title = title.replace(_str, _str.upper())
     return title
 
 
