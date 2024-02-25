@@ -4,22 +4,20 @@
 
 ### MultiQC updates
 
+- New plot type: box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
+- Pin Plotly version and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
 - Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
-- Group-mode bar plot: fix inner gap ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
-- Pin Plotly package and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
+- Bar plot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
+- Bar plot: fix inner gap in group mode ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
 - Always create JSON even when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
-- Fix getting id from optional pconfig=None ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
-- Barplot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
-- MegaQC: dump `pconfig` ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
-- Catch non-hashable values in table data ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
-- Prevent parsing numerical sample names in heatmap ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
+- Dump `pconfig` for MegaQC ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
+- Catch non-hashable values (dicts, lists) passed as a table cell value ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
+- Heatmap: prevent from parsing numerical sample names ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
 - Replace `setup.py` with `pyproject.toml` ([#2353](https://github.com/MultiQC/MultiQC/pull/2353))
-- Infinite dmax or dmin fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
-- Wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
-- Add box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
+- Fix: generate plot id when `pconfig=None` ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
+- Fix: infinite `dmax` or `dmin` fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
+- Fix: wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
 - Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
-- Put matplotlib back into main deps ([#2370](https://github.com/MultiQC/MultiQC/pull/2370))
-- Box plot adjustment ([#2374](https://github.com/MultiQC/MultiQC/pull/2374))
 
 ### New modules
 

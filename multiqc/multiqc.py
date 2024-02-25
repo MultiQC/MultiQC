@@ -11,6 +11,7 @@ import base64
 import errno
 import io
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -19,9 +20,9 @@ import tempfile
 import time
 import json
 import traceback
-from urllib.request import urlopen
 
 import jinja2
+import requests
 import rich
 import rich_click as click
 from packaging import version
@@ -30,6 +31,7 @@ from rich.syntax import Syntax
 from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
+from .utils.util_functions import strtobool
 
 # Set up logging
 start_execution_time = time.time()
@@ -404,14 +406,43 @@ def run(
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urlopen(f"http://multiqc.info/version.php?v={config.short_version}", timeout=5)
-            remote_version = response.read().decode("utf-8").strip()
-            if version.parse(re.sub(r"[^0-9.]", "", remote_version)) > version.parse(
-                re.sub(r"[^0-9.]", "", config.short_version)
-            ):
-                logger.warning(f"MultiQC Version {remote_version} now available!")
+            # Fetch the version info from the API
+            meta = {
+                "version_multiqc": config.short_version,
+                "version_python": platform.python_version(),
+                "operating_system": platform.system(),
+                "is_docker": os.path.exists("/.dockerenv"),
+                "is_singularity": os.path.exists("/.singularity.d"),
+                "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
+                "is_ci": strtobool(os.getenv("CI", False)),
+            }
+            wait_seconds = 2
+            try:
+                r = requests.get(config.version_check_url, params=meta, timeout=wait_seconds)
+            except requests.exceptions.Timeout as e:
+                logger.debug(
+                    f"Timed out after waiting for {wait_seconds}s for multiqc.info to check latest version: {e}"
+                )
+            except requests.exceptions.RequestException as e:
+                logger.debug(f"Could not connect to multiqc.info for version check: {e}")
             else:
-                logger.debug(f"Latest MultiQC version is {remote_version}")
+                release_info = r.json()
+                # Broadcast log messages if found
+                for msg in release_info.get("broadcast_messages", []):
+                    if msg.get("message"):
+                        level = msg.get("level")
+                        if level not in ["debug", "info", "warning", "error", "critical"]:
+                            level = "info"
+                        getattr(logger, level)(msg["message"])
+                # Available update log if newer
+                remove_version = version.parse(re.sub(r"[^0-9.]", "", release_info["latest_release"]["version"]))
+                this_version = version.parse(re.sub(r"[^0-9.]", "", config.short_version))
+                if remove_version > this_version:
+                    logger.warning(f"MultiQC Version {release_info['latest_release']['version']} now available!")
+                logger.debug(
+                    f"Latest MultiQC version is {release_info['latest_release']['version']}, "
+                    f"released {release_info['latest_release']['release_date']}"
+                )
         except Exception as e:
             logger.debug(f"Could not connect to multiqc.info for version check: {e}")
 
