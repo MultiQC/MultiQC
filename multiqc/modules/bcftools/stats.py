@@ -280,10 +280,10 @@ class StatsReportMixin:
                 "ymin": 0,
                 "smooth_points": 600,
                 "data_labels": [
-                    {"name": "Count SNP", "ylab": "Quality"},
-                    {"name": "Count Transitions", "ylab": "Quality"},
-                    {"name": "Count Transversions", "ylab": "Quality"},
-                    {"name": "Count Indels", "ylab": "Quality"},
+                    "Count SNP",
+                    "Count Transitions",
+                    "Count Transversions",
+                    "Count Indels",
                 ],
             }
             self.add_section(
