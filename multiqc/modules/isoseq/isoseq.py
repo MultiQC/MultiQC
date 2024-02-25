@@ -12,6 +12,14 @@ from multiqc.plots import bargraph, box
 log = logging.getLogger(__name__)
 
 
+REFINE_CATEGORIES = {
+    "fivelen": "5' primer length",
+    "threelen": "3' primer length",
+    "insertlen": "Insert length",
+    "polyAlen": "Poly(A) length",
+}
+
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
@@ -34,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if refine_json_data_by_sample:
             self._add_general_stats_refine(refine_json_data_by_sample)
-            self._add_refine_plot(refine_csv_data_by_sample)
+            self._add_refine_box_plots(refine_csv_data_by_sample)
 
         if cnt_by_cluster_id_by_sample:
             self._add_general_stats_cluster(cnt_by_cluster_id_by_sample)
@@ -49,9 +57,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         for f in self.find_log_files("isoseq/refine-csv", filehandles=True):
             reader: csv.DictReader = csv.DictReader(f["f"])
+            file_cols = reader.fieldnames
+            expected_cols = set(REFINE_CATEGORIES.keys())
+            missing_cols = set(expected_cols) - set(file_cols)
+            if missing_cols:
+                log.warning(f"Expected columns {missing_cols} not found in {f['fn']}")
+
+            found_cols = set(file_cols) & set(expected_cols)
             vals_by_metric = defaultdict(list)
             for row in reader:
-                for col in ["fivelen", "threelen", "polyAlen", "insertlen"]:
+                for col in found_cols:
                     vals_by_metric[col].append(int(row[col]))
             refine_csv_data_by_sample[f["s_name"]] = vals_by_metric
             self.add_data_source(f, section="refine-csv")
@@ -190,42 +205,27 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(data_by_sample, headers, namespace="refine")
 
-    def _add_refine_plot(self, values_by_metric_by_sample):
-        data_labels = {
-            "fivelen": "5' primer length",
-            "threelen": "3' primer length",
-            "insertlen": "Insert length",
-            "polyAlen": "Poly(A) length",
-        }
-        data_by_sample_by_metric = {k: {} for k in data_labels.keys()}
+    def _add_refine_box_plots(self, values_by_metric_by_sample):
+        data_by_sample_by_metric = {k: {} for k in REFINE_CATEGORIES.keys()}
         for sname, values_by_metric in values_by_metric_by_sample.items():
-            for metric in data_labels.keys():
+            for metric in REFINE_CATEGORIES.keys():
                 data_by_sample_by_metric[metric][sname] = values_by_metric[metric]
 
-        data_labels = [
-            {
-                "label": title,
-                "title": "Iso-Seq refine: " + title,
-            }
-            for metric, title in data_labels.items()
-        ]
-
-        self.add_section(
-            name="Iso-Seq refine",
-            anchor="insert-refine-stats",
-            description="Iso-Seq refine statistics",
-            helptext="""
-            The <code>.report.csv</code> files contain information about 5' prime and 3' primers length, 
-            insert length, poly(A) length, and couple of primers detected for each CCS.
-            The boxplot presents the distribution based on the known min, max, mean, standard deviation
-            statistics for each parameter.
-            """,
-            plot=box.plot(
-                list_of_data_by_sample=list(data_by_sample_by_metric.values()),
-                pconfig={
-                    "id": "isoseq_refine_boxplot",
-                    "title": "Iso-Seq: refine",
-                    "data_labels": data_labels,
-                },
-            ),
-        )
+        for metric, data_by_sample in data_by_sample_by_metric.items():
+            self.add_section(
+                name=f"{REFINE_CATEGORIES[metric]}",
+                anchor=f"insert-refine-stats-{metric}",
+                helptext="""
+                Statistics from the Iso-Seq <code>refine</code> file <code>.report.csv</code>. The file contains 
+                information about 5' prime and 3' primers length, insert length, poly(A) length, and couple of 
+                primers detected for each CCS. The box plots present the distribution based on the known min, max, 
+                mean, standard deviation statistics for each parameter.
+                """,
+                plot=box.plot(
+                    list_of_data_by_sample=data_by_sample,
+                    pconfig={
+                        "id": f"isoseq_refine_boxplot_{metric}",
+                        "title": f"Iso-Seq refine: {REFINE_CATEGORIES[metric]}",
+                    },
+                ),
+            )
