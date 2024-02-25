@@ -55,30 +55,12 @@ class BoxPlot extends Plot {
       }
 
       let values = data[sampleIdx];
-      // Regular box plot: data provided directly, statistics are calculated dynamically
-      if (Array.isArray(values)) {
-        return {
-          type: "box",
-          x: values,
-          name: sample.name,
-          ...params,
-        };
-      } else {
-        // Box plot with pre-calculated statistics, without data points
-        let median = values.median ?? values.mean ?? null;
-        return {
-          type: "box",
-          q1: [values.q1 ?? median],
-          q3: [values.q3 ?? median],
-          median: [median],
-          mean: [values.mean ?? median],
-          sd: [values.std ?? values.stddev ?? values.sd ?? null],
-          lowerfence: [values.min ?? values.lowerfence ?? null],
-          upperfence: [values.max ?? values.upperfence ?? null],
-          name: sample.name,
-          ...params,
-        };
-      }
+      return {
+        type: "box",
+        x: values,
+        name: sample.name,
+        ...params,
+      };
     });
   }
 
