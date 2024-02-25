@@ -438,6 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": f"{self.name}: Top {self.top_n} species duplication",
             "square": False,
             "xcats_samples": False,
+            "angled_xticks": False,
         }
 
         rank_code = "S"

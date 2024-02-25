@@ -101,10 +101,15 @@ class MultiqcModule(BaseMultiqcModule):
         results = defaultdict(dict)
         # Parse the lines that have the data
         for line in file_content:
-            spline = line.strip().split("\t")
-            data = {field: value for field, value in zip(header, spline)}
+            fields = line.strip().split("\t")
+            if len(header) != len(fields):
+                continue
 
-            # Remove the sample and chromsome from the data
+            data = {field: value for field, value in zip(header, fields)}
+            if "chromosome" not in data or "sample" not in data:
+                continue
+
+            # Remove the sample and chromosome from the data
             sample = str(data.pop("sample"))
             chromosome = data.pop("chromosome")
 
@@ -442,6 +447,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "WhatsHap",
                     "id": "whatshap-stats-table",
+                    "title": "WhatsHap Statistics",
                 },
             ),
         )

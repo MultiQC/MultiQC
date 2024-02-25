@@ -241,7 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
         # also make some nice barplots
         # barplot for mean umis per sample
         mean_umis = {
-            sample: {"UMIs per barcode": values["meanUMIsPerBarcode"]} for sample, values in self.bustools_data.items()
+            sample: {"Mean UMIs per barcode": values["meanUMIsPerBarcode"]}
+            for sample, values in self.bustools_data.items()
         }
 
         self.add_section(
@@ -277,19 +278,19 @@ class MultiqcModule(BaseMultiqcModule):
             description="The whitelist is a list of unique barcodes used in your protocol, either provided or inferred from the data.",
             helptext="Each unique barcode from the whitelist represents a cell. The percentage of "
             "reads with barcode / barcodes in the whitelist is a measure of percentage of reads that could "
-            "be asigned to a cell.",
+            "be assigned to a cell.",
             plot=bargraph.plot(
                 percentage_whitelist,
                 pconfig={
                     "id": "bus_reads",
                     "title": "Bustools: Barcodes / reads with barcodes in the whitelist",
                     "ymax": 100,
-                    "ymix": 0,
+                    "ymin": 0,
                     "cpswitch": False,
                     "tt_percentages": False,
                     "ylab": "Percentage of barcodes / reads with barcodes in the whitelist",
                     "stacking": None,
-                    "ylab_format": "{value}%",
+                    "ysuffix": "%",
                 },
             ),
         )

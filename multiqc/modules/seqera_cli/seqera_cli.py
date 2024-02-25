@@ -111,9 +111,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Figure out the org/workspace and save as a separate field
         # Needed so that we can have it as a separate column in the table
         for d in data_by_run.values():
-            runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
-            if d["runUrl"]:
-                m = runUrl_re.search(d["runUrl"])
+            run_url_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
+            if d.get("runUrl"):
+                m = run_url_re.search(d["runUrl"])
                 if m:
                     org, workspace, run = m.groups()
                     d["org"] = org
@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             # service-info.json
             "version",
         ]
-        d = {k: d.get(k) for k in keys}
+        d = {k: d.get(k) for k in keys if k in d}
 
         if not d.get("id") or not d.get("repository"):
             return None
@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
         # parse them with a library, take the difference "complete" - "start" to get the
         # wall time, and convert the wall time it to a human-readable format.
-        if "start" in d and "complete" in d:
+        if "start" in d and "complete" in d and d["complete"] is not None:
             start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
             complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
             wall_time = complete - start
@@ -205,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         repositories = list(set(d.get("repository") for d in data_by_run.values()))
 
-        def format_runUrl(x):
+        def format_run_url(x):
             runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
             if x:
                 m = runUrl_re.search(x)
@@ -215,7 +215,12 @@ class MultiqcModule(BaseMultiqcModule):
             return str(x)
 
         headers = {
-            "runUrl": {"title": "Run ID", "description": "Workflow run ID", "scale": False, "format": format_runUrl},
+            "runUrl": {
+                "title": "Run ID",
+                "description": "Workflow run ID",
+                "scale": False,
+                "format": format_run_url,
+            },
             "org_workspace": {
                 "title": "Workspace",
                 "description": "Organisation and workspace",
@@ -351,7 +356,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_suffix": "&nbsp;h",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),
@@ -370,7 +374,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_suffix": "&nbsp;h",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),
@@ -389,7 +392,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_suffix": "&nbsp;$",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),

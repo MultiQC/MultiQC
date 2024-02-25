@@ -41,8 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Write parsed report data to a file
-        self.write_data_file(self.percents, f"multiqc_{self.anchor}_percents")
-        self.write_data_file(self.counts, f"multiqc_{self.anchor}_counts")
+        self.write_data_file(self.percents, "multiqc_xengsort_percents")
+        self.write_data_file(self.counts, "multiqc_xengsort_counts")
 
         self._build_table()
         self._build_plot()
@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
             for cls in ["graft", "host", "ambiguous", "both", "neither"]:
                 table_data[sn][f"{cls}_reads_pct"] = data.get(cls)
                 headers[f"{cls}_reads_pct"] = {
-                    "rid": f"{self.anchor}_{cls}_reads_pct",  # to make the ID unique from xenome
+                    "rid": f"xengsort_{cls}_reads_pct",  # to make the ID unique from xenome
                     "title": f"{cls.capitalize()} reads",
                     "description": f"share of {cls} reads in the sample",
                     "min": 0,
@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
             for cls in ["graft", "host", "ambiguous", "both", "neither"]:
                 table_data[sn][f"{cls}_reads_cnt"] = data.get(cls)
                 detail_headers[f"{cls}_reads_cnt"] = {
-                    "rid": f"{self.anchor}_{cls}_reads_cnt",  # to make the ID unique from xenome
+                    "rid": f"xengsort_{cls}_reads_cnt",  # to make the ID unique from xenome
                     "title": f"{cls.capitalize()} reads",
                     "description": f"number of {cls} reads in the sample",
                     "min": 0,
@@ -115,8 +115,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Summary table",
-            anchor=f"{self.anchor}-summary-table-section",
-            plot=table.plot(table_data, detail_headers, {"id": f"{self.anchor}-summary-table"}),
+            anchor="xengsort-summary-table-section",
+            plot=table.plot(
+                table_data,
+                detail_headers,
+                {
+                    "id": "xengsort-summary-table",
+                    "namespace": "Xengsort",
+                    "title": "Xengsort: Summary",
+                },
+            ),
         )
 
     def _build_plot(self):
@@ -128,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
             "host": {"name": "Host", "color": "#e41a1c"},  # red
             "both": {"name": "Both", "color": "#984ea3"},  # purple
             "ambiguous": {"name": "Ambiguous", "color": "#616161"},  # grey
-            "neither": {"name": "Neither", "color": "b3b3b3"},  # light grey
+            "neither": {"name": "Neither", "color": "#b3b3b3"},  # light grey
         }
         self.add_section(
             description=f"This plot shows the number of reads classified by {self.name}",
@@ -141,16 +149,17 @@ class MultiqcModule(BaseMultiqcModule):
             * **Ambiguous**: reads origin could not be adequately determined.  
             """,
             name="Summary classification",
-            anchor=f"{self.anchor}_summary_bar_plot_section",
+            anchor="xengsort_summary_bar_plot_section",
             plot=bargraph.plot(
                 self.counts,
                 cats,
                 {
-                    "id": f"{self.anchor}_summary_bar_plot",
+                    "id": "xengsort_summary_bar_plot",
                     "title": f"{self.name}: summary classification",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of reads",
                     "cpswitch_c_active": False,
+                    "logswitch": True,
                 },
             ),
         )

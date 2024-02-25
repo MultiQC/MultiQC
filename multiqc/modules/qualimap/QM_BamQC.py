@@ -2,10 +2,13 @@
 
 
 import logging
+import os
+
 import math
 import re
 
 from multiqc import config
+from multiqc.modules.qualimap import parse_numerals
 from multiqc.plots import linegraph
 
 # Initialise the logger
@@ -82,58 +85,62 @@ def parse_reports(self):
 
 def parse_genome_results(self, f):
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
-    regexes = {
-        "Input": {
-            "bam_file": r"bam file = (.+)",
-        },
-        "Globals": {
-            "total_reads": r"number of reads = ([\d,]+)",
-            "mapped_reads": r"number of mapped reads = ([\d,]+)",
-            "mapped_bases": r"number of mapped bases = ([\d,]+)",
-            "sequenced_bases": r"number of sequenced bases = ([\d,]+)",
-        },
-        "Insert size": {
-            "mean_insert_size": r"mean insert size = ([\d,\.]+)",
-            "median_insert_size": r"median insert size = ([\d,\.]+)",
-        },
-        "Mapping quality": {
-            "mean_mapping_quality": r"mean mapping quality = ([\d,\.]+)",
-        },
-        "Mismatches and indels": {
-            "general_error_rate": r"general error rate = ([\d,\.]+)",
-        },
-        "Coverage": {
-            "mean_coverage": r"mean coverageData = ([\d,\.]+)",
-        },
-        "Globals inside": {
-            "regions_size": r"regions size = ([\d,\.]+)",
-            "regions_mapped_reads": r"number of mapped reads = ([\d,]+)",  # WARNING: Same as in Globals
-        },
+
+    int_metrics = {
+        "number of reads": "total_reads",
+        "number of mapped reads": "mapped_reads",
+        "number of mapped reads inside": "regions_mapped_reads",
+        "number of mapped bases": "mapped_bases",
+        "number of sequenced bases": "sequenced_bases",
+        "regions size": "regions_size",
     }
-    d = dict()
+    float_metrics = {
+        "mean insert size": "mean_insert_size",
+        "median insert size": "median_insert_size",
+        "mean mapping quality": "mean_mapping_quality",
+        "mean coverageData": "mean_coverage",
+    }
+    rate_metrics = {  # useful to determine decimal separator
+        "general error rate": "general_error_rate",
+        "GC percentage": "gc_percentage",
+        "duplication rate": "duplication_rate",
+        "homopolymer indels": "homopolymer_indels",
+    }
+
+    value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
+    preparsed_d = dict()
+    # Keeping track of the section because "number of mapped reads" occurs both
+    # under "Globals" and "Globals inside"
     section = None
     for line in f["f"].splitlines():
         if line.startswith(">>>>>>>"):
             section = line[8:]
-        elif section:
-            for k, r in regexes.get(section, {}).items():
-                r_search = re.search(r, line)
-                if r_search:
-                    if r"\d" in r:
-                        try:
-                            d[k] = float(r_search.group(1).replace(",", ""))
-                        except ValueError:
-                            d[k] = r_search.group(1)
-                    else:
-                        d[k] = r_search.group(1)
+        elif not section:
+            continue
+        if "=" in line:
+            key, val = line.split("=", 1)
+            m = re.search(value_regex, val)
+            if m:
+                val = m.group(0)
+                val = re.sub(r"\xa0", "", val)
+            key = key.strip()
+            if "Globals inside" in section and key == "number of mapped reads":
+                key = "number of mapped reads inside"
+            preparsed_d[key] = val.strip()
 
     # Check we have an input filename
-    if "bam_file" not in d:
+    if "bam file" not in preparsed_d:
         log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
         return None
+    s_name = self.clean_s_name(preparsed_d["bam file"], f)
 
-    # Get a nice sample name
-    s_name = self.clean_s_name(d["bam_file"], f)
+    d = parse_numerals(
+        preparsed_d,
+        float_metrics=float_metrics,
+        int_metrics=int_metrics,
+        rate_metrics=rate_metrics,
+        fpath=os.path.join(f["root"], f["fn"]),
+    )
 
     if "general_error_rate" in d:
         d["general_error_rate"] = d["general_error_rate"] * 100.0
@@ -174,7 +181,7 @@ def parse_coverage(self, f):
         if line.startswith("#"):
             continue
         coverage, count = line.split(None, 1)
-        coverage = int(round(float(coverage)))
+        coverage = int(round(float(coverage.replace(",", "."))))
         count = float(count)
         d[coverage] = count
 
@@ -569,7 +576,7 @@ def general_stats_headers(self):
     }
     for c in self.covs:
         self.general_stats_headers[f"{c}_x_pc"] = {
-            "title": f"&ge; {c}X",
+            "title": f"≥ {c}X",
             "description": f"Fraction of genome with at least {c}X coverage",
             "max": 100,
             "min": 0,

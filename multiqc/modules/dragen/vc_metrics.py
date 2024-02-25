@@ -14,57 +14,88 @@ NAMESPACE = "Variant calling"
 
 class DragenVCMetrics(BaseMultiqcModule):
     def add_vc_metrics(self):
-        data_by_sample = dict()
-
+        vc_data_by_sample = dict()
         for f in self.find_log_files("dragen/vc_metrics"):
             data = parse_vc_metrics_file(f)
             s_name = f["s_name"]
-            if s_name in data_by_sample:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="vc_metrics")
-            data_by_sample[s_name] = data
+            if s_name in vc_data_by_sample:
+                log.debug(f"Duplicate DRAGEN vc_metrics file was found! Overwriting sample {s_name}")
+            self.add_data_source(f, s_name=s_name, section="vc_metrics")
+            vc_data_by_sample[s_name] = data
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, s_name)
+        gvcf_data_by_sample = dict()
+        for f in self.find_log_files("dragen/gvcf_metrics"):
+            data = parse_vc_metrics_file(f)
+            s_name = f["s_name"]
+            if s_name in gvcf_data_by_sample:
+                log.debug(f"Duplicate DRAGEN gvcf_metrics file was found! Overwriting sample {s_name}")
+            self.add_data_source(f, s_name=s_name, section="gvcf_metrics")
+            gvcf_data_by_sample[s_name] = data
 
         # Filter to strip out ignored sample names:
-        data_by_sample = self.ignore_samples(data_by_sample)
-        if not data_by_sample:
+        vc_data_by_sample = self.ignore_samples(vc_data_by_sample)
+        gvcf_data_by_sample = self.ignore_samples(gvcf_data_by_sample)
+        if not vc_data_by_sample:
             return set()
 
         # Write data to file
-        self.write_data_file(data_by_sample, "dragen_vc_metrics")
+        self.write_data_file(vc_data_by_sample, "dragen_vc_metrics")
+        if gvcf_data_by_sample:
+            self.write_data_file(gvcf_data_by_sample, "dragen_gvcf_metrics")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         all_metric_names = set()
-        for sn, sdata in data_by_sample.items():
+        for sn, sdata in vc_data_by_sample.items():
             for m in sdata.keys():
                 all_metric_names.add(m)
 
-        gen_stats_headers, vc_table_headers = make_headers(all_metric_names, VC_METRICS)
+        gen_stats_headers, table_headers = make_headers(all_metric_names, VC_METRICS)
 
-        self.general_stats_addcols(data_by_sample, gen_stats_headers, namespace=NAMESPACE)
+        self.general_stats_addcols(vc_data_by_sample, gen_stats_headers, namespace=NAMESPACE)
 
         self.add_section(
             name="Variant calling",
             anchor="dragen-vc-metrics",
             description="""
-            Variant calling metrics. Metrics are reported for each sample in multi sample VCF
-            and gVCF files. Based on the run case, metrics are reported either as standard
+            Metrics are reported for each sample in multi-sample VCF
+            files. Based on the run case, metrics are reported either as standard
             VARIANT CALLER or JOINT CALLER. All metrics are reported for post-filter VCFs,
             except for the "Filtered" metrics which represent how many variants were filtered out
             from pre-filter VCF to generate the post-filter VCF.
             """,
             plot=table.plot(
-                data_by_sample,
-                vc_table_headers,
+                vc_data_by_sample,
+                table_headers,
                 pconfig={
                     "id": "dragen-vc-metrics-table",
                     "namespace": NAMESPACE,
+                    "title": "DRAGEN: Variant calling metrics",
                 },
             ),
         )
-        return data_by_sample.keys()
+
+        if gvcf_data_by_sample:
+            self.add_section(
+                name="GVCF metrics",
+                anchor="dragen-gvcf-metrics",
+                description="""
+                Metrics are calculated for each sample in a corresponding GVCF file.
+                """,
+                plot=table.plot(
+                    gvcf_data_by_sample,
+                    table_headers,
+                    pconfig={
+                        "id": "dragen-gvcf-metrics-table",
+                        "namespace": NAMESPACE,
+                        "title": "DRAGEN: GVCF metrics",
+                    },
+                ),
+            )
+
+        return vc_data_by_sample.keys()
 
 
 VC_METRICS = [
@@ -292,7 +323,7 @@ VC_METRICS = [
 
 def parse_vc_metrics_file(f):
     """
-    T_SRR7890936_50pc.vc_metrics.csv
+    T_SRR7890936_50pc.vc_metrics.csv or T_SRR7890936_50pc.gvcf_metrics.csv
 
     VARIANT CALLER SUMMARY,,Number of samples,1
     VARIANT CALLER SUMMARY,,Reads Processed,2721782043
@@ -374,7 +405,7 @@ def parse_vc_metrics_file(f):
         if analysis == "VARIANT CALLER PREFILTER":
             prefilter_data[metric] = value
 
-        if analysis == "VARIANT CALLER POSTFILTER":
+        if analysis in ["VARIANT CALLER POSTFILTER", "VARIANT CALLER POSTFILTER GVCF"]:
             postfilter_data[metric] = value
             if percentage is not None:
                 postfilter_data[metric + " pct"] = percentage

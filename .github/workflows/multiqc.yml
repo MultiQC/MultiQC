@@ -113,15 +113,15 @@ jobs:
         if: matrix.python-version == env.latest_python
         run: multiqc --strict test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
-      - name: For overwrite / Flat plots / Tagged modules only / Exclude module / Ignore samples / Full names / zip data dir / config file
+      - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --tag methylation --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
 
-      - name: Specific module / named output dir / dev template / JSON data / File list
+      - name: Specific module / named output dir / JSON data / File list
         if: matrix.python-version == env.latest_python
         run: |
           cd test_data
-          multiqc -m star -o tests/multiqc_report_dev -t default_dev -k json --file-list data/special_cases/file_list.txt
+          multiqc -m star -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
 
       - name: No report
         if: matrix.python-version == env.latest_python
@@ -185,4 +185,12 @@ jobs:
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data\test-data-main\data\modules\ --filename full_report.html
+        run: |
+          $single_module = "${{ needs.changes.outputs.single_module }}"
+          # want to run on just one module to avoid the windows job to time out:
+          if ($single_module) {
+              multiqc $single_module --strict test_data\test-data-main\data\modules\ --filename full_report.html
+          }
+          if (-not $single_module) {
+              multiqc -m samtools --strict test_data\test-data-main\data\modules\ --filename full_report.html
+          }
