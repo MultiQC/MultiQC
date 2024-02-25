@@ -470,13 +470,13 @@ TABLE_CONFIG = {
     "sortRows": True,  # Whether to sort rows alphabetically
     "only_defined_headers": True,  # Only show columns that are defined in the headers config
     "col1_header": None,  # The header used for the first column with sample names.
-    "no_beeswarm": False,  # Force a table to always be plotted (beeswarm by default if many rows)
+    "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)
 }
 # Below are region-specific configs with higher priority.
 REGION_TABLE_CONFIG = {
     WGS: {
         "table_title": "WGS",
-        # "no_beeswarm": True,
+        # "no_violin": True,
         # "save_file": True,
         # "raw_data_fn": "Genome_raw_file",
     },

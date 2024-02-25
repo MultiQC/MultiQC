@@ -107,7 +107,7 @@ def parse_reports(module):
                 "table_title": f"{module.name}: Crosscheck Fingerprints",
                 "save_file": True,
                 "col1_header": "ID",
-                "no_beeswarm": True,
+                "no_violin": True,
             },
         ),
     )

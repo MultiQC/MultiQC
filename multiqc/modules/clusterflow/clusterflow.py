@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             "table_title": "Cluster Flow Commands",
             "col1_header": "Tool",
             "sortRows": False,
-            "no_beeswarm": True,
+            "no_violin": True,
         }
         self.add_section(
             name="Commands",
@@ -336,7 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "clusterflow-pipelines-table",
             "table_title": "Cluster Flow Pipelines",
             "col1_header": "Pipeline ID",
-            "no_beeswarm": True,
+            "no_violin": True,
             "save_file": True,
         }
         self.add_section(

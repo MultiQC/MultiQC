@@ -328,8 +328,9 @@ class ViolinPlot(Plot):
         assert len(list_of_values_by_sample_by_metric) > 0
 
         self.dt = dt
-        self.show_table_by_default = dt is not None and show_table_by_default
+        self.no_violin = pconfig.get("no_violin", pconfig.get("no_beeswarm", False))
         self.show_table = dt is not None
+        self.show_table_by_default = show_table_by_default or self.no_violin
 
         super().__init__(
             PlotType.VIOLIN,
@@ -381,7 +382,7 @@ class ViolinPlot(Plot):
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
         self.serialize_figure = False
-        if self.n_samples > config.max_table_rows:
+        if self.n_samples > config.max_table_rows and not self.no_violin:
             self.show_table = False
             if self.show_table_by_default:
                 logger.debug(
@@ -431,7 +432,10 @@ class ViolinPlot(Plot):
         return ": %{x}"
 
     def add_to_report(self, report) -> str:
-        violin_html = super().add_to_report(report)
+        if not self.no_violin:
+            violin_html = super().add_to_report(report)
+        else:
+            violin_html = ""
 
         warning = ""
         if self.show_table_by_default and not self.show_table:
@@ -456,17 +460,26 @@ class ViolinPlot(Plot):
             )
 
         if not self.show_table:
-            # Show violin alone
+            # Show violin alone.
+            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
+            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
             html = warning + violin_html
+        elif self.no_violin:
+            # Show table alone
+            table_html, configuration_modal = make_table(self.dt)
+            html = warning + table_html + configuration_modal
         else:
-            # Switch between table and violin
+            # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.dt, violin_id=self.id)
-            visibility = "style='display: none;'" if self.show_table_by_default else ""
-            html = f"<div id='mqc_violintable_wrapper_{self.id}' {visibility}>{warning}{violin_html}</div>"
-            if self.show_table:
-                visibility = "style='display: none;'" if not self.show_table_by_default else ""
-                html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {visibility}>{table_html}</div>"
+
+            violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
+            html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
+
+            table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
+            html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {table_visibility}>{table_html}</div>"
+
             html += configuration_modal
+
         return html
 
     def dump_for_javascript(self):
