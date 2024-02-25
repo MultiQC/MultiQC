@@ -365,32 +365,7 @@ data = {
 html = box.plot(data, pconfig=...)
 ```
 
-It is also possible to pass a dictionary of statistics directly, instead of a list:
-
-```python
-from multiqc.plots import box
-data = {
-    "sample 1": box.BoxPlotStats(
-        min=1,
-        q1=3,
-        median=5,
-        q3=7,
-        max=9,
-        mean=5.5,
-    ),
-    "sample 2": box.BoxPlotStats(
-        min=0,
-        q1=2,
-        median=6,
-        q3=6,
-        max=10,
-        mean=4.5,
-    ),
-}
-html = box.plot(data, pconfig=...)
-```
-
-And similar to other plot types, multiple datasets can be passed as `data`, along with
+Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
 
 ## Scatter Plots
