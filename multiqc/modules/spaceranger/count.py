@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from collections import OrderedDict
 
 from multiqc import config
@@ -108,7 +109,7 @@ class SpaceRangerCountMixin:
             )
 
             # The gDNA plots are only contained for spaceranger workflows with probesets
-            try:
+            if "genomic_dna" in self.spacerangercount_plots_data:
                 self.add_section(
                     name="Count - UMIs from Genomic DNA",
                     anchor="spaceranger-count-bcrank-plot",
@@ -119,29 +120,29 @@ class SpaceRangerCountMixin:
                         self.spacerangercount_plots_conf["genomic_dna"]["config"],
                     ),
                 )
-            except KeyError:
-                pass
 
-            self.add_section(
-                name="Count - Median genes",
-                anchor="spaceranger-count-genes-plot",
-                description=self.spacerangercount_plots_conf["genes"]["description"],
-                helptext=self.spacerangercount_plots_conf["genes"]["helptext"],
-                plot=linegraph.plot(
-                    self.spacerangercount_plots_data["genes"], self.spacerangercount_plots_conf["genes"]["config"]
-                ),
-            )
+            if "genes" in self.spacerangercount_plots_data:
+                self.add_section(
+                    name="Count - Median genes",
+                    anchor="spaceranger-count-genes-plot",
+                    description=self.spacerangercount_plots_conf["genes"]["description"],
+                    helptext=self.spacerangercount_plots_conf["genes"]["helptext"],
+                    plot=linegraph.plot(
+                        self.spacerangercount_plots_data["genes"], self.spacerangercount_plots_conf["genes"]["config"]
+                    ),
+                )
 
-            self.add_section(
-                name="Count - Saturation plot",
-                anchor="spaceranger-count-saturation-plot",
-                description=self.spacerangercount_plots_conf["saturation"]["description"],
-                helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
-                plot=linegraph.plot(
-                    self.spacerangercount_plots_data["saturation"],
-                    self.spacerangercount_plots_conf["saturation"]["config"],
-                ),
-            )
+            if "saturation" in self.spacerangercount_plots_data:
+                self.add_section(
+                    name="Count - Saturation plot",
+                    anchor="spaceranger-count-saturation-plot",
+                    description=self.spacerangercount_plots_conf["saturation"]["description"],
+                    helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
+                    plot=linegraph.plot(
+                        self.spacerangercount_plots_data["saturation"],
+                        self.spacerangercount_plots_conf["saturation"]["config"],
+                    ),
+                )
 
             return len(self.spacerangercount_general_data)
 
@@ -174,11 +175,14 @@ class SpaceRangerCountMixin:
             + summary["summary_tab"]["sequencing"]["table"]["rows"]
             + summary["summary_tab"]["mapping"]["table"]["rows"]
         )
-        # This is only contained in spaceranger reports for anlayses with probesets
+        # This is only contained in spaceranger reports for analyses with probe sets
         try:
             data_rows.extend(summary["analysis_tab"]["gdna"]["gems"]["table"]["rows"])
-        except KeyError:
-            pass
+        except KeyError as e:
+            fname = os.path.join(f["root"], f["fn"])
+            log.debug(
+                f"Could not parse the expected DNA table in the spaceranger report: {fname}: '{e}' field is missing"
+            )
 
         # Store general stats
         col_dict = {
@@ -287,8 +291,12 @@ class SpaceRangerCountMixin:
             plots_data["saturation"] = {
                 sample_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
             }
-        except KeyError:
-            pass
+        except KeyError as e:
+            log.debug("No saturation plot found in the spaceranger report:", e)
+            if "saturation" in plots:
+                del plots["saturation"]
+            if "saturation" in plots_data:
+                del plots_data["saturation"]
 
         # `analysis_tab` may not be present in the report if there are few reads
         try:
@@ -308,7 +316,11 @@ class SpaceRangerCountMixin:
                 sample_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])
             }
         except KeyError:
-            pass
+            log.debug("No median gene plot found in the spaceranger report")
+            if "genes" in plots:
+                del plots["genes"]
+            if "genes" in plots_data:
+                del plots_data["genes"]
 
         # The gDNA plots are only contained for spaceranger workflows with probesets
         try:
@@ -329,7 +341,11 @@ class SpaceRangerCountMixin:
                 sample_name: transform_data(summary["analysis_tab"]["gdna"]["plot"]["data"][2])
             }
         except KeyError:
-            pass
+            log.debug("No genomic DNA plot found in the spaceranger report")
+            if "genomic_dna" in plots:
+                del plots["genomic_dna"]
+            if "genomic_dna" in plots_data:
+                del plots_data["genomic_dna"]
 
         if len(data) > 0:
             if sample_name in self.spacerangercount_general_data:
