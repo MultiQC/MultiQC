@@ -84,7 +84,11 @@ class SpaceRangerCountMixin:
                     plot=table.plot(
                         self.spacerangercount_warnings,
                         self.count_warnings_headers,
-                        {"namespace": "Space Ranger Count", "id": "spaceranger-count-warnings"},
+                        {
+                            "namespace": "Space Ranger Count",
+                            "id": "spaceranger-count-warnings",
+                            "title": "Space Ranger Count: Warnings",
+                        },
                     ),
                 )
 
@@ -95,7 +99,11 @@ class SpaceRangerCountMixin:
                 plot=table.plot(
                     self.spacerangercount_data,
                     self.count_data_headers,
-                    {"namespace": "Space Ranger Count", "id": "spaceranger-count-stats"},
+                    {
+                        "namespace": "Space Ranger Count",
+                        "id": "spaceranger-count-stats",
+                        "title": "Space Ranger Count: Summary stats",
+                    },
                 ),
             )
 
