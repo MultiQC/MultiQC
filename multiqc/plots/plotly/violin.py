@@ -460,9 +460,15 @@ class ViolinPlot(Plot):
             )
 
         if not self.show_table:
-            # Show violin alone
+            # Show violin alone.
+            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
+            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
             html = warning + violin_html
-        elif self.show_table and not self.no_violin:
+        elif self.no_violin:
+            # Show table alone
+            table_html, configuration_modal = make_table(self.dt)
+            html = warning + table_html + configuration_modal
+        else:
             # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.dt, violin_id=self.id)
 
@@ -473,10 +479,6 @@ class ViolinPlot(Plot):
             html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {table_visibility}>{table_html}</div>"
 
             html += configuration_modal
-        else:
-            # Show table alone
-            table_html, configuration_modal = make_table(self.dt)
-            html = warning + table_html + configuration_modal
 
         return html
 
