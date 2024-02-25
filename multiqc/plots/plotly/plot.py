@@ -208,11 +208,9 @@ class Plot(ABC):
 
             if not isinstance(dconfig, (str, dict)):
                 logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
-            dconfig = dconfig if isinstance(dconfig, dict) else {"label": dconfig}
-            dataset.label = dconfig.get("name", idx + 1)
-            if "label" in dconfig:
-                dataset.label = dconfig["label"]
-            if "ylab" not in dconfig:
+            dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
+            dataset.label = dconfig.get("name", dconfig.get("label", idx + 1))
+            if "ylab" not in dconfig and "ylab" not in self.pconfig:
                 dconfig["ylab"] = dataset.label
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
