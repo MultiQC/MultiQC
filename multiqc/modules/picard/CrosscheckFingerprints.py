@@ -124,8 +124,6 @@ def parse_reports(module):
             pconfig={
                 "id": "picard-crosscheckfingerprints-lod-heatmap",
                 "title": f"{module.name}: Crosscheck Fingerprints",
-                "ylab": "Left sample",
-                "xlab": "Right sample",
                 "zlab": "LOD score",
                 "xcats_samples": True,
                 "ycats_samples": True,
