@@ -61,6 +61,8 @@ def parse_reports(module):
             row["RIGHT_SAMPLE"] = module.clean_s_name(row["RIGHT_SAMPLE"], f)
             row["RIGHT_GROUP_VALUE"] = module.clean_s_name(row["RIGHT_GROUP_VALUE"], f)
 
+            row["RESULT"] = row["RESULT"].capitalize().replace("_", " ")
+
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
@@ -91,6 +93,11 @@ def parse_reports(module):
         "Crosschecks All Expected": {
             "title": "Crosschecks",
             "description": "All results for samples CrosscheckFingerprints were as expected.",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "All expected"}],
+                "warn": [{"s_eq": "Some inconclusive"}],
+                "fail": [{"s_eq": "Unexpected"}, {"s_eq": "Some unexpected"}],
+            },
         }
     }
     module.general_stats_addcols(general_stats_data, general_stats_headers, namespace="CrosscheckFingerprints")
@@ -261,9 +268,9 @@ def _get_table_headers(data_by_sample):
         if h == "RESULT":
             headers[h]["title"] = "Categorical Result"
             headers[h]["cond_formatting_rules"] = {
-                "pass": [{"s_contains": "EXPECTED_"}],
-                "warn": [{"s_eq": "INCONCLUSIVE"}],
-                "fail": [{"s_contains": "UNEXPECTED_"}],
+                "pass": [{"s_contains": "Expected"}],
+                "warn": [{"s_eq": "Inconclusive"}],
+                "fail": [{"s_contains": "Unexpected"}],
             }
 
         # Add appropriate colors for LOD scores
@@ -288,7 +295,13 @@ def _create_general_stats_data(in_data):
     sorted_by_left_sample = sorted(flattened, key=lambda r: r["LEFT_SAMPLE"])
 
     for group, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
-        passfail = "Pass" if all(v["RESULT"].startswith("EXPECTED") for v in values) else "Fail"
-        out_data[group] = {"Crosschecks All Expected": passfail}
+        status = "All expected"
+        if all(v["RESULT"].startswith("Unexpected") for v in values):
+            status = "All unexpected"
+        elif any(v["RESULT"].startswith("Unexpected") for v in values):
+            status = "Some unexpected"
+        elif any(v["RESULT"] == "Inconclusive" for v in values):
+            status = "Some inconclusive"
+        out_data[group] = {"Crosschecks All Expected": status}
 
     return out_data
