@@ -50,13 +50,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the Sickle standard output"""
         regexes = [
             # Paired-end
-            ["reads_paired_kept", re.compile("FastQ paired records kept: ([\d,]+) .*")],
-            ["reads_single_kept", re.compile("FastQ single records kept: ([\d,]+).*")],
-            ["reads_paired_discarded", re.compile("FastQ paired records discarded: ([\d,]+) .*")],
-            ["reads_single_discarded", re.compile("FastQ single records discarded: ([\d,]+) .*")],
+            ["reads_paired_kept", re.compile(r"FastQ paired records kept: ([\d,]+) .*")],
+            ["reads_single_kept", re.compile(r"FastQ single records kept: ([\d,]+).*")],
+            ["reads_paired_discarded", re.compile(r"FastQ paired records discarded: ([\d,]+) .*")],
+            ["reads_single_discarded", re.compile(r"FastQ single records discarded: ([\d,]+) .*")],
             # Single-end
-            ["reads_single_kept", re.compile("FastQ records kept: ([\d,]+)")],
-            ["reads_single_discarded", re.compile("FastQ records discarded: ([\d,]+)")],
+            ["reads_single_kept", re.compile(r"FastQ records kept: ([\d,]+)")],
+            ["reads_single_discarded", re.compile(r"FastQ records discarded: ([\d,]+)")],
         ]
         data = {}
         for line in f.splitlines():

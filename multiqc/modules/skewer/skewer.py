@@ -89,16 +89,16 @@ class MultiqcModule(BaseMultiqcModule):
         """Go through log file looking for skewer output"""
         fh = f["f"]
         regexes = {
-            "fq1": "Input file:\s+(.+)",
-            "fq2": "Paired file:\s+(.+)",
-            "r_processed": "(\d+) read|reads pairs? processed",
-            "r_short_filtered": "(\d+) \(\s*\d+.\d+%\) short read",
-            "r_empty_filtered": "(\d+) \(\s*\d+.\d+%\) empty read",
-            "r_avail": "(\d+) \(\s*\d+.\d+%\) read",
-            "r_trimmed": "(\d+) \(\s*\d+.\d+%\) trimmed read",
-            "r_untrimmed": "(\d+) \(\s*\d+.\d+%\) untrimmed read",
+            "fq1": r"Input file:\s+(.+)",
+            "fq2": r"Paired file:\s+(.+)",
+            "r_processed": r"(\d+) read|reads pairs? processed",
+            "r_short_filtered": r"(\d+) \(\s*\d+.\d+%\) short read",
+            "r_empty_filtered": r"(\d+) \(\s*\d+.\d+%\) empty read",
+            "r_avail": r"(\d+) \(\s*\d+.\d+%\) read",
+            "r_trimmed": r"(\d+) \(\s*\d+.\d+%\) trimmed read",
+            "r_untrimmed": r"(\d+) \(\s*\d+.\d+%\) untrimmed read",
         }
-        regex_hist = "\s?(\d+)\s+(\d+)\s+(\d+.\d+)%"
+        regex_hist = r"\s?(\d+)\s+(\d+)\s+(\d+.\d+)%"
 
         data = dict()
         for k, v in regexes.items():

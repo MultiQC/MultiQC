@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for line in f["f"]:
             if "Reads file" in line:
-                parts = re.split(r":|=", line)
+                parts = re.split(r"[:=]", line)
                 s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = dict()
             if "Results:" in line and not post_results_start:  # old versions
@@ -83,13 +83,13 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if post_results_start and not post_database_start:
                 if "Total reads =" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["total"] = int(m.group())
                     else:
                         err = True
                 elif "Total reads passing" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["rRNA"] = int(m.group())
                         self.sortmerna[s_name]["rRNA_pct"] = (
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         err = True
                 elif "Total reads failing" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["non_rRNA"] = int(m.group())
                         self.sortmerna[s_name]["non_rRNA_pct"] = (
