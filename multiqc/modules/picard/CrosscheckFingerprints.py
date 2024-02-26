@@ -2,12 +2,12 @@
 
 import logging
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from csv import DictReader
 from itertools import chain, groupby
 
 from multiqc import config
-from multiqc.plots import table
+from multiqc.plots import table, heatmap
 from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger
@@ -66,6 +66,11 @@ def parse_reports(module):
             row["TUMOR_AWARENESS"] = tumor_awareness
             data_by_sample[i] = row
 
+            try:
+                row["LOD_SCORE"] = float(row["LOD_SCORE"])
+            except ValueError:
+                row["LOD_SCORE"] = None
+
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
@@ -90,10 +95,10 @@ def parse_reports(module):
     }
     module.general_stats_addcols(general_stats_data, general_stats_headers, namespace="CrosscheckFingerprints")
 
-    # Add a table section to the report
+    # Add a pairwise comparison table
     module.add_section(
         name="Crosscheck Fingerprints",
-        anchor=f"{module.anchor}-crosscheckfingerprints",
+        anchor=f"{module.anchor}-crosscheckfingerprints-table",
         description="Pairwise identity checking between samples and groups.",
         helptext="""
         Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
@@ -104,10 +109,37 @@ def parse_reports(module):
             {
                 "namespace": module.name,
                 "id": f"{module.anchor}_crosscheckfingerprints_table",
-                "table_title": f"{module.name}: Crosscheck Fingerprints",
+                "title": f"{module.name}: Crosscheck Fingerprints",
                 "save_file": True,
                 "col1_header": "ID",
                 "no_violin": True,
+            },
+        ),
+    )
+
+    # Heatmap of the LOD scores for each pairwise comparison
+    heatmap_data = defaultdict(dict)
+    for row in data_by_sample.values():
+        left = row["LEFT_SAMPLE"]
+        right = row["RIGHT_SAMPLE"]
+        heatmap_data[left][right] = row["LOD_SCORE"]
+
+    module.add_section(
+        name="Crosscheck Fingerprints Heatmap",
+        anchor=f"{module.anchor}-crosscheckfingerprints-heatmap",
+        description="Pairwise identity checking between samples and groups: heatmap of LOD scores.",
+        plot=heatmap.plot(
+            heatmap_data,
+            pconfig={
+                "id": "picard-crosscheckfingerprints-lod-heatmap",
+                "title": f"{module.name}: Crosscheck Fingerprints",
+                "ylab": "Left sample",
+                "xlab": "Right sample",
+                "zlab": "LOD score",
+                "xcats_samples": True,
+                "ycats_samples": True,
+                "square": True,
+                "legend": False,
             },
         ),
     )
