@@ -49,16 +49,15 @@ class HeatmapPlot(Plot):
         ) -> "HeatmapPlot.Dataset":
             if isinstance(rows, dict):
                 # Convert dict to a list of lists
-                found_ycats = list(rows.keys())
-                found_xcats = []
-                for y, value_by_x in rows.items():
-                    for x, value in value_by_x.items():
-                        if x not in found_xcats:
-                            found_xcats.append(x)
-
-                ycats = [y for y in found_ycats if y in ycats] if ycats else found_ycats
-                xcats = [x for x in found_xcats if x in xcats] if xcats else found_xcats
-                rows = [[rows[y].get(x) for x in xcats] for y in ycats]
+                if not ycats:
+                    ycats = list(rows.keys())
+                if not xcats:
+                    xcats = []
+                    for y, value_by_x in rows.items():
+                        for x, value in value_by_x.items():
+                            if x not in xcats:
+                                xcats.append(x)
+                rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
 
             dataset = HeatmapPlot.Dataset(
                 **dataset.__dict__,
