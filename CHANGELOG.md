@@ -20,6 +20,7 @@
 - Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
 - Violin plot: filter Inf values ([#2380](https://github.com/MultiQC/MultiQC/pull/2380))
 - Fix use of the `no_violin`/`no_beeswarm` table config flag ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
+- Fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
 
 ### New modules
 
