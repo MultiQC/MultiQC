@@ -96,6 +96,18 @@ class HeatmapPlot(Plot):
     ):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
 
+        if isinstance(rows, list):
+            if ycats and not isinstance(ycats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: ycats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the rows in the input data."
+                )
+            if xcats and not isinstance(xcats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: xcats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the columns in the input data."
+                )
+
         self.layout.update(
             yaxis=dict(
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
