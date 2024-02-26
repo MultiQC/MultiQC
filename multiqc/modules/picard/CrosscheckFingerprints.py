@@ -78,6 +78,16 @@ def parse_reports(module):
             except ValueError:
                 row["LOD_SCORE"] = None
 
+            # Add BEST_MATCH and BEST_MATCH_LOD if the result is unexpected or inconclusive
+            if row["RESULT"].startswith("Unexpected") or row["RESULT"] == "Inconclusive":
+                # Find the best match for the left sample
+                left_sample = row["LEFT_SAMPLE"]
+                best_match = max(
+                    (r for r in lines if r["LEFT_SAMPLE"] == left_sample), key=lambda r: float(r["LOD_SCORE"])
+                )
+                row["BEST_MATCH"] = best_match["RIGHT_SAMPLE"]
+                row["BEST_MATCH_LOD"] = float(best_match["LOD_SCORE"])
+
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
@@ -190,6 +200,7 @@ def parse_reports(module):
                 "ycats_samples": True,
                 "square": True,
                 "legend": False,
+                "reverseColors": True,
             },
         ),
     )
@@ -331,7 +342,15 @@ def _get_table_headers(data_by_sample):
             continue
 
         # Set up the configuration for the column
-        h_title = h.replace("_", " ").strip().lower().capitalize().replace("Lod", "LOD")
+        h_title = (
+            h.replace("_", " ")
+            .strip()
+            .lower()
+            .capitalize()
+            .replace("Lod score", "LOD")
+            .replace("tumor normal", "T/N")
+            .replace("normal tumor", "N/T")
+        )
         headers[h] = {
             "title": h_title,
             "description": FIELD_DESCRIPTIONS.get(h),
@@ -341,7 +360,7 @@ def _get_table_headers(data_by_sample):
 
         # Rename Result to be a longer string so the table formats more nicely
         if h == "RESULT":
-            headers[h]["title"] = "Categorical Result"
+            headers[h]["title"] = "Match"
             headers[h]["cond_formatting_rules"] = {
                 "pass": [{"s_contains": "Expected"}],
                 "warn": [{"s_eq": "Inconclusive"}],
@@ -356,5 +375,20 @@ def _get_table_headers(data_by_sample):
 
         if h in table_cols_hidden:
             headers[h]["hidden"] = True
+
+    # Add a new column showing the best match for the left sample if there are unexpected samples
+    if "RESULT" in table_cols and "LEFT_SAMPLE" in table_cols and "RIGHT_SAMPLE" in table_cols:
+        headers["BEST_MATCH"] = {
+            "title": "Best match",
+            "description": "The sample name with the highest LOD for the left sample.",
+            "namespace": "CrosscheckFingerprints",
+            "hidden": False,
+        }
+        headers["BEST_MATCH_LOD"] = {
+            "title": "Best match LOD",
+            "description": "The LOD score for the best matching sample for the left sample.",
+            "namespace": "CrosscheckFingerprints",
+            "hidden": False,
+        }
 
     return headers
