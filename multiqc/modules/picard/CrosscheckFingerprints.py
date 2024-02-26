@@ -146,7 +146,7 @@ def parse_reports(module):
     module.add_section(
         name="Crosscheck Fingerprints",
         anchor=f"{module.anchor}-crosscheckfingerprints-table",
-        description="Pairwise identity checking between samples and groups." + (f"\n{warning}" if warning else ""),
+        description="Pairwise identity checking between samples and groups." + (f"<br>{warning}" if warning else ""),
         helptext="""
         Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
         """,
@@ -164,7 +164,7 @@ def parse_reports(module):
         ),
     )
 
-    return len(data_by_sample)
+    return len(heatmap_data.keys())
 
 
 def _take_till(iterator, fn):
