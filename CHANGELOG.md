@@ -22,6 +22,7 @@
 - Fix use of the `no_violin`/`no_beeswarm` table config flag ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
 - Refactor: fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
 - Heatmap: allow a dict dicts of data ([#2386](https://github.com/MultiQC/MultiQC/pull/2386))
+- Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
 
 ### New modules
 
