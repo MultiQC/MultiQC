@@ -38,6 +38,7 @@ def parse_reports(module):
     """
 
     data_by_sample = dict()
+    found_reports = 0
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/crosscheckfingerprints", filehandles=True):
@@ -47,10 +48,14 @@ def parse_reports(module):
         if "LEFT_GROUP_VALUE" not in header:
             # Not a CrosscheckFingerprints Report
             continue
-        reader = DictReader(metrics, fieldnames=header, delimiter="\t")
         # Parse out the tumor awareness option and the lod threshold setting if possible
         tumor_awareness, lod_threshold = _parse_cli(comments[1])
-        for i, row in enumerate(reader):
+        reader: DictReader = DictReader(metrics, fieldnames=header, delimiter="\t")
+        lines = list(reader)
+        if not lines:
+            continue
+        found_reports += 1
+        for i, row in enumerate(lines):
             # Check if this row contains samples that should be ignored
             if module.is_ignore_sample(row["LEFT_SAMPLE"]) or module.is_ignore_sample(row["RIGHT_SAMPLE"]):
                 continue
@@ -75,14 +80,14 @@ def parse_reports(module):
 
             module.add_data_source(f, section="CrosscheckFingerprints")
 
+    # Only add sections if we found data
+    if found_reports == 0:
+        return 0
+
     # Sort the data by the left sample, then right sample
     data_by_sample = OrderedDict(
         sorted(data_by_sample.items(), key=lambda x: (x[1]["LEFT_SAMPLE"], x[1]["RIGHT_SAMPLE"]))
     )
-
-    # Only add sections if we found data
-    if len(data_by_sample) == 0:
-        return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -140,7 +145,6 @@ def parse_reports(module):
             f"Note that there are too many pairwise comparisons to show in table "
             f" ({len(data_by_sample)} > 100), so only unexpected or inconclusive pairs are shown."
         )
-        log.warning(warning)
         data_by_sample = {k: v for k, v in data_by_sample.items() if not v["RESULT"].startswith("Expected")}
 
     module.add_section(
@@ -164,7 +168,7 @@ def parse_reports(module):
         ),
     )
 
-    return len(heatmap_data.keys())
+    return found_reports
 
 
 def _take_till(iterator, fn):

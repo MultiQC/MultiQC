@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
             if func is not None:
                 n[tool] = func(self)
                 if n[tool] > 0:
-                    log.info(f"Found {n[tool]} {tool} samples")
+                    log.info(f"Found {n[tool]} {tool} reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
