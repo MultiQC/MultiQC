@@ -38,7 +38,7 @@ def parse_reports(module):
     """
 
     row_by_number = dict()
-    found_reports = 0
+    n_found_reports = 0
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/crosscheckfingerprints", filehandles=True):
@@ -51,15 +51,15 @@ def parse_reports(module):
         # Parse out the tumor awareness option and the lod threshold setting if possible
         tumor_awareness, lod_threshold = _parse_cli(comments[1])
         reader: DictReader = DictReader(metrics, fieldnames=header, delimiter="\t")
-        lines = list(reader)
+        lines = [
+            (i, row)
+            for i, row in enumerate(reader)
+            if not module.is_ignore_sample(row["LEFT_SAMPLE"]) and not module.is_ignore_sample(row["RIGHT_SAMPLE"])
+        ]
         if not lines:
             continue
-        found_reports += 1
-        for i, row in enumerate(lines):
-            # Check if this row contains samples that should be ignored
-            if module.is_ignore_sample(row["LEFT_SAMPLE"]) or module.is_ignore_sample(row["RIGHT_SAMPLE"]):
-                continue
-
+        n_found_reports += 1
+        for i, row in lines:
             # Clean the sample names
             row["LEFT_SAMPLE"] = module.clean_s_name(row["LEFT_SAMPLE"], f)
             row["LEFT_GROUP_VALUE"] = module.clean_s_name(row["LEFT_GROUP_VALUE"], f)
@@ -83,7 +83,7 @@ def parse_reports(module):
                 # Find the best match for the left sample
                 left_sample = row["LEFT_SAMPLE"]
                 best_match = max(
-                    (r for r in lines if r["LEFT_SAMPLE"] == left_sample), key=lambda r: float(r["LOD_SCORE"])
+                    (r for j, r in lines if r["LEFT_SAMPLE"] == left_sample), key=lambda r: float(r["LOD_SCORE"])
                 )
                 row["BEST_MATCH"] = best_match["RIGHT_SAMPLE"]
                 row["BEST_MATCH_LOD"] = float(best_match["LOD_SCORE"])
@@ -91,7 +91,7 @@ def parse_reports(module):
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
-    if found_reports == 0:
+    if n_found_reports == 0:
         return 0
 
     # Sort the data by the left sample, then right sample
@@ -236,7 +236,7 @@ def parse_reports(module):
         ),
     )
 
-    return found_reports
+    return n_found_reports
 
 
 def _take_till(iterator, fn):
