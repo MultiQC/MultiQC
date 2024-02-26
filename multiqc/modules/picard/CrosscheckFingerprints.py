@@ -100,25 +100,38 @@ def parse_reports(module):
     status_by_sample = dict()
     sorted_by_left_sample = sorted(row_by_number.values(), key=lambda r: r["LEFT_SAMPLE"])
     for left_sample, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
-        status = "All expected"
-        if all(v["RESULT"].startswith("Unexpected") for v in values):
-            status = "All unexpected"
-        elif any(v["RESULT"].startswith("Unexpected") for v in values):
-            status = "Some unexpected"
-        elif any(v["RESULT"] == "Inconclusive" for v in values):
-            status = "Some inconclusive"
-        status_by_sample[left_sample] = {"Crosschecks": status}
+        values = list(values)
+        if values:
+            status = "All expected"
+            if all(v["RESULT"].startswith("Unexpected") for v in values):
+                status = "All unexpected"
+            elif any(v["RESULT"].startswith("Unexpected") for v in values):
+                status = "Some unexpected"
+            elif any(v["RESULT"] == "Inconclusive" for v in values):
+                status = "Some inconclusive"
+            status_by_sample[left_sample] = {"Crosschecks": status}
+            best_match = max(values, key=lambda v: v["LOD_SCORE"])
+            status_by_sample[left_sample]["Best match"] = best_match["RIGHT_SAMPLE"]
+            status_by_sample[left_sample]["Best match LOD"] = best_match["LOD_SCORE"]
 
     sample_table_headers = {
         "Crosschecks": {
             "title": "Crosschecks",
-            "description": "The worst pairwise result for this sample.",
+            "description": "Flags if there are any unexpected or inconclusive matches.",
             "cond_formatting_rules": {
                 "pass": [{"s_eq": "All expected"}],
                 "warn": [{"s_eq": "Some inconclusive"}],
                 "fail": [{"s_eq": "Unexpected"}, {"s_eq": "Some unexpected"}],
             },
-        }
+        },
+        "Best match": {
+            "title": "Best match",
+            "description": "The sample name with the highest LOD for this sample.",
+        },
+        "Best match LOD": {
+            "title": "Best match LOD",
+            "description": "The LOD score for the best matching sample.",
+        },
     }
 
     def _order_status(status: str) -> int:
@@ -132,8 +145,9 @@ def parse_reports(module):
         return 3
 
     module.add_section(
-        name="Crosscheck Fingerprints: Sample Table",
+        name="Crosscheck Fingerprints",
         anchor=f"{module.anchor}-crosscheckfingerprints-sample-table-section",
+        description="Summary for each sample, showing the overall status along with the best matching sample name.",
         plot=table.plot(
             dict(sorted(status_by_sample.items(), key=lambda kv: _order_status(kv[1]["Crosschecks"]))),
             sample_table_headers,
@@ -142,6 +156,7 @@ def parse_reports(module):
                 "id": f"{module.anchor}-crosscheckfingerprints-sample-table",
                 "title": f"{module.name}: Crosscheck Fingerprints: Samples",
                 "no_violin": True,
+                "sortRows": False,
             },
         ),
     )
