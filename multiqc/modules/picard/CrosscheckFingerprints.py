@@ -92,7 +92,7 @@ def parse_reports(module):
     general_stats_headers = {
         "Crosschecks All Expected": {
             "title": "Crosschecks",
-            "description": "All results for samples CrosscheckFingerprints were as expected.",
+            "description": "The worst pairwise result for this sample.",
             "cond_formatting_rules": {
                 "pass": [{"s_eq": "All expected"}],
                 "warn": [{"s_eq": "Some inconclusive"}],
@@ -101,28 +101,6 @@ def parse_reports(module):
         }
     }
     module.general_stats_addcols(general_stats_data, general_stats_headers, namespace="CrosscheckFingerprints")
-
-    # Add a pairwise comparison table
-    module.add_section(
-        name="Crosscheck Fingerprints",
-        anchor=f"{module.anchor}-crosscheckfingerprints-table",
-        description="Pairwise identity checking between samples and groups.",
-        helptext="""
-        Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
-        """,
-        plot=table.plot(
-            data_by_sample,
-            _get_table_headers(data_by_sample),
-            {
-                "namespace": module.name,
-                "id": f"{module.anchor}_crosscheckfingerprints_table",
-                "title": f"{module.name}: Crosscheck Fingerprints",
-                "save_file": True,
-                "col1_header": "ID",
-                "no_violin": True,
-            },
-        ),
-    )
 
     # Heatmap of the LOD scores for each pairwise comparison
     heatmap_data = defaultdict(dict)
@@ -147,6 +125,37 @@ def parse_reports(module):
                 "ycats_samples": True,
                 "square": True,
                 "legend": False,
+            },
+        ),
+    )
+
+    # If the number of rows is > 100, do not show pairs with "Expected" status
+    warning = ""
+    if len(data_by_sample) > 100:
+        warning = (
+            f"Note that there are too many pairwise comparisons to show in table "
+            f" ({len(data_by_sample)} > 100), so only unexpected or inconclusive pairs are shown."
+        )
+        log.warning(warning)
+        data_by_sample = {k: v for k, v in data_by_sample.items() if not v["RESULT"].startswith("Expected")}
+
+    module.add_section(
+        name="Crosscheck Fingerprints",
+        anchor=f"{module.anchor}-crosscheckfingerprints-table",
+        description="Pairwise identity checking between samples and groups." + (f"\n{warning}" if warning else ""),
+        helptext="""
+        Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
+        """,
+        plot=table.plot(
+            data_by_sample,
+            _get_table_headers(data_by_sample),
+            {
+                "namespace": module.name,
+                "id": f"{module.anchor}_crosscheckfingerprints_table",
+                "title": f"{module.name}: Crosscheck Fingerprints",
+                "save_file": True,
+                "col1_header": "ID",
+                "no_violin": True,
             },
         ),
     )
