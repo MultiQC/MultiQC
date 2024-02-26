@@ -211,7 +211,7 @@ class Plot(ABC):
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
             dataset.label = dconfig.get("name", dconfig.get("label", idx + 1))
             if "ylab" not in dconfig and "ylab" not in self.pconfig:
-                dconfig["ylab"] = dataset.label
+                dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
