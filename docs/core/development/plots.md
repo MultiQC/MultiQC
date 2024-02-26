@@ -752,6 +752,7 @@ pconfig = {
     "title": None,                 # Plot title - should be in format "Module Name: Plot Title"
     "xlab": None,                  # X-axis title
     "ylab": None,                  # Y-axis title
+    "zlab": None,                  # Z-axis title, shown in the hover tooltip
     "min": None,                   # Minimum value (default: auto)
     "max": None,                   # Maximum value (default: auto)
     "square": True,                # Force the plot to stay square? (Maintain aspect ratio)
