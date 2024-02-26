@@ -75,6 +75,11 @@ def parse_reports(module):
 
             module.add_data_source(f, section="CrosscheckFingerprints")
 
+    # Sort the data by the left sample, then right sample
+    data_by_sample = OrderedDict(
+        sorted(data_by_sample.items(), key=lambda x: (x[1]["LEFT_SAMPLE"], x[1]["RIGHT_SAMPLE"]))
+    )
+
     # Only add sections if we found data
     if len(data_by_sample) == 0:
         return 0
@@ -115,6 +120,7 @@ def parse_reports(module):
         description="Pairwise identity checking between samples and groups: heatmap of LOD scores.",
         plot=heatmap.plot(
             heatmap_data,
+            xcats=list(heatmap_data.keys()),
             pconfig={
                 "id": "picard-crosscheckfingerprints-lod-heatmap",
                 "title": f"{module.name}: Crosscheck Fingerprints",
