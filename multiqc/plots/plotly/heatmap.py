@@ -258,7 +258,14 @@ class HeatmapPlot(Plot):
                 [0.9, "#d73027"],
                 [1, "#a50026"],
             ]
+
         decimal_places = pconfig.get("decimalPlaces", 2)
+
+        xlab = pconfig.get("xlab", "x")
+        ylab = pconfig.get("ylab", "y")
+        zlab = pconfig.get("zlab", "z")
+        hovertemplate = f"{xlab}: %{{x}}<br>{ylab}: %{{y}}<br>{zlab}: %{{z}}<extra></extra>"
+
         for ds in self.datasets:
             ds.trace_params = {
                 "colorscale": colorscale,
@@ -266,6 +273,7 @@ class HeatmapPlot(Plot):
                 "showscale": pconfig.get("legend", True),
                 "zmin": pconfig.get("min", None),
                 "zmax": pconfig.get("max", None),
+                "hovertemplate": hovertemplate,
             }
             # Enable datalabels if there are less than 20x20 cells, unless heatmap_config.datalabels is set explicitly
             if pconfig.get("datalabels") is None and num_rows * num_cols < 400:
