@@ -13,10 +13,10 @@ ElemT = Union[str, float, int]
 
 
 def plot(
-    rows: List[List[ElemT]],
-    xcats: List[str],
-    ycats: List[str],
+    rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
     pconfig: Dict,
+    xcats: Optional[List[str]] = None,
+    ycats: Optional[List[str]] = None,
 ) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -26,7 +26,7 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(pconfig, rows, xcats, ycats)
+    p = HeatmapPlot(rows, pconfig, xcats, ycats)
 
     from multiqc.utils import report
 
@@ -43,11 +43,23 @@ class HeatmapPlot(Plot):
         @staticmethod
         def create(
             dataset: BaseDataset,
-            pconfig: Dict,
-            rows: List[List[ElemT]],
-            xcats: List[str],
-            ycats: List[str],
+            rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+            xcats: Optional[List[str]] = None,
+            ycats: Optional[List[str]] = None,
         ) -> "HeatmapPlot.Dataset":
+            if isinstance(rows, dict):
+                # Convert dict to a list of lists
+                found_ycats = list(rows.keys())
+                found_xcats = []
+                for y, value_by_x in rows.items():
+                    for x, value in value_by_x.items():
+                        if x not in found_xcats:
+                            found_xcats.append(x)
+
+                ycats = [y for y in found_ycats if y in ycats] if ycats else found_ycats
+                xcats = [x for x in found_xcats if x in xcats] if xcats else found_xcats
+                rows = [[rows[y].get(x) for x in xcats] for y in ycats]
+
             dataset = HeatmapPlot.Dataset(
                 **dataset.__dict__,
                 rows=rows,
@@ -77,12 +89,24 @@ class HeatmapPlot(Plot):
 
     def __init__(
         self,
+        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         pconfig: Dict,
-        rows: List[List[ElemT]],
-        xcats: List[str],
-        ycats: List[str],
+        xcats: Optional[List[str]],
+        ycats: Optional[List[str]],
     ):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
+
+        if isinstance(rows, list):
+            if ycats and not isinstance(ycats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: ycats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the rows in the input data."
+                )
+            if xcats and not isinstance(xcats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: xcats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the columns in the input data."
+                )
 
         self.layout.update(
             yaxis=dict(
@@ -93,6 +117,7 @@ class HeatmapPlot(Plot):
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
+            showlegend=pconfig.get("legend", True),
         )
 
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
@@ -101,7 +126,6 @@ class HeatmapPlot(Plot):
         self.datasets: List[HeatmapPlot.Dataset] = [
             HeatmapPlot.Dataset.create(
                 self.datasets[0],
-                pconfig=pconfig,
                 rows=rows,
                 xcats=xcats,
                 ycats=ycats,
@@ -113,22 +137,21 @@ class HeatmapPlot(Plot):
             for dataset in self.datasets:
                 for row in dataset.rows:
                     for val in row:
-                        if val is not None:
-                            assert isinstance(val, (int, float))
+                        if val is not None and isinstance(val, (int, float)):
                             self.min = val if self.min is None else min(self.min, val)
         self.max = self.pconfig.get("max", None)
         if self.max is None:
             for dataset in self.datasets:
                 for row in dataset.rows:
                     for val in row:
-                        if val is not None:
+                        if val is not None and isinstance(val, (int, float)):
                             self.max = val if self.max is None else max(self.max, val)
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
-        num_rows = len(ycats)
-        num_cols = len(xcats)
+        num_rows = len(self.datasets[0].ycats)
+        num_cols = len(self.datasets[0].xcats)
         MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
@@ -141,16 +164,16 @@ class HeatmapPlot(Plot):
             if n >= 20:
                 return 26
             if n >= 15:
-                return 30
+                return 33
             if n >= 10:
-                return 35
+                return 45
             if n >= 5:
-                return 40
+                return 60
             if n >= 3:
-                return 50
-            if n >= 2:
                 return 80
-            return 100
+            if n >= 2:
+                return 100
+            return 120
 
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
@@ -182,11 +205,11 @@ class HeatmapPlot(Plot):
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
             self.layout.yaxis.tickmode = "array"
-            self.layout.yaxis.tickvals = list(range(len(ycats)))
+            self.layout.yaxis.tickvals = list(range(num_rows))
             self.layout.yaxis.ticktext = ycats
         if x_px_per_elem > 18:
             self.layout.xaxis.tickmode = "array"
-            self.layout.xaxis.tickvals = list(range(len(xcats)))
+            self.layout.xaxis.tickvals = list(range(num_cols))
             self.layout.xaxis.ticktext = xcats
         if pconfig.get("angled_xticks", True) is False and x_px_per_elem >= 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:

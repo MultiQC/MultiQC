@@ -722,14 +722,36 @@ names = ["one", "two", "three", "four", "five", "six"]
 html = heatmap.plot(data, xcats=names, pconfig=...)
 ```
 
+Alternatively you can supply a dictionary of dictionaries, in which case
+xcats and ycats are optional:
+
+```python
+data = {
+    "sample 1": {
+        "one": 0.9,
+        "two": 0.87,
+        "three": 0.73,
+        "four": 0.6,
+        "five": 0.2,
+    },
+    "sample 2": {
+        "two": 1,
+        "three": 0.7,
+        "four": 0.6,
+        "six": 0.3,
+    },
+}
+html = heatmap.plot(data, pconfig=...)
+```
+
 Much like the other plots, you can change the way that the heatmap looks
 using a config dictionary:
 
 ```python
 pconfig = {
     "title": None,                 # Plot title - should be in format "Module Name: Plot Title"
-    "xTitle": None,                # X-axis title
-    "yTitle": None,                # Y-axis title
+    "xlab": None,                  # X-axis title
+    "ylab": None,                  # Y-axis title
     "min": None,                   # Minimum value (default: auto)
     "max": None,                   # Maximum value (default: auto)
     "square": True,                # Force the plot to stay square? (Maintain aspect ratio)
