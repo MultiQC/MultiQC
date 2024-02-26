@@ -72,10 +72,10 @@ class SambambaMarkdupMixin:
         """
 
         regexes = {
-            "sorted_end_pairs": "sorted (\d+) end pairs",
-            "single_ends": "and (\d+) single ends",
-            "single_unmatched_pairs": "among them (\d+) unmatched",
-            "duplicate_reads": "found (\d+) duplicates",
+            "sorted_end_pairs": r"sorted (\d+) end pairs",
+            "single_ends": r"and (\d+) single ends",
+            "single_unmatched_pairs": r"among them (\d+) unmatched",
+            "duplicate_reads": r"found (\d+) duplicates",
         }
         d = {}
         for key, regex in regexes.items():
