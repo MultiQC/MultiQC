@@ -145,7 +145,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
 
                     # This is horrible, but Python locale settings are worse
                     if config.thousandsSep_format is None:
-                        config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                        config.thousandsSep_format = '<span class="mqc_small_space"></span>'
                     if config.decimalPoint_format is None:
                         config.decimalPoint_format = "."
                     valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
@@ -153,7 +153,11 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                         "THOUSAND", config.thousandsSep_format
                     )
 
-                valstring += header.get("suffix", "")
+                suffix = header.get("suffix")
+                if suffix:
+                    # Add a space before the suffix, but not as an actual character, so ClipboardJS would copy
+                    # the whole value without the space.
+                    valstring += "<span class='mqc_small_space'></span>" + suffix.strip()
 
                 # Conditional formatting
                 # Build empty dict for cformatting matches
