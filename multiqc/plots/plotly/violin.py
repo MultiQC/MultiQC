@@ -517,8 +517,9 @@ class ViolinPlot(Plot):
         data = {}
         for metric in dataset.metrics:
             values_by_sample = dataset.violin_values_by_sample_by_metric[metric]
+            title = dataset.header_by_metric[metric]["title"]
             for sample, value in values_by_sample.items():
-                data.setdefault(sample, {})[metric] = value
+                data.setdefault(sample, {})[title] = value
 
         util_functions.write_data_file(data, dataset.uid)
 
