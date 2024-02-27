@@ -24,6 +24,7 @@
 - Heatmap: allow a dict dicts of data ([#2386](https://github.com/MultiQC/MultiQC/pull/2386))
 - Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
 - Add export button for table ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
+- Use a padded span with `nowrap` instead of `&nbsp;` before suffixes in table cells ([#2395](https://github.com/MultiQC/MultiQC/pull/2395))
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
 
 ### New modules
