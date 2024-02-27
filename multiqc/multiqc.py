@@ -958,8 +958,15 @@ def run(
                 f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
             )
 
+    all_hidden = True
+    for headers in report.general_stats_headers:
+        for h in headers.values():
+            if not h.get("hidden", False):
+                all_hidden = False
+                break
+
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0 and not config.skip_generalstats:
+    if len(report.general_stats_data) > 0 and not config.skip_generalstats and not all_hidden:
         pconfig = {
             "id": "general_stats_table",
             "table_title": "General Statistics",

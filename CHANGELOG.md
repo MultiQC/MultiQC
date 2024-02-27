@@ -20,6 +20,9 @@
 - Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
 - Violin plot: filter Inf values ([#2380](https://github.com/MultiQC/MultiQC/pull/2380))
 - Fix use of the `no_violin`/`no_beeswarm` table config flag ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
+- Refactor: fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
+- Heatmap: allow a dict dicts of data ([#2386](https://github.com/MultiQC/MultiQC/pull/2386))
+- Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
 
 ### New modules
 
@@ -40,10 +43,11 @@
 - **HTSeq Count**: robust file reading loop, ignore `.parquet` files ([#2364](https://github.com/MultiQC/MultiQC/pull/2364))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
+- **Picard**: Crosscheck Fingerprints: add LOD heatmap ([#2388](https://github.com/MultiQC/MultiQC/pull/2388))
+- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
 - **Samtools**: support `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
 - **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
 - **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
-- **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
