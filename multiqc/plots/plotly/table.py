@@ -156,8 +156,9 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 suffix = header.get("suffix")
                 if suffix:
                     # Add a space before the suffix, but not as an actual character, so ClipboardJS would copy
-                    # the whole value without the space.
-                    valstring += "<span class='mqc_small_space'></span>" + suffix.strip()
+                    # the whole value without the space. Also, remove &nbsp; that we don't want ClipboardJS to copy.
+                    suffix = suffix.replace("&nbsp;", " ").strip()
+                    valstring += "<span class='mqc_small_space'></span>" + suffix
 
                 # Conditional formatting
                 # Build empty dict for cformatting matches
