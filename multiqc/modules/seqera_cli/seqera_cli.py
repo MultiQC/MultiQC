@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                 m = runUrl_re.search(x)
                 if m:
                     org, workspace, run = m.groups()
-                    return f'<a href="{x}" style="white-space: nowrap;" target="_blank">{run}</a>'
+                    return f'<a href="{x}" target="_blank">{run}</a>'
             return str(x)
 
         headers = {
