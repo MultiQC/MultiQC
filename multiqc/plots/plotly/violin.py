@@ -473,7 +473,7 @@ class ViolinPlot(Plot):
             html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
 
             table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
-            html += f"<div id='mqc_violintable_wrapper_table_{self.id}' {table_visibility}>{table_html}</div>"
+            html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {table_visibility}>{table_html}</div>"
 
             html += configuration_modal
 
