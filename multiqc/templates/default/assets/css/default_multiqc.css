@@ -677,6 +677,7 @@ input.form-control[type="color"] {
 }
 .mqc_table tbody tr td .wrapper .val {
   z-index: -1;
+  white-space: nowrap; /* keep suffix stick to the value */
 }
 .mqc_table tbody tr td .wrapper .val .label {
   font-size: 100%;

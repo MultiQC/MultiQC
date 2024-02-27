@@ -153,7 +153,6 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                         "THOUSAND", config.thousandsSep_format
                     )
 
-                # Percentage suffixes etc
                 valstring += header.get("suffix", "")
 
                 # Conditional formatting
@@ -204,14 +203,13 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 except TypeError:
                     hashable = False
                     print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
+
                 # Categorical background colours supplied
                 if hashable and val in header.get("bgcols", {}).keys():
                     col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
-                        val=val, rid=rid, h=hide, c=col, v=valstring
-                    )
+                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstring}</td>'
 
                 # Build table cell background colour bar
                 elif hashable and header["scale"]:
@@ -227,9 +225,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td val="{val}" class="data-coloured {rid} {h}">{c}</td>'.format(
-                        val=val, rid=rid, h=hide, c=wrapper_html
-                    )
+                    t_rows[s_name][rid] = f'<td val="{val}" class="data-coloured {rid} {hide}">{wrapper_html}</td>'
 
                 # Scale / background colours are disabled
                 else:
