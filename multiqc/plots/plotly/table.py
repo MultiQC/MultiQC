@@ -298,6 +298,12 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
             </button>
             """
 
+        html += f"""
+        <button type="button" class="export-plot btn btn-default btn-sm" 
+            data-pid="{violin_id or dt.id}" data-type="table"
+        >Export as TSV</button>
+        """
+
         # "Showing x of y columns" text
         row_visibilities = [all(t_rows_empty[s_name].values()) for s_name in t_rows_empty]
         visible_rows = [x for x in row_visibilities if not x]

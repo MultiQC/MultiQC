@@ -324,7 +324,8 @@ class Plot(ABC):
     def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        data_attrs["pid"] = self.id
+        if "pid" not in data_attrs:
+            data_attrs["pid"] = self.id
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 

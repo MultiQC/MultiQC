@@ -297,7 +297,7 @@ $(function () {
   // EXPORTING PLOTS
   // Change text on download button
   $('#mqc_exportplots a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
-    if ($(e.target).attr("href") == "#mqc_data_download") {
+    if ($(e.target).attr("href") === "#mqc_data_download") {
       $("#mqc-dl-plot-txt").text("Data");
     } else {
       $("#mqc-dl-plot-txt").text("Images");
@@ -494,6 +494,7 @@ $(function () {
     e.preventDefault();
     // Get the id of the span element that was clicked
     let id = e.target.dataset.pid;
+    let isTable = e.target.dataset.type === "table";
     // Tick only this plot in the toolbox and slide out
     $("#mqc_export_selectplots input").prop("checked", false);
     $('#mqc_export_selectplots input[value="' + id + '"]').prop("checked", true);
@@ -501,7 +502,11 @@ $(function () {
     if (id === "tableScatterPlot") {
       $("#tableScatterModal").modal("hide");
     }
-    mqc_toolbox_openclose("#mqc_exportplots", true);
+    mqc_toolbox_openclose(
+      "#mqc_exportplots",
+      true,
+      isTable, // no image export for table, go directly to data download
+    );
   });
 
   /// SAVING STUFF
@@ -674,19 +679,15 @@ function hashCode(str) {
 //////////////////////////////////////////////////////
 // GENERAL TOOLBOX FUNCTIONS
 //////////////////////////////////////////////////////
-function mqc_toolbox_openclose(target, open) {
+function mqc_toolbox_openclose(target, open, dataTab) {
   // Hide any open tooltip so it's not left dangling
   $(".mqc-toolbox-buttons li a").tooltip("hide");
   // Find if what we clicked is already open
-  var btn = $('.mqc-toolbox-buttons li a[href="' + target + '"]');
+  let btn = $('.mqc-toolbox-buttons li a[href="' + target + '"]');
   if (open === undefined) {
-    if (btn.hasClass("active")) {
-      open = false;
-    } else {
-      open = true;
-    }
+    open = !btn.hasClass("active");
   }
-  var already_open = $(".mqc-toolbox").hasClass("active");
+  let already_open = $(".mqc-toolbox").hasClass("active");
   if (open) {
     if (already_open) {
       mqc_toolbox_confirmapply();
@@ -695,18 +696,21 @@ function mqc_toolbox_openclose(target, open) {
     btn.addClass("active");
     $(".mqc-toolbox, " + target).addClass("active");
     $(document).trigger("mqc_toolbox_open");
-    var timeout = already_open ? 0 : 510;
+    let timeout = already_open ? 0 : 510;
     setTimeout(function () {
-      if (target == "#mqc_cols") {
+      if (target === "#mqc_cols") {
         $("#mqc_colour_filter").focus();
       }
-      if (target == "#mqc_renamesamples") {
+      if (target === "#mqc_renamesamples") {
         $("#mqc_renamesamples_from").focus();
       }
-      if (target == "#mqc_hidesamples") {
+      if (target === "#mqc_hidesamples") {
         $("#mqc_hidesamples_filter").focus();
       }
     }, timeout);
+    if (dataTab) {
+      $('#mqc_exportplots a[href="#mqc_data_download"]').tab("show");
+    }
   } else {
     mqc_toolbox_confirmapply();
     btn.removeClass("active");
