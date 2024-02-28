@@ -57,7 +57,7 @@ $(function () {
       e.clearSelection();
     });
     $(".mqc_table_copy_btn").click(function () {
-      var btn = $(this);
+      let btn = $(this);
       btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
       setTimeout(function () {
         btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copy table');

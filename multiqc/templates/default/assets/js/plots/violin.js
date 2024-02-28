@@ -281,7 +281,8 @@ class ViolinPlot extends Plot {
 
     let sep = format === "tsv" ? "\t" : ",";
     // Export all data points as a table, samples are rows, metrics are columns
-    let csv = "Sample" + sep + metrics.join(sep) + "\n";
+    let titles = metrics.map((metric) => headerByMetric[metric].title);
+    let csv = "Sample" + sep + titles.join(sep) + "\n";
     for (let i = 0; i < allSamples.length; i++) {
       let sample = allSamples[i];
       if (sampleSettings[i].hidden) continue;

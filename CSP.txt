@@ -6,7 +6,9 @@ script-src 'self'
     'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
     'sha256-yRjvY4tSJ5z2ggAL/i5pJj+peALSAG9PD51Z0Hf7wzQ=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
     'sha256-gf6XBM6wOXcVJjumRhlnj7J/GEpeABZmKQla1g2feYk=' # class BoxPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
-    'sha256-mVO5Pel/niJHZXAV5BhYrr15QkRTeRFbjRpIVLbBsb4=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-hT8GW76gPbw230zK0dy6dUPxVfhN9QKm3T8EyNblQjw=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-DrHBQbs5duODlWwXxhFtOOpsMfANjqepi9PBfA4om/8=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-skoLPw9W6GGVScPkzbYwz7laPwL8dOpznqFPCoUHVxA=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
 
     # 1.20
     'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
