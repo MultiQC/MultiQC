@@ -246,9 +246,10 @@ class ViolinPlot(Plot):
                     "tickfont": copy.deepcopy(layout["yaxis"]["tickfont"]),
                 }
 
-                title = header["title"] + "  "
+                padding = "  "  # otherwise the labels will stick too close to the axis
+                title = header["title"] + padding
                 if header.get("namespace"):
-                    title = f"{header['namespace']}  <br>" + title
+                    title = f"{header['namespace']}{padding}<br>" + title
                 layout[f"yaxis{metric_idx + 1}"].update(
                     {
                         "tickmode": "array",
@@ -419,6 +420,11 @@ class ViolinPlot(Plot):
         if len(set([v["color"] for v in header_by_metric.values()])) == 1:
             for v in header_by_metric.values():
                 v.pop("color", None)
+
+        # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
+        if len(set([v["namespace"] for v in header_by_metric.values()])) == 1:
+            for v in header_by_metric.values():
+                v.pop("namespace", None)
 
         return ViolinPlot(
             [values_by_sample_by_metric],
