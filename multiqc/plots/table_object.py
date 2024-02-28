@@ -166,7 +166,6 @@ class DataTable:
                 if suffix is None and shared_key_suffix is not None:
                     suffix = " " + shared_key_suffix
                 if suffix is not None:
-                    suffix = suffix.replace(" ", "&nbsp;")
                     headers[idx][k]["suffix"] = suffix
 
                 # Use defaults / data keys if headers not given
