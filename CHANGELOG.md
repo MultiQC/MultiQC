@@ -25,6 +25,7 @@
 - Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
 - When checking for git SHA, make sure we are not inside another git repo ([#2399](https://github.com/MultiQC/MultiQC/pull/2399))
 - Add export button for table ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
+- Add option to place bar plot legend on the bottom ([#2397](https://github.com/MultiQC/MultiQC/pull/2397))
 
 ### New modules
 
