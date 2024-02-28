@@ -194,3 +194,68 @@ def choose_emoji():
         if date_range_start <= today <= date_range_end:
             return emoji
     return "mag"
+
+
+# Custom encoder to handle lambda functions
+class MQCJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if callable(obj):
+            try:
+                return obj(1)
+            except Exception:
+                return None
+        return json.JSONEncoder.default(self, obj)
+
+
+def multiqc_dump_json(report):
+    """
+    Export the parsed data in memory to a JSON file.
+    Used for MegaQC and other data export.
+    WARNING: May be depreciated and removed in future versions.
+    """
+    exported_data = dict()
+    export_vars = {
+        "report": [
+            "data_sources",
+            "general_stats_data",
+            "general_stats_headers",
+            "multiqc_command",
+            "plot_data",
+            "saved_raw_data",
+        ],
+        "config": [
+            "analysis_dir",
+            "creation_date",
+            "git_hash",
+            "intro_text",
+            "report_comment",
+            "report_header_info",
+            "script_path",
+            "short_version",
+            "subtitle",
+            "title",
+            "version",
+            "output_dir",
+        ],
+    }
+    for s in export_vars:
+        for k in export_vars[s]:
+            try:
+                d = None
+                if s == "config":
+                    d = {f"{s}_{k}": getattr(config, k)}
+                elif s == "report":
+                    d = {f"{s}_{k}": getattr(report, k)}
+                if d:
+                    json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
+                    exported_data.update(d)
+            except (TypeError, KeyError, AttributeError):
+                log.warning(f"Couldn't export data key '{s}.{k}'")
+        # Get the absolute paths of analysis directories
+        exported_data["config_analysis_dir_abs"] = list()
+        for d in exported_data.get("config_analysis_dir", []):
+            try:
+                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+            except Exception:
+                pass
+    return exported_data

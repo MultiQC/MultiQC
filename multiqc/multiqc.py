@@ -995,7 +995,7 @@ def run(
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
-        multiqc_json_dump = megaqc.multiqc_dump_json(report)
+        multiqc_json_dump = util_functions.multiqc_dump_json(report)
         if config.data_dump_file:
             util_functions.write_data_file(multiqc_json_dump, "multiqc_data", False, "json")
         if config.megaqc_url:
