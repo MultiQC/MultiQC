@@ -1,6 +1,6 @@
 &nbsp;
 ![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only)
-![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-dark-mode-only)
+![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png#gh-dark-mode-only)
 &nbsp;
 
 ### Aggregate bioinformatics results across many samples into a single report
