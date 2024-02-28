@@ -710,6 +710,8 @@ function mqc_toolbox_openclose(target, open, dataTab) {
     }, timeout);
     if (dataTab) {
       $('#mqc_exportplots a[href="#mqc_data_download"]').tab("show");
+    } else {
+      $('#mqc_exportplots a[href="#mqc_data_download"]').tab("hide");
     }
   } else {
     mqc_toolbox_confirmapply();
