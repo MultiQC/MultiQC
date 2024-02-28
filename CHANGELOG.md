@@ -26,6 +26,7 @@
 - When checking for git SHA, make sure we are not inside another git repo ([#2399](https://github.com/MultiQC/MultiQC/pull/2399))
 - Add export button for table ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
 - Add option to place bar plot legend on the bottom ([#2397](https://github.com/MultiQC/MultiQC/pull/2397))
+- Use a `"<span class='mqc_small_space'></span>` instead of `&nbsp;` for suffix in table cells ([#2395](https://github.com/MultiQC/MultiQC/pull/2395))
 
 ### New modules
 
