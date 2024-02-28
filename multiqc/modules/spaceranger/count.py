@@ -38,18 +38,17 @@ class SpaceRangerCountMixin:
 
         self.count_general_data_headers["reads"] = {
             "rid": "count_genstats_reads",
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
+            "title": "Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
             "shared_key": "read_count",
             "namespace": "Space Ranger Count",
         }
 
         self.count_data_headers["reads"] = {
             "rid": "count_data_reads",
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads ({})".format(config.read_count_desc),
-            "modify": lambda x: x * config.read_count_multiplier,
+            "title": "Reads",
+            "description": f"Number of reads ({config.read_count_desc})",
+            "shared_key": "read_count",
         }
         self.count_data_headers = set_hidden_cols(
             self.count_data_headers,
@@ -80,7 +79,7 @@ class SpaceRangerCountMixin:
             if len(self.spacerangercount_warnings) > 0:
                 self.add_section(
                     name="Count - Warnings",
-                    anchor="spaceranger-count-warnings",
+                    anchor="spaceranger-count-warnings-section",
                     description="Warnings encountered during the analysis",
                     plot=table.plot(
                         self.spacerangercount_warnings,
@@ -95,7 +94,7 @@ class SpaceRangerCountMixin:
 
             self.add_section(
                 name="Count - Summary stats",
-                anchor="spaceranger-count-stats",
+                anchor="spaceranger-count-stats-section",
                 description="Summary QC metrics from Space Ranger count",
                 plot=table.plot(
                     self.spacerangercount_data,
@@ -112,7 +111,7 @@ class SpaceRangerCountMixin:
             if "genomic_dna" in self.spacerangercount_plots_data:
                 self.add_section(
                     name="Count - UMIs from Genomic DNA",
-                    anchor="spaceranger-count-bcrank-plot",
+                    anchor="spaceranger-count-bcrank-plot-section",
                     description=self.spacerangercount_plots_conf["genomic_dna"]["description"],
                     helptext=self.spacerangercount_plots_conf["genomic_dna"]["helptext"],
                     plot=linegraph.plot(
@@ -124,7 +123,7 @@ class SpaceRangerCountMixin:
             if "genes" in self.spacerangercount_plots_data:
                 self.add_section(
                     name="Count - Median genes",
-                    anchor="spaceranger-count-genes-plot",
+                    anchor="spaceranger-count-genes-plot-section",
                     description=self.spacerangercount_plots_conf["genes"]["description"],
                     helptext=self.spacerangercount_plots_conf["genes"]["helptext"],
                     plot=linegraph.plot(
@@ -135,7 +134,7 @@ class SpaceRangerCountMixin:
             if "saturation" in self.spacerangercount_plots_data:
                 self.add_section(
                     name="Count - Saturation plot",
-                    anchor="spaceranger-count-saturation-plot",
+                    anchor="spaceranger-count-saturation-plot-section",
                     description=self.spacerangercount_plots_conf["saturation"]["description"],
                     helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
                     plot=linegraph.plot(
@@ -349,7 +348,7 @@ class SpaceRangerCountMixin:
 
         if len(data) > 0:
             if sample_name in self.spacerangercount_general_data:
-                log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], sample_name))
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {sample_name}")
             self.add_data_source(f, sample_name, module="spaceranger", section="count")
             self.spacerangercount_data[sample_name] = data
             self.spacerangercount_general_data[sample_name] = data_general_stats
