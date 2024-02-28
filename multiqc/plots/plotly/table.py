@@ -314,7 +314,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
             f"""
         <button type="button" class="export-plot btn btn-default btn-sm" 
             data-pid="{violin_id or dt.id}" data-type="table"
-        >Export as TSV</button>
+        >Export as CSV</button>
         """
         )
 
