@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                 m = runUrl_re.search(x)
                 if m:
                     org, workspace, run = m.groups()
-                    return f'<a href="{x}" style="white-space: nowrap;" target="_blank">{run}</a>'
+                    return f'<a href="{x}" target="_blank">{run}</a>'
             return str(x)
 
         headers = {
@@ -242,25 +242,25 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Start",
                 "description": "Start time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "wallTime": {
                 "title": "Wall time",
                 "description": "Duration of the workflow",
-                "format": lambda x: str(dt.timedelta(seconds=x)).replace(" ", "&nbsp;"),
+                "format": lambda x: str(dt.timedelta(seconds=x)),
                 "scale": "BuPu",
             },
             "cpuTime": {
                 "title": "CPU time",
                 "description": "Total CPU time used by the workflow",
                 "modify": lambda x: x // 1000 / 60 / 60,  # hours
-                "suffix": "&nbsp;h",
+                "suffix": " h",
                 "scale": "Greys",
             },
             "cost": {
@@ -285,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "CPU efficiency",
                 "description": "Percentage of CPU time used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
+                "suffix": "%",
                 "max": 100,
                 "scale": "RdYlGn",
             },
@@ -293,7 +293,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Memory efficiency",
                 "description": "Percentage of memory used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
+                "suffix": "%",
                 "max": 100,
                 "scale": "YlGn",
             },
@@ -353,7 +353,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: Wall time",
                     "ylab": "hours",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;h",
+                    "tt_suffix": " h",
                     "tt_percentages": False,
                     "cpswitch": False,
                     "hide_zero_cats": False,
@@ -371,7 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: CPU time",
                     "ylab": "CPU hours",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;h",
+                    "tt_suffix": " h",
                     "tt_percentages": False,
                     "cpswitch": False,
                     "hide_zero_cats": False,
@@ -389,7 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: Estimated cost",
                     "ylab": "$",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;$",
+                    "tt_suffix": " $",
                     "tt_percentages": False,
                     "cpswitch": False,
                     "hide_zero_cats": False,

@@ -966,6 +966,19 @@ thousandsSep_format: ""
 This formatting currently only applies to the interactive charts. It may be extended
 to apply elsewhere in the future (submit a new issue if you spot somewhere where you'd like it).
 
+## Bar plot legend positioning
+
+By default, the legend for bar plots is placed on the right hand side of the plot.
+If you'd like to move it to the bottom, you can use the following config option:
+
+```yaml
+barplot_legend_on_bottom: true
+```
+
+This is not recommended to set up globally though, as it would look well only
+for medium-sized plot, but would start overlapping with the tick labels on shorter
+plots, or create a large gap on taller plots.
+
 ## Troubleshooting
 
 One tricky bit that caught me out whilst writing this is the different type casting
