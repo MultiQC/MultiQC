@@ -37,7 +37,6 @@ Note that now for new modules, an entry point should be added to `pyproject.toml
 ```toml
 [project.entry-points."multiqc.modules.v1"]
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
-...
 ```
 
 #### Heatmap
