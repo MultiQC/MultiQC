@@ -23,6 +23,7 @@
 - Refactor: fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
 - Heatmap: allow a dict dicts of data ([#2386](https://github.com/MultiQC/MultiQC/pull/2386))
 - Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
+- When checking for git SHA, make sure we are not inside another git repo ([#2399](https://github.com/MultiQC/MultiQC/pull/2399))
 - Add export button for table ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
 
 ### New modules
