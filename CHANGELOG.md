@@ -25,7 +25,7 @@ self.add_section(
 )
 ```
 
-![alt text](docs/images/changelog/v1.21-boxplot.png)
+<img width="400" src="https://raw.githubusercontent.com/MultiQC/MultiQC/1e2ad5529d547ab9dc04c99274da49ad6a2e556f/docs/images/changelog/v1.21-boxplot.png">
 
 Note the difference with the violin plot: the box plot visualises the distributions of many values within one sample, whereas the violin plot shows the distribution of one metric across many samples.
 
