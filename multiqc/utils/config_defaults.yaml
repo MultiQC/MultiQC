@@ -510,6 +510,7 @@ module_order:
   - seqyclean
   - optitype
   - whatshap
+  - spaceranger
   - xenome
   - xengsort
   - metaphlan
