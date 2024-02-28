@@ -327,18 +327,19 @@ class ViolinPlot(Plot):
         assert len(list_of_values_by_sample_by_metric) == len(list_of_header_by_metric)
         assert len(list_of_values_by_sample_by_metric) > 0
 
-        self.dt = dt
-        self.no_violin = pconfig.get("no_violin", pconfig.get("no_beeswarm", False))
-        self.show_table = dt is not None
-        self.show_table_by_default = show_table_by_default or self.no_violin
-
         super().__init__(
             PlotType.VIOLIN,
             pconfig,
             n_datasets=len(list_of_values_by_sample_by_metric),
-            # To make sure we use a different ID for the table and the violin plot
-            id=f"violin-{dt.id}" if self.show_table else None,
+            id=dt.id if dt else None,
         )
+
+        self.dt = dt
+        self.no_violin = pconfig.get("no_violin", pconfig.get("no_beeswarm", False))
+        self.show_table = dt is not None
+        self.show_table_by_default = show_table_by_default or self.no_violin
+        if dt:  # to make it different from the violin id
+            dt.id = "table-" + dt.id
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -432,11 +433,6 @@ class ViolinPlot(Plot):
         return ": %{x}"
 
     def add_to_report(self, report) -> str:
-        if not self.no_violin:
-            violin_html = super().add_to_report(report)
-        else:
-            violin_html = ""
-
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -463,7 +459,7 @@ class ViolinPlot(Plot):
             # Show violin alone.
             # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
             # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-            html = warning + violin_html
+            html = warning + super().add_to_report(report)
         elif self.no_violin:
             # Show table alone
             table_html, configuration_modal = make_table(self.dt)
@@ -471,6 +467,7 @@ class ViolinPlot(Plot):
         else:
             # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.dt, violin_id=self.id)
+            violin_html = super().add_to_report(report)
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
             html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
@@ -520,8 +517,9 @@ class ViolinPlot(Plot):
         data = {}
         for metric in dataset.metrics:
             values_by_sample = dataset.violin_values_by_sample_by_metric[metric]
+            title = dataset.header_by_metric[metric]["title"]
             for sample, value in values_by_sample.items():
-                data.setdefault(sample, {})[metric] = value
+                data.setdefault(sample, {})[title] = value
 
         util_functions.write_data_file(data, dataset.uid)
 

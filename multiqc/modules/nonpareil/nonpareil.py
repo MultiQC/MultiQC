@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Statistics",
-            anchor="nonpareil-table",
+            anchor="nonpareil-table-section",
             description="""
             Nonpareil uses the redundancy of the reads in metagenomic datasets to
             estimate the average coverage and predict the amount of sequences that
