@@ -4,8 +4,6 @@
 
 ### MultiQC updates
 
-- Absolute image links in README ([#2406](https://github.com/MultiQC/MultiQC/pull/2406))
-
 ### New modules
 
 ### Module updates
