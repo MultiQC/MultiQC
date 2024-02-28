@@ -263,7 +263,7 @@ class SpaceRangerCountMixin:
                 continue
             warnings[alarm["id"]] = "FAIL"
             self.count_warnings_headers[alarm["id"]] = {
-                "title": alarm["id"],
+                "title": alarm["id"].replace("_", " ").title(),
                 "description": alarm["title"],
                 "bgcols": {"FAIL": "#f06807"},
             }
