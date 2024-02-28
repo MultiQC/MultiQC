@@ -711,7 +711,7 @@ function mqc_toolbox_openclose(target, open, dataTab) {
     if (dataTab) {
       $('#mqc_exportplots a[href="#mqc_data_download"]').tab("show");
     } else {
-      $('#mqc_exportplots a[href="#mqc_data_download"]').tab("hide");
+      $('#mqc_exportplots a[href="#mqc_image_download"]').tab("show");
     }
   } else {
     mqc_toolbox_confirmapply();
