@@ -28,21 +28,21 @@ version = importlib_metadata.version("multiqc")
 short_version = version
 git_hash = None
 git_hash_short = None
-script_dir = Path(__file__).parent
+script_path = str(Path(__file__).parent)  # dynamically used by util_functions.multiqc_dump_json()
 git_root = None
 try:
     git_root = subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], cwd=script_dir, stderr=subprocess.STDOUT, universal_newlines=True
+        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
     git_root = Path(git_root)
     # .git
     # multiqc/
     #   utils/
     #       config.py  <- __file__
-    expected_git_root = script_dir.parent.parent
+    expected_git_root = Path(script_path).parent.parent
     if git_root == expected_git_root:
         git_hash = subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=script_dir, stderr=subprocess.STDOUT, universal_newlines=True
+            ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
         ).strip()
         git_hash_short = git_hash[:7]
         version = f"{version} ({git_hash_short})"
