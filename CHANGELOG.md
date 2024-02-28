@@ -1,36 +1,100 @@
 # MultiQC Version History
 
-## MultiQC v1.21dev
+## [MultiQC v1.21](https://github.com/ewels/MultiQC/releases/tag/v1.21) - 2024-02-28
+
+### Highlights
+
+#### Box plot
+
+Added a new plot type: box plot. It's useful to visualise a distribution when you have a set of values for each sample.
+
+```py
+from multiqc.plots import box
+self.add_section(
+    ...,
+    plot=box.plot(
+        {
+            "sample 1": [4506, 4326, 3137, 1563, 1730, 3254, 2259, 3670, 2719, ...],
+            "sample 2": [2145, 2011, 3368, 2132, 1673, 1993, 6635, 1635, 4984, ...],
+            "sample 3": [1560, 1845, 3247, 1701, 2829, 2775, 3179, 1724, 1828, ...],
+        },
+        pconfig={
+            "title": "Iso-Seq: Insert Length",
+        },
+    )
+)
+```
+
+![alt text](docs/images/changelog/v1.21-boxplot.png)
+
+Note the difference with the violin plot: the box plot visualises the distributions of many values within one sample, whereas the violin plot shows the distribution of one metric across many samples.
+
+#### `pyproject.toml`
+
+The `setup.py` file has been superseded by `pyproject.toml` for the build configuration.
+Note that now for new modules, an entry point should be added to `pyproject.toml` instead of `setup.py`, e.g.:
+
+```toml
+[project.entry-points."multiqc.modules.v1"]
+afterqc = "multiqc.modules.afterqc:MultiqcModule"
+...
+```
+
+#### Heatmap
+
+The heatmap plot now supports passing a dict as input data, and also supports a `zlab`
+parameter to set the label for the z-axis:
+
+```py
+from multiqc.plots import heatmap
+self.add_section(
+    ...,
+    plot=heatmap.plot(
+        {
+            "sample 1": {"sample 2": 0, "sample 3": 1},
+            "sample 2": {"sample 1": 0, "sample 3": 0},
+            "sample 3": {"sample 1": 1, "sample 2": 0, "sample 3": 1},
+        },
+        pconfig={
+            "title": "Sample comparison",
+            "zlab": "Match",
+        },
+    )
+)
+```
 
 ### MultiQC updates
 
 - New plot type: box plot ([#2358](https://github.com/MultiQC/MultiQC/pull/2358))
-- Pin Plotly version and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
-- Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
-- Bar plot: keep sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
-- Bar plot: fix inner gap in group mode ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
-- Always create JSON even when MegaQC upload disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
-- Dump `pconfig` for MegaQC ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
-- Catch non-hashable values (dicts, lists) passed as a table cell value ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
-- Heatmap: prevent from parsing numerical sample names ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
+- Add "Export to TSV" button for tables ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
 - Replace `setup.py` with `pyproject.toml` ([#2353](https://github.com/MultiQC/MultiQC/pull/2353))
-- Fix: generate plot id when `pconfig=None` ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
-- Fix: infinite `dmax` or `dmin` fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
-- Fix: wrap `full_figure_for_development` in try to handle Kaleido error ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
-- Generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
-- Violin plot: filter Inf values ([#2380](https://github.com/MultiQC/MultiQC/pull/2380))
-- Fix use of the `no_violin`/`no_beeswarm` table config flag ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
-- Refactor: fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
 - Heatmap: allow a dict dicts of data ([#2386](https://github.com/MultiQC/MultiQC/pull/2386))
-- Heatmap: add zlab config parameter. Show xlab, ylab, zlab in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
-- Add export button for table ([#2394](https://github.com/MultiQC/MultiQC/pull/2394))
+- Heatmap: add `zlab` config parameter. Show `xlab`, `ylab`, `zlab` in tooltip ([#2387](https://github.com/MultiQC/MultiQC/pull/2387))
+- Warn if `run_modules` contains a non-existent module ([#2322](https://github.com/MultiQC/MultiQC/pull/2322))
+- Catch non-hashable values (dicts, lists) passed as a table cell value ([#2348](https://github.com/MultiQC/MultiQC/pull/2348))
+- Always create JSON even when MegaQC upload is disabled ([#2330](https://github.com/MultiQC/MultiQC/pull/2330))
+- Use generic font family for Plotly ([#2368](https://github.com/MultiQC/MultiQC/pull/2368))
 - Use a padded span with `nowrap` instead of `&nbsp;` before suffixes in table cells ([#2395](https://github.com/MultiQC/MultiQC/pull/2395))
-- Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Update the Clipboard.JS library ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Refactor: fix unescaped regex strings ([#2384](https://github.com/MultiQC/MultiQC/pull/2384))
+
+Fixes:
+
+- Pin the required Plotly version and add a runtime version check ([#2325](https://github.com/MultiQC/MultiQC/pull/2325))
+- Bar plot: preserve the sample order ([#2339](https://github.com/MultiQC/MultiQC/pull/2339))
+- Bar plot: fix inner gap in group mode ([#2321](https://github.com/MultiQC/MultiQC/pull/2321))
+- Violin: filter `Inf` values ([#2380](https://github.com/MultiQC/MultiQC/pull/2380))
+- Table: Fix use of the `no_violin` (ex-`no_beeswarm`) table config flag ([#2376](https://github.com/MultiQC/MultiQC/pull/2376))
+- Heatmap: prevent from parsing numerical sample names ([#2349](https://github.com/MultiQC/MultiQC/pull/2349))
+- Work around call of `full_figure_for_development` to avoid Kaleido errors ([#2359](https://github.com/MultiQC/MultiQC/pull/2359))
+- Auto-generate plot `id` when `pconfig=None` ([#2337](https://github.com/MultiQC/MultiQC/pull/2337))
+- Fix: infinite `dmax` or `dmin` fail JSON dump load in JavaScript ([#2354](https://github.com/MultiQC/MultiQC/pull/2354))
+- Fix: dump `pconfig` for MegaQC ([#2344](https://github.com/MultiQC/MultiQC/pull/2344))
 
 ### New modules
 
 - [**IsoSeq**](https://github.com/PacificBiosciences/IsoSeq)
-  - Iso-Seq contains the newest tools to identify transcripts in PacBio single-molecule sequencing data (HiFi reads).
+  - Iso-Seq contains the newest tools to identify transcripts in PacBio single-molecule sequencing data (HiFi reads). `cluster` and `refine` commands are supported.
 
 ### Module updates
 
@@ -38,15 +102,22 @@
 - **DRAGEN**: add few coverage metrics in general stats ([#2341](https://github.com/MultiQC/MultiQC/pull/2341))
 - **DRAGEN**: fix showing the number of found samples ([#2347](https://github.com/MultiQC/MultiQC/pull/2347))
 - **DRAGEN**: support `gvcf_metrics` ([#2327](https://github.com/MultiQC/MultiQC/pull/2327))
-- **fastp**: improve detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
+- **fastp**: fix detection of JSON files ([#2334](https://github.com/MultiQC/MultiQC/pull/2334))
 - **HTSeq Count**: robust file reading loop, ignore `.parquet` files ([#2364](https://github.com/MultiQC/MultiQC/pull/2364))
 - **Illumina InterOp Statistics**: do not set `'scale': False` as a default ([#2350](https://github.com/MultiQC/MultiQC/pull/2350))
 - **mosdepth**: fix regression in showing general stats ([#2346](https://github.com/MultiQC/MultiQC/pull/2346))
-- **Picard**: Crosscheck Fingerprints: add LOD heatmap ([#2388](https://github.com/MultiQC/MultiQC/pull/2388))
+- **Picard**: Crosscheck Fingerprints updates ([#2388](https://github.com/MultiQC/MultiQC/pull/2388))
+  - add a heatmap for LOD scores besides a table
+  - if too many pairs in table, skip those with `Expected` status
+  - use the `warn` status for `Inconclusive`
+  - add a separate sample-wise table instead of general stats
+  - sort tables by status, not by sample name
+  - add a column "Best match" and "Best match LOD" in tables
+  - hide the LOD Threshold column
 - **PURPLE**: support v4.0.1 output without `version` column ([#2366](https://github.com/MultiQC/MultiQC/pull/2366))
-- **Samtools**: support `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
-- **UMI-tools**: support `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
-- **Whatshap**: make robust to stdout appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
+- **Samtools**: support new `coverage` command ([#2356](https://github.com/MultiQC/MultiQC/pull/2356))
+- **UMI-tools**: support new `extract` command ([#2296](https://github.com/MultiQC/MultiQC/pull/2296))
+- **Whatshap**: make robust when a stdout is appended to TSV ([#2361](https://github.com/MultiQC/MultiQC/pull/2361))
 
 ## [MultiQC v1.20](https://github.com/ewels/MultiQC/releases/tag/v1.20) - 2024-02-12
 
@@ -85,7 +156,7 @@ The v1.20 release is also the first release we've had since we moved the MultiQC
 - Support Plotly as a new backend for plots ([#2079](https://github.com/MultiQC/MultiQC/pull/2079))
   - The default template now uses Plotly for all plots
   - Added a new plot type `violin` (replaces `beeswarm`)
-  - Moved legacy Highcharts/Matplotlib code under an optional template `highcharts`
+  - Moved legacy H[pyproject.toml](pyproject.toml)ighcharts/Matplotlib code under an optional template `highcharts`
     ([#2292](https://github.com/MultiQC/MultiQC/pull/2292))
 - Move GitHub repository to `MultiQC` organisation ([#2243](https://github.com/MultiQC/MultiQC/pull/2243))
 - Update all GitHub actions to their latest versions ([#2242](https://github.com/ewels/MultiQC/pull/2242))
