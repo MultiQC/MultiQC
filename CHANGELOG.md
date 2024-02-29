@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Allow to set style of line graph (lines or lines+markers) per plot ([#2413](https://github.com/MultiQC/MultiQC/pull/2413))
+
 ### New modules
 
 ### Module updates
