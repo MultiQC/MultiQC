@@ -40,16 +40,23 @@ def plot_qahist(samples, file_type, **plot_args):
 
     plot_data = []
     for column_type in columns_to_plot:
-        plot_data.append(
-            {
-                sample + "." + column_name: {
-                    x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
-                }
-                for sample in samples
-                for column, column_name in columns_to_plot[column_type].items()
-            }
-        )
+        column_data = {}
+        for column, column_name in columns_to_plot[column_type].items():
+            for sample in samples:
+                sample_dict = {}
+                for x in all_x:
+                    if x in samples[sample]["data"]:
+                        try:
+                            sample_dict[x] = samples[sample]["data"][x][column]
+                        except IndexError:
+                            # This can happen if the data is missing columns.
+                            # Which happens if e.g. a certain quality value is not present in the data.
+                            sample_dict[x] = None
+                    else:
+                        sample_dict[x] = 0
+                column_data[sample + "." + column_name] = sample_dict
 
+        plot_data.append(column_data)
     plot_params = {
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
