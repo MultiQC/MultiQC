@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- **Bcftools**: Stats: add multialleic sites column ([#2414](https://github.com/MultiQC/MultiQC/pull/2414))
+
 ## [MultiQC v1.21](https://github.com/MultiQC/MultiQC/releases/tag/v1.21) - 2024-02-28
 
 ### Highlights
