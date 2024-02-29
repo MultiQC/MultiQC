@@ -461,5 +461,19 @@ class StatsReportMixin:
                 "format": "{:,.0f}",
                 "hidden": True,
             },
+            "number_of_multiallelic_sites": {
+                "title": "Multiallelic",
+                "description": "Variation sites with multiple alleles",
+                "min": 0,
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "number_of_multiallelic_SNP_sites": {
+                "title": "Multiallelic SNP",
+                "description": "Variation sites with multiple SNPs",
+                "min": 0,
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
         }
         return stats_headers
