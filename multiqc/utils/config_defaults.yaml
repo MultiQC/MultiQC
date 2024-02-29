@@ -274,6 +274,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".qcML"
   - ".mosdepth"
   - "_gopeaks"
   - ".readCounts"
