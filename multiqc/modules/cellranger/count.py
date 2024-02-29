@@ -460,7 +460,6 @@ class CellRangerCountMixin:
                     "use_legend": False,
                     "tt_decimals": 2,
                     "tt_suffix": "%",
-                    "tt_percentages": False,
                 },
                 "keys": keys,
                 "description": "Antibody Counts Distribution Plot",

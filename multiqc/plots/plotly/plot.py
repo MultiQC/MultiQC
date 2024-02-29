@@ -184,11 +184,11 @@ class Plot(ABC):
         )
 
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
-        if self.pconfig.get("xLog"):
+        if self.pconfig.get("xlog", self.pconfig.get("xLog")):
             self.layout.xaxis.type = "log"
             if "xaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("xaxis")
-        if self.pconfig.get("yLog"):
+        if self.pconfig.get("ylog", self.pconfig.get("yLog")):
             self.layout.yaxis.type = "log"
             if "yaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("yaxis")
@@ -611,8 +611,8 @@ def _dataset_layout(
             title=dict(text=pconfig.get("xlab")),
             rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("xFloor"),
-                clipmax=pconfig.get("xCeiling"),
+                clipmin=pconfig.get("x_clipmin", pconfig.get("xFloor")),
+                clipmax=pconfig.get("x_clipmax", pconfig.get("xCeiling")),
                 minallowed=pconfig.get("xmin"),
                 maxallowed=pconfig.get("xmax"),
             ),
@@ -623,8 +623,8 @@ def _dataset_layout(
             title=dict(text=pconfig.get("ylab")),
             rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("yFloor"),
-                clipmax=pconfig.get("yCeiling"),
+                clipmin=pconfig.get("y_clipmin", pconfig.get("yFloor")),
+                clipmax=pconfig.get("y_clipmax", pconfig.get("yCeiling")),
                 minallowed=pconfig.get("ymin"),
                 maxallowed=pconfig.get("ymax"),
             ),

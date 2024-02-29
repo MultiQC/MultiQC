@@ -73,7 +73,6 @@ def parse_reports(self):
         "ylab": "% Tags",
         "ymin": 0,
         "ymax": 100,
-        "tt_percentages": False,
         "ylab_format": "{value}%",
         "cpswitch": False,
     }

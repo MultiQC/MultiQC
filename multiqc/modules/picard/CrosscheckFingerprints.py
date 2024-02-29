@@ -166,7 +166,7 @@ def parse_reports(module):
                 "id": f"{module.anchor}-crosscheckfingerprints-sample-table",
                 "title": f"{module.name}: Crosscheck Fingerprints: Samples",
                 "no_violin": True,
-                "sortRows": False,
+                "sort_rows": False,
             },
         ),
     )
@@ -231,7 +231,7 @@ def parse_reports(module):
                 "save_file": True,
                 "col1_header": "ID",
                 "no_violin": True,
-                "sortRows": False,
+                "sort_rows": False,
             },
         ),
     )

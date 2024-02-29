@@ -362,7 +362,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if mod["config"].get("plot_type") == "table":
-            pconfig["sortRows"] = pconfig.get("sortRows", False)
+            pconfig["sort_rows"] = pconfig.get("sort_rows", pconfig.get("sortRows", False))
             headers = mod["config"].get("headers")
             plot = table.plot(mod["data"], headers, pconfig)
 

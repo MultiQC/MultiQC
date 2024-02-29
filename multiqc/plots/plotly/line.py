@@ -61,7 +61,7 @@ class LinePlot(Plot):
                     len(line["data"]) == len(dataset.dconfig["categories"]) for line in dataset.lines
                 ), dataset.uid
 
-            # convert HighCharts hardcoded trace parameters to Plotly
+            # convert HighCharts-style hardcoded trace parameters to Plotly style
             lines = []
             for src_line in dataset.lines:
                 new_line = {
@@ -70,25 +70,26 @@ class LinePlot(Plot):
                     "color": src_line.get("color"),
                 }
                 lines.append(new_line)
-                new_line["marker"] = {}
-                if "dashStyle" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["dash"] = convert_dash_style(src_line["dashStyle"])
-                if "lineWidth" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["width"] = src_line["lineWidth"]
-                if "showInLegend" in src_line:
-                    new_line["showlegend"] = src_line["showInLegend"]
+                dash = src_line.get("dash", src_line.get("dashStyle"))
+                width = src_line.get("width", src_line.get("lineWidth"))
+                if dash is not None:
+                    new_line["line"] = dict(new_line.get("line", {}), dash=convert_dash_style(dash))
+                if width is not None:
+                    new_line["line"] = dict(new_line.get("line", {}), width=width)
+                new_line["showlegend"] = src_line.get("showlegend", src_line.get("showInLegend", True))
                 if "marker" in src_line:
-                    new_line["marker"] = new_line.get("marker", {})
-                    new_line["marker"]["line"] = new_line["marker"].get("line", {})
-                    if "lineWidth" in src_line["marker"]:
-                        new_line["marker"]["line"]["width"] = src_line["marker"]["lineWidth"]
-                    if "lineColor" in src_line["marker"]:
-                        new_line["marker"]["line"]["color"] = src_line["marker"]["lineColor"]
-                    if "symbol" in src_line["marker"]:
-                        new_line["mode"] = "lines+markers"
-                        new_line["marker"]["symbol"] = src_line["marker"]["symbol"]
+                    new_line["mode"] = "lines+markers"
+                    new_line["marker"] = {
+                        "symbol": src_line["marker"].get("symbol"),
+                        "line": {
+                            "width": src_line["marker"]
+                            .get("line", {})
+                            .get("width", src_line["marker"].get("lineWidth")),
+                            "color": src_line["marker"]
+                            .get("line", {})
+                            .get("color", src_line["marker"].get("lineColor")),
+                        },
+                    }
             dataset.lines = lines
             # Update default trace parameters
             dataset.trace_params.update(
@@ -153,11 +154,11 @@ class LinePlot(Plot):
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
 
-        y_min_range = pconfig.get("yMinRange")
-        y_bands = pconfig.get("yPlotBands")
-        x_bands = pconfig.get("xPlotBands")
-        x_lines = pconfig.get("xPlotLines")
-        y_lines = pconfig.get("yPlotLines")
+        y_min_range = pconfig.get("y_minrange", pconfig.get("yMinRange"))
+        y_bands = pconfig.get("y_bands", pconfig.get("yPlotBands"))
+        x_bands = pconfig.get("x_bands", pconfig.get("xPlotBands"))
+        x_lines = pconfig.get("x_lines", pconfig.get("xPlotLines"))
+        y_lines = pconfig.get("y_lines", pconfig.get("yPlotLines"))
         if y_min_range or y_bands or y_lines:
             # We don't want the bands to affect the calculated axis range, so we
             # find the min and the max from data points, and manually set the range
@@ -246,7 +247,7 @@ class LinePlot(Plot):
                     y1=line["value"],
                     line={
                         "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -263,7 +264,7 @@ class LinePlot(Plot):
                     y1=1,
                     line={
                         "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -324,7 +325,7 @@ class LinePlot(Plot):
 
 def convert_dash_style(dash_style: str) -> str:
     """Convert dash style from Highcharts to Plotly"""
-    return {
+    mapping = {
         "Solid": "solid",
         "ShortDash": "dash",
         "ShortDot": "dot",
@@ -336,4 +337,9 @@ def convert_dash_style(dash_style: str) -> str:
         "LongDash": "longdash",
         "LongDashDot": "longdashdot",
         "LongDashDotDot": "longdashdot",
-    }.get(dash_style, "solid")
+    }
+    if dash_style in mapping.values():  # Plotly style?
+        return dash_style
+    elif dash_style in mapping.keys():  # Highcharts style?
+        return mapping[dash_style]
+    return "solid"

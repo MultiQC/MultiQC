@@ -230,7 +230,6 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch": False,
             "title": "Anglerfish: Undetermined Indexes",
             "ylab": "Index Count",
-            "tt_percentages": False,
         }
         self.add_section(
             name="Undetermined Indexes",

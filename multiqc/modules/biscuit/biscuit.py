@@ -550,11 +550,10 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Duplicate Rate [%]",
             "ymin": 0,
             "ymax": 100,
-            "yCeiling": 110,
+            "y_clipmax": 110,
             "use_legend": False,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False,
         }
 
         if len(pd1) > 0:
@@ -642,8 +641,8 @@ class MultiqcModule(BaseMultiqcModule):
             if len(data) > 0:
                 pd[s_name] = data
 
-        shared_mean = {"min": 0, "format": "{:,3f}", "minRange": 10}
-        shared_cofv = {"min": 0, "format": "{:,3f}", "minRange": 50}
+        shared_mean = {"min": 0, "format": "{:,3f}", "min_range": 10}
+        shared_cofv = {"min": 0, "format": "{:,3f}", "min_range": 50}
 
         pheader = {
             "mu_a_b": dict(
@@ -786,7 +785,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "biscuit_seq_depth",
             "table_title": "BISCUIT: Sequencing Depth",
-            "sortRows": False,
+            "sort_rows": False,
         }
 
         if len(pd) > 0:
@@ -1109,8 +1108,8 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "CpG Retention Rate (%)",
             "ymin": 0,
             "ymax": 100,
-            "yMinRange": 0,
-            "yFloor": 0,
+            "y_minrange": 0,
+            "y_clipmin": 0,
             "tt_label": "<strong>Position {point.x}:</strong> {point.y:.2f}%",
             "data_labels": [
                 {"name": "CpG Read 1", "ylab": "CpG Retention Rate (%)"},

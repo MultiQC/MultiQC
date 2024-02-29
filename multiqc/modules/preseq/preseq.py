@@ -369,12 +369,10 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_su
             x = float(xs_by_sample[sn])
             point = {
                 "color": scale.get_colour(si),
-                "showInLegend": False,
+                "showlegend": False,
                 "marker": {
-                    "enabled": True,
                     "symbol": "diamond",
-                    "lineColor": "black",
-                    "lineWidth": 1,
+                    "line": {"color": "black", "width": 1},
                 },
             }
             if sn in yx_by_sample:

@@ -245,22 +245,21 @@ pconfig = {
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
     "xlab": None,                # X axis label
     "ylab": None,                # Y axis label
-    "xCeiling": None,            # Maximum value for automatic axis limit (good for percentages)
-    "xFloor": None,              # Minimum value for automatic axis limit
-    "xMinRange": None,           # Minimum range for axis
-    "xmax": None,                # Max x limit
-    "xmin": None,                # Min x limit
-    "xLog": False,               # Use log10 x axis?
-    "yCeiling": None,            # Maximum value for automatic axis limit (good for percentages)
-    "yFloor": None,              # Minimum value for automatic axis limit
-    "yMinRange": None,           # Minimum range for axis
-    "ymax": None,                # Max y limit
-    "ymin": None,                # Min y limit
-    "yLog": False,               # Use log10 y axis?
-    "yPlotBands": None,          # Highlighted background bands
-    "xPlotBands": None,          # Highlighted background bands
-    "yPlotLines": None,          # Highlighted background lines
-    "xPlotLines": None,          # Highlighted background lines
+    "xmax": None,                # Hard max x limit
+    "xmin": None,                # Hard min x limit
+    "ymax": None,                # Hard max y limit
+    "ymin": None,                # Hard min y limit
+    "x_clipmax": None,           # Maximum value allowed for automatic axis limit
+    "x_clipmin": None,           # Minimum value allowed for automatic axis limit
+    "y_clipmax": None,           # Maximum value allowed for automatic axis limit
+    "y_clipmin": None,           # Minimum value allowed for automatic axis limit
+    "y_minrange": None,          # Minimum range for y-axis (5 would allow 0..5, but also 15..20, etc.)
+    "xlog": False,               # Use log10 for the x-axis
+    "ylog": False,               # Use log10 scale for the y-axis
+    "y_bands": None,             # Horizontal colored background bands
+    "x_bands": None,             # Vertical colored background bands
+    "y_lines": None,             # Extra horizontal lines
+    "x_lines": None,             # Extra vertical lines
     "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
@@ -337,12 +336,11 @@ pconfig = {
     "extra_series": {
         "name": "x = y",
         "data": [[0, 0], [max_x_val, max_y_val]],
-        "dashStyle": "Dash",
-        "lineWidth": 1,
+        "dash": "dash",
+        "width": 1,
         "color": "#000000",
         "marker": {"enabled": False},
-        "enableMouseTracking": False,
-        "showInLegend": False,
+        "showlegend": False,
     }
 }
 html = linegraph.plot(data, pconfig)
@@ -455,7 +453,7 @@ single_header = {
     "min": None,                     # Maximum value in range, for bar / colour coding
     "ceiling": None,                 # Maximum value for automatic bar limit
     "floor": None,                   # Minimum value for automatic bar limit
-    "minRange": None,                # Minimum range for automatic bar
+    "minrange": None,                # Minimum range for automatic bar
     "scale": "GnBu",                 # Colour scale for colour coding. False to disable.
     "bgcols": None,                  # Dict with values: background colours for categorical data.
     "colour": "<auto>",              # Colour for column grouping
@@ -478,7 +476,7 @@ table_config = {
     "table_title": "<table id>",               # Title of the table. Used in the column config modal
     "save_file": False,                        # Whether to save the table data to a file
     "raw_data_fn": "multiqc_<table_id>_table", # File basename to use for raw data file
-    "sortRows": True,                          # Whether to sort rows alphabetically
+    "sort_rows": True,                          # Whether to sort rows alphabetically
     "only_defined_headers": True,              # Only show columns that are defined in the headers config
     "col1_header": "Sample Name",              # The header used for the first column
     "no_violin": False,                        # Force a table to always be plotted (beeswarm by default if many rows)
@@ -486,7 +484,7 @@ table_config = {
 ```
 
 Most of the header keys can also be specified in the table config
-(`namespace`, `scale`, `format`, `colour`, `hidden`, `max`, `min`, `ceiling`, `floor`, `minRange`, `shared_key`, `modify`).
+(`namespace`, `scale`, `format`, `colour`, `hidden`, `max`, `min`, `ceiling`, `floor`, `minrange`, `shared_key`, `modify`).
 These will then be applied to all columns prior to applying column-specific heading config.
 
 A very basic example of creating a table is shown below:

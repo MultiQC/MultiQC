@@ -202,7 +202,6 @@ class MultiqcModule(BaseMultiqcModule):
                         "id": "bclconvert_undetermined",
                         "title": "bclconvert: Undetermined barcodes by lane",
                         "ylab": "Count",
-                        "tt_percentages": False,
                         "use_legend": True,
                         "tt_suffix": "reads",
                     },

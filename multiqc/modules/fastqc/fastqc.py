@@ -670,16 +670,14 @@ class MultiqcModule(BaseMultiqcModule):
         if theoretical_gc is not None:
             # Calculate the count version of the theoretical data based on the largest data store
             max_total = max([sum(d.values()) for d in data.values()])
-            esconfig = {
+            extra_series_config = {
                 "name": "Theoretical GC Content",
-                "dashStyle": "Dash",
-                "lineWidth": 2,
-                "color": "#000000",
-                "marker": {"enabled": False},
-                "enableMouseTracking": False,
-                "showInLegend": False,
+                "dash": "dash",
+                "line": {"width": 2},
+                "color": "black",
+                "showlegend": False,
             }
-            pconfig["extra_series"] = [[dict(esconfig)], [dict(esconfig)]]
+            pconfig["extra_series"] = [[dict(extra_series_config)], [dict(extra_series_config)]]
             pconfig["extra_series"][0][0]["data"] = theoretical_gc
             pconfig["extra_series"][1][0]["data"] = [[d[0], (d[1] / 100.0) * max_total] for d in theoretical_gc]
             desc = f" **The dashed black line shows theoretical GC content:** `{theoretical_gc_name}`"
@@ -731,14 +729,13 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Per Base N Content",
             "ylab": "Percentage N-Count",
             "xlab": "Position in Read (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
             "colors": self.get_status_cols("per_base_n_content"),
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},
@@ -924,11 +921,10 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "fastqc_overrepresented_sequences_plot",
             "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
-            "yCeiling": 100,
-            "yMinRange": 20,
+            "y_clipmax": 100,
+            "y_minrange": 20,
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "tt_percentages": False,
             "cpswitch": False,
             "ylab": "Percentage of Total Sequences",
         }
@@ -1035,7 +1031,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "fastqc_top_overrepresented_sequences_table",
                     "table_title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
-                    "sortRows": False,
+                    "sort_rows": False,
                 },
             ),
         )
@@ -1070,13 +1066,12 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Adapter Content",
             "ylab": "% of Sequences",
             "xlab": "Position (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
-            "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},
