@@ -173,6 +173,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
 
     # First, special case for search patterns.
+    keys_added_in_search_patterns = set()
     keys_modified_in_search_patterns = set()
     sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
     if sp_paths:
@@ -195,7 +196,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
             for new_skey in new_data:
                 # Added module?
                 if new_skey not in old_data:
-                    keys_modified_in_search_patterns.add(new_skey)
+                    keys_added_in_search_patterns.add(new_skey)
             for old_skey in old_data:
                 # Removed module?
                 if old_skey not in new_data:
