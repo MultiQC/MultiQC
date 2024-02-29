@@ -153,54 +153,68 @@ class LinePlot(Plot):
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
 
-        y_min_range = pconfig.get("yMinRange")
-        y_bands = pconfig.get("yPlotBands")
-        x_bands = pconfig.get("xPlotBands")
-        x_lines = pconfig.get("xPlotLines")
-        y_lines = pconfig.get("yPlotLines")
-        if y_min_range or y_bands or y_lines:
+        y_minrange = pconfig.get("y_minrange", pconfig.get("yMinRange"))
+        x_minrange = pconfig.get("x_minrange", pconfig.get("xMinRange"))
+        y_bands = pconfig.get("y_bands", pconfig.get("yPlotBands"))
+        x_bands = pconfig.get("x_bands", pconfig.get("xPlotBands"))
+        x_lines = pconfig.get("x_lines", pconfig.get("xPlotLines"))
+        y_lines = pconfig.get("y_lines", pconfig.get("yPlotLines"))
+        if y_minrange or y_bands or y_lines:
             # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range
+            # find the min and the max from data points, and manually set the range.
             for dataset in self.datasets:
-                ymin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
-                if ymin is None:
-                    ymin = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                ymax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
-                if ymax is None:
-                    ymax = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
-                if ymin is None or ymax is None:
-                    for line in dataset.lines:
-                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                            ys = [x[1] for x in line["data"]]
-                        else:
-                            ys = line["data"]
-                        if ymin is None:
-                            ymin = min(ys)
-                        if ymax is None:
-                            ymax = max(ys)
-                            ymax += (ymax - ymin) * 0.05
-                dataset.layout["yaxis"]["range"] = [ymin, ymax]
+                minval = None
+                maxval = None
+                for line in dataset.lines:
+                    if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                        ys = [x[1] for x in line["data"]]
+                    else:
+                        ys = line["data"]
+                    if len(ys) > 0:
+                        minval = min(ys) if minval is None else min(minval, min(ys))
+                        maxval = max(ys) if maxval is None else max(maxval, max(ys))
+                if maxval is not None and minval is not None:
+                    maxval += (maxval - minval) * 0.05
+                if minval is None:
+                    minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                if maxval is None:
+                    maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and clipmax < maxval:
+                    maxval = clipmax
+                if y_minrange is not None:
+                    maxval = max(maxval, minval + y_minrange)
+                dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        if x_bands or x_lines:
+        if x_minrange or x_bands or x_lines:
             # same as above but for x-axis
             for dataset in self.datasets:
-                xmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
-                if xmin is None:
-                    xmin = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                xmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
-                if xmax is None:
-                    xmax = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
-                if xmin is None or xmax is None:
-                    for line in dataset.lines:
-                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                            xs = [x[0] for x in line["data"]]
-                        else:
-                            xs = [x for x in range(len(line["data"]))]
-                        if xmin is None:
-                            xmin = min(xs)
-                        if xmax is None:
-                            xmax = max(xs)
-                dataset.layout["xaxis"]["range"] = [xmin, xmax]
+                minval = None
+                maxval = None
+                for line in dataset.lines:
+                    if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                        xs = [x[0] for x in line["data"]]
+                    else:
+                        xs = [x for x in range(len(line["data"]))]
+                    if len(xs) > 0:
+                        minval = min(xs) if minval is None else min(minval, min(xs))
+                        maxval = max(xs) if maxval is None else max(maxval, max(xs))
+                if minval is None:
+                    minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                if maxval is None:
+                    maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and clipmax < maxval:
+                    maxval = clipmax
+                if x_minrange is not None:
+                    maxval = max(maxval, minval + x_minrange)
+                dataset.layout["xaxis"]["range"] = [minval, maxval]
 
         self.layout.shapes = (
             [
