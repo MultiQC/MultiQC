@@ -41,7 +41,7 @@ SINGLE_HEADER = {
     "min": 0,  # Maximum value in range, for bar / colour coding
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
-    "min_range": None,  # Minimum range for automatic bar
+    "minrange": None,  # Minimum range for automatic bar
     "scale": "GnBu",  # Colour scale for colour coding. False to disable.
     "bgcols": None,  # Dict with values: background colours for categorical data.
     "colour": "15, 150, 255",  # Colour for column grouping

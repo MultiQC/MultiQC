@@ -200,7 +200,7 @@ STD_TABLE_CONFIGS = [
     "min",
     "ceiling",
     "floor",
-    "min_range",
+    "minrange",
     "scale",
     "bgcols",
     "colour",
