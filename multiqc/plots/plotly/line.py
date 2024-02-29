@@ -181,11 +181,11 @@ class LinePlot(Plot):
                     maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and clipmin > minval:
+                if clipmin is not None and minval is not None and clipmin > minval:
                     minval = clipmin
-                if clipmax is not None and clipmax < maxval:
+                if clipmax is not None and maxval is not None and clipmax < maxval:
                     maxval = clipmax
-                if y_minrange is not None:
+                if y_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + y_minrange)
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
@@ -208,11 +208,11 @@ class LinePlot(Plot):
                     maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and clipmin > minval:
+                if clipmin is not None and minval is not None and clipmin > minval:
                     minval = clipmin
-                if clipmax is not None and clipmax < maxval:
+                if clipmax is not None and maxval is not None and clipmax < maxval:
                     maxval = clipmax
-                if x_minrange is not None:
+                if x_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + x_minrange)
                 dataset.layout["xaxis"]["range"] = [minval, maxval]
 
