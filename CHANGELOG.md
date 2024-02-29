@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Fix `y_minrange` option ([#2415](https://github.com/MultiQC/MultiQC/pull/2415))
+
 ### New modules
 
 ### Module updates
