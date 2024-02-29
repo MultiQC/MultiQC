@@ -68,15 +68,12 @@ class LinePlot(Plot):
                     "name": src_line["name"],
                     "data": src_line["data"],
                     "color": src_line.get("color"),
+                    "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+                    "line": {
+                        "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
+                        "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                    },
                 }
-                lines.append(new_line)
-                dash = src_line.get("dash", src_line.get("dashStyle"))
-                width = src_line.get("width", src_line.get("lineWidth"))
-                if dash is not None:
-                    new_line["line"] = dict(new_line.get("line", {}), dash=convert_dash_style(dash))
-                if width is not None:
-                    new_line["line"] = dict(new_line.get("line", {}), width=width)
-                new_line["showlegend"] = src_line.get("showlegend", src_line.get("showInLegend", True))
                 if "marker" in src_line:
                     new_line["mode"] = "lines+markers"
                     new_line["marker"] = {
@@ -90,6 +87,8 @@ class LinePlot(Plot):
                             .get("color", src_line["marker"].get("lineColor")),
                         },
                     }
+                lines.append(remove_nones_and_empty_dicts(new_line))
+
             dataset.lines = lines
             # Update default trace parameters
             dataset.trace_params.update(
@@ -343,3 +342,10 @@ def convert_dash_style(dash_style: str) -> str:
     elif dash_style in mapping.keys():  # Highcharts style?
         return mapping[dash_style]
     return "solid"
+
+
+def remove_nones_and_empty_dicts(d: Dict) -> Dict:
+    """Remove None and empty dicts from a dict recursively."""
+    if not isinstance(d, Dict):
+        return d
+    return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}
