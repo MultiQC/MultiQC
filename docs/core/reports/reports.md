@@ -49,7 +49,7 @@ Above the table there is a button called 'Configure Columns'. Clicking this
 will launch a modal window with more detailed information about each column,
 plus options to show/hide and change the order of columns.
 
-![configure columns](../../../docs/images/genstats_config_cols.png)
+![genstats_config_cols](../../../docs/images/genstats_config_cols.png)
 
 ## Plots
 
@@ -64,7 +64,7 @@ Plots in MultiQC reports are usually interactive, using the
 You can hover the mouse over data to see a tooltip with more information
 about that dataset. Clicking and dragging on the line graphs will zoom into that area.
 
-![plot zoom](../../../docs/images/plot_zoom.png)
+![plot_zoom](../../../docs/images/plot_zoom.png)
 
 To reset the zoom, use the button in the top right:
 
@@ -73,7 +73,7 @@ To reset the zoom, use the button in the top right:
 Plots have a grey bar along their base; clicking and dragging this will
 resize the plot's height:
 
-![plot zoom](../../../docs/images/plot_height.png)
+![plot_height](../../../docs/images/plot_height.png)
 
 You can force reports to use interactive plots instead of flat by specifying
 the `--interactive` command line option (see below).
@@ -82,7 +82,7 @@ the `--interactive` command line option (see below).
 
 Reports with large numbers of samples may contain flat plots. These are
 rendered when the MultiQC report is generated in Python using non-interactive (flat)
-images within the report. The reason for generating these is that large
+images within the report. The reason for generating these are that large
 sample numbers can make MultiQC reports very data-intensive and unresponsive
 (crashing people's browsers in extreme cases). Plotting data in flat images
 is scalable to any number of samples, however.
@@ -97,11 +97,11 @@ for more on how to customise the flat / interactive plot behaviour.
 
 ### Exporting plots
 
-If you want to use the plot elsewhere (_eg._ in a presentation or paper),
+If you want to use the plot elsewhere (_e.g._ in a presentation or paper),
 you can export it in a range of formats. Just click the menu button in
 the top right of the plot:
 
-![plot zoom](../../../docs/images/plot_export.png)
+<img src="../../../docs/images/plot_export.png" alt="plot_export" width=200/>
 
 This opens the MultiQC Toolbox _Export Plots_ panel with the current plot
 selected. You have a range of export options here. When deciding on output
@@ -115,9 +115,9 @@ _Plot scaling_ option changes how large the labels are relative to the plot.
 
 Some plots have buttons above them which allow you to change the data
 that they show or their axis. For example, many bar plots have the option
-to show the data as percentages instead of counts:
+to show the data as percentages instead of counts, or use a logarithmic scale:
 
-![percentage button](../../../docs/images/plot_percentage_button.png)
+<img src="../../../docs/images/plot_percentage_button.png" alt="plot_percentage_button" width=280/>
 
 ## Toolbox
 
