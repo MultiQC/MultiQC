@@ -264,7 +264,8 @@ pconfig = {
     "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
-    "height": 500                # The default height of the plot, in pixels
+    "height": 500,               # The default height of the plot, in pixels
+    "style": "line",             # The style of the line. Can be "line" or "lines+markers"
 }
 html = linegraph.plot(..., pconfig)
 ```
