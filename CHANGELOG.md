@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Remove Highcharts ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
+
 ### New modules
 
 ### Module updates
