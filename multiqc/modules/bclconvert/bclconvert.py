@@ -566,11 +566,11 @@ class MultiqcModule(BaseMultiqcModule):
             except ZeroDivisionError:
                 perfect_percent = "0.0"
             try:
-                one_mismatch_pecent = "{0:.1f}".format(
+                one_mismatch_percent = "{0:.1f}".format(
                     float(100.0 * sample["one_mismatch_index_reads"] / sample["clusters"])
                 )
             except ZeroDivisionError:
-                one_mismatch_pecent = "0.0"
+                one_mismatch_percent = "0.0"
 
             try:
                 yield_q30_percent = f"{float(100.0 * (sample['basesQ30'] / sample['yield'])):.1f}"
@@ -598,7 +598,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # "perfect_index": samle['perfect_index_reads'], # don't need these
                 # "one_mismatch_index_reads": sample['one_mismatch_index_reads'],
                 "perfect_pecent": perfect_percent,
-                "one_mismatch_pecent": one_mismatch_pecent,
+                "one_mismatch_pecent": one_mismatch_percent,
                 "mean_quality": sample.get("mean_quality"),
                 "index": sample["index"],
             }
@@ -716,7 +716,6 @@ class MultiqcModule(BaseMultiqcModule):
             "namespace": "bclconvert",
             "id": "bclconvert-sample-stats-table",
             "table_title": "bclconvert Sample Statistics",
-            "no_beeswarm": True,
         }
 
         return table.plot(sample_stats_data, headers, table_config)
@@ -822,7 +821,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "bclconvert-lane-stats-table",
             "table_title": "bclconvert Lane Statistics",
             "col1_header": "Run ID - Lane",
-            "no_beeswarm": True,
         }
 
         # new dict with matching keys for plotting (this avoids duplicate html id linting errors)

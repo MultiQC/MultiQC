@@ -91,10 +91,10 @@ class ViolinPlot(Plot):
                 values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
                 values_are_integer = all(isinstance(v, int) for v in value_by_sample.values())
                 if values_are_numeric:
-                    # Remove NaN values
-                    value_by_sample = {s: v for s, v in value_by_sample.items() if not math.isnan(v)}
+                    # Remove NaN and Inf values
+                    value_by_sample = {s: v for s, v in value_by_sample.items() if np.isfinite(v)}
                     if not value_by_sample:
-                        logger.warning(f"All values are NaN for metric: {header['title']}")
+                        logger.warning(f"All values are NaN or Inf for metric: {header['title']}")
                         continue
 
                 header["show_points"] = len(value_by_sample) <= config.violin_min_threshold_no_points
@@ -193,9 +193,15 @@ class ViolinPlot(Plot):
                 hoveron="points",
             )
 
+            # If all violins are grey, make the dots blue to make it more clear that it's interactive
+            # if some violins are color-coded, make the dots black to make them less distracting
+            marker_color = "black" if any(h.get("color") for h in ds.header_by_metric.values()) else "#0b79e6"
             ds.scatter_trace_params = {
                 "mode": "markers",
-                "marker": {"size": 4, "color": "rgba(0,0,0,1)"},
+                "marker": {
+                    "size": 4,
+                    "color": marker_color,
+                },
                 "showlegend": False,
                 "hovertemplate": ds.trace_params["hovertemplate"],
                 "hoverlabel": {"bgcolor": "white"},
@@ -240,9 +246,10 @@ class ViolinPlot(Plot):
                     "tickfont": copy.deepcopy(layout["yaxis"]["tickfont"]),
                 }
 
-                title = header["title"] + "  "
+                padding = "  "  # otherwise the labels will stick too close to the axis
+                title = header["title"] + padding
                 if header.get("namespace"):
-                    title = f"{header['namespace']}  <br>" + title
+                    title = f"{header['namespace']}{padding}<br>" + title
                 layout[f"yaxis{metric_idx + 1}"].update(
                     {
                         "tickmode": "array",
@@ -321,17 +328,19 @@ class ViolinPlot(Plot):
         assert len(list_of_values_by_sample_by_metric) == len(list_of_header_by_metric)
         assert len(list_of_values_by_sample_by_metric) > 0
 
-        self.dt = dt
-        self.show_table_by_default = dt is not None and show_table_by_default
-        self.show_table = dt is not None
-
         super().__init__(
             PlotType.VIOLIN,
             pconfig,
             n_datasets=len(list_of_values_by_sample_by_metric),
-            # To make sure we use a different ID for the table and the violin plot
-            id=f"violin-{dt.id}" if self.show_table else None,
+            id=dt.id if dt else None,
         )
+
+        self.dt = dt
+        self.no_violin = pconfig.get("no_violin", pconfig.get("no_beeswarm", False))
+        self.show_table = dt is not None
+        self.show_table_by_default = show_table_by_default or self.no_violin
+        if dt:  # to make it different from the violin id
+            dt.id = "table-" + dt.id
 
         self.datasets: List[ViolinPlot.Dataset] = [
             ViolinPlot.Dataset.create(ds, values_by_sample_by_metric, headers_by_metric)
@@ -375,7 +384,7 @@ class ViolinPlot(Plot):
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         self.n_samples = max(len(ds.all_samples) for ds in self.datasets)
         self.serialize_figure = False
-        if self.n_samples > config.max_table_rows:
+        if self.n_samples > config.max_table_rows and not self.no_violin:
             self.show_table = False
             if self.show_table_by_default:
                 logger.debug(
@@ -412,6 +421,11 @@ class ViolinPlot(Plot):
             for v in header_by_metric.values():
                 v.pop("color", None)
 
+        # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
+        if len(set([v["namespace"] for v in header_by_metric.values()])) == 1:
+            for v in header_by_metric.values():
+                v.pop("namespace", None)
+
         return ViolinPlot(
             [values_by_sample_by_metric],
             [header_by_metric],
@@ -425,8 +439,6 @@ class ViolinPlot(Plot):
         return ": %{x}"
 
     def add_to_report(self, report) -> str:
-        violin_html = super().add_to_report(report)
-
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -450,17 +462,27 @@ class ViolinPlot(Plot):
             )
 
         if not self.show_table:
-            # Show violin alone
-            html = warning + violin_html
+            # Show violin alone.
+            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
+            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
+            html = warning + super().add_to_report(report)
+        elif self.no_violin:
+            # Show table alone
+            table_html, configuration_modal = make_table(self.dt)
+            html = warning + table_html + configuration_modal
         else:
-            # Switch between table and violin
+            # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.dt, violin_id=self.id)
-            visibility = "style='display: none;'" if self.show_table_by_default else ""
-            html = f"<div id='mqc_violintable_wrapper_{self.id}' {visibility}>{warning}{violin_html}</div>"
-            if self.show_table:
-                visibility = "style='display: none;'" if not self.show_table_by_default else ""
-                html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {visibility}>{table_html}</div>"
+            violin_html = super().add_to_report(report)
+
+            violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
+            html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
+
+            table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
+            html += f"<div id='mqc_violintable_wrapper_{self.dt.id}' {table_visibility}>{table_html}</div>"
+
             html += configuration_modal
+
         return html
 
     def dump_for_javascript(self):
@@ -501,8 +523,9 @@ class ViolinPlot(Plot):
         data = {}
         for metric in dataset.metrics:
             values_by_sample = dataset.violin_values_by_sample_by_metric[metric]
+            title = dataset.header_by_metric[metric]["title"]
             for sample, value in values_by_sample.items():
-                data.setdefault(sample, {})[metric] = value
+                data.setdefault(sample, {})[title] = value
 
         util_functions.write_data_file(data, dataset.uid)
 

@@ -228,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Length of target region",
                 "min": 0,
                 "format": "{:,d}",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "scale": "Greys",
             },
         }

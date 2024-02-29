@@ -8,4 +8,4 @@ description: >
 
 The MultiQC module for umitools parses logs from umi-tools
 
-Currently only the `dedup` command is supported.
+Currently `dedup` and `extract` commands are supported.

@@ -9,8 +9,9 @@ import math
 import plotly.graph_objects as go
 import spectra
 
+from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
-from multiqc.utils import util_functions
+from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
 
@@ -123,46 +124,21 @@ class BarPlot(Plot):
 
         # Set the barmode
         barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", "normal", None]):
+        if "stacking" in pconfig and (pconfig["stacking"] in ["group", None]):
             barmode = "group"  # side by side
 
         max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
 
-        n_bars = max_n_samples
-        # Group mode puts each category in a separate bar, so need to multiply by the number of categories
-        if barmode == "group":
-            n_bars *= max_n_cats
-
-        def n_bars_to_size(n: int):
-            if n >= 30:
-                return 15
-            if n >= 20:
-                return 20
-            if n >= 10:
-                return 25
-            if n >= 5:
-                return 30
-            return 35
-
-        # Set height to be proportional to the number of samples
-        height = n_bars * n_bars_to_size(n_bars)
-
         # Set height to also be proportional to the number of cats to fit a legend
         HEIGHT_PER_LEGEND_ITEM = 19
         legend_height = HEIGHT_PER_LEGEND_ITEM * max_n_cats
-        # expand the plot to fit the legend:
-        height = max(height, max(height, legend_height))
-        # but not too much - if there are only 2 samples, we don't want the plot to be too high:
-        height = min(660, max(height, legend_height))
 
-        height += 140  # Add space for the title and footer
-
-        # now, limit the max and min height (plotly will start to automatically skip
-        # some of the ticks on the left when the plot is too high)
-        MIN_HEIGHT = 300
-        MAX_HEIGHT = 2560
-        height = min(MAX_HEIGHT, height)
-        height = max(MIN_HEIGHT, height)
+        height = determine_barplot_height(
+            max_n_samples=max_n_samples,
+            # Group mode puts each category in a separate bar, so need to multiply by the number of categories
+            max_bars_in_group=max_n_cats if barmode == "group" else 1,
+            legend_height=legend_height,
+        )
 
         self.layout.update(
             height=height,
@@ -201,6 +177,17 @@ class BarPlot(Plot):
                 font=dict(color="black"),
             ),
         )
+
+        if getattr(config, "barplot_legend_on_bottom", False):
+            self.layout.update(
+                legend=go.layout.Legend(
+                    orientation="h",
+                    x=0.5,
+                    xanchor="center",
+                    y=-0.5,
+                    yanchor="top",
+                ),
+            )
 
         for dataset in self.datasets:
             if barmode == "group":

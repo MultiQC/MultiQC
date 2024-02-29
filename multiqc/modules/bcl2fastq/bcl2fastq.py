@@ -474,7 +474,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "bcl2fastq-lane-stats-table",
             "table_title": "bcl2fastq Lane Statistics",
             "col1_header": "Run ID - Lane",
-            "no_beeswarm": True,
         }
         return table.plot(self.bcl2fastq_bylane, headers, table_config)
 

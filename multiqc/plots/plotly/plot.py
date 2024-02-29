@@ -29,6 +29,7 @@ class PlotType(Enum):
     BAR = "bar_graph"
     SCATTER = "scatter"
     HEATMAP = "heatmap"
+    BOX = "box"
 
 
 @dataclasses.dataclass
@@ -41,7 +42,7 @@ class BaseDataset(ABC):
     label: str
     uid: str
     dconfig: Dict  # user dataset-specific configuration
-    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
+    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict
     pct_range: Dict
 
@@ -147,7 +148,7 @@ class Plot(ABC):
             width=width,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="Black", family="Lucida Grande"),
+            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
@@ -207,11 +208,10 @@ class Plot(ABC):
 
             if not isinstance(dconfig, (str, dict)):
                 logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
-            dconfig = dconfig if isinstance(dconfig, dict) else {"label": dconfig}
-            dataset.label = dconfig.get("name", idx + 1)
-            if "label" in dconfig:
-                dataset.label = dconfig["label"]
-                dconfig["ylab"] = dconfig["label"]
+            dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
+            dataset.label = dconfig.get("name", dconfig.get("label", idx + 1))
+            if "ylab" not in dconfig and "ylab" not in self.pconfig:
+                dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
@@ -324,7 +324,8 @@ class Plot(ABC):
     def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        data_attrs["pid"] = self.id
+        if "pid" not in data_attrs:
+            data_attrs["pid"] = self.id
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 
@@ -603,6 +604,7 @@ def _dataset_layout(
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
     layout = dict(
+        title=dict(text=pconfig.get("title")),
         xaxis=dict(
             hoverformat=None,
             ticksuffix=xsuffix or "",

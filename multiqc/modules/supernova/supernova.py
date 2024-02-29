@@ -470,9 +470,9 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         # Find the sample ID
         sid = ""
-        sid_pat = re.compile("- \[(.+)\]")
+        sid_pat = re.compile(r"- \[(.+)\]")
         # [number, unit, category]
-        stat_pat = re.compile("-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =")
+        stat_pat = re.compile(r"-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =")
 
         for line in content.splitlines():
             sid_m = re.match(sid_pat, line)
