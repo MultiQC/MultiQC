@@ -156,7 +156,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_loci_barplot(self):
-        """Make the HighCharts HTML to plot the qorts splice loci"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceLoci_Known_ManyReads",
@@ -213,7 +212,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def qorts_splice_events_barplot(self):
-        """Make the HighCharts HTML to plot the qorts splice events"""
         # Specify the order of the different possible categories
         keys = [
             "SpliceEvents_KnownLociWithManyReads",

@@ -89,7 +89,6 @@ def plot(data, pconfig=None):
         except Exception:
             pass
 
-    # Generate the data dict structure expected by HighCharts series
     plotdata: List[List[Dict]] = []
     for data_index, d in enumerate(data):
         thisplotdata: List[Dict] = []
@@ -200,9 +199,6 @@ def plot(data, pconfig=None):
     except Exception:
         pass
 
-    # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    # identical to default scale of the Highcharts JS library, this is not strictly
-    # needed. But it future proofs when we replace Highcharts with something else.
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for si, sd in enumerate(plotdata):
         for di, d in enumerate(sd):

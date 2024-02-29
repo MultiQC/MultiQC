@@ -117,8 +117,6 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = None
 
     def trimmomatic_barplot(self):
-        """Make the HighCharts HTML to plot the trimmomatic rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "surviving": {"color": "#437bb1", "name": "Surviving Reads"},

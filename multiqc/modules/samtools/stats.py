@@ -247,7 +247,6 @@ class StatsReportMixin:
 
 
 def alignment_chart(data):
-    """Make the HighCharts HTML to plot the alignment rates"""
     keys = {
         "reads_mapped_MQ1": {"color": "#437bb1", "name": "Mapped (with MQ>0)"},
         "reads_MQ0": {"color": "#FF9933", "name": "MQ0"},

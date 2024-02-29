@@ -253,6 +253,7 @@ pconfig = {
     "x_clipmin": None,           # Minimum value allowed for automatic axis limit
     "y_clipmax": None,           # Maximum value allowed for automatic axis limit
     "y_clipmin": None,           # Minimum value allowed for automatic axis limit
+    "x_minrange": None,          # Minimum range for x-axis (5 would allow 0..5, but also 15..20, etc.)
     "y_minrange": None,          # Minimum range for y-axis (5 would allow 0..5, but also 15..20, etc.)
     "xlog": False,               # Use log10 for the x-axis
     "ylog": False,               # Use log10 scale for the y-axis

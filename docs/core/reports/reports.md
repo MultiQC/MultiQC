@@ -59,16 +59,16 @@ the general statistics table.
 ### Interactive plots
 
 Plots in MultiQC reports are usually interactive, using the
-[HighCharts](http://www.highcharts.com/) JavaScript library.
+[Plotly](https://plotly.com/javascript) JavaScript library.
 
 You can hover the mouse over data to see a tooltip with more information
-about that dataset. Clicking and dragging on line graphs will zoom into that area.
+about that dataset. Clicking and dragging on the line graphs will zoom into that area.
 
 ![plot zoom](../../../docs/images/plot_zoom.png)
 
 To reset the zoom, use the button in the top right:
 
-![reset zoom](../../../docs/images/plot_reset_zoom.png)
+<img src="../../../docs/images/plot_reset_zoom.png" alt="reset zoom" width=300/>
 
 Plots have a grey bar along their base; clicking and dragging this will
 resize the plot's height:
@@ -81,8 +81,7 @@ the `--interactive` command line option (see below).
 ### Flat plots
 
 Reports with large numbers of samples may contain flat plots. These are
-rendered when the MultiQC report is generated using
-[MatPlotLib](http://matplotlib.org/) and are non-interactive (flat)
+rendered when the MultiQC report is generated in Python using non-interactive (flat)
 images within the report. The reason for generating these is that large
 sample numbers can make MultiQC reports very data-intensive and unresponsive
 (crashing people's browsers in extreme cases). Plotting data in flat images

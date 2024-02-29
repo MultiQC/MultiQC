@@ -39,7 +39,6 @@ def plot(data, pconfig=None):
     if not isinstance(data, list):
         data = [data]
 
-    # Generate the data dict structure expected by HighCharts series
     plotdata = list()
     for data_index, ds in enumerate(data):
         d = list()
@@ -80,8 +79,6 @@ def plot(data, pconfig=None):
         plotdata.append(d)
 
     if pconfig.get("square"):
-        # Making sure HighCharts doesn't get creative in adding different paddings
-        pconfig["endOnTick"] = False
         if "ymax" not in pconfig and "xmax" not in pconfig:
             # Find the max value
             max_val = 0
