@@ -4,8 +4,6 @@
 
 ### MultiQC updates
 
-- Changelog CI: update PR URLs, fix removing existing entry and determining module addition ([#2412](https://github.com/MultiQC/MultiQC/pull/2412))
-
 ### New modules
 
 ### Module updates
