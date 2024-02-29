@@ -90,12 +90,20 @@ class LinePlot(Plot):
                         new_line["mode"] = "lines+markers"
                         new_line["marker"]["symbol"] = src_line["marker"]["symbol"]
             dataset.lines = lines
-            # Update default trace parameters
+
+            mode = pconfig.get("style", "lines")
+            if config.lineplot_style == "lines+markers":
+                mode = "lines+markers"
+
             dataset.trace_params.update(
-                mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-                line={"width": 2 if config.lineplot_style == "lines" else 0.6},
-                marker={"size": 4},
+                mode=mode,
+                line={"width": 2},
             )
+            if mode == "lines+markers":
+                dataset.trace_params.update(
+                    line={"width": 0.6},
+                    marker={"size": 5},
+                )
             return dataset
 
         def create_figure(
