@@ -160,13 +160,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot perfect library as dashed line
         pconfig["extra_series"].append(
             {
-                "name": "a perfect library where each read is unique",
+                "name": "A perfect library where each read is unique",
                 "data": [[0, 0], [max_yx, max_y]],
-                "dashStyle": "Dash",
-                "lineWidth": 1,
+                "dash": "dash",
+                "line": {"width": 1},
                 "color": "#000000",
-                "marker": {"enabled": False},
-                "showInLegend": False,
+                "showlegend": False,
             }
         )
 
