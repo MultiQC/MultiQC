@@ -8,6 +8,8 @@
 
 ### Module updates
 
+- **BBTools**: Set missing values to None for bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
+
 ## [MultiQC v1.21](https://github.com/ewels/MultiQC/releases/tag/v1.21) - 2024-02-28
 
 ### Highlights
