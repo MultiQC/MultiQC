@@ -6,7 +6,7 @@ import re
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph, beeswarm
+from multiqc.plots import bargraph, linegraph, violin
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -807,7 +807,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * _Low GC_ - Bases / CpGs that overlap with the bottom 10% of 100bp windows for GC-content
 
                 """,
-                plot=beeswarm.plot(pd, pheader, pconfig),
+                plot=violin.plot(pd, pheader, pconfig),
             )
 
     ########################################

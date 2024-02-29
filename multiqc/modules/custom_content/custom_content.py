@@ -12,7 +12,7 @@ import yaml
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, heatmap, linegraph, scatter, table
+from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
 from multiqc.utils import report
 
 # Initialise the logger
@@ -383,9 +383,9 @@ class MultiqcModule(BaseMultiqcModule):
         elif mod["config"].get("plot_type") == "heatmap":
             plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
 
-        # Beeswarm plot
-        elif mod["config"].get("plot_type") == "beeswarm":
-            plot = beeswarm.plot(mod["data"], pconfig)
+        # Violin plot
+        elif mod["config"].get("plot_type") in ["violin", "beeswarm"]:
+            plot = violin.plot(mod["data"], pconfig)
 
         # Raw HTML
         elif mod["config"].get("plot_type") == "html":

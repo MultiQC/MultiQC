@@ -5,7 +5,7 @@ import logging
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, heatmap, linegraph
+from multiqc.plots import bargraph, violin, heatmap, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -323,7 +323,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def bam_statplot(self):
-        pconfig = {"id": "rna_seqc_bam_stat_beeswarm", "title": "RNA-SeQC: Read metrics"}
+        pconfig = {"id": "rna_seqc_bam_stat_violin", "title": "RNA-SeQC: Read metrics"}
         columns = [
             "Total Read Number",
             "Alternative Alignments",
@@ -359,5 +359,5 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="rna_seqc_bam_stat",
             description=f"Number of reads ({config.read_count_desc}) falling into different categories.",
             helptext="Note that many of these statistics are only available from RNA-SeQC v2.x",
-            plot=beeswarm.plot(self.rna_seqc_metrics, keys, pconfig),
+            plot=violin.plot(self.rna_seqc_metrics, keys, pconfig),
         )
