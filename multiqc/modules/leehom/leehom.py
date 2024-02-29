@@ -5,7 +5,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -35,13 +35,17 @@ class MultiqcModule(BaseMultiqcModule):
                 self.leehom_data[f["s_name"]] = parsed_data
                 self.add_data_source(f, f["s_name"])
 
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, f["s_name"])
+
         # Filter to strip out ignored sample names
         self.leehom_data = self.ignore_samples(self.leehom_data)
 
         if len(self.leehom_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.leehom_data)))
+        log.info(f"Found {len(self.leehom_data)} reports")
 
         # Write parsed report data to a file
         self.write_data_file(self.leehom_data, "multiqc_leehom")
@@ -61,10 +65,10 @@ class MultiqcModule(BaseMultiqcModule):
             "failed_key": r"Failed Key\s+(\d+)",
         }
         parsed_data = dict()
-        for l in f["f"]:
+        for line in f["f"]:
             # Search regexes for overview stats
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     parsed_data[k] = int(match.group(1))
         return parsed_data
@@ -75,16 +79,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {}
         headers["merged_trimming"] = {
-            "title": "{} Merged (Trimming)".format(config.read_count_prefix),
-            "description": "Merged clusters from trimming ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Merged (Trimming)",
+            "description": f"Merged clusters from trimming ({config.read_count_desc})",
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
         }
         headers["merged_overlap"] = {
-            "title": "{} Merged (Overlap)".format(config.read_count_prefix),
-            "description": "Merged clusters from overlapping reads ({})".format(config.read_count_desc),
+            "title": f"{config.read_count_prefix} Merged (Overlap)",
+            "description": f"Merged clusters from overlapping reads ({config.read_count_desc})",
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,

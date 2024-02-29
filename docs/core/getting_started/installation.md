@@ -8,16 +8,13 @@ description: How to install MultiQC on your system
 MultiQC is written in Python and can be installed in a number of ways.
 Which method you should use depends on how you're using MultiQC and how familiar you are with the Python ecosystem.
 
-:::info
+If you're new to software packaging, this page can be a little overwhelming.
+If in doubt, a general rule is:
 
-This page can be a little overwhelming. If in doubt:
+- _Running MultiQC in a pipeline?_ &nbsp; Use [Docker](#docker) or [Singularity](#singularity).
+- _Running MultiQC locally?_ &nbsp; Use [Pip](#pip) or [Conda](#conda).
 
-- Running MultiQC in a pipeline? Use [Docker](#docker) or [Singularity](#singularity).
-- Running MultiQC locally? Use [Pip](#pip) or [Conda](#conda).
-
-:::
-
-:::tip{title="TL;DR;"}
+:::tip{title="Installation cheat sheet"}
 
 Know what you're doing with this kind of thing? Here's a quick reference:
 
@@ -32,7 +29,7 @@ pip install multiqc
 <tr><td>Pip (dev version)</td><td>
 
 ```bash
-pip install --upgrade --force-reinstall git+https://github.com/ewels/MultiQC.git
+pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
 </td></tr>
@@ -46,7 +43,7 @@ conda install multiqc
 <tr><td>Docker</td><td>
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 ```
 
 </td></tr>
@@ -59,7 +56,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
 MultiQC is written in Python and needs a Python installation to run.
 
 To run MultiQC manually install, you'll typically install it into a local Python environment.
-MultiQC requires Python version 3.6 or above.
+MultiQC requires Python version 3.8 or above.
 
 ### System Python
 
@@ -72,7 +69,7 @@ If you find yourself prepending `sudo` to any MultiQC commands, take a step back
 ### Python with Conda
 
 To see if you have python installed, run `python --version` on the command line.
-MultiQC needs Python version 3.6+.
+MultiQC needs Python version 3.8+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
@@ -131,7 +128,7 @@ conda config --set channel_priority strict
 :::warning
 
 In the past we used `-c bioconda` in the installation command, but this is no longer the correct usage.
-Doing so will likely cause weird stuff to happen (like only being able to install very old versions).
+Doing so will likely cause weird stuff to happen (such as only being able to install very old versions).
 
 :::
 
@@ -151,7 +148,7 @@ Use the `--upgrade` flag to update to the latest version.
 If you would like the development version, the command is:
 
 ```bash
-pip install git+https://github.com/ewels/MultiQC.git
+pip install git+https://github.com/MultiQC/MultiQC.git
 ```
 
 To update the dev version between releases, use `--upgrade --force-reinstall`. This is needed as the version number isn't changing.
@@ -165,9 +162,9 @@ pip install --user multiqc
 
 ### Spack
 
-MultiQC [is available](https://spack.readthedocs.io/en/latest/package_list.html#py-multiqc) on [Spack](https://spack.io/) as `py-multiqc`:
+MultiQC [is available on spack](https://packages.spack.io/package.html?name=py-multiqc) as `py-multiqc`:
 
-```
+```bash
 spack install py-multiqc
 ```
 
@@ -197,7 +194,7 @@ To report issues with a FreeBSD port, please submit a PR on the
 If you'd rather not use either of these tools, you can clone the code and install the code yourself:
 
 ```bash
-git clone https://github.com/ewels/MultiQC.git
+git clone https://github.com/MultiQC/MultiQC.git
 cd MultiQC
 pip install .
 ```
@@ -207,9 +204,9 @@ This will fetch the latest development code. To update to the latest changes, us
 `git` not installed? No problem - just download the flat files:
 
 ```bash
-curl -LOk https://github.com/ewels/MultiQC/archive/master.zip
-unzip master.zip
-cd MultiQC-master
+curl -LOk https://github.com/MultiQC/MultiQC/archive/main.zip
+unzip main.zip
+cd MultiQC-main
 pip install .
 ```
 
@@ -223,13 +220,13 @@ with required dependencies. To build MultiQC, run `nix build`.
 
 ### Docker
 
-A Docker container is provided on Docker Hub called `ewels/multiqc`.
+A Docker container is provided on Docker Hub called [`multiqc/multiqc`](https://hub.docker.com/r/ewels/multiqc/).
 It's based on an `python-slim` base image to give the smallest image size possible.
 
 To use, call the `docker run` with your current working directory mounted as a volume and working directory. Then just specify the MultiQC command at the end as usual:
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 ```
 
 - `-t`: Runs docker with a pseudo-tty, for nice terminal colours
@@ -239,22 +236,28 @@ docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc .
 You can specify additional MultiQC parameters as normal at the end of the command:
 
 ```bash
-docker run -t -v `pwd`:`pwd` -w `pwd` ewels/multiqc multiqc . --title "My amazing report" -b "This was made with docker"
+docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc . --title "My amazing report" -b "This was made with docker"
 ```
 
 By default, docker will use the `:latest` tag. For MultiQC, this is set to be the most recent release.
-To use the most recent development code, use `ewels/multiqc:dev`.
-You can also specify specific versions, eg: `ewels/multiqc:1.14`.
+To use the most recent development code, use `multiqc/multiqc:dev`.
+You can also specify specific versions, eg: `multiqc/multiqc:v1.20`.
 
 Note that all files on the command line (eg. config files) must also be mounted in the docker container to be accessible.
 For more help, look into [the Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
 
-:::tip{title="Docker bash alias"}
+:::warning{title="Docker image name change"}
+The docker image used to be called `ewels/multiqc`.
+All releases prior to MultiQC v1.19 can be found at [ewels/multiqc](https://hub.docker.com/r/ewels/multiqc/)
+and everything from v1.20 onwards can be found at [multiqc/multiqc](https://hub.docker.com/r/multiqc/multiqc/).
+:::
 
-The above base command is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
+:::tip{title="Tip: Docker bash alias"}
+
+The docker command above is a little verbose, so if you are using this a lot it may be worth adding the following bash alias to your `~/.bashrc` file:
 
 ```bash
-alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` ewels/multiqc"
+alias multiqc="docker run -tv `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc"
 ```
 
 Once applied (first log out and in again) you can then just use the `multiqc` command instead:
@@ -265,18 +268,42 @@ multiqc .
 
 :::
 
-### Singularity
+:::note{title="Compute architectures"}
 
-To build a singularity container image from the docker image, use the following command: _(change `1.14` to the current MultiQC version)_
+These docker images are [multi-platform images](https://docs.docker.com/build/building/multi-platform/) – each build contains two digests, one for `linux/amd64` and one for `linux/arm64`.
+
+Generally, the Docker client should be clever enough to pull the digest appropriate for your local compute architecture.
+However, if you wish you can force it with the `--platform` flag.
 
 ```bash
-singularity build multiqc-1.14.sif docker://ewels/multiqc:1.14
+docker pull --platform linux/arm64 multiqc/multiqc:latest
+```
+
+:::
+
+### GitHub Packages
+
+If you prefer, the Docker image above is also available from [GitHub packages](https://github.com/MultiQC/MultiQC/pkgs/container/multiqc).
+Usage is identical, the only difference is that the URI has a `ghcr.io/` prefix:
+
+```bash
+docker pull ghcr.io/multiqc/multiqc
+```
+
+This image was also renamed, versions up to v1.19 can be found at [`ghcr.io/ewels/multiqc`](https://github.com/users/ewels/packages/container/package/multiqc).
+
+### Singularity
+
+To build a singularity container image from the docker image, use the following command: _(change `1.20` to the current MultiQC version)_
+
+```bash
+singularity build multiqc-1.20.sif docker://multiqc/multiqc:v1.20
 ```
 
 Then, use `singularity run` to run the image with the normal MultiQC arguments:
 
 ```bash
-singularity run multiqc-1.14.sif my_results/ --title "Report made using Singularity"
+singularity run multiqc-1.20.sif my_results/ --title "Report made using Singularity"
 ```
 
 :::info{title="Import errors with Singularity"}
@@ -317,7 +344,7 @@ Currently you can't do a lot more than just running MultiQC.
 
 ### On the main Galaxy instance
 
-The easiest and fast manner to use MutliQC is to use the [usegalaxy.org](https://usegalaxy.org/) main Galaxy instance where you will find [MultiQC Galaxy tool](https://usegalaxy.org/?tool_id=toolshed.g2.bx.psu.edu%2Frepos%2Fengineson%2Fmultiqc%2Fmultiqc%2F1.0.0.0&version=1.0.0.0&__identifer=2sjdq8d9r3l) under the _NGS: QC and manipualtion_ tool panel section.
+The easiest and fast manner to use MultiQC is to use the [usegalaxy.org](https://usegalaxy.org/) main Galaxy instance where you will find [MultiQC Galaxy tool](https://usegalaxy.org/?tool_id=toolshed.g2.bx.psu.edu%2Frepos%2Fengineson%2Fmultiqc%2Fmultiqc%2F1.0.0.0&version=1.0.0.0&__identifer=2sjdq8d9r3l) under the _NGS: QC and manipualtion_ tool panel section.
 
 ### On your instance
 

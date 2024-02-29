@@ -17,7 +17,6 @@ from collections import defaultdict
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from multiqc.utils.util_functions import write_data_file
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
 
@@ -25,12 +24,12 @@ from .utils import check_duplicate_samples, clean_headers, make_log_report, orde
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN coverage"
+NAMESPACE = "Coverage"
 
 
 '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 The following code section provides a clean and simple tool for setting configurations:
-https://github.com/ewels/MultiQC/blob/master/docs/plots.md#creating-a-table
+https://github.com/MultiQC/MultiQC/blob/main/docs/plots.md#creating-a-table
 
 The SINGLE_HEADER is used to define the common settings for all coverage headers.
 '''
@@ -149,12 +148,6 @@ Some rules:
   * If it still does not work, then you might need to take a look
     at the "make_consistent_metric" and maybe at the "make_user_configs".
 
-- Some "title"s below contain the "&nbsp;" html entity to widen the column's title.
-  Otherwise long values can overlap with adjacent values in right columns/rows below.
-  Basically it is just a dirty little trick, which can be useful in rare cases.
-  These entities will be deleted for the general table, since its columns' titles
-  contain extra region suffixes, which make the columns wide enough.
-
 - If you want to use "greater than or equal to" sign, then take a look at these:
     ">="
     &ge;
@@ -225,18 +218,6 @@ Ideas:
   elif float -> "{:,.Nf}", where N is the number of after-point digits.
   else -> "{:,.1f}, which is default by the MultiQC.
 
-- The problem with overlapping adjacent columns/rows, when column's
-  title block is shorter than single value blocks below.
-  There is a solution, which can automatically improve the appearance
-  of html tables. After data/headers have been collected, a special
-  function converts the column's value to string, concatenates with
-  "suffix" if present and appends at least abs(maxlen(values) - len(title))
-  "&nbsp;" entities. Simple, but does not solve the issue in general.
-  Additional JS script could analyze tables' data and attributes(eg font)
-  to decide how much extra padding space is needed to increase table's
-  readability further to some extent.
-
-
 Final notes:
 
 - Most configs below are for demonstration purposes only.
@@ -252,13 +233,6 @@ USER_CONFIGS_ENABLED = True
 
 V2 = " pct"  # Used to create a unique ID if a metric has two values.
 
-""" GTQ is the "greater than or equal to" sign.
-Other types can be found in the "Extra Info" comment above.
-GTQ is used by setting automatic titles for the metric:
-PCT of region with coverage [ix: inf)
-"""
-GTQ = "&ge;"
-
 METRICS = {
     "aligned reads": {
         "order_priority": 0,
@@ -270,13 +244,13 @@ METRICS = {
         "scale": "RdGy",
         "colour": "255, 0, 0",
     },
-    "aligned reads in region"
-    + V2: {
+    "aligned reads in region" + V2: {
         "order_priority": 0.2,
         "max": 100,
-        "suffix": " %",
+        "suffix": "%",
         "scale": "Purples",
         "colour": "255, 0, 0",
+        "exclude": False,
     },
     "aligned bases": {
         "order_priority": 0.3,
@@ -295,27 +269,27 @@ METRICS = {
             "scale": "Oranges",
         },
     },
-    "aligned bases in region"
-    + V2: {
+    "aligned bases in region" + V2: {
         "order_priority": 0.5,
         "max": 100,
         "colour": "0, 0, 255",
         "scale": "Greens",
-        "suffix": " %",
+        "suffix": "%",
         "bgcols": {"NA": "#00FFFF"},
+        "exclude": False,
     },
     "average chr x coverage over region": {
         "order_priority": 1.0,
         "title": "X cov",
         "suffix": " x",
-        "colour": "255, 255, 0",
+        "colour": "179,179,50",  # Olive
     },
     "average chr y coverage over region": {
         "order_priority": 1.1,
         "title": "Y cov",
         "suffix": " x",
         "scale": "YlOrRd",
-        "colour": "255, 255, 0",
+        "colour": "179,179,50",  # Olive
     },
     "xavgcov/yavgcov ratio over region": {
         "order_priority": 1.2,
@@ -333,16 +307,17 @@ METRICS = {
         "order_priority": 3,
         "exclude": False,
         "hidden_own": False,
+        "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
-        "colour": "0, 255, 255",
+        "colour": "55,126,184",  # Blue
     },
     "average mitochondrial coverage over region": {
         "order_priority": 4,
-        "title": "MT cov&nbsp;&nbsp;",
+        "title": "MT cov",
         "scale": "Purples",
         "suffix": " x",
-        "colour": "255, 0, 255",
+        "colour": "152,78,163",  # Purple
     },
     "average autosomal coverage over region": {
         "order_priority": 6,
@@ -363,6 +338,7 @@ METRICS = {
         "title": "Med aut cov",
         "suffix": " x",
         "scale": "Greens",
+        "exclude": False,
     },
     "mean/median autosomal coverage ratio over region": {
         "order_priority": 7.1,
@@ -375,8 +351,9 @@ METRICS = {
     # But if you want to handle a certain number manually, then you can
     # add a float-string key with desired configs in the "extra".
     "uniformity of coverage (pct > d.d*mean) over region": {
-        "suffix": " %",
-        "colour": "55, 255, 55",
+        "suffix": "%",
+        "colour": "77,175,74",  # Green
+        "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
             "0.2": {
@@ -414,8 +391,9 @@ METRICS = {
     "pct of region with coverage [ix:inf)": {
         "max": 100,
         "scale": "Purples",
-        "suffix": " %",
-        "colour": "255, 50, 25",
+        "suffix": "%",
+        "colour": "228,26,28",  # Red
+        "exclude": False,
         WGS: {
             # "scale": "Reds",
         },
@@ -425,7 +403,7 @@ METRICS = {
         "extra": {
             # "PCT of region with coverage [0x: inf)" metric.
             ("0x", "inf"): {
-                "title": GTQ + "0x" + 8 * "&nbsp;",
+                "title": "≥0x",
                 # Simple example of colors with rules.
                 # "cond_formatting_rules": {
                 #    "red_bad": [{"s_contains": ""}], # Each value is red by default.
@@ -463,11 +441,11 @@ METRICS = {
     "pct of region with coverage [ix:jx)": {
         "max": 100,
         "scale": "Reds",
-        "suffix": " %",
+        "suffix": "%",
         # "exclude_own": True,
         "extra": {
             ("0x", "1x"): {
-                "title": "0x&nbsp;&nbsp;&nbsp;",
+                "title": "0x",
                 WGS: {
                     "description": "Percentage of sites in genome with no coverage.",
                 },
@@ -492,13 +470,13 @@ TABLE_CONFIG = {
     "sortRows": True,  # Whether to sort rows alphabetically
     "only_defined_headers": True,  # Only show columns that are defined in the headers config
     "col1_header": None,  # The header used for the first column with sample names.
-    "no_beeswarm": False,  # Force a table to always be plotted (beeswarm by default if many rows)
+    "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)
 }
 # Below are region-specific configs with higher priority.
 REGION_TABLE_CONFIG = {
     WGS: {
         "table_title": "WGS",
-        # "no_beeswarm": True,
+        # "no_violin": True,
         # "save_file": True,
         # "raw_data_fn": "Genome_raw_file",
     },
@@ -524,7 +502,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
     Other methods can be added as well to provide extra features (eg module interface, JSON).
     """
 
-    def add_coverage_metrics(self):
+    def add_coverage_metrics(self, overall_mean_cov_data):
         """The main function of the dragen coverage metrics module.
         The public members of the BaseMultiqcModule and dragen modules defined in
         MultiqcModule are available within it. Returns a set with sample names."""
@@ -544,7 +522,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         for file in self.find_log_files("dragen/coverage_metrics"):
             out = coverage_parser(file)
             if out["success"]:
-                self.add_data_source(file, section="stats")
+                self.add_data_source(file, section="coverage_metrics")
 
                 original_sample = out["sample_name"]
                 cleaned_sample = self.clean_s_name(original_sample, file)
@@ -552,9 +530,13 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
                 cov_data[cleaned_sample][phenotype] = out["data"]  # Add/overwrite the sample.
 
-                all_samples[cleaned_sample + "." + phenotype].append(file)
+                all_samples[cleaned_sample].append(file)
                 match_overall_mean_cov[cleaned_sample][phenotype] = (original_sample, file["root"])
                 all_metrics.update(out["metric_IDs_with_original_names"])
+
+                # Superfluous function call to confirm that it is used in this module
+                # Replace None with actual version if it is available
+                self.add_software_version(None, cleaned_sample)
 
         cov_data = self.ignore_samples(cov_data)
         if not cov_data:
@@ -563,7 +545,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         cov_headers = make_coverage_headers(all_metrics)
 
         # Check samples for duplicates.
-        check_duplicate_samples(all_samples, log, "dragen/coverage_metrics")
+        check_duplicate_samples(all_samples, log)
 
         # Report found info/warnings/errors, which were collected while
         # calling the coverage_parser and constructing cov_headers.
@@ -580,7 +562,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
         # And prepare <coverage-region-prefix>-specific texts.
-        bed_texts = make_bed_texts(self.overall_mean_cov_data_reference, match_overall_mean_cov)
+        bed_texts = make_bed_texts(overall_mean_cov_data, match_overall_mean_cov)
         coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
 
         for cov_section in coverage_sections:
@@ -591,7 +573,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
                 helptext=cov_section["helptext"],
                 plot=cov_section["plot"],
             )
-        return {sample + phenotype for sample in cov_data for phenotype in cov_data[sample]}
+        return cov_data.keys()
 
 
 def make_data_for_txt_reports(coverage_data, metrics):
@@ -602,7 +584,7 @@ def make_data_for_txt_reports(coverage_data, metrics):
     for sample in coverage_data:
         for phenotype in coverage_data[sample]:
             # Replace any sequence of spaces/hyphens/dots/underscores by single underscore.
-            new_phenotype = re.sub("(\s|-|\.|_)+", "_", phenotype)
+            new_phenotype = re.sub(r"(\s|-|\.|_)+", "_", phenotype)
             # Transform phenotype as in the previous code version.
             if new_phenotype == "wgs":
                 new_phenotype += "_cov_metrics"
@@ -730,9 +712,9 @@ def create_table_handlers():
     * make_own_coverage_sections"""
 
     # Regexes for the well-known standard phenotypes.
-    RGX_WGS_PHENOTYPE = re.compile("^wgs$", re.IGNORECASE)
-    RGX_QC_PHENOTYPE = re.compile("^qc-coverage-region-(?P<number>\d+)$", re.IGNORECASE)
-    RGX_BED_PHENOTYPE = re.compile("^target_bed$", re.IGNORECASE)
+    RGX_WGS_PHENOTYPE = re.compile(r"^wgs$", re.IGNORECASE)
+    RGX_QC_PHENOTYPE = re.compile(r"^qc-coverage-region-(?P<number>\d+)$", re.IGNORECASE)
+    RGX_BED_PHENOTYPE = re.compile(r"^target_bed$", re.IGNORECASE)
 
     def improve_gen_phenotype(phenotype):
         """Improve phenotype's appearance for columns' titles in the general table."""
@@ -775,9 +757,10 @@ def create_table_handlers():
                         # PCT of region with coverage [10x: 50x]
                         # will both reference the same HTML ID.
                         # Irrelevant in this module, but may not in general.
-                        m_id = re.sub("(\s|-|\.|_)+", " ", phenotype + "_" + metric)
+                        m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
+                        del gen_headers[m_id]["colour"]
                         """
                         Some modifications are necessary to improve informativeness
                         of the general table, because several/many familiar tables
@@ -789,9 +772,7 @@ def create_table_handlers():
                         """
                         if "title" in gen_headers[m_id]:
                             gen_headers[m_id]["title"] = (
-                                re.sub("&nbsp;", "", gen_headers[m_id]["title"])
-                                + " "
-                                + improve_gen_phenotype(phenotype)
+                                gen_headers[m_id]["title"] + " " + improve_gen_phenotype(phenotype)
                             )
 
         return gen_data, clean_headers(order_headers(gen_headers))
@@ -812,7 +793,7 @@ def create_table_handlers():
             return "Target Bed Coverage Metrics"
 
         # Try to make it better looking a little bit.
-        phenotype = re.sub("(\s|-|\.|_)+", " ", phenotype).strip()
+        phenotype = re.sub(r"(\s|-|\.|_)+", " ", phenotype).strip()
         phenotype = phenotype[0].capitalize() + phenotype[1:]
         return phenotype + " Coverage Metrics"
 
@@ -851,7 +832,7 @@ def create_table_handlers():
                         if metric + region in coverage_headers:
                             _metric += region
                     if not ("exclude_own" in coverage_headers[_metric] and coverage_headers[_metric]["exclude_own"]):
-                        m_id = re.sub("(\s|-|\.|_)+", " ", phenotype + "_" + metric)
+                        m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         data[sample][m_id] = real_data[metric]
                         headers[m_id] = coverage_headers[_metric].copy()
 
@@ -900,10 +881,12 @@ def create_table_handlers():
                     + bed_texts[phenotype]["description"]
                     + "\n\nPress the `Help` button for details."
                 )
+                anchor = "dragen-cov-metrics-own-section-" + re.sub(r"(\s|-|\.|_)+", "-", phenotype)
+                plots[phenotype]["config"]["id"] = f"{anchor}-table"
                 sections.append(
                     {
                         "name": make_section_name(phenotype),
-                        "anchor": "dragen-cov-metrics-own-section-" + re.sub("(\s|-|\.|_)+", "-", phenotype),
+                        "anchor": anchor,
                         "helptext": helptext + bed_texts[phenotype]["helptext"],
                         "description": description,
                         "plot": table.plot(
@@ -979,7 +962,7 @@ def construct_coverage_parser():
 
     def make_consistent_metric(metric):
         """Tries to fix consistency issues that may arise in coverage metrics data."""
-        metric = re.sub("\s+", " ", metric).strip()
+        metric = re.sub(r"\s+", " ", metric).strip()
 
         pct_case = PCT_RGX.search(metric)
         if pct_case:
@@ -1001,8 +984,8 @@ def construct_coverage_parser():
         else:
             return suffix
 
-    FILE_RGX = re.compile("(.+)\.(.+)_coverage_metrics(.*)\.csv$")
-    LINE_RGX = re.compile("^COVERAGE SUMMARY,,([^,]+),([^,]+),?([^,]*)$")
+    FILE_RGX = re.compile(r"(.+)\.(.+)_coverage_metrics(.*)\.csv$")
+    LINE_RGX = re.compile(r"^COVERAGE SUMMARY,,([^,]+),([^,]+),?([^,]*)$")
 
     def coverage_metrics_parser(file_handler):
         """Parser for coverage metrics csv files.
@@ -1064,7 +1047,7 @@ def construct_coverage_parser():
 
             # Otherwise check if line is empty. If not then report it. Go to the next line.
             else:
-                if not re.search("^\s*$", line):
+                if not re.search(r"^\s*$", line):
                     log_data["invalid_file_lines"][root][file].append(line)
                 continue
 
@@ -1085,7 +1068,7 @@ def construct_coverage_parser():
                 try:
                     value1 = float(value1)
                 except ValueError:
-                    if not re.search("^NA$", value1.strip(), re.IGNORECASE):
+                    if not re.search(r"^NA$", value1.strip(), re.IGNORECASE):
                         log_data["unusual_values"][root][file][metric] = value1
 
             data[consistent_metric_id] = value1
@@ -1097,7 +1080,7 @@ def construct_coverage_parser():
                     try:
                         value2 = int(value2)
                     except ValueError:
-                        if not re.search("^NA$", value2.strip(), re.IGNORECASE):
+                        if not re.search(r"^NA$", value2.strip(), re.IGNORECASE):
                             log_data["unusual_values"][root][file][metric + " (second value)"] = value2
 
                 data[consistent_metric_id + V2] = value2
@@ -1125,34 +1108,34 @@ def create_coverage_headers_handler():
     # All regexes are constructed to be as general and simple as possible to speed up the matching.
     # "make_configs" will point later to a function, which automatically sets some header's configs.
     R_B_PAT = {
-        "RGX": re.compile("^Aligned (?P<entity>reads|bases)$", re.IGNORECASE),
+        "RGX": re.compile(r"^Aligned (?P<entity>reads|bases)$", re.IGNORECASE),
         "make_configs": None,
     }
     ALN_PAT = {
-        "RGX": re.compile("^Aligned (?P<entity>.+?) in (?P<region>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"^Aligned (?P<entity>.+?) in (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     AVG_PAT = {
-        "RGX": re.compile("^Average (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"^Average (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     PCT_PAT = {
-        "RGX": re.compile("^PCT of (?P<region>.+?) with coverage (?P<entity>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"^PCT of (?P<region>.+?) with coverage (?P<entity>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     UNI_PAT = {
-        "RGX": re.compile("^Uniformity of coverage (?P<entity>.+?) over (?P<region>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"^Uniformity of coverage (?P<entity>.+?) over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     MED_PAT = {
-        "RGX": re.compile("^Median (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"^Median (?P<entity>.+?) coverage over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
     RAT_PAT = {
-        "RGX": re.compile("(?P<entity>.+?) ratio over (?P<region>.+)", re.IGNORECASE),
+        "RGX": re.compile(r"(?P<entity>.+?) ratio over (?P<region>.+)", re.IGNORECASE),
         "make_configs": None,
     }
-    ANY_PAT = {"RGX": re.compile(".+"), "make_configs": None}
+    ANY_PAT = {"RGX": re.compile(r".+"), "make_configs": None}
 
     # The order is based on the structure of regexes and amount of patterns found in examined data.
     METRIC_PATTERNS_FOR_REGIONS = [PCT_PAT, AVG_PAT, ALN_PAT, UNI_PAT, MED_PAT, RAT_PAT]
@@ -1249,10 +1232,10 @@ def create_coverage_headers_handler():
         pct_case = PCT_PAT["RGX"].search(metric)
         uni_case = UNI_PAT["RGX"].search(metric)
         if pct_case:
-            metric = re.sub("\[\d+x:", "[ix:", metric)
-            metric = re.sub(":\d+x\)", ":jx)", metric)
+            metric = re.sub(r"\[\d+x:", "[ix:", metric)
+            metric = re.sub(r":\d+x\)", ":jx)", metric)
         if uni_case:
-            metric = re.sub("\d+", "d", metric)
+            metric = re.sub(r"\d+", "d", metric)
 
         # Now set region-specific parameters for the given metric.
         if metric in METRICS:
@@ -1264,7 +1247,7 @@ def create_coverage_headers_handler():
 
             # Try to set (ix:inf)/(ix:jx)-specific settings.
             if pct_case:
-                ix_jx_match = re.search("\[(\d+x):(inf|\d+x)\)", pct_case["entity"])
+                ix_jx_match = re.search(r"\[(\d+x):(inf|\d+x)\)", pct_case["entity"])
                 if ix_jx_match:
                     ix_jx = (ix_jx_match.group(1), ix_jx_match.group(2))
                     if ix_jx in _configs["extra"]:
@@ -1275,7 +1258,7 @@ def create_coverage_headers_handler():
 
             # Try to match the float and set specific configs.
             if uni_case:
-                float_match = re.search("\(pct > (\d+\.\d+)\*mean\)", uni_case["entity"])
+                float_match = re.search(r"\(pct > (\d+\.\d+)\*mean\)", uni_case["entity"])
                 if float_match:
                     _float = float_match.group(1)
                     if _float in _configs["extra"]:
@@ -1377,9 +1360,9 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "format": base_format,
-                    "description": "Total number ({}) of aligned bases.".format(config.base_count_desc),
-                    "title": config.base_count_prefix + " Aln bases",
-                    "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
+                    "description": f"Total number ({config.base_count_desc}) of aligned bases.",
+                    "title": "Aln bases",
+                    "shared_key": "base_count",
                 }
             }
         else:
@@ -1387,9 +1370,9 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "format": read_format,
-                    "description": "Total number ({}) of aligned reads.".format(config.read_count_desc),
-                    "title": config.read_count_prefix + " Aln reads",
-                    "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
+                    "description": f"Total number ({config.read_count_desc}) of aligned reads.",
+                    "title": "Aln reads",
+                    "shared_key": "read_count",
                 }
             }
 
@@ -1401,25 +1384,25 @@ def create_coverage_headers_handler():
         REGION = metric_pattern_match["region"]
         region = improve_region(REGION)
         if entity == "bases":
-            description = "Number ({}) of uniquely mapped bases to ".format(config.base_count_desc) + region
+            description = f"Number ({config.base_count_desc}) of uniquely mapped bases to " + region
             configs = {
                 "min": 0,
                 "format": base_format,
-                "title": config.base_count_prefix + " Bases on target",
+                "title": "Bases on target",
                 "description": description + ".",
-                "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
+                "shared_key": "base_count",
             }
             configs2 = {
                 "min": 0,
                 "max": 100,
-                "suffix": " %",
+                "suffix": "%",
                 "format": base_format,
                 "title": "Bases on target",
                 "description": description + " relative to the number of uniquely mapped bases to the genome.",
             }
         elif entity == "reads":
             description = (
-                "Number ({}) of uniquely mapped reads to ".format(config.read_count_desc)
+                f"Number ({config.read_count_desc}) of uniquely mapped reads to "
                 + region
                 + ". DRAGEN V3.4 - V3.8:"
                 + " When region is the target BED, this metric is equivalent to and replaces"
@@ -1430,14 +1413,14 @@ def create_coverage_headers_handler():
             configs = {
                 "min": 0,
                 "format": read_format,
-                "title": config.read_count_prefix + " Reads on target",
+                "title": "Reads on target",
                 "description": description,
-                "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
+                "shared_key": "read_count",
             }
             configs2 = {
                 "min": 0,
                 "max": 100,
-                "suffix": " %",
+                "suffix": "%",
                 "format": read_format,
                 "title": "Reads on target",
                 "description": "Number of uniquely mapped reads to "
@@ -1554,7 +1537,7 @@ def create_coverage_headers_handler():
 
     # Special regex to match (PCT > d.d*mean) substring.
     # Placed here because it may be used more than once.
-    RGX_FLOAT = re.compile("\(pct\s*>\s*(\d+\.\d+)\*mean\)")
+    RGX_FLOAT = re.compile(r"\(pct\s*>\s*(\d+\.\d+)\*mean\)")
 
     def get_Uniformity_configs(metric_pattern_match):
         """The following metrics are supported:
@@ -1569,7 +1552,7 @@ def create_coverage_headers_handler():
             multiplier = entity_match.group(1)
             percent = str(float(multiplier) * 100) + "%"
             configs = {
-                "suffix": " %",
+                "suffix": "%",
                 "min": 0,
                 "max": 100,
                 "title": "Uniformity(>" + multiplier + "&#215;mean)",
@@ -1602,7 +1585,7 @@ def create_coverage_headers_handler():
 
     # Special regex to match the [ix, inf) and [ix, jx)
     # Placed here because it will be used more than once.
-    IX_JX = re.compile("\[(\d+)x:(inf|\d+x)\)")
+    IX_JX = re.compile(r"\[(\d+)x:(inf|\d+x)\)")
 
     def get_PCT_configs(metric_pattern_match):
         """The following metrics are supported:
@@ -1619,10 +1602,7 @@ def create_coverage_headers_handler():
             JX = entity_match.group(2)
             description = "Percentage of sites in " + region
             if JX == "inf":
-                title = GTQ + IX + "x"
-                # Add extra html entities to widen the title.
-                if len(IX) < 6:
-                    title += "&nbsp;" * (6 - len(IX))
+                title = "≥" + IX + "x"
 
                 if IX == "0":
                     description += " with any coverage."
@@ -1640,7 +1620,7 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "max": 100,
-                    "suffix": " %",
+                    "suffix": "%",
                     "title": title,
                     "description": description,
                 },

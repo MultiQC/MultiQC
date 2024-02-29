@@ -8,7 +8,7 @@ description: Troubleshooting difficulties
 Hopefully MultiQC will be easy to use and run without any hitches. If you have
 any problems, please do get in touch with the developer
 ([Phil Ewels](http://phil.ewels.co.uk)) by e-mail or by
-[submitting an issue](https://github.com/ewels/MultiQC/issues/new) on github.
+[submitting an issue](https://github.com/MultiQC/MultiQC/issues/new) on github.
 Before that, here are a few things previously encountered that may help...
 
 ## Not enough samples found
@@ -76,6 +76,24 @@ filesearch_lines_limit: 2000000000
 
 This will slow down the initial file search but should otherwise be safe.
 
+### Concatenated log files
+
+In order to speed up the file search, once MultiQC matches a file to a specific
+module it ignores it for all others. The only time this can really cause problems
+is if you concenate log outputs from multiple analysis steps into a single file.
+
+This "consumption" of files during the search can be disabled in the module search
+pattern configuration, by setting `shared: true`.
+It can also be set using the dedicated config option `filesearch_file_shared`, to avoid
+needing to modify the search pattern.
+The latter takes a list of module names, for example:
+
+```yaml
+filesearch_file_shared:
+  - cutadapt
+  - star
+```
+
 ## No logs found for a tool
 
 In this case, you have run a bioinformatics tool and have some log files in
@@ -85,8 +103,8 @@ for the tool in question.
 There are a couple of things you can check here:
 
 1. Is the tool definitely
-   [supported by MultiQC](https://github.com/ewels/MultiQC)? If not, why
-   not [open an issue](https://github.com/ewels/MultiQC/issues/new) to
+   [supported by MultiQC](https://github.com/MultiQC/MultiQC)? If not, why
+   not [open an issue](https://github.com/MultiQC/MultiQC/issues/new) to
    request it!
 2. Did your bioinformatics tool definitely run properly? I've spent quite
    a bit of time debugging MultiQC modules only to realise that the output
@@ -94,12 +112,12 @@ There are a couple of things you can check here:
    take a look and the raw files and make sure that there's something to see!
 3. Did you make sure that the logs you're trying to run MultiQC on are the ones
    expected by the module in question? Check the [module documentation](https://multiqc.info/modules/)
-   and have a look at the [example data](https://github.com/ewels/MultiQC_TestData/tree/master/data/modules) used for CI tests.
+   and have a look at the [example data](https://github.com/MultiQC/test-data/tree/main/data/modules) used for CI tests.
 
 If everything looks fine, then MultiQC probably needs extending to support
 your data. Tools have different versions, different parameters and different
 output formats that can confuse the parsing code.
-Please [open an issue](https://github.com/ewels/MultiQC/issues/new) with
+Please [open an issue](https://github.com/MultiQC/MultiQC/issues/new) with
 your log files and we can get it fixed.
 
 ## Error messages about mkl trial mode / licences

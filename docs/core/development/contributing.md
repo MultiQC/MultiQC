@@ -3,7 +3,45 @@ title: Contributing
 description: Guides for how to contribute to the MultiQC code base
 ---
 
-# Documentation
+# Contributing
+
+## Changelog
+
+Almost all changes deserve an entry in the `CHANGELOG.md` file, so that people
+know what updates are present between versions.
+
+Whilst you can do this yourself by manually editing the file, we prefer to automate
+the process by using our friendly MultiQC bot, just before merging.
+By doing the changelog entry at the last minute we reduce the risk of having to
+solve changelog merge conflicts.
+
+The MultiQC changelog bot works by using the pull-request title.
+**Your job is to ensure that your pull-request follows one of the following 3 conventions:**
+
+- `New module: XYZ` - adding a new module named `XYZ`
+- `XYZ: Change something in this existing module` - updating module `XYZ`
+- `Some other change` - anything else, e.g. core MultiQC changes
+- `Typo in docs [skip changelog]` - a change so minor that we don't want to log it at all
+
+The MultiQC bot will automatically build a proper changelog entry based on this title
+and (for new modules / module changes) the meta-information in the `MultiqcModule` class.
+
+When a pull request is opened, a GitHub Action script is triggered, that inspects
+the PR, updates the changelog and commits the update back to your PR. If your
+pull request is not worth a change log entry (i.e. a minor documentation update),
+you can append `[skip changelog]` to the PR title.
+
+The action can also be triggered manually by adding the following comment on an open
+pull request:
+
+```md
+@multiqc-bot changelog
+```
+
+It will replace the automatically added changelog entry if the pull request title
+was updated after the initial commit. And finally, if you forgot to initially append
+`[skip changelog]` and you did it after the initial commit, triggering the bot with a
+comment will assure that the changelog line is removed.
 
 ## Admonitions
 
