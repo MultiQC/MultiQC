@@ -569,6 +569,8 @@ def _dataset_layout(
             xsuffix = xlabformat.split("}")[1]
 
     if "tt_label" in pconfig:
+        allowed_suffix_to_parse = ["%", "x", " bp", "M", "k"]
+
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
@@ -577,17 +579,17 @@ def _dataset_layout(
         parts = tt_label.split("%{")
         for part in parts:
             if ysuffix is None and part.startswith("y") and "}" in part:
-                ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in ysuffix:
-                    ysuffix = ysuffix.split(",")[0]
-                if len(ysuffix) > 5:  # too long for a suffix, perhaps split by space?
-                    ysuffix = ysuffix.split(" ")[0]
+                info = part.split("}")[1].replace("</b>", "")
+                info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                for suf in allowed_suffix_to_parse:
+                    if info == suf.strip():
+                        ysuffix = suf
             elif xsuffix is None and part.startswith("x") and "}" in part:
-                xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in xsuffix:
-                    xsuffix = xsuffix.split(",")[0]
-                if len(xsuffix) > 5:  # too long for a suffix, perhaps split by space?
-                    xsuffix = xsuffix.split(" ")[0]
+                info = part.split("}")[1].replace("</b>", "")
+                info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                for suf in allowed_suffix_to_parse:
+                    if info == suf.strip():
+                        xsuffix = suf
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
