@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
-            "ylab_format": "{value}%",
+            "ysuffix": "%",
             "cpswitch": False,
         }
 

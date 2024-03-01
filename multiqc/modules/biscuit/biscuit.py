@@ -303,7 +303,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "BISCUIT: Distribution of Mapping Qualities",
             "ymin": 0,
             "xmin": 0,
-            "yLabelFormat": "{value}%",
             "tt_label": "<strong>Q{point.x}:</strong> {point.y:.2f}% of mapped reads",
             "ylab": "% of Primary Mapped Reads",
             "xlab": "Mapping Quality Score",
