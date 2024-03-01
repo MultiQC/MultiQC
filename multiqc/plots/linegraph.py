@@ -56,7 +56,7 @@ def plot(data, pconfig=None):
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
-            if k not in pconfig:
+            if k not in pconfig and any(k not in dl for dl in pconfig.get("data_labels", [])):
                 errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
