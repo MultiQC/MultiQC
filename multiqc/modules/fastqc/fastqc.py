@@ -621,7 +621,6 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "xmax": 100,
             "xmin": 0,
-            "yDecimals": False,
             "tt_label": "<b>{point.x}% GC</b>: {point.y}",
             "colors": self.get_status_cols("per_sequence_gc_content"),
             "data_labels": [
