@@ -4,7 +4,6 @@
 import logging
 import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, violin
 
@@ -304,8 +303,9 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "xmin": 0,
             "tt_label": "<strong>Q{point.x}:</strong> {point.y:.2f}% of mapped reads",
-            "ylab": "% of Primary Mapped Reads",
-            "xlab": "Mapping Quality Score",
+            "ysuffix": "%",
+            "ylab": "% of primary mapped reads",
+            "xlab": "Mapping quality score",
         }
 
         self.add_section(
@@ -453,23 +453,27 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, dd in self.mdata["align_isize"].items():
             if "no_data_available" not in dd.keys():
                 pd_p[s_name] = dd["percent"]
-                pd_r[s_name] = {ins: cnt * config.read_count_multiplier for ins, cnt in dd["readcnt"].items()}
+                pd_r[s_name] = dd["readcnt"]
 
         pconfig = {
             "id": "biscuit_isize",
             "title": "BISCUIT: Insert Size Distribution",
             "ymin": 0,
             "xmin": 0,
-            "yLabelFormat": "{value}",
             "smooth_points": 1000,  # limit number of points / smooth data
-            "tt_label": "<strong>IS{point.x}:</strong> {point.y:.2f}",
             "xlab": "Insert Size",
-            "ylab": "% of Mapped Reads",
             "data_labels": [
-                {"name": "Percent of Reads", "ylab": "% of Mapped Reads"},
                 {
-                    "name": f"{config.read_count_desc.capitalize()} of Reads",
-                    "ylab": f"{config.read_count_desc.capitalize()} of Mapped Reads",
+                    "name": "% of Mapped Reads",
+                    "ylab": "% of Mapped Reads",
+                    "ysuffix": "%",
+                    "tt_label": "<strong>IS%{x} bp:</strong> %{y:.2f}%",
+                },
+                {
+                    "name": "Mapped Reads",
+                    "ylab": "Mapped Reads",
+                    "ysuffix": "",
+                    "tt_label": "<strong>IS%{x} bp:</strong> %{y:,.0f}",
                 },
             ],
         }
@@ -546,7 +550,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_c_active": False,
             "title": "BISCUIT: Percentage of Duplicate Reads",
             "data_labels": [{"name": "Overall Duplicate Rate"}, {"name": "MAPQ>=40 Duplicate Rate"}],
-            "ylab": "Duplicate Rate [%]",
+            "ylab": "Duplicate rate",
             "ymin": 0,
             "ymax": 100,
             "y_clipmax": 110,
@@ -561,7 +565,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="biscuit-dup-report",
                 description="Shows the percentage of total reads that are duplicates.",
                 helptext="""
-                    `MAPQ >= 40` shows the duplicate rate for just the reads reads
+                    `MAPQ >= 40` shows the duplicate rate for just the reads
                     with a mapping quality score of `MAPQ >= 40`.
                 """,
                 plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),

@@ -310,7 +310,7 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Indel Distribution",
                 "ylab": "Count",
                 "xlab": "InDel Length (bp)",
-                "xDecimals": False,
+                "xsuffix": " bp",
                 "ymin": 0,
             }
             self.add_section(
@@ -335,6 +335,7 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Variant depths",
                 "ylab": "Fraction of sites (%)",
                 "xlab": "Variant depth",
+                "ysuffix": "%",
                 "ymin": 0,
                 "ymax": 100,
                 "categories": True,
