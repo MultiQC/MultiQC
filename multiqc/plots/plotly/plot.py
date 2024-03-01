@@ -556,14 +556,17 @@ def _dataset_layout(
 
     # Format on-hover tooltips
     ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
-    if ylabformat and "%" in ylabformat:
-        ysuffix = "%"
-
     xsuffix = pconfig.get("xsuffix")
+
+    # Options deprecated in 1.21
+    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
+    if ylabformat:
+        if "}" in ylabformat:
+            ysuffix = ylabformat.split("}")[1]
     xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
-    if xlabformat and "%" in xlabformat:
-        xsuffix = "%"
+    if xlabformat:
+        if "}" in xlabformat:
+            xsuffix = xlabformat.split("}")[1]
 
     if "tt_label" in pconfig:
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
@@ -577,10 +580,14 @@ def _dataset_layout(
                 ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
                 if "," in ysuffix:
                     ysuffix = ysuffix.split(",")[0]
+                if len(ysuffix) > 5:  # too long for a suffix, perhaps split by space?
+                    ysuffix = ysuffix.split(" ")[0]
             elif xsuffix is None and part.startswith("x") and "}" in part:
                 xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
                 if "," in xsuffix:
                     xsuffix = xsuffix.split(",")[0]
+                if len(xsuffix) > 5:  # too long for a suffix, perhaps split by space?
+                    xsuffix = xsuffix.split(" ")[0]
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
@@ -603,10 +610,13 @@ def _dataset_layout(
     tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
     y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
 
+    x_decimals = pconfig.get("x_decimals")
+    x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
+
     layout = dict(
         title=dict(text=pconfig.get("title")),
         xaxis=dict(
-            hoverformat=None,
+            hoverformat=x_hoverformat,
             ticksuffix=xsuffix or "",
             title=dict(text=pconfig.get("xlab")),
             rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
