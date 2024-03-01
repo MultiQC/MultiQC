@@ -194,11 +194,14 @@ class StatsReportMixin:
                 # Variant Qualities
                 if s[0] == "QUAL" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    quality = float("0" + s[2].strip())
-                    self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
-                    self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
-                    self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
-                    self.bcftools_stats_vqc_indels[s_name][quality] = float(s[6].strip())
+                    try:
+                        quality = float(s[2].strip())
+                    except ValueError:
+                        quality = 0
+                    self.bcftools_stats_vqc_snp[s_name][quality] = int(s[3].strip())
+                    self.bcftools_stats_vqc_transi[s_name][quality] = int(s[4].strip())
+                    self.bcftools_stats_vqc_transv[s_name][quality] = int(s[5].strip())
+                    self.bcftools_stats_vqc_indels[s_name][quality] = int(s[6].strip())
 
         # Remove empty samples
         self.bcftools_stats = {k: v for k, v in self.bcftools_stats.items() if len(v) > 0}
@@ -276,9 +279,9 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Variant Quality Count",
                 "ylab": "Count",
                 "xlab": "Quality",
-                "xDecimals": False,
                 "ymin": 0,
                 "smooth_points": 600,
+                "x_decimals": 0,
                 "data_labels": [
                     "Count SNP",
                     "Count Transitions",
