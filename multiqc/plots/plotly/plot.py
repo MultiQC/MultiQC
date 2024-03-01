@@ -568,28 +568,39 @@ def _dataset_layout(
         if "}" in xlabformat:
             xsuffix = xlabformat.split("}")[1]
 
-    if "tt_label" in pconfig:
-        allowed_suffix_to_parse = ["%", "x", " bp", "M", "k"]
+    # Set or remove space in known suffixes
+    KNOWN_SUFFIXES = ["%", "x", " bp", "M", "k"]
+    for suf in KNOWN_SUFFIXES:
+        if ysuffix is not None and ysuffix == suf.strip():
+            ysuffix = suf
+        if xsuffix is not None and xsuffix == suf.strip():
+            xsuffix = suf
 
+    if "tt_label" in pconfig:
         # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
 
-        # if "%" character is inside the Y label, add suffix to the Y ticks as well
-        parts = tt_label.split("%{")
-        for part in parts:
-            if ysuffix is None and part.startswith("y") and "}" in part:
-                info = part.split("}")[1].replace("</b>", "")
-                info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
-                for suf in allowed_suffix_to_parse:
-                    if info == suf.strip():
-                        ysuffix = suf
-            elif xsuffix is None and part.startswith("x") and "}" in part:
-                info = part.split("}")[1].replace("</b>", "")
-                info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
-                for suf in allowed_suffix_to_parse:
-                    if info == suf.strip():
-                        xsuffix = suf
+        if ysuffix is None or xsuffix is None:
+            # if "%" or other suffix is in the hover label, parse that suffix to add it to the ticks
+            parts = tt_label.split("%{")
+            for part in parts:
+                if ysuffix is None and part.startswith("y") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                ysuffix = suf
+                                break
+                elif xsuffix is None and part.startswith("x") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                xsuffix = suf
+                                break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
