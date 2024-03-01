@@ -115,8 +115,7 @@ config = {
     # Customising the plot
     "title": None,                            # Plot title - should be in format "Module Name: Plot Title"
     "ylab": None,                             # Y axis label
-    "ymax": None,                             # Max y limit
-    "ymin": None,                             # Min y limit
+    "ymax": None,                             # Max bar size limit (default is calculated from data)
     "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label
     "xsuffix": "%",                           # Suffix for the x-axis values and labels. Parsed from tt_label by default
     "ysuffix": "%",                           # Suffix for the y-axis values and labels. Parsed from tt_label by default
@@ -249,12 +248,12 @@ pconfig = {
     "xmin": None,                # Hard min x limit
     "ymax": None,                # Hard max y limit
     "ymin": None,                # Hard min y limit
-    "x_clipmax": None,           # Maximum value allowed for automatic axis limit
-    "x_clipmin": None,           # Minimum value allowed for automatic axis limit
-    "y_clipmax": None,           # Maximum value allowed for automatic axis limit
-    "y_clipmin": None,           # Minimum value allowed for automatic axis limit
-    "x_minrange": None,          # Minimum range for x-axis (5 would allow 0..5, but also 15..20, etc.)
-    "y_minrange": None,          # Minimum range for y-axis (5 would allow 0..5, but also 15..20, etc.)
+    "x_clipmax": None,           # Max value allowed for automatic axis limit
+    "x_clipmin": None,           # Min value allowed for automatic axis limit
+    "y_clipmax": None,           # Max value allowed for automatic axis limit
+    "y_clipmin": None,           # Min value allowed for automatic axis limit
+    "x_minrange": None,          # Min range for x-axis (5 would allow 0..5, but also 15..20, etc.)
+    "y_minrange": None,          # Min range for y-axis (5 would allow 0..5, but also 15..20, etc.)
     "xlog": False,               # Use log10 for the x-axis
     "ylog": False,               # Use log10 scale for the y-axis
     "y_bands": None,             # Horizontal colored background bands
@@ -421,6 +420,14 @@ pconfig = {
     "marker_line_colour": "#999",  # string, colour of point border
     "marker_line_width": 1,  # int, width of point border
     "square": False,  # Force the plot to stay square? (Maintain aspect ratio)
+    "xmin": None,  # Hard min x limit
+    "xmax": None,  # Hard max x limit
+    "ymin": None,  # Hard min y limit
+    "ymax": None,  # Hard max y limit
+    "x_clipmin": None,  # Min value allowed for automatic axis limit
+    "x_clipmax": None,  # Max value allowed for automatic axis limit
+    "y_clipmin": None,  # Min value allowed for automatic axis limit
+    "y_clipmax": None,  # Max value allowed for automatic axis limit
 }
 ```
 
