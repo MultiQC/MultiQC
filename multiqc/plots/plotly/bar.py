@@ -206,7 +206,9 @@ class BarPlot(Plot):
                 )
 
             minallowed = 0 if xmin_cnt > 0 else xmin_cnt  # allow bar to start below zero
-            maxallowed = dataset.layout["yaxis"]["autorangeoptions"].get("maxallowed", xmax_cnt)
+            maxallowed = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+            if maxallowed is None:
+                maxallowed = xmax_cnt
 
             dataset.layout.update(
                 yaxis=dict(
