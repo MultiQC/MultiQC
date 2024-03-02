@@ -17,6 +17,7 @@ import os
 import re
 import zipfile
 from collections import Counter
+from typing import Dict, List, Optional, Tuple
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -86,7 +87,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
         if len(self.fastqc_data) == 0:
             raise ModuleNoSamplesFound
-
         log.info(f"Found {len(self.fastqc_data)} reports")
 
         # Write the summary stats to a file
@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
         # we sort by the avg of the range, which is effectively
         # sorting ranges in asc order assuming no overlap
         sequence_length_distributions = self.fastqc_data[s_name].get("sequence_length_distribution", [])
-        sequence_length_distributions.sort(key=lambda d: self.avg_bp_from_range(d["length"]))
+        sequence_length_distributions.sort(key=lambda d: _avg_bp_from_range(d["length"]))
 
         # Calculate the average sequence length (Basic Statistics gives a range)
         length_reads = 0
@@ -221,13 +221,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for d in sequence_length_distributions:
             length_reads += d["count"]
-            length_bp += d["count"] * self.avg_bp_from_range(d["length"])
+            length_bp += d["count"] * _avg_bp_from_range(d["length"])
 
             if median is None and length_reads >= total_count / 2:
                 # if the distribution-entry is a range, we use the average of the range.
                 # this isn't technically correct, because we can't know what the distribution
                 # is within that range. Probably good enough though.
-                median = self.avg_bp_from_range(d["length"])
+                median = _avg_bp_from_range(d["length"])
 
         if total_count > 0:
             self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
@@ -253,11 +253,9 @@ class MultiqcModule(BaseMultiqcModule):
             if data[s_name]["total_sequences"] == 0:
                 log.warning(f"Sample had zero reads: '{s_name}'")
 
-            try:
+            if "total_deduplicated_percentage" in bs:
                 # Older versions of FastQC don't have this
                 data[s_name]["percent_duplicates"] = 100 - bs["total_deduplicated_percentage"]
-            except KeyError:
-                pass
 
             # Add count of fail statuses
             num_statuses = 0
@@ -266,11 +264,76 @@ class MultiqcModule(BaseMultiqcModule):
                 num_statuses += 1
                 if s == "fail":
                     num_fails += 1
-            try:
+            if num_statuses > 0:
                 data[s_name]["percent_fails"] = (float(num_fails) / float(num_statuses)) * 100.0
-            except KeyError:
-                # If we had no reads then we have no sample in data
-                pass
+
+        # Merge Read 1 + Read 2 data
+        gdata = dict()
+        merged_samples = False
+        for g_name, s_names in self.group_samples(
+            list(data.keys()),
+            grouping_criteria="read_pairs",
+            key_by="merged_name",
+        ).items():
+            if len(s_names) == 0:
+                continue
+            if len(s_names) == 1:
+                gdata[s_names[0]] = data[s_names[0]]
+                continue
+            merged_samples = True
+            t_seqs = sum([data[s_name]["total_sequences"] for s_name in s_names])
+            gdata[g_name] = {}
+            gdata[g_name]["total_sequences"] = t_seqs / len(s_names)
+            if t_seqs > 0:
+                gdata[g_name]["avg_sequence_length"] = sum(
+                    [
+                        float(data[s_name]["avg_sequence_length"]) * float(data[s_name]["total_sequences"])
+                        for s_name in s_names
+                    ]
+                ) / float(t_seqs)
+                gdata[g_name]["percent_gc"] = sum(
+                    [float(data[s_name]["percent_gc"]) * float(data[s_name]["total_sequences"]) for s_name in s_names]
+                ) / float(t_seqs)
+                if all("percent_duplicates" in data[s_name] for s_name in s_names):
+                    gdata[g_name]["percent_duplicates"] = sum(
+                        [
+                            float(data[s_name]["percent_duplicates"]) * float(data[s_name]["total_sequences"])
+                            for s_name in s_names
+                        ]
+                    ) / float(t_seqs)
+            # Add count of fail statuses
+            num_statuses = 0
+            num_fails = 0
+            for s_name in s_names:
+                for s in self.fastqc_data[s_name]["statuses"].values():
+                    num_statuses += 1
+                    if s == "fail":
+                        num_fails += 1
+            if num_statuses > 0:
+                gdata[g_name]["percent_fails"] = (float(num_fails) / float(num_statuses)) * 100.0
+
+        # Take only the trimmed data for the General Stats Table
+        trimmed_samples = False
+        for merged_name, s_names in self.group_samples(
+            list(gdata.keys()),
+            grouping_criteria="trimming",
+            key_by="merged_name",
+        ).items():
+            if len(s_names) > 1:
+                # We expect these groups to contain trimmed and not trimmed.
+                # The non-trimmed sample names will be the same as the group,
+                # so we keep the one that's different.
+                s_names_trimmed = [s for s in s_names if s != merged_name]
+                # Only continue if we have one result as expected
+                if len(s_names_trimmed) == 1:
+                    trimmed_samples = True
+                    # Save this data temporarily
+                    tmp_data = gdata[s_names_trimmed[0]]
+                    # Remove the whole group from general stats
+                    for s_name in s_names:
+                        del gdata[s_name]
+                    # Add our chosen row back again
+                    gdata[merged_name] = tmp_data
 
         # Are sequence lengths interesting?
         median_seq_lengths = [x["median_sequence_length"] for x in data.values()]
@@ -280,10 +343,16 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
+        extra_desc = ""
+        if merged_samples:
+            extra_desc += ", averaged across read pairs."
+        if trimmed_samples:
+            extra_desc += " Values from trimmed data shown."
+
         headers = {
             "percent_duplicates": {
                 "title": "% Dups",
-                "description": "% Duplicate Reads",
+                "description": f"% Duplicate Reads{extra_desc}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -291,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "percent_gc": {
                 "title": "% GC",
-                "description": "Average % GC Content",
+                "description": f"Average % GC Content{extra_desc}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -300,7 +369,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "avg_sequence_length": {
                 "title": "Average Read Length",
-                "description": "Average Read Length (bp)",
+                "description": f"Average Read Length (bp){extra_desc}",
                 "min": 0,
                 "suffix": " bp",
                 "scale": "RdYlGn",
@@ -309,7 +378,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "median_sequence_length": {
                 "title": "Median Read Length",
-                "description": "Median Read Length (bp)",
+                "description": f"Median Read Length (bp){extra_desc}",
                 "min": 0,
                 "suffix": " bp",
                 "scale": "RdYlGn",
@@ -318,7 +387,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "percent_fails": {
                 "title": "% Failed",
-                "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
+                "description": f"Percentage of modules failed in FastQC report (includes those not plotted here){extra_desc}",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -328,17 +397,19 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "total_sequences": {
                 "title": f"{config.read_count_prefix} Seqs",
-                "description": f"Total Sequences ({config.read_count_desc})",
+                "description": f"Total Sequences ({config.read_count_desc}){extra_desc}",
                 "min": 0,
                 "scale": "Blues",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
             },
         }
-        self.general_stats_addcols(data, headers)
+        self.general_stats_addcols(gdata, headers)
 
     def read_count_plot(self):
         """Stacked bar plot showing counts of reads"""
+
+        # Main plot config
         pconfig = {
             "id": "fastqc_sequence_counts_plot",
             "title": "FastQC: Sequence Counts",
@@ -346,6 +417,8 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of reads",
             "hide_zero_cats": False,
         }
+
+        # Calculate the number of unique and duplicate reads if we can
         pdata = dict()
         has_dups = False
         has_total = False
@@ -363,6 +436,8 @@ class MultiqcModule(BaseMultiqcModule):
             except (KeyError, ValueError):
                 pdata[s_name] = {"Total Sequences": pd["Total Sequences"]}
                 has_total = True
+
+        # Configure the cats and config according to what we found
         pcats = list()
         duptext = ""
         if has_total:
@@ -373,6 +448,8 @@ class MultiqcModule(BaseMultiqcModule):
         if has_total and not has_dups:
             pconfig["use_legend"] = False
             pconfig["cpswitch"] = False
+
+        # Add the report section
         self.add_section(
             name="Sequence Counts",
             anchor="fastqc_sequence_counts",
@@ -403,7 +480,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d["mean"]
+                    _avg_bp_from_range(d["base"]): d["mean"]
                     for d in self.fastqc_data[s_name]["per_base_sequence_quality"]
                 }
             except KeyError:
@@ -428,6 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
         }
+
         self.add_section(
             name="Sequence Quality Histograms",
             anchor="fastqc_per_base_sequence_quality",
@@ -478,6 +556,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
         }
+
         self.add_section(
             name="Per Sequence Quality Scores",
             anchor="fastqc_per_sequence_quality_scores",
@@ -501,7 +580,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in sorted(self.fastqc_data.keys()):
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
+                    _avg_bp_from_range(d["base"]): d for d in self.fastqc_data[s_name]["per_base_sequence_content"]
                 }
             except KeyError:
                 # FastQC module was skipped - move on to the next sample
@@ -696,7 +775,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             _In a normal random library you would expect to see a roughly normal distribution
             of GC content where the central peak corresponds to the overall GC content of
-            the underlying genome. Since we don't know the the GC content of the genome the
+            the underlying genome. Since we don't know the GC content of the genome the
             modal GC content is calculated from the observed data and used to build a
             reference distribution._
 
@@ -717,8 +796,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["base"]): d["n-count"]
-                    for d in self.fastqc_data[s_name]["per_base_n_content"]
+                    _avg_bp_from_range(d["base"]): d["n-count"] for d in self.fastqc_data[s_name]["per_base_n_content"]
                 }
             except KeyError:
                 pass
@@ -773,7 +851,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
-                    self.avg_bp_from_range(d["length"]): d["count"]
+                    _avg_bp_from_range(d["length"]): d["count"]
                     for d in self.fastqc_data[s_name]["sequence_length_distribution"]
                 }
                 avg_seq_lengths.update(data[s_name].keys())
@@ -805,6 +883,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "colors": self.get_status_cols("sequence_length_distribution"),
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }
+
             self.add_section(
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
@@ -935,9 +1014,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data.values()]) < 1:
-            plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(
-                len(data)
-            )
+            plot_html = f'<div class="alert alert-info">{len(data)} samples had less than 1% of reads made up of overrepresented sequences</div>'
         else:
             plot_html = bargraph.plot(data, cats, pconfig)
 
@@ -1047,7 +1124,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name in self.fastqc_data:
             try:
                 for adapters in self.fastqc_data[s_name]["adapter_content"]:
-                    pos = self.avg_bp_from_range(adapters["position"])
+                    pos = _avg_bp_from_range(adapters["position"])
                     for adapter_name, percent in adapters.items():
                         k = f"{s_name} - {adapter_name}"
                         if adapter_name != "position":
@@ -1185,20 +1262,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=heatmap.plot(data, list(status_cats.values()), s_names, pconfig),
         )
 
-    def avg_bp_from_range(self, bp):
-        """Helper function - FastQC often gives base pair ranges (eg. 10-15)
-        which are not helpful when plotting. This returns the average from such
-        ranges as an int, which is helpful. If not a range, just returns the int"""
-
-        try:
-            if "-" in bp:
-                maxlen = float(bp.split("-", 1)[1])
-                minlen = float(bp.split("-", 1)[0])
-                bp = ((maxlen - minlen) / 2) + minlen
-        except TypeError:
-            pass
-        return int(bp)
-
     def get_status_cols(self, section):
         """Helper function - returns a list of colours according to the FastQC
         status of this module for each sample."""
@@ -1207,3 +1270,42 @@ class MultiqcModule(BaseMultiqcModule):
             status = self.fastqc_data[s_name]["statuses"].get(section, "default")
             colours[s_name] = self.status_colours[status]
         return colours
+
+    @staticmethod
+    def split_fastqc_data_by_group(
+        samples_by_label: Dict[str, List[str]],
+        data: Dict[str, Dict],
+        pconfig: Optional[Dict] = None,
+    ) -> Tuple[List[Dict[str, Dict]], Optional[Dict]]:
+        """
+        Split plot data into multiple datasets, corresponding to the sample groups.
+        """
+        pconfig = pconfig or {}
+        pconfig["data_labels"] = list()
+        gdata: List[Dict[str, Dict]] = []
+
+        for label, samples in samples_by_label.items():
+            pconfig["data_labels"].append({"name": label})
+            gdata.append(dict())
+            for sample in samples:
+                if sample in data:
+                    gdata[-1][sample] = data[sample]
+
+        return gdata, pconfig
+
+
+def _avg_bp_from_range(bp: str) -> int:
+    """
+    Helper function - FastQC often gives base pair ranges (e.g. 10-15)
+    which are not helpful when plotting. This returns the average from such
+    ranges as an int, which is helpful. If not a range, just returns the int
+    """
+
+    try:
+        if "-" in bp:
+            maxlen = float(bp.split("-", 1)[1])
+            minlen = float(bp.split("-", 1)[0])
+            bp = ((maxlen - minlen) / 2) + minlen
+    except TypeError:
+        pass
+    return int(bp)

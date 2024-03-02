@@ -1,5 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict, Tuple, Literal, Iterable
 
 import fnmatch
 import io
@@ -323,12 +323,27 @@ class BaseMultiqcModule(object):
 
         return None
 
-    def clean_s_name(self, s_name: Union[str, List[str]], f=None, root=None, filename=None, seach_pattern_key=None):
+    def clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f=None,
+        root=None,
+        filename=None,
+        search_pattern_key=None,
+        fn_clean_exts: Optional[List[Dict[str, Union[str, List[str]]]]] = None,
+        fn_clean_trim: Optional[List[str]] = None,
+        prepend_dirs: Optional[bool] = None,
+    ):
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
         :param s_name: The sample name(s) to clean.
-        :param root: The directory path that this file is within
-        :config.prepend_dirs: boolean, whether to prepend dir name to s_name
+        :param f: the file dict from find_log_files() that this file is within
+        :param root: the directory path that this file is within
+        :param filename: the base name of the file
+        :param search_pattern_key: the search pattern key that this file matched
+        :param fn_clean_exts: patterns to use for cleaning (default: config.fn_clean_exts)
+        :param fn_clean_trim: patterns to use for trimming (default: config.fn_clean_trim)
+        :param prepend_dirs: boolean, whether to prepend dir name to s_name (default: config.prepend_dirs)
         :return: The cleaned sample name, ready to be used
         """
         if isinstance(s_name, list):
@@ -338,7 +353,16 @@ class BaseMultiqcModule(object):
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                self.clean_s_name(
+                    sn,
+                    f=f,
+                    root=root,
+                    filename=filename,
+                    search_pattern_key=search_pattern_key,
+                    fn_clean_exts=fn_clean_exts,
+                    fn_clean_trim=fn_clean_trim,
+                    prepend_dirs=prepend_dirs,
+                )
                 for sn in s_name
             ]
             if len(set(clean_names)) == 1:
@@ -367,8 +391,8 @@ class BaseMultiqcModule(object):
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
-            if "sp_key" in f and seach_pattern_key is None:
-                seach_pattern_key = f["sp_key"]
+            if "sp_key" in f and search_pattern_key is None:
+                search_pattern_key = f["sp_key"]
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
@@ -376,22 +400,27 @@ class BaseMultiqcModule(object):
             config.use_filename_as_sample_name is True
             or (
                 isinstance(config.use_filename_as_sample_name, list)
-                and seach_pattern_key is not None
-                and seach_pattern_key in config.use_filename_as_sample_name
+                and search_pattern_key is not None
+                and search_pattern_key in config.use_filename_as_sample_name
             )
         ):
             s_name = filename
-
-        # Set root to empty string if not known
-        if root is None:
-            root = ""
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
         s_name = os.path.basename(s_name)
 
+        # Set root to empty string if not known
+        if root is None:
+            root = ""
+        if fn_clean_exts is None:
+            fn_clean_exts = config.fn_clean_exts
+        if fn_clean_trim is None:
+            fn_clean_trim = config.fn_clean_trim
+        if prepend_dirs is None:
+            prepend_dirs = config.prepend_dirs
         # Prepend sample name with directory
-        if config.prepend_dirs:
+        if prepend_dirs:
             sep = config.prepend_dirs_sep
             root = root.lstrip(f".{os.sep}")
             dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
@@ -406,7 +435,11 @@ class BaseMultiqcModule(object):
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            for ext in config.fn_clean_exts:
+            for ext in fn_clean_exts:
+                # Go through different filter types
+                if isinstance(ext, str):
+                    ext = {"type": "truncate", "pattern": ext}
+
                 # Check if this config is limited to a module
                 if "module" in ext:
                     if isinstance(ext["module"], str):
@@ -414,9 +447,6 @@ class BaseMultiqcModule(object):
                     if not any([m == self.anchor for m in ext["module"]]):
                         continue
 
-                # Go through different filter types
-                if isinstance(ext, str):
-                    ext = {"type": "truncate", "pattern": ext}
                 if ext.get("type") == "truncate":
                     s_name = s_name.split(ext["pattern"], 1)[0]
                 elif ext.get("type") in ("remove", "replace"):
@@ -434,13 +464,14 @@ class BaseMultiqcModule(object):
                 elif ext.get("type") is None:
                     logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
-                    logger.error(f"Unrecognised config.fn_clean_exts type: {ext.get('type')}")
+                    logger.error(f"Unrecognised sample name cleaning pattern: {ext.get('type')}")
+
             # Trim off characters at the end of names
-            for chrs in config.fn_clean_trim:
-                if s_name.endswith(chrs):
-                    s_name = s_name[: -len(chrs)]
-                if s_name.startswith(chrs):
-                    s_name = s_name[len(chrs) :]
+            for characters in fn_clean_trim:
+                if s_name.endswith(characters):
+                    s_name = s_name[: -len(characters)]
+                if s_name.startswith(characters):
+                    s_name = s_name[len(characters) :]
 
         # Remove trailing whitespace
         s_name = s_name.strip()
@@ -477,6 +508,136 @@ class BaseMultiqcModule(object):
                     logger.error(f"Error with sample name replacement regex: {e}")
 
         return s_name
+
+    def groups_for_sample(
+        self,
+        s_name: str,
+        grouping_criteria: Union[str, List[str]],
+    ) -> Tuple[str, Optional[str]]:
+        """
+        Takes a sample name and returns a trimmed name and groups it's assgined to.
+        based on the patterns in config.sample_merge_groups.
+
+        >>> self.groups_for_sample("S1_R1_001", "read_pairs")
+        "S1", "Read 1"
+        >>> self.groups_for_sample("S1_1", "read_pairs")
+        "S1", "Read 1"
+        >>> self.groups_for_sample("S1_1.trimmed", "read_pairs")
+        "S1.trimmed", "Read 1"
+        >>> self.groups_for_sample("S1", "read_pairs")
+        "S1", "Unpaired"
+        >>> self.groups_for_sample("S1", "trimming")
+        "S1": "Raw"
+        >>> self.groups_for_sample("S1_1.trimmed", "trimming")
+        "S1_R1": "Trimmed"
+        >>> self.groups_for_sample("S1_1.trimmed", ["trimming", "read_pairs"])
+        "S1": "Trimmed Read 1"
+        >>> self.groups_for_sample("S1.trimmed", ["trimming", "read_pairs"])
+        "S1": "Trimmed"
+        >>> self.groups_for_sample("S1_1", ["trimming", "read_pairs"])
+        "S1": "Read 1"
+        >>> self.groups_for_sample("S1", ["non_existing_criteria"])
+        "S1", None
+        """
+        if isinstance(grouping_criteria, str):
+            grouping_criteria = [grouping_criteria]
+
+        skipped_suffixes = []
+        label_by_grouping = dict()
+        groupings = getattr(config, "sample_merge_groups", {})
+        for grouping, groups in groupings.items():
+            if grouping not in grouping_criteria:
+                # Just trimming all found patterns and recording them to add them back after
+                all_exts = []
+                for label, fn_clean_exts in groups.items():
+                    all_exts += fn_clean_exts or []
+                trimmed_name = self.clean_s_name(s_name, fn_clean_exts=all_exts, fn_clean_trim=[], prepend_dirs=False)
+                skipped_suffixes.append(s_name.replace(trimmed_name, ""))
+                s_name = trimmed_name
+
+            else:
+                matched_label = None
+                for label, fn_clean_exts in groups.items():
+                    if fn_clean_exts:
+                        trimmed_name = self.clean_s_name(
+                            s_name, fn_clean_exts=fn_clean_exts, fn_clean_trim=[], prepend_dirs=False
+                        )
+                        if trimmed_name != s_name:
+                            matched_label = label
+                            s_name = trimmed_name
+                            break
+                label_by_grouping[grouping] = matched_label
+
+        if all([label is None for label in label_by_grouping.values()]):
+            # Sample didn't match any group, so using the default labels from each groupping to represent the
+            # sample somehow.
+            for grouping in label_by_grouping.keys():
+                _dls = [label for label, fn_clean_exts in groupings[grouping].items() if not fn_clean_exts]
+                if _dls:
+                    if len(_dls) > 1:
+                        logger.error(f"Multiple default labels found for '{grouping}': {_dls}, taking the first one")
+                    label_by_grouping[grouping] = _dls[0]
+
+        labels = [label for label in label_by_grouping.values() if label is not None]
+        label = " ".join(labels) if labels else None
+
+        return s_name + "".join(skipped_suffixes), label
+
+    def group_samples(
+        self,
+        samples: Iterable[str],
+        grouping_criteria: str,
+        key_by: Literal["label", "merged_name"] = "label",
+    ) -> Dict[str, List[str]]:
+        """
+        Group sample name according to a named set of patterns defined in
+        the config.sample_merge_groups dictionary.
+        :param samples: sample names
+        :param grouping_criteria: name of the grouping criteria to use (e.g. ["trimming", "read_pairs"])
+        :param key_by: key to use for the resulting dictionary (e.g. "label" or "merged_name")
+        :return: a dict where the keys are group labels, and the values are lists of tuples,
+            of cleaned basenames according to the cleaning rules and the original sample names
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs")
+        {"Read 1": ["S1_R1_001", "S1_R1_001.trimmed", "S2_R1"],
+         "Read 2": ["S1_R2_001"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs", key_by="merged_name")
+        {"S1": ["S1_R1_001", "S1_R2_001"],
+         "S1.trimmed: ["S1_R1_001.trimmed"],
+         "S2": ["S2_R1"]}
+
+        >>> self.group_samples(["S1_R1", "S1"], "read_pairs")
+        {None: ["S1"], "Read 1": ["S1_R1"]}
+
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
+        {"Raw": ["S1_R1_001", "S1_R2_001", "S2_R1"],
+         "Trimmed": ["S1_R1_001.trimmed"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming", key_by="merged_name")
+        {"S1_R1_001": ["S1_R1_001", "S1_R1_001.trimmed"],
+         "S1_R2_001": ["S1_R2_001"],
+         "S2_R1: ["S2_R1"]}
+
+        >>> self.group_samples(["S1_R1_001", "S2_R1"], "trimming")
+        {"Raw": ["S1_R1_001", "S2_R1"]}
+
+        >>> self.group_samples(["S1", "S2"], "non_existing_criteria")
+        {None: ["S1", "S2"]}
+        """
+        groups = defaultdict(list)
+        for original_name in sorted(samples):
+            merged_name, label = self.groups_for_sample(original_name, grouping_criteria)
+            groups[label].append((merged_name, original_name))
+
+        regrouped = defaultdict(list)
+        if key_by == "label":
+            for label, merged_name_original_name in groups.items():
+                for merged_name, original_name in merged_name_original_name:
+                    regrouped[label].append(original_name)
+        else:
+            for label, merged_name_original_name in groups.items():
+                for merged_name, original_name in merged_name_original_name:
+                    regrouped[merged_name].append(original_name)
+
+        return regrouped
 
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
