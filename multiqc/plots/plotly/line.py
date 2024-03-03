@@ -3,6 +3,8 @@ import io
 import logging
 import os
 from typing import Dict, List, Union, Optional, Tuple
+
+import math
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
@@ -171,6 +173,9 @@ class LinePlot(Plot):
                     maxval = clipmax
                 if y_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + y_minrange)
+                if self.layout.yaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
         if not pconfig.get("categories", False) and x_minrange or x_bands or x_lines:
@@ -195,6 +200,9 @@ class LinePlot(Plot):
                     maxval = clipmax
                 if x_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + x_minrange)
+                if self.layout.xaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["xaxis"]["range"] = [minval, maxval]
 
         self.layout.shapes = (
