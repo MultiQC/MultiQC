@@ -47,9 +47,10 @@ def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
     if "data_labels" in pconfig:
         if len(pconfig["data_labels"]) != len(data):
             raise ValueError(
-                "Length of data_labels does not match the number of datasets. "
-                "Please check your module code and ensure that the data_labels "
-                "list is the same length as the data list."
+                f"Length of data_labels does not match the number of datasets. "
+                f"Please check your module code and ensure that the data_labels "
+                f"list is the same length as the data list: {len(pconfig['data_labels'])} != {len(data)}. "
+                f"pconfig={pconfig}"
             )
         pconfig["data_labels"] = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconfig["data_labels"]]
 

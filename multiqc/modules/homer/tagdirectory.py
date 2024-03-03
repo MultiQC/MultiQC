@@ -473,7 +473,6 @@ class TagDirReportMixin:
             "title": "HOMER: Frequency Distribution",
             "ylab": "Fraction of Reads",
             "xlab": "Log10(Distance between regions)",
-            "data_labels": ["Reads", "Percent"],
             "smooth_points": 500,
             "smooth_points_sumcounts": False,
             "yLog": True,
