@@ -38,8 +38,8 @@ def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
 
     # Allow user to overwrite any given config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for x, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[x] = v
+        for k, v in config.custom_plot_config[pconfig["id"]].items():
+            pconfig[k] = v
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
@@ -65,9 +65,9 @@ def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
                 modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
-        for x in ["id", "title", "ylab"]:
-            if x not in pconfig and any(x not in dl for dl in pconfig.get("data_labels", [])):
-                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{x}'"
+        for k in ["id", "title", "ylab"]:
+            if k not in pconfig and any(k not in dl for dl in pconfig.get("data_labels", [])):
+                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -102,46 +102,46 @@ def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
             if not x_are_categories:
                 xs = sorted(xs)
 
-            for x in xs:
+            for k in xs:
                 if not x_are_categories:
-                    if "xmax" in series_config and float(x) > float(series_config["xmax"]):
+                    if "xmax" in series_config and float(k) > float(series_config["xmax"]):
                         continue
-                    if "xmin" in series_config and float(x) < float(series_config["xmin"]):
+                    if "xmin" in series_config and float(k) < float(series_config["xmin"]):
                         continue
-                if data_by_sample[s][x] is not None and "ymax" in series_config:
-                    if float(data_by_sample[s][x]) > float(series_config["ymax"]):
+                if data_by_sample[s][k] is not None and "ymax" in series_config:
+                    if float(data_by_sample[s][k]) > float(series_config["ymax"]):
                         discard_ymax = True
                     elif discard_ymax is True:
                         discard_ymax = False
-                if data_by_sample[s][x] is not None and "ymin" in series_config:
-                    if float(data_by_sample[s][x]) > float(series_config["ymin"]):
+                if data_by_sample[s][k] is not None and "ymin" in series_config:
+                    if float(data_by_sample[s][k]) > float(series_config["ymin"]):
                         discard_ymin = True
                     elif discard_ymin is True:
                         discard_ymin = False
 
             # Build the plot data structure
-            for x in xs:
-                if not x_are_categories and x is not None:
-                    if "xmax" in series_config and float(x) > float(series_config["xmax"]):
+            for k in xs:
+                if not x_are_categories and k is not None:
+                    if "xmax" in series_config and float(k) > float(series_config["xmax"]):
                         continue
-                    if "xmin" in series_config and float(x) < float(series_config["xmin"]):
+                    if "xmin" in series_config and float(k) < float(series_config["xmin"]):
                         continue
-                if data_by_sample[s][x] is not None:
+                if data_by_sample[s][k] is not None:
                     if (
                         "ymax" in series_config
-                        and float(data_by_sample[s][x]) > float(series_config["ymax"])
+                        and float(data_by_sample[s][k]) > float(series_config["ymax"])
                         and discard_ymax is not False
                     ):
                         continue
                     if (
                         "ymin" in series_config
-                        and float(data_by_sample[s][x]) < float(series_config["ymin"])
+                        and float(data_by_sample[s][k]) < float(series_config["ymin"])
                         and discard_ymin is not False
                     ):
                         continue
-                pairs.append((x, data_by_sample[s][x]))
+                pairs.append((k, data_by_sample[s][k]))
                 try:
-                    maxval = max(maxval, data_by_sample[s][x])
+                    maxval = max(maxval, data_by_sample[s][k])
                 except TypeError:
                     pass
             if maxval > 0 or series_config.get("hide_empty") is not True:
