@@ -3,7 +3,7 @@
 import inspect
 import logging
 import re
-from typing import List, Dict
+from typing import List, Dict, Union, Tuple
 
 from multiqc.utils import config, mqc_colour, report
 from multiqc.plots.plotly import line
@@ -24,8 +24,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, pconfig=None):
-    """Plot a line graph with X,Y data.
+def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
+    """
+    Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
@@ -37,12 +38,20 @@ def plot(data, pconfig=None):
 
     # Allow user to overwrite any given config for this plot
     if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
+        for x, v in config.custom_plot_config[pconfig["id"]].items():
+            pconfig[x] = v
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
         data = [data]
+    if "data_labels" in pconfig:
+        if len(pconfig["data_labels"]) != len(data):
+            raise ValueError(
+                "Length of data_labels does not match the number of datasets. "
+                "Please check your module code and ensure that the data_labels "
+                "list is the same length as the data list."
+            )
+        pconfig["data_labels"] = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconfig["data_labels"]]
 
     # Validate config if linting
     if config.strict:
@@ -55,9 +64,9 @@ def plot(data, pconfig=None):
                 modname = f">{callpath}< "
                 break
         # Look for essential missing pconfig keys
-        for k in ["id", "title", "ylab"]:
-            if k not in pconfig and any(k not in dl for dl in pconfig.get("data_labels", [])):
-                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
+        for x in ["id", "title", "ylab"]:
+            if x not in pconfig and any(x not in dl for dl in pconfig.get("data_labels", [])):
+                errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{x}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
         # Check plot title format
@@ -70,120 +79,78 @@ def plot(data, pconfig=None):
 
     # Smooth dataset if requested in config
     if pconfig.get("smooth_points", None) is not None:
-        for i, d in enumerate(data):
-            data[i] = smooth_line_data(d, pconfig["smooth_points"])
+        for i, data_by_sample in enumerate(data):
+            data[i] = smooth_line_data(data_by_sample, pconfig["smooth_points"])
 
-    # Add sane plotting config defaults
-    for idx, yp in enumerate(pconfig.get("yPlotLines", [])):
-        pconfig["yPlotLines"][idx]["width"] = pconfig["yPlotLines"][idx].get("width", 2)
-
-    # Add initial axis labels if defined in `data_labels` but not main config
-    if pconfig.get("ylab") is None:
-        try:
-            pconfig["ylab"] = pconfig["data_labels"][0]["ylab"]
-        except Exception:
-            pass
-    if pconfig.get("xlab") is None:
-        try:
-            pconfig["xlab"] = pconfig["data_labels"][0]["xlab"]
-        except Exception:
-            pass
-
-    plotdata: List[List[Dict]] = []
-    for data_index, d in enumerate(data):
-        thisplotdata: List[Dict] = []
-
-        # Ensure any overwritten conditionals from data_labels (e.g. ymax or categories) are taken in consideration
-        dataset_config = pconfig.copy()
-        if "data_labels" in pconfig and isinstance(
-            pconfig["data_labels"][data_index], dict
-        ):  # if not a dict: only dataset name is provided
-            dataset_config.update(pconfig["data_labels"][data_index])
-
-        if "categories" in dataset_config:
-            if not isinstance(pconfig["categories"], list):
-                dataset_config["categories"] = list()
-
-            # Add any new categories
-            for s in sorted(d.keys()):
-                for k in d[s].keys():
-                    if k not in dataset_config["categories"]:
-                        dataset_config["categories"].append(k)
-
-            # Save adjusted categories per-dataset
-            del pconfig["categories"]
-            if "data_labels" not in pconfig:
-                pconfig["data_labels"] = [{}] * len(data)
-            pconfig["data_labels"] = [({"name": dl} if isinstance(dl, str) else dl) for dl in pconfig["data_labels"]]
-            pconfig["data_labels"][data_index]["categories"] = dataset_config["categories"]
-
-        for s in sorted(d.keys()):
+    datasets: List[List[Dict]] = []
+    for ds_idx, data_by_sample in enumerate(data):
+        this_list_of_series: List[Dict] = []
+        for s in sorted(data_by_sample.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config = dataset_config.copy()
-            pairs = []
+            series_config = pconfig.copy()
+            pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
             maxval = 0
-            if "categories" in series_config:
-                # Go through categories and add either data or a blank
-                for k in series_config["categories"]:
-                    try:
-                        pairs.append(d[s][k])
-                        maxval = max(maxval, d[s][k])
-                    except KeyError:
-                        pairs.append(None)
-            else:
-                # Discard > ymax or just hide?
-                # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
-                discard_ymax = None
-                discard_ymin = None
-                for k in sorted(d[s].keys()):
-                    if "xmax" in series_config and float(k) > float(series_config["xmax"]):
-                        continue
-                    if "xmin" in series_config and float(k) < float(series_config["xmin"]):
-                        continue
-                    if d[s][k] is not None and "ymax" in series_config:
-                        if float(d[s][k]) > float(series_config["ymax"]):
-                            discard_ymax = True
-                        elif discard_ymax is True:
-                            discard_ymax = False
-                    if d[s][k] is not None and "ymin" in series_config:
-                        if float(d[s][k]) > float(series_config["ymin"]):
-                            discard_ymin = True
-                        elif discard_ymin is True:
-                            discard_ymin = False
+            x_are_categories = pconfig.get("categories", False)
+            if "data_labels" in pconfig:
+                x_are_categories = pconfig["data_labels"][ds_idx].get("categories", x_are_categories)
+            # Discard > ymax or just hide?
+            # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
+            discard_ymax = None
+            discard_ymin = None
+            xs = data_by_sample[s].keys()
+            if not x_are_categories:
+                xs = sorted(xs)
 
-                # Build the plot data structure
-                for k in sorted(d[s].keys()):
-                    if k is not None:
-                        if "xmax" in series_config and float(k) > float(series_config["xmax"]):
-                            continue
-                        if "xmin" in series_config and float(k) < float(series_config["xmin"]):
-                            continue
-                    if d[s][k] is not None:
-                        if (
-                            "ymax" in series_config
-                            and float(d[s][k]) > float(series_config["ymax"])
-                            and discard_ymax is not False
-                        ):
-                            continue
-                        if (
-                            "ymin" in series_config
-                            and float(d[s][k]) < float(series_config["ymin"])
-                            and discard_ymin is not False
-                        ):
-                            continue
-                    pairs.append([k, d[s][k]])
-                    try:
-                        maxval = max(maxval, d[s][k])
-                    except TypeError:
-                        pass
+            for x in xs:
+                if not x_are_categories:
+                    if "xmax" in series_config and float(x) > float(series_config["xmax"]):
+                        continue
+                    if "xmin" in series_config and float(x) < float(series_config["xmin"]):
+                        continue
+                if data_by_sample[s][x] is not None and "ymax" in series_config:
+                    if float(data_by_sample[s][x]) > float(series_config["ymax"]):
+                        discard_ymax = True
+                    elif discard_ymax is True:
+                        discard_ymax = False
+                if data_by_sample[s][x] is not None and "ymin" in series_config:
+                    if float(data_by_sample[s][x]) > float(series_config["ymin"]):
+                        discard_ymin = True
+                    elif discard_ymin is True:
+                        discard_ymin = False
+
+            # Build the plot data structure
+            for x in xs:
+                if not x_are_categories and x is not None:
+                    if "xmax" in series_config and float(x) > float(series_config["xmax"]):
+                        continue
+                    if "xmin" in series_config and float(x) < float(series_config["xmin"]):
+                        continue
+                if data_by_sample[s][x] is not None:
+                    if (
+                        "ymax" in series_config
+                        and float(data_by_sample[s][x]) > float(series_config["ymax"])
+                        and discard_ymax is not False
+                    ):
+                        continue
+                    if (
+                        "ymin" in series_config
+                        and float(data_by_sample[s][x]) < float(series_config["ymin"])
+                        and discard_ymin is not False
+                    ):
+                        continue
+                pairs.append((x, data_by_sample[s][x]))
+                try:
+                    maxval = max(maxval, data_by_sample[s][x])
+                except TypeError:
+                    pass
             if maxval > 0 or series_config.get("hide_empty") is not True:
                 this_series: Dict = {"name": s, "data": pairs}
                 try:
                     this_series["color"] = series_config["colors"][s]
-                except Exception:
+                except KeyError:
                     pass
-                thisplotdata.append(this_series)
-        plotdata.append(thisplotdata)
+                this_list_of_series.append(this_series)
+        datasets.append(this_list_of_series)
 
     # Add on annotation data series
     try:
@@ -195,27 +162,27 @@ def plot(data, pconfig=None):
                 extra_series = [pconfig["extra_series"]]
             for i, es in enumerate(extra_series):
                 for s in es:
-                    plotdata[i].append(s)
+                    datasets[i].append(s)
     except Exception:
         pass
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, sd in enumerate(plotdata):
-        for di, d in enumerate(sd):
-            d.setdefault("color", scale.get_colour(di, lighten=1))
+    for si, sd in enumerate(datasets):
+        for di, data_by_sample in enumerate(sd):
+            data_by_sample.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - template custom, or interactive or flat
     mod = get_template_mod()
     if "linegraph" in mod.__dict__ and callable(mod.linegraph):
         try:
-            return mod.linegraph(plotdata, pconfig)
+            return mod.linegraph(datasets, pconfig)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return line.plot(plotdata, pconfig)
+    return line.plot(datasets, pconfig)
 
 
 def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[int, int]]:
