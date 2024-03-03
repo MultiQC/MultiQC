@@ -64,7 +64,7 @@ Plots in MultiQC reports are usually interactive, using the
 You can hover the mouse over data to see a tooltip with more information
 about that dataset. Clicking and dragging on the line graphs will zoom into that area.
 
-![plot_zoom](../../../docs/images/plot_zoom.png)
+<img src="../../../docs/images/plot_zoom.png" alt="plot_zoom" width=620/>
 
 To reset the zoom, use the button in the top right:
 
