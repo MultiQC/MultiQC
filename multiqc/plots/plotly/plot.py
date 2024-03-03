@@ -560,24 +560,40 @@ def _dataset_layout(
 
     # Options deprecated in 1.21
     ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
-    if ylabformat:
+    if ysuffix is None and ylabformat:
         if "}" in ylabformat:
             ysuffix = ylabformat.split("}")[1]
     xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
-    if xlabformat:
+    if xsuffix is None and xlabformat:
         if "}" in xlabformat:
             xsuffix = xlabformat.split("}")[1]
 
     # Set or remove space in known suffixes
-    KNOWN_SUFFIXES = ["%", "x", " bp", "M", "k"]
+    KNOWN_SUFFIXES = ["%", "x", "X", "k", "M", " bp", " kbp", " Mbp"]
     for suf in KNOWN_SUFFIXES:
         if ysuffix is not None and ysuffix == suf.strip():
             ysuffix = suf
         if xsuffix is not None and xsuffix == suf.strip():
             xsuffix = suf
 
+    # Set % suffix from ylab if it's in form like "% reads"
+    ylab = pconfig.get("ylab")
+    xlab = pconfig.get("xlab")
+    if ysuffix is None and ylab:
+        if "%" in ylab or "percentage" in ylab.lower():
+            ysuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if ylab.endswith(f" ({suf.strip()})"):
+                ysuffix = suf
+    if xsuffix is None and xlab:
+        if "%" in xlab or "percentage" in xlab.lower():
+            xsuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if xlab.endswith(f" ({suf.strip()})"):
+                xsuffix = suf
+
     if "tt_label" in pconfig:
-        # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
+        # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
 
@@ -620,8 +636,8 @@ def _dataset_layout(
         hovertemplate = None
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
-    y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
+    y_decimals = pconfig.get("tt_decimals", pconfig.get("y_decimals", pconfig.get("decimalPlaces")))
+    y_hoverformat = f",.{y_decimals}f" if y_decimals is not None else None
 
     x_decimals = pconfig.get("x_decimals")
     x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
