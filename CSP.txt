@@ -5,6 +5,7 @@ script-src 'self'
     # 1.22
     'sha256-p2SsW2a+SsyNi+LtSdukcfpcdrrNmRM+wKseEeVkrIc=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
     'sha256-fOvpIz8q+8v/SDe12LpgscBq8UEi2ddICjXZgOjPDs0=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont    
+    'sha256-lsXtdFgvtulDtY87J4+BuHR4E6+Vf87i4ate3rQ7Ksk=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
 
     # 1.21
     'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
