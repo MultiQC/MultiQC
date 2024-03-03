@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Remove Highcharts ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
+- Plot categories refactoring ([#2418](https://github.com/MultiQC/MultiQC/pull/2418))
 
 ### New modules
 
