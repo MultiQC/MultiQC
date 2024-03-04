@@ -1,3 +1,6 @@
+// box.js: Box plot
+////////////////////////////////////////////////
+
 class BoxPlot extends Plot {
   constructor(dump) {
     super(dump);

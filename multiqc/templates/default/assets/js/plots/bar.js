@@ -1,3 +1,6 @@
+// bar.js: Bar plot
+////////////////////////////////////////////////
+
 class BarPlot extends Plot {
   constructor(dump) {
     super(dump);

@@ -1,3 +1,5 @@
+// heatmap.js: Heatmap plot
+////////////////////////////////////////////////
 class HeatmapPlot extends Plot {
   constructor(dump) {
     super(dump);
