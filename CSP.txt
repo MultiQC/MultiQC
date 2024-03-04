@@ -13,21 +13,20 @@ script-src 'self'
     'sha256-v69SxdPeknzXy0hkSHL/SrchLvO8QDQS4N7V50xE0Ks=' # "function"!=typeof Object.create&&(Object.create=function(t){function o(){}retur
     'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' # /*!JSZip v3.10.1 - A JavaScript class for generating and reading zip files<http:
     'sha256-s+I8RWf3BWIpPmzCGLcbThkbBqyCu0jQ6bYb3ES1iDA=' # /*** plotly.js v2.27.0* Copyright 2012-2023, Plotly, Inc.* All rights reserved.*
-    'sha256-ikoDwSvmg9nAMB3yNEyCJdu+jH595tp6KdhEg6RRttM=' # // multiqc.js: Base JS for MultiQC Reports//////////////////////////////////////
-    'sha256-sd+TtigYbNm34HmMr0hMrSo6cVnJYAyeP7aHx2fEKGQ=' # // flat.js: Flat plots controls/////////////////////////////////////////////////
-    'sha256-1ViK+HrAnbB6nrvOHmL6aZ7NwTOKIXyryc5HV8pyZg0=' # // plotting.js: Plotly Plotting Code////////////////////////////////////////////
-    'sha256-ej0jhPPzzImZvcFeiQQQSWCvdCfNcZlOrqlxaXjmuQI=' # // tables.js: MultiQC Table code////////////////////////////////////////////////
-    'sha256-PcJ4muxKnmrqxGHhflAYAtjQ31Ow4IEQjykBuhkke9w=' # // toolbox.js: MultiQC Report Toolbox Code//////////////////////////////////////
-    'sha256-XgTfV3214W8NKM4XnztO79BtPs7CtghiUyy1W6DZktU=' # // bar.js: Bar plot////////////////////////////////////////////////class BarPlot
-    'sha256-ih19HSK58JxFlv2PTt+4K91wvteE9loE5GoJT8gIHQI=' # // box.js: Box plot////////////////////////////////////////////////class BoxPlot
-    'sha256-Rr6vFSfHzrrayzEOuPBd9/0nCTOvgjQuzpq56nyJJqY=' # // line.js: Line plot////////////////////////////////////////////////class LineP
-    'sha256-Vfh9cp1l01z0yWvxcXQboV49XbaT0fKaiHLDmvJm0WU=' # // scatter.js: Scatter plot////////////////////////////////////////////////class
-    'sha256-4T6Z4qiWgH8n6aZQu+9uW+cZJiY3Q5rxEiFbQnQ6yZw=' # // heatmap.js: Heatmap plot////////////////////////////////////////////////class
-    'sha256-ZwdO8Ts4Nx6FYWQ7Df7WIZ4IGE8GMEg9WQGLvyF+Vng=' # // violin.js: Violin plot////////////////////////////////////////////////class V
+    'sha256-nAE0B7TX3j60nc5fHxAC9xh3ioK0Dpoydmcr/+0YZTo=' # ////////////////////////////////////////////////// multiqc.js: Base JS for Multi
+    'sha256-o/FwYAh6xvlUMNqrzEothP+Br3FRAJKPWcbMHkECNpM=' # ////////////////////////////////////////////////// flat.js: Flat plots controls/
+    'sha256-xrszMyEqMBRqsbbM8gJhcOIKw30vqpSWPmGVgiEGma4=' # ////////////////////////////////////////////////// plotting.js: Plotly Plotting
+    'sha256-sGlpm+VHjfAGkovLilP66+MTPYQ8KGbldqK/91TtwqY=' # ////////////////////////////////////////////////// tables.js: MultiQC Table code
+    'sha256-xlFM6jj4FO/GiGuBeXP1MsBgNsX9vb+Ei/HUNdQoi98=' # ////////////////////////////////////////////////// toolbox.js: MultiQC Report To
+    'sha256-Vpx5U0YsmAHkxVF0py4NsD4nFei0LcRRHrpyUGtgLq4=' # ////////////////////////////////////////////////// bar.js: Bar plot/////////////
+    'sha256-e7vUvezcU+V33NHgiUjOz1cbtx0Pz6ObkX0yyw/jLcg=' # ////////////////////////////////////////////////// box.js: Box plot/////////////
+    'sha256-USJEva2nGYW70cYXf8xEcpsgCx+nrQ8vnQocoyD8UME=' # ////////////////////////////////////////////////// line.js: Line plot///////////
+    'sha256-DbJrHB62xGhvIGYYwmmgScl5dr42U2F8+v3vdjoJ8d0=' # ////////////////////////////////////////////////// scatter.js: Scatter plot/////
+    'sha256-vXwGX62NamwbHXsTYHEWnkQ9MLlLBJR8ZbHRSqFm3u0=' # ////////////////////////////////////////////////// heatmap.js: Heatmap plot/////
+    'sha256-mou4E28ya2ayqF12+H9cnNVb5CPu/m3gZs2Vu+btpWM=' # ////////////////////////////////////////////////// violin.js: Violin plot///////
     'sha256-L0eGKfzVDFdE34HopbSv113Z4Qv7z22YyZ3aCfFB1D4=' # // Return JS code required for plotting a single sample// RSeQC plot. Attempt to
-    'sha256-bEI7fmPkynn/19cr8rouPnov+ZbZ7P8bsWO2AiSfIGM=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+    'sha256-idMGi0VMVd1oyu5hHlz1qqsuIQtnBYVjfULFbajWtd8=' # ////////////////////////////////////////////////// multiqc_dragen_fastqc.js: Dra
+    'sha256-6ARmqyq/4I9/yenwKev7XGQ08zbM2G2gRBqp6HX3r38=' # ////////////////////////////////////////////////// multiqc_fastqc.js: FastQC mod
     'sha256-+F66a8s8ponoNnBnP06kgZ4LvQ6IBedFeTJHpTbA0O0=' # load_fastqc_passfails();
-    'sha256-iWO8z1sbOFlW9jqHm6PDldXb2wCcqo3gBNPZxg/TBBs=' # /*! jQuery UI - v1.12.1 - 2016-12-22* http://jqueryui.com* Includes: widget.js, 
-    'sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=' # /*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter, 
     'unsafe-eval'
 ;
