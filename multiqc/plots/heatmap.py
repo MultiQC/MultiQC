@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC functions to plot a heatmap """
 
 
@@ -24,9 +22,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, xcats, ycats=None, pconfig=None):
+def plot(data, xcats=None, ycats=None, pconfig=None):
     """Plot a 2D heatmap.
-    :param data: List of lists, each a representing a row of values.
+    :param data: List of lists, each a representing a row of values; or a dict of dicts
     :param xcats: Labels for x-axis
     :param ycats: Labels for y-axis. Defaults to same as x.
     :param pconfig: optional dict with config key:value pairs.
@@ -54,4 +52,4 @@ def plot(data, xcats, ycats=None, pconfig=None):
                 # debugging of modules
                 raise
 
-    return heatmap.plot(data, xcats, ycats, pconfig)
+    return heatmap.plot(data, pconfig, xcats, ycats)

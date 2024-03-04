@@ -47,6 +47,7 @@ prepend_dirs_depth: 0
 prepend_dirs_sep: " | "
 file_list: false
 require_logs: false
+version_check_url: https://api.multiqc.info/version
 
 make_data_dir: true
 zip_data_dir: false
@@ -61,6 +62,7 @@ plots_force_interactive: false
 plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 lineplot_style: lines # "lines+markers"
+barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
 lineplot_max_samples: 100 # turn into a violin plot if more than this number
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
@@ -300,6 +302,8 @@ fn_clean_exts:
   - ".fastqc_metrics"
   - ".labels"
   - ".bammetrics.metrics"
+  - ".filter_summary"
+  - ".cluster_report"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -352,7 +356,7 @@ fn_ignore_files:
   - "*.md5"
   - "*.parquet"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
-  - multiqc_data.json
+  - "multiqc_data.json"
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -368,6 +372,7 @@ module_order:
   - ngsderive
   - purple
   - conpair
+  - isoseq
   - lima
   - peddy
   - somalier
@@ -505,6 +510,7 @@ module_order:
   - seqyclean
   - optitype
   - whatshap
+  - spaceranger
   - xenome
   - xengsort
   - metaphlan

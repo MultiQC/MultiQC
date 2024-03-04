@@ -139,7 +139,7 @@ class IdxstatsReportMixin:
             "id": "samtools-idxstats-mapped-reads-plot",
             "title": "Samtools idxstats: Mapped reads per contig",
             "ylab": "# mapped reads",
-            "xlab": "Chromosome Name",
+            "xlab": "Chromosome name",
             "logswitch": True,
             "categories": True,
             "tt_label": "<strong>{point.category}:</strong> {point.y:.2f}",

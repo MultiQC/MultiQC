@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC functions to plot a linegraph """
 
 import inspect
@@ -117,7 +115,7 @@ def plot(data, pconfig=None):
             del pconfig["categories"]
             if "data_labels" not in pconfig:
                 pconfig["data_labels"] = [{}] * len(data)
-            pconfig["data_labels"] = [({"label": dl} if isinstance(dl, str) else dl) for dl in pconfig["data_labels"]]
+            pconfig["data_labels"] = [({"name": dl} if isinstance(dl, str) else dl) for dl in pconfig["data_labels"]]
             pconfig["data_labels"][data_index]["categories"] = dataset_config["categories"]
 
         for s in sorted(d.keys()):

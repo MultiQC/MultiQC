@@ -9,6 +9,7 @@ from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
 from .markdup import MarkdupReportMixin
 from .rmdup import RmdupReportMixin
+from .coverage import CoverageReportMixin
 
 # Import the Samtools submodules
 from .stats import StatsReportMixin
@@ -62,6 +63,10 @@ class MultiqcModule(
         n["rmdup"] = self.parse_samtools_rmdup()
         if n["rmdup"] > 0:
             log.info(f"Found {n['rmdup']} rmdup reports")
+
+        n["coverage"] = self.parse_samtools_coverage()
+        if n["coverage"] > 0:
+            log.info(f"Found {n['coverage']} coverage reports")
 
         n["markdup"] = self.parse_samtools_markdup()
         if n["markdup"] > 0:

@@ -44,7 +44,7 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
 
-if any(
+no_changelog = any(
     line in pr_title.lower()
     for line in [
         "skip changelog",
@@ -53,9 +53,7 @@ if any(
         "no change log",
         "bump version",
     ]
-):
-    print("Skipping changelog update")
-    sys.exit(0)
+)
 
 
 def _run_cmd(cmd):
@@ -175,6 +173,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
 
     # First, special case for search patterns.
+    keys_added_in_search_patterns = set()
     keys_modified_in_search_patterns = set()
     sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
     if sp_paths:
@@ -197,7 +196,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
             for new_skey in new_data:
                 # Added module?
                 if new_skey not in old_data:
-                    keys_modified_in_search_patterns.add(new_skey)
+                    keys_added_in_search_patterns.add(new_skey)
             for old_skey in old_data:
                 # Removed module?
                 if old_skey not in new_data:
@@ -258,32 +257,35 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     return section, {}
 
 
-# Determine the type of the PR: new module, module update, or core update.
-section, mod = _determine_change_type(pr_title, pr_number)
+pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
 
 # Prepare the change log entry.
 new_lines = []
-pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-if comment := comment.removeprefix("@multiqc-bot changelog").strip():
-    pr_title = comment
-else:
-    if section == "### New modules":
+section = None
+if not no_changelog:
+    # Determine the type of the PR: new module, module update, or core update.
+    section, mod = _determine_change_type(pr_title, pr_number)
+
+    if comment := comment.removeprefix("@multiqc-bot changelog").strip():
+        pr_title = comment
+    else:
+        if section == "### New modules":
+            new_lines = [
+                f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
+                f"  - {mod['name']} {mod['info']}\n",
+            ]
+        elif section == "### Module updates":
+            assert mod is not None
+            descr = pr_title
+            if ":" in descr:
+                descr = descr.split(":", maxsplit=1)[1].strip()
+            new_lines = [
+                f"- **{mod['name']}**: {descr} {pr_link}\n",
+            ]
+    if not new_lines:
         new_lines = [
-            f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
-            f"  - {mod['name']} {mod['info']}\n",
+            f"- {pr_title} {pr_link}\n",
         ]
-    elif section == "### Module updates":
-        assert mod is not None
-        descr = pr_title
-        if ":" in descr:
-            descr = descr.split(":", maxsplit=1)[1].strip()
-        new_lines = [
-            f"- **{mod['name']}**: {descr} {pr_link}\n",
-        ]
-if not new_lines:
-    new_lines = [
-        f"- {pr_title} {pr_link}\n",
-    ]
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
@@ -331,6 +333,10 @@ while orig_lines:
 
     # If the line already contains a link to the PR, don't add it again.
     line = _skip_existing_entry_for_this_pr(line, same_section=False)
+
+    if no_changelog:  # do not add anything, and remove if already added
+        updated_lines.append(line)
+        continue
 
     if line.startswith("## "):  # Version header, e.g. "## MultiQC v1.10dev"
         updated_lines.append(line)

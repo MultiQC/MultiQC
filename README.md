@@ -1,6 +1,6 @@
 &nbsp;
-![MultiQC](docs/images/MultiQC_logo.png#gh-light-mode-only)
-![MultiQC](docs/images/MultiQC_logo_darkbg.png#gh-dark-mode-only)
+![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only)
+![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png#gh-dark-mode-only)
 &nbsp;
 
 ### Aggregate bioinformatics results across many samples into a single report
@@ -24,7 +24,7 @@ it ideal for routine fast quality control.
 A very large number of Bioinformatics tools are supported by MultiQC. Please see the MultiQC website for a [complete list](https://multiqc.info/modules/).
 MultiQC can also easily parse data from custom scripts, if correctly formatted / configured - a feature called [Custom Content](https://multiqc.info/docs/custom_content/).
 
-More modules are being written all of the time. Please suggest any ideas as a new
+More modules are being written all the time. Please suggest any ideas as a new
 [issue](https://github.com/MultiQC/MultiQC/issues) _(please include example log files)_.
 
 ## Installation
@@ -67,7 +67,7 @@ and produce a report detailing whatever it finds.
 
 <!-- RICH-CODEX fake_command: "multiqc ." -->
 
-![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](docs/images/screenshots/fastqc-run.svg)
+![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 
 The report is created in `multiqc_report.html` by default. Tab-delimited data
 files are also created in `multiqc_data/`, containing extra information.

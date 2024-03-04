@@ -40,23 +40,19 @@ class FlagstatReportMixin:
         # General Stats Table
         flagstats_headers = {
             "flagstat_total": {
-                "title": f"{config.read_count_prefix} Reads",
+                "title": "Reads",
                 "description": f"Total reads in the bam file ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "hidden": True,
             },
             "mapped_passed": {
-                "title": f"{config.read_count_prefix} Reads Mapped",
-                "description": f"Reads Mapped in the bam file ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
+                "title": "Reads mapped",
+                "description": f"Reads mapped in the bam file ({config.read_count_desc})",
                 "shared_key": "read_count",
             },
             "mapped_passed_pct": {
-                "title": "% Reads Mapped",
-                "description": "% Reads Mapped in the bam file",
+                "title": "% Reads mapped",
+                "description": "% Reads mapped in the bam file",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -64,7 +60,7 @@ class FlagstatReportMixin:
                 "hidden": True,
             },
         }
-        self.general_stats_addcols(self.samtools_flagstat, flagstats_headers)
+        self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, namespace="flagstat")
 
         # Make dot plot of counts
         keys = {}
@@ -100,7 +96,7 @@ class FlagstatReportMixin:
         )
 
         self.add_section(
-            name="Samtools Flagstat",
+            name="Flagstat",
             anchor="samtools-flagstat",
             description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
             plot=beeswarm.plot(
@@ -108,7 +104,7 @@ class FlagstatReportMixin:
                 keys,
                 {
                     "id": "samtools-flagstat-dp",
-                    "title": "Samtools Flagstat: Read Counts",
+                    "title": "Samtools flagstat: Read Counts",
                 },
             ),
         )

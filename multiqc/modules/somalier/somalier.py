@@ -391,7 +391,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "somalier_stats",
             "namespace": "Somalier",
             "title": "Somalier: Statistics",
-            "no_beeswarm": True,
+            "no_violin": True,
             "raw_data_fn": "multiqc_somalier_stats",
         }
 

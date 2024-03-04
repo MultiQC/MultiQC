@@ -2,12 +2,12 @@
 
 import logging
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from csv import DictReader
 from itertools import chain, groupby
 
 from multiqc import config
-from multiqc.plots import table
+from multiqc.plots import table, heatmap
 from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger
@@ -37,7 +37,8 @@ def parse_reports(module):
     does pairwise comparisons between samples at the level selected by `--CROSSCHECK_BY`.
     """
 
-    data_by_sample = dict()
+    row_by_number = dict()
+    n_found_reports = 0
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/crosscheckfingerprints", filehandles=True):
@@ -47,72 +48,195 @@ def parse_reports(module):
         if "LEFT_GROUP_VALUE" not in header:
             # Not a CrosscheckFingerprints Report
             continue
-        reader = DictReader(metrics, fieldnames=header, delimiter="\t")
         # Parse out the tumor awareness option and the lod threshold setting if possible
         tumor_awareness, lod_threshold = _parse_cli(comments[1])
-        for i, row in enumerate(reader):
-            # Check if this row contains samples that should be ignored
-            if module.is_ignore_sample(row["LEFT_SAMPLE"]) or module.is_ignore_sample(row["RIGHT_SAMPLE"]):
-                continue
-
+        reader: DictReader = DictReader(metrics, fieldnames=header, delimiter="\t")
+        lines = [
+            (i, row)
+            for i, row in enumerate(reader)
+            if not module.is_ignore_sample(row["LEFT_SAMPLE"]) and not module.is_ignore_sample(row["RIGHT_SAMPLE"])
+        ]
+        if not lines:
+            continue
+        n_found_reports += 1
+        for i, row in lines:
             # Clean the sample names
             row["LEFT_SAMPLE"] = module.clean_s_name(row["LEFT_SAMPLE"], f)
             row["LEFT_GROUP_VALUE"] = module.clean_s_name(row["LEFT_GROUP_VALUE"], f)
             row["RIGHT_SAMPLE"] = module.clean_s_name(row["RIGHT_SAMPLE"], f)
             row["RIGHT_GROUP_VALUE"] = module.clean_s_name(row["RIGHT_GROUP_VALUE"], f)
 
+            row["RESULT"] = row["RESULT"].capitalize().replace("_", " ")
+
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
-            data_by_sample[i] = row
+            row_by_number[i] = row
+
+            try:
+                row["LOD_SCORE"] = float(row["LOD_SCORE"])
+            except ValueError:
+                row["LOD_SCORE"] = None
+
+            # Add BEST_MATCH and BEST_MATCH_LOD if the result is unexpected or inconclusive
+            if row["RESULT"].startswith("Unexpected") or row["RESULT"] == "Inconclusive":
+                # Find the best match for the left sample
+                left_sample = row["LEFT_SAMPLE"]
+                best_match = max(
+                    (r for j, r in lines if r["LEFT_SAMPLE"] == left_sample), key=lambda r: float(r["LOD_SCORE"])
+                )
+                row["BEST_MATCH"] = best_match["RIGHT_SAMPLE"]
+                row["BEST_MATCH_LOD"] = float(best_match["LOD_SCORE"])
 
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
-    if len(data_by_sample) == 0:
+    if n_found_reports == 0:
         return 0
+
+    # Sort the data by the left sample, then right sample
+    row_by_number = OrderedDict(
+        sorted(row_by_number.items(), key=lambda x: (x[1]["LEFT_SAMPLE"], x[1]["RIGHT_SAMPLE"]))
+    )
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
     # Write data to file
-    module.write_data_file(data_by_sample, f"{module.anchor}_crosscheckfingerprints")
+    module.write_data_file(row_by_number, f"{module.anchor}_crosscheckfingerprints")
 
-    # For each sample, flag if any comparisons that don't start with "Expected"
-    # A sample that does not have all "Expected" will show as `False` and be Red
-    general_stats_data = _create_general_stats_data(data_by_sample)
-    general_stats_headers = {
-        "Crosschecks All Expected": {
+    # Add a per-sample table
+    status_by_sample = dict()
+    sorted_by_left_sample = sorted(row_by_number.values(), key=lambda r: r["LEFT_SAMPLE"])
+    for left_sample, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
+        values = list(values)
+        if values:
+            status = "All expected"
+            if all(v["RESULT"].startswith("Unexpected") for v in values):
+                status = "All unexpected"
+            elif any(v["RESULT"].startswith("Unexpected") for v in values):
+                status = "Some unexpected"
+            elif any(v["RESULT"] == "Inconclusive" for v in values):
+                status = "Some inconclusive"
+            status_by_sample[left_sample] = {"Crosschecks": status}
+            best_match = max(values, key=lambda v: v["LOD_SCORE"])
+            status_by_sample[left_sample]["Best match"] = best_match["RIGHT_SAMPLE"]
+            status_by_sample[left_sample]["Best match LOD"] = best_match["LOD_SCORE"]
+
+    sample_table_headers = {
+        "Crosschecks": {
             "title": "Crosschecks",
-            "description": "All results for samples CrosscheckFingerprints were as expected.",
-        }
+            "description": "Flags if there are any unexpected or inconclusive matches.",
+            "cond_formatting_rules": {
+                "pass": [{"s_eq": "All expected"}],
+                "warn": [{"s_eq": "Some inconclusive"}],
+                "fail": [{"s_eq": "Unexpected"}, {"s_eq": "Some unexpected"}],
+            },
+        },
+        "Best match": {
+            "title": "Best match",
+            "description": "The sample name with the highest LOD for this sample.",
+        },
+        "Best match LOD": {
+            "title": "Best match LOD",
+            "description": "The LOD score for the best matching sample.",
+        },
     }
-    module.general_stats_addcols(general_stats_data, general_stats_headers, namespace="CrosscheckFingerprints")
 
-    # Add a table section to the report
+    def _order_status(status: str) -> int:
+        # sorting order to show the bad results first
+        if "all unexpected" in status.lower():
+            return 0
+        if "unexpected" in status.lower():
+            return 1
+        if "inconclusive" in status.lower():
+            return 2
+        return 3
+
     module.add_section(
         name="Crosscheck Fingerprints",
-        anchor=f"{module.anchor}-crosscheckfingerprints",
-        description="Pairwise identity checking between samples and groups.",
-        helptext="""
-        Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
-        """,
+        anchor=f"{module.anchor}-crosscheckfingerprints-sample-table-section",
+        description="Summary for each sample, showing the overall status along with the best matching sample name.",
         plot=table.plot(
-            data_by_sample,
-            _get_table_headers(data_by_sample),
-            {
+            dict(sorted(status_by_sample.items(), key=lambda kv: _order_status(kv[1]["Crosschecks"]))),
+            sample_table_headers,
+            pconfig={
                 "namespace": module.name,
-                "id": f"{module.anchor}_crosscheckfingerprints_table",
-                "table_title": f"{module.name}: Crosscheck Fingerprints",
-                "save_file": True,
-                "col1_header": "ID",
-                "no_beeswarm": True,
+                "id": f"{module.anchor}-crosscheckfingerprints-sample-table",
+                "title": f"{module.name}: Crosscheck Fingerprints: Samples",
+                "no_violin": True,
+                "sortRows": False,
+            },
+        ),
+    )
+    for h in sample_table_headers.values():
+        h["hidden"] = True
+    module.general_stats_addcols(
+        status_by_sample,
+        sample_table_headers,
+        namespace="CrosscheckFingerprints",
+    )
+
+    # Heatmap of the LOD scores for each pairwise comparison
+    heatmap_data = defaultdict(dict)
+    for row in row_by_number.values():
+        left = row["LEFT_SAMPLE"]
+        right = row["RIGHT_SAMPLE"]
+        heatmap_data[left][right] = row["LOD_SCORE"]
+
+    module.add_section(
+        name="Crosscheck Fingerprints: Heatmap",
+        anchor=f"{module.anchor}-crosscheckfingerprints-heatmap-section",
+        description="Pairwise identity checking between samples and groups: heatmap of LOD scores.",
+        plot=heatmap.plot(
+            heatmap_data,
+            xcats=list(heatmap_data.keys()),
+            pconfig={
+                "id": f"{module.anchor}-crosscheckfingerprints-heatmap",
+                "title": f"{module.name}: Crosscheck Fingerprints",
+                "zlab": "LOD score",
+                "xcats_samples": True,
+                "ycats_samples": True,
+                "square": True,
+                "legend": False,
+                "reverseColors": True,
             },
         ),
     )
 
-    return len(data_by_sample)
+    # If the number of rows is > 100, do not show pairs with "Expected" status
+    warning = ""
+    if len(row_by_number) > 100:
+        warning = (
+            f"Note that there are too many pairwise comparisons to show in table "
+            f" ({len(row_by_number)} > 100), so only unexpected or inconclusive pairs are shown."
+        )
+        row_by_number = {k: v for k, v in row_by_number.items() if not v["RESULT"].startswith("Expected")}
+
+    module.add_section(
+        name="Crosscheck Fingerprints: Pairwise Table",
+        anchor=f"{module.anchor}-crosscheckfingerprints-table-section",
+        description="Pairwise identity checking between samples and groups." + (f"<br>{warning}" if warning else ""),
+        helptext="""
+        Checks that all data in the set of input files comes from the same individual, based on the selected group granularity.
+        """,
+        plot=table.plot(
+            data=dict(sorted(row_by_number.items(), key=lambda kv: (_order_status(kv[1]["RESULT"]), kv[0]))),
+            headers=_get_table_headers(row_by_number),
+            pconfig={
+                "namespace": module.name,
+                "id": f"{module.anchor}-crosscheckfingerprints-table",
+                "title": f"{module.name}: Crosscheck Fingerprints",
+                "save_file": True,
+                "col1_header": "ID",
+                "no_violin": True,
+                "sortRows": False,
+            },
+        ),
+    )
+
+    return n_found_reports
 
 
 def _take_till(iterator, fn):
@@ -173,6 +297,7 @@ def _get_table_headers(data_by_sample):
         "RIGHT_LIBRARY",
         "RIGHT_FILE",
         "DATA_TYPE",
+        "LOD_THRESHOLD",
     ]
 
     # Allow customisation from the MultiQC config
@@ -217,7 +342,15 @@ def _get_table_headers(data_by_sample):
             continue
 
         # Set up the configuration for the column
-        h_title = h.replace("_", " ").strip().lower().capitalize().replace("Lod", "LOD")
+        h_title = (
+            h.replace("_", " ")
+            .strip()
+            .lower()
+            .capitalize()
+            .replace("Lod score", "LOD")
+            .replace("tumor normal", "T/N")
+            .replace("normal tumor", "N/T")
+        )
         headers[h] = {
             "title": h_title,
             "description": FIELD_DESCRIPTIONS.get(h),
@@ -227,11 +360,11 @@ def _get_table_headers(data_by_sample):
 
         # Rename Result to be a longer string so the table formats more nicely
         if h == "RESULT":
-            headers[h]["title"] = "Categorical Result"
+            headers[h]["title"] = "Match"
             headers[h]["cond_formatting_rules"] = {
-                "pass": [{"s_contains": "EXPECTED_"}],
-                "warn": [{"s_eq": "INCONCLUSIVE"}],
-                "fail": [{"s_contains": "UNEXPECTED_"}],
+                "pass": [{"s_contains": "Expected"}],
+                "warn": [{"s_eq": "Inconclusive"}],
+                "fail": [{"s_contains": "Unexpected"}],
             }
 
         # Add appropriate colors for LOD scores
@@ -243,20 +376,19 @@ def _get_table_headers(data_by_sample):
         if h in table_cols_hidden:
             headers[h]["hidden"] = True
 
+    # Add a new column showing the best match for the left sample if there are unexpected samples
+    if "RESULT" in table_cols and "LEFT_SAMPLE" in table_cols and "RIGHT_SAMPLE" in table_cols:
+        headers["BEST_MATCH"] = {
+            "title": "Best match",
+            "description": "The sample name with the highest LOD for the left sample.",
+            "namespace": "CrosscheckFingerprints",
+            "hidden": False,
+        }
+        headers["BEST_MATCH_LOD"] = {
+            "title": "Best match LOD",
+            "description": "The LOD score for the best matching sample for the left sample.",
+            "namespace": "CrosscheckFingerprints",
+            "hidden": False,
+        }
+
     return headers
-
-
-def _create_general_stats_data(in_data):
-    """
-    Look at the LEFT_SAMPLE fields and determine if there are any pairs for that samples
-    that don't have a RESULT that startswith EXPECTED.
-    """
-    out_data = dict()
-    flattened = (row for row in in_data.values())
-    sorted_by_left_sample = sorted(flattened, key=lambda r: r["LEFT_SAMPLE"])
-
-    for group, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
-        passfail = "Pass" if all(v["RESULT"].startswith("EXPECTED") for v in values) else "Fail"
-        out_data[group] = {"Crosschecks All Expected": passfail}
-
-    return out_data

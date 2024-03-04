@@ -116,15 +116,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Get total number of reads read by rockhopper
             if line.startswith("Total reads:"):
-                results["total-reads"] = int(re.search("Total reads:\s*(\d*)", line).group(1))
+                results["total-reads"] = int(re.search(r"Total reads:\s*(\d*)", line).group(1))
 
             # Get number of reads aligned to each genome
             elif line.startswith("Successfully aligned reads"):
                 # Get number of aligned reads
-                genome_reads = int(re.search("Successfully aligned reads:\s*(\d*)", line).group(1))
+                genome_reads = int(re.search(r"Successfully aligned reads:\s*(\d*)", line).group(1))
 
                 # Get percent of reads in each category
-                stats = [int(re.search("(\d+)\%", subline).group(1)) for subline in lines[i + 1 : i + 10]]
+                stats = [int(re.search(r"(\d+)\%", subline).group(1)) for subline in lines[i + 1 : i + 10]]
                 for name, val in zip(stats_index, stats):
                     # Convert percentages to true number of reads in each category
                     results[name] += int(round(val * genome_reads / 100))

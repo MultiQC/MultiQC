@@ -312,7 +312,7 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         cnt_lbl = "{value:,.0f}"
     if is_basepairs:
         cnt_lbl = "{value:,.2f} " + config.base_count_prefix
-        cnt_suffix = "&nbsp;" + config.base_count_prefix
+        cnt_suffix = " " + config.base_count_prefix
         if config.base_count_multiplier == 1:
             cnt_lbl = "{value:,.0f}"
 
