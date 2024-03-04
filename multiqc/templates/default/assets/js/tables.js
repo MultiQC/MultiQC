@@ -51,13 +51,21 @@ $(function () {
       $("#mqc_violintable_wrapper_" + violinId).hide();
     });
 
-    // Copy table contents to clipboard
-    let clipboard = new Clipboard(".mqc_table_copy_btn");
-    clipboard.on("success", function (e) {
-      e.clearSelection();
-    });
     $(".mqc_table_copy_btn").click(function () {
       let btn = $(this);
+      let table = $(btn.data("clipboard-target"))[0];
+      navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([table.outerHTML], {
+            type: "text/html",
+          }),
+          "text/plain": new Blob([table.innerText], {
+            // fallback for browsers that don't support text/html
+            type: "text/plain",
+          }),
+        }),
+      ]);
+
       btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
       setTimeout(function () {
         btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copy table');
