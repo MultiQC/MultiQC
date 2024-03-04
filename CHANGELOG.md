@@ -4,6 +4,8 @@
 
 ### MultiQC updates
 
+- Use native clipboard API ([#2419](https://github.com/MultiQC/MultiQC/pull/2419))
+
 ### New modules
 
 ### Module updates
