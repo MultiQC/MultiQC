@@ -4,7 +4,7 @@
 script-src 'self'
     # 1.22
     'sha256-4XodgW4TwIJuDtf+v6vDJ39FVxI0veC/kSCCmnFp7ck=' # /*! * clipboard.js v2.0.11 * https://clipboardjs.com/ * * Licensed MIT © Zeno Ro
-    'sha256-4IREYxb/j808B757ugxPov9U0FcBwSA+Pj8ckYJy70s=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-LXGlzGr/OzLRNAzg6WIbhvBcrRnP2o3by6KOsXPgODI=' # ////////////////////////////////////////////////// MultiQC Table code///////////
 
     # 1.21
     'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
