@@ -2,16 +2,6 @@
 # (Content Security Policy), you will need the following scripts whitelisted:
 
 script-src 'self'
-    'sha256-Q8T2P8EmA90icfsFreWNkgqXzeAUtRDu2cLsJfgN1aY=' # mqc_compressed_plotdata = document.getElementById('mqc_compressed_plotdata').inn
-    'sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=' # /*! jQuery v3.1.1 | (c) jQuery Foundation | jquery.org/license */!function(a,b){
-    'sha256-iWO8z1sbOFlW9jqHm6PDldXb2wCcqo3gBNPZxg/TBBs=' # /*! jQuery UI - v1.12.1 - 2016-12-22* http://jqueryui.com* Includes: widget.js,
-    'sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=' # /*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter,
-    'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # !function(e){"function"==typeof define&&define.amd?define(["jquery"],e):"object"
-    'sha256-4XodgW4TwIJuDtf+v6vDJ39FVxI0veC/kSCCmnFp7ck=' # /*! * clipboard.js v2.0.11 * https://clipboardjs.com/ * * Licensed MIT © Zeno Ro
-    'sha256-FPJJt8nA+xL4RU6/gsriA8p8xAeLGatoyTjldvQKGdE=' # /*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js
-    'sha256-nRoO8HoupfqozUr7YKBRgHXmdx40Hl/04OSBzv7e7L8=' # var LZString=function(){function o(o,r){if(!t[o]){t[o]={};for(var n=0;n<o.length
-    'sha256-v69SxdPeknzXy0hkSHL/SrchLvO8QDQS4N7V50xE0Ks=' # "function"!=typeof Object.create&&(Object.create=function(t){function o(){}retur
-    'sha256-rMfkFFWoB2W1/Zx+4bgHim0WC7vKRVrq6FTeZclH1Z4=' # /*!JSZip v3.10.1 - A JavaScript class for generating and reading zip files<http:
     'sha256-s+I8RWf3BWIpPmzCGLcbThkbBqyCu0jQ6bYb3ES1iDA=' # /*** plotly.js v2.27.0* Copyright 2012-2023, Plotly, Inc.* All rights reserved.*
     'sha256-ikoDwSvmg9nAMB3yNEyCJdu+jH595tp6KdhEg6RRttM=' # // multiqc.js: Base JS for MultiQC Reports//////////////////////////////////////
     'sha256-sd+TtigYbNm34HmMr0hMrSo6cVnJYAyeP7aHx2fEKGQ=' # // flat.js: Flat plots controls/////////////////////////////////////////////////
