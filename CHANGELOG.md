@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Automatically update the CSP.txt whitelist in the CI job ([#2421](https://github.com/MultiQC/MultiQC/pull/2421))
 
 ### New modules
 
