@@ -1,5 +1,4 @@
-// flat.js: Flat plots controls
-////////////////////////////////////////////////
+/* Flat plots controls and switches */
 
 // On page load
 $(function () {

@@ -1,5 +1,4 @@
-// tables.js: MultiQC Table code
-////////////////////////////////////////////////
+/* MultiQC table code */
 
 // Execute when page load has finished loading
 $(function () {

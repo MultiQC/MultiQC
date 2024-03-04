@@ -1,5 +1,4 @@
-// bar.js: Bar plot
-////////////////////////////////////////////////
+/* Bar plot */
 
 class BarPlot extends Plot {
   constructor(dump) {

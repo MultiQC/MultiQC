@@ -1,5 +1,4 @@
-// multiqc_fastqc.js: FastQC module JS code
-////////////////////////////////////////////////
+/* FastQC module JS code */
 
 ///////////////
 // Per Base Sequence Content

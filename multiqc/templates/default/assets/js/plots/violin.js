@@ -1,5 +1,4 @@
-// violin.js: Violin plot
-////////////////////////////////////////////////
+/* Violin plot */
 
 class ViolinPlot extends Plot {
   constructor(dump) {

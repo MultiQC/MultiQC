@@ -1,5 +1,4 @@
-// scatter.js: Scatter plot
-////////////////////////////////////////////////
+/* Scatter plot */
 
 class ScatterPlot extends Plot {
   activeDatasetSize() {

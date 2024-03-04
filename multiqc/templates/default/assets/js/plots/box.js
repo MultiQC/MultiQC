@@ -1,5 +1,4 @@
-// box.js: Box plot
-////////////////////////////////////////////////
+/* Box plot */
 
 class BoxPlot extends Plot {
   constructor(dump) {

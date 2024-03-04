@@ -1,9 +1,8 @@
-// multiqc_rseqc.js: RSeQC module JS code
-////////////////////////////////////////////////
-
-// Return JS code required for plotting a single sample
-// RSeQC plot. Attempt to make it look as much as the original as possible.
-// Note: this code is injected by `eval(str)`, not <script type="text/javascript">
+/* 
+JS code for the RSeQC module. Required for plotting a single-sample RSeQC plot. 
+Attempt to make it look as much as the original as possible.
+Note: this code is injected by `eval(str)`, not <script type="text/javascript">
+ */
 
 function get_current_name(name) {
   // a helper function that applies renaming

@@ -1,5 +1,4 @@
-// multiqc_dragen_fastqc.js: Dragen-FastQC module JS code
-////////////////////////////////////////////////
+/* DRAGEN-FastQC module JS code */
 
 ///////////////
 // Per Base Sequence Content
