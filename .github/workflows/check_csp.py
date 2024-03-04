@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 logger = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser(
-    description="Checks inline scripts in report.html against a " "whitelist of hashes (Content Security Policy)"
+    description="Checks inline scripts in report.html against a whitelist of hashes (Content Security Policy)"
 )
 
 parser.add_argument("--report", help="Report file (.html)", required=True)
@@ -34,19 +34,20 @@ def get_hash(script):
     return "sha256-" + base64.b64encode(hashlib.sha256(script.encode("utf-8")).digest()).decode()
 
 
-whitelist_with_comments = open(args.whitelist, "r", encoding="utf-8").read()
+with open(args.whitelist, "r", encoding="utf-8") as f:
+    whitelist_with_comments = f.read()
 whitelist = re.sub(r"#.*", "", whitelist_with_comments)
 
 html_report = open(args.report, "r", encoding="utf-8").read()
 soup = BeautifulSoup(html_report, features="html.parser")
 
 scripts = [script.get_text() for script in soup.select("script") if is_executable(script)]
-missing_scripts = [script for script in scripts if get_hash(script) not in whitelist]
 
+missing_scripts = [script for script in scripts if get_hash(script) not in whitelist]
 if missing_scripts:
-    logger.warning("The following scripts are missing from {}".format(args.whitelist))
+    logger.warning(f"The following scripts are missing from {args.whitelist}, adding them and making a commit")
     for script in missing_scripts:
-        hash = get_hash(script)
+        js_hash = get_hash(script)
         snippet = script.replace("\n", "")[0:80]
-        logger.warning("  '{}' # {}".format(hash, snippet))
+        logger.warning(f"  '{js_hash}' # {snippet}")
     exit(1)
