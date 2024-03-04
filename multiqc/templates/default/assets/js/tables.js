@@ -3,8 +3,7 @@
 
 // Execute when page load has finished loading
 $(function () {
-  let tables = $(".mqc_table");
-  if (tables.length > 0) {
+  if ($(".mqc_table").length > 0) {
     // Enable tablesorter on MultiQC tables
     let get_sort_val = function (node) {
       // if val is defined, use it
@@ -27,7 +26,7 @@ $(function () {
 
       return text;
     };
-    tables.tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val });
+    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
