@@ -68,10 +68,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # For CSP checking
-      - name: Install dependencies for CI tests
-        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
-
       - name: Install MultiQC
         run: pip install .
 
@@ -143,9 +139,32 @@ jobs:
             exit 1
           fi
 
-      - name: Test for missing CSPs
+      - name: Install dependencies for CSP checking
+        run: python -m pip install --upgrade ${{ env.core_python_dependencies }}
+
+      - name: Update CSP whitelist
         if: matrix.python-version == env.latest_python
-        run: python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
+        run: |
+          python ${GITHUB_WORKSPACE}/.github/workflows/update_csp.py \
+          --report full_report.html --whitelist ${GITHUB_WORKSPACE}/CSP.txt
+
+      - name: Check if CSP.txt changed
+        run: |
+          git diff --exit-code ${GITHUB_WORKSPACE}/CSP.txt || echo "changed=YES" >> $GITHUB_ENV
+          echo "File changed: ${{ env.changed }}"
+
+      - name: Commit and push CSP.txt changes
+        env:
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+        if: env.changed == 'YES'
+        run: |
+          git config user.name 'MultiQC Bot'
+          git config user.email 'multiqc-bot@seqera.io'
+          git config push.default upstream
+          git add ${GITHUB_WORKSPACE}/CSP.txt
+          git status
+          git commit -m "[automated] Update CSP.txt"
+          git push
 
   run_windows:
     name: Windows
