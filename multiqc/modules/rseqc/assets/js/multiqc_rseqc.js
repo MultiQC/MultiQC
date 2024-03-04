@@ -1,3 +1,7 @@
+////////////////////////////////////////////////
+// multiqc_rseqc.js: RSeQC module JS code
+////////////////////////////////////////////////
+
 // Return JS code required for plotting a single sample
 // RSeQC plot. Attempt to make it look as much like the original as possible.
 // Note: this code is injected by `eval(str)`, not <script type="text/javascript">
