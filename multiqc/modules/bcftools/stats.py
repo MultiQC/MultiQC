@@ -405,6 +405,7 @@ class StatsReportMixin:
                 "id": "bcftools-stats-sequencing-depth",
                 "title": "Bcftools Stats: Sequencing depth",
                 "ylab": "Sequencing depth",
+                "ysuffix": "X",
                 "cpswitch_counts_label": "Sequencing depth",
                 "cpswitch": False,
                 "data_labels": list(self.bcftools_stats_sample_depth),
