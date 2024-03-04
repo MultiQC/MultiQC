@@ -1108,6 +1108,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biscuit_retention_cytosine",
             "title": "BISCUIT: Retention vs. Base Position in Read",
             "xlab": "Position in Read",
+            "xsuffix": "bp",
             "ylab": "CpG Retention Rate (%)",
             "ymin": 0,
             "ymax": 100,

@@ -33,6 +33,7 @@ def plot_ihist(samples, file_type, **plot_args):
         "title": "BBTools: " + plot_args["plot_title"],
         "xmax": xmax,
         "xlab": "Insert size (base pairs)",
+        "xsuffix": " bp",
         "ylab": "Read count",
     }
     plot_params.update(plot_args["plot_params"])
