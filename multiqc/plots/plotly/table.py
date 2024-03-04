@@ -259,45 +259,65 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     html = ""
     if not config.simple_output:
         # Copy Table Button
-        html += f"""
+        buttons = []
+
+        buttons.append(
+            f"""
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.id}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
+        )
 
         # Configure Columns Button
         if len(t_headers) > 1:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" 
                 data-target="#{dt.id}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
+            )
 
         # Sort By Highlight button
-        html += f"""
+        buttons.append(
+            f"""
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" 
             data-target="#{dt.id}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
+        )
 
         # Scatter Plot Button
         if len(t_headers) > 1:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" 
                 data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
+            )
 
         if violin_id is not None:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" 
                 data-table-id="{dt.id}" data-violin-id="{violin_id}">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """
+            )
+
+        buttons.append(
+            f"""
+        <button type="button" class="export-plot btn btn-default btn-sm" 
+            data-pid="{violin_id or dt.id}" data-type="table"
+        >Export as CSV</button>
+        """
+        )
 
         html += f"""
         <button type="button" class="export-plot btn btn-default btn-sm" 
@@ -319,8 +339,15 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
             t_showing_cols_txt = f' and <sup id="{dt.id}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{len(t_headers)}</sub> columns'
 
         # Build table header text
-        html += f"""
+        buttons.append(
+            f"""
         <small id="{dt.id}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
+        """
+        )
+
+        panel = "\n".join(buttons)
+        html += f"""
+        <div class='row'>\n<div class='col-xs-12'>\n{panel}\n</div>\n</div>
         """
 
     # Build the table itself

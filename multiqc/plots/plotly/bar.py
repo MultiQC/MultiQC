@@ -11,7 +11,7 @@ import spectra
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
-from multiqc.utils import util_functions
+from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +177,17 @@ class BarPlot(Plot):
                 font=dict(color="black"),
             ),
         )
+
+        if getattr(config, "barplot_legend_on_bottom", False):
+            self.layout.update(
+                legend=go.layout.Legend(
+                    orientation="h",
+                    x=0.5,
+                    xanchor="center",
+                    y=-0.5,
+                    yanchor="top",
+                ),
+            )
 
         for dataset in self.datasets:
             if barmode == "group":

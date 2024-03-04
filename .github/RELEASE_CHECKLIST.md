@@ -59,11 +59,12 @@ This checklist is for my own reference, as I forget the steps every time.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
 13. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
 14. Commit and push version bump
-15. Look for the automated release PR on `bioconda` and approve / merge
+15. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
+16. Look for the automated release PR on `bioconda` and approve / merge
     - IMPORTANT: If any new dependencies added, need a manual PR to add them.
     - Do this quickly, as other people merge the automated PRs really quickly
-16. Tweet that new version is released
-17. Continue making more awesome :metal:
+17. Tweet that new version is released
+18. Continue making more awesome :metal:
 
 ## Appendix
 

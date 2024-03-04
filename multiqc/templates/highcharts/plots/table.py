@@ -180,7 +180,7 @@ def make_table(dt: table_object.DataTable, violin_switch=False) -> str:
 
                     # This is horrible, but Python locale settings are worse
                     if config.thousandsSep_format is None:
-                        config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                        config.thousandsSep_format = '<span class="mqc_small_space"></span>'
                     if config.decimalPoint_format is None:
                         config.decimalPoint_format = "."
                     valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
