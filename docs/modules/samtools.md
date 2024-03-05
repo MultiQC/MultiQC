@@ -17,6 +17,8 @@ Supported commands:
 - `flagstats`
 - `idxstats`
 - `rmdup`
+- `coverage`
+- `markdup`
 
 ### idxstats
 
