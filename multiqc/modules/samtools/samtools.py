@@ -9,6 +9,7 @@ from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
 from .rmdup import RmdupReportMixin
 from .coverage import CoverageReportMixin
+from .markdup import MarkdupReportMixin
 
 # Import the Samtools submodules
 from .stats import StatsReportMixin
@@ -18,7 +19,13 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(
-    BaseMultiqcModule, StatsReportMixin, FlagstatReportMixin, IdxstatsReportMixin, RmdupReportMixin, CoverageReportMixin
+    BaseMultiqcModule,
+    StatsReportMixin,
+    FlagstatReportMixin,
+    IdxstatsReportMixin,
+    RmdupReportMixin,
+    CoverageReportMixin,
+    MarkdupReportMixin,
 ):
     """Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
@@ -61,6 +68,10 @@ class MultiqcModule(
         n["coverage"] = self.parse_samtools_coverage()
         if n["coverage"] > 0:
             log.info(f"Found {n['coverage']} coverage reports")
+
+        n["markdup"] = self.parse_samtools_markdup()
+        if n["markdup"] > 0:
+            log.info(f"Found {n['markdup']} markdup reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
