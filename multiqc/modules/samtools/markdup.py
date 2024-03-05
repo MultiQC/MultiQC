@@ -1,6 +1,6 @@
 # coding: utf-8
 """ MultiQC submodule to parse output from Samtools markdup """
-
+import json
 import logging
 import re
 
@@ -16,68 +16,79 @@ log = logging.getLogger(__name__)
 class MarkdupReportMixin:
     """A MultiQC module for `samtools markdup` metrics."""
 
-    @staticmethod
-    def parse_contents(contents: str) -> Dict[str, int]:
-        """
-        Parse the contents of a `samtools markdup` output file.
-        """
-        pattern_by_metric: Dict[str, re.Pattern] = {
-            "optical_duplicate_distance": re.compile(r"COMMAND:\s.*-d\s(\d+)"),
-            "read": re.compile(r"READ:\s(\d+)"),
-            "written": re.compile(r"WRITTEN:\s(\d+)"),
-            "excluded": re.compile(r"EXCLUDED:\s(\d+)"),
-            "examined": re.compile(r"EXAMINED:\s(\d+)"),
-            "paired": re.compile(r"PAIRED:\s(\d+)"),
-            "single": re.compile(r"SINGLE:\s(\d+)"),
-            "duplicate_pair": re.compile(r"DUPLICATE\sPAIR:\s(\d+)"),
-            "duplicate_single": re.compile(r"DUPLICATE\sSINGLE:\s(\d+)"),
-            "duplicate_pair_optical": re.compile(r"DUPLICATE\sPAIR\sOPTICAL:\s(\d+)"),
-            "duplicate_single_optical": re.compile(r"DUPLICATE\sSINGLE\sOPTICAL:\s(\d+)"),
-            "duplicate_non_primary": re.compile(r"DUPLICATE\sNON\sPRIMARY:\s(\d+)"),
-            "duplicate_non_primary_optical": re.compile(r"DUPLICATE\sNON\sPRIMARY\sOPTICAL:\s(\d+)"),
-            "duplicate_primary_total": re.compile(r"DUPLICATE\sPRIMARY\sTOTAL:\s(\d+)"),
-            "duplicate_total": re.compile(r"DUPLICATE\sTOTAL:\s(\d+)"),
-            "estimated_library_size": re.compile(r"ESTIMATED_LIBRARY_SIZE:\s(\d+)"),
-        }
-
-        data: Dict[str, int] = dict()
-        for metric, regex in pattern_by_metric.items():
-            match = regex.search(contents)
-            if match:
-                data[metric] = int(match.group(1))
-
-        return data
-
     def parse_samtools_markdup(self):
-        val_by_metric_by_sample: Dict[str, Dict[str, Union[int, float]]] = dict()
+        raw_by_sample = dict()
 
-        for f in self.find_log_files("samtools/markdup"):
-            data: Dict[str, Union[int, float]] = self.parse_contents(f["f"])
-            if not data:
-                continue
-            if f["s_name"] in val_by_metric_by_sample:
+        for f in self.find_log_files("samtools/markdup_json", filehandles=True):
+            raw_d = json.load(f["f"])
+            if f["s_name"] in raw_by_sample:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
             self.add_data_source(f, section="markdup")
+            raw_by_sample[f["s_name"]] = raw_d
 
-            # Derive more metrics from counts
-            n_reads: int = data["paired"] + data["single"]
-            data["duplicate_optical_total"] = data["duplicate_pair_optical"] + data["duplicate_single_optical"]
-            data["duplicate_optical_fraction"] = data["duplicate_optical_total"] / n_reads if n_reads > 0 else 0.0
-            data["duplicate_fraction"] = data["duplicate_total"] / n_reads if n_reads > 0 else 0.0
-            data["duplicate_paired_non_optical"] = data["duplicate_pair"] - data["duplicate_pair_optical"]
-            data["duplicate_single_non_optical"] = data["duplicate_single"] - data["duplicate_single_optical"]
-            data["duplicate_non_primary_non_optical"] = (
-                data["duplicate_non_primary"] - data["duplicate_non_primary_optical"]
-            )
-            data["non_duplicate"] = data["paired"] + data["single"] - data["duplicate_total"]
-            val_by_metric_by_sample[f["s_name"]] = data
+        for f in self.find_log_files("samtools/markdup_txt"):
+            raw_d = dict()
+            for line in f["contents_lines"]:
+                if ":" in line:
+                    key, value = line.split(":")
+                    try:
+                        value = int(value.strip())
+                    except ValueError:
+                        value = value.strip()
+                    raw_d[key.strip()] = value
+            if f["s_name"] in raw_by_sample:
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
+            self.add_data_source(f, section="markdup")
+            raw_by_sample[f["s_name"]] = raw_d
 
-        val_by_metric_by_sample = self.ignore_samples(val_by_metric_by_sample)
-        if len(val_by_metric_by_sample) == 0:
+        raw_by_sample = self.ignore_samples(raw_by_sample)
+        if len(raw_by_sample) == 0:
             return 0
 
         # Superfluous function call to confirm that it is used in this module
         self.add_software_version(None)
+
+        val_by_metric_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
+        for s_name, raw_d in raw_by_sample.items():
+            if len(raw_d) == 0:
+                continue
+
+            d: Dict[str, Union[int, float]] = {}
+            val_by_metric_by_sample[s_name] = d
+            rename_map = {
+                "READ": "read",
+                "WRITTEN": "written",
+                "EXCLUDED": "excluded",
+                "EXAMINED": "examined",
+                "PAIRED": "paired",
+                "SINGLE": "single",
+                "DUPLICATE PAIR": "duplicate_pair",
+                "DUPLICATE SINGLE": "duplicate_single",
+                "DUPLICATE PAIR OPTICAL": "duplicate_pair_optical",
+                "DUPLICATE SINGLE OPTICAL": "duplicate_single_optical",
+                "DUPLICATE NON PRIMARY": "duplicate_non_primary",
+                "DUPLICATE NON PRIMARY OPTICAL": "duplicate_non_primary_optical",
+                "DUPLICATE PRIMARY TOTAL": "duplicate_primary_total",
+                "DUPLICATE TOTAL": "duplicate_total",
+                "ESTIMATED_LIBRARY_SIZE": "estimated_library_size",
+            }
+            for name, val in raw_d.items():
+                if name in rename_map:
+                    d[rename_map[name]] = int(raw_d[name])
+                elif name == "COMMAND":
+                    m = re.search(r".*-d\s(\d+)", val)
+                    if m:
+                        d["optical_duplicate_distance"] = int(m.group(1))
+
+            # Derive more metrics from counts
+            n_reads: int = d["paired"] + d["single"]
+            d["duplicate_optical_total"] = d["duplicate_pair_optical"] + d["duplicate_single_optical"]
+            d["duplicate_optical_fraction"] = d["duplicate_optical_total"] / n_reads if n_reads > 0 else 0.0
+            d["duplicate_fraction"] = d["duplicate_total"] / n_reads if n_reads > 0 else 0.0
+            d["duplicate_paired_non_optical"] = d["duplicate_pair"] - d["duplicate_pair_optical"]
+            d["duplicate_single_non_optical"] = d["duplicate_single"] - d["duplicate_single_optical"]
+            d["duplicate_non_primary_non_optical"] = d["duplicate_non_primary"] - d["duplicate_non_primary_optical"]
+            d["non_duplicate"] = d["paired"] + d["single"] - d["duplicate_total"]
 
         self.write_data_file(val_by_metric_by_sample, fn="multiqc_samtools_markdup")
 
@@ -149,7 +160,7 @@ class MarkdupReportMixin:
             ),
         )
 
-        # Stacked Bar Plot
+        # Bar plot
         pconfig = {
             "id": "samtools-markdup-fraction",
             "title": "Samtools markdup: duplicate categories",
