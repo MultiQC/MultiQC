@@ -77,9 +77,22 @@ class MarkdupReportMixin:
             # if it is not a json file, then it is a text file
             parsed_data = {line.split(":")[0].strip(): line.split(":")[1].strip() for line in f.splitlines() if line}
 
+        # Calculate the percent duplication
         parsed_data["PERCENT DUPLICATION"] = (
             int(parsed_data.get("DUPLICATE TOTAL", 0)) / int(parsed_data.get("READ")) * 100
         )
 
-        print(parsed_data)
+        # Double the "PAIR" data to fix the number of reads
+        parsed_data["PAIRED"] = int(parsed_data.get("PAIRS", 0)) * 2
+        parsed_data["DUPLICATE PAIR"] = int(parsed_data.get("DUPLICATE PAIR", 0)) * 2
+        parsed_data["DUPLICATE PAIR OPTICAL"] = int(parsed_data.get("DUPLICATE PAIR OPTICAL", 0)) * 2
+
+        # Drop unused data
+        parsed_data.pop("COMMAND", None)
+        parsed_data.pop("READ", None)
+        parsed_data.pop("WRITTEN", None)
+        parsed_data.pop("EXAMINED", None)
+        parsed_data.pop("DUPLICATE TOTAL", None)
+        parsed_data.pop("ESTIMATED_LIBRARY_SIZE", None)
+
         return parsed_data
