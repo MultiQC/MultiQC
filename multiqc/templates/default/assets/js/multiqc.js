@@ -1,4 +1,6 @@
-/* Base JS for MultiQC reports */
+////////////////////////////////////////////////
+// Base JS for MultiQC Reports
+////////////////////////////////////////////////
 
 // Helper config - is defined and object length > 0?
 function notEmptyObj(obj) {

@@ -1,4 +1,6 @@
-/* Plotly-JS plotting code and base Plot class */
+////////////////////////////////////////////////
+// Plotly Plotting Code
+////////////////////////////////////////////////
 
 // Global plot data variable. Accessed in many other JavaScript files.
 let mqc_plots = {};

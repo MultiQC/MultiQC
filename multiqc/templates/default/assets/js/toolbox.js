@@ -1,4 +1,6 @@
-/* MultiQC report toolbox code */
+////////////////////////////////////////////////
+// MultiQC Report Toolbox Code
+////////////////////////////////////////////////
 
 let mqc_colours_idx = 0;
 const mqc_colours = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a9a904", "#a65628", "#f781bf", "#999999"];
