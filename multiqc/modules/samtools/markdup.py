@@ -4,9 +4,7 @@
 import logging
 import re
 
-from typing import Callable
 from typing import Dict
-from typing import Tuple
 from typing import Union
 
 from multiqc.plots import bargraph
@@ -19,37 +17,34 @@ class MarkdupReportMixin:
     """A MultiQC module for `samtools markdup` metrics."""
 
     @staticmethod
-    def markdup_metric_patterns() -> Dict[str, Tuple[re.Pattern, Callable[[str], Union[int, str]]]]:
-        """Patterns for parsing the metrics within `samtools markdup` outputs."""
-        return {
-            "optical_duplicate_distance": (re.compile(r"COMMAND:\s.*-d\s(\d+)"), int),
-            "read": (re.compile(r"READ:\s(\d+)"), int),
-            "written": (re.compile(r"WRITTEN:\s(\d+)"), int),
-            "excluded": (re.compile(r"EXCLUDED:\s(\d+)"), int),
-            "examined": (re.compile(r"EXAMINED:\s(\d+)"), int),
-            "paired": (re.compile(r"PAIRED:\s(\d+)"), int),
-            "single": (re.compile(r"SINGLE:\s(\d+)"), int),
-            "duplicate_pair": (re.compile(r"DUPLICATE\sPAIR:\s(\d+)"), int),
-            "duplicate_single": (re.compile(r"DUPLICATE\sSINGLE:\s(\d+)"), int),
-            "duplicate_pair_optical": (re.compile(r"DUPLICATE\sPAIR\sOPTICAL:\s(\d+)"), int),
-            "duplicate_single_optical": (re.compile(r"DUPLICATE\sSINGLE\sOPTICAL:\s(\d+)"), int),
-            "duplicate_non_primary": (re.compile(r"DUPLICATE\sNON\sPRIMARY:\s(\d+)"), int),
-            "duplicate_non_primary_optical": (re.compile(r"DUPLICATE\sNON\sPRIMARY\sOPTICAL:\s(\d+)"), int),
-            "duplicate_primary_total": (re.compile(r"DUPLICATE\sPRIMARY\sTOTAL:\s(\d+)"), int),
-            "duplicate_total": (re.compile(r"DUPLICATE\sTOTAL:\s(\d+)"), int),
-            "estimated_library_size": (re.compile(r"ESTIMATED_LIBRARY_SIZE:\s(\d+)"), int),
-        }
-
-    @staticmethod
-    def parse_contents(contents: str) -> Dict[str, Union[int, float]]:
+    def parse_contents(contents: str) -> Dict[str, int]:
         """
         Parse the contents of a `samtools markdup` output file.
         """
-        data: Dict[str, Union[int, float]] = dict()
-        for metric, (regex, converter) in MarkdupReportMixin.markdup_metric_patterns().items():
+        pattern_by_metric: Dict[str, re.Pattern] = {
+            "optical_duplicate_distance": re.compile(r"COMMAND:\s.*-d\s(\d+)"),
+            "read": re.compile(r"READ:\s(\d+)"),
+            "written": re.compile(r"WRITTEN:\s(\d+)"),
+            "excluded": re.compile(r"EXCLUDED:\s(\d+)"),
+            "examined": re.compile(r"EXAMINED:\s(\d+)"),
+            "paired": re.compile(r"PAIRED:\s(\d+)"),
+            "single": re.compile(r"SINGLE:\s(\d+)"),
+            "duplicate_pair": re.compile(r"DUPLICATE\sPAIR:\s(\d+)"),
+            "duplicate_single": re.compile(r"DUPLICATE\sSINGLE:\s(\d+)"),
+            "duplicate_pair_optical": re.compile(r"DUPLICATE\sPAIR\sOPTICAL:\s(\d+)"),
+            "duplicate_single_optical": re.compile(r"DUPLICATE\sSINGLE\sOPTICAL:\s(\d+)"),
+            "duplicate_non_primary": re.compile(r"DUPLICATE\sNON\sPRIMARY:\s(\d+)"),
+            "duplicate_non_primary_optical": re.compile(r"DUPLICATE\sNON\sPRIMARY\sOPTICAL:\s(\d+)"),
+            "duplicate_primary_total": re.compile(r"DUPLICATE\sPRIMARY\sTOTAL:\s(\d+)"),
+            "duplicate_total": re.compile(r"DUPLICATE\sTOTAL:\s(\d+)"),
+            "estimated_library_size": re.compile(r"ESTIMATED_LIBRARY_SIZE:\s(\d+)"),
+        }
+
+        data: Dict[str, int] = dict()
+        for metric, regex in pattern_by_metric.items():
             match = regex.search(contents)
             if match:
-                data[metric] = converter(match.group(1))
+                data[metric] = int(match.group(1))
 
         return data
 
@@ -57,7 +52,7 @@ class MarkdupReportMixin:
         val_by_metric_by_sample: Dict[str, Dict[str, Union[int, float]]] = dict()
 
         for f in self.find_log_files("samtools/markdup"):
-            data = self.parse_contents(f["f"])
+            data: Dict[str, Union[int, float]] = self.parse_contents(f["f"])
             if not data:
                 continue
             if f["s_name"] in val_by_metric_by_sample:
