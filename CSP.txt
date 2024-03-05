@@ -1,5 +1,5 @@
 # If you are hosting MultiQC reports >= v1.8 on a web application with CSP
-# (Content Security Policy), you will need the following scripts whitelisted:
+# (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
     'sha256-iPIReyQyAoheerXqjtulr8WN7lPMWacMVU4awy5CTJg=' # templates/highcharts/assets/js/multiqc_mpl.js

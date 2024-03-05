@@ -50,7 +50,7 @@ with whitelist_path.open("w") as f:
     f.write(
         f"""\
 # If you are hosting MultiQC reports >= v1.8 on a web application with CSP
-# (Content Security Policy), you will need the following scripts whitelisted:
+# (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
     {whitelist}
