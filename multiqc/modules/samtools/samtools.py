@@ -5,14 +5,12 @@ import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
+from .stats import StatsReportMixin
 from .flagstat import FlagstatReportMixin
 from .idxstats import IdxstatsReportMixin
-from .markdup import MarkdupReportMixin
 from .rmdup import RmdupReportMixin
 from .coverage import CoverageReportMixin
-
-# Import the Samtools submodules
-from .stats import StatsReportMixin
+from .markdup import MarkdupReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -25,6 +23,7 @@ class MultiqcModule(
     IdxstatsReportMixin,
     RmdupReportMixin,
     MarkdupReportMixin,
+    CoverageReportMixin,
 ):
     """Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for

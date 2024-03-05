@@ -4,7 +4,6 @@
 import logging
 import re
 
-from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Tuple
@@ -12,24 +11,17 @@ from typing import Union
 
 from multiqc.plots import bargraph
 from multiqc.plots import table
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.base_module import ModuleNoSamplesFound
 
-
-# Initialise the logger
 log = logging.getLogger(__name__)
+
 
 class MarkdupReportMixin:
     """A MultiQC module for `samtools markdup` metrics."""
 
-    search_key: str = "samtools/markdup"
-    """The configuration key for storing search patterns about `samtools markdup` outputs."""
-
     @staticmethod
-    def markdup_metric_patterns() -> Dict[str, Tuple[re.Pattern, Callable[[Any], Union[int, str]]]]:
+    def markdup_metric_patterns() -> Dict[str, Tuple[re.Pattern, Callable[[str], Union[int, str]]]]:
         """Patterns for parsing the metrics within `samtools markdup` outputs."""
         return {
-            "command": (re.compile(r"COMMAND:\s(.*)"), str),
             "optical_duplicate_distance": (re.compile(r"COMMAND:\s.*-d\s(\d+)"), int),
             "read": (re.compile(r"READ:\s(\d+)"), int),
             "written": (re.compile(r"WRITTEN:\s(\d+)"), int),
@@ -49,117 +41,72 @@ class MarkdupReportMixin:
         }
 
     @staticmethod
-    def parse_contents(contents: str) -> Dict[str, Union[int, str]]:
-        """Parse the contents of a `samtools markdup` output file."""
-        metrics: Dict[str, Union[int, str]] = dict()
-
+    def parse_contents(contents: str) -> Dict[str, Union[int, float]]:
+        """
+        Parse the contents of a `samtools markdup` output file.
+        """
+        data: Dict[str, Union[int, float]] = dict()
         for metric, (regex, converter) in MarkdupReportMixin.markdup_metric_patterns().items():
             match = regex.search(contents)
             if match:
-                metrics[metric] = converter(match.group(1))
+                data[metric] = converter(match.group(1))
 
-        return metrics
-
-    @staticmethod
-    def derive_metrics(metrics: Dict[str, Union[int, str]]) -> Dict[str, Union[int, str]]:
-        """Derive custom metrics from the contents of a `samtools markdup` output file."""
-        reads: int = metrics["paired"] + metrics["single"]
-        metrics["duplicate_optical_total"] = metrics["duplicate_pair_optical"] + metrics["duplicate_single_optical"]
-        metrics["duplicate_optical_fraction"] = reads and metrics["duplicate_optical_total"] / reads or 0.0
-        metrics["duplicate_fraction"] = reads and metrics["duplicate_total"] / reads or 0.0
-        metrics["duplicate_paired_non_optical"] = metrics["duplicate_pair"] - metrics["duplicate_pair_optical"]
-        metrics["duplicate_single_non_optical"] = metrics["duplicate_single"] - metrics["duplicate_single_optical"]
-        metrics["duplicate_non_primary_non_optical"] = metrics["duplicate_non_primary"] - metrics["duplicate_non_primary_optical"]
-        metrics["non_duplicate"] = metrics["paired"] + metrics["single"] - metrics["duplicate_total"]
-        return metrics
+        return data
 
     def parse_samtools_markdup(self):
-        """Initialize the MultiQC `samtools markdup` module."""
-        super(MarkdupReportMixin, self).__init__(
-            name="Samtools (Custom)",
-            anchor="Samtools",
-            target="Samtools",
-            href="http://www.htslib.org",
-            info=" is a suite of programs for interacting with high-throughput sequencing data.",
-            doi="10.1093/bioinformatics/btp352",
-        )
+        val_by_metric_by_sample: Dict[str, Dict[str, Union[int, float]]] = dict()
 
-        metrics: Dict[str, Dict[str, Union[int, str]]] = dict()
+        for f in self.find_log_files("samtools/markdup"):
+            data = self.parse_contents(f["f"])
+            if not data:
+                continue
+            if f["s_name"] in val_by_metric_by_sample:
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {f['s_name']}")
+            self.add_data_source(f, section="markdup")
 
-        # TODO: Check support for the JSON output form of this log file
-        # TODO: Support parsing from a stdout log file in either text/JSON mode
-        for file in self.find_log_files(self.search_key):
-            parsed = self.parse_contents(file["f"])
-            metrics[file["s_name"]] = self.derive_metrics(parsed)
+            # Derive more metrics from counts
+            n_reads: int = data["paired"] + data["single"]
+            data["duplicate_optical_total"] = data["duplicate_pair_optical"] + data["duplicate_single_optical"]
+            data["duplicate_optical_fraction"] = data["duplicate_optical_total"] / n_reads if n_reads > 0 else 0.0
+            data["duplicate_fraction"] = data["duplicate_total"] / n_reads if n_reads > 0 else 0.0
+            data["duplicate_paired_non_optical"] = data["duplicate_pair"] - data["duplicate_pair_optical"]
+            data["duplicate_single_non_optical"] = data["duplicate_single"] - data["duplicate_single_optical"]
+            data["duplicate_non_primary_non_optical"] = (
+                data["duplicate_non_primary"] - data["duplicate_non_primary_optical"]
+            )
+            data["non_duplicate"] = data["paired"] + data["single"] - data["duplicate_total"]
+            val_by_metric_by_sample[f["s_name"]] = data
 
-        metrics = self.ignore_samples(data=metrics)
-
-        if len(metrics) == 0:
+        val_by_metric_by_sample = self.ignore_samples(val_by_metric_by_sample)
+        if len(val_by_metric_by_sample) == 0:
             return 0
 
+        # Superfluous function call to confirm that it is used in this module
         self.add_software_version(None)
 
-        self.write_data_file(data=metrics, fn="multiqc_samtools")
+        self.write_data_file(val_by_metric_by_sample, fn="multiqc_samtools_markdup")
 
-        # General Statistics ###########################################################
-
-        headers = {
+        genstats_headers = {
             "duplicate_fraction": {
-                "title": "% Duplicates",
-                "description": "The percent of all types of duplicate reads.",
+                "title": "Duplicates",
+                "description": "The percent of all types of duplicate reads",
                 "min": 0,
+                "max": 100,
                 "modify": lambda x: x * 100,
-                "format": "{:,.0f}",
                 "suffix": "%",
-                "scale": "RdYlGn-rev",
+                "scale": "OrRd",
             },
             "estimated_library_size": {
-                "title": "Estimated Library Size",
+                "title": "Est. library size",
                 "description": "The estimated library size after de-duplication.",
                 "min": 0,
-                "format": "{:,.0f}",
+                "format": "{:,d}",
             },
         }
-
-        self.general_stats_addcols(data=metrics, headers=headers)
-
-        # Detailed Metrics #############################################################
-
-        headers = {
-            "estimated_library_size": {
-                "title": "Estimated Library Size",
-                "description": "The estimated library size after de-duplication.",
-                "min": 0,
-                "format": "{:,.0f}",
-            },
-            "optical_duplicate_distance": {
-                "title": "Optical Distance",
-                "description": "The optical distance for considering instrument duplicates.",
-                "min": 0,
-                "format": "{:,.0f}",
-            },
-            "duplicate_fraction": {
-                "title": "% Duplicates",
-                "description": "The percent of all types of duplicate reads.",
-                "min": 0,
-                "modify": lambda x: x * 100,
-                "format": "{:,.0f}",
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-            "duplicate_optical_fraction": {
-                "title": "% Optical Duplicates",
-                "description": "The percent of optical/clustering duplicate reads.",
-                "min": 0,
-                "modify": lambda x: x * 100,
-                "format": "{:,.0f}",
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-        }
+        self.general_stats_addcols(data=val_by_metric_by_sample, headers=genstats_headers, namespace="markdup")
 
         self.add_section(
-            name="Samtools markdup",
+            name="Samtools markdup: stats",
             anchor="samtools-markdup",
             description=(
                 "Optical duplicates are due to either optical or clustering-based artifacts. "
@@ -178,46 +125,62 @@ class MarkdupReportMixin:
                 + "</ul>."
             ),
             plot=table.plot(
-                data=metrics,
-                headers=headers,
+                data=val_by_metric_by_sample,
+                headers=dict(
+                    genstats_headers,
+                    **{
+                        "optical_duplicate_distance": {
+                            "title": "Optical distance",
+                            "description": "The optical distance for considering instrument duplicates",
+                            "min": 0,
+                            "format": "{:,d}",
+                            "scale": "RdYlGn",
+                        },
+                        "duplicate_optical_fraction": {
+                            "title": "Optical dups",
+                            "description": "The percent of optical/clustering duplicate reads",
+                            "min": 0,
+                            "max": 100,
+                            "modify": lambda x: x * 100,
+                            "suffix": "%",
+                            "scale": "RdYlGn-rev",
+                        },
+                    },
+                ),
                 pconfig={
-                    "namespace": self.name,
                     "id": "samtools-markdup-table",
-                    "table_title": "Samtools: Duplicate Marked SAM Records (Alignments)",
-                    "sortRows": False,
+                    "title": "Samtools: duplicate-marked SAM records (alignments)",
                 },
             ),
         )
 
-        # Stacked Bar Plot #############################################################
-
-        bargraph_config = {
-            "namespace": self.name,
+        # Stacked Bar Plot
+        pconfig = {
             "id": "samtools-markdup-fraction",
-            "title": "Samtools: Duplicate Marked SAM Records (Alignments)",
-            "cpswitch": True,
-            "ylab": "% SAM Records",
+            "title": "Samtools markdup: duplicate categories",
+            "ylab": "SAM Records",
         }
 
-        # TODO; Confirm that under all ways to run samtools markdup, these sum up to "all records"
         keys: Dict[str, Dict[str, str]] = {
-            "non_duplicate": {"name": "Non-Duplicates"},
-            "duplicate_pair_optical": {"name": "Optical Duplicates in Pairs"},
-            "duplicate_single_optical": {"name": "Optical Duplicates in Singletons"},
-            "duplicate_non_primary_optical": {"name": "Optical Non-Primary Duplicate"},
-            "duplicate_pair_non_optical": {"name": "Non-optical Duplicates in Pairs"},
-            "duplicate_single_non_optical": {"name": "Non-optical Duplicates in Singletons"},
-            "duplicate_non_primary_non_optical": {"name": "Non-Optical Non-Primary Duplicates"},
+            "non_duplicate": {"name": "Non-duplicates"},
+            "duplicate_pair_optical": {"name": "Optical duplicates in pairs"},
+            "duplicate_single_optical": {"name": "Optical duplicates in singletons"},
+            "duplicate_non_primary_optical": {"name": "Optical non-primary duplicate"},
+            "duplicate_pair_non_optical": {"name": "Non-optical duplicates in pairs"},
+            "duplicate_single_non_optical": {"name": "Non-optical duplicates in singletons"},
+            "duplicate_non_primary_non_optical": {"name": "Non-optical non-primary duplicates"},
             "excluded": {"name": "Ignored (QC fail or unmapped)"},
         }
 
         self.add_section(
+            name="Samtools markdup: duplicate categories",
+            anchor="samtools-markdup-categories",
             description=(
                 "For more information about the duplicate categories, see the "
                 + '<a href="https://www.htslib.org/doc/samtools-markdup.html#STATISTICS" '
                 + 'target="_blank">samtools documentation</a>. '
             ),
-            plot=bargraph.plot(data=metrics, cats=keys, pconfig=bargraph_config),
+            plot=bargraph.plot(data=val_by_metric_by_sample, cats=keys, pconfig=pconfig),
         )
 
-        return len(metrics)
+        return len(val_by_metric_by_sample)

@@ -793,6 +793,9 @@ samtools/rmdup:
 samtools/coverage:
   contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
   num_lines: 10
+samtools/markdup:
+  contents: "COMMAND: samtools markdup"
+  num_lines: 2
 sargasso:
   fn: "overall_filtering_summary.txt"
 seqwho:
