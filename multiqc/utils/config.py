@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
+
 from pathlib import Path
 from typing import List, Dict, Optional, Union
 

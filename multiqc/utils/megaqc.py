@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """ MultiQC code to export data to MegaQC / flat JSON files """
-
 
 import gzip
 import io

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """

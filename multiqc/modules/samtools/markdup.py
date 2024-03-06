@@ -112,7 +112,7 @@ class MarkdupReportMixin:
         self.general_stats_addcols(data=val_by_metric_by_sample, headers=genstats_headers, namespace="markdup")
 
         self.add_section(
-            name="Samtools markdup: stats",
+            name="Markdup: stats",
             anchor="samtools-markdup",
             description=(
                 "Optical duplicates are due to either optical or clustering-based artifacts. "
@@ -163,7 +163,7 @@ class MarkdupReportMixin:
         # Bar plot
         pconfig = {
             "id": "samtools-markdup-fraction",
-            "title": "Samtools markdup: duplicate categories",
+            "title": "Markdup: duplicate categories",
             "ylab": "SAM Records",
         }
 
@@ -179,7 +179,7 @@ class MarkdupReportMixin:
         }
 
         self.add_section(
-            name="Samtools markdup: duplicate categories",
+            name="Markdup: duplicate categories",
             anchor="samtools-markdup-categories",
             description=(
                 "For more information about the duplicate categories, see the "

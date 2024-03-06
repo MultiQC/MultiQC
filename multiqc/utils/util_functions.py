@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """ MultiQC Utility functions, used in a variety of places. """
-
 
 import io
 import json

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """ Utility functions to handle software version reporting """
-
 
 import logging
 import os
