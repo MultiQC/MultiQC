@@ -179,7 +179,7 @@ class MarkdupReportMixin:
         }
 
         self.add_section(
-            name="Samtools markdup: duplicate categories",
+            name="Markdup: duplicate categories",
             anchor="samtools-markdup-categories",
             description=(
                 "For more information about the duplicate categories, see the "
