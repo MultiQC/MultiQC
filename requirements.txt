@@ -1,0 +1,18 @@
+click
+coloredlogs
+humanize
+importlib-metadata
+jinja2>=3.0.0
+kaleido  # for flat plot export
+markdown
+matplotlib>=2.1.1
+numpy
+packaging
+requests
+Pillow>=10  # to add a logo into flat plots
+plotly>=5.18
+pyyaml>=4
+pyaml-env
+rich>=10
+rich-click
+spectra>=0.0.10
