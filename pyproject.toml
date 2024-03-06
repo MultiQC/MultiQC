@@ -5,31 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "multiqc"
 version = "1.22dev"
-dependencies = [
-    "click",
-    "coloredlogs",
-    "humanize",
-    "importlib-metadata",
-    "jinja2>=3.0.0",
-    "kaleido",  # for flat plot export
-    "markdown",
-    "matplotlib>=2.1.1",
-    "numpy",
-    "packaging",
-    "requests",
-    "Pillow>=10",  # to add a logo into flat plots
-    "plotly>=5.18",
-    "pyyaml>=4",
-    "pyaml-env",
-    "rich>=10",
-    "rich-click",
-    "spectra>=0.0.10",
-]
 requires-python = ">=3.8"
 authors = [
     {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
     {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
 ]
+dynamic = ["dependencies", "optional-dependencies"]
 description = "Create aggregate bioinformatics analysis reports across many samples and tools"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -51,11 +32,9 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
-[project.optional-dependencies]
-dev = [
-    "pre-commit",
-    "ruff",
-]
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+optional-dependencies.dev = { file = ["requirements-dev.txt"] }
 
 [project.urls]
 Homepage = "https://multiqc.info"
