@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
 """
-Code to initilise the MultiQC logging
+Code to initialise the MultiQC logging
 """
 
 import logging
