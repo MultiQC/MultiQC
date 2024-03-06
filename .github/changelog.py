@@ -49,6 +49,7 @@ def main():
             entries_by_section[section][mod_info["name"]].append((message, pr_link))
         else:  # "### MultiQC updates"
             entries_by_section[section].append((message, pr_link))
+    run_cmd(f"cd {WORKSPACE_PATH} && git checkout main")
 
     dev_version = importlib_metadata.version("multiqc")  # 1.22.dev0
     new_version = dev_version.removesuffix(".dev0")
@@ -258,7 +259,8 @@ def modules_modified_by_commit(commit_sha) -> set[str]:
         #   - contents_re: '^(feature\tcount|\w+\t\d+)$'
         #   + contents_re: '^(feature\tcount|\w+.*\t\d+)$'
         #   num_lines: 1
-        run_cmd(f"cd {WORKSPACE_PATH} && git checkout main")
+        # Checkout code before commit
+        run_cmd(f"cd {WORKSPACE_PATH} && git checkout {commit_sha}^1")
         with (WORKSPACE_PATH / sp_path).open() as f:
             old_text = f.read()
         # Get contents of the file changed by the PR.
