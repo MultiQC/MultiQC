@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC submodule to parse output from Samtools idxstats """
 
 import logging
