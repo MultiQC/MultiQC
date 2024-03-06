@@ -1,5 +1,5 @@
-#!/usr/bin/env python
 """ MultiQC submodule to parse output from truvari bench """
+
 import json
 import logging
 import os

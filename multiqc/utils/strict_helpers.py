@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC lint helpers. Simple additional tests to run when
 --strict is specified (outside scope of normal functions) """
 
