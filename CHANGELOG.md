@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Specify dependency list in a `requirements.txt` file ([#2426](https://github.com/MultiQC/MultiQC/pull/2426))
 
 ### New modules
 
