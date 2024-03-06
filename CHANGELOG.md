@@ -12,6 +12,7 @@
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
 - **Samtools**: Add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
+- **Samtools**: remove superfluous samtools name ([#2424](https://github.com/MultiQC/MultiQC/pull/2424))
 
 ## [MultiQC v1.21](https://github.com/MultiQC/MultiQC/releases/tag/v1.21) - 2024-02-28
 
