@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC module to parse output files from miRTrace """
 
 
