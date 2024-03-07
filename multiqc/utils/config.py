@@ -1,8 +1,8 @@
-#!/usr/bin/env python
-
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
-from typing import List, Dict, Optional
+
+from pathlib import Path
+from typing import List, Dict, Optional, Union
 
 import inspect
 
@@ -25,15 +25,26 @@ logger = logging.getLogger("multiqc")
 # Get the MultiQC version
 version = importlib_metadata.version("multiqc")
 short_version = version
-script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
+script_path = str(Path(__file__).parent)  # dynamically used by util_functions.multiqc_dump_json()
+git_root = None
 try:
-    git_hash = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+    git_root = subprocess.check_output(
+        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
-    git_hash_short = git_hash[:7]
-    version = f"{version} ({git_hash_short})"
+    git_root = Path(git_root)
+    # .git
+    # multiqc/
+    #   utils/
+    #       config.py  <- __file__
+    expected_git_root = Path(script_path).parent.parent
+    if git_root == expected_git_root:
+        git_hash = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+        ).strip()
+        git_hash_short = git_hash[:7]
+        version = f"{version} ({git_hash_short})"
 except Exception:
     pass
 
@@ -71,7 +82,6 @@ output_fn_name: str
 data_dir_name: str
 plots_dir_name: str
 data_format: str
-module_tag: List[str]
 force: bool
 no_ansi: bool
 quiet: bool
@@ -80,6 +90,7 @@ prepend_dirs_depth: int
 prepend_dirs_sep: str
 file_list: bool
 require_logs: bool
+version_check_url: str
 
 make_data_dir: bool
 zip_data_dir: bool
@@ -93,6 +104,12 @@ plots_force_flat: bool
 plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
+lineplot_style: str
+lineplot_max_samples: int
+barplot_legend_on_bottom: bool
+violin_downsample_after: int
+violin_min_threshold_outliers: int
+violin_min_threshold_no_points: int
 collapse_tables: bool
 max_table_rows: int
 table_columns_visible: Dict
@@ -106,6 +123,7 @@ remove_sections: List
 section_comments: Dict
 lint: bool  # Deprecated since v1.17
 strict: bool
+development: bool
 custom_plot_config: Dict
 custom_table_header_config: Dict
 software_versions: Dict
@@ -135,6 +153,7 @@ disable_version_detection: int
 versions_table_group_header: str
 data_format_extensions: Dict[str, str]
 export_plot_formats: List[str]
+filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
@@ -142,7 +161,7 @@ fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List
-module_order: List
+module_order: List[Union[str, Dict]]
 
 # Populating the variables above from the default MultiQC config
 config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
@@ -451,15 +470,24 @@ def load_show_hide(sh_file):
         show_hide_regex.insert(0, False)
 
 
+# Keep track of all changes to the config
+nondefault_config = dict()
+
+
 def update(u):
+    update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 
 
-def update_dict(d, u):
+def update_dict(target, source, none_only=False):
     """Recursively updates nested dict d from nested dict u"""
-    for key, val in u.items():
+    for key, val in source.items():
         if isinstance(val, dict):
-            d[key] = update_dict(d.get(key, {}), val)
+            target[key] = update_dict(target.get(key, {}), val)
         else:
-            d[key] = u[key]
-    return d
+            if not none_only or target.get(key) is None:
+                if isinstance(val, list):
+                    target[key] = val.copy()
+                else:
+                    target[key] = val
+    return target

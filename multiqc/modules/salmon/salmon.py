@@ -6,6 +6,7 @@ import os
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
+from multiqc.utils import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -92,7 +93,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Mapped reads (millions)",
                     "min": 0,
                     "scale": "PuRd",
-                    "modify": lambda x: float(x) / 1000000,
+                    "modify": lambda x: float(x) * config.read_count_multiplier,
+                    "suffix": config.read_count_prefix,
                     "shared_key": "read_count",
                 },
                 "library_types": {

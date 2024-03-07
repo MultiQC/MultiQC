@@ -277,7 +277,11 @@ class MultiqcModule(BaseMultiqcModule):
             del self.headers["longranger_version"]
 
         ### Write the table
-        config_table = {"id": "longranger_table", "namespace": "longranger"}
+        config_table = {
+            "id": "longranger_table",
+            "namespace": "longranger",
+            "title": "Long Ranger",
+        }
         self.add_section(
             name="Run stats",
             anchor="longranger-run-stats",

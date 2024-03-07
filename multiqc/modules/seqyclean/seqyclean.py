@@ -159,9 +159,9 @@ class MultiqcModule(BaseMultiqcModule):
         """Given a list of keys, make them easier to read for plot labels"""
         cats = {}
         for k in keys:
-            nice_name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", k)  # CamelCase > Camel Case
-            nice_name = re.sub("([PS]E\d?)", "\g<1> ", nice_name)  # PE1Label > PE1 Label
-            nice_name = re.sub("W([A-Z])", "W \g<1>", nice_name)  # WContam > W Contam
+            nice_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", k)  # CamelCase > Camel Case
+            nice_name = re.sub(r"([PS]E\d?)", r"\g<1> ", nice_name)  # PE1Label > PE1 Label
+            nice_name = re.sub(r"W([A-Z])", r"W \g<1>", nice_name)  # WContam > W Contam
             nice_name = nice_name.replace("_", " ")  # tags_found > tags found
             nice_name = nice_name.title()  # Title Case
             nice_name = nice_name.replace("Pe", "PE").replace("Se", "SE")

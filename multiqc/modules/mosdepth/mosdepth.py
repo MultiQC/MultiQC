@@ -28,21 +28,21 @@ def read_config():
     if not isinstance(cfg["exclude_contigs"], list):
         cfg["exclude_contigs"] = []
 
-    cfg["xchr"] = cfg.get("xchr", None)
-    if not isinstance(cfg["xchr"], str):
-        cfg["xchr"] = None
+    xchr = cfg.get("xchr")
+    if xchr and isinstance(cfg["xchr"], str):
+        cfg["xchr"] = xchr
 
-    cfg["ychr"] = cfg.get("ychr", None)
-    if not isinstance(cfg["ychr"], str):
-        cfg["ychr"] = None
+    ychr = cfg.get("ychr")
+    if ychr and isinstance(cfg["ychr"], str):
+        cfg["ychr"] = ychr
 
     if cfg["include_contigs"]:
         log.debug(f"Trying to include these contigs in mosdepth: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
         log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
-    if cfg["xchr"]:
+    if cfg.get("xchr"):
         log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
-    if cfg["ychr"]:
+    if cfg.get("ychr"):
         log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
@@ -215,6 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "title": "Mosdepth: Cumulative coverage distribution",
                             "xlab": "Cumulative Coverage (X)",
                             "ylab": "% bases in genome/regions covered by at least X reads",
+                            "ymin": 0,
                             "ymax": 100,
                             "xmax": xmax,
                             "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
@@ -251,6 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "title": "Mosdepth: Coverage distribution",
                             "xlab": "Coverage (X)",
                             "ylab": "% bases in genome/regions covered by X reads",
+                            "ymin": 0,
                             "ymax": ymax * 1.05,
                             "yCeiling": 100,
                             "xmax": xmax,
@@ -268,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_data,
                         {
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-multi",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Region",
                             "ylab": "Average Coverage",
@@ -284,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = bargraph.plot(
                         perchrom_avg_data,
                         pconfig={
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-single",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
@@ -295,15 +297,15 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.add_section(
                     name="Average coverage per contig",
-                    anchor="mosdepth-coverage-per-contig-id",
+                    anchor="mosdepth-coverage-per-contig-section",
                     description="Average coverage per contig or chromosome",
                     plot=perchrom_plot,
                 )
 
             if xy_cov:
                 xy_keys = {
-                    "x": {"name": self.cfg.get("xchr", "Chromosome X")},
-                    "y": {"name": self.cfg.get("xchr", "Chromosome Y")},
+                    "x": {"name": self.cfg.get("xchr") or "Chromosome X"},
+                    "y": {"name": self.cfg.get("xchr") or "Chromosome Y"},
                 }
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
@@ -325,44 +327,46 @@ class MultiqcModule(BaseMultiqcModule):
                 self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
 
         # Add mosdepth summary to General Stats
-        genstats_headers = {
-            "mean_coverage": {
-                "title": "Mean Cov.",
-                "description": "Mean coverage",
-                "min": 0,
-                "scale": "BuPu",
+        genstats_headers.update(
+            {
+                "mean_coverage": {
+                    "title": "Mean Cov.",
+                    "description": "Mean coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                },
+                "min_coverage": {
+                    "title": "Min Cov.",
+                    "description": "Minimum coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "max_coverage": {
+                    "title": "Max Cov.",
+                    "description": "Maximum coverage",
+                    "min": 0,
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "coverage_bases": {
+                    "title": f"{config.base_count_prefix} Total Coverage Bases",
+                    "description": f"Total coverage of bases ({config.base_count_desc})",
+                    "min": 0,
+                    "shared_key": "base_count",
+                    "scale": "Greens",
+                    "hidden": True,
+                },
+                "length": {
+                    "title": "Genome length",
+                    "description": "Total length of the genome",
+                    "min": 0,
+                    "scale": "Greys",
+                    "format": "{:,d}",
+                    "hidden": True,
+                },
             },
-            "min_coverage": {
-                "title": "Min Cov.",
-                "description": "Minimum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "max_coverage": {
-                "title": "Max Cov.",
-                "description": "Maximum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "coverage_bases": {
-                "title": f"{config.base_count_prefix} Total Coverage Bases",
-                "description": f"Total coverage of bases ({config.base_count_desc})",
-                "min": 0,
-                "shared_key": "base_count",
-                "scale": "Greens",
-                "hidden": True,
-            },
-            "length": {
-                "title": "Genome length",
-                "description": "Total length of the genome",
-                "min": 0,
-                "scale": "Greys",
-                "format": "{:,d}",
-                "hidden": True,
-            },
-        }
+        )
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
@@ -512,7 +516,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
-                "title": f"&ge; {t}X",
+                "title": f"≥ {t}X",
                 "description": f"Fraction of genome with at least {t}X coverage",
                 "max": 100,
                 "min": 0,

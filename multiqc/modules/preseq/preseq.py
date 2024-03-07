@@ -106,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
         max_yx = max_y_cov if x_axis == "coverage" else max_y_cnt
 
         # Preparing axis and tooltip labels
-        x_lbl, y_tt_lbl, x_axis_name, y_lbl, x_tt_lbl, y_axis_name = _prepare_labels(
+        x_suffix, y_tt_lbl, x_axis_name, y_suffix, x_tt_lbl, y_axis_name = _prepare_labels(
             is_basepairs, max_y_cov, x_axis, y_axis
         )
 
@@ -121,8 +121,8 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 0,
             "ymin": 0,
             "tt_label": "<b>" + y_tt_lbl + "</b>: " + x_tt_lbl,
-            "xLabelFormat": x_lbl,
-            "yLabelFormat": y_lbl,
+            "xsuffix": x_suffix,
+            "ysuffix": y_suffix,
             "extra_series": [],
         }
         if not is_basepairs:
@@ -137,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
             real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis
         )
         pconfig["extra_series"].extend(
-            _real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_lbl, y_lbl, y_tt_lbl)
+            _real_counts_to_plot_series(data, real_vals_unq, real_vals_all, x_suffix, y_suffix, y_tt_lbl)
         )
         if real_vals_unq:
             description += "<p>Points show read count versus deduplicated read counts (externally calculated).</p>"
@@ -295,6 +295,8 @@ def _get_counts_in_1x(data_is_basepairs):
 
 
 def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
+    cov_suffix = "x"
+
     cov_lbl = None
     if x_axis == "coverage" or y_axis == "coverage":
         cov_precision = "2"
@@ -305,41 +307,43 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         cov_lbl = "{value:,." + cov_precision + "f}x"
 
     cnt_lbl = "{value:,.2f} " + config.read_count_prefix
+    cnt_suffix = config.read_count_prefix
     if config.read_count_multiplier == 1:
         cnt_lbl = "{value:,.0f}"
     if is_basepairs:
         cnt_lbl = "{value:,.2f} " + config.base_count_prefix
+        cnt_suffix = " " + config.base_count_prefix
         if config.base_count_multiplier == 1:
             cnt_lbl = "{value:,.0f}"
 
     if x_axis == "coverage":
-        x_lbl = cov_lbl
+        x_suffix = cov_suffix
         x_tt_lbl = cov_lbl.replace("value", "point.x")
         x_axis_name = "Total coverage (including duplicates)"
     else:
-        x_lbl = cnt_lbl
+        x_suffix = cnt_suffix
         x_tt_lbl = cnt_lbl.replace("value", "point.x")
         if is_basepairs:
-            x_tt_lbl += " base pairs (total)"
+            x_tt_lbl += " pairs (total)"
             x_axis_name = "Base pairs (total)"
         else:
             x_tt_lbl += " total molecules"
             x_axis_name = "Total molecules (including duplicates)"
 
     if y_axis == "coverage":
-        y_lbl = cov_lbl
+        y_suffix = cov_suffix
         y_tt_lbl = cov_lbl.replace("value", "point.y") + " depth"
         y_axis_name = "Unique coverage"
     else:
-        y_lbl = cnt_lbl
+        y_suffix = cnt_suffix
         y_tt_lbl = cnt_lbl.replace("value", "point.y")
         if is_basepairs:
-            y_tt_lbl += " base pairs (unique)"
+            y_tt_lbl += " pairs (unique)"
             y_axis_name = "Base pairs (unique reads)"
         else:
             y_tt_lbl += " unique molecules"
             y_axis_name = "Unique molecules"
-    return x_lbl, y_tt_lbl, x_axis_name, y_lbl, x_tt_lbl, y_axis_name
+    return x_suffix, y_tt_lbl, x_axis_name, y_suffix, x_tt_lbl, y_axis_name
 
 
 def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, x_axis, y_axis):
@@ -356,7 +360,7 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, y_tt_lbl):
+def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_suffix, y_tt_lbl):
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
 
     series = []
@@ -379,13 +383,13 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, 
                 point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
                 series.append(point)
                 y = y_tt_lbl.replace("point.y", "y").format(y=y)
-                log.debug(f"Real counts for {sn}: {x_lbl.format(value=x)}, ({y})")
+                log.debug(f"Real counts for {sn}: {x}{x_suffix}, ({y}{y_suffix})")
             else:
                 xs = sorted(data[sn].keys())
                 ys = sorted(data[sn].values())
                 if x > max(xs):
                     log.warning(
-                        f"Total reads for {sn} ({x_lbl.format(value=x)}) > max preseq value ({x_lbl.format(value=max(xs))}): "
+                        f"Total reads for {sn} ({x}{x_suffix}) > max preseq value ({max(xs)}{x_suffix}): "
                         "skipping this point"
                     )
                 else:
@@ -394,5 +398,5 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_lbl, y_lbl, 
                     point["name"] = sn + ": actual read count (externally calculated)"
                     series.append(point)
                     y = y_tt_lbl.replace("point.y", "y").format(y=interp_y)
-                    log.debug(f"Real count for {sn}: {x_lbl.format(value=x)} ({y})")
+                    log.debug(f"Real count for {sn}: {x}{{x_suffix}} ({y}{{y_suffix}})")
     return series

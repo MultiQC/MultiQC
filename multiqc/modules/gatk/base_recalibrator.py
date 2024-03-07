@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC submodule to parse output from GATK BaseRecalibrator """
 
 import logging
@@ -171,7 +169,9 @@ class BaseRecalibratorMixin:
             sample_data.append(reported_empirical)
 
             # Build data label configs for this data type
-            data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
+            data_labels.append(
+                {"name": f"{rt_type_name} Reported vs. Empirical Quality", "ylab": "Empirical quality score"}
+            )
 
         plot = scatter.plot(
             sample_data,

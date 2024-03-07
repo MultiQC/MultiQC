@@ -251,6 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "quast_table",
             "min": 0,
             "namespace": "QUAST",
+            "title": "QUAST: Assembly Statistics",
         }
         return table.plot(self.quast_data, headers, config)
 

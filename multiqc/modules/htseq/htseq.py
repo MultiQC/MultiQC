@@ -60,15 +60,23 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
         parsed_data = dict()
         assigned_counts = 0
-        for line in f["f"]:
-            s = line.split("\t")
-            if s[0] in keys:
-                parsed_data[s[0][2:]] = int(s[-1])
-            else:
-                try:
-                    assigned_counts += int(s[-1])
-                except (ValueError, IndexError):
-                    pass
+
+        # HtSeq search pattern is just two tab-separated columns, which is not very specific.
+        # Need to wrap in try-catch to catch potential weird files like parquet being matched.
+        try:
+            for line in f["f"]:
+                s = line.split("\t")
+                if s[0] in keys:
+                    parsed_data[s[0][2:]] = int(s[-1])
+                else:
+                    try:
+                        assigned_counts += int(s[-1])
+                    except (ValueError, IndexError):
+                        pass
+        except UnicodeDecodeError:
+            log.debug(f"Could not parse potential HTSeq Count file {f['fn']}")
+            return None
+
         if len(parsed_data) > 0:
             parsed_data["assigned"] = assigned_counts
             parsed_data["total_count"] = sum([v for v in parsed_data.values()])

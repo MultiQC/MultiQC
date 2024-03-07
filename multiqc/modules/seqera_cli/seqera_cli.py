@@ -111,9 +111,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Figure out the org/workspace and save as a separate field
         # Needed so that we can have it as a separate column in the table
         for d in data_by_run.values():
-            runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
-            if d["runUrl"]:
-                m = runUrl_re.search(d["runUrl"])
+            run_url_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
+            if d.get("runUrl"):
+                m = run_url_re.search(d["runUrl"])
                 if m:
                     org, workspace, run = m.groups()
                     d["org"] = org
@@ -159,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             # service-info.json
             "version",
         ]
-        d = {k: d.get(k) for k in keys}
+        d = {k: d.get(k) for k in keys if k in d}
 
         if not d.get("id") or not d.get("repository"):
             return None
@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
         # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
         # parse them with a library, take the difference "complete" - "start" to get the
         # wall time, and convert the wall time it to a human-readable format.
-        if "start" in d and "complete" in d:
+        if "start" in d and "complete" in d and d["complete"] is not None:
             start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
             complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
             wall_time = complete - start
@@ -205,17 +205,22 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         repositories = list(set(d.get("repository") for d in data_by_run.values()))
 
-        def format_runUrl(x):
+        def format_run_url(x):
             runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
             if x:
                 m = runUrl_re.search(x)
                 if m:
                     org, workspace, run = m.groups()
-                    return f'<a href="{x}" style="white-space: nowrap;" target="_blank">{run}</a>'
+                    return f'<a href="{x}" target="_blank">{run}</a>'
             return str(x)
 
         headers = {
-            "runUrl": {"title": "Run ID", "description": "Workflow run ID", "scale": False, "format": format_runUrl},
+            "runUrl": {
+                "title": "Run ID",
+                "description": "Workflow run ID",
+                "scale": False,
+                "format": format_run_url,
+            },
             "org_workspace": {
                 "title": "Workspace",
                 "description": "Organisation and workspace",
@@ -237,25 +242,25 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Start",
                 "description": "Start time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)).replace(" ", "&nbsp;"),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
             },
             "wallTime": {
                 "title": "Wall time",
                 "description": "Duration of the workflow",
-                "format": lambda x: str(dt.timedelta(seconds=x)).replace(" ", "&nbsp;"),
+                "format": lambda x: str(dt.timedelta(seconds=x)),
                 "scale": "BuPu",
             },
             "cpuTime": {
                 "title": "CPU time",
                 "description": "Total CPU time used by the workflow",
                 "modify": lambda x: x // 1000 / 60 / 60,  # hours
-                "suffix": "&nbsp;h",
+                "suffix": " h",
                 "scale": "Greys",
             },
             "cost": {
@@ -280,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "CPU efficiency",
                 "description": "Percentage of CPU time used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
+                "suffix": "%",
                 "max": 100,
                 "scale": "RdYlGn",
             },
@@ -288,7 +293,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Memory efficiency",
                 "description": "Percentage of memory used by the workflow",
                 "format": "{:,.2f}",
-                "suffix": "&nbsp;%",
+                "suffix": "%",
                 "max": 100,
                 "scale": "YlGn",
             },
@@ -348,10 +353,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: Wall time",
                     "ylab": "hours",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;h",
+                    "tt_suffix": " h",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),
@@ -367,10 +371,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: CPU time",
                     "ylab": "CPU hours",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;h",
+                    "tt_suffix": " h",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),
@@ -386,10 +389,9 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Seqera platform CLI: Estimated cost",
                     "ylab": "$",
                     "tt_decimals": 1,
-                    "tt_suffix": "&nbsp;$",
+                    "tt_suffix": " $",
                     "tt_percentages": False,
                     "cpswitch": False,
-                    "use_legend": False,
                     "hide_zero_cats": False,
                 },
             ),

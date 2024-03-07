@@ -1,7 +1,7 @@
-#!/usr/bin/env python
 """
 Helper functions to manipulate colours and colour scales
 """
+
 import hashlib
 
 # Default logger will be replaced by caller
@@ -396,15 +396,6 @@ class mqc_colour_scale(object):
                     try:
                         val_float = float(val_stripped)
                     except ValueError:
-                        if config.strict:
-                            msg = (
-                                f'{source}: Cannot interpret a value "{val}" as `float` '
-                                f'when getting color from a sequential scale "{self.name}".\nConsider changing '
-                                f'the scale, setting background colors directly with `"bgcols"`, setting '
-                                f'`"cond_formatting_rules"`, or disabling the scale with `"scale": False`.'
-                            )
-                            logger.error(msg)
-                            report.lint_errors.append(msg)
                         return ""
                     val_float = max(val_float, self.minval)
                     val_float = min(val_float, self.maxval)

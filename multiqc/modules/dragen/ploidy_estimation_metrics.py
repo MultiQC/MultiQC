@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 
 from multiqc.modules.base_module import BaseMultiqcModule
 
@@ -57,10 +56,11 @@ def parse_ploidy_estimation_metrics_file(f):
     PLOIDY ESTIMATION,,Ploidy estimation,X0
     """
 
-    data = defaultdict(dict)
-
+    data = {}
     for line in f["f"].splitlines():
         _, _, metric, stat = line.split(",")
+        if stat.strip() == "":
+            continue
         try:
             stat = float(stat)
         except ValueError:

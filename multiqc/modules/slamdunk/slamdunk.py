@@ -433,6 +433,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "slamdunk_filtering_table",
             "min": 0,
+            "title": "Slamdunk: Filtering statistics",
         }
 
         self.add_section(

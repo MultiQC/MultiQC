@@ -17,7 +17,7 @@ class RmdupReportMixin:
         for f in self.find_log_files("samtools/rmdup", filehandles=True):
             # Example below:
             # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
-            dups_regex = "\[bam_rmdups?e?_core\] (\d+) / (\d+) = (\d+\.\d+) in library '(.*)'"
+            dups_regex = r"\[bam_rmdups?e?_core\] (\d+) / (\d+) = (\d+\.\d+) in library '(.*)'"
             s_name = f["s_name"]
             for line in f["f"]:
                 match = re.search(dups_regex, line)
@@ -68,7 +68,7 @@ class RmdupReportMixin:
         # General Stats Table
         stats_headers = {
             "pct_dups": {
-                "title": "% Dups",
+                "title": "Duplicates",
                 "description": "Percent of duplicate alignments",
                 "min": 0,
                 "max": 100,
@@ -76,6 +76,6 @@ class RmdupReportMixin:
                 "scale": "OrRd",
             }
         }
-        self.general_stats_addcols(self.samtools_rmdup, stats_headers)
+        self.general_stats_addcols(self.samtools_rmdup, stats_headers, namespace="rmdup")
 
         return len(self.samtools_rmdup)

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """ Super Special-Case MultiQC module to produce report section on software versions """
-
 
 import logging
 from textwrap import dedent
@@ -53,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         html = [
             dedent(
                 f"""\
-                <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="#{table_id}">
+                <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{table_id}">
                     <span class="glyphicon glyphicon-copy"></span> Copy table
                 </button>
                 <table class="table mqc_versions_table" id="{table_id}">

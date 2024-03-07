@@ -44,7 +44,7 @@ pr_title = pr_title.removesuffix(f" (#{pr_number})")
 
 changelog_path = workspace_path / "CHANGELOG.md"
 
-if any(
+no_changelog = any(
     line in pr_title.lower()
     for line in [
         "skip changelog",
@@ -53,9 +53,7 @@ if any(
         "no change log",
         "bump version",
     ]
-):
-    print("Skipping changelog update")
-    sys.exit(0)
+)
 
 
 def _run_cmd(cmd):
@@ -175,6 +173,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
     altered_files = _files_altered_by_pr(pr_number, {"modified"})
 
     # First, special case for search patterns.
+    keys_added_in_search_patterns = set()
     keys_modified_in_search_patterns = set()
     sp_paths = [f for f in altered_files if f.name == "search_patterns.yaml"]
     if sp_paths:
@@ -197,7 +196,7 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
             for new_skey in new_data:
                 # Added module?
                 if new_skey not in old_data:
-                    keys_modified_in_search_patterns.add(new_skey)
+                    keys_added_in_search_patterns.add(new_skey)
             for old_skey in old_data:
                 # Removed module?
                 if old_skey not in new_data:
@@ -213,8 +212,8 @@ def _modules_modified_by_pr(pr_number) -> set[str]:
 
     # Now adding module-specific files
     for path in altered_files:
-        if str(path).startswith(f"{MODULES_DIR}/"):
-            mod_name = path.parent.name
+        if path.is_relative_to(MODULES_DIR):
+            mod_name = path.relative_to(MODULES_DIR).parts[0]
             mod_names.add(mod_name)
 
     return mod_names
@@ -225,64 +224,68 @@ def _determine_change_type(pr_title, pr_number) -> tuple[str, dict]:
     Determine the type of the PR: new module, module update, or core update.
     Returns a tuple of the section name and the module info.
     """
+    added_modules = _modules_added_by_pr(pr_number)
+    modified_modules = _modules_modified_by_pr(pr_number)
 
+    # Sanity check PR name suggesting a newly added module
     if pr_title.lower().capitalize().startswith("New module: "):
-        added_modules = _modules_added_by_pr(pr_number)
         if len(added_modules) == 0:
             raise RuntimeError(
                 f"Could not find a new folder in '{MODULES_DIR}' with expected python files for the new module"
             )
         if len(added_modules) > 1:
             RuntimeError(f"Found multiple added modules: {added_modules}")
-        else:
-            mod_info = _find_module_info(added_modules[0])
-            proper_pr_title = f"New module: {mod_info['name']}"
-            if pr_title != proper_pr_title:
-                try:
-                    _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
-                except (RuntimeError, subprocess.CalledProcessError) as e:
-                    print(
-                        f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
-                        file=sys.stderr,
-                    )
-            return "### New modules", mod_info
 
-    # Check what modules were changed by the PR, and if the title starts with one
-    # of the names of the changed modules, assume it's a module update.
-    modified_modules = _modules_modified_by_pr(pr_number)
-    if len(modified_modules) == 1:
+    if len(added_modules) == 1 and len(modified_modules) == 0:
+        mod_info = _find_module_info(added_modules[0])
+        proper_pr_title = f"New module: {mod_info['name']}"
+        if pr_title != proper_pr_title:
+            try:
+                _run_cmd(f"cd {workspace_path} && gh pr edit --title '{proper_pr_title}'")
+            except (RuntimeError, subprocess.CalledProcessError) as e:
+                print(
+                    f"Error executing command: {e}. Please alter the title manually: '{proper_pr_title}'",
+                    file=sys.stderr,
+                )
+        return "### New modules", mod_info
+
+    elif len(modified_modules) == 1 and len(added_modules) == 0:
         mod_info = _find_module_info(modified_modules.pop())
-        if pr_title.lower().startswith(f"{mod_info['name'].lower()}: "):
-            return "### Module updates", mod_info
+        return "### Module updates", mod_info
 
     section = "### MultiQC updates"  # Default section for non-module (core) updates.
     return section, {}
 
 
-# Determine the type of the PR: new module, module update, or core update.
-section, mod = _determine_change_type(pr_title, pr_number)
+pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
 
 # Prepare the change log entry.
 new_lines = []
-pr_link = f"([#{pr_number}]({REPO_URL}/pull/{pr_number}))"
-if comment := comment.removeprefix("@multiqc-bot changelog").strip():
-    pr_title = comment
-else:
-    if section == "### New modules":
+section = None
+if not no_changelog:
+    # Determine the type of the PR: new module, module update, or core update.
+    section, mod = _determine_change_type(pr_title, pr_number)
+
+    if comment := comment.removeprefix("@multiqc-bot changelog").strip():
+        pr_title = comment
+    else:
+        if section == "### New modules":
+            new_lines = [
+                f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
+                f"  - {mod['name']} {mod['info']}\n",
+            ]
+        elif section == "### Module updates":
+            assert mod is not None
+            descr = pr_title
+            if ":" in descr:
+                descr = descr.split(":", maxsplit=1)[1].strip()
+            new_lines = [
+                f"- **{mod['name']}**: {descr} {pr_link}\n",
+            ]
+    if not new_lines:
         new_lines = [
-            f"- [**{mod['name']}**]({mod['url']}) {pr_link}\n",
-            f"  - {mod['name']} {mod['info']}\n",
+            f"- {pr_title} {pr_link}\n",
         ]
-    elif section == "### Module updates":
-        assert mod is not None
-        descr = pr_title.split(":", maxsplit=1)[1].strip()
-        new_lines = [
-            f"- **{mod['name']}**: {descr} {pr_link}\n",
-        ]
-if not new_lines:
-    new_lines = [
-        f"- {pr_title} {pr_link}\n",
-    ]
 
 # Finally, updating the changelog.
 # Read the current changelog lines. We will print them back as is, except for one new
@@ -319,7 +322,7 @@ def _skip_existing_entry_for_this_pr(line, same_section=True):
 
 
 # Find the next line in the change log that matches the pattern "## MultiQC v.*dev"
-# If it doesn't exist, exist with code 1 (let's assume that a new section is added
+# If it doesn't exist, exit with code 1 (let's assume that a new section is added
 # manually or by CI when a release is pushed).
 # Else, find the next line that matches the `section` variable, and insert a new line
 # under it (we also assume that section headers are added already).
@@ -330,6 +333,10 @@ while orig_lines:
 
     # If the line already contains a link to the PR, don't add it again.
     line = _skip_existing_entry_for_this_pr(line, same_section=False)
+
+    if no_changelog:  # do not add anything, and remove if already added
+        updated_lines.append(line)
+        continue
 
     if line.startswith("## "):  # Version header, e.g. "## MultiQC v1.10dev"
         updated_lines.append(line)

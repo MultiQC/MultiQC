@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 multiqc.multiqc
 ~~~~~~~~~~~~~~~~~~~~~
@@ -7,20 +5,23 @@ The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
+
 import base64
 import errno
 import io
 import os
+import platform
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+import json
 import traceback
-from urllib.request import urlopen
 
 import jinja2
+import requests
 import rich
 import rich_click as click
 from packaging import version
@@ -29,6 +30,7 @@ from rich.syntax import Syntax
 from .modules.base_module import ModuleNoSamplesFound
 from .plots import table
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
+from .utils.util_functions import strtobool
 
 # Set up logging
 start_execution_time = time.time()
@@ -66,8 +68,6 @@ click.rich_click.OPTION_GROUPS = {
             "options": [
                 "--module",
                 "--exclude",
-                "--tag",
-                "--view-tags",
             ],
         },
         {
@@ -112,6 +112,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--verbose",
                 "--quiet",
                 "--strict",
+                "--development",
                 "--require-logs",
                 "--profile-runtime",
                 "--no-megaqc-upload",
@@ -155,15 +156,6 @@ click.rich_click.OPTION_GROUPS = {
 @click.option("-o", "--outdir", type=str, help="Create report in the specified output directory.")
 @click.option(
     "-t", "--template", type=click.Choice(config.avail_templates), metavar=None, help="Report template to use."
-)
-@click.option("--tag", "module_tag", type=str, multiple=True, help="Use only modules which tagged with this keyword")
-@click.option(
-    "--view-tags",
-    is_flag=True,
-    callback=util_functions.view_all_tags,
-    expose_value=False,
-    is_eager=True,
-    help="View the available tags and which modules they load",
 )
 @click.option("-x", "--ignore", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore analysis files")
 @click.option(
@@ -248,6 +240,13 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
 @click.option(
+    "--development",
+    "--dev",
+    "development",
+    is_flag=True,
+    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+)
+@click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
@@ -311,7 +310,6 @@ def run(
     title=None,
     report_comment=None,
     template=None,
-    module_tag=(),
     module=(),
     require_logs=False,
     exclude=(),
@@ -336,6 +334,7 @@ def run(
     plots_interactive=False,
     strict=False,
     lint=False,  # Deprecated since v1.17
+    development=False,
     make_pdf=False,
     no_megaqc_upload=False,
     config_file=(),
@@ -406,14 +405,43 @@ def run(
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is not True:
         try:
-            response = urlopen(f"http://multiqc.info/version.php?v={config.short_version}", timeout=5)
-            remote_version = response.read().decode("utf-8").strip()
-            if version.parse(re.sub(r"[^0-9.]", "", remote_version)) > version.parse(
-                re.sub(r"[^0-9.]", "", config.short_version)
-            ):
-                logger.warning(f"MultiQC Version {remote_version} now available!")
+            # Fetch the version info from the API
+            meta = {
+                "version_multiqc": config.short_version,
+                "version_python": platform.python_version(),
+                "operating_system": platform.system(),
+                "is_docker": os.path.exists("/.dockerenv"),
+                "is_singularity": os.path.exists("/.singularity.d"),
+                "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
+                "is_ci": strtobool(os.getenv("CI", False)),
+            }
+            wait_seconds = 2
+            try:
+                r = requests.get(config.version_check_url, params=meta, timeout=wait_seconds)
+            except requests.exceptions.Timeout as e:
+                logger.debug(
+                    f"Timed out after waiting for {wait_seconds}s for multiqc.info to check latest version: {e}"
+                )
+            except requests.exceptions.RequestException as e:
+                logger.debug(f"Could not connect to multiqc.info for version check: {e}")
             else:
-                logger.debug(f"Latest MultiQC version is {remote_version}")
+                release_info = r.json()
+                # Broadcast log messages if found
+                for msg in release_info.get("broadcast_messages", []):
+                    if msg.get("message"):
+                        level = msg.get("level")
+                        if level not in ["debug", "info", "warning", "error", "critical"]:
+                            level = "info"
+                        getattr(logger, level)(msg["message"])
+                # Available update log if newer
+                remove_version = version.parse(re.sub(r"[^0-9.]", "", release_info["latest_release"]["version"]))
+                this_version = version.parse(re.sub(r"[^0-9.]", "", config.short_version))
+                if remove_version > this_version:
+                    logger.warning(f"MultiQC Version {release_info['latest_release']['version']} now available!")
+                logger.debug(
+                    f"Latest MultiQC version is {release_info['latest_release']['version']}, "
+                    f"released {release_info['latest_release']['release_date']}"
+                )
         except Exception as e:
             logger.debug(f"Could not connect to multiqc.info for version check: {e}")
 
@@ -434,7 +462,7 @@ def run(
         analysis_dir = [analysis_dir]
     config.analysis_dir = analysis_dir
     if outdir is not None:
-        config.output_dir = outdir
+        config.output_dir = os.path.realpath(outdir)
     if use_filename_as_sample_name:
         config.use_filename_as_sample_name = True
         logger.info("Using log filenames for sample names")
@@ -465,12 +493,15 @@ def run(
             "update your command line and/or configs."
         )
         strict = True
-    if os.environ.get("MULTIQC_STRICT"):
-        strict = True
     if strict:
         config.strict = True
         config.lint = True  # Deprecated since v1.17
         strict_helpers.run_tests()
+    if development:
+        config.development = True
+        config.export_plots = True
+        if "png" not in config.export_plot_formats:
+            config.export_plot_formats.append("png")
     if make_pdf:
         config.template = "simple"
     if no_megaqc_upload:
@@ -485,8 +516,6 @@ def run(
     if sample_names:
         config.load_sample_names(sample_names)
     config.load_show_hide(sample_filters)
-    if module_tag is not None:
-        config.module_tag = module_tag
     if len(module) > 0:
         config.run_modules = module
     if len(exclude) > 0:
@@ -509,7 +538,6 @@ def run(
     del title
     del report_comment
     del template
-    del module_tag
     del module
     del require_logs
     del exclude
@@ -546,7 +574,10 @@ def run(
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug(f"Template    : {config.template}")
     if config.strict:
-        logger.info("--strict specified. Being strict with validation.")
+        logger.info(
+            "Strict mode specified. Will exit early if a module or a template crashed, and will "
+            "give warnings if anything is not optimally configured in a module or a template."
+        )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 
@@ -578,16 +609,19 @@ def run(
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
     else:
-        if config.title is not None and filename is None:
+        if filename is not None and filename.endswith(".html"):
+            filename = filename[:-5]
+        if filename is None and config.title is not None:
             filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
             filename += "_multiqc_report"
         if filename is not None:
-            if filename.endswith(".html"):
-                filename = filename[:-5]
-            config.output_fn_name = filename
-            config.data_dir_name = f"{filename}_data"
-            config.plots_dir_name = f"{filename}_plots"
-        if not config.output_fn_name.endswith(".html") and config.make_report:
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
             config.output_fn_name = f"{config.output_fn_name}.html"
 
     # Print some status updates
@@ -608,23 +642,6 @@ def run(
                 errmsg = f"LINT: Module '{m}' not found in config.module_order"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
-            else:
-                for mo in config.module_order:
-                    if m != "custom_content" and m in mo.keys() and "module_tag" not in mo[m]:
-                        errmsg = f"LINT: Module '{m}' in config.module_order did not have 'module_tag' config"
-                        logger.error(errmsg)
-                        report.lint_errors.append(errmsg)
-
-    # Get the available tags to decide which modules to run.
-    modules_from_tags = set()
-    if config.module_tag is not None:
-        tags = config.module_tag
-        for m in config.module_order:
-            module_name = list(m.keys())[0]  # only one name in each dict
-            for tag in tags:
-                for t in m[module_name].get("module_tag", []):
-                    if tag.lower() == t.lower():
-                        modules_from_tags.add(module_name)
 
     # Get the list of modules we want to run, in the order that we want them
     run_modules = [m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()]
@@ -638,12 +655,17 @@ def run(
         ]
     )
 
+    # Check the module names that were requested to run explicitly
     if len(getattr(config, "run_modules", {})) > 0:
+        unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
+        if unknown_modules:
+            logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
+        if len(unknown_modules) == len(config.run_modules):
+            logger.critical("No available modules to run!")
+            return {"report": report, "config": config, "sys_exit_code": 1}
+        config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
-    elif modules_from_tags:
-        run_modules = [m for m in run_modules if list(m.keys())[0] in modules_from_tags]
-        logger.info(f"Only using modules with '{', '.join(config.module_tag)}' tag")
     if len(getattr(config, "exclude_modules", {})) > 0:
         logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
         if "general_stats" in config.exclude_modules:
@@ -935,8 +957,15 @@ def run(
                 f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
             )
 
+    all_hidden = True
+    for headers in report.general_stats_headers:
+        for h in headers.values():
+            if not h.get("hidden", False):
+                all_hidden = False
+                break
+
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0 and not config.skip_generalstats:
+    if len(report.general_stats_data) > 0 and not config.skip_generalstats and not all_hidden:
         pconfig = {
             "id": "general_stats_table",
             "table_title": "General Statistics",
@@ -964,12 +993,16 @@ def run(
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
-    if (config.data_dump_file or config.megaqc_url) and config.megaqc_upload:
-        multiqc_json_dump = megaqc.multiqc_dump_json(report)
+    if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
+        multiqc_json_dump = util_functions.multiqc_dump_json(report)
         if config.data_dump_file:
             util_functions.write_data_file(multiqc_json_dump, "multiqc_data", False, "json")
         if config.megaqc_url:
             megaqc.multiqc_api_post(multiqc_json_dump)
+
+    if config.development:
+        with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
+            f.write(json.dumps(report.plot_data))
 
     # Make the final report path & data directories
     if filename != "stdout":
@@ -977,6 +1010,8 @@ def run(
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        # del config.data_dir_name
+        # del config.plots_dir_name
         deleted_report = False
         deleted_data_dir = False
         deleted_export_plots = False
@@ -1095,6 +1130,7 @@ def run(
     # Generate report if required
     if config.make_report:
         # Load in parent template files first if a child theme
+        parent_template = None
         try:
             parent_template = config.avail_templates[template_mod.template_parent].load()
         except AttributeError:
@@ -1111,11 +1147,35 @@ def run(
             try:
                 if fdir is None:
                     fdir = ""
+                path = os.path.join(fdir, name)
+
+                if config.development:
+                    if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+                    elif parent_template and os.path.exists(
+                        dev_path := os.path.join(parent_template.template_dir, name)
+                    ):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+
+                    if re.match(r".*\.min\.(js|css)$", name):
+                        unminimized_name = re.sub(r"\.min\.", ".", name)
+                        if os.path.exists(os.path.join(fdir, unminimized_name)):
+                            name = unminimized_name
+
+                    if name.endswith(".js"):
+                        return f'</script><script type="text/javascript" src="{name}">'
+                    if name.endswith(".css"):
+                        return f'</style><link rel="stylesheet" href="{name}">'
+
                 if b64:
-                    with io.open(os.path.join(fdir, name), "rb") as f:
+                    with io.open(path, "rb") as f:
                         return base64.b64encode(f.read()).decode("utf-8")
                 else:
-                    with io.open(os.path.join(fdir, name), "r", encoding="utf-8") as f:
+                    with io.open(path, "r", encoding="utf-8") as f:
                         return f.read()
             except (OSError, IOError) as e:
                 logger.error(f"Could not include file '{name}': {e}")
@@ -1124,7 +1184,7 @@ def run(
         try:
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
             env.globals["include_file"] = include_file
-            j_template = env.get_template(template_mod.base_fn)
+            j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
         except:  # noqa: E722
             raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
 
@@ -1145,7 +1205,7 @@ def run(
                 for f in template_mod.copy_files:
                     fn = os.path.join(tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
-                    shutil.copytree(fn, dest_dir)
+                    shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
             except AttributeError:
                 pass  # No files to copy
 

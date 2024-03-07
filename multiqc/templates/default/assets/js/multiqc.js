@@ -8,7 +8,7 @@ function notEmptyObj(obj) {
     if (obj === undefined) {
       return false;
     }
-    if (obj.length == 0) {
+    if (obj.length === 0) {
       return false;
     }
   } catch (e) {

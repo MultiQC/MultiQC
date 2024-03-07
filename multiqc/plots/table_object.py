@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+""" MultiQC datatable class, used by tables and violin plots """
 
-""" MultiQC datatable class, used by tables and beeswarm plots """
+import math
 
 import logging
 import random
 import re
 import string
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional, Union
 
 from multiqc.utils import config, report
 
@@ -18,24 +18,22 @@ class DataTable:
     """Data table class. Prepares and holds data and configuration
     for either a table or a beeswarm plot."""
 
-    def __init__(self, data, headers=None, pconfig=None):
+    def __init__(
+        self,
+        data: Union[List, Dict],
+        headers: Optional[Union[List, Dict]] = None,
+        pconfig: Optional[Dict] = None,
+    ):
         """Prepare data for use in a table or plot"""
+        self.headers_in_order = defaultdict(list)
+        self.data: Dict = {}
+        self.headers: Optional[List] = None
+        self.pconfig: Optional[Dict] = None
+
         if headers is None:
             headers = []
         if pconfig is None:
             pconfig = {}
-
-        # Allow user to overwrite any given config for this plot
-        if pconfig.get("id") and pconfig["id"] in config.custom_plot_config:
-            for k, v in config.custom_plot_config[pconfig["id"]].items():
-                pconfig[k] = v
-
-        if not pconfig.get("id"):
-            if config.strict:
-                errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-            pconfig["id"] = report.save_htmlid(f"table_{''.join(random.sample(string.ascii_lowercase, 4))}")
 
         # Given one dataset - turn it into a list
         if not isinstance(data, list):
@@ -43,16 +41,38 @@ class DataTable:
         if not isinstance(headers, list):
             headers = [headers]
 
-        sectcols = [
-            "55,126,184",
-            "77,175,74",
-            "152,78,163",
-            "255,127,0",
-            "228,26,28",
-            "255,255,51",
-            "166,86,40",
-            "247,129,191",
-            "153,153,153",
+        if pconfig and "id" in pconfig:
+            self.id = pconfig.pop("id")
+        else:
+            if config.strict:
+                errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
+            self.id = report.save_htmlid(f"table-{''.join(random.sample(string.ascii_lowercase, 4))}")
+
+        self._build(data, headers, pconfig)
+
+    def _build(
+        self,
+        data: List,
+        headers: List,
+        pconfig: Dict,
+    ):
+        # Allow user to overwrite any given config for this plot
+        if self.id in config.custom_plot_config:
+            for k, v in config.custom_plot_config[self.id].items():
+                pconfig[k] = v
+
+        SECTION_COLORS = [
+            "55,126,184",  # Blue
+            "77,175,74",  # Green
+            "152,78,163",  # Purple
+            "255,127,0",  # Orange
+            "228,26,28",  # Red
+            "179,179,50",  # Olive
+            "166,86,40",  # Brown
+            "247,129,191",  # Pink
+            "153,153,153",  # Grey
         ]
 
         # Go through each table section
@@ -122,20 +142,31 @@ class DataTable:
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[idx][k].get("shared_key", None)
+                shared_key_suffix = None
                 if shared_key in ["read_count", "long_read_count", "base_count"]:
-                    if shared_key == "read_count":
+                    if shared_key == "read_count" and config.read_count_prefix:
                         multiplier = config.read_count_multiplier
-                    elif shared_key == "long_read_count":
+                        shared_key_suffix = config.read_count_prefix
+                    elif shared_key == "long_read_count" and config.long_read_count_prefix:
                         multiplier = config.long_read_count_multiplier
-                    elif shared_key == "base_count":
+                        shared_key_suffix = config.long_read_count_prefix
+                    elif shared_key == "base_count" and config.base_count_prefix:
                         multiplier = config.base_count_multiplier
+                        shared_key_suffix = config.base_count_prefix
+                    else:
+                        multiplier = 1
                     if headers[idx][k].get("modify") is None:
                         headers[idx][k]["modify"] = lambda x: x * multiplier
                     if headers[idx][k].get("min") is None:
                         headers[idx][k]["min"] = 0
                     if headers[idx][k].get("format") is None:
                         if multiplier == 1:
-                            headers[idx][k]["format"] = "{:,.0f}"
+                            headers[idx][k]["format"] = "{:,d}"
+                suffix = headers[idx][k].get("suffix")
+                if suffix is None and shared_key_suffix is not None:
+                    suffix = " " + shared_key_suffix
+                if suffix is not None:
+                    headers[idx][k]["suffix"] = suffix
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))
@@ -156,14 +187,14 @@ class DataTable:
 
                 if headers[idx][k]["colour"] is None:
                     cidx = idx
-                    while cidx >= len(sectcols):
-                        cidx -= len(sectcols)
-                    headers[idx][k]["colour"] = sectcols[cidx]
+                    while cidx >= len(SECTION_COLORS):
+                        cidx -= len(SECTION_COLORS)
+                    headers[idx][k]["colour"] = SECTION_COLORS[cidx]
 
                 # Overwrite (2nd time) any given config with table-level user config
                 # This is to override column-specific values set by modules
-                if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-                    for cpc_k, cpc_v in config.custom_plot_config[pconfig["id"]].items():
+                if self.id in config.custom_plot_config:
+                    for cpc_k, cpc_v in config.custom_plot_config[self.id].items():
                         headers[idx][k][cpc_k] = cpc_v
 
                 # Overwrite "name" if set in user config
@@ -171,7 +202,7 @@ class DataTable:
                 for key, val in config.table_columns_name.items():
                     key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()] and isinstance(val, dict):
+                    if key in [self.id.lower(), headers[idx][k]["namespace"].lower()] and isinstance(val, dict):
                         # Assume a dict of specific column IDs
                         for key2, new_title in val.items():
                             key2 = key2.lower()
@@ -187,7 +218,7 @@ class DataTable:
                 for key, val in config.table_columns_visible.items():
                     key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key in [pconfig["id"].lower(), headers[idx][k]["namespace"].lower()]:
+                    if key in [self.id.lower(), headers[idx][k]["namespace"].lower()]:
                         # First - if config value is a bool, set all module columns to that value
                         if isinstance(val, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
@@ -213,14 +244,12 @@ class DataTable:
                     )
                 except (KeyError, ValueError):
                     try:
-                        headers[idx][k]["placement"] = float(config.table_columns_placement[pconfig["id"]][k])
+                        headers[idx][k]["placement"] = float(config.table_columns_placement[self.id][k])
                     except (KeyError, ValueError):
                         pass
 
                 # Overwrite any header config if set in config
-                for custom_k, custom_v in (
-                    config.custom_table_header_config.get(pconfig.get("id"), {}).get(k, {}).items()
-                ):
+                for custom_k, custom_v in config.custom_table_header_config.get(self.id, {}).get(k, {}).items():
                     headers[idx][k][custom_k] = custom_v
 
                 # Work out max and min value if not given
@@ -245,10 +274,11 @@ class DataTable:
                             val = float(samp[k])
                             if callable(headers[idx][k]["modify"]):
                                 val = float(headers[idx][k]["modify"](val))
-                            if setdmax:
-                                headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
-                            if setdmin:
-                                headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
+                            if math.isfinite(val) and not math.isnan(val):
+                                if setdmax:
+                                    headers[idx][k]["dmax"] = max(headers[idx][k]["dmax"], val)
+                                if setdmin:
+                                    headers[idx][k]["dmin"] = min(headers[idx][k]["dmin"], val)
                         except (ValueError, TypeError):
                             val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
@@ -280,7 +310,6 @@ class DataTable:
         # So the final ordering is:
         #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
-        self.headers_in_order = defaultdict(list)
         for idx, hs in enumerate(headers):
             for k in hs.keys():
                 sk = headers[idx][k]["shared_key"]

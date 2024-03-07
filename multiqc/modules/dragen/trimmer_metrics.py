@@ -45,6 +45,7 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
                 pconfig={
                     "id": "dragen-trimmer-metrics-table",
                     "namespace": "Trimmer Metrics",
+                    "title": "DRAGEN: Trimmer Metrics",
                 },
             ),
         )

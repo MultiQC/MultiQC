@@ -37,7 +37,8 @@ dist/
 ehthumbs.db
 Thumbs.db
 
-.idea/
+.idea
+.vscode
 runTest.sh
 
 # Prevent direnv from cluttering the repo
@@ -51,3 +52,6 @@ venv/
 test_data/
 website/
 usage/
+
+multiqc/templates/plotly/assets/js/packages/plotly-2.27.0.js
+default_multiqc_report*

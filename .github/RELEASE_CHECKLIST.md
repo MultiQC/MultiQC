@@ -2,10 +2,10 @@
 
 This checklist is for my own reference, as I forget the steps every time.
 
-1. Check that everything is up to date and ready to go
+1. Check that everything is up-to-date and ready to go
 2. Figure out what this release should be called
-3. Update version numbers in code: `setup.py`, `CHANGELOG.md`
-4. Link the changelog subheading to the as yet non-existant release URL. Add date.
+3. Update version numbers in code: `pyproject.toml`, `CHANGELOG.md`
+4. Link the changelog subheading to the as yet non-existent release URL. Add date.
 5. Install the package again in `install` mode:
 
    ```bash
@@ -59,11 +59,12 @@ This checklist is for my own reference, as I forget the steps every time.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
 13. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
 14. Commit and push version bump
-15. Look for the automated release PR on `bioconda` and approve / merge
+15. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
+16. Look for the automated release PR on `bioconda` and approve / merge
     - IMPORTANT: If any new dependencies added, need a manual PR to add them.
     - Do this quickly, as other people merge the automated PRs really quickly
-16. Tweet that new version is released
-17. Continue making more awesome :metal:
+17. Tweet that new version is released
+18. Continue making more awesome :metal:
 
 ## Appendix
 

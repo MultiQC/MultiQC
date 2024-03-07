@@ -79,7 +79,7 @@ report_header_info:
 
 Then this will be displayed at the top of reports:
 
-![report project info](../../images/report_proj_info.png)
+![report project info](../../../docs/images/report_proj_info.png)
 
 Note that you can also specify a path to a config file using `-c`.
 
@@ -723,11 +723,11 @@ The first key is the table ID, the second is the header ID for the column you wa
 :::tip
 The easiest way to find these IDs is by clicking _Configure Columns_ above the table you want to customise.
 
-![Table: configure columns button](../../images/table_configure_columns.png)
+![Table: configure columns button](../../../docs/images/table_configure_columns.png)
 
 The table ID is shown at the top of the modal window. The _ID_ column shows the column (header) ID.
 
-![Table: configure columns button](../../images/table_header_ids.png)
+![Table: configure columns button](../../../docs/images/table_header_ids.png)
 :::
 
 ### Hiding columns
@@ -965,6 +965,19 @@ thousandsSep_format: ""
 
 This formatting currently only applies to the interactive charts. It may be extended
 to apply elsewhere in the future (submit a new issue if you spot somewhere where you'd like it).
+
+## Bar plot legend positioning
+
+By default, the legend for bar plots is placed on the right hand side of the plot.
+If you'd like to move it to the bottom, you can use the following config option:
+
+```yaml
+barplot_legend_on_bottom: true
+```
+
+This is not recommended to set up globally though, as it would look well only
+for medium-sized plot, but would start overlapping with the tick labels on shorter
+plots, or create a large gap on taller plots.
 
 ## Troubleshooting
 

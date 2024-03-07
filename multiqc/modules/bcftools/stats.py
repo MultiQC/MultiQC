@@ -40,7 +40,7 @@ class StatsReportMixin:
         self.bcftools_stats_vqc_transi = dict()
         self.bcftools_stats_vqc_transv = dict()
         self.bcftools_stats_vqc_indels = dict()
-        depth_data = dict()
+        self.bcftools_stats_depth_data = dict()
         for f in self.find_log_files("bcftools/stats"):
             s_names = list()
             for line in f["f"].splitlines():
@@ -83,7 +83,7 @@ class StatsReportMixin:
                     self.bcftools_stats_vqc_transi[s_name] = dict()
                     self.bcftools_stats_vqc_transv[s_name] = dict()
                     self.bcftools_stats_vqc_indels[s_name] = dict()
-                    depth_data[s_name] = {}
+                    self.bcftools_stats_depth_data[s_name] = {}
                     self.bcftools_stats_indels[s_name][0] = None  # Avoid joining line across missing 0
 
                 # Parse key stats
@@ -91,7 +91,7 @@ class StatsReportMixin:
                     s_name = s_names[int(s[1])]
                     field = s[2].strip()[:-1]
                     field = field.replace(" ", "_")
-                    value = float(s[3].strip())
+                    value = int(s[3].strip())
                     self.bcftools_stats[s_name][field] = value
 
                 # Parse transitions/transversions stats
@@ -99,8 +99,11 @@ class StatsReportMixin:
                     s_name = s_names[int(s[1])]
                     fields = ["ts", "tv", "tstv", "ts_1st_ALT", "tv_1st_ALT", "tstv_1st_ALT"]
                     for i, field in enumerate(fields):
-                        value = float(s[i + 2].strip())
-
+                        value = s[i + 2].strip()
+                        if "tstv" in field:
+                            value = float(value)
+                        else:
+                            value = int(value)
                         self.bcftools_stats[s_name][field] = value
 
                 # Parse substitution types
@@ -113,7 +116,7 @@ class StatsReportMixin:
                         change = ">".join(rc[n] for n in change.split(">"))
 
                     field = f"substitution_type_{change}"
-                    value = float(s[3].strip())
+                    value = int(s[3].strip())
                     if field not in self.bcftools_stats[s_name]:
                         self.bcftools_stats[s_name][field] = 0
                     self.bcftools_stats[s_name][field] += value
@@ -121,8 +124,8 @@ class StatsReportMixin:
                 # Indel length distributions
                 if s[0] == "IDD" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    length = float(s[2].strip())
-                    count = float(s[3].strip())
+                    length = int(s[2].strip())
+                    count = int(s[3].strip())
                     self.bcftools_stats_indels[s_name][length] = count
 
                 # Per-sample counts
@@ -186,7 +189,7 @@ class StatsReportMixin:
                     s_name = s_names[int(s[1])]
                     bin_name = s[2].strip()
                     percent_sites = float(s[-1].strip())
-                    depth_data[s_name][bin_name] = percent_sites
+                    self.bcftools_stats_depth_data[s_name][bin_name] = percent_sites
 
                 # Variant Qualities
                 if s[0] == "QUAL" and len(s_names) > 0:
@@ -212,180 +215,201 @@ class StatsReportMixin:
         self.bcftools_stats_vqc_transi = {k: v for k, v in self.bcftools_stats_vqc_transi.items() if len(v) > 0}
         self.bcftools_stats_vqc_transv = {k: v for k, v in self.bcftools_stats_vqc_transv.items() if len(v) > 0}
         self.bcftools_stats_vqc_indels = {k: v for k, v in self.bcftools_stats_vqc_indels.items() if len(v) > 0}
-        depth_data = {k: v for k, v in depth_data.items() if len(v) > 0}
+        self.bcftools_stats_depth_data = {k: v for k, v in self.bcftools_stats_depth_data.items() if len(v) > 0}
 
         # Filter to strip out ignored sample names
         self.bcftools_stats = self.ignore_samples(self.bcftools_stats)
+        self.bcftools_stats_indels = self.ignore_samples(self.bcftools_stats_indels)
+        self.bcftools_stats_vqc_snp = self.ignore_samples(self.bcftools_stats_vqc_snp)
+        self.bcftools_stats_sample_variants = self.ignore_samples(self.bcftools_stats_sample_variants)
+        self.bcftools_stats_sample_tstv = self.ignore_samples(self.bcftools_stats_sample_tstv)
+        self.bcftools_stats_sample_singletons = self.ignore_samples(self.bcftools_stats_sample_singletons)
+        self.bcftools_stats_sample_depth = self.ignore_samples(self.bcftools_stats_sample_depth)
+        self.bcftools_stats_vqc_transi = self.ignore_samples(self.bcftools_stats_vqc_transi)
+        self.bcftools_stats_vqc_transv = self.ignore_samples(self.bcftools_stats_vqc_transv)
+        self.bcftools_stats_vqc_indels = self.ignore_samples(self.bcftools_stats_vqc_indels)
+        self.bcftools_stats_depth_data = self.ignore_samples(self.bcftools_stats_depth_data)
+        if len(self.bcftools_stats) == 0:
+            return 0
 
-        if len(self.bcftools_stats) > 0:
-            # Write parsed report data to a file
-            self.write_data_file(self.bcftools_stats, "multiqc_bcftools_stats")
+        # Write parsed report data to a file
+        self.write_data_file(self.bcftools_stats, "multiqc_bcftools_stats")
 
-            # Stats Table
-            stats_headers = self.bcftools_stats_genstats_headers()
-            if getattr(config, "bcftools", {}).get("write_general_stats", True):
-                self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
-            if getattr(config, "bcftools", {}).get("write_separate_table", False):
-                self.add_section(
-                    name="Bcftools Stats",
-                    anchor="bcftools-stats_stats",
-                    plot=table.plot(
-                        self.bcftools_stats,
-                        stats_headers,
-                        {
-                            "namespace": "Stats",
-                            "id": "bcftools-stats-table",
-                        },
-                    ),
-                )
-
-            # Make bargraph plot of substitution types
-            keys = {}
-            for t in types:
-                keys[f"substitution_type_{t}"] = {"name": t}
-            pconfig = {
-                "id": "bcftools-stats-subtypes",
-                "title": "Bcftools Stats: Substitutions",
-                "ylab": "# Substitutions",
-                "cpswitch_counts_label": "Number of Substitutions",
-            }
+        # Stats Table
+        stats_headers = self.bcftools_stats_genstats_headers()
+        if getattr(config, "bcftools", {}).get("write_general_stats", True):
+            self.general_stats_addcols(self.bcftools_stats, stats_headers, "Stats")
+        if getattr(config, "bcftools", {}).get("write_separate_table", False):
             self.add_section(
-                name="Variant Substitution Types",
-                anchor="bcftools-stats_variant_sub_types",
-                plot=bargraph.plot(self.bcftools_stats, keys, pconfig),
+                name="Bcftools Stats",
+                anchor="bcftools-stats_stats",
+                plot=table.plot(
+                    self.bcftools_stats,
+                    stats_headers,
+                    {
+                        "namespace": "Stats",
+                        "id": "bcftools-stats-table",
+                    },
+                ),
             )
 
-            # Make histograms of variant quality
-            if len(self.bcftools_stats_vqc_snp) > 0:
-                pconfig = {
-                    "id": "bcftools_stats_vqc",
-                    "title": "Bcftools Stats: Variant Quality Count",
-                    "ylab": "Count",
-                    "xlab": "Quality",
-                    "xDecimals": False,
-                    "ymin": 0,
-                    "smooth_points": 600,
-                    # 'tt_label': '<b>{point.x} bp trimmed</b>: {point.y:.0f}',
-                    "data_labels": [
-                        {"name": "Count SNP", "ylab": "Quality"},
-                        {"name": "Count Transitions", "ylab": "Quality"},
-                        {"name": "Count Transversions", "ylab": "Quality"},
-                        {"name": "Count Indels", "ylab": "Quality"},
+        # Make bargraph plot of substitution types
+        keys = {}
+        for t in types:
+            keys[f"substitution_type_{t}"] = {"name": t}
+        pconfig = {
+            "id": "bcftools-stats-subtypes",
+            "title": "Bcftools Stats: Substitutions",
+            "ylab": "# Substitutions",
+            "cpswitch_counts_label": "Number of Substitutions",
+        }
+        self.add_section(
+            name="Variant Substitution Types",
+            anchor="bcftools-stats_variant_sub_types",
+            plot=bargraph.plot(self.bcftools_stats, keys, pconfig),
+        )
+
+        # Make histograms of variant quality
+        if len(self.bcftools_stats_vqc_snp) > 0:
+            pconfig = {
+                "id": "bcftools_stats_vqc",
+                "title": "Bcftools Stats: Variant Quality Count",
+                "ylab": "Count",
+                "xlab": "Quality",
+                "xDecimals": False,
+                "ymin": 0,
+                "smooth_points": 600,
+                "data_labels": [
+                    "Count SNP",
+                    "Count Transitions",
+                    "Count Transversions",
+                    "Count Indels",
+                ],
+            }
+            self.add_section(
+                name="Variant Quality",
+                anchor="bcftools-stats_variant_quality_plot",
+                plot=linegraph.plot(
+                    [
+                        self.bcftools_stats_vqc_snp,
+                        self.bcftools_stats_vqc_transi,
+                        self.bcftools_stats_vqc_transv,
+                        self.bcftools_stats_vqc_indels,
                     ],
-                }
-                self.add_section(
-                    name="Variant Quality",
-                    anchor="bcftools-stats_variant_quality_plot",
-                    plot=linegraph.plot(
-                        [
-                            self.bcftools_stats_vqc_snp,
-                            self.bcftools_stats_vqc_transi,
-                            self.bcftools_stats_vqc_transv,
-                            self.bcftools_stats_vqc_indels,
-                        ],
-                        pconfig,
-                    ),
-                )
+                    pconfig,
+                ),
+            )
 
-            # Make line graph of indel lengths
-            if len(self.bcftools_stats_indels) > 0:
-                pconfig = {
-                    "id": "bcftools_stats_indel-lengths",
-                    "title": "Bcftools Stats: Indel Distribution",
-                    "ylab": "Count",
-                    "xlab": "InDel Length (bp)",
-                    "xDecimals": False,
-                    "ymin": 0,
-                }
-                self.add_section(
-                    name="Indel Distribution",
-                    anchor="bcftools-stats_indel_plot",
-                    plot=linegraph.plot(self.bcftools_stats_indels, pconfig),
-                )
-            # Make line graph of variants per depth
-            if len(depth_data) > 0:
-                pconfig = {
-                    "id": "bcftools_stats_depth",
-                    "title": "Bcftools Stats: Variant depths",
-                    "ylab": "Fraction of sites (%)",
-                    "xlab": "Variant depth",
-                    "ymin": 0,
-                    "ymax": 100,
-                    "categories": True,
-                }
-                self.add_section(
-                    name="Variant depths",
-                    anchor="bcftools-stats_depth_plot",
-                    description="Read depth support distribution for called variants",
-                    plot=linegraph.plot(depth_data, pconfig),
-                )
+        # Make line graph of indel lengths
+        if len(self.bcftools_stats_indels) > 0:
+            pconfig = {
+                "id": "bcftools_stats_indel-lengths",
+                "title": "Bcftools Stats: Indel Distribution",
+                "ylab": "Count",
+                "xlab": "InDel Length (bp)",
+                "xDecimals": False,
+                "ymin": 0,
+            }
+            self.add_section(
+                name="Indel Distribution",
+                anchor="bcftools-stats_indel_plot",
+                plot=linegraph.plot(self.bcftools_stats_indels, pconfig),
+            )
+        # Make line graph of variants per depth
+        if len(self.bcftools_stats_depth_data) > 0:
+            # Get shared list of bins and order them numerically
+            all_bins = []
+            for sname, val_by_bin in self.bcftools_stats_depth_data.items():
+                all_bins.extend(list(val_by_bin.keys()))
+            all_bins = sorted(all_bins, key=lambda x: int(re.sub(r"\D", "", x)))
+            # Order bins in samples and fill missing bins:
+            sorted_data = {
+                sname: {b: self.bcftools_stats_depth_data[sname].get(b, 0) for b in all_bins}
+                for sname in self.bcftools_stats_depth_data
+            }
+            pconfig = {
+                "id": "bcftools_stats_variant_depths",
+                "title": "Bcftools Stats: Variant depths",
+                "ylab": "Fraction of sites (%)",
+                "xlab": "Variant depth",
+                "ymin": 0,
+                "ymax": 100,
+                "categories": True,
+                "tt_decimals": 1,
+            }
+            self.add_section(
+                name="Variant depths",
+                anchor="bcftools-stats_depth_plot",
+                description="Read depth support distribution for called variants",
+                plot=linegraph.plot(sorted_data, pconfig),
+            )
 
-            # Make bargraph plot of missing sites
-            if len(self.bcftools_stats_sample_variants) > 0:
-                pconfig = {
-                    "id": "bcftools-stats-sites",
-                    "title": "Bcftools Stats: Sites per sample",
-                    "ylab": "# Sites",
-                    "cpswitch_counts_label": "Number of sites",
-                    "data_labels": list(self.bcftools_stats_sample_variants),
-                }
-                self.add_section(
-                    name="Sites per sample",
-                    anchor="bcftools-stats_sites_per_sample",
-                    plot=bargraph.plot(
-                        list(self.bcftools_stats_sample_variants.values()), ["nSNPs", "nIndels", "nOther"], pconfig
-                    ),
-                )
+        # Make bargraph plot of missing sites
+        if len(self.bcftools_stats_sample_variants) > 0:
+            pconfig = {
+                "id": "bcftools-stats-sites",
+                "title": "Bcftools Stats: Sites per sample",
+                "ylab": "# Sites",
+                "cpswitch_counts_label": "Number of sites",
+                "data_labels": list(self.bcftools_stats_sample_variants),
+            }
+            self.add_section(
+                name="Sites per sample",
+                anchor="bcftools-stats_sites_per_sample",
+                plot=bargraph.plot(
+                    list(self.bcftools_stats_sample_variants.values()), ["nSNPs", "nIndels", "nOther"], pconfig
+                ),
+            )
 
-            # Make bargraph plot of ts/tv stats
-            if len(self.bcftools_stats_sample_tstv) > 0:
-                pconfig = {
-                    "id": "bcftools-stats-tstv",
-                    "title": "Bcftools Stats: Ts/Tv",
-                    "ylab": "Ts/Tv",
-                    "cpswitch_counts_label": "Ts/Tv",
-                    "cpswitch": False,
-                    "data_labels": list(self.bcftools_stats_sample_tstv),
-                }
-                self.add_section(
-                    name="Ts/Tv",
-                    anchor="bcftools-stats_ts_tv",
-                    plot=bargraph.plot(list(self.bcftools_stats_sample_tstv.values()), ["tstv"], pconfig),
-                )
+        # Make bargraph plot of ts/tv stats
+        if len(self.bcftools_stats_sample_tstv) > 0:
+            pconfig = {
+                "id": "bcftools-stats-tstv",
+                "title": "Bcftools Stats: Ts/Tv",
+                "ylab": "Ts/Tv",
+                "cpswitch_counts_label": "Ts/Tv",
+                "cpswitch": False,
+                "data_labels": list(self.bcftools_stats_sample_tstv),
+            }
+            self.add_section(
+                name="Ts/Tv",
+                anchor="bcftools-stats_ts_tv",
+                plot=bargraph.plot(list(self.bcftools_stats_sample_tstv.values()), ["tstv"], pconfig),
+            )
 
-            # Make bargraph plot of singletons stats
-            if len(self.bcftools_stats_sample_singletons) > 0:
-                pconfig = {
-                    "id": "bcftools-stats-singletons",
-                    "title": "Bcftools Stats: Singletons",
-                    "ylab": "# Singletons",
-                    "cpswitch_counts_label": "Singletons",
-                    "cpswitch_c_active": False,
-                    "data_labels": list(self.bcftools_stats_sample_singletons),
-                }
-                self.add_section(
-                    name="Number of Singletons",
-                    anchor="bcftools-stats_singletones",
-                    plot=bargraph.plot(
-                        list(self.bcftools_stats_sample_singletons.values()), ["singletons", "rest"], pconfig
-                    ),
-                )
+        # Make bargraph plot of singletons stats
+        if len(self.bcftools_stats_sample_singletons) > 0:
+            pconfig = {
+                "id": "bcftools-stats-singletons",
+                "title": "Bcftools Stats: Singletons",
+                "ylab": "# Singletons",
+                "cpswitch_counts_label": "Singletons",
+                "cpswitch_c_active": False,
+                "data_labels": list(self.bcftools_stats_sample_singletons),
+            }
+            self.add_section(
+                name="Number of Singletons",
+                anchor="bcftools-stats_singletones",
+                plot=bargraph.plot(
+                    list(self.bcftools_stats_sample_singletons.values()), ["singletons", "rest"], pconfig
+                ),
+            )
 
-            # Make bargraph plot of sequencing depth stats
-            if len(self.bcftools_stats_sample_depth) > 0:
-                pconfig = {
-                    "id": "bcftools-stats-depth",
-                    "title": "Bcftools Stats: Sequencing depth",
-                    "ylab": "Sequencing depth",
-                    "cpswitch_counts_label": "Sequencing depth",
-                    "cpswitch": False,
-                    "data_labels": list(self.bcftools_stats_sample_depth),
-                }
-                self.add_section(
-                    name="Sequencing depth",
-                    anchor="bcftools-stats_sequencing_depth",
-                    plot=bargraph.plot(list(self.bcftools_stats_sample_depth.values()), ["depth"], pconfig),
-                )
+        # Make bargraph plot of sequencing depth stats
+        if len(self.bcftools_stats_sample_depth) > 0:
+            pconfig = {
+                "id": "bcftools-stats-sequencing-depth",
+                "title": "Bcftools Stats: Sequencing depth",
+                "ylab": "Sequencing depth",
+                "cpswitch_counts_label": "Sequencing depth",
+                "cpswitch": False,
+                "data_labels": list(self.bcftools_stats_sample_depth),
+            }
+            self.add_section(
+                name="Sequencing depth",
+                anchor="bcftools-stats_sequencing_depth",
+                plot=bargraph.plot(list(self.bcftools_stats_sample_depth.values()), ["depth"], pconfig),
+            )
 
         # Return the number of logs that were found
         return len(self.bcftools_stats)

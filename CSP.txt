@@ -2,6 +2,35 @@
 # (Content Security Policy), you will need the following scripts allowlisted:
 
 script-src 'self'
+    # 1.22
+    'sha256-4XodgW4TwIJuDtf+v6vDJ39FVxI0veC/kSCCmnFp7ck=' # /*! * clipboard.js v2.0.11 * https://clipboardjs.com/ * * Licensed MIT © Zeno Ro
+    'sha256-LXGlzGr/OzLRNAzg6WIbhvBcrRnP2o3by6KOsXPgODI=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+
+    # 1.21
+    'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-yRjvY4tSJ5z2ggAL/i5pJj+peALSAG9PD51Z0Hf7wzQ=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
+    'sha256-gf6XBM6wOXcVJjumRhlnj7J/GEpeABZmKQla1g2feYk=' # class BoxPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-hT8GW76gPbw230zK0dy6dUPxVfhN9QKm3T8EyNblQjw=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-DrHBQbs5duODlWwXxhFtOOpsMfANjqepi9PBfA4om/8=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-skoLPw9W6GGVScPkzbYwz7laPwL8dOpznqFPCoUHVxA=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
+    'sha256-ZAR6nlDF3X1oyyS2SMzxupvbW+MVuc+OzhyS2AqJmbY=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
+
+    # 1.20
+    'sha256-tTUP7XMWeShHDbCfkNfh2MTlcpIsSP6ybV/ChnAPZyo=' # ////////////////////////////////////////////////// Base JS for MultiQC Reports//
+    'sha256-GklszK6SQ46EiosR+K0skEd4P6blQVwOIWIXI2k1JkI=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+    'sha256-bEI7fmPkynn/19cr8rouPnov+ZbZ7P8bsWO2AiSfIGM=' # // Javascript for the FastQC MultiQC Mod///////////////// Per Base Sequence Cont
+    'sha256-s+I8RWf3BWIpPmzCGLcbThkbBqyCu0jQ6bYb3ES1iDA=' # /*** plotly.js v2.27.0* Copyright 2012-2023, Plotly, Inc.* All rights reserved.*
+    'sha256-eiGS4SJ1q6AOA5XgpkbRE5+XO2rNz+D2JjZ6lY57uwg=' # ////////////////////////////////////////////////// Flat plots controls//////////
+    'sha256-VQVaSCWx7Tw7JDkvFSYrZog9dle5pp+JncGkAdO1JHQ=' # ////////////////////////////////////////////////// Plotly Plotting Code/////////
+    'sha256-1OBEUwtItTLX7y6ruLkqRS+jj5o2XKFAF6Z8mp+Y/U0=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-f8lyyCxWBLVPbYs/tVc1OEs3glMEm8wimK2K0SZprlM=' # ////////////////////////////////////////////////// MultiQC Report Toolbox Code//
+    'sha256-ASQylzECdP7VNkxfkmQwDp4jNK9wdjolkizZgk2Zen0=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
+    'sha256-MaWOHt3Ypx+T0eaSaDVcZaqFeYuyvtYPok/th8uU/1s=' # class LinePlot extends Plot {  activeDatasetSize() {    if (this.datasets.length
+    'sha256-MoNMGbvzqWOC7dSfxHbJJYTdku35WXwcFpx5auIgvwI=' # class ScatterPlot extends Plot {  activeDatasetSize() {    if (this.datasets.len
+    'sha256-4o06/K8XbqKEjPmqX0NFpD63VEZGYlgmb3wTZGE3DXE=' # class HeatmapPlot extends Plot {  constructor(dump) {    super(dump);    this.xC
+    'sha256-J1hk+IJNtxaSYwkdE/OOMkkcGHFLfsxqVIcK/jAkymU=' # class ViolinPlot extends Plot {  constructor(dump) {    super(dump);    this.vio
+    'sha256-L0eGKfzVDFdE34HopbSv113Z4Qv7z22YyZ3aCfFB1D4=' # // Return JS code required for plotting a single sample// RSeQC plot. Attempt to
+
     # 1.19
     'sha256-dtGH1XcAyKopMui5x20KnPxuGuSx9Rs6piJB/4Oqu6I=' # jquery.tablesorter.min.js
     'sha256-/C57+E7g4T7gJpkhM4cBNKuHqniEVV8thOcQDOUy640=' # multiqc/templates/default/assets/js/multiqc_plotting.js

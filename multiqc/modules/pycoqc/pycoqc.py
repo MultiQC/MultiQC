@@ -228,7 +228,11 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        pycoqc_table_config = {"id": "pycoqc_stats_table", "namespace": "pycoQC"}
+        pycoqc_table_config = {
+            "id": "pycoqc_stats_table",
+            "namespace": "pycoQC",
+            "title": "pycoQC: Statistics",
+        }
 
         self.add_section(
             name="Statistics",

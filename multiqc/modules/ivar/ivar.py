@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC module to parse output files from iVar """
 
 
@@ -140,17 +138,24 @@ class MultiqcModule(BaseMultiqcModule):
         """Heatmap showing information on each primer found for every sample"""
         # Top level dict contains sample IDs + dict(primer, counts)
 
-        final_data = list()
-        final_xcats = list()
-        final_ycats = list()
+        final_data = []
+        final_xcats = []
+        final_ycats = []
 
-        for k, v in self.ivar_primers.items():
+        for i, (k, v) in enumerate(self.ivar_primers.items()):
             final_ycats.append(k)
-            tmp_prim_val = list()
+            tmp_prim_val = []
             for prim, val in v.items():
-                final_xcats.append(prim)
+                if i == 0:
+                    final_xcats.append(prim)
                 tmp_prim_val.append(val)
             final_data.append(tmp_prim_val)
+
+        if len(final_xcats) != len(final_data[0]):
+            log.error(f"Number of primers do not match: {len(final_xcats)} vs {len(final_data[0])}")
+
+        if len(final_ycats) == len(final_data):
+            log.error(f"Number of samples and primers do not match: {len(final_ycats)} vs {len(final_data)}")
 
         if self.ivar_primers is not None:
             pconfig = {

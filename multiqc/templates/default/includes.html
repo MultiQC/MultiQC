@@ -47,22 +47,24 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery-3.1.1.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery-ui.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.heatmap.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.exporting.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.offline-exporting.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/highcharts.export-csv.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/clipboard.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/lz-string.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.toast.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/multiqc_tables.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/multiqc_plotting.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/multiqc_mpl.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/multiqc_toolbox.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/flat.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plotting.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/tables.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/toolbox.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/bar.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/box.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/line.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/scatter.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/heatmap.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/plots/violin.js') }}</script>
 {% set included_js = [] %}
 {%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}
 {% if js_href not in included_js -%}

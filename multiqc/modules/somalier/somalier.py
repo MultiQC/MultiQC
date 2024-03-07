@@ -144,15 +144,12 @@ class MultiqcModule(BaseMultiqcModule):
                 for i, v in enumerate(s):
                     if i not in s_name_idx:  # Skip if (i == 0 or 1); i.e. sample_a, sample_b
                         if isnan(float(v)) or isinf(float(v)):
-                            # TODO: find better solution
-                            log.debug("Found Inf or NaN value. Overwriting with -2.")
-                            v = -2
-                        try:
+                            # Inf or NaN indicate the absence of data
+                            v = None
+                        else:
                             # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i]] = float(v)
-                        except ValueError:
-                            # add the pattern as a suffix to key
-                            parsed_data[s_name][headers[i]] = v
+                            v = float(v)
+                        parsed_data[s_name][headers[i]] = v
 
         if len(parsed_data) == 0:
             return None
@@ -270,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ancestry": {"title": "Ancestry", "description": "Most probable ancestry background", "scale": False},
             "p_ancestry": {
                 "title": "P(Ancestry)",
-                "description": "Ancestry probablitty",
+                "description": "Ancestry probability",
                 "max": 1,
                 "min": 0,
                 "scale": "RdYlGn",
@@ -394,7 +391,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "somalier_stats",
             "namespace": "Somalier",
             "title": "Somalier: Statistics",
-            "no_beeswarm": True,
+            "no_violin": True,
             "raw_data_fn": "multiqc_somalier_stats",
         }
 
@@ -406,63 +403,79 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def somalier_relatedness_plot(self):
-        data = dict()
         alpha = 0.6
-        relatedness_colours = {
-            0: ["Unrelated", f"rgba(74, 124, 182, {alpha})"],
-            0.49: ["Sib-sib", f"rgba(243, 123, 40, {alpha})"],
-            0.5: ["Parent-child", f"rgba(159, 84, 47, {alpha})"],
+        relatedness_groups = {
+            0: {
+                "name": "Unrelated",
+                "color": f"rgba(74, 124, 182, {alpha})",
+            },
+            0.49: {
+                "name": "Sib-sib",
+                "color": f"rgba(243, 123, 40, {alpha})",
+            },
+            0.5: {
+                "name": "Parent-child",
+                "color": f"rgba(159, 84, 47, {alpha})",
+            },
         }
 
         # Get index colour scale
         cscale = mqc_colour.mqc_colour_scale()
         extra_colours = cscale.get_colours("Dark2")
         extra_colours = _make_col_alpha(extra_colours, alpha)
-
         extra_colour_idx = 0
-        for s_name, d in self.somalier_data.items():
-            if "ibs0" in d and "ibs2" in d:
-                data[s_name] = {"x": d["ibs0"], "y": d["ibs2"]}
-            if "relatedness" in d:
-                relatedness = d["expected_relatedness"]
-                # -1 is not the same family, 0 is same family but unreleaed
-                # @brentp says he usually bundles them together
-                if relatedness == -1:
-                    relatedness = 0
+        data = dict()
+        for pair, d in self.somalier_data.items():
+            if "expected_relatedness" not in d:
+                continue
 
-                # New unique value that we've not seen before
-                if relatedness not in relatedness_colours:
-                    relatedness_colours[relatedness] = [str(relatedness), extra_colours[extra_colour_idx]]
-                    extra_colour_idx += 0
-                    if extra_colour_idx > len(extra_colours):
-                        extra_colour_idx = 0
+            relatedness = d["expected_relatedness"]
+            # -1 is not the same family, 0 is same family but unrelated
+            # @brentp says he usually bundles them together
+            if relatedness == -1:
+                relatedness = 0
 
-                # Assign colour
-                data[s_name]["color"] = relatedness_colours[relatedness][1]
+            # New unique value that we've not seen before
+            if relatedness not in relatedness_groups:
+                relatedness_groups[relatedness] = {
+                    "name": str(relatedness),
+                    "color": extra_colours[extra_colour_idx],
+                }
+                extra_colour_idx += 0
+                if extra_colour_idx > len(extra_colours):
+                    extra_colour_idx = 0
 
-        if len(data) > 0:
-            pconfig = {
-                "id": "somalier_relatedness_plot",
-                "title": "Somalier: Sample Shared Allele Rates (IBS)",
-                "xlab": "IBS0 (no alleles shared)",
-                "ylab": "IBS2 (both alleles shared)",
-                "marker_line_width": 0,
+            data[pair] = {
+                "x": d["ibs0"],
+                "y": d["ibs2"],
+                "color": relatedness_groups[relatedness]["color"],
+                "group": relatedness_groups[relatedness]["name"],
             }
 
-            colours_legend = ""
-            for val in sorted(relatedness_colours.keys()):
-                name, col_rgb = relatedness_colours[val]
-                col = col_rgb.replace(str(alpha), "1.0")
-                colours_legend += f'<span style="color:{col}">{name}</span>, '
+        if len(data) == 0:
+            return
 
-            self.add_section(
-                name="Relatedness",
-                anchor="somalier-relatedness",
-                description="""
-                Shared allele rates between sample pairs.
-                Points are coloured by degree of expected-relatedness: {}""".format(colours_legend),
-                plot=scatter.plot(data, pconfig),
-            )
+        pconfig = {
+            "id": "somalier_relatedness_plot",
+            "title": "Somalier: Sample Shared Allele Rates (IBS)",
+            "xlab": "IBS0 (no alleles shared)",
+            "ylab": "IBS2 (both alleles shared)",
+            "marker_line_width": 0,
+        }
+
+        colours_legend = ""
+        for rel, group in sorted(relatedness_groups.items()):
+            col = group["color"].replace(str(alpha), "1.0")
+            colours_legend += f'<span style="color:{col}">{group["name"]}</span>, '
+
+        self.add_section(
+            name="Relatedness",
+            anchor="somalier-relatedness",
+            description=f"""
+            Shared allele rates between sample pairs.
+            Points are coloured by degree of expected relatedness: {colours_legend}""",
+            plot=scatter.plot(data, pconfig),
+        )
 
     def somalier_relatedness_heatmap_plot(self):
         # inspiration: MultiQC/modules/vcftools/relatedness2.py
@@ -475,8 +488,8 @@ class MultiqcModule(BaseMultiqcModule):
                 a, b = s_name.split("*")
                 labels.add(a)
                 labels.add(b)
-                rels[a][b] = rels[b][a] = float(d["relatedness"])
-                rels[a][a] = rels[b][b] = float(1)
+                rels[a][b] = rels[b][a] = d["relatedness"]
+                rels[a][a] = rels[b][b] = 1.0
 
         # impose alphabetical order and avoid json serialisation errors in utils.report
         labels = sorted(labels)
@@ -487,7 +500,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     line.append(rels[x][y])
                 except KeyError:
-                    line.append(-2)
+                    line.append(None)
             data.append(line)
 
         if len(data) > 0:
@@ -532,7 +545,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Heterozygosity",
-                description="Standard devation of heterozygous allele balance against mean depth.",
+                description="Standard deviation of heterozygous allele balance against mean depth.",
                 helptext="A high standard deviation in allele balance suggests contamination.",
                 anchor="somalier-hetcheck",
                 plot=scatter.plot(data, pconfig),
@@ -549,7 +562,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
-                    "x": (random.random() - 0.5) * 0.1 + sex_index.get(d["original_pedigree_sex"], 2),
+                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (random.random() - 0.5) * 0.1,
                     "y": y,
                 }
 
@@ -592,7 +605,7 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, d in self.somalier_data.items():
             # ensure that only relevant items are added,
             # i.e. only ancestry category values
-            ls = {k: v for k, v in d.items() if (k in self.somalier_ancestry_cats)}
+            ls = {k: v * 100.0 for k, v in d.items() if (k in self.somalier_ancestry_cats)}
             if len(ls) > 0:  # only add dict, if it contains values
                 data[s_name] = ls
 
@@ -600,9 +613,10 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig = {
                 "id": "somalier_ancestry_barplot",
                 "title": "Somalier: Sample Predicted Ancestry Proportions",
-                "cpswitch_c_active": False,
+                "cpswitch": False,
                 "hide_zero_cats": False,
                 "ylab": "Predicted Ancestry",
+                "tt_suffix": "%",
             }
 
             self.add_section(
@@ -621,6 +635,33 @@ class MultiqcModule(BaseMultiqcModule):
     def somalier_ancestry_pca_plot(self):
         data = dict()
 
+        # add background
+        # N.B. this must be done after samples to have samples on top
+        d = self.somalier_background_pcs.pop("background_pcs", {})
+        if d:
+            # generate color scale to match the number of categories
+            c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
+            cats = self.somalier_ancestry_cats
+            ancestry_colors = dict(zip(cats, c_scale[: len(cats)]))
+            default_background_color = "rgba(255,192,203,0.3)"
+
+            # Make colours semi-transparent
+            ancestry_colors = dict(zip(ancestry_colors.keys(), _make_col_alpha(ancestry_colors.values(), 0.3)))
+
+            background = [
+                {
+                    "x": pc1,
+                    "y": pc2,
+                    "color": ancestry_colors.get(ancestry, default_background_color),
+                    "name": ancestry,
+                    "marker_size": 3,
+                    "marker_line_width": 0,
+                    "annotate": False,
+                }
+                for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
+            ]
+            data["background"] = background
+
         # cycle over samples and add PC coordinates to data dict
         for s_name, d in self.somalier_data.items():
             if "PC1" in d and "PC2" in d:
@@ -630,25 +671,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "color": "rgba(0, 0, 0, 0.6)",
                 }
 
-        # add background
-        # N.B. this must be done after samples to have samples on top
-        d = self.somalier_background_pcs.pop("background_pcs", {})
-        if d:
-            # generate color scale to match the number of categories
-            c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
-            cats = self.somalier_ancestry_cats
-            ancestry_colors = dict(zip(cats, c_scale[: len(cats)]))
-            default_background_color = "rgb(255,192,203,0.3)"
-
-            # Make colours semi-transparent
-            ancestry_colors = dict(zip(ancestry_colors.keys(), _make_col_alpha(ancestry_colors.values(), 0.3)))
-
-            background = [
-                {"x": pc1, "y": pc2, "color": ancestry_colors.get(ancestry, default_background_color), "name": ancestry}
-                for pc1, pc2, ancestry in zip(d["PC1"], d["PC2"], d["ancestry"])
-            ]
-            data["background"] = background
-
         # generate section and plot
         if len(data) > 0:
             pconfig = {
@@ -657,7 +679,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "PC1",
                 "ylab": "PC2",
                 "marker_size": 5,
-                "marker_line_width": 0,
             }
 
             self.add_section(
