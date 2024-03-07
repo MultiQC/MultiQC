@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """ Crude code-quality checks for running in CI """
 
 import glob
