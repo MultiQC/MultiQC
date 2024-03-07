@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 """ Super Special-Case MultiQC module to produce report section on MultiQC run time """
-
 
 import logging
 

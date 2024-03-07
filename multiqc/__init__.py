@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-""" __init__.py
+"""
+__init__.py
 ~~~~~~~~~~~~~~~~~~~~
 Initialises when multiqc module is loaded.
 

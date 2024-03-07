@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC plugin hooks. Enables MultiQC plugins
 to run their own custom subroutines at predefined
 trigger points during MultiQC execution. """

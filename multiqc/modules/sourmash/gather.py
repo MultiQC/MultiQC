@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse similarity matrix output by sourmash gather """
 
 import csv
