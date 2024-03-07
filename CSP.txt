@@ -3,7 +3,8 @@
 
 script-src 'self'
     # 1.22
-    'sha256-4IREYxb/j808B757ugxPov9U0FcBwSA+Pj8ckYJy70s=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-L4g4Q3rqY24J25YgbPa0sB/9IcEkvcvQumTSuqGkBx4=' # ////////////////////////////////////////////////// MultiQC Table code///////////
+    'sha256-3JN7WYkmBPWoaslpNs1/8J4l8Yrmt1joAUokx/oDnpE=' # None
 
     # 1.21
     'sha256-bHPK47f6TsuMbS8pR8jVPzEK4orYin9an6P5OkYf+n8=' # class BarPlot extends Plot {  constructor(dump) {    super(dump);    this.filter
