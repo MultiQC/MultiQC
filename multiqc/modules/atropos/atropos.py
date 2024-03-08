@@ -12,7 +12,7 @@ TODO: look at whether there are any plots to duplicate from here: https://github
 """
 
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 import logging
 import io
 import math
@@ -23,10 +23,10 @@ import json
 from numpy import mean, multiply, cumsum
 from multiqc import config
 from multiqc.plots import linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 ATROPOS_GITHUB_URL = "https://github.com/jdidion/atropos"
-ATROPOS_DOC_URL = "http://atropos.readthedocs.org/en/latest/guide.html"
+ATROPOS_DOC_URL = "https://atropos.readthedocs.io/en/1.1"
 
 
 class Status(object):
@@ -58,21 +58,12 @@ PASSFAILS = '<script type="text/javascript">atropos_passfails_{phase} = {statuse
 log = logging.getLogger(__name__)
 
 
-# Module
-
-
 class MultiqcModule(BaseMultiqcModule):
-    """Base Atropos module class. Loads JSON ouptut. Submodule classes are
+    """Base Atropos module class. Loads JSON output. Submodule classes are
     responsible for extracting data and generating summary table and plots.
-
-    Args:
-        name: Module name.
-        anchor: HTML anchor name.
-        from_config: Whether to load data from configured locations. This should
-            only be set to False in tests.
     """
 
-    def __init__(self, name="", anchor="", info="", from_config=True):
+    def __init__(self, name="", anchor="", info="", is_test=False):
         # Create the submodule based on the phase
         mod_cust_config = getattr(self, "mod_cust_config", {})
         phase = mod_cust_config.get("phase", "trim")
@@ -98,38 +89,24 @@ class MultiqcModule(BaseMultiqcModule):
         self.js = {}
 
         # Load data from logs and generate the report
-        if from_config:
-            self.init_from_config()
-            self.submodule.atropos_report(self)
+        if is_test:
+            return
+
+        for f in self.find_log_files("atropos", filehandles=True):
+            data = json.load(f["f"])
+            if self.submodule.can_add_data(data):
+                sample_id = data["sample_id"]
+                self.add_data_source(f, sample_id)
+                self.submodule.add_data(sample_id, data)
+
+        if self.num_samples == 0:
+            raise ModuleNoSamplesFound
+        log.info(f"Found {self.num_samples} reports")
+        self.submodule.atropos_report(self)
 
     def __getattr__(self, name):
         """Fetch all missing attributes from the submodule."""
         return getattr(self.submodule, name)
-
-    def init_from_config(self):
-        """Initialize module from JSON files discovered via MultiQC
-        configuration.
-        """
-        log_files = self.find_log_files("atropos", filehandles=True)
-
-        for file_dict in log_files:
-            fileobj = file_dict["f"]
-
-            try:
-                data = json.load(fileobj)
-
-                if self.submodule.can_add_data(data):
-                    sample_id = data["sample_id"]
-                    self.add_data_source(file_dict, sample_id)
-                    self.submodule.add_data(sample_id, data)
-            except IOError:
-                raise Exception("Error loading file {} - it may be corrupted".format(fileobj))
-
-        if self.num_samples == 0:
-            log.debug("Could not find any reports in %s", config.analysis_dir)
-            raise UserWarning
-        else:
-            log.info("Found %s reports", self.num_samples)
 
 
 # Submodules
@@ -159,7 +136,7 @@ class Submodule(metaclass=ABCMeta):
         # List of sample IDs
         self.atropos_sample_ids = []
         # General data (for summary table)
-        self.atropos_general_data = OrderedDict()
+        self.atropos_general_data = dict()
 
     @property
     def num_samples(self):
@@ -216,7 +193,7 @@ class TrimModule(Submodule):
 
     def __init__(self):
         super(TrimModule, self).__init__()
-        self.atropos_trim_data = OrderedDict()
+        self.atropos_trim_data = dict()
         self.trim_sections = [TrimmedLength()]
 
     def can_add_data(self, data):
@@ -256,52 +233,51 @@ class TrimModule(Submodule):
         """Add some single-number stats to the basic statistics table at the
         top of the report.
         """
-        headers = OrderedDict()
-        headers["input_format"] = {
-            "title": "Format",
-            "description": "Input File Format",
-        }
-        headers["total_record_count"] = {
-            "title": "M Seqs",
-            "description": "Total Sequences (millions)",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "read_count",
-        }
-        headers["sum_total_bp_count"] = {
-            "title": "M bp",
-            "description": "Total Base Pairs (millions)",
-            "min": 0,
-            "scale": "Blues",
-            "shared_key": "base_count",
-        }
-        headers["mean_sequence_length"] = {
-            "title": "Length",
-            "description": "Average Sequence Length (bp)",
-            "min": 0,
-            "suffix": "bp",
-            "scale": "RdYlGn",
-            "format": "{:.0f}",
-        }
-        headers["fraction_bp_trimmed"] = {
-            "title": "% Base Pairs Trimmed",
-            "description": "% Total Base Pairs trimmed",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlBu-rev",
-            "modify": lambda x: x * 100,
-            "format": "{:.1f}%",
-        }
-        headers["fraction_records_with_adapters"] = {
-            "title": "% Reads w/ Adapters",
-            "description": "% Total Reads with Adapters",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "RdYlBu-rev",
-            "modify": lambda x: x * 100,
-            "format": "{:.1f}%",
+        headers = {
+            "input_format": {
+                "title": "Format",
+                "description": "Input File Format",
+            },
+            "total_record_count": {
+                "title": "M Seqs",
+                "description": "Total Sequences (millions)",
+                "scale": "Blues",
+                "shared_key": "read_count",
+            },
+            "sum_total_bp_count": {
+                "title": "M bp",
+                "description": "Total Base Pairs (millions)",
+                "scale": "Blues",
+                "shared_key": "base_count",
+            },
+            "mean_sequence_length": {
+                "title": "Length",
+                "description": "Average Sequence Length (bp)",
+                "min": 0,
+                "suffix": "bp",
+                "scale": "RdYlGn",
+                "format": "{:,d}",
+            },
+            "fraction_bp_trimmed": {
+                "title": "% Base Pairs Trimmed",
+                "description": "% Total Base Pairs trimmed",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlBu-rev",
+                "modify": lambda x: x * 100,
+                "format": "{:,.1f}",
+            },
+            "fraction_records_with_adapters": {
+                "title": "% Reads w/ Adapters",
+                "description": "% Total Reads with Adapters",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlBu-rev",
+                "modify": lambda x: x * 100,
+                "format": "{:,.1f}",
+            },
         }
         parent.general_stats_addcols(self.atropos_general_data, headers)
 
@@ -315,7 +291,7 @@ class TrimModule(Submodule):
 class QcModule(Submodule, metaclass=ABCMeta):
     def __init__(self):
         super(QcModule, self).__init__()
-        self.atropos_qc_data = OrderedDict()
+        self.atropos_qc_data = dict()
         self.qc_sections = [
             PerBaseQuality(),
             # PerTileQuality()
@@ -330,7 +306,7 @@ class QcModule(Submodule, metaclass=ABCMeta):
         ]
 
     def add_stats_data(self, sample_id, pairing, input_names, _, data):
-        self.atropos_qc_data[sample_id] = OrderedDict()
+        self.atropos_qc_data[sample_id] = dict()
         source_files = input_names
         if pairing == 3:
             self.atropos_qc_data[sample_id] = [None, None]
@@ -350,7 +326,7 @@ class QcModule(Submodule, metaclass=ABCMeta):
         parent.status_colours["default"] = DEFAULT_COLOR
 
     def atropos_general(self, parent):
-        headers = OrderedDict()
+        headers = dict()
         headers["percent_fails_{}".format(self.get_phase())] = {
             "title": "% Failed ({}-trimming)".format(self.get_phase()),
             "description": "Percentage of Atropos QC modules failed ({}-trimming)".format(self.get_phase()),
@@ -358,7 +334,7 @@ class QcModule(Submodule, metaclass=ABCMeta):
             "min": 0,
             "suffix": "%",
             "scale": "Reds",
-            "format": "{:.0f}%",
+            "format": "{:,.1f}",
             "hidden": True,
         }
         parent.general_stats_addcols(self.atropos_general_data, headers)
@@ -516,14 +492,16 @@ class Section(metaclass=ABCMeta):
 
     def format_html(self, context):
         """Format the html string with variables from the context."""
-        return self.html_template.format(**context)
+        if self.html_template is not None:
+            return self.html_template.format(**context)
+        return None
 
     def add_plot_data(self, context, data):
         """Add plot data to the context. Plot data must be named
         'plot_data{read}', where read is 1 or 2.
         """
-        plot_data1 = OrderedDict()
-        plot_data2 = OrderedDict()
+        plot_data1 = dict()
+        plot_data2 = dict()
         for sample_id, (data1, data2) in data.items():
             plot_data1[sample_id] = self.get_sample_plot_data(context, data1)
             if data2:
@@ -595,7 +573,7 @@ class TrimmedLength(Section):
                         dest_dict[side] = [[{}, {}], [{}, {}]]
                     hist = sort_hist(read_dict[key])
                     dest_dict[side][read][0][sample_id] = hist
-                    dest_dict[side][read][1][sample_id] = ordered_dict(
+                    dest_dict[side][read][1][sample_id] = dict(
                         (length, num_reads * 0.25 ** min(length, adapter_length)) for length, count in hist.items()
                     )
                     return
@@ -712,9 +690,7 @@ class QcSection(Section, metaclass=ABCMeta):
 
     def get_statuses(self, context, data):
         """Returns {sample_id: status} dict."""
-        return ordered_dict(
-            (sample_id, self.get_status(context, *sample_data)) for sample_id, sample_data in data.items()
-        )
+        return dict((sample_id, self.get_status(context, *sample_data)) for sample_id, sample_data in data.items())
 
     def get_status(self, context, sample_data1, sample_data2=None):
         """Returns the status. If this is paired data, the status should
@@ -1068,7 +1044,7 @@ class PerSequenceGC(QcSection):
 
     def get_sample_plot_data(self, context, data):
         def normalize_gc(gc, total):
-            return ordered_dict((pct, count * 100 / total) for pct, count in gc)
+            return dict((pct, count * 100 / total) for pct, count in gc)
 
         gchist = dict((int(pos), count) for pos, count in data["hist"].items())
         total = sum(gchist.values())
@@ -1151,8 +1127,8 @@ class PerBaseN(QcSection):
         def get_n_data(bases):
             nidx = bases["columns"].index("N")
             return dict(
-                n_counts=ordered_dict((int(pos), bases["rows"][pos][nidx]) for pos in bases["rows"].keys()),
-                total_counts=ordered_dict((int(pos), sum(bases["rows"][pos])) for pos in bases["rows"].keys()),
+                n_counts=dict((int(pos), bases["rows"][pos][nidx]) for pos in bases["rows"].keys()),
+                total_counts=dict((int(pos), sum(bases["rows"][pos])) for pos in bases["rows"].keys()),
             )
 
         section_data = {}
@@ -1190,7 +1166,7 @@ class PerBaseN(QcSection):
 
     def get_sample_plot_data(self, context, data):
         """Create the HTML for the per base N content plot."""
-        return ordered_dict(
+        return dict(
             (key, data["n_counts"].get(key, 0) * 100 / data["total_counts"].get(key))
             for key in data["total_counts"].keys()
         )
@@ -1283,15 +1259,8 @@ class NormalDistribution(object):
         return (math.e ** -(((value - self.mean) ** 2) / self.sd2)) / math.sqrt(self.sd2 * math.pi)
 
 
-def ordered_dict(iterable):
-    d = OrderedDict()
-    for key, value in iterable:
-        d[key] = value
-    return d
-
-
 def sort_hist(hist):
-    return ordered_dict(sorted(((int(length), count) for length, count in hist.items()), key=lambda x: x[0]))
+    return dict(sorted(((int(length), count) for length, count in hist.items()), key=lambda x: x[0]))
 
 
 def weighted_lower_quantile(values, freqs, quantile):
@@ -1338,7 +1307,7 @@ def get_status_cols(statuses):
     """Helper function - returns a list of colours according to the
     status of this module for each sample.
     """
-    return ordered_dict((sample_id, status.color) for sample_id, status in statuses.items())
+    return dict((sample_id, status.color) for sample_id, status in statuses.items())
 
 
 def simplify(obj):
