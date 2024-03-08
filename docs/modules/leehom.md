@@ -1,8 +1,8 @@
 ---
-Name: leeHom
-URL: https://github.com/grenaud/leeHom
-Description: >
-    leeHom is a program for the Bayesian reconstruction of ancient DNA
+name: leeHom
+url: https://github.com/grenaud/leeHom
+description: >
+  leeHom is a program for the Bayesian reconstruction of ancient DNA
 ---
 
 leeHom is a Bayesian maximum _a posteriori_ algorithm for stripping

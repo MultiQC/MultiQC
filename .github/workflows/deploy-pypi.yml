@@ -1,0 +1,44 @@
+name: Publish MultiQC to PyPI
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-n-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        name: Check out source-code repository
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          pip install .
+
+      - name: Build the distribution
+        run: python setup.py sdist bdist_wheel
+
+      - name: Publish MultiQC to PyPI
+        if: github.repository == 'MultiQC/MultiQC'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+#      - name: Tweet
+#        if: github.repository == 'MultiQC/MultiQC'
+#        uses: snow-actions/tweet@v1.3.0
+#        with:
+#          status: |
+#            A new version of @MultiQC has just been released! ${{ github.event.release.name }}
+#
+#            Read the changelog here: ${{ github.event.release.html_url }}
+#        env:
+#          CONSUMER_API_KEY: ${{ secrets.TWITTER_CONSUMER_API_KEY }}
+#          CONSUMER_API_SECRET_KEY: ${{ secrets.TWITTER_CONSUMER_API_SECRET_KEY }}
+#          ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+#          ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}

@@ -1,0 +1,66 @@
+name: Publish Docker image
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    if: github.repository == 'MultiQC/MultiQC'
+    name: Build + Push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      # https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push dev image
+        uses: docker/build-push-action@v3
+        if: github.event_name == 'push'
+        with:
+          # All available with python:3.11-slim are:
+          # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+          # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            multiqc/multiqc:dev
+            ghcr.io/multiqc/multiqc:dev
+
+      - name: Push release image
+        uses: docker/build-push-action@v3
+        if: github.event_name == 'release'
+        with:
+          # All available with python:3.11-slim are:
+          # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
+          # But 32-bit binaries likely require compilation from source so stick with linux/amd64 and linux/arm64 for now
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            multiqc/multiqc:${{ github.event.release.tag_name }}
+            multiqc/multiqc:latest
+            ghcr.io/multiqc/multiqc:${{ github.event.release.tag_name }}
+            ghcr.io/multiqc/multiqc:latest

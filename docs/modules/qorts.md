@@ -1,9 +1,9 @@
 ---
-Name: QoRTs
-URL: http://hartleys.github.io/QoRTs/
-Description: >
-    QoRTs is a fast, efficient, and portable toolkit designed
-    to assist in the analysis, QC and data management of RNA-Seq datasets.
+name: QoRTs
+url: http://hartleys.github.io/QoRTs/
+description: >
+  QoRTs is a fast, efficient, and portable toolkit designed
+  to assist in the analysis, QC and data management of RNA-Seq datasets.
 ---
 
 The QoRTs software package is a fast, efficient, and portable multifunction
