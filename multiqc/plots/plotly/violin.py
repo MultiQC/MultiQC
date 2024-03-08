@@ -15,11 +15,11 @@ from multiqc.plots.plotly.table import make_table
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: DataTable, show_table_by_default=False) -> str:
+def plot(dts: List[DataTable], show_table_by_default=False) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    p = ViolinPlot.from_dt(dt, show_table_by_default)
+    p = ViolinPlot.from_dt(dts, show_table_by_default)
 
     from multiqc.utils import report
 
@@ -182,8 +182,8 @@ class ViolinPlot(Plot):
                 orientation="h",
                 box={"visible": True},
                 meanline={"visible": True},
-                fillcolor="grey",
-                line={"width": 2, "color": "grey"},
+                fillcolor="#b5b5b5",
+                line={"width": 2, "color": "#b5b5b5"},
                 opacity=0.5,
                 points=False,  # Don't show points, we'll add them manually
                 # The hover information is useful, but the formatting is ugly and not
@@ -393,44 +393,48 @@ class ViolinPlot(Plot):
                 )
 
     @staticmethod
-    def from_dt(dt: DataTable, show_table_by_default=False) -> "ViolinPlot":
-        values_by_sample_by_metric = dict()
-        header_by_metric = dict()
+    def from_dt(dts: List[DataTable], show_table_by_default=False) -> "ViolinPlot":
+        list_values_by_sample_by_metric = []
+        list_header_by_metric = []
 
-        for idx, k, header in dt.get_headers_in_order():
-            rid = header["rid"]
-            header_by_metric[rid] = {
-                "namespace": header["namespace"],
-                "title": header["title"],
-                "description": header["description"],
-                "dmax": header.get("dmax"),
-                "dmin": header.get("dmin"),
-                "suffix": header.get("suffix", ""),
-                "color": header.get("colour", header.get("color")),
-                "hidden": header.get("hidden"),
-                "modify": header.get("modify"),
-                "tt_decimals": header.get("decimalPlaces", 2),
-            }
-            values_by_sample_by_metric[rid] = dict()
-            for s_name, val_by_metric in dt.data[idx].items():
-                if k in val_by_metric:
-                    values_by_sample_by_metric[rid][s_name] = val_by_metric[k]
+        for dt in dts:
+            list_values_by_sample_by_metric.append(dict())
+            list_header_by_metric.append(dict())
 
-        # If all colors are the same, remove them
-        if len(set([v["color"] for v in header_by_metric.values()])) == 1:
-            for v in header_by_metric.values():
-                v.pop("color", None)
+            for idx, k, header in dt.get_headers_in_order():
+                rid = header["rid"]
+                list_header_by_metric[-1][rid] = {
+                    "namespace": header["namespace"],
+                    "title": header["title"],
+                    "description": header["description"],
+                    "dmax": header.get("dmax"),
+                    "dmin": header.get("dmin"),
+                    "suffix": header.get("suffix", ""),
+                    "color": header.get("colour", header.get("color")),
+                    "hidden": header.get("hidden"),
+                    "modify": header.get("modify"),
+                    "tt_decimals": header.get("tt_decimals", header.get("decimalPlaces", 2)),
+                }
+                list_values_by_sample_by_metric[-1][rid] = dict()
+                for s_name, val_by_metric in dt.data[idx].items():
+                    if k in val_by_metric:
+                        list_values_by_sample_by_metric[-1][rid][s_name] = val_by_metric[k]
 
-        # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
-        if len(set([v["namespace"] for v in header_by_metric.values()])) == 1:
-            for v in header_by_metric.values():
-                v.pop("namespace", None)
+            # If all colors are the same, remove them
+            if len(set([v["color"] for v in list_header_by_metric[-1].values()])) == 1:
+                for v in list_header_by_metric[-1].values():
+                    v.pop("color", None)
+
+            # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
+            if len(set([v["namespace"] for v in list_header_by_metric[-1].values()])) == 1:
+                for v in list_header_by_metric[-1].values():
+                    v.pop("namespace", None)
 
         return ViolinPlot(
-            [values_by_sample_by_metric],
-            [header_by_metric],
-            pconfig=dt.pconfig,
-            dt=dt,
+            list_values_by_sample_by_metric,
+            list_header_by_metric,
+            pconfig=dts[0].pconfig,
+            dt=dts[0],
             show_table_by_default=show_table_by_default,
         )
 
@@ -500,7 +504,7 @@ class ViolinPlot(Plot):
     def buttons(self) -> []:
         """Add a control panel to the plot"""
         buttons = []
-        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.dt.id is not None:
+        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.dt is not None:
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",

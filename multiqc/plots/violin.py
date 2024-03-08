@@ -9,8 +9,6 @@ from multiqc.plots.plotly import violin
 
 logger = logging.getLogger(__name__)
 
-letters = "abcdefghijklmnopqrstuvwxyz"
-
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -32,18 +30,27 @@ def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pc
                     max values etc.
     :return: HTML string
     """
-    # Make a datatable object
-    dt = table_object.DataTable(data, headers, pconfig)
+    if headers is None:
+        headers = []
+    if pconfig is None:
+        pconfig = {}
+    if not isinstance(data, list):
+        data = [data]
+    if not isinstance(headers, list):
+        headers = [headers]
+
+    # Make datatable objects
+    dts = [table_object.DataTable(d, h, pconfig.copy()) for d, h in zip(data, headers)]
 
     mod = get_template_mod()
     if "violin" in mod.__dict__ and callable(mod.violin):
         # noinspection PyBroadException
         try:
-            return mod.violin(dt)
+            return mod.violin(dts)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return violin.plot(dt)
+    return violin.plot(dts)

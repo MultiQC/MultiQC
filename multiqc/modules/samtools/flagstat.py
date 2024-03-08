@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class FlagstatReportMixin:
-    def parse_samtools_flagstats(self):
+    def parse_samtools_flagstat(self):
         """Find Samtools flagstat logs and parse their data"""
 
         self.samtools_flagstat = dict()
@@ -38,7 +38,7 @@ class FlagstatReportMixin:
         self.write_data_file(self.samtools_flagstat, "multiqc_samtools_flagstat")
 
         # General Stats Table
-        flagstats_headers = {
+        flagstat_headers = {
             "flagstat_total": {
                 "title": "Reads",
                 "description": f"Total reads in the bam file ({config.read_count_desc})",
@@ -60,51 +60,72 @@ class FlagstatReportMixin:
                 "hidden": True,
             },
         }
-        self.general_stats_addcols(self.samtools_flagstat, flagstats_headers, namespace="flagstat")
+        self.general_stats_addcols(self.samtools_flagstat, flagstat_headers, namespace="flagstat")
 
-        # Make dot plot of counts
-        keys = {}
+        # Make a violin plot
         reads = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": config.read_count_prefix,
-            "decimalPlaces": 2,
             "shared_key": "read_count",
+            "modify": None,
+            "format": None,
+            "suffix": None,
         }
-        keys["flagstat_total"] = dict(reads, title="Total Reads")
-        keys["total_passed"] = dict(reads, title="Total Passed QC")
-        keys["mapped_passed"] = dict(reads, title="Mapped")
+        keys_counts = dict()
+        keys_counts["flagstat_total"] = dict(reads, title="Total Reads")
+        keys_counts["total_passed"] = dict(reads, title="Total Passed QC")
+        keys_counts["mapped_passed"] = dict(reads, title="Mapped")
 
         if any(v.get("secondary_passed") for v in self.samtools_flagstat.values()):
-            keys["secondary_passed"] = dict(reads, title="Secondary Alignments")
+            keys_counts["secondary_passed"] = dict(reads, title="Secondary Alignments")
 
         if any(v.get("supplementary_passed") for v in self.samtools_flagstat.values()):
-            keys["supplementary_passed"] = dict(reads, title="Supplementary Alignments")
+            keys_counts["supplementary_passed"] = dict(reads, title="Supplementary Alignments")
 
-        keys["duplicates_passed"] = dict(reads, title="Duplicates")
-        keys["paired in sequencing_passed"] = dict(reads, title="Paired in Sequencing")
-        keys["properly paired_passed"] = dict(reads, title="Properly Paired")
-        keys["with itself and mate mapped_passed"] = dict(
+        keys_counts["duplicates_passed"] = dict(reads, title="Duplicates")
+        keys_counts["paired in sequencing_passed"] = dict(reads, title="Paired in Sequencing")
+        keys_counts["properly paired_passed"] = dict(reads, title="Properly Paired")
+        keys_counts["with itself and mate mapped_passed"] = dict(
             reads, title="Self and mate mapped", description="Reads with itself and mate mapped"
         )
-        keys["singletons_passed"] = dict(reads, title="Singletons")
-        keys["with mate mapped to a different chr_passed"] = dict(
+        keys_counts["singletons_passed"] = dict(reads, title="Singletons")
+        keys_counts["with mate mapped to a different chr_passed"] = dict(
             reads, title="Mate mapped to diff chr", description="Mate mapped to different chromosome"
         )
-        keys["with mate mapped to a different chr (mapQ >= 5)_passed"] = dict(
+        keys_counts["with mate mapped to a different chr (mapQ >= 5)_passed"] = dict(
             reads, title="Diff chr (mapQ >= 5)", description="Mate mapped to different chromosome (mapQ >= 5)"
         )
+
+        data_pct = dict()
+        for sample, d in self.samtools_flagstat.items():
+            data_pct[sample] = dict()
+            total = d["flagstat_total"]
+            if total > 0:
+                for metric, cnt in d.items():
+                    data_pct[sample][f"{metric}_pct"] = cnt / total * 100
+        keys_pct = {
+            f"{metric}_pct": dict(
+                title=header["title"],
+                min=0,
+                max=100,
+                suffix="%",
+                shared_key=None,
+            )
+            for metric, header in keys_counts.items()
+        }
 
         self.add_section(
             name="Flagstat",
             anchor="samtools-flagstat",
-            description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
+            description="This module parses the output from <code>samtools flagstat</code>",
             plot=beeswarm.plot(
-                self.samtools_flagstat,
-                keys,
-                {
+                [self.samtools_flagstat, data_pct],
+                headers=[keys_counts, keys_pct],
+                pconfig={
                     "id": "samtools-flagstat-dp",
-                    "title": "Samtools flagstat: Read Counts",
+                    "title": "Samtools flagstat: read count",
+                    "data_labels": [
+                        {"name": "Read counts", "title": "Samtools flagstat: read count"},
+                        {"name": "Percentage of total", "title": "Samtools flagstat: percentage of total"},
+                    ],
                 },
             ),
         )
@@ -113,8 +134,8 @@ class FlagstatReportMixin:
         return len(self.samtools_flagstat)
 
 
-#  flagstat has one thing per line, documented here (search for flagstat):
-#  http://www.htslib.org/doc/samtools.html
+# flagstat has one thing per line, documented here (search for flagstat):
+# http://www.htslib.org/doc/samtools.html
 flagstat_regexes = {
     "total": r"(\d+) \+ (\d+) in total \(QC-passed reads \+ QC-failed reads\)",
     "secondary": r"(\d+) \+ (\d+) secondary",

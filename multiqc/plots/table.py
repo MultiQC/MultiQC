@@ -48,4 +48,4 @@ def plot(data, headers=None, pconfig=None):
                 # debugging of modules
                 raise
 
-    return table.plot(dt)
+    return table.plot([dt])
