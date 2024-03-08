@@ -13,6 +13,10 @@ afterqc:
 anglerfish:
   fn: "*.json"
   contents: "anglerfish_version"
+atropos:
+  fn: "*.json"
+  contents: '"program": "Atropos"'
+  num_lines: 3
 bakta:
   fn: "*.txt"
   contents: "Bakta:"

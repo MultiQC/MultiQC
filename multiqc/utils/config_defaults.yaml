@@ -473,6 +473,12 @@ module_order:
   - librarian
   - nonpareil
   - adapterRemoval
+  - atropos:
+      phase: "pre"
+  - atropos:
+      phase: "trim"
+  - atropos:
+      phase: "post"
   - bbduk
   - clipandmerge
   - cutadapt

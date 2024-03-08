@@ -1,0 +1,112 @@
+/* CSS for the Atropos MultiQC Module */
+
+/* Atropos statuses popovers */
+.atropos_passfail_progress .progress-bar {
+  cursor: pointer;
+}
+.mqc-section {
+  
+}
+.mqc-section-atropos .popover .popover-content {
+  font-size: 11px;
+  max-height: 300px;
+  white-space: nowrap;
+  overflow: auto;
+}
+.popover-success .popover-title {
+  background-color: #dff0d8;
+  color: #3c763d;
+}
+.popover-warning .popover-title {
+  background-color: #fcf8e3;
+  color: #8a6d3b;
+}
+.popover-danger .popover-title {
+  background-color: #f2dede;
+  color: #a94442;
+}
+.atropos-popover-intro {
+  margin: 5px 5px 0;
+  padding: 3px 5px;
+  border: 1px dashed #ccc;
+  border-radius: 5px;
+  font-size: 10px;
+  color: #999;
+  background-color: #fafafa;
+}
+.atropos-popover-intro a {
+  color: #999;
+  text-decoration: underline;
+}
+
+/* Other stuff */
+.showhide_orig {
+  padding: 15px;
+  height:100%;
+  overflow: hidden;
+}
+.showhide_orig h4 {
+  margin-top: 0;
+}
+.s_status {
+  text-transform: capitalize;
+}
+.original-plot {
+  max-width:100%;
+  max-height: calc(100% - 60px);
+  cursor: pointer;
+}
+
+.atropos_passfail_progress {
+  width: 100px;
+  display: inline-block;
+  margin: 0 0 -2px 20px;
+}
+
+
+#atropos_pre_seq_heatmap,#atropos_post_seq_heatmap {
+  cursor: pointer;
+}
+#atropos_pre_seq_heatmap_div,#atropos_post_seq_heatmap_div .hc-plot-wrapper {
+  height: 300px;
+}
+#atropos_pre_seq_heatmap_footer,#atropos_post_seq_heatmap_footer {
+  clear:both;
+}
+#atropos_pre_sequence_content_plot,#atropos_post_sequence_content_plot h5 {
+  display: inline-block;
+  height: 18px;
+}
+.atropos_bases_plot {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.atropos_seq_heatmap_header {
+  text-align: center;
+}
+.atropos_seq_heatmap_key {
+  font-size: 12px;
+}
+.atropos_seq_heatmap_key div {
+  display: inline-block;
+  width: 120px;
+  margin: 0 8px;
+}
+.atropos_seq_heatmap_key > span, .atropos_seq_heatmap_key div > span {
+  display:inline-block;
+  width: 60px;
+}
+.mqc-module-section {
+  padding: 10px;
+}
+.pair-plot-wrapper {
+  padding: 10px;
+}
+.mqc_hcplot_plotgroup {
+  padding-bottom: 10px;
+}
+#atropos_pre_seq_heatmap_key_t,#atropos_post_seq_heatmap_key_t { border-bottom: 1px solid red; }
+#atropos_pre_seq_heatmap_key_c,#atropos_post_seq_heatmap_key_t { border-bottom: 1px solid blue; }
+#atropos_pre_seq_heatmap_key_a,#atropos_post_seq_heatmap_key_t { border-bottom: 1px solid green; }
+#atropos_pre_seq_heatmap_key_g,#atropos_post_seq_heatmap_key_t { border-bottom: 1px solid black; }

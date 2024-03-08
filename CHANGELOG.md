@@ -8,6 +8,9 @@
 
 ### New modules
 
+- [**Atropos**](https://github.com/jdidion/atropos)
+  - Tool for adapter trimming, quality trimming, QC, and more
+
 ### Module updates
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
