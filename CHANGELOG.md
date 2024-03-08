@@ -5,6 +5,7 @@
 ### MultiQC updates
 
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Replace NaN with null in JSON dumps ([#2432](https://github.com/MultiQC/MultiQC/pull/2432))
 
 ### New modules
 
