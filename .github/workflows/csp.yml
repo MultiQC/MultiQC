@@ -28,7 +28,7 @@ jobs:
       - name: Update CSP whitelist
         if: matrix.python-version == env.latest_python
         run: |
-          python ${GITHUB_WORKSPACE}/.github/workflows/update_csp.py \
+          python ${GITHUB_WORKSPACE}/.github/workflows/csp.py \
           --whitelist ${GITHUB_WORKSPACE}/CSP.txt
 
       - name: Check if CSP.txt changed
