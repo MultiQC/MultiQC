@@ -137,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def bbduk_bargraph_plot(self):
         """
-        Beeswarm displaying all possible filtering results reported by BBDuk.
+        Violin displaying all possible filtering results reported by BBDuk.
 
         We don't display this as a barchart as the total across all categories
         of filters reported don't match exactly the total reads remaining (I

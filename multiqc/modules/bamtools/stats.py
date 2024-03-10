@@ -4,7 +4,7 @@ http://bamtools.sourceforge.net/#bam-stat-py """
 import logging
 import re
 
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 from multiqc.utils import config
 
 # Initialise the logger
@@ -120,7 +120,7 @@ def parse_reports(self):
     self.add_section(
         name="Bamtools Stats",
         anchor="bamtools-stats",
-        plot=beeswarm.plot(
+        plot=violin.plot(
             self.bamtools_stats_data,
             keys,
             pconfig={

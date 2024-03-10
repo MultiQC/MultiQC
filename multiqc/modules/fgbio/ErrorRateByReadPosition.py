@@ -103,8 +103,7 @@ def parse_reports(self):
         "title": "Fgbio: Error Rate by Read Position",
         "ylab": "Error rate",
         "xlab": "Read Position",
-        "xDecimals": False,
-        "tt_label": "<b>read position {point.x}</b>: {point.y:.2f} %",
+        "tt_label": "<b>read position {point.x}</b>: {point.y:.2f}%",
         "ymax": y_max,
         "ymin": 0,
         "data_labels": [

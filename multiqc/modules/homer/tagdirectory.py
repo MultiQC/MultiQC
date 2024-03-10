@@ -393,6 +393,7 @@ class TagDirReportMixin:
             "title": "HOMER: Restriction Distribution",
             "ylab": "Reads",
             "xlab": "Distance from cut site (bp)",
+            "tt_label": "<b>{point.x} bp</b>: {point.y} reads",
             "data_labels": [{"name": "Number of Tags"}, {"name": "Percenatge"}],
         }
         datasets = [self.tagdir_data["restriction"], self.tagdir_data["restriction_norm"]]
@@ -408,6 +409,7 @@ class TagDirReportMixin:
             "title": "HOMER: Tag Length Distribution",
             "ylab": "Fraction of Tags",
             "xlab": "Tag Length (bp)",
+            "tt_label": "<b>{point.x} bp</b>: {point.y}",
         }
         return linegraph.plot(self.tagdir_data["length"], pconfig)
 
