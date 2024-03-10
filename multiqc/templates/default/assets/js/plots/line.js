@@ -1,7 +1,3 @@
-////////////////////////////////////////////////
-// Line plot
-////////////////////////////////////////////////
-
 class LinePlot extends Plot {
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
