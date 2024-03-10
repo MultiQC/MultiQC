@@ -92,7 +92,7 @@ def parse_reports(self):
         min_cov = min(self.gene_body_cov_hist_counts[s_name].values())
         max_cov = max(self.gene_body_cov_hist_counts[s_name].values())
         for k, v in self.gene_body_cov_hist_counts[s_name].items():
-            self.gene_body_cov_hist_percent[s_name][k] = (v - min_cov) / (max_cov - min_cov)
+            self.gene_body_cov_hist_percent[s_name][k] = (v - min_cov) / (max_cov - min_cov) * 100.0
 
     # Add line graph to section
     pconfig = {

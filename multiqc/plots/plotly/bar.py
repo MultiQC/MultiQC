@@ -205,21 +205,25 @@ class BarPlot(Plot):
                     for i in range(len(dataset.samples))
                 )
 
+            minallowed = 0 if xmin_cnt > 0 else xmin_cnt  # allow bar to start below zero
+            maxallowed = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+            if maxallowed is None:
+                maxallowed = xmax_cnt
+
             dataset.layout.update(
                 yaxis=dict(
                     title=None,
                     hoverformat=dataset.layout["xaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
-                    autorangeoptions=dataset.layout["xaxis"]["autorangeoptions"],
                 ),
                 xaxis=dict(
                     title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
                     hoverformat=dataset.layout["yaxis"]["hoverformat"],
                     ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
-                    autorangeoptions={
-                        "minallowed": xmin_cnt,
-                        "maxallowed": xmax_cnt,
-                    },
+                    autorangeoptions=dict(
+                        minallowed=minallowed,
+                        maxallowed=maxallowed,
+                    ),
                 ),
                 showlegend=len(dataset.cats) > 1,
             )

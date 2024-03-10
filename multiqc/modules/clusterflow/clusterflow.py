@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "clusterflow-commands-table",
             "table_title": "Cluster Flow Commands",
             "col1_header": "Tool",
-            "sortRows": False,
+            "sort_rows": False,
             "no_violin": True,
         }
         self.add_section(

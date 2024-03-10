@@ -110,7 +110,6 @@ def is_searching_in_source_dir(path: Path) -> bool:
         "MANIFEST.in",
         ".gitmodules",
         "README.md",
-        "CSP.txt",
         "setup.py",
         ".gitignore",
     ]
