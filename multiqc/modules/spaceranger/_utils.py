@@ -5,14 +5,14 @@ def clean_title_case(col_id):
     return title
 
 
-def update_dict(table, headers, rows_list, col_map, colours, prefix, int_cols=()):
+def update_data_and_headers(data, headers, new_data, new_headers, colors, prefix, int_cols=()):
     """update the data dict and headers dict
 
     :param: int_cols columns to be shown as integers in the table
     """
 
-    for col_name, col_data in rows_list:
-        if col_name in col_map:
+    for col_name, col_data in new_data:
+        if col_name in new_headers:
             # Sanitize numeric data
             is_percentage = "%" in col_data
             col_data = col_data.replace(",", "").replace("%", "")
@@ -26,14 +26,14 @@ def update_dict(table, headers, rows_list, col_map, colours, prefix, int_cols=()
                 except ValueError:
                     pass
 
-            col_id = col_map[col_name]
-            table[col_id] = col_data
+            col_id = new_headers[col_name]
+            data[col_id] = col_data
             headers[col_id] = {
                 "rid": "{}_{}".format(prefix, col_id.replace(" ", "_").replace("/", "_")),
                 "title": clean_title_case(col_id),
                 "description": col_name,
                 "namespace": f"Space Ranger {prefix}",
-                "scale": colours.get(col_id, "RdYlGn" if is_percentage else "GnBu"),
+                "scale": colors.get(col_id, "RdYlGn" if is_percentage else "GnBu"),
             }
             if is_percentage:
                 headers[col_id].update(
