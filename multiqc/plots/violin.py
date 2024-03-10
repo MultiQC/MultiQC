@@ -1,5 +1,3 @@
-""" MultiQC functions to plot a violin plot """
-
 import logging
 from typing import List, Dict, Optional, Union
 
@@ -8,8 +6,6 @@ from multiqc.utils import config
 from multiqc.plots.plotly import violin
 
 logger = logging.getLogger(__name__)
-
-letters = "abcdefghijklmnopqrstuvwxyz"
 
 
 # Load the template so that we can access its configuration
@@ -24,12 +20,13 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: List[Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
+def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
     """Helper HTML for a violin plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
                     max values etc.
+    :param pconfig: plot config dict
     :return: HTML string
     """
     # Make a datatable object

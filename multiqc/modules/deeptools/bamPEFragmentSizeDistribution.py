@@ -35,11 +35,10 @@ class bamPEFragmentSizeDistributionMixin:
                 "id": "fragment_size_distribution_plot",
                 "title": "deeptools: Fragment Size Distribution Plot",
                 "ylab": "Occurrence",
-                "xlab": "Fragment Size (bp)",
+                "xlab": "Fragment Size",
                 "smooth_points": 50,
                 "xmax": 1000,
-                "xDecimals": False,
-                "tt_label": "<b>Fragment Size (bp) {point.x}</b>: {point.y} Occurrence",
+                "tt_label": "<b>{point.x} bp</b>: {point.y}th occurrence",
             }
 
             self.add_section(
