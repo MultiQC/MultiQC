@@ -3,7 +3,7 @@ Print missing hashes for a Content Security Policy (CSP) whitelist (see https://
 for the scripts inlined in a MultiQC report. Usage:
 
 multiqc test_data/data/modules --filename full_report.html
-python scripts/print_csp_hashes.py --report full_report.html [--current csp.txt]
+python scripts/print_missing_csp.py --report full_report.html [--current csp.txt]
 
 If the current list is provided, will print only missing hashes.
 """
