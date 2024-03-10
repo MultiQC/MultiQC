@@ -1,5 +1,6 @@
 """ MultiQC modules base class, contains helper functions """
-from typing import List, Union, Optional
+
+from typing import List, Union, Optional, Dict
 
 import fnmatch
 import io
@@ -22,7 +23,10 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-class BaseMultiqcModule(object):
+class BaseMultiqcModule:
+    # Custom options from user config that can overwrite base module values
+    mod_cust_config: Dict = {}
+
     def __init__(
         self,
         name="base",
@@ -34,24 +38,34 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=None,
+        doi: Optional[str] = None,
+        path_filters: Optional[Union[str, List[str]]] = None,
+        path_filters_exclude: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        self.name = mod_cust_config.get("name", name)
-        self.anchor = mod_cust_config.get("anchor", anchor)
-        target = mod_cust_config.get("target", target)
-        self.href = mod_cust_config.get("href", href)
-        self.info = mod_cust_config.get("info", info)
-        self.comment = mod_cust_config.get("comment", comment)
-        self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", (doi or []))
+        self.name = self.mod_cust_config.get("name", name)
+        self.anchor = self.mod_cust_config.get("anchor", anchor)
+        target = self.mod_cust_config.get("target", target)
+        self.href = self.mod_cust_config.get("href", href)
+        self.info = self.mod_cust_config.get("info", info)
+        self.comment = self.mod_cust_config.get("comment", comment)
+        self.extra = self.mod_cust_config.get("extra", extra)
+        self.doi = self.mod_cust_config.get("doi", (doi or []))
+
+        # Pick up path filters if specified.
+        # Allows modules to be called multiple times with different sets of files
+        if isinstance(path_filters, str):
+            path_filters = [path_filters]
+        if isinstance(path_filters_exclude, str):
+            path_filters_exclude = [path_filters_exclude]
+        self.path_filters: Optional[List[str]] = path_filters
+        self.path_filters_exclude: Optional[List[str]] = path_filters_exclude
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        config.update({anchor: mod_cust_config.get("custom_config", {})})
+        config.update({anchor: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
         self.anchor = report.save_htmlid(self.anchor)
@@ -111,15 +125,6 @@ class BaseMultiqcModule(object):
                  As yield is used, the results can be iterated over without loading all files at once
         """
 
-        # Pick up path filters if specified.
-        # Allows modules to be called multiple times with different sets of files
-        path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
-        path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
-        if isinstance(path_filters, str):
-            path_filters = [path_filters]
-        if isinstance(path_filters_exclude, str):
-            path_filters_exclude = [path_filters_exclude]
-
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
@@ -141,14 +146,14 @@ class BaseMultiqcModule(object):
             report.last_found_file = os.path.join(f["root"], f["fn"])
 
             # Filter out files based on exclusion patterns
-            if path_filters_exclude and len(path_filters_exclude) > 0:
+            if self.path_filters_exclude and len(self.path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analysis dirs
                 exlusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in self.path_filters_exclude),
                     *(
                         (
                             fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
-                            for pfe in path_filters_exclude
+                            for pfe in self.path_filters_exclude
                         )
                         for analysis_dir in config.analysis_dir
                     ),
@@ -160,12 +165,15 @@ class BaseMultiqcModule(object):
                     continue
 
             # Filter out files based on inclusion patterns
-            if path_filters and len(path_filters) > 0:
+            if self.path_filters and len(self.path_filters) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in self.path_filters),
                     *(
-                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        (
+                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf))
+                            for pf in self.path_filters
+                        )
                         for analysis_dir in config.analysis_dir
                     ),
                 )
@@ -245,9 +253,8 @@ class BaseMultiqcModule(object):
                 anchor = f"{self.anchor}-section-{sl}"
 
         # Append custom module anchor to the section if set
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        if "anchor" in mod_cust_config:
-            anchor = f"{mod_cust_config['anchor']}_{anchor}"
+        if "anchor" in self.mod_cust_config:
+            anchor = f"{self.mod_cust_config['anchor']}_{anchor}"
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
@@ -598,9 +605,8 @@ class BaseMultiqcModule(object):
         to report.write_data_file() to create the file in the report directory"""
 
         # Append custom module anchor if set
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        if "anchor" in mod_cust_config:
-            fn = f"{fn}_{mod_cust_config['anchor']}"
+        if "anchor" in self.mod_cust_config:
+            fn = f"{fn}_{self.mod_cust_config['anchor']}"
 
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1
