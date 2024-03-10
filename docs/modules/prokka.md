@@ -1,7 +1,7 @@
 ---
-Name: Prokka
-URL: http://www.vicbioinformatics.com/software.prokka.shtml
-Description: >-
+name: Prokka
+url: http://www.vicbioinformatics.com/software.prokka.shtml
+description: >-
   Prokka is a software tool for the rapid annotation of prokaryotic genomes.
 ---
 
@@ -16,7 +16,7 @@ The Prokka module accepts two configuration options:
 
 Sample names are generated using the first line in the prokka reports:
 
-```txt
+```
 organism: Helicobacter pylori Sample1
 ```
 

@@ -1,14 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC module to parse output files from VarScan2 """
 
 
 import logging
 import re
-from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -60,13 +57,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Warning when no files are found
         if len(self.varscan2_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write parsed data to a file
         self.write_data_file(self.varscan2_data, "multiqc_varscan2_summary")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Found reports or not?
-        log.info("Found {} reports".format(len(self.varscan2_data)))
+        log.info(f"Found {len(self.varscan2_data)} reports")
 
         # Basic Stats Table
         self.varscan2_general_stats_table()
@@ -95,10 +96,10 @@ class MultiqcModule(BaseMultiqcModule):
             "variant_reported_snps": r"(?:\d+)(?:\svariant positions reported \()(\d+)",
             "variant_reported_indels": r"(?:\d+)(?:\svariant positions reported \()(?:\d+ SNP, )(\d+)",
         }
-        for l in f["f"]:
+        for line in f["f"]:
             # Search regexes for stats
             for k, r in regexes.items():
-                match = re.search(r, l)
+                match = re.search(r, line)
                 if match:
                     if k not in ["sample_name", "p_val_threshold", "min_var_freq"]:
                         parsed[k] = int(match.group(1))
@@ -123,75 +124,76 @@ class MultiqcModule(BaseMultiqcModule):
         General Statistics table
         """
 
-        headers = OrderedDict()
-        headers["variant_reported_snps"] = {
-            "title": "SNPs reported",
-            "description": "Total number of SNPs reported.",
-            "min": 0,
-            "scale": "Spectral",
-            "format": "{:,.0f}",
-            "shared_key": "snps",
-        }
-        headers["variant_reported_indels"] = {
-            "title": "INDELs reported",
-            "description": "Total number INDELs reported.",
-            "min": 0,
-            "scale": "Spectral",
-            "format": "{:,.0f}",
-            "shared_key": "indels",
-        }
-        headers["variant_reported_total"] = {
-            "title": "Variants reported",
-            "description": "Total number of variants reported.",
-            "min": 0,
-            "scale": "Spectral",
-            "format": "{:,.0f}",
-            "shared_key": "variants",
-            "hidden": True,
-        }
-        headers["variant_snps"] = {
-            "title": "SNPs",
-            "description": "Total number of SNPs detected",
-            "min": 0,
-            "scale": "BrBg",
-            "format": "{:,.0f}",
-            "shared_key": "snps",
-            "hidden": True,
-        }
-        headers["variant_indels"] = {
-            "title": "INDELs",
-            "description": "Total number of INDELs detected",
-            "min": 0,
-            "scale": "BrBg",
-            "format": "{:,.0f}",
-            "shared_key": "indels",
-            "hidden": True,
-        }
-        headers["variant_total"] = {
-            "title": "Variants",
-            "description": "Total number of variants detected",
-            "min": 0,
-            "scale": "BrBg",
-            "format": "{:,.0f}",
-            "shared_key": "variants",
-            "hidden": True,
-        }
-        headers["failed_strand_filter"] = {
-            "title": "Failed Strand Filter",
-            "description": "Total number variants failing the strand-filter.",
-            "min": 0,
-            "scale": "YlOrBr",
-            "format": "{:,.0f}",
-            "shared_key": "variants",
-            "hidden": True,
-        }
-        headers["bases_in_pileup"] = {
-            "title": "{} Bases in Pileup".format(config.base_count_prefix),
-            "description": "Number of bases in pileup input for VarScan2 ()".format(config.base_count_desc),
-            "scale": "Greens",
-            "modify": lambda x: x * config.base_count_multiplier,
-            "shared_key": "base_count",
-            "hidden": True,
+        headers = {
+            "variant_reported_snps": {
+                "title": "SNPs reported",
+                "description": "Total number of SNPs reported.",
+                "min": 0,
+                "scale": "Spectral",
+                "format": "{:,.0f}",
+                "shared_key": "snps",
+            },
+            "variant_reported_indels": {
+                "title": "INDELs reported",
+                "description": "Total number INDELs reported.",
+                "min": 0,
+                "scale": "Spectral",
+                "format": "{:,.0f}",
+                "shared_key": "indels",
+            },
+            "variant_reported_total": {
+                "title": "Variants reported",
+                "description": "Total number of variants reported.",
+                "min": 0,
+                "scale": "Spectral",
+                "format": "{:,.0f}",
+                "shared_key": "variants",
+                "hidden": True,
+            },
+            "variant_snps": {
+                "title": "SNPs",
+                "description": "Total number of SNPs detected",
+                "min": 0,
+                "scale": "BrBG",
+                "format": "{:,.0f}",
+                "shared_key": "snps",
+                "hidden": True,
+            },
+            "variant_indels": {
+                "title": "INDELs",
+                "description": "Total number of INDELs detected",
+                "min": 0,
+                "scale": "BrBG",
+                "format": "{:,.0f}",
+                "shared_key": "indels",
+                "hidden": True,
+            },
+            "variant_total": {
+                "title": "Variants",
+                "description": "Total number of variants detected",
+                "min": 0,
+                "scale": "BrBG",
+                "format": "{:,.0f}",
+                "shared_key": "variants",
+                "hidden": True,
+            },
+            "failed_strand_filter": {
+                "title": "Failed Strand Filter",
+                "description": "Total number variants failing the strand-filter.",
+                "min": 0,
+                "scale": "YlOrBr",
+                "format": "{:,.0f}",
+                "shared_key": "variants",
+                "hidden": True,
+            },
+            "bases_in_pileup": {
+                "title": f"{config.base_count_prefix} Bases in Pileup",
+                "description": "Number of bases in pileup input for VarScan2 ()",
+                "scale": "Greens",
+                "modify": lambda x: x * config.base_count_multiplier,
+                "shared_key": "base_count",
+                "hidden": True,
+            },
         }
 
         self.general_stats_addcols(self.varscan2_data, headers)
@@ -203,12 +205,16 @@ class MultiqcModule(BaseMultiqcModule):
         # 99 variant positions reported (99 SNP, 0 indel)
 
         # Specify the order of the different possible categories
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["variant_reported_snps"] = {"name": "SNPs reported", "color": "#7fc97f"}
-        cats[0]["variant_snps_failed"] = {"name": "SNPs not reported", "color": "#fb8072"}
-        cats[1]["variant_reported_indels"] = {"name": "INDELs reported", "color": "#7fc97f"}
-        cats[1]["variant_indels_failed"] = {"name": "INDELs not reported", "color": "#fb8072"}
-
+        cats = [
+            {
+                "variant_reported_snps": {"name": "SNPs reported", "color": "#7fc97f"},
+                "variant_snps_failed": {"name": "SNPs not reported", "color": "#fb8072"},
+            },
+            {
+                "variant_reported_indels": {"name": "INDELs reported", "color": "#7fc97f"},
+                "variant_indels_failed": {"name": "INDELs not reported", "color": "#fb8072"},
+            },
+        ]
         # Config for the plot
         pconfig = {
             "id": "varscan2_variant_counts_plot",

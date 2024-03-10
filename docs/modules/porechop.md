@@ -1,7 +1,7 @@
 ---
-Name: Porechop
-URL: https://github.com/rrwick/Porechop
-Description: >
+name: Porechop
+url: https://github.com/rrwick/Porechop
+description: >
   Porechop is a tool for finding and removing adapters from Oxford Nanopore reads. Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle, it is treated as chimeric and chopped into separate reads. Porechop performs thorough alignments to effectively find adapters, even at low sequence identity.
 ---
 

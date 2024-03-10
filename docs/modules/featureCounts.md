@@ -1,7 +1,7 @@
 ---
-Name: featureCounts
-URL: http://bioinf.wehi.edu.au/featureCounts/
-Description: >
+name: featureCounts
+url: http://bioinf.wehi.edu.au/featureCounts/
+description: >
   featureCounts is a highly efficient general-purpose read summarization
   program that counts mapped reads for genomic features such as genes,
   exons, promoter, gene bodies, genomic bins and chromosomal locations.

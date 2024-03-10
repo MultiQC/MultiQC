@@ -1,11 +1,13 @@
 import logging
 
+from ..base_module import ModuleNoSamplesFound
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
 from .dragen_gc_metrics import DragenGcMetrics
 from .fragment_length import DragenFragmentLength
 from .mapping_metrics import DragenMappingMetics
+from .overall_mean_cov import DragenOverallMeanCovMetrics
 from .ploidy_estimation_metrics import DragenPloidyEstimationMetrics
 from .rna_quant_metrics import DragenRnaQuantMetrics
 from .rna_transcript_cov import DragenRnaTranscriptCoverage
@@ -24,6 +26,7 @@ class MultiqcModule(
     DragenPloidyEstimationMetrics,
     DragenVCMetrics,
     DragenCoveragePerContig,
+    DragenOverallMeanCovMetrics,
     DragenCoverageMetrics,
     DragenCoverageHist,
     DragenGcMetrics,
@@ -34,19 +37,19 @@ class MultiqcModule(
     DragenScRnaMetrics,
     DragenScAtacMetrics,
 ):
-    """DRAGEN provides a number of differrent pipelines and outputs, including base calling, DNA and RNA alignment,
+    """DRAGEN provides a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     However, it can be treated as a fast aligner with additional features on top, as users will unlikely use any
     features without enabling DRAGEN mapping. So we will treat this module as an alignment tool module and
     place it accordingly in the module_order list, in docs, etc.
 
     The QC metrics DRAGEN generates resemble those of samtools-stats, qualimap, mosdepth, bcftools-stats and alike.
-    Whenver possible, the visual output is made similar to those modules.
+    Whenever possible, the visual output is made similar to those modules.
 
     Note that this MultiQC module supports some of DRAGEN output but not all. Contributions are welcome!
 
     The code is structured in a way so every mix-in parses one type of QC file that DRAGEN generates
-    (e.g. *.mapping_metrics.csv, *.wgs_fine_hist_normal.csv, etc). If a corresponding file is found, a mix-in adds
+    (e.g. *.mapping_metrics.csv, *.wgs_fine_hist_normal.csv, etc.). If a corresponding file is found, a mix-in adds
     a section into the report.
     """
 
@@ -71,16 +74,13 @@ class MultiqcModule(
         samples_found |= self.add_ploidy_estimation_metrics()
         # <output prefix>.ploidy_estimation_metrics.csv    - add just Ploidy estimation into gen stats
 
-        samples_found |= self.add_wgs_coverage_metrics()
-        # <output prefix>.wgs_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.wgs_coverage_metrics_tumor.csv   - same
+        overall_mean_cov_data = self.collect_overall_mean_cov_data()
+        # <output prefix>.<coverage region prefix>_overall_mean_cov<arbitrary suffix>.csv
+        # This data will be used by in the DragenCoverageMetrics.
 
-        samples_found |= self.add_target_bed_coverage_metrics()
-        # <output prefix>.target_bed_coverage_metrics_normal.csv  - general stats table and a dedicated table
-        # <output prefix>.target_bed_coverage_metrics_tumor.csv   - same
+        samples_found |= self.add_coverage_metrics(overall_mean_cov_data)
+        # <output prefix>.<coverage region prefix>_coverage_metrics<arbitrary suffix>.csv
 
-        samples_found |= self.add_qc_region_coverage_metrics()
-        # <output prefix>.qc-coverage-region-i_coverage_metrics.csv
         samples_found |= self.add_coverage_hist()
 
         # <output prefix>.wgs_fine_hist_normal.csv         - coverage distribution and cumulative coverage plots
@@ -115,5 +115,5 @@ class MultiqcModule(
         # <output prefix>.scATAC.metrics.csv or <output prefix>.scATAC_metrics.csv
 
         if len(samples_found) == 0:
-            raise UserWarning
-        log.info("Found {} reports".format(len(samples_found)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found samples: {len(samples_found)}")

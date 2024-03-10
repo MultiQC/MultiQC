@@ -1,7 +1,7 @@
 ---
-Name: BISCUIT
-URL: https://github.com/huishenlab/biscuit
-Description: >
+name: BISCUIT
+url: https://github.com/huishenlab/biscuit
+description: >
   BISCUIT is a software tool suite for analyzing bisulfite-converted DNA
   sequencing.
 ---

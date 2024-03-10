@@ -1,7 +1,7 @@
 ---
-Name: RNA-SeQC
-URL: https://github.com/broadinstitute/rnaseqc
-Description: >
+name: RNA-SeQC
+url: https://github.com/broadinstitute/rnaseqc
+description: >
   Fast, efficient RNA-Seq metrics for quality control and process optimization
 ---
 

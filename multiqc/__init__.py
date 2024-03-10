@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-""" __init__.py
+"""
+__init__.py
 ~~~~~~~~~~~~~~~~~~~~
 Initialises when multiqc module is loaded.
 
@@ -19,3 +18,5 @@ from .utils import config
 config.logger = logging.getLogger(__name__)
 
 __version__ = config.version
+
+__all__ = ["run", "config", "__version__"]

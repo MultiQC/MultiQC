@@ -1,7 +1,7 @@
 ---
-Name: Cluster Flow
-URL: http://clusterflow.io
-Description: >
+name: Cluster Flow
+url: http://clusterflow.io
+description: >
   Cluster Flow is a simple and flexible bioinformatics pipeline tool.
 ---
 

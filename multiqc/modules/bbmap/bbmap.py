@@ -1,10 +1,7 @@
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-from multiqc.utils import config
-
 from .bbmap_filetypes import file_types, section_order
 
 """ MultiQC module to parse output from BBMap """
@@ -42,13 +39,17 @@ class MultiqcModule(BaseMultiqcModule):
                     data_found = True
 
         if not data_found:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
             num_samples = max([len(self.mod_data[ft].keys()) for ft in self.mod_data])
-            log.info("Found {} reports".format(num_samples))
+            log.info(f"Found {num_samples} reports")
 
         # Write data to file
         self.write_data_file(self.mod_data, "bbmap")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         for file_type in section_order:
             if len(self.mod_data[file_type]) > 0:
@@ -100,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
 
         log.debug("Parsing %s/%s", root, fn)
-        if not file_type in file_types:
+        if file_type not in file_types:
             log.error("Unknown output type '%s'. Error in config?", file_type)
             return False
         log_descr = file_types[file_type]
@@ -109,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
             return False
 
         cols = log_descr["cols"]
-        if isinstance(cols, OrderedDict):
+        if isinstance(cols, dict):
             cols = list(cols.keys())
 
         kv = {}
@@ -150,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                             log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
                             return False
             else:
-                if isinstance(log_descr["cols"], OrderedDict):
+                if isinstance(log_descr["cols"], dict):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
                 else:
                     line = list(map(int, line))
@@ -184,13 +185,13 @@ class MultiqcModule(BaseMultiqcModule):
         table_headers = {}
         for column_header, (description, header_options) in file_types[file_type]["kv_descriptions"].items():
             table_headers[column_header] = {
-                "rid": "{}_{}_bbmstheader".format(file_type, column_header),
+                "rid": f"{file_type}_{column_header}_bbmstheader",
                 "title": column_header,
                 "description": description,
             }
             table_headers[column_header].update(header_options)
 
-        tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools"}
+        tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools", "title": "BBTools " + file_type}
         for sample in table_data:
             for key, value in table_data[sample].items():
                 try:

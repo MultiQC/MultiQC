@@ -1,8 +1,7 @@
 import logging
 import re
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -29,6 +28,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.seqyclean_data[f["s_name"]] = dict()
             for header, col in zip(headers, cols):
+                # Add verions info
+                if header == "Version":
+                    self.add_software_version(col, f["s_name"])
+
                 # Attempt to convert into a float if we can
                 try:
                     col = float(col)
@@ -39,14 +42,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         self.seqyclean_data = self.ignore_samples(self.seqyclean_data)
 
         if len(self.seqyclean_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.seqyclean_data)))
+        log.info(f"Found {len(self.seqyclean_data)} logs")
 
         # Adding the bar plots
         self.add_section(
@@ -132,34 +135,33 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.seqyclean_data, self._clean_keys(keys), config)
 
     def seqyclean_general_stats_table(self):
-        headers = OrderedDict()
-        # Paired and single end
-        headers["Perc_Kept"] = {
-            "title": "% Kept",
-            "description": "The percentage of reads remaining after cleaning",
-            "scale": "YlGn",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
-        }
-        # 454
-        headers["PercentageKept"] = {
-            "title": "% Kept",
-            "description": "The percentage of reads remaining after cleaning",
-            "scale": "YlGn",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
+        headers = {
+            "Perc_Kept": {
+                "title": "% Kept",
+                "description": "The percentage of reads remaining after cleaning",
+                "scale": "YlGn",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            },
+            "PercentageKept": {
+                "title": "% Kept",
+                "description": "The percentage of reads remaining after cleaning",
+                "scale": "YlGn",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            },
         }
         self.general_stats_addcols(self.seqyclean_data, headers)
 
     def _clean_keys(self, keys):
         """Given a list of keys, make them easier to read for plot labels"""
-        cats = OrderedDict()
+        cats = {}
         for k in keys:
-            nice_name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", k)  # CamelCase > Camel Case
-            nice_name = re.sub("([PS]E\d?)", "\g<1> ", nice_name)  # PE1Label > PE1 Label
-            nice_name = re.sub("W([A-Z])", "W \g<1>", nice_name)  # WContam > W Contam
+            nice_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", k)  # CamelCase > Camel Case
+            nice_name = re.sub(r"([PS]E\d?)", r"\g<1> ", nice_name)  # PE1Label > PE1 Label
+            nice_name = re.sub(r"W([A-Z])", r"W \g<1>", nice_name)  # WContam > W Contam
             nice_name = nice_name.replace("_", " ")  # tags_found > tags found
             nice_name = nice_name.title()  # Title Case
             nice_name = nice_name.replace("Pe", "PE").replace("Se", "SE")

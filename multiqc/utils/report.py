@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
@@ -13,26 +11,22 @@ import mimetypes
 import os
 import re
 import time
-from collections import OrderedDict, defaultdict
-
-import lzstring
+from collections import defaultdict, OrderedDict
+from pathlib import Path
 import rich
 import rich.progress
 import yaml
+from yaml.representer import Representer
+
+from multiqc.utils import lzstring
 
 from . import config
 
 logger = config.logger
 
 # Treat defaultdict and OrderedDict as normal dicts for YAML output
-from yaml.representer import Representer, SafeRepresenter
-
 yaml.add_representer(defaultdict, Representer.represent_dict)
 yaml.add_representer(OrderedDict, Representer.represent_dict)
-try:
-    yaml.add_representer(unicode, SafeRepresenter.represent_unicode)
-except NameError:
-    pass  # Python 3
 
 
 # Set up global variables shared across modules
@@ -100,6 +94,63 @@ def init():
     global files
     files = dict()
 
+    # Map of software tools to a set of unique version strings
+    global software_versions
+    software_versions = defaultdict(lambda: defaultdict(list))
+
+
+def is_searching_in_source_dir(path: Path) -> bool:
+    """
+    Checks whether MultiQC is searching for files in the source code folder
+    """
+    multiqc_installation_dir_files = [
+        "LICENSE",
+        "CHANGELOG.md",
+        "Dockerfile",
+        "MANIFEST.in",
+        ".gitmodules",
+        "README.md",
+        "CSP.txt",
+        "setup.py",
+        ".gitignore",
+    ]
+
+    filenames = [f.name for f in path.iterdir() if f.is_file()]
+
+    if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
+        logger.error(f"Error: MultiQC is running in source code directory! {path}")
+        logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+        return True
+    else:
+        return False
+
+
+def handle_analysis_path(item: Path):
+    """
+    Branching logic to handle analysis paths (directories and files)
+    Walks directory trees recursively calling pathlib's `path.iterdir()`.
+    Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
+    """
+    if item.is_symlink() and config.ignore_symlinks:
+        file_search_stats["skipped_symlinks"] += 1
+        return
+    elif item.is_file():
+        searchfiles.append([item.name, os.fspath(item.parent)])
+    elif item.is_dir():
+        # Skip directory if it matches ignore patterns
+        d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
+        p_matches = any(p for p in config.fn_ignore_paths if item.match(p.rstrip(os.sep)))
+        if d_matches or p_matches:
+            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+            return
+
+        # Check not running in install directory
+        if is_searching_in_source_dir(item):
+            return
+
+        for item in item.iterdir():
+            handle_analysis_path(item)
+
 
 def get_filelist(run_module_names):
     """
@@ -137,7 +188,7 @@ def get_filelist(run_module_names):
         ]
         unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
-            logger.warning("Unrecognised search pattern keys for '{}': {}".format(key, ", ".join(unrecognised_keys)))
+            logger.warning(f"Unrecognised search pattern keys for '{key}': {', '.join(unrecognised_keys)}")
 
         # Check if we are skipping this search key
         if any([x.get("skip") for x in sps]):
@@ -162,11 +213,11 @@ def get_filelist(run_module_names):
             spatterns[0][key] = sps
 
     if len(ignored_patterns) > 0:
-        logger.debug("Ignored {} search patterns as didn't match running modules.".format(len(ignored_patterns)))
+        logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
 
     if len(skipped_patterns) > 0:
-        logger.info("Skipping {} file search patterns".format(len(skipped_patterns)))
-        logger.debug("Skipping search patterns: {}".format(", ".join(skipped_patterns)))
+        logger.info(f"Skipping {len(skipped_patterns)} file search patterns")
+        logger.debug(f"Skipping search patterns: {', '.join(skipped_patterns)}")
 
     def add_file(fn, root):
         """
@@ -191,10 +242,18 @@ def get_filelist(run_module_names):
         try:
             f["filesize"] = os.path.getsize(os.path.join(root, fn))
         except (IOError, OSError, ValueError, UnicodeDecodeError):
-            logger.debug("Couldn't read file when checking filesize: {}".format(fn))
+            logger.debug(f"Couldn't read file when checking filesize: {fn}")
         else:
             if f["filesize"] > config.log_filesize_limit:
                 file_search_stats["skipped_filesize_limit"] += 1
+                return False
+
+        # Use mimetypes to exclude binary files where possible
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+            if encoding is not None:
+                return False
+            if ftype is not None and ftype.startswith("image"):
                 return False
 
         # Test file for each search pattern
@@ -211,80 +270,19 @@ def get_filelist(run_module_names):
                             file_search_stats[key] = file_search_stats.get(key, 0) + 1
                             file_matched = True
                         # Don't keep searching this file for other modules
-                        if not sp.get("shared", False):
+                        if not sp.get("shared", False) and key not in config.filesearch_file_shared:
                             runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
                             return True
                         # Don't look at other patterns for this module
-                        else:
-                            break
+                        break
                 runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
 
         return file_matched
 
     # Go through the analysis directories and get file list
-    multiqc_installation_dir_files = [
-        "LICENSE",
-        "CHANGELOG.md",
-        "Dockerfile",
-        "MANIFEST.in",
-        ".gitmodules",
-        "README.md",
-        "CSP.txt",
-        "setup.py",
-        ".gitignore",
-    ]
     total_sp_starttime = time.time()
     for path in config.analysis_dir:
-        if os.path.islink(path) and config.ignore_symlinks:
-            file_search_stats["skipped_symlinks"] += 1
-            continue
-        elif os.path.isfile(path):
-            searchfiles.append([os.path.basename(path), os.path.dirname(path)])
-        elif os.path.isdir(path):
-            for root, dirnames, filenames in os.walk(path, followlinks=(not config.ignore_symlinks), topdown=True):
-                bname = os.path.basename(root)
-
-                # Skip any sub-directories matching ignore params
-                orig_dirnames = dirnames[:]
-                for n in config.fn_ignore_dirs:
-                    dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(d, n.rstrip(os.sep))]
-                    if len(orig_dirnames) != len(dirnames):
-                        removed_dirs = [
-                            os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                        ]
-                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
-                        orig_dirnames = dirnames[:]
-                for n in config.fn_ignore_paths:
-                    dirnames[:] = [d for d in dirnames if not fnmatch.fnmatch(os.path.join(root, d), n.rstrip(os.sep))]
-                    if len(orig_dirnames) != len(dirnames):
-                        removed_dirs = [
-                            os.path.join(root, d) for d in set(orig_dirnames).symmetric_difference(set(dirnames))
-                        ]
-                        file_search_stats["skipped_directory_fn_ignore_dirs"] += len(removed_dirs)
-
-                # Skip *this* directory if matches ignore params
-                d_matches = [n for n in config.fn_ignore_dirs if fnmatch.fnmatch(bname, n.rstrip(os.sep))]
-                if len(d_matches) > 0:
-                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-                    continue
-                p_matches = [n for n in config.fn_ignore_paths if fnmatch.fnmatch(root, n.rstrip(os.sep))]
-                if len(p_matches) > 0:
-                    file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-                    continue
-
-                # Sanity check - make sure that we're not just running in the installation directory
-                if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
-                    logger.error("Error: MultiQC is running in source code directory! {}".format(root))
-                    logger.warning(
-                        "Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc"
-                    )
-                    dirnames[:] = []
-                    filenames[:] = []
-                    continue
-
-                # Search filenames in this directory
-                for fn in filenames:
-                    searchfiles.append([fn, root])
+        handle_analysis_path(Path(path))
 
     # Search through collected files
     console = rich.console.Console(
@@ -313,6 +311,8 @@ def get_filelist(run_module_names):
         progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
+    if config.profile_runtime:
+        logger.info(f"Profile-runtime: Searching files took {runtimes['total_sp']:.2f}s")
 
     # Debug log summary about what we skipped
     summaries = []
@@ -331,14 +331,6 @@ def search_file(pattern, f, module_key):
     fn_matched = False
     contents_matched = False
 
-    # Use mimetypes to exclude binary files where possible
-    if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
-        (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-        if encoding is not None:
-            return False
-        if ftype is not None and ftype.startswith("image"):
-            return False
-
     # Search pattern specific filesize limit
     if pattern.get("max_filesize") is not None and "filesize" in f:
         if f["filesize"] > pattern.get("max_filesize"):
@@ -351,6 +343,8 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file name (regex)
     if pattern.get("fn_re") is not None:
@@ -358,40 +352,82 @@ def search_file(pattern, f, module_key):
             fn_matched = True
             if pattern.get("contents") is None and pattern.get("contents_re") is None:
                 return True
+        else:
+            return False
 
     # Search by file contents
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        try:
+        if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
+            f["contents_lines"] = []
             file_path = os.path.join(f["root"], f["fn"])
-            with io.open(file_path, "r", encoding="utf-8") as fh:
-                l = 1
-                for line in fh:
-                    # Search by file contents (string)
-                    if pattern.get("contents") is not None:
-                        if pattern["contents"] in line:
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
+
+            try:
+                fh = io.open(file_path, "r", encoding="utf-8")
+            except Exception as e:
+                if config.report_readerrors:
+                    logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+                file_search_stats["skipped_file_contents_search_errors"] += 1
+                return False
+            else:
+                try:
+                    for i, line in enumerate(fh):
+                        f["contents_lines"].append(line)
+                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
                             break
-                    # Search by file contents (regex)
-                    elif pattern.get("contents_re") is not None:
-                        if re.search(repattern, line):
-                            contents_matched = True
-                            if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                                return True
-                            break
-                    # Break if we've searched enough lines for this pattern
-                    if pattern.get("num_lines") and l >= pattern.get("num_lines"):
-                        break
-                    l += 1
-        # Can't open file - usually because it's a binary file and we're reading as utf-8
-        except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
-            if config.report_readerrors:
-                logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-            file_search_stats["skipped_file_contents_search_errors"] += 1
-            return False
+                except UnicodeDecodeError as e:
+                    if config.report_readerrors:
+                        logger.debug(
+                            f"Couldn't read file as a utf-8 text when looking for output: {file_path}, {e}. "
+                            f"Usually because it's a binary file. But sometimes there are single non-unicode "
+                            f"characters, so attempting reading while skipping such characters."
+                        )
+                    try:
+                        with io.open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
+                            for i, line in enumerate(fh):
+                                f["contents_lines"].append(line)
+                                if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
+                                    break
+                    except Exception as e:
+                        if config.report_readerrors:
+                            logger.debug(f"Still couldn't read the file, skipping: {file_path}, {e}")
+                        file_search_stats["skipped_file_contents_search_errors"] += 1
+                        return False
+                    else:
+                        if not f["contents_lines"]:
+                            if config.report_readerrors:
+                                logger.debug(f"No utf-8 lines were read from the file, skipping {file_path}")
+                            file_search_stats["skipped_file_contents_search_errors"] += 1
+                            return False
+                except Exception as e:
+                    if config.report_readerrors:
+                        logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
+                    file_search_stats["skipped_file_contents_search_errors"] += 1
+                    return False
+            finally:
+                fh.close()
+
+        # Go through the parsed file contents
+        for i, line in enumerate(f["contents_lines"]):
+            # Break if we've searched enough lines for this pattern
+            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
+                break
+
+            # Search by file contents (string)
+            if pattern.get("contents") is not None:
+                if pattern["contents"] in line:
+                    contents_matched = True
+                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                        return True
+                    break
+            # Search by file contents (regex)
+            elif pattern.get("contents_re") is not None:
+                if re.search(repattern, line):
+                    contents_matched = True
+                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
+                        return True
+                    break
 
     return fn_matched and contents_matched
 
@@ -438,7 +474,7 @@ def exclude_file(sp, f):
 
 
 def data_sources_tofile():
-    fn = "multiqc_sources.{}".format(config.data_format_extensions[config.data_format])
+    fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
             jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
@@ -451,11 +487,11 @@ def data_sources_tofile():
                 for sec in data_sources[mod]:
                     for s_name, source in data_sources[mod][sec].items():
                         lines.append([mod, sec, s_name, source])
-            body = "\n".join(["\t".join(l) for l in lines])
+            body = "\n".join(["\t".join(line) for line in lines])
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile():
+def dois_tofile(modules_output):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
@@ -463,7 +499,7 @@ def dois_tofile():
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
             dois[mod.anchor] = mod.doi
     # Write to a file
-    fn = "multiqc_citations.{}".format(config.data_format_extensions[config.data_format])
+    fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
             jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
@@ -474,7 +510,7 @@ def dois_tofile():
             body = ""
             for mod, dois in dois.items():
                 for doi in dois:
-                    body += "{}{} # {}\n".format(doi, " " * (50 - len(doi)), mod)
+                    body += f"{doi}{' ' * (50 - len(doi))} # {mod}\n"
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
@@ -492,24 +528,24 @@ def save_htmlid(html_id, skiplint=False):
 
     # Must begin with a letter
     if re.match(r"^[a-zA-Z]", html_id_clean) is None:
-        html_id_clean = "mqc_{}".format(html_id_clean)
+        html_id_clean = f"mqc_{html_id_clean}"
 
     # Replace illegal characters
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
 
     # Validate if linting
-    if config.lint and not skiplint:
+    if config.strict and not skiplint:
         modname = ""
         codeline = ""
         callstack = inspect.stack()
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = ">{}< ".format(callpath)
+                modname = f">{callpath}< "
                 codeline = n[4][0].strip()
                 break
-    if config.lint and not skiplint and html_id != html_id_clean:
-        errmsg = "LINT: {}HTML ID was not clean ('{}' -> '{}') ## {}".format(modname, html_id, html_id_clean, codeline)
+    if config.strict and not skiplint and html_id != html_id_clean:
+        errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
         logger.error(errmsg)
         lint_errors.append(errmsg)
 
@@ -517,10 +553,10 @@ def save_htmlid(html_id, skiplint=False):
     i = 1
     html_id_base = html_id_clean
     while html_id_clean in html_ids:
-        html_id_clean = "{}-{}".format(html_id_base, i)
+        html_id_clean = f"{html_id_base}-{i}"
         i += 1
-        if config.lint and not skiplint:
-            errmsg = "LINT: {}HTML ID was a duplicate ({}) ## {}".format(modname, html_id_clean, codeline)
+        if config.strict and not skiplint:
+            errmsg = f"LINT: {modname}HTML ID was a duplicate ({html_id_clean}) ## {codeline}"
             logger.error(errmsg)
             lint_errors.append(errmsg)
 

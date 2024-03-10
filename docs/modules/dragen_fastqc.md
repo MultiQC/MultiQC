@@ -1,7 +1,7 @@
 ---
-Name: DRAGEN-FastQC
-URL: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html
-Description: >
+name: DRAGEN-FastQC
+url: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html
+description: >
   Illumina Bio-IT Platform that uses FPGA for accelerated primary and secondary analysis
 ---
 

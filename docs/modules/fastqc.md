@@ -1,7 +1,7 @@
 ---
-Name: FastQC
-URL: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
-Description: >
+name: FastQC
+url: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
+description: >
   FastQC is a quality control tool for high throughput sequence data,
   written by Simon Andrews at the Babraham Institute in Cambridge.
 ---
@@ -17,7 +17,7 @@ called `fastqc_data.txt` which is relatively easy to parse.
 
 A typical run will produce the following files:
 
-```txt
+```
 mysample_fastqc.html
 mysample_fastqc/
   Icons/
@@ -34,9 +34,11 @@ The FastQC MultiQC module looks for files called `fastqc_data.txt`
 or ending in `_fastqc.zip`. If the zip files are found, they are
 read in memory and `fastqc_data.txt` parsed.
 
-> **Note:** The directory and zip file are often both present. To speed
-> up MultiQC execution, zip files will be skipped if the file name suggests
-> that they will share a sample name with data that has already been parsed.
+:::note
+The directory and zip file are often both present. To speed
+up MultiQC execution, zip files will be skipped if the file name suggests
+that they will share a sample name with data that has already been parsed.
+:::
 
 You can customise the patterns used for finding these files in your
 MultiQC config (see [Module search patterns](#module-search-patterns)).
@@ -50,8 +52,10 @@ sp:
     fn: "*_fastqc.zip"
 ```
 
-> **Note:** Sample names are discovered by parsing the line beginning
-> `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
+:::note
+Sample names are discovered by parsing the line beginning
+`Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
+:::
 
 ### Theoretical GC Content
 
@@ -109,6 +113,25 @@ variable described above:
 ```yaml
 fastqc_config:
   fastqc_theoretical_gc: "/path/to/your/custom_fastqc_theoretical_gc.txt"
+```
+
+### Overrepresented sequences
+
+The overrepresented sequences table shows the most common sequences found,
+measured by the number of samples they occur as overrepresented. By default, the
+table shows top 20 sequences. This can be customised in the config:
+
+```yaml
+fastqc_config:
+  top_overrepresented_sequences: 50
+```
+
+You can also choose to rank the top sequences by the total number of reads
+rather than by number of samples:
+
+```yaml
+fastqc_config:
+  top_overrepresented_sequences_by: "total"
 ```
 
 ### Changing the order of sections
