@@ -200,20 +200,29 @@ class MultiqcModule(BaseMultiqcModule):
             # Everything else
             elif section in keys:
                 if keys[section] == "all" or any([k in s[0].strip() for k in keys[section]]):
+                    if len(s) < 2:
+                        continue
+                    key = s[0].strip()
+                    val = s[1].strip()
                     try:
-                        parsed_data[s[0].strip()] = float(s[1].strip())
+                        val = float(val)
                     except ValueError:
-                        parsed_data[s[0].strip()] = s[1].strip()
-                    except IndexError:
                         pass
                     else:
+                        parsed_data[key] = val
                         # Parsing the number worked - add to totals
                         try:
-                            self.snpeff_section_totals[section][s[0].strip()] += parsed_data[s[0].strip()]
+                            self.snpeff_section_totals[section][key] += val
                         except KeyError:
-                            self.snpeff_section_totals[section][s[0].strip()] = parsed_data[s[0].strip()]
+                            self.snpeff_section_totals[section][key] = val
                     if len(s) > 2 and s[2][-1:] == "%":
-                        parsed_data[f"{s[0].strip()}_percent"] = float(s[2][:-1])
+                        val = s[2].strip("%").strip()
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            pass
+                        else:
+                            parsed_data[f"{key}_percent"] = val
 
         if len(parsed_data) > 0:
             if f["s_name"] in self.snpeff_data:

@@ -177,8 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
-            "tt_percentages": True,
-            "ylab_format": "{value}%",
+            "ysuffix": "%",
             "cpswitch": False,
         }
 
@@ -322,8 +321,14 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ngsderive: Read Length",
             "xlab": "Read Length",
             "ylab": "% Evidence for Read Length",
+            "xsuffix": " bp",
             "data_labels": [
-                {"name": "Percentages", "ylab": "% Evidence for Read Length"},
+                {
+                    "name": "Percentages",
+                    "ylab": "% Evidence for Read Length",
+                    "ymax": 100,
+                    "y_decimals": 2,
+                },
                 {"name": "Counts", "ylab": "Number of reads"},
             ],
         }

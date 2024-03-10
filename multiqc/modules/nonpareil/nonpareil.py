@@ -314,12 +314,10 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
-        esconfig = {
-            "dashStyle": "Dash",
-            "lineWidth": 2,
-            "marker": {"enabled": False},
-            "enableMouseTracking": True,
-            "showInLegend": False,
+        extra_series_config = {
+            "dash": "dash",
+            "line": {"width": 2},
+            "showlegend": False,
         }
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
@@ -346,7 +344,7 @@ class MultiqcModule(BaseMultiqcModule):
                 elif dataset["name"] == "Combined":
                     data_plot[idx][s_name] = data["nonpareil_observed"]
                     if data["nonpareil_has.model"]:
-                        extra_series[idx].append(dict(esconfig))
+                        extra_series[idx].append(dict(extra_series_config))
                         extra_series[idx][-1]["name"] = s_name
                         extra_series[idx][-1]["data"] = [[x, y] for x, y in data["nonpareil_model"].items()]
                         extra_series[idx][-1]["color"] = data_colors[s_name]

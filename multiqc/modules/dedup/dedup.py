@@ -150,8 +150,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.dedup_data, headers)
 
     def dedup_alignment_plot(self):
-        """Make the HighCharts HTML to plot the duplication rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "mapped_after_dedup": {"name": "Unique Retained"},

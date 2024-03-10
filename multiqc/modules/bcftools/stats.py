@@ -194,11 +194,14 @@ class StatsReportMixin:
                 # Variant Qualities
                 if s[0] == "QUAL" and len(s_names) > 0:
                     s_name = s_names[int(s[1])]
-                    quality = float("0" + s[2].strip())
-                    self.bcftools_stats_vqc_snp[s_name][quality] = float(s[3].strip())
-                    self.bcftools_stats_vqc_transi[s_name][quality] = float(s[4].strip())
-                    self.bcftools_stats_vqc_transv[s_name][quality] = float(s[5].strip())
-                    self.bcftools_stats_vqc_indels[s_name][quality] = float(s[6].strip())
+                    try:
+                        quality = float(s[2].strip())
+                    except ValueError:
+                        quality = 0
+                    self.bcftools_stats_vqc_snp[s_name][quality] = int(s[3].strip())
+                    self.bcftools_stats_vqc_transi[s_name][quality] = int(s[4].strip())
+                    self.bcftools_stats_vqc_transv[s_name][quality] = int(s[5].strip())
+                    self.bcftools_stats_vqc_indels[s_name][quality] = int(s[6].strip())
 
         # Remove empty samples
         self.bcftools_stats = {k: v for k, v in self.bcftools_stats.items() if len(v) > 0}
@@ -276,9 +279,9 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Variant Quality Count",
                 "ylab": "Count",
                 "xlab": "Quality",
-                "xDecimals": False,
                 "ymin": 0,
                 "smooth_points": 600,
+                "x_decimals": 0,
                 "data_labels": [
                     "Count SNP",
                     "Count Transitions",
@@ -307,7 +310,7 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Indel Distribution",
                 "ylab": "Count",
                 "xlab": "InDel Length (bp)",
-                "xDecimals": False,
+                "xsuffix": " bp",
                 "ymin": 0,
             }
             self.add_section(
@@ -332,6 +335,7 @@ class StatsReportMixin:
                 "title": "Bcftools Stats: Variant depths",
                 "ylab": "Fraction of sites (%)",
                 "xlab": "Variant depth",
+                "ysuffix": "%",
                 "ymin": 0,
                 "ymax": 100,
                 "categories": True,
@@ -401,6 +405,7 @@ class StatsReportMixin:
                 "id": "bcftools-stats-sequencing-depth",
                 "title": "Bcftools Stats: Sequencing depth",
                 "ylab": "Sequencing depth",
+                "ysuffix": "X",
                 "cpswitch_counts_label": "Sequencing depth",
                 "cpswitch": False,
                 "data_labels": list(self.bcftools_stats_sample_depth),
@@ -457,6 +462,20 @@ class StatsReportMixin:
             "number_of_MNPs": {
                 "title": "MNP",
                 "description": "Variation multinucleotide polymorphisms",
+                "min": 0,
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "number_of_multiallelic_sites": {
+                "title": "Multiallelic",
+                "description": "Variation sites with multiple alleles",
+                "min": 0,
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "number_of_multiallelic_SNP_sites": {
+                "title": "Multiallelic SNP",
+                "description": "Variation sites with multiple SNPs",
                 "min": 0,
                 "format": "{:,.0f}",
                 "hidden": True,
