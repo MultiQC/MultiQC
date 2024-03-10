@@ -1,3 +1,3 @@
-from .adapterRemoval import MultiqcModule
+from .adapterremoval import MultiqcModule
 
 __all__ = ["MultiqcModule"]
