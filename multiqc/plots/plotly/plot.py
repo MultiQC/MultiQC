@@ -185,11 +185,11 @@ class Plot(ABC):
 
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
         if self.pconfig.get("xlog", self.pconfig.get("xLog")):
-            self.layout.xaxis.type = "log"
+            self._set_axis_log_scale(self.layout.xaxis)
             if "xaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("xaxis")
         if self.pconfig.get("ylog", self.pconfig.get("yLog")):
-            self.layout.yaxis.type = "log"
+            self._set_axis_log_scale(self.layout.yaxis)
             if "yaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("yaxis")
         if self.add_log_tab and self.l_active:
@@ -215,6 +215,16 @@ class Plot(ABC):
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
+
+    @staticmethod
+    def _set_axis_log_scale(axis):
+        axis.type = "log"
+        minval = axis.autorangeoptions["minallowed"]
+        maxval = axis.autorangeoptions["maxallowed"]
+        minval = math.log10(minval) if minval is not None and minval > 0 else None
+        maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+        axis.autorangeoptions["minallowed"] = minval
+        axis.autorangeoptions["maxallowed"] = maxval
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
