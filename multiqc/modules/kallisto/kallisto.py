@@ -121,8 +121,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.kallisto_data, headers)
 
     def kallisto_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "pseudoaligned_reads": {"color": "#437bb1", "name": "Pseudoaligned"},

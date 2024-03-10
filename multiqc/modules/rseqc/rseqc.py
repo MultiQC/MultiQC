@@ -1,7 +1,6 @@
 """ MultiQC module to parse output from RSeQC """
 
 import logging
-import os
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -47,11 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "bam_stat",
                 "tin",
             ]
-
-        # Add self.js to be included in template
-        self.js = {
-            "assets/js/multiqc_rseqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_rseqc.js")
-        }
 
         # Call submodule functions
         for sm in rseqc_sections:

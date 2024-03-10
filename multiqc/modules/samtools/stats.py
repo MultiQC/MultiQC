@@ -4,7 +4,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph, violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -189,7 +189,7 @@ class StatsReportMixin:
             name="Alignment stats",
             anchor="samtools-stats",
             description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.samtools_stats,
                 keys,
                 {
@@ -245,7 +245,6 @@ class StatsReportMixin:
 
 
 def alignment_chart(data):
-    """Make the HighCharts HTML to plot the alignment rates"""
     keys = {
         "reads_mapped_MQ1": {"color": "#437bb1", "name": "Mapped (with MQ>0)"},
         "reads_MQ0": {"color": "#FF9933", "name": "MQ0"},

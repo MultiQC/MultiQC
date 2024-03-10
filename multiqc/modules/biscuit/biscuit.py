@@ -4,9 +4,8 @@
 import logging
 import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, linegraph, beeswarm
+from multiqc.plots import bargraph, linegraph, violin
 
 # Initialize the logger
 log = logging.getLogger(__name__)
@@ -303,10 +302,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "BISCUIT: Distribution of Mapping Qualities",
             "ymin": 0,
             "xmin": 0,
-            "yLabelFormat": "{value}%",
             "tt_label": "<strong>Q{point.x}:</strong> {point.y:.2f}% of mapped reads",
-            "ylab": "% of Primary Mapped Reads",
-            "xlab": "Mapping Quality Score",
+            "ysuffix": "%",
+            "ylab": "% of primary mapped reads",
+            "xlab": "Mapping quality score",
         }
 
         self.add_section(
@@ -454,23 +453,27 @@ class MultiqcModule(BaseMultiqcModule):
         for s_name, dd in self.mdata["align_isize"].items():
             if "no_data_available" not in dd.keys():
                 pd_p[s_name] = dd["percent"]
-                pd_r[s_name] = {ins: cnt * config.read_count_multiplier for ins, cnt in dd["readcnt"].items()}
+                pd_r[s_name] = dd["readcnt"]
 
         pconfig = {
             "id": "biscuit_isize",
             "title": "BISCUIT: Insert Size Distribution",
             "ymin": 0,
             "xmin": 0,
-            "yLabelFormat": "{value}",
             "smooth_points": 1000,  # limit number of points / smooth data
-            "tt_label": "<strong>IS{point.x}:</strong> {point.y:.2f}",
             "xlab": "Insert Size",
-            "ylab": "% of Mapped Reads",
             "data_labels": [
-                {"name": "Percent of Reads", "ylab": "% of Mapped Reads"},
                 {
-                    "name": f"{config.read_count_desc.capitalize()} of Reads",
-                    "ylab": f"{config.read_count_desc.capitalize()} of Mapped Reads",
+                    "name": "% of Mapped Reads",
+                    "ylab": "% of Mapped Reads",
+                    "ysuffix": "%",
+                    "tt_label": "<strong>IS%{x} bp:</strong> %{y:.2f}%",
+                },
+                {
+                    "name": "Mapped Reads",
+                    "ylab": "Mapped Reads",
+                    "ysuffix": "",
+                    "tt_label": "<strong>IS%{x} bp:</strong> %{y:,.0f}",
                 },
             ],
         }
@@ -547,14 +550,13 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_c_active": False,
             "title": "BISCUIT: Percentage of Duplicate Reads",
             "data_labels": [{"name": "Overall Duplicate Rate"}, {"name": "MAPQ>=40 Duplicate Rate"}],
-            "ylab": "Duplicate Rate [%]",
+            "ylab": "Duplicate rate",
             "ymin": 0,
             "ymax": 100,
-            "yCeiling": 110,
+            "y_clipmax": 110,
             "use_legend": False,
             "tt_decimals": 1,
             "tt_suffix": "%",
-            "tt_percentages": False,
         }
 
         if len(pd1) > 0:
@@ -563,7 +565,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="biscuit-dup-report",
                 description="Shows the percentage of total reads that are duplicates.",
                 helptext="""
-                    `MAPQ >= 40` shows the duplicate rate for just the reads reads
+                    `MAPQ >= 40` shows the duplicate rate for just the reads
                     with a mapping quality score of `MAPQ >= 40`.
                 """,
                 plot=bargraph.plot([pd1, pd2], [pheader, pheader], pconfig),
@@ -642,8 +644,8 @@ class MultiqcModule(BaseMultiqcModule):
             if len(data) > 0:
                 pd[s_name] = data
 
-        shared_mean = {"min": 0, "format": "{:,3f}", "minRange": 10}
-        shared_cofv = {"min": 0, "format": "{:,3f}", "minRange": 50}
+        shared_mean = {"min": 0, "format": "{:,3f}", "minrange": 10}
+        shared_cofv = {"min": 0, "format": "{:,3f}", "minrange": 50}
 
         pheader = {
             "mu_a_b": dict(
@@ -786,7 +788,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "biscuit_seq_depth",
             "table_title": "BISCUIT: Sequencing Depth",
-            "sortRows": False,
+            "sort_rows": False,
         }
 
         if len(pd) > 0:
@@ -808,7 +810,7 @@ class MultiqcModule(BaseMultiqcModule):
                     * _Low GC_ - Bases / CpGs that overlap with the bottom 10% of 100bp windows for GC-content
 
                 """,
-                plot=beeswarm.plot(pd, pheader, pconfig),
+                plot=violin.plot(pd, pheader, pconfig),
             )
 
     ########################################
@@ -1106,11 +1108,12 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biscuit_retention_cytosine",
             "title": "BISCUIT: Retention vs. Base Position in Read",
             "xlab": "Position in Read",
+            "xsuffix": "bp",
             "ylab": "CpG Retention Rate (%)",
             "ymin": 0,
             "ymax": 100,
-            "yMinRange": 0,
-            "yFloor": 0,
+            "y_minrange": 0,
+            "y_clipmin": 0,
             "tt_label": "<strong>Position {point.x}:</strong> {point.y:.2f}%",
             "data_labels": [
                 {"name": "CpG Read 1", "ylab": "CpG Retention Rate (%)"},

@@ -61,34 +61,34 @@ class LinePlot(Plot):
                     len(line["data"]) == len(dataset.dconfig["categories"]) for line in dataset.lines
                 ), dataset.uid
 
-            # convert HighCharts hardcoded trace parameters to Plotly
+            # convert HighCharts-style hardcoded trace parameters to Plotly style
             lines = []
             for src_line in dataset.lines:
                 new_line = {
                     "name": src_line["name"],
                     "data": src_line["data"],
                     "color": src_line.get("color"),
+                    "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+                    "line": {
+                        "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
+                        "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                    },
                 }
-                lines.append(new_line)
-                new_line["marker"] = {}
-                if "dashStyle" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["dash"] = convert_dash_style(src_line["dashStyle"])
-                if "lineWidth" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["width"] = src_line["lineWidth"]
-                if "showInLegend" in src_line:
-                    new_line["showlegend"] = src_line["showInLegend"]
                 if "marker" in src_line:
-                    new_line["marker"] = new_line.get("marker", {})
-                    new_line["marker"]["line"] = new_line["marker"].get("line", {})
-                    if "lineWidth" in src_line["marker"]:
-                        new_line["marker"]["line"]["width"] = src_line["marker"]["lineWidth"]
-                    if "lineColor" in src_line["marker"]:
-                        new_line["marker"]["line"]["color"] = src_line["marker"]["lineColor"]
-                    if "symbol" in src_line["marker"]:
-                        new_line["mode"] = "lines+markers"
-                        new_line["marker"]["symbol"] = src_line["marker"]["symbol"]
+                    new_line["mode"] = "lines+markers"
+                    new_line["marker"] = {
+                        "symbol": src_line["marker"].get("symbol"),
+                        "line": {
+                            "width": src_line["marker"]
+                            .get("line", {})
+                            .get("width", src_line["marker"].get("lineWidth")),
+                            "color": src_line["marker"]
+                            .get("line", {})
+                            .get("color", src_line["marker"].get("lineColor")),
+                        },
+                    }
+                lines.append(remove_nones_and_empty_dicts(new_line))
+
             dataset.lines = lines
             # Update default trace parameters
             dataset.trace_params.update(
@@ -260,7 +260,7 @@ class LinePlot(Plot):
                     y1=line["value"],
                     line={
                         "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -277,7 +277,7 @@ class LinePlot(Plot):
                     y1=1,
                     line={
                         "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -338,7 +338,7 @@ class LinePlot(Plot):
 
 def convert_dash_style(dash_style: str) -> str:
     """Convert dash style from Highcharts to Plotly"""
-    return {
+    mapping = {
         "Solid": "solid",
         "ShortDash": "dash",
         "ShortDot": "dot",
@@ -350,4 +350,16 @@ def convert_dash_style(dash_style: str) -> str:
         "LongDash": "longdash",
         "LongDashDot": "longdashdot",
         "LongDashDotDot": "longdashdot",
-    }.get(dash_style, "solid")
+    }
+    if dash_style in mapping.values():  # Plotly style?
+        return dash_style
+    elif dash_style in mapping.keys():  # Highcharts style?
+        return mapping[dash_style]
+    return "solid"
+
+
+def remove_nones_and_empty_dicts(d: Dict) -> Dict:
+    """Remove None and empty dicts from a dict recursively."""
+    if not isinstance(d, Dict):
+        return d
+    return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}

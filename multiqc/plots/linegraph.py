@@ -56,7 +56,7 @@ def plot(data, pconfig=None):
                 break
         # Look for essential missing pconfig keys
         for k in ["id", "title", "ylab"]:
-            if k not in pconfig:
+            if k not in pconfig and any(k not in dl for dl in pconfig.get("data_labels", [])):
                 errmsg = f"LINT: {modname}Linegraph pconfig was missing key '{k}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
@@ -89,7 +89,6 @@ def plot(data, pconfig=None):
         except Exception:
             pass
 
-    # Generate the data dict structure expected by HighCharts series
     plotdata: List[List[Dict]] = []
     for data_index, d in enumerate(data):
         thisplotdata: List[Dict] = []
@@ -200,9 +199,6 @@ def plot(data, pconfig=None):
     except Exception:
         pass
 
-    # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    # identical to default scale of the Highcharts JS library, this is not strictly
-    # needed. But it future proofs when we replace Highcharts with something else.
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for si, sd in enumerate(plotdata):
         for di, d in enumerate(sd):
