@@ -5,7 +5,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class FlagstatReportMixin:
             name="Flagstat",
             anchor="samtools-flagstat",
             description="This module parses the output from <code>samtools flagstat</code>. All numbers in millions.",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.samtools_flagstat,
                 keys,
                 {

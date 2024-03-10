@@ -268,7 +268,6 @@ class MultiqcModule(BaseMultiqcModule):
             "anchor": "multiqc_whatshap_phased_bp",
             "ylab": "Base Pairs",
             "cpswitch": False,
-            "tt_percentages": False,
         }
 
         keys = {"Phased Base Pairs": {"name": "Phased Base Pairs"}}

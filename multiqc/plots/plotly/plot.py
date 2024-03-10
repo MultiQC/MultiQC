@@ -184,12 +184,12 @@ class Plot(ABC):
         )
 
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
-        if self.pconfig.get("xLog"):
-            self.layout.xaxis.type = "log"
+        if self.pconfig.get("xlog", self.pconfig.get("xLog")):
+            self._set_axis_log_scale(self.layout.xaxis)
             if "xaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("xaxis")
-        if self.pconfig.get("yLog"):
-            self.layout.yaxis.type = "log"
+        if self.pconfig.get("ylog", self.pconfig.get("yLog")):
+            self._set_axis_log_scale(self.layout.yaxis)
             if "yaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("yaxis")
         if self.add_log_tab and self.l_active:
@@ -215,6 +215,16 @@ class Plot(ABC):
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
+
+    @staticmethod
+    def _set_axis_log_scale(axis):
+        axis.type = "log"
+        minval = axis.autorangeoptions["minallowed"]
+        maxval = axis.autorangeoptions["maxallowed"]
+        minval = math.log10(minval) if minval is not None and minval > 0 else None
+        maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+        axis.autorangeoptions["minallowed"] = minval
+        axis.autorangeoptions["maxallowed"] = maxval
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -279,7 +289,7 @@ class Plot(ABC):
                 '<p class="text-info">',
                 "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -556,31 +566,67 @@ def _dataset_layout(
 
     # Format on-hover tooltips
     ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
-    if ylabformat and "%" in ylabformat:
-        ysuffix = "%"
-
     xsuffix = pconfig.get("xsuffix")
+
+    # Options deprecated in 1.21
+    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
+    if ysuffix is None and ylabformat:
+        if "}" in ylabformat:
+            ysuffix = ylabformat.split("}")[1]
     xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
-    if xlabformat and "%" in xlabformat:
-        xsuffix = "%"
+    if xsuffix is None and xlabformat:
+        if "}" in xlabformat:
+            xsuffix = xlabformat.split("}")[1]
+
+    # Set or remove space in known suffixes
+    KNOWN_SUFFIXES = ["%", "x", "X", "k", "M", " bp", " kbp", " Mbp"]
+    for suf in KNOWN_SUFFIXES:
+        if ysuffix is not None and ysuffix == suf.strip():
+            ysuffix = suf
+        if xsuffix is not None and xsuffix == suf.strip():
+            xsuffix = suf
+
+    # Set % suffix from ylab if it's in form like "% reads"
+    ylab = pconfig.get("ylab")
+    xlab = pconfig.get("xlab")
+    if ysuffix is None and ylab:
+        if "%" in ylab or "percentage" in ylab.lower():
+            ysuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if ylab.endswith(f" ({suf.strip()})"):
+                ysuffix = suf
+    if xsuffix is None and xlab:
+        if "%" in xlab or "percentage" in xlab.lower():
+            xsuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if xlab.endswith(f" ({suf.strip()})"):
+                xsuffix = suf
 
     if "tt_label" in pconfig:
-        # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
+        # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
 
-        # if "%" character is inside the Y label, add suffix to the Y ticks as well
-        parts = tt_label.split("%{")
-        for part in parts:
-            if ysuffix is None and part.startswith("y") and "}" in part:
-                ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in ysuffix:
-                    ysuffix = ysuffix.split(",")[0]
-            elif xsuffix is None and part.startswith("x") and "}" in part:
-                xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in xsuffix:
-                    xsuffix = xsuffix.split(",")[0]
+        if ysuffix is None or xsuffix is None:
+            # if "%" or other suffix is in the hover label, parse that suffix to add it to the ticks
+            parts = tt_label.split("%{")
+            for part in parts:
+                if ysuffix is None and part.startswith("y") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                ysuffix = suf
+                                break
+                elif xsuffix is None and part.startswith("x") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                xsuffix = suf
+                                break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
         if ysuffix is not None and "{y}" + ysuffix in tt_label:
@@ -600,19 +646,22 @@ def _dataset_layout(
         hovertemplate = None
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
-    y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
+    y_decimals = pconfig.get("tt_decimals", pconfig.get("y_decimals", pconfig.get("decimalPlaces")))
+    y_hoverformat = f",.{y_decimals}f" if y_decimals is not None else None
+
+    x_decimals = pconfig.get("x_decimals")
+    x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
 
     layout = dict(
         title=dict(text=pconfig.get("title")),
         xaxis=dict(
-            hoverformat=None,
+            hoverformat=x_hoverformat,
             ticksuffix=xsuffix or "",
             title=dict(text=pconfig.get("xlab")),
             rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("xFloor"),
-                clipmax=pconfig.get("xCeiling"),
+                clipmin=pconfig.get("x_clipmin", pconfig.get("xFloor")),
+                clipmax=pconfig.get("x_clipmax", pconfig.get("xCeiling")),
                 minallowed=pconfig.get("xmin"),
                 maxallowed=pconfig.get("xmax"),
             ),
@@ -623,8 +672,8 @@ def _dataset_layout(
             title=dict(text=pconfig.get("ylab")),
             rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("yFloor"),
-                clipmax=pconfig.get("yCeiling"),
+                clipmin=pconfig.get("y_clipmin", pconfig.get("yFloor")),
+                clipmax=pconfig.get("y_clipmax", pconfig.get("yCeiling")),
                 minallowed=pconfig.get("ymin"),
                 maxallowed=pconfig.get("ymax"),
             ),

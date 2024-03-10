@@ -455,7 +455,6 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "tt_percentages": False,
             "hide_zero_cats": False,
             "data_labels": [
                 "Plus Strand +",
@@ -499,7 +498,6 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "tt_percentages": False,
             "hide_zero_cats": False,
         }
 

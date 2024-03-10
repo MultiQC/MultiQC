@@ -950,7 +950,7 @@ long_read_count_desc: "thousands"
 
 ## Number formatting
 
-By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand
+By default, the interactive plots in MultiQC reports use spaces for thousands
 separators and points for decimal places (_e.g._ `1 234 567.89`). Different countries
 have different preferences for this, so you can customise the two using a couple of
 configuration parameters - `decimalPoint_format` and `thousandsSep_format`.

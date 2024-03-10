@@ -540,6 +540,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "somalier_het_check_plot",
                 "title": "Somalier: Sample Observed Heterozygosity",
                 "xlab": "Mean depth",
+                "xsuffix": "x",
                 "ylab": "Standard deviation of allele-balance",
             }
 
