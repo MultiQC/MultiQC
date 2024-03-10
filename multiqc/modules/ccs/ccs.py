@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="CCS",
             anchor="ccs",

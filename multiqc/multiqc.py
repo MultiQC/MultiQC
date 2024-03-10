@@ -752,8 +752,13 @@ def run(
             if not isinstance(modules, list):
                 modules = [modules]
             for m in modules:
-                # If m has parse method without arguments, call it:
-                if hasattr(m, "parse") and isinstance(m.parse, Callable) and m.parse.__code__.co_argcount == 1:
+                if (
+                    hasattr(m, "parse")
+                    and isinstance(m.parse, Callable)
+                    and m.parse.__code__.co_argcount == 1
+                    # make sure it's not the base class, but in the derived class:
+                    and m.parse.__code__.co_qualname != "BaseMultiqcModule.parse"
+                ):
                     m.parse()
                     m.add_sections()
                 else:
