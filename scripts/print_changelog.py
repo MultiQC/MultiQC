@@ -4,6 +4,7 @@ Script to prepare a release changelog section.
 Takes the git commit history since the last tag, assuming each commit message is a changelog
 entry (if it's not suffixed with [no changelog]), and creates a markdown.
 """
+
 import datetime
 import os
 import re

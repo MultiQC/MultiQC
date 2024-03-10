@@ -4,7 +4,7 @@ This checklist is for my own reference, as I forget the steps every time.
 
 1. Check that everything is up-to-date and ready to go
 2. Update version numbers in `pyproject.toml`
-3. Run `python .github/changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
+3. Run `python scripts/print_changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
 4. Install the package again in `install` mode:
 
    ```bash
