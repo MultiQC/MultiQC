@@ -39,8 +39,6 @@ class BaseMultiqcModule:
         autoformat=True,
         autoformat_type="markdown",
         doi: Optional[str] = None,
-        path_filters: Optional[Union[str, List[str]]] = None,
-        path_filters_exclude: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
@@ -51,15 +49,6 @@ class BaseMultiqcModule:
         self.comment = self.mod_cust_config.get("comment", comment)
         self.extra = self.mod_cust_config.get("extra", extra)
         self.doi = self.mod_cust_config.get("doi", (doi or []))
-
-        # Pick up path filters if specified.
-        # Allows modules to be called multiple times with different sets of files
-        if isinstance(path_filters, str):
-            path_filters = [path_filters]
-        if isinstance(path_filters_exclude, str):
-            path_filters_exclude = [path_filters_exclude]
-        self.path_filters: Optional[List[str]] = path_filters
-        self.path_filters_exclude: Optional[List[str]] = path_filters_exclude
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions = defaultdict(list)
@@ -124,6 +113,14 @@ class BaseMultiqcModule:
                  for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
+        # Pick up path filters if specified.
+        # Allows modules to be called multiple times with different sets of files
+        path_filters: Union[str, List[str]] = self.mod_cust_config.get("path_filters", [])
+        path_filters_exclude: Union[str, List[str]] = self.mod_cust_config.get("path_filters_exclude", [])
+        if isinstance(path_filters, str):
+            path_filters: List[str] = [path_filters]
+        if isinstance(path_filters_exclude, str):
+            path_filters_exclude: List[str] = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -146,14 +143,14 @@ class BaseMultiqcModule:
             report.last_found_file = os.path.join(f["root"], f["fn"])
 
             # Filter out files based on exclusion patterns
-            if self.path_filters_exclude and len(self.path_filters_exclude) > 0:
+            if path_filters_exclude and len(path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analysis dirs
                 exlusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in self.path_filters_exclude),
+                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
                         (
                             fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
-                            for pfe in self.path_filters_exclude
+                            for pfe in path_filters_exclude
                         )
                         for analysis_dir in config.analysis_dir
                     ),
@@ -165,15 +162,12 @@ class BaseMultiqcModule:
                     continue
 
             # Filter out files based on inclusion patterns
-            if self.path_filters and len(self.path_filters) > 0:
+            if path_filters and len(path_filters) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in self.path_filters),
+                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
                     *(
-                        (
-                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf))
-                            for pf in self.path_filters
-                        )
+                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
                         for analysis_dir in config.analysis_dir
                     ),
                 )
