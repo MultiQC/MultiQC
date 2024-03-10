@@ -14,8 +14,6 @@
 ### Module updates
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
-- **Samtools**: add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
-- **Bcftools**: stats: add multialleic sites column ([#2414](https://github.com/MultiQC/MultiQC/pull/2414))
 - **Samtools**: support new `markdup` command ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
 - **Space Ranger**: fix for missing `genomic_dna` section ([#2429](https://github.com/MultiQC/MultiQC/pull/2429))
 
