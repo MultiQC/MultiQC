@@ -52,7 +52,8 @@ $(function () {
     });
 
     // Copy table contents to clipboard
-    let clipboard = new Clipboard(".mqc_table_copy_btn");
+    let clipboard = new ClipboardJS(".mqc_table_copy_btn");
+
     clipboard.on("success", function (e) {
       e.clearSelection();
     });

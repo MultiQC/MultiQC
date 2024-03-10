@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
@@ -112,7 +110,6 @@ def is_searching_in_source_dir(path: Path) -> bool:
         "MANIFEST.in",
         ".gitmodules",
         "README.md",
-        "CSP.txt",
         "setup.py",
         ".gitignore",
     ]

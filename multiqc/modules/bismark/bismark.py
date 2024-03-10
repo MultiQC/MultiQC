@@ -6,7 +6,7 @@ import re
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, linegraph
+from multiqc.plots import bargraph, violin, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -450,7 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cytosine Methylation",
             anchor="bismark-methylation",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.bismark_data["methextract"],
                 keys,
                 {

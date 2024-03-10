@@ -33,20 +33,7 @@ class LinePlot extends Plot {
     let nonHighlighted = lines.filter((p) => !p.highlight);
     lines = nonHighlighted.concat(highlighted);
 
-    let categories = dataset["dconfig"]["categories"] ?? [];
     return lines.map((line) => {
-      let x, y;
-      if (line.data.length > 0 && Array.isArray(line.data[0])) {
-        x = line.data.map((x) => x[0]);
-        y = line.data.map((x) => x[1]);
-      } else if (categories.length > 0) {
-        x = categories;
-        y = line.data;
-      } else {
-        x = [...Array(line.data.length).keys()];
-        y = line.data;
-      }
-
       let params = {
         marker: line["marker"] ?? {},
         line: line["line"] ?? {},
@@ -60,10 +47,10 @@ class LinePlot extends Plot {
 
       return {
         type: "scatter",
-        x: x,
-        y: y,
+        x: line.data.map((x) => x[0]),
+        y: line.data.map((x) => x[1]),
         name: line.name,
-        text: x.map(() => line.name),
+        text: line.data.map(() => line.name),
         ...params,
       };
     });
@@ -79,11 +66,7 @@ class LinePlot extends Plot {
     let x = null;
     lines.forEach((line) => {
       let thisX;
-      if (line.data.length > 0 && Array.isArray(line.data[0])) {
-        thisX = line.data.map((x) => x[0]);
-      } else {
-        thisX = dataset["dconfig"]["categories"];
-      }
+      thisX = line.data.map((x) => x[0]);
       if (x === null) {
         x = thisX;
       } else if (x.length !== thisX.length) {

@@ -178,8 +178,6 @@ def plot(data, cats=None, pconfig=None):
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    # identical to default scale of the Highcharts JS library, this is not strictly
-    # needed. But it future proofs when we replace Highcharts with something else.
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for si, sd in enumerate(plotdata):
         for di, d in enumerate(sd):

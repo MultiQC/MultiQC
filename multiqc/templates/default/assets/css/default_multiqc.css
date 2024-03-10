@@ -881,7 +881,7 @@ tbody .sorthandle {
   left: 0;
 }
 
-/* Flat MatPlotLib plots */
+/* Flat plots */
 .mqc_mplplot {
   border: 1px solid #dedede;
   margin-top: 0;
@@ -892,7 +892,7 @@ tbody .sorthandle {
   height: auto;
 }
 
-/* Draggable height bar for HighCharts Plots */
+/* Draggable height bar interactive plots */
 .hc-plot {
   height: 500px;
   width: 100%;
