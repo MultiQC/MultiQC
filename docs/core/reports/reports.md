@@ -64,11 +64,11 @@ Plots in MultiQC reports are usually interactive, using the
 You can hover the mouse over data to see a tooltip with more information
 about that dataset. Clicking and dragging on the line graphs will zoom into that area.
 
-<img src="../../../docs/images/plot_zoom.png" alt="plot_zoom" width=620/>
+![plot_zoom](../../../docs/images/plot_zoom.png)
 
 To reset the zoom, use the button in the top right:
 
-<img src="../../../docs/images/plot_reset_zoom.png" alt="reset zoom" width=300/>
+![plot_reset_zoom](../../../docs/images/plot_reset_zoom.png)
 
 Plots have a grey bar along their base; clicking and dragging this will
 resize the plot's height:
@@ -101,7 +101,7 @@ If you want to use the plot elsewhere (_e.g._ in a presentation or paper),
 you can export it in a range of formats. Just click the menu button in
 the top right of the plot:
 
-<img src="../../../docs/images/plot_export.png" alt="plot_export" width=200/>
+![plot_export](../../../docs/images/plot_export.png)
 
 This opens the MultiQC Toolbox _Export Plots_ panel with the current plot
 selected. You have a range of export options here. When deciding on output
@@ -117,7 +117,7 @@ Some plots have buttons above them which allow you to change the data
 that they show or their axis. For example, many bar plots have the option
 to show the data as percentages instead of counts, or use a logarithmic scale:
 
-<img src="../../../docs/images/plot_percentage_button.png" alt="plot_percentage_button" width=280/>
+![plot_percentage_button](../../../docs/images/plot_percentage_button.png)
 
 ## Toolbox
 

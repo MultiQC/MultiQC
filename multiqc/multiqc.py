@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 multiqc.multiqc
 ~~~~~~~~~~~~~~~~~~~~~
@@ -7,6 +5,7 @@ The main function to run MultiQC. Sorry about the messy namespace.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
+
 import base64
 import errno
 import io
