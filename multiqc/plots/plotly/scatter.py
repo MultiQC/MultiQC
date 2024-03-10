@@ -35,7 +35,6 @@ class ScatterPlot(Plot):
     @dataclasses.dataclass
     class Dataset(BaseDataset):
         points: List[PointT]
-        categories: List[str]
 
         @staticmethod
         def create(
@@ -46,7 +45,6 @@ class ScatterPlot(Plot):
             dataset = ScatterPlot.Dataset(
                 **dataset.__dict__,
                 points=points,
-                categories=pconfig.get("categories", []),
             )
 
             dataset.trace_params.update(
@@ -58,6 +56,14 @@ class ScatterPlot(Plot):
                     color="rgba(124, 181, 236, .5)",
                 ),
             )
+
+            # if categories is provided, set them as x-axis ticks
+            categories = pconfig.get("categories")
+            if categories:
+                dataset.layout["xaxis"]["tickmode"] = "array"
+                dataset.layout["xaxis"]["tickvals"] = list(range(len(categories)))
+                dataset.layout["xaxis"]["ticktext"] = categories
+
             return dataset
 
         def create_figure(
@@ -116,17 +122,6 @@ class ScatterPlot(Plot):
             in_legend = set()
             for element in self.points:
                 x = element["x"]
-                if self.categories:
-                    if isinstance(x, float):
-                        x = int(round(x))
-                    if isinstance(x, int) and (0 <= x < len(self.categories)):
-                        x = self.categories[x]
-                    else:
-                        logger.error(
-                            f"Scatter plot {self.plot.id}: x={x} must be an index in the list of categories: {self.categories}"
-                        )
-                        continue
-
                 name = element["name"]
                 group = element.get("group")
                 color = element.get("color")

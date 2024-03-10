@@ -656,7 +656,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "value": self.qc3c_data["bam"][smpl]["b_obs_insert_median"],
                     "color": "#D8E2DC",
                     "width": 2,
-                    "dashStyle": "ShortDashDot",
+                    "dash": "dashdot",
                 }
             )
 
@@ -668,9 +668,8 @@ class MultiqcModule(BaseMultiqcModule):
             "logswitch": True,
             "logswitch_active": True,
             "logswitch_label": "Log10 [Density]",
-            "xLog": True,
-            # 'yLog': True,
-            "xPlotLines": median_lines,
+            "xlog": True,
+            "x_lines": median_lines,
             "xlab": "Log10 [Separation]",
             "ylab": "Density",
             "tt_label": "x:{point.x:.0f} bp, y:{point.y:.8f}",

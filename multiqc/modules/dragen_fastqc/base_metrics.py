@@ -77,10 +77,9 @@ class DragenBaseMetrics(BaseMultiqcModule):
             "ylab": "Phred Quality Score",
             "xlab": "Position (bp)",
             "ymin": 0,
-            "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 28, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},

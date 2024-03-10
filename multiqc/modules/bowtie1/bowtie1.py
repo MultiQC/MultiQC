@@ -120,8 +120,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie_data, headers)
 
     def bowtie_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "reads_aligned": {"color": "#8bbc21", "name": "Aligned"},

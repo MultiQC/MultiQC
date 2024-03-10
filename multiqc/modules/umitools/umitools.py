@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph, violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             "read2_mismatch": {"color": "#fd86aa", "name": "Read2 Mismatch"},
         }
 
-        # add a section with a beeswarm plot of UMI stats to the report
+        # Add a section with a barplot plot of UMI stats to the report
         self.add_section(
             name="Extract Stats",
             anchor="umitools_extract",
@@ -273,7 +273,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        # add a section with a beeswarm plot of UMI stats to the report
+        # add a section with a violin plot of UMI stats to the report
         self.add_section(
             name="UMI Stats",
             anchor="umitools-umi-stats",
@@ -285,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
             - **Mean #UMI**: Mean number of unique UMIs per position
             - **Max #UMI**: Max number of unique UMIs per position
             """,
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 data_by_sample,
                 headers,
                 {

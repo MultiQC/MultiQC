@@ -1,4 +1,6 @@
-// Javascript for the FastQC MultiQC Mod
+////////////////////////////////////////////////
+// Javascript for the DRAGEN FastQC MultiQC module
+////////////////////////////////////////////////
 
 ///////////////
 // Per Base Sequence Content
@@ -523,45 +525,6 @@ function fastqc_module(module_element, module_key) {
     if (orig_s_name !== undefined) {
       plot_single_seqcontent(s_name);
     }
-  });
-  module_element.on("click", ".fastqc_seqcontent_single_prevnext", function (e) {
-    e.preventDefault();
-    // Find next / prev sample name
-    var idx = sample_names.indexOf(current_single_plot);
-    if ($(this).data("action") == "next") {
-      idx++;
-    } else {
-      idx--;
-    }
-    if (idx < 0) {
-      idx = sample_names.length - 1;
-    }
-    if (idx >= sample_names.length) {
-      idx = 0;
-    }
-    var s_name = sample_names[idx];
-    var orig_s_name = orig_s_names[sample_names[idx]];
-    current_single_plot = s_name;
-    // Prep the new plot data
-    var plot_data = [[], [], [], []];
-    var bases = Object.keys(fastqc_seq_content[module_key][orig_s_name]).sort(function (a, b) {
-      return a - b;
-    });
-    for (i = 0; i < bases.length; i++) {
-      var base = fastqc_seq_content[module_key][orig_s_name][bases[i]]["base"].toString().split("-");
-      base = parseFloat(base[0]);
-      plot_data[0].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["t"]]);
-      plot_data[1].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["c"]]);
-      plot_data[2].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["a"]]);
-      plot_data[3].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["g"]]);
-    }
-    // Update the chart
-    var hc = module_element.find("#fastqc_sequence_content_single").highcharts();
-    for (i = 0; i < plot_data.length; i++) {
-      hc.series[i].setData(plot_data[i], false);
-    }
-    hc.setTitle({ text: s_name });
-    hc.redraw({ duration: 200 });
   });
   module_element.on("click", "#fastqc_sequence_content_single_back", function (e) {
     e.preventDefault();

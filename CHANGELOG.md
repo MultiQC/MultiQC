@@ -5,6 +5,8 @@
 ### MultiQC updates
 
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
+- Remove CSP.txt and the linting check, move the script that prints missing hashes under `scripts`. Admins of servers with Content Security Policy can use it to print missing hashes when they install a new MultiQC version with: `python scripts/print_missing_csp.py --report full_report.html` ([#2421](https://github.com/MultiQC/MultiQC/pull/2421))
+- Remove the `highcharts` template ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
 - Do not maintain change log between releases ([#2427](https://github.com/MultiQC/MultiQC/pull/2427))
 
 ### New modules
@@ -13,6 +15,7 @@
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
 - **Samtools**: support new `markdup` command ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
+- **Space Ranger**: fix for missing `genomic_dna` section ([#2429](https://github.com/MultiQC/MultiQC/pull/2429))
 
 ## [MultiQC v1.21](https://github.com/MultiQC/MultiQC/releases/tag/v1.21) - 2024-02-28
 

@@ -56,10 +56,16 @@ class GroupReadsByUmiMixin:
             "ylab": "Number of UMIs",
             "xlab": "Reads supporting UMI",
             "xmax": 15,
-            "xDecimals": False,
             "data_labels": [
-                {"name": "Counts", "ylab": "Number of UMIs"},
-                {"name": "Percentages", "ylab": "Percentage of sample"},
+                {
+                    "name": "Counts",
+                    "ylab": "Number of UMIs",
+                },
+                {
+                    "name": "Percentages",
+                    "ylab": "Percentage of sample",
+                    "ysuffix": "%",
+                },
             ],
         }
 
