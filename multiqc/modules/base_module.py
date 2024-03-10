@@ -1,5 +1,4 @@
 """ MultiQC modules base class, contains helper functions """
-
 from typing import List, Union, Optional, Dict
 
 import fnmatch
@@ -56,12 +55,12 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: self.mod_cust_config.get("custom_config", {})})
 
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
-
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
             self.comment = config.section_comments[self.anchor]
+
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
 
         if self.info is None:
             self.info = ""
@@ -103,7 +102,19 @@ class BaseMultiqcModule:
 
         self.sections = list()
 
-    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
+    def parse(self):
+        """
+        Parse log files into an intermediate format. Overridden in child classes.
+        """
+        pass
+
+    def add_sections(self):
+        """
+        Add sections to the report. Overridden in child classes.
+        """
+        pass
+
+    def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -121,22 +132,6 @@ class BaseMultiqcModule:
             path_filters: List[str] = [path_filters]
         if isinstance(path_filters_exclude, str):
             path_filters_exclude: List[str] = [path_filters_exclude]
-
-        # Old, depreciated syntax support. Likely to be removed in a future version.
-        if isinstance(sp_key, dict):
-            report.files[self.name] = list()
-            for sf in report.searchfiles:
-                if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
-                    report.files[self.name].append({"fn": sf[0], "root": sf[1]})
-            sp_key = self.name
-            logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
-            if len(report.files[self.name]) > 0:
-                logger.warning(logwarn)
-            else:
-                logger.debug(logwarn)
-        elif not isinstance(sp_key, str):
-            logger.warning("Did not understand find_log_files() search key")
-            return
 
         for f in report.files[sp_key]:
             # Make a note of the filename so that we can report it if something crashes
