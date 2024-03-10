@@ -5,7 +5,7 @@
 ### MultiQC updates
 
 - Update Clipboard.JS ([#2396](https://github.com/MultiQC/MultiQC/pull/2396))
-- Automatically update the CSP.txt whitelist in the CI job ([#2421](https://github.com/MultiQC/MultiQC/pull/2421))
+- Remove CSP.txt and the linting check, move the script that prints missing hashes under `scripts`. Admins of servers with Content Security Policy can use it to print missing hashes when they install a new MultiQC version with: `python scripts/print_csp_hashes.py --report full_report.html` ([#2421](https://github.com/MultiQC/MultiQC/pull/2421))
 
 ### New modules
 
