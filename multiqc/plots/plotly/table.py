@@ -359,7 +359,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     # Build the table body
     html += "<tbody>"
     t_row_keys = t_rows.keys()
-    if dt.pconfig.get("sortRows") is not False:
+    if dt.pconfig.get("sort_rows", dt.pconfig.get("sortRows")) is not False:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
         # Hide the row if all cells are empty or hidden

@@ -310,9 +310,8 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
                     "title": "Mosdepth: chrXY coverage",
-                    "ylab": "Percent of X+Y coverage",
-                    "cpswitch_counts_label": "Coverage",
-                    "cpswitch_percent_label": "Percent of X+Y coverage",
+                    "ylab": "Coverage",
+                    "ysuffix": "X",
                     "cpswitch_c_active": False,
                 }
                 self.add_section(

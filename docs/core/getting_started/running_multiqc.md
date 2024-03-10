@@ -182,7 +182,7 @@ To zip the data directory, use the `-z`/`--zip-data-dir` flag.
 ## Exporting Plots
 
 In addition to the HTML report, it's also possible to get MultiQC to save
-plots as stand alone files. You can do this with the `-p`/`--export` command
+plots as standalone files. You can do this with the `-p`/`--export` command
 line flag. By default, plots will be saved in a directory called `multiqc_plots`
 as `.png`, `.svg` and `.pdf` files. Raw data for the plots are also saved to files.
 
@@ -190,7 +190,7 @@ You can instruct MultiQC to always do this by setting the `export_plots` config
 option to `true`, though note that this will add a few seconds on to execution time.
 The `plots_dir_name` changes the default directory name for plots and the
 `export_plot_formats` specifies what file formats should be created (must be
-supported by MatPlotLib).
+supported by Plotly).
 
 Note that not all plot types are yet supported, so you may find some plots are
 missing.

@@ -15,12 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class DataTable:
-    """Data table class. Prepares and holds data and configuration
-    for either a table or a beeswarm plot."""
+    """
+    Data table class. Prepares and holds data and configuration
+    for either a table or a violin plot.
+    """
 
     def __init__(
         self,
-        data: Union[List, Dict],
+        data: Union[List[Dict], Dict],
         headers: Optional[Union[List, Dict]] = None,
         pconfig: Optional[Dict] = None,
     ):
@@ -177,7 +179,9 @@ class DataTable:
                 headers[idx][k]["min"] = headers[idx][k].get("min", pconfig.get("min", None))
                 headers[idx][k]["ceiling"] = headers[idx][k].get("ceiling", pconfig.get("ceiling", None))
                 headers[idx][k]["floor"] = headers[idx][k].get("floor", pconfig.get("floor", None))
-                headers[idx][k]["minRange"] = headers[idx][k].get("minRange", pconfig.get("minRange", None))
+                headers[idx][k]["minrange"] = headers[idx][k].get(
+                    "minrange", pconfig.get("minrange", headers[idx][k].get("minRange", pconfig.get("minRange", None)))
+                )
                 headers[idx][k]["shared_key"] = headers[idx][k].get("shared_key", pconfig.get("shared_key", None))
                 headers[idx][k]["modify"] = headers[idx][k].get("modify", pconfig.get("modify", None))
                 headers[idx][k]["placement"] = float(headers[idx][k].get("placement", 1000))
@@ -280,15 +284,15 @@ class DataTable:
                             val = samp[k]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
-                    # Limit auto-generated scales with floor, ceiling and minRange.
+                    # Limit auto-generated scales with floor, ceiling and minrange.
                     if headers[idx][k]["ceiling"] is not None and headers[idx][k]["max"] is None:
                         headers[idx][k]["dmax"] = min(headers[idx][k]["dmax"], float(headers[idx][k]["ceiling"]))
                     if headers[idx][k]["floor"] is not None and headers[idx][k]["min"] is None:
                         headers[idx][k]["dmin"] = max(headers[idx][k]["dmin"], float(headers[idx][k]["floor"]))
-                    if headers[idx][k]["minRange"] is not None:
+                    if headers[idx][k]["minrange"] is not None:
                         drange = headers[idx][k]["dmax"] - headers[idx][k]["dmin"]
-                        if drange < float(headers[idx][k]["minRange"]):
-                            headers[idx][k]["dmax"] = headers[idx][k]["dmin"] + float(headers[idx][k]["minRange"])
+                        if drange < float(headers[idx][k]["minrange"]):
+                            headers[idx][k]["dmax"] = headers[idx][k]["dmin"] + float(headers[idx][k]["minrange"])
 
         # Collect settings for shared keys
         shared_keys = defaultdict(lambda: dict())
@@ -317,7 +321,7 @@ class DataTable:
                 self.headers_in_order[headers[idx][k]["placement"]].append((idx, k))
 
         # Skip any data that is not used in the table
-        # Would be ignored for making the table anyway, but can affect whether a beeswarm plot is used
+        # Would be ignored for making the table anyway, but can affect whether a violin plot is used
         for idx, d in enumerate(data):
             for s_name in list(d.keys()):
                 if not any(h in data[idx][s_name].keys() for h in headers[idx]):

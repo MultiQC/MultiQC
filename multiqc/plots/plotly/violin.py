@@ -450,8 +450,7 @@ class ViolinPlot(Plot):
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
-                + "well as hoverable points for outlier samples in each metric. "
-                + 'See http://multiqc.info/docs/#tables--beeswarm-plots"'
+                + 'well as hoverable points for outlier samples in each metric."'
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
         elif not self.show_table:
@@ -460,8 +459,7 @@ class ViolinPlot(Plot):
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "The violin plot displays hoverable points only for outlier samples in each metric, "
-                + "and the hiding/highlighting functionality through the toolbox only works for outliers "
-                + 'See http://multiqc.info/docs/#tables--beeswarm-plots"'
+                + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
                 + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
             )
 

@@ -4,7 +4,7 @@ http://rseqc.sourceforge.net/#bam-stat-py """
 import logging
 import re
 
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 from multiqc.utils import config
 
 # Initialise the logger
@@ -137,7 +137,7 @@ def parse_reports(self):
         name="Bam Stat",
         anchor="rseqc-bam_stat",
         description="All numbers reported in millions.",
-        plot=beeswarm.plot(self.bam_stat_data, keys, pconfig),
+        plot=violin.plot(self.bam_stat_data, keys, pconfig),
     )
 
     # Return number of samples found
