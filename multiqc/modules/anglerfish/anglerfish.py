@@ -3,13 +3,13 @@
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule):
+class MultiqcModule(BaseModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Anglerfish",

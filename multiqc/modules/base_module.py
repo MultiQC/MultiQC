@@ -102,18 +102,6 @@ class BaseMultiqcModule:
 
         self.sections = list()
 
-    def parse(self):
-        """
-        Parse log files into an intermediate format. Overridden in child classes.
-        """
-        pass
-
-    def add_sections(self):
-        """
-        Add sections to the report. Overridden in child classes.
-        """
-        pass
-
     def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
@@ -625,3 +613,21 @@ class BaseMultiqcModule:
         if pconfig is None:
             pconfig = {}
         return linegraph.plot(data, pconfig)
+
+
+class BaseModule(BaseMultiqcModule):
+    # v2 MultiQC module, suitable for interactive use
+    def __init__(self, *args, **kwargs):
+        super(BaseModule, self).__init__(*args, **kwargs)
+
+    def parse(self):
+        """
+        Parse log files into an intermediate format. Overridden in child classes.
+        """
+        pass
+
+    def add_sections(self):
+        """
+        Add sections to the report. Overridden in child classes.
+        """
+        pass

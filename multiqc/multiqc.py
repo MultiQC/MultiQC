@@ -29,7 +29,7 @@ import rich_click as click
 from packaging import version
 from rich.syntax import Syntax
 
-from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule
+from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule, BaseModule
 from .plots import table
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 from .utils.util_functions import strtobool
@@ -752,13 +752,7 @@ def run(
             if not isinstance(modules, list):
                 modules = [modules]
             for m in modules:
-                if (
-                    hasattr(m, "parse")
-                    and isinstance(m.parse, Callable)
-                    and m.parse.__code__.co_argcount == 1
-                    # make sure it's not the base class, but in the derived class:
-                    and m.parse.__code__.co_qualname != "BaseMultiqcModule.parse"
-                ):
+                if isinstance(m, BaseModule):
                     m.parse()
                     m.add_sections()
                 else:
