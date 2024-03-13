@@ -173,9 +173,24 @@ function hts_btn_click(ele) {
     }
   }
 
+  const dropdown_id = "htstream_stats_dropdown_" + unique_id;
+  const dropdown = document.getElementById(dropdown_id);
+  dropdown.innerHTML = ele.innerText + ' <span class="caret"></span>';
+
+  // get children of buttons
+  var children = dropdown.parentElement.nextElementSibling.children;
+
+  // iterate through and click appropriate button
+  for (var i = 0; i < children.length; i++) {
+    var child = children[i];
+
+    if (child.innerText == ele.innerText) {
+      child.click();
+    }
+  }
+
   // stolen from the plotting.js from multiqc ;)
   mqc_plots[plot_id].activeDatasetIdx = target;
-  console.log(mqc_plots[plot_id]);
   renderPlot(plot_id);
 }
 

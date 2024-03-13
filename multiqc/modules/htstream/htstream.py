@@ -73,6 +73,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(file)
             self.data[s_name] = file_data
 
+        self.data = self.ignore_samples(self.data)
+
         # make sure samples are being processed
         if len(self.data) == 0:
             raise ModuleNoSamplesFound
