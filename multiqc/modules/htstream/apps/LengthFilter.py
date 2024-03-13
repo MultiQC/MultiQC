@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -12,7 +11,6 @@ from multiqc.plots import table, bargraph
 
 
 class LengthFilter:
-
     ########################
     # Info about App
     def __init__(self):
@@ -21,7 +19,6 @@ class LengthFilter:
 
     # Bargraph Function
     def bargraph(self, json, reads_lost, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: Removed Reads Bargraph",
@@ -48,7 +45,6 @@ class LengthFilter:
 
         # Construct data for multidataset bargraph
         for key in json:
-
             perc_pe = (json[key]["Lf_PE_lost"] / json[key]["Lf_Total_Reads"]) * 100
             perc_se = (json[key]["Lf_SE_lost"] / json[key]["Lf_Total_Reads"]) * 100
 
@@ -73,7 +69,6 @@ class LengthFilter:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
@@ -81,7 +76,6 @@ class LengthFilter:
         reads_lost = 0
 
         for key in json.keys():
-
             if json[key]["Fragment"]["in"] == 0:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."

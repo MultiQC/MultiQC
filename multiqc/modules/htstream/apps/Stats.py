@@ -1,10 +1,9 @@
 from collections import OrderedDict
-import logging, statistics, math
+import logging
 from random import random
 
 from . import htstream_utils
-from multiqc import config
-from multiqc.plots import table, linegraph, heatmap
+from multiqc.plots import table, linegraph
 
 #################################################
 
@@ -14,7 +13,6 @@ from multiqc.plots import table, linegraph, heatmap
 
 
 class Stats:
-
     ########################
     # Info about App
     def __init__(self):
@@ -34,6 +32,10 @@ class Stats:
     ########################
     # Table Function
     def table(self, json, index):
+        unique_id = str(random() % 1000)[5:]
+
+        # pconfig
+        config = {"id": "htstream_stats_table_line_" + unique_id, "title": "HTStream: Stats"}
 
         # striaght forward table function, right from MultiQC documentation
         headers = OrderedDict()
@@ -53,7 +55,7 @@ class Stats:
             "description": "percentage of read 2 bps Q30 or greater",
             "format": "{:,.2f}",
             "suffix": "%",
-            "scale": "PiYGn",
+            "scale": "PRGn",
         }
         headers["St_SE_Q30" + index] = {
             "title": "% SE Q30",
@@ -69,7 +71,7 @@ class Stats:
             "description": "Percentage of bps that are G or C",
             "format": "{:,.2f}",
             "suffix": "%",
-            "scale": "Blues",
+            "scale": "Reds",
         }
         headers["St_N_Content" + index] = {
             "title": "N Content",
@@ -80,12 +82,11 @@ class Stats:
             "scale": "RdPu",
         }
 
-        return table.plot(json, headers)
+        return table.plot(json, headers, config)
 
     ########################
     # Base By cycle sections Functions
     def base_by_cycle(self, json, read):
-
         # Read Code and Unique ID
         read_code = self.read_keys[read]
         unique_id = str(random() % 1000)[5:]
@@ -98,7 +99,7 @@ class Stats:
             "ylab": "Avg. Distance from 25%",
             "xlab": "Cycle",
             "categories": True,
-            "tt_decimals": "{:,.2f}",
+            "tt_decimals": "{x}: {y:.2f}",
             "yPlotBands": [
                 {"from": 0, "to": 8, "color": "#c3e6c3"},
                 {"from": 8, "to": 35, "color": "#e6dcc3"},
@@ -116,7 +117,7 @@ class Stats:
             "xlab": "Cycle",
             "yCeiling": 100,
             "categories": True,
-            "tt_decimals": "{:,.2f}",
+            "tt_decimals": "{x}: {y:.2f}",
             "tt_suffix": "%",
             "colors": {
                 "Base: A": "#B62612",
@@ -134,7 +135,6 @@ class Stats:
 
         # If paired end, we need to add midpoint line
         if read_code == "PE":
-
             midpoint = htstream_utils.uniform(json, read)
 
             # If uniform, add line
@@ -158,7 +158,6 @@ class Stats:
 
         # For each sample, add their line to multi-sample graph and construct their own line graph
         for samp in json.keys():
-
             line_data[samp] = {}
             samp_data = {"Base: A": {}, "Base: C": {}, "Base: G": {}, "Base: T": {}, "Base: N": {}}
 
@@ -173,7 +172,6 @@ class Stats:
 
             # Iterates through positions
             for i in range(bases):
-
                 # Total count at position
                 total = sum([base[i] for base in data])
 
@@ -196,7 +194,6 @@ class Stats:
                     "ylab": "Percentage",
                     "xlab": "Cycle",
                     "yCeiling": 100,
-                    "categories": True,
                     "smooth_points_sumcounts": False,
                 }
             )
@@ -231,7 +228,6 @@ class Stats:
     ########################
     # Quality By cycle sections Functions
     def quality_by_cycle(self, json, read):
-
         # Read Code and Unique ID
         read_code = self.read_keys[read]
         unique_id = str(random() % 1000)[5:]
@@ -250,7 +246,6 @@ class Stats:
 
         # If paired end, we need to add midpoint line
         if read_code == "PE":
-
             midpoint = htstream_utils.uniform(json, read)
 
             # If uniform, add line
@@ -269,13 +264,11 @@ class Stats:
         line_data = {}
 
         for key in json.keys():
-
             # create dictionary for line graph. Again, format is {x: y}
             line_data[key] = {}
 
             # If PE, we wanna concat quality by cycle data
             if read_code == "PE":
-
                 # Length of R1, Create concat list, Get Column Names
                 length = len(json[key][read][0]["data"])
                 temp_data = [json[key][read][0]["data"][x] + json[key][read][1]["data"][x] for x in range(length)]
@@ -295,9 +288,6 @@ class Stats:
                 }
 
             y_lab = json[key][read]["row_names"][::-1]  # reverse orientation makes it easier to cycle through
-
-            # Data list
-            data = []
 
             # create variables for range functions in loops. Represents shape of data
             # quality_scores = json[key][read]["shape"][0]
@@ -349,7 +339,6 @@ class Stats:
     ########################
     # Read Length Heatmaps
     def read_length(self, json, read):
-
         # Read cor and unique IDs
         read_code = self.read_keys[read]
         unique_id = str(random() % 1000)[5:]
@@ -377,10 +366,8 @@ class Stats:
         uniform_dict = {}
 
         for samp in json.keys():
-
             # paired end reads require the histograms be concatenated
             if read_code == "SE":
-
                 # uniform reads
                 if len(json[samp][read][0]) == 1:
                     uniform_dict[samp] = {"St_Read_Lengths_SE_" + unique_id: json[samp][read][0][0][0]}
@@ -390,11 +377,9 @@ class Stats:
 
                 # populate x,y coords
                 for length in json[samp][read][0]:
-
                     readlength_data[samp][length[0]] = length[1]
 
             else:
-
                 # uniform read lengths
                 if len(json[samp][read][0]) + len(json[samp][read][1]) == 2:
                     uniform_dict[samp] = {
@@ -404,7 +389,6 @@ class Stats:
 
                 # iterate through R1 and R2 read length hists
                 for i in range(0, 2):
-
                     readlength_data[i][samp] = {}
 
                     for length in json[samp][read][i]:
@@ -416,6 +400,7 @@ class Stats:
         html += """<p> Distribution of read lengths for each sample. </p>"""
 
         if len(uniform_dict.keys()) == len(json.keys()):
+            config = {"id": "htstream_stats_read_length_" + unique_id, "title": "HTStream: Stats"}
 
             headers = OrderedDict()
 
@@ -442,12 +427,11 @@ class Stats:
             }
 
             html += '\n<div class="alert alert-info"> <strong>Notice:</strong> Each sample has a uniform read length distribution. </div>'
-            html += table.plot(uniform_dict, headers)
+            html += table.plot(uniform_dict, headers, config)
 
             return html
 
         else:
-
             # Construct heatmap
             html += linegraph.plot(readlength_data, line_config)
 
@@ -456,14 +440,12 @@ class Stats:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         SE_json = OrderedDict()
         PE_json = OrderedDict()
         overview_stats = {}
 
         for key in json.keys():
-
             #
             # STATS FOR TABLE
             #
@@ -514,7 +496,7 @@ class Stats:
                 overview_stats[key]["Q30_Fraction"] += json[key]["Single_end"]["total_Q30_basepairs"] / total_bps
                 overview_stats[key]["SE_Fraction"] = json[key]["Single_end"]["out"] / total_frags
 
-            except:
+            except KeyError:
                 overview_stats[key]["Q30_Fraction"] += 0
                 overview_stats[key]["SE_Fraction"] = 0
 
@@ -555,7 +537,7 @@ class Stats:
                 ) / total_bps
                 overview_stats[key]["PE_Fraction"] = json[key]["Paired_end"]["out"] / total_frags
 
-            except:
+            except KeyError:
                 overview_stats[key]["Q30_Fraction"] += 0
                 overview_stats[key]["PE_Fraction"] = 0
 

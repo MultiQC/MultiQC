@@ -1,9 +1,6 @@
 from collections import OrderedDict
 import logging
-from random import random
 
-from . import htstream_utils
-from multiqc import config
 from multiqc.plots import bargraph
 
 #################################################
@@ -14,7 +11,6 @@ from multiqc.plots import bargraph
 
 
 class Primers:
-
     ########################
     # Info about App
     def __init__(self):
@@ -23,7 +19,6 @@ class Primers:
 
     # Bargraph Function
     def bargraph(self, json, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: Primer Counts Bargraph",
@@ -39,7 +34,6 @@ class Primers:
 
         # Construct data for multidataset bargraph
         for key in json:
-
             counts_list = json[key]["Pr_Primer_Counts"]
             data[key] = {}
 
@@ -59,25 +53,22 @@ class Primers:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
-        total_flipped = 0
-
         for key in json.keys():
-
             bp_lost = json[key]["Fragment"]["basepairs_in"] - json[key]["Fragment"]["basepairs_out"]
 
             try:
                 fract_bp_lost = bp_lost / json[key]["Fragment"]["basepairs_in"]
 
-            except:
+            except ZeroDivisionError:
                 fract_bp_lost = 0
 
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                raise
 
             # Overview stats
             overview_dict[key] = {

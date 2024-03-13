@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -12,7 +11,6 @@ from multiqc.plots import table, bargraph
 
 
 class AdapterTrimmer:
-
     ########################
     # Info about App
     def __init__(self):
@@ -24,7 +22,6 @@ class AdapterTrimmer:
     ########################
     # Table Function
     def bargraph(self, json, bps, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: AdapterTrimmer Trimmed Basepairs Bargraph",
@@ -52,7 +49,6 @@ class AdapterTrimmer:
 
         # Create dictionaries for multidataset bargraphs
         for key in json:
-
             perc_data[key] = {"Perc_bp_lost": json[key]["At_%_BP_Lost" + index]}
 
             read_data[key] = {"Perc_adapters": json[key]["At_%_Adapters" + index]}
@@ -73,20 +69,17 @@ class AdapterTrimmer:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
         total = 0
         zeroes = False
 
         for key in json.keys():
-
             frag_in = (2 * json[key]["Paired_end"]["in"]) + json[key]["Single_end"]["in"]
             bp_in = json[key]["Fragment"]["basepairs_in"]
 
             # try block to avoid zero division
             try:
-
                 fract_bp_lost = (bp_in - json[key]["Fragment"]["basepairs_out"]) / bp_in
                 perc_bp_lost = fract_bp_lost * 100
 
@@ -101,7 +94,7 @@ class AdapterTrimmer:
                 fract_se_bp_trimmed = json[key]["Single_end"]["adapterBpTrim"] / bp_in
                 fract_se_reads_trimmed = json[key]["Single_end"]["adapterTrim"] / frag_in
 
-            except:
+            except ZeroDivisionError:
                 fract_bp_lost = 0
                 perc_bp_lost = 0
 
@@ -141,7 +134,7 @@ class AdapterTrimmer:
             total += avg_bp_trimmed
 
             # If percentages are small, use raw counts
-            if perc_bp_lost < 0.001 and zeroes == False:
+            if perc_bp_lost < 0.001 and not zeroes:
                 zeroes = True
 
             # Overview stats

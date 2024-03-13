@@ -118,28 +118,34 @@ function btn_activator() {
 //////////////////////////////////////////////////
 // Div and Plot Switches
 
-////////////////////////
-// Div Switch
-function htstream_div_switch(ele) {
-  // Get ID of button, get corresponding plot divs.
-  var plot_id = ele.id.split("_btn")[0];
-  var parent_node = $(ele).closest(".htstream_fadein");
-  var plot_div = parent_node.find(".hc-plot");
+// ////////////////////////
+// // Div Switch
+// function htstream_div_switch(ele) {
+//   // Get ID of button, get corresponding plot divs.
+//   var plot_id = ele.id.split("_btn")[0];
+//   var parent_node = $(ele).closest(".htstream_fadein");
+//   var plot_div = parent_node.find(".hc-plot");
 
-  // Change div attributes
-  plot_div.attr("id", plot_id);
-  plot_div.attr("class", "hc-plot not_rendered hc-heatmap");
+//   // Change div attributes
+//   plot_div.attr("id", plot_id);
+//   plot_div.attr("class", "hc-plot not_rendered hc-heatmap");
 
-  // Plot chart (usually heatmaps)
-  plot_graph(plot_id);
-}
+//   // Plot chart (usually heatmaps)
+//   renderPlot(plot_id);
+// }
 
 ////////////////////////
 // Plot Switch
 function htstream_plot_switch(ele, target) {
   // Get ID of button and find ID's of corresponding on and off divs.
-  var plot_id = ele.id.split("_btn")[0];
-  var on = $("#" + plot_id);
+  var unique_id = ele.id.split("_btn")[0];
+
+  //var btns = ele.parentElement.children;
+  $(this).addClass("active");
+  $("button[id='" + target + "_btn']").removeClass("active");
+
+  // turn off and on proper divs
+  var on = $("#" + unique_id);
   var off = $("#" + target);
 
   // Hide corresponding divs
@@ -147,8 +153,7 @@ function htstream_plot_switch(ele, target) {
   on.css("display", "block");
 
   // Find plot div and plot data
-  var plot_div = on.find(".hc-plot");
-  plot_graph(plot_div.attr("id"));
+  renderPlot(on.find(".hc-plot").attr("id"));
 }
 
 ////////////////////////
@@ -156,21 +161,22 @@ function htstream_plot_switch(ele, target) {
 function hts_btn_click(ele) {
   // change value in button
   const unique_id = ele.id.split("_").pop();
-  const dropdown_id = "htstream_stats_dropdown_" + unique_id;
-  const dropdown = document.getElementById(dropdown_id);
-  dropdown.innerHTML = ele.innerText + ' <span class="caret"></span>';
+  const plot_id = $("div[id$='" + unique_id + "'][id^='htstream_stats_base_line_'][class*='hc-plot']").attr("id");
+  const datasets = mqc_plots[plot_id].datasets;
+  var target = -1;
 
-  // get children of buttons
-  var children = dropdown.parentElement.nextElementSibling.children;
-
-  // iterate through and click appropriate button
-  for (var i = 0; i < children.length; i++) {
-    var child = children[i];
-
-    if (child.innerText == ele.innerText) {
-      child.click();
+  // find index of correct datset
+  for (var i = 0; i < datasets.length; i++) {
+    if (datasets[i].label == ele.innerText) {
+      target = i;
+      break;
     }
   }
+
+  // stolen from the plotting.js from multiqc ;)
+  mqc_plots[plot_id].activeDatasetIdx = target;
+  console.log(mqc_plots[plot_id]);
+  renderPlot(plot_id);
 }
 
 //////////////////////////////////////////////////
@@ -266,7 +272,7 @@ $("document").ready(function () {
             samples[i] +
             '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
             samples[i] +
-            '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>'
+            '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
         );
       }
 

@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 #################################################
@@ -12,7 +11,6 @@ from multiqc.plots import bargraph
 
 
 class QWindowTrim:
-
     ########################
     # Info about App
     def __init__(self):
@@ -22,7 +20,6 @@ class QWindowTrim:
     ########################
     # Table Function
     def bargraph(self, json, bps, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: QWindowTrim Trimmed Basepairs Bargraph",
@@ -50,7 +47,6 @@ class QWindowTrim:
 
         # Create dictionaries for multidataset bargraphs
         for key in json:
-
             r1_data[key] = {"LT_R1": json[key]["Qt_Left_Trimmed_R1"], "RT_R1": json[key]["Qt_Right_Trimmed_R1"]}
 
             r2_data[key] = {"LT_R2": json[key]["Qt_Left_Trimmed_R2"], "RT_R2": json[key]["Qt_Right_Trimmed_R2"]}
@@ -74,14 +70,12 @@ class QWindowTrim:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
         overall_trim = 0
 
         for key in json.keys():
-
             total_bp_lost = json[key]["Fragment"]["basepairs_in"] - json[key]["Fragment"]["basepairs_out"]
             overall_trim += total_bp_lost
 

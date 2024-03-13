@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -12,7 +11,6 @@ from multiqc.plots import table, bargraph
 
 
 class PolyATTrim:
-
     ########################
     # Info about App
     def __init__(self):
@@ -22,7 +20,6 @@ class PolyATTrim:
     ########################
     # Bargraph Function
     def bargraph(self, json, bps_trimmed, index):
-
         # configuration dictionary for bar graph
         config = {
             "title": "HTStream: PolyATTrim Trimmed Basepairs Bargraph",
@@ -50,7 +47,6 @@ class PolyATTrim:
 
         # Construct data for multidataset bargraph
         for key in json:
-
             perc_data[key] = {
                 "Perc_R1_lost": json[key]["Pt_Perc_R1_lost"],
                 "Perc_R2_lost": json[key]["Pt_Perc_R2_lost"],
@@ -81,7 +77,6 @@ class PolyATTrim:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
@@ -89,7 +84,6 @@ class PolyATTrim:
         overall = 0
 
         for key in json.keys():
-
             total_bp_lost = json[key]["Fragment"]["basepairs_in"] - json[key]["Fragment"]["basepairs_out"]
 
             r1_lost = (
@@ -103,15 +97,13 @@ class PolyATTrim:
             # try block to avoid zero division
             try:
                 fract_bp_lost = total_bp_lost / json[key]["Fragment"]["basepairs_in"]
-                perc_bp_lost = fract_bp_lost * 100
 
                 perc_r1_lost = (r1_lost / json[key]["Fragment"]["basepairs_in"]) * 100
                 perc_r2_lost = (r2_lost / json[key]["Fragment"]["basepairs_in"]) * 100
                 perc_se_lost = (se_lost / json[key]["Fragment"]["basepairs_in"]) * 100
 
-            except:
+            except ZeroDivisionError:
                 fract_bp_lost = 0
-                perc_bp_lost = 0
 
                 perc_r1_lost = 0
                 perc_r2_lost = 0
@@ -120,6 +112,7 @@ class PolyATTrim:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                raise
 
             # Overview stats
             overview_dict[key] = {

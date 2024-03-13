@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import linegraph
 
 #################################################
@@ -12,7 +11,6 @@ from multiqc.plots import linegraph
 
 
 class SuperDeduper:
-
     ########################
     # Info about App
     def __init__(self):
@@ -22,7 +20,6 @@ class SuperDeduper:
     ########################
     # Linegraph Function
     def linegraph(self, json, index):
-
         # plot configurations, list of options in MultiQC docs
         config = {
             "id": "htstream_superdedup_" + index,
@@ -41,7 +38,6 @@ class SuperDeduper:
         data = [{}, {}]
 
         for key in json.keys():
-
             data[0][key] = {}
             data[1][key] = {}
 
@@ -50,7 +46,6 @@ class SuperDeduper:
                 return html
 
             for item in json[key]["Sd_Saturation"]:
-
                 perc = (item[0] / json[key]["Sd_Total_Reads"]) * 100
                 perc_dup = (item[1] / json[key]["Sd_Total_Reads"]) * 100
 
@@ -62,23 +57,22 @@ class SuperDeduper:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
         for key in json.keys():
-
             try:
                 perc_dup = json[key]["Fragment"]["duplicate"] / json[key]["Fragment"]["in"]
                 perc_ignored = json[key]["Fragment"]["ignored"] / json[key]["Fragment"]["in"]
 
-            except:
+            except ZeroDivisionError:
                 perc_dup = 0
                 perc_ignored = 0
 
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                raise
 
             # Overview stats
             overview_dict[key] = {

@@ -1,5 +1,4 @@
-import json, math, re
-import numpy as np
+import json
 import logging
 
 #################################################
@@ -11,16 +10,15 @@ import logging
 # Logger Initialization
 log = logging.getLogger(__name__)
 
+
 ###################################
 # convert json
 def resolve(pairs):
-
     resolved_dict = {}
     index_dict = {}
 
     # iterates through json key value pairs, resolves key conflits
     for k, v in pairs:
-
         if k in index_dict.keys() and "hts_" in k:
             resolved_dict[k + "_" + str(index_dict[k])] = v
             index_dict[k] += 1
@@ -38,20 +36,17 @@ def resolve(pairs):
 ###################################
 # Json and stats parsing functions
 def parse_json(name, f):
-
     app_dict = {}
     apps = json.loads(f)
 
     # Will fail if old format is usef
     try:
-
         # Allows for multiple instances of app, just adds number suffix
         for a in apps:
             i = 1
             app_name = a["Program_details"]["program"] + "_" + str(i)
 
             if app_name in app_dict.keys():
-
                 while app_name in app_dict.keys():
                     i += 1
                     app_name = a["Program_details"]["program"] + "_" + str(i)
@@ -59,10 +54,10 @@ def parse_json(name, f):
             app_dict[app_name] = a
 
     except:
-
         # Used to parse older json files. Will likely be removed in future.
         app_dict = json.loads(f, object_pairs_hook=resolve)
         log.warning("Sample " + name + " uses old json format. Please update to a newer version of HTStream.")
+        raise
 
     return app_dict
 
@@ -70,7 +65,6 @@ def parse_json(name, f):
 ###################################
 # prints keys in a pretty way
 def key_print(dictionary):
-
     string = ""
 
     for key in dictionary.keys():
@@ -84,12 +78,10 @@ def key_print(dictionary):
 ###################################
 # Checks if read lengths are uniform
 def uniform(json, read):
-
     midpoint = 0
 
     # Check if read lengths are uniform across all samples
     for key in json.keys():
-
         temp = json[key][read][0]["shape"][-1] * 2
 
         if midpoint == 0:
@@ -108,7 +100,6 @@ def uniform(json, read):
 ###################################
 # Multiplot html formatter
 def multi_plot_html(header, samples, btn_1, btn_2, id_1, id_2, graph_1, graph_2, exempt=True):
-
     # section header
     wrapper_html = header
 
@@ -136,28 +127,18 @@ def multi_plot_html(header, samples, btn_1, btn_2, id_1, id_2, graph_1, graph_2,
     tmp = graph_2[0].split(">")
 
     # # add dropdown html
-    tmp[
-        0
-    ] += """><div class="btn-group">
+    tmp[0] += """><div class="btn-group">
                 <button type="button" class="btn btn-default dropdown-toggle" id="{i}" data-toggle="dropdown">{s} <span class="caret"></span></button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">""".format(
-        i=id_3, s=samples[0]
-    )
+                    <ul class="dropdown-menu scrollable-menu" role="menu">""".format(i=id_3, s=samples[0])
 
     # populate dropdown buttons for each sample
     for s in samples:
-        tmp[
-            0
-        ] += """<li style="border-bottom: 1px solid #bdbcbc; margin-botton:8px;">
+        tmp[0] += """<li style="border-bottom: 1px solid #bdbcbc; margin-botton:8px;">
                         <a><button class="hts-btn" id="{i}" onclick="hts_btn_click(this)">{s}</button></a>
-                     </li>""".format(
-            i=s + "_" + id_suffix, s=s
-        )
+                     </li>""".format(i=s + "_" + id_suffix, s=s)
 
     # close all elements and rejoin
-    tmp[
-        0
-    ] += """</ul>
+    tmp[0] += """</ul>
             </div"""
 
     # hide buttons

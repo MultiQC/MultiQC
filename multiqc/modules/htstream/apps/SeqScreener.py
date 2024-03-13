@@ -1,7 +1,6 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
 from multiqc.plots import bargraph
 
 #################################################
@@ -12,7 +11,6 @@ from multiqc.plots import bargraph
 
 
 class SeqScreener:
-
     ########################
     # Info about App
     def __init__(self):
@@ -21,7 +19,6 @@ class SeqScreener:
 
     # Bargraph Function
     def bargraph(self, json, reads_screened, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: Identified Reads Bargraph",
@@ -46,7 +43,6 @@ class SeqScreener:
 
         # Construct data for multidataset bargraph
         for key in json:
-
             perc_data[key] = {"Perc_PE": json[key]["Ss_PE_%_hits"], "Perc_SE": json[key]["Ss_SE_%_hits"]}
             read_data[key] = {"Reads_PE": json[key]["Ss_PE_hits"], "Reads_SE": json[key]["Ss_SE_hits"]}
 
@@ -65,14 +61,12 @@ class SeqScreener:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
         reads_screened = 0
 
         for key in json.keys():
-
             pe_hits = json[key]["Paired_end"]["hits"]
             se_hits = json[key]["Single_end"]["hits"]
 
@@ -80,14 +74,14 @@ class SeqScreener:
             try:
                 perc_pe_hits = (pe_hits / json[key]["Paired_end"]["in"]) * 100
 
-            except:
+            except ZeroDivisionError:
                 perc_pe_hits = 0
 
             # Will fail if no SE data
             try:
                 perc_se_hits = (se_hits / json[key]["Single_end"]["in"]) * 100
 
-            except:
+            except ZeroDivisionError:
                 perc_se_hits = 0
 
             # for overview section
@@ -97,8 +91,7 @@ class SeqScreener:
                 ]
                 fract_hits = (pe_hits + se_hits) / json[key]["Fragment"]["in"]
 
-            except:
-
+            except ZeroDivisionError:
                 fract_reads_lost = 0
                 fract_hits = 0
 

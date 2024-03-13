@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -12,7 +11,6 @@ from multiqc.plots import table, bargraph
 
 
 class CutTrim:
-
     ########################
     # Info about App
     def __init__(self):
@@ -21,7 +19,6 @@ class CutTrim:
 
     # Bargraph Function
     def bargraph(self, json, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: Trimmed Basepairs Bargraph",
@@ -41,7 +38,6 @@ class CutTrim:
 
         # Construct data for multidataset bargraph
         for key in json:
-
             perc_data[key] = {
                 "Perc_Left_Trim": json[key]["Ct_%_Left_Trimmed"],
                 "Perc_Left_Trimm": json[key]["Ct_%_Right_Trimmed"],
@@ -63,14 +59,10 @@ class CutTrim:
     ########################
     # MainFunction
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
-        overall_pe = 0
-        overall_se = 0
 
         for key in json.keys():
-
             total_bp_lost = json[key]["Fragment"]["basepairs_in"] - json[key]["Fragment"]["basepairs_out"]
             left_bp_lost = (
                 json[key]["Paired_end"]["Read1"]["leftTrim"]
@@ -88,10 +80,11 @@ class CutTrim:
                 perc_right_bp_lost = (right_bp_lost / json[key]["Fragment"]["basepairs_in"]) * 100
                 fraction_bp_lost = total_bp_lost / json[key]["Fragment"]["basepairs_in"]
 
-            except:
+            except ZeroDivisionError:
                 perc_left_bp_lost = 0
                 perc_right_bp_lost = 0
                 fraction_bp_lost = 0
+                raise
 
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."

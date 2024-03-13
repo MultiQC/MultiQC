@@ -467,6 +467,7 @@ module_order:
   - nextclade
   - freyja
   # Pre-alignment QC
+  - htstream
   - humid
   - kat
   - leehom

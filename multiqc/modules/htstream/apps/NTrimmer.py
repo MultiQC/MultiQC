@@ -1,8 +1,7 @@
 from collections import OrderedDict
 import logging
 
-from multiqc import config
-from multiqc.plots import table, bargraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -12,7 +11,6 @@ from multiqc.plots import table, bargraph
 
 
 class NTrimmer:
-
     ########################
     # Info about App
     def __init__(self):
@@ -22,7 +20,6 @@ class NTrimmer:
     ########################
     # Table Function
     def bargraph(self, json, bps, index):
-
         # config dict for bar graph
         config = {
             "title": "HTStream: NTrimmer Trimmed Basepairs Bargraph",
@@ -50,7 +47,6 @@ class NTrimmer:
 
         # Create dictionaries for multidataset bargraphs
         for key in json:
-
             r1_data[key] = {"LT_R1": json[key]["Nt_Left_Trimmed_R1"], "RT_R1": json[key]["Nt_Right_Trimmed_R1"]}
 
             r2_data[key] = {"LT_R2": json[key]["Nt_Left_Trimmed_R2"], "RT_R2": json[key]["Nt_Right_Trimmed_R2"]}
@@ -74,7 +70,6 @@ class NTrimmer:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
@@ -82,7 +77,6 @@ class NTrimmer:
         overall = 0
 
         for key in json.keys():
-
             total_bp = json[key]["Fragment"]["basepairs_in"]
             total_bp_lost = json[key]["Fragment"]["basepairs_in"] - json[key]["Fragment"]["basepairs_out"]
 
@@ -98,12 +92,13 @@ class NTrimmer:
             try:
                 fract_bp_lost = total_bp_lost / json[key]["Fragment"]["basepairs_in"]
 
-            except:
+            except ZeroDivisionError:
                 fract_bp_lost = 0
 
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                raise
 
             # overview stats
             overview_dict[key] = {

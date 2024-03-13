@@ -1,9 +1,8 @@
 from collections import OrderedDict
 import logging
-import os, statistics
+import statistics
 
-from multiqc import config
-from multiqc.plots import table, bargraph, linegraph
+from multiqc.plots import bargraph
 
 #################################################
 
@@ -13,7 +12,6 @@ from multiqc.plots import table, bargraph, linegraph
 
 
 class Overlapper:
-
     ########################
     # Info about App
     def __init__(self):
@@ -23,13 +21,15 @@ class Overlapper:
     ########################
     # Bargraph Function
     def bargraph(self, json, inserts):
-
         # configuration dictionary for bar graph
         config = {
             "title": "HTStream: Overlap Composition Bargraph",
             "id": "htstream_overlapper_bargraph",
-            "ylab": "Percentages",
-            "cpswitch_c_active": False,
+            "ylab": "Overlap Types",
+            "cpswitch": True,
+            "cpswitch_c_active": True,
+            "cpswitch_counts_label": "Counts",
+            "cpswitch_percent_label": "Percentages",
         }
 
         # Header
@@ -87,7 +87,6 @@ class Overlapper:
     ########################
     # Function for parsing histogram in files
     def parse_histogram_stats(self, hist):
-
         hist_stats = {"Max": 0, "Median": 0}
 
         median_list = []
@@ -106,7 +105,6 @@ class Overlapper:
     ########################
     # Main Function
     def execute(self, json, index):
-
         stats_json = OrderedDict()
         overview_dict = {}
 
@@ -115,7 +113,6 @@ class Overlapper:
         # se_total_gain = 0
 
         for key in json.keys():
-
             sins = json[key]["Fragment"]["inserts"]["short"]
             mins = json[key]["Fragment"]["inserts"]["medium"]
             lins = json[key]["Fragment"]["inserts"]["long"]
@@ -149,6 +146,7 @@ class Overlapper:
             except:
                 parsed_hist_stats = -1
                 ov_hist = -1
+                raise
 
             # if no histogram, assign zeroes to median and max
             if parsed_hist_stats == -1:
@@ -173,6 +171,7 @@ class Overlapper:
                 log = logging.getLogger(__name__)
                 report = "HTStream: Zero Reads or Basepairs Reported for " + key + "."
                 log.error(report)
+                raise
 
             # Overview stats
             overview_dict[key] = {

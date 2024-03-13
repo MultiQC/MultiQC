@@ -5,15 +5,15 @@
 from __future__ import print_function
 from collections import OrderedDict
 import logging
-import re, json, os, operator
+import json
+import os
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule
 
 # Import modules
-from .apps import *
-from os.path import dirname, basename, isfile, join
-import glob
+from .apps import __hts_import
+from .apps import htstream_utils
 
 #################################################
 
@@ -23,13 +23,12 @@ log = logging.getLogger(__name__)
 # Config Initialization
 hconfig = {}
 
-modules = glob.glob(join(dirname(__file__), "apps/*.py"))
-globals()["supported_apps"] = [basename(f)[:-3] for f in modules if isfile(f) and not f.endswith("__init__.py")]
+# get supported apps
+supported_apps = __hts_import.supported_apps
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         self.sample_statistics = {}
 
         # Initialise the parent object
@@ -53,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # iterates through files found by "find_log_files" (located in base_module.py, re patterns found in search_patterns.yml)
         for file in self.find_log_files("htstream"):
-
             # clean sample name
             s_name = self.clean_s_name(file["s_name"], file["root"])  # sample name
 
@@ -86,7 +84,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         # if 'sample_colors' parameter is specified, apply colors
         if "sample_colors" in hconfig.keys():
-
             try:
                 color_file = hconfig["sample_colors"]
                 hconfig["sample_colors"] = {}
@@ -104,6 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning(
                     "Sample Coloring file could not be parsed. Check for proper path, TSV format, and HTML color codes."
                 )
+                raise
 
         # number of smaples
         hconfig["htstream_number_of_samples"] = len(self.data.keys())
@@ -118,13 +116,8 @@ class MultiqcModule(BaseMultiqcModule):
     #########################
     # Iterate through files and generate report
     def process_data(self, json):
-
-        # import global list of supported apps
-        supported_apps = globals()["supported_apps"]
-
         # checks that order is consistent within stats files
         for key in json.keys():
-
             temp = list(json[key].keys())
 
             if self.app_order == []:
@@ -148,15 +141,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         pipeline_input = True
 
+        supported_apps_keys = list(supported_apps.keys())
+
         # process data
         for i in range(len(self.app_order)):
-
             # clean up app name
             app = self.app_order[i]
             program = app.split("hts_")[-1].split("_")[0]
 
             # Check if app is supported
-            if program not in supported_apps:
+            if program not in supported_apps_keys:
                 log.warning(
                     "hts_"
                     + program
@@ -170,13 +164,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             # iterate through samples
             for key in sample_keys:
-
                 # get app
                 stats_dict[key] = json[key][app]
 
                 # populate info for first app in pipeline
-                if pipeline_input == True and len(self.app_order) > 1:
-
+                if pipeline_input and len(self.app_order) > 1:
                     # add info
                     self.overview_stats["Pipeline Input"][key] = {
                         "Input_Reads": stats_dict[key]["Fragment"]["in"],
@@ -187,10 +179,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             # if data exists for app, execute app specific stats processing
             if len(stats_dict.keys()) != 0:
-
                 app_name = app
                 index = app_name.split("_")[-1]
-                app = globals()[program]()
+                app = supported_apps[program]()
 
                 # add app to list of read or bp reducers
                 if app.type == "both":
@@ -205,7 +196,6 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # if dictionary is not empty
                 if len(section_dict.keys()) != 0:
-
                     # get overview sectino data
                     self.overview_stats[app_name] = section_dict["Overview"]
 
@@ -213,6 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
                         notes = stats_dict[list(stats_dict.keys())[1]]["Program_details"]["options"]["notes"]
                     except:
                         notes = ""
+                        raise
 
                     # construct html for section
                     html = ""
@@ -221,7 +212,6 @@ class MultiqcModule(BaseMultiqcModule):
                         html += '\n<div class="alert alert-info"> <strong>Notes: </strong>' + notes + "</div>"
 
                     for title, section in section_dict.items():
-
                         if section != "" and title != "Overview":
                             html += section + "<br>\n"
 
@@ -237,13 +227,11 @@ class MultiqcModule(BaseMultiqcModule):
     ############################
     # add sections
     def generate_reports(self):
-
         # add pipeline overview section if appropriate
         if self.overview_stats != {} and len(self.app_order) > 1:
-
             # try adding overview section
             try:
-                app = globals()["OverviewStats"]()
+                app = supported_apps["OverviewStats"]()
 
                 description = "Plots reduction of reads and basepairs across the preprocessing pipeline."
                 html = app.execute(self.overview_stats, self.app_order)
@@ -252,10 +240,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             except:
                 log.warning("Report Section for Processing Overview Failed.")
+                raise
 
             # try adding cols to general table
             try:
-
                 # collect data for general table in proper format
                 last_app = list(self.overview_stats.keys())[-1]
                 self.gen_report_stats = {}
@@ -285,10 +273,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             except:
                 log.warning("Adding Columns to General Table Failed.")
+                raise
 
         # add app sections
         for section, content in self.report_sections.items():
-
             temp_list = section.split("_")
             name = (temp_list[1]) if temp_list[-1] == "1" else (temp_list[1] + " " + temp_list[-1])
 
@@ -298,5 +286,6 @@ class MultiqcModule(BaseMultiqcModule):
             except:
                 msg = "Report Section for " + section + " Failed."
                 log.warning(msg)
+                raise
 
         self.write_data_file(self.data, "multiqc_htstream")
