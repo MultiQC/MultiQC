@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from FastQC"""
+""" MultiQC module to parse output from FastQC
+"""
 
 ############################################################
 ######  LOOKING FOR AN EXAMPLE OF HOW MULTIQC WORKS?  ######
@@ -6,6 +7,7 @@
 #### Stop! This is one of the most complicated modules. ####
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
+
 
 import io
 import json

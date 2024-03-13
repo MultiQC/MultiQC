@@ -9,6 +9,7 @@ VERSION_REGEX = r"sambamba ([\d\.]+)"
 
 
 class SambambaMarkdupMixin:
+
     """Find and parse Sambamba Markdup output log files and calculate duplication rate"""
 
     def parse_sambamba_markdup(self):

@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from sourmash"""
+""" MultiQC module to parse output from sourmash """
 
 import logging
 

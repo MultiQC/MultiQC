@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from CCS"""
+""" MultiQC module to parse output from CCS """
 
 import json
 import logging

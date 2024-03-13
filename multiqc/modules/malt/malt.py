@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from MALT"""
+""" MultiQC module to parse output from MALT """
+
 
 import logging
 import re

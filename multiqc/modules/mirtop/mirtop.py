@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from mirtop"""
+""" MultiQC module to parse output from mirtop"""
+
 
 import json
 import logging

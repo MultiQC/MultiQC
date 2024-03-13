@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from MetaPhlAn"""
+""" MultiQC module to parse output from MetaPhlAn """
+
 
 import logging
 import re

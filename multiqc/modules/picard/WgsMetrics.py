@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard WgsMetrics"""
+""" MultiQC submodule to parse output from Picard WgsMetrics """
 
 import logging
 

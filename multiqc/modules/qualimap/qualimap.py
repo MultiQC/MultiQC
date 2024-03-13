@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from QualiMap"""
+""" MultiQC module to parse output from QualiMap """
+
 
 import logging
 import os

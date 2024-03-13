@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from vcftools"""
+""" MultiQC module to parse output from vcftools """
+
 
 import logging
 

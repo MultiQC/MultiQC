@@ -1,4 +1,5 @@
-"""MultiQC module to parse Stacks 2 denovo output"""
+""" MultiQC module to parse Stacks 2 denovo output"""
+
 
 import logging
 import os

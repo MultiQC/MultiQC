@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Trimmomatic"""
+""" MultiQC module to parse output from Trimmomatic """
+
 
 import logging
 import re

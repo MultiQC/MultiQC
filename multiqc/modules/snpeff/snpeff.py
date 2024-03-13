@@ -1,4 +1,5 @@
-"""MultiQC module to parse logs from SnpEff"""
+""" MultiQC module to parse logs from SnpEff """
+
 
 import logging
 import re

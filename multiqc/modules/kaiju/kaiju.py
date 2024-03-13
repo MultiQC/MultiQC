@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from Kaiju"""
+""" MultiQC module to parse output from Kaiju """
 
 import logging
 

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from GATK"""
+""" MultiQC module to parse output from GATK """
+
 
 import logging
 

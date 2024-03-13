@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Samblaster"""
+""" MultiQC module to parse output from Samblaster """
+
 
 import logging
 import os

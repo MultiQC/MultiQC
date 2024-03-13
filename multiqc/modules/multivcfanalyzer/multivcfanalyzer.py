@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from MultiVCFAnalyzer"""
+""" MultiQC module to parse output from MultiVCFAnalyzer """
+
 
 import json
 import logging

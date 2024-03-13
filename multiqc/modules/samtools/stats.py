@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Samtools stats"""
+""" MultiQC submodule to parse output from Samtools stats """
 
 import logging
 import re

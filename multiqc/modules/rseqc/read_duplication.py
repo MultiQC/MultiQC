@@ -1,5 +1,5 @@
-"""MultiQC submodule to parse output from RSeQC read_duplication.py
-http://rseqc.sourceforge.net/#read-duplication-py"""
+""" MultiQC submodule to parse output from RSeQC read_duplication.py
+http://rseqc.sourceforge.net/#read-duplication-py """
 
 import logging
 

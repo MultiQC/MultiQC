@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard OxoGMetrics"""
+""" MultiQC submodule to parse output from Picard OxoGMetrics """
 
 import logging
 from collections import defaultdict

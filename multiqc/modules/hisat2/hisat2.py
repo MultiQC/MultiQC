@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from HISAT2"""
+""" MultiQC module to parse output from HISAT2 """
+
 
 import logging
 import re

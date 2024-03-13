@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from RSEM/rsem-calculate-expression"""
+""" MultiQC module to parse output from RSEM/rsem-calculate-expression """
+
 
 import logging
 

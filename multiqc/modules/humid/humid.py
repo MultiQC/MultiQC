@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from Lima"""
+""" MultiQC module to parse output from Lima """
 
 import logging
 

@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
+""" MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
 
 import logging
 from collections import defaultdict

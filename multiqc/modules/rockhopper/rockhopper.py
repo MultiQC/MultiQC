@@ -1,5 +1,6 @@
-"""MultiQC submodule to parse output from Rockhopper summary files
-https://cs.wellesley.edu/~btjaden/Rockhopper/"""
+""" MultiQC submodule to parse output from Rockhopper summary files
+https://cs.wellesley.edu/~btjaden/Rockhopper/ """
+
 
 import logging
 import re

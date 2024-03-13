@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from featureCounts"""
+""" MultiQC module to parse output from featureCounts """
+
 
 import logging
 import re

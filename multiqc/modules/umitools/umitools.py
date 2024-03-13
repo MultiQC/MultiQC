@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from UMI-tools"""
+""" MultiQC module to parse output from UMI-tools """
+
 
 import logging
 import re

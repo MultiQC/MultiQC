@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from MEGAHIT"""
+""" MultiQC module to parse output from MEGAHIT """
+
 
 import logging
 import re

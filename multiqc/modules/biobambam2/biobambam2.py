@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from biobambam2"""
+""" MultiQC module to parse output from biobambam2 """
+
 
 import logging
 

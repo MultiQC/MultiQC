@@ -1,4 +1,6 @@
-"""MultiQC module to parse output from fgbio GroupReadsByUmi"""
+""" MultiQC module to parse output from fgbio GroupReadsByUmi
+"""
+
 
 import logging
 

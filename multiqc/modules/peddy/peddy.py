@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Peddy"""
+""" MultiQC module to parse output from Peddy """
+
 
 import json
 import logging

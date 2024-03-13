@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from HOPS postprocessing script"""
+""" MultiQC module to parse output from HOPS postprocessing script """
+
 
 import json
 import logging

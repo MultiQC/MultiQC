@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Supernova"""
+""" MultiQC module to parse output from Supernova"""
+
 
 import json
 import logging

@@ -1,5 +1,4 @@
-"""MultiQC module to parse QC output from PURPLE"""
-
+""" MultiQC module to parse QC output from PURPLE """
 # Initialise the logger
 import logging
 from collections import defaultdict

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Sambamba"""
+""" MultiQC module to parse output from Sambamba """
+
 
 import logging
 

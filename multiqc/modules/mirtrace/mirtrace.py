@@ -1,4 +1,5 @@
-"""MultiQC module to parse output files from miRTrace"""
+""" MultiQC module to parse output files from miRTrace """
+
 
 import json
 import logging

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from phantompeakqualtools"""
+""" MultiQC module to parse output from phantompeakqualtools """
+
 
 import logging
 

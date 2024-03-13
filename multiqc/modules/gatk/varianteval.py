@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from GATK varianteval"""
+""" MultiQC submodule to parse output from GATK varianteval """
 
 import logging
 

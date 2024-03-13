@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from ngsderive"""
+""" MultiQC module to parse output from ngsderive """
+
 
 import csv
 import io

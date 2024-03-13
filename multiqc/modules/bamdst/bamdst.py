@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Bamdst"""
+""" MultiQC module to parse output from Bamdst """
+
 
 import logging
 from collections import defaultdict

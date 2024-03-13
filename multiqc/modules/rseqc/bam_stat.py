@@ -1,5 +1,5 @@
-"""MultiQC submodule to parse output from RSeQC bam_stat.py
-http://rseqc.sourceforge.net/#bam-stat-py"""
+""" MultiQC submodule to parse output from RSeQC bam_stat.py
+http://rseqc.sourceforge.net/#bam-stat-py """
 
 import logging
 import re

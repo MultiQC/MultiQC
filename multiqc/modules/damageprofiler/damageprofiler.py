@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from DamageProfiler"""
+""" MultiQC module to parse output from DamageProfiler """
+
 
 import json
 import logging

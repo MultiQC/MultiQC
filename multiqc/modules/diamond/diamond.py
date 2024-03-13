@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from DIAMOND"""
+""" MultiQC module to parse output from DIAMOND """
 
 import logging
 import re

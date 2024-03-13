@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from QoRTs"""
+""" MultiQC module to parse output from QoRTs """
+
 
 import logging
 import os

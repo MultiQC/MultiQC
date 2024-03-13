@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Fastp"""
+""" MultiQC module to parse output from Fastp """
+
 
 import json
 import logging

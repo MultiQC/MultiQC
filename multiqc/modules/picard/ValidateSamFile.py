@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard ValidateSamFile"""
+""" MultiQC submodule to parse output from Picard ValidateSamFile """
 
 import logging
 

@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from WhatsHap"""
+""" MultiQC module to parse output from WhatsHap """
 
 import logging
 from collections import defaultdict

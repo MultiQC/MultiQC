@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Samtools"""
+""" MultiQC module to parse output from Samtools """
+
 
 import logging
 

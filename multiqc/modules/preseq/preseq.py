@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Preseq"""
+""" MultiQC module to parse output from Preseq """
+
 
 import logging
 

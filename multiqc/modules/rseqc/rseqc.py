@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from RSeQC"""
+""" MultiQC module to parse output from RSeQC """
 
 import logging
 

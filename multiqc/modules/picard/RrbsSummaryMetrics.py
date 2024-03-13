@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard RrbsSummaryMetrics"""
+""" MultiQC submodule to parse output from Picard RrbsSummaryMetrics """
 
 import logging
 from collections import OrderedDict

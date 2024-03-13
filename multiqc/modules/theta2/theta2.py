@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from THetA2"""
+""" MultiQC module to parse output from THetA2 """
+
 
 import logging
 

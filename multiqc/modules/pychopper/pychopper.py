@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from pychopper"""
+""" MultiQC module to parse output from pychopper """
+
 
 import logging
 

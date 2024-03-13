@@ -1,4 +1,4 @@
-"""MultiQC submodule to parse output from Picard GcBiasMetrics"""
+""" MultiQC submodule to parse output from Picard GcBiasMetrics """
 
 import logging
 

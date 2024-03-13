@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Conpair"""
+""" MultiQC module to parse output from Conpair """
+
 
 import logging
 import re

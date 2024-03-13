@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from MACS2"""
+""" MultiQC module to parse output from MACS2 """
+
 
 import logging
 import re

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Cutadapt"""
+""" MultiQC module to parse output from Cutadapt """
+
 
 import logging
 import os

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from somalier"""
+""" MultiQC module to parse output from somalier """
+
 
 import csv
 import logging

@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from Space Ranger count"""
+""" MultiQC module to parse output from Space Ranger count """
 
 import json
 import logging

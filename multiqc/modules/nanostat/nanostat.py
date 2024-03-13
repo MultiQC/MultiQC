@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from NanoStat"""
+""" MultiQC module to parse output from NanoStat """
+
 
 import logging
 

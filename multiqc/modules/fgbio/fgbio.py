@@ -1,5 +1,4 @@
-"""MultiQC module to parse output from fgbio"""
-
+""" MultiQC module to parse output from fgbio """
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound

@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from SeqWho"""
+""" MultiQC module to parse output from SeqWho """
 
 import json
 import logging

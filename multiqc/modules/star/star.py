@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from STAR"""
+""" MultiQC module to parse output from STAR """
+
 
 import logging
 import os

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from HiCUP"""
+""" MultiQC module to parse output from HiCUP """
+
 
 import logging
 

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from BioBloom Tools"""
+""" MultiQC module to parse output from BioBloom Tools """
+
 
 import logging
 

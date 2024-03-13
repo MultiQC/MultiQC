@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Prokka"""
+""" MultiQC module to parse output from Prokka """
+
 
 import logging
 

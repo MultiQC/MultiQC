@@ -1,5 +1,4 @@
 """MultiQC module to parse the output from SNPsplit"""
-
 import logging
 import re
 

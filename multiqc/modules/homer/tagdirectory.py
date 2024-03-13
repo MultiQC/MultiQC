@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from HOMER tagdirectory"""
+""" MultiQC module to parse output from HOMER tagdirectory """
 
 import logging
 import math

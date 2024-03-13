@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from Tophat"""
+""" MultiQC module to parse output from Tophat """
+
 
 import logging
 import os

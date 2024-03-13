@@ -1,4 +1,4 @@
-"""MultiQC module to parse output from pycoQC"""
+""" MultiQC module to parse output from pycoQC """
 
 import logging
 

@@ -1,4 +1,5 @@
-"""MultiQC module to parse output files from VarScan2"""
+""" MultiQC module to parse output files from VarScan2 """
+
 
 import logging
 import re

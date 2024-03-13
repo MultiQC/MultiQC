@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from HiCExplorer"""
+""" MultiQC module to parse output from HiCExplorer """
+
 
 import logging
 

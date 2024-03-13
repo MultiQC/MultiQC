@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from SexdetErrmine"""
+""" MultiQC module to parse output from SexdetErrmine """
+
 
 import json
 import logging

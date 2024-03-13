@@ -1,4 +1,5 @@
-"""MultiQC module to parse output from SortMeRNA"""
+""" MultiQC module to parse output from SortMeRNA """
+
 
 import logging
 import os

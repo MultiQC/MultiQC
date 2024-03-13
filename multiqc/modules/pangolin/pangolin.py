@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
-"""MultiQC module to parse output from Pangolin"""
+""" MultiQC module to parse output from Pangolin """
+
 
 import csv
 import logging
