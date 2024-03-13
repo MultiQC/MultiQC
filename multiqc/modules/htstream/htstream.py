@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" MultiQC module to parse output from HTStream """
+"""MultiQC module to parse output from HTStream"""
 
 from __future__ import print_function
 from collections import OrderedDict
@@ -46,7 +46,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.report_sections = {}
         self.app_order = []
         self.add_software_version("v1.3.3")
-\
         # Import js and css functions.
         self.js = {"assets/js/htstream.js": os.path.join(os.path.dirname(__file__), "assets", "js", "htstream.js")}
         self.css = {"assets/css/htstream.css": os.path.join(os.path.dirname(__file__), "assets", "css", "htstream.css")}
@@ -68,8 +67,6 @@ class MultiqcModule(BaseMultiqcModule):
             file_data = htstream_utils.parse_json(
                 file["s_name"], file["f"]
             )  # parse stats file. Should return json directory of apps and their stats
-
-
 
             # Add data to MultiQC and data structures
             self.add_data_source(file)
