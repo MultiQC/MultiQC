@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from qc3C """
-
+"""MultiQC module to parse output from qc3C"""
 
 import itertools
 import json

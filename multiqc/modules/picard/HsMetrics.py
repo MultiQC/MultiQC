@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard HsMetrics """
+"""MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
 from collections import defaultdict

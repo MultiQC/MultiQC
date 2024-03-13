@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from the Seqera Platform CLI """
+"""MultiQC module to parse output from the Seqera Platform CLI"""
 
 import datetime as dt
 import json

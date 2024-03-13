@@ -1,5 +1,4 @@
-""" MultiQC module to parse results from jellyfish  """
-
+"""MultiQC module to parse results from jellyfish"""
 
 import logging
 

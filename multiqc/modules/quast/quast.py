@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from QUAST """
-
+"""MultiQC module to parse output from QUAST"""
 
 import logging
 import re

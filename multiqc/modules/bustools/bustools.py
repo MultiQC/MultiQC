@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from bustools inspect """
-
+"""MultiQC module to parse output from bustools inspect"""
 
 import json
 import logging

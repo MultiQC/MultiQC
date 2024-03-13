@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Samtools idxstats """
+"""MultiQC submodule to parse output from Samtools idxstats"""
 
 import logging
 from collections import defaultdict

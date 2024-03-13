@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from eigenstrat_snp_coverage """
-
+"""MultiQC module to parse output from eigenstrat_snp_coverage"""
 
 import json
 import logging

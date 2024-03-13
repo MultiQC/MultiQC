@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard RnaSeqMetrics """
+"""MultiQC submodule to parse output from Picard RnaSeqMetrics"""
 
 import logging
 

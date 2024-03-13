@@ -1,5 +1,4 @@
-""" MultiQC Submodule to parse output from Qualimap BamQC """
-
+"""MultiQC Submodule to parse output from Qualimap BamQC"""
 
 import logging
 import os

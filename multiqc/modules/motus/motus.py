@@ -1,4 +1,4 @@
-""" Module to parse output from mOTUs """
+"""Module to parse output from mOTUs"""
 
 import logging
 

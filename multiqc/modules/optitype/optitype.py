@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from optitype """
-
+"""MultiQC module to parse output from optitype"""
 
 import logging
 

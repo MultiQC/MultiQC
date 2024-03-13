@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from kraken """
-
+"""MultiQC module to parse output from kraken"""
 
 import logging
 import re

@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard MarkIlluminaAdapters """
+"""MultiQC submodule to parse output from Picard MarkIlluminaAdapters"""
 
 import logging
 

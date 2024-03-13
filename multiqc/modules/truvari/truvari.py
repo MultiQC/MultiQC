@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from truvari """
+"""MultiQC module to parse output from truvari"""
 
 import logging
 

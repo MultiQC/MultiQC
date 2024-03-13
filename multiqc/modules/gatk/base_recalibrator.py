@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from GATK BaseRecalibrator """
+"""MultiQC submodule to parse output from GATK BaseRecalibrator"""
 
 import logging
 from collections import namedtuple

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Picard """
-
+"""MultiQC module to parse output from Picard"""
 
 import logging
 

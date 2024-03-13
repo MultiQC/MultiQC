@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Nextclade """
+"""MultiQC module to parse output from Nextclade"""
 
 import csv
 import logging

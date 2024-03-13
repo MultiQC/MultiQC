@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from ClipAndMerge """
-
+"""MultiQC module to parse output from ClipAndMerge"""
 
 import logging
 import os

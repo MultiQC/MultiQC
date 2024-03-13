@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Snippy """
+"""MultiQC module to parse output from Snippy"""
 
 import logging
 

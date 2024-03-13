@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from sargasso """
-
+"""MultiQC module to parse output from sargasso"""
 
 import logging
 

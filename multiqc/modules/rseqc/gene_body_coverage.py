@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC geneBody_coverage.py
-http://rseqc.sourceforge.net/#genebody-coverage-py """
+"""MultiQC submodule to parse output from RSeQC geneBody_coverage.py
+http://rseqc.sourceforge.net/#genebody-coverage-py"""
 
 import logging
 

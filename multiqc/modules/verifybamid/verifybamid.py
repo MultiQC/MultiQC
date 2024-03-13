@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from VerifyBAMID """
-
+"""MultiQC module to parse output from VerifyBAMID"""
 
 import logging
 

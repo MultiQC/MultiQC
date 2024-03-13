@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Cluster Flow """
-
+"""MultiQC module to parse output from Cluster Flow"""
 
 import datetime
 import logging

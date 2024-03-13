@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from bracken """
+"""MultiQC module to parse output from bracken"""
 
 import logging
 

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Bakta """
-
+"""MultiQC module to parse output from Bakta"""
 
 import logging
 

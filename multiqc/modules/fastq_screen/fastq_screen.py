@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from FastQ Screen """
-
+"""MultiQC module to parse output from FastQ Screen"""
 
 import logging
 import re

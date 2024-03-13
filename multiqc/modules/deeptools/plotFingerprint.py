@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotFingerprint """
+"""MultiQC submodule to parse output from deepTools plotFingerprint"""
 
 import logging
 

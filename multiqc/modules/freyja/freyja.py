@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Freyja """
+"""MultiQC module to parse output from Freyja"""
 
 import logging
 

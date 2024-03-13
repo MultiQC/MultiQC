@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard VariantCallingMetrics """
+"""MultiQC submodule to parse output from Picard VariantCallingMetrics"""
 
 import logging
 

@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC junction_annotation.py
-http://rseqc.sourceforge.net/#junction-annotation-py """
+"""MultiQC submodule to parse output from RSeQC junction_annotation.py
+http://rseqc.sourceforge.net/#junction-annotation-py"""
 
 import logging
 import re

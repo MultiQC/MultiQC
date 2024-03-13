@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from gffcompare """
-
+"""MultiQC module to parse output from gffcompare"""
 
 import logging
 import re

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Slamdunk """
-
+"""MultiQC module to parse output from Slamdunk"""
 
 import logging
 import re

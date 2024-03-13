@@ -1,4 +1,4 @@
-""" Module to parse output from BBDuk """
+"""Module to parse output from BBDuk"""
 
 import logging
 import re

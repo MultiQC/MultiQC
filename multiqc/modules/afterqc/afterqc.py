@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Afterqc """
-
+"""MultiQC module to parse output from Afterqc"""
 
 import json
 import logging

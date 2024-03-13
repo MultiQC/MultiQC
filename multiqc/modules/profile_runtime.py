@@ -1,4 +1,4 @@
-""" Super Special-Case MultiQC module to produce report section on MultiQC run time """
+"""Super Special-Case MultiQC module to produce report section on MultiQC run time"""
 
 import logging
 

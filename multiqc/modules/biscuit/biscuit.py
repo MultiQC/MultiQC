@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from BISCUITqc """
-
+"""MultiQC module to parse output from BISCUITqc"""
 
 import logging
 import re

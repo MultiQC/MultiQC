@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC inner_distance.py
-http://rseqc.sourceforge.net/#inner-distance-py """
+"""MultiQC submodule to parse output from RSeQC inner_distance.py
+http://rseqc.sourceforge.net/#inner-distance-py"""
 
 import logging
 

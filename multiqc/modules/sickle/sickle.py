@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from sickle """
+"""MultiQC module to parse output from sickle"""
 
 import logging
 import re

@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools estimateReadFiltering """
+"""MultiQC submodule to parse output from deepTools estimateReadFiltering"""
 
 import logging
 

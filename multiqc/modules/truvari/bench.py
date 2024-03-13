@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from truvari bench """
+"""MultiQC submodule to parse output from truvari bench"""
 
 import json
 import logging

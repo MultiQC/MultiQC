@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Kallisto """
-
+"""MultiQC module to parse output from Kallisto"""
 
 import logging
 import os

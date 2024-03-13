@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard QualityScoreDistribution """
+"""MultiQC submodule to parse output from Picard QualityScoreDistribution"""
 
 import logging
 from collections import OrderedDict

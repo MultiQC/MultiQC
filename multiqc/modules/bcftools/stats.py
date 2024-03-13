@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Bcftools stats """
+"""MultiQC submodule to parse output from Bcftools stats"""
 
 import logging
 import re

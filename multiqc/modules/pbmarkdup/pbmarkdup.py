@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from pbmarkdup"""
+"""MultiQC module to parse output from pbmarkdup"""
 
 import logging
 import re

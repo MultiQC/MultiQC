@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from MinIONQC summary stats """
+"""MultiQC submodule to parse output from MinIONQC summary stats"""
 
 import copy
 import logging

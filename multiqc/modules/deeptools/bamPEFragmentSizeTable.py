@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table """
+"""MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table"""
 
 import logging
 

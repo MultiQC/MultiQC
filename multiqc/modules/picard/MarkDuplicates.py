@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard MarkDuplicates """
+"""MultiQC submodule to parse output from Picard MarkDuplicates"""
 
 import logging
 import math

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from nonpareil """
-
+"""MultiQC module to parse output from nonpareil"""
 
 import logging
 import numpy as np

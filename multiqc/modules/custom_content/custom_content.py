@@ -1,5 +1,4 @@
-""" Core MultiQC module to parse output from custom script output """
-
+"""Core MultiQC module to parse output from custom script output"""
 
 import base64
 import json

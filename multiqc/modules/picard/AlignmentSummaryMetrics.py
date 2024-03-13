@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard AlignmentSummaryMetrics """
+"""MultiQC submodule to parse output from Picard AlignmentSummaryMetrics"""
 
 import logging
 from collections import OrderedDict

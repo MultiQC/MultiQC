@@ -1,4 +1,4 @@
-""" MultiQC module to parse log output from Xenome Classify """
+"""MultiQC module to parse log output from Xenome Classify"""
 
 from collections import defaultdict
 

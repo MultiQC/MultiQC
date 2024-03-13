@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics """
+"""MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics"""
 
 import logging
 from collections import defaultdict

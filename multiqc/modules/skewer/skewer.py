@@ -1,5 +1,4 @@
-""" MultiQC module to parse logs from Skewer """
-
+"""MultiQC module to parse logs from Skewer"""
 
 import logging
 import re

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Bismark """
-
+"""MultiQC module to parse output from Bismark"""
 
 import logging
 import re

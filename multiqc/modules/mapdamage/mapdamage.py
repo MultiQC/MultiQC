@@ -1,5 +1,4 @@
-""" MultiQC module to parse base misincorporation output from mapdamage2 """
-
+"""MultiQC module to parse base misincorporation output from mapdamage2"""
 
 import logging
 import os

@@ -1,4 +1,5 @@
-""" MultiQC module to parse output from KAT """
+"""MultiQC module to parse output from KAT"""
+
 import json
 import logging
 

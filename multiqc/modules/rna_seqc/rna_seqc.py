@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from RNA-SeQC """
-
+"""MultiQC module to parse output from RNA-SeQC"""
 
 import logging
 

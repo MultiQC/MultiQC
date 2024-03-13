@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard CrosscheckFingerprints """
+"""MultiQC submodule to parse output from Picard CrosscheckFingerprints"""
 
 import logging
 import re

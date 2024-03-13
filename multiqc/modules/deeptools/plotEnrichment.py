@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotEnrichment """
+"""MultiQC submodule to parse output from deepTools plotEnrichment"""
 
 import logging
 

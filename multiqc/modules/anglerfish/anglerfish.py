@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Anglerfish """
+"""MultiQC module to parse output from Anglerfish"""
 
 import json
 import logging

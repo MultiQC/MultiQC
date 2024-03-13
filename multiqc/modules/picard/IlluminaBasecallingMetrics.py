@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard IlluminaBasecallingMetrics """
+"""MultiQC submodule to parse output from Picard IlluminaBasecallingMetrics"""
 
 import logging
 

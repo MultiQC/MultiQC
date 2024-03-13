@@ -1,4 +1,4 @@
-""" MultiQC module to parse similarity matrix output by sourmash gather """
+"""MultiQC module to parse similarity matrix output by sourmash gather"""
 
 import csv
 import logging

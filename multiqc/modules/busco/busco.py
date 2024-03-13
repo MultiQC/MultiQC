@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from BUSCO """
-
+"""MultiQC module to parse output from BUSCO"""
 
 import logging
 import re

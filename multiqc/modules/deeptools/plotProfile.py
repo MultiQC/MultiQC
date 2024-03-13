@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotProfile """
+"""MultiQC submodule to parse output from deepTools plotProfile"""
 
 import logging
 

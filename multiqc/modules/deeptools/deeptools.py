@@ -1,4 +1,5 @@
 """MultiQC module to parse the output from deepTools"""
+
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound

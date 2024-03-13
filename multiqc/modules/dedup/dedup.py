@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from DeDup """
+"""MultiQC module to parse output from DeDup"""
 
 import json
 import logging

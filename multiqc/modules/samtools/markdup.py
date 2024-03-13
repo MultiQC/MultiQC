@@ -1,5 +1,6 @@
 # coding: utf-8
-""" MultiQC submodule to parse output from Samtools markdup """
+"""MultiQC submodule to parse output from Samtools markdup"""
+
 import json
 import logging
 import re

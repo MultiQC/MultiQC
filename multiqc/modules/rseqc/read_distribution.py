@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC read_distribution.py
-http://rseqc.sourceforge.net/#read-distribution-py """
+"""MultiQC submodule to parse output from RSeQC read_distribution.py
+http://rseqc.sourceforge.net/#read-distribution-py"""
 
 import logging
 import re

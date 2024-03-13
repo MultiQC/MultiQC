@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Bowtie 1 """
-
+"""MultiQC module to parse output from Bowtie 1"""
 
 import logging
 import re

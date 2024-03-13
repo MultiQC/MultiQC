@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from HOMER """
-
+"""MultiQC module to parse output from HOMER"""
 
 import logging
 

@@ -1,5 +1,4 @@
-""" MultiQC Submodule to parse output from Qualimap RNASeq """
-
+"""MultiQC Submodule to parse output from Qualimap RNASeq"""
 
 import logging
 import os

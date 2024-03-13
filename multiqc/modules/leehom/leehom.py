@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from leeHom """
-
+"""MultiQC module to parse output from leeHom"""
 
 import logging
 import re

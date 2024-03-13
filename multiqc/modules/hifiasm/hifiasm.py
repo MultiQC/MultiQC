@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from HiFiasm """
+"""MultiQC module to parse output from HiFiasm"""
 
 import logging
 import re

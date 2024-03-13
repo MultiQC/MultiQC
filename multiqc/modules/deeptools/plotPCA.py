@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotPCA """
+"""MultiQC submodule to parse output from deepTools plotPCA"""
 
 import logging
 

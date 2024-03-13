@@ -1,5 +1,4 @@
-""" MultiQC module to parse output files from iVar """
-
+"""MultiQC module to parse output files from iVar"""
 
 import logging
 import re

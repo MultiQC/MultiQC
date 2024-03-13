@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Adapter Removal """
-
+"""MultiQC module to parse output from Adapter Removal"""
 
 import logging
 import re

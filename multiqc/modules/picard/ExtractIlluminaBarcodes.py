@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes """
+"""MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes"""
 
 import logging
 from collections import defaultdict

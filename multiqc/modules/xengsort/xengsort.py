@@ -1,4 +1,4 @@
-""" MultiQC module to parse log output from xengsort classify """
+"""MultiQC module to parse log output from xengsort classify"""
 
 from collections import defaultdict
 

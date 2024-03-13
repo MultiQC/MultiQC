@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools bamPEFragmentSize for read length distribution """
+"""MultiQC submodule to parse output from deepTools bamPEFragmentSize for read length distribution"""
 
 import logging
 

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Flexbar """
-
+"""MultiQC module to parse output from Flexbar"""
 
 import logging
 import re

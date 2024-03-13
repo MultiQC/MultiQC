@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from bcftools """
-
+"""MultiQC module to parse output from bcftools"""
 
 import logging
 

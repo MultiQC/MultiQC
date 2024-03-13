@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from odgi stats """
-
+"""MultiQC module to parse output from odgi stats"""
 
 import logging
 

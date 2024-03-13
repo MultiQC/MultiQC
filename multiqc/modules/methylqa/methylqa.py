@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from methylQA """
-
+"""MultiQC module to parse output from methylQA"""
 
 import logging
 import os

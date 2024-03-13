@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from gopeaks """
+"""MultiQC module to parse output from gopeaks"""
 
 import json
 import logging

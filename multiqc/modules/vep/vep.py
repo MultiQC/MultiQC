@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from VEP """
-
+"""MultiQC module to parse output from VEP"""
 
 import ast
 import logging

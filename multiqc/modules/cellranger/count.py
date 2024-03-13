@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Cell Ranger count """
+"""MultiQC module to parse output from Cell Ranger count"""
 
 import json
 import logging
