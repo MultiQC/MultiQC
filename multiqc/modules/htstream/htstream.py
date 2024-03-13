@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.overview_stats = {}
         self.report_sections = {}
         self.app_order = []
-        self.add_software_version('v1.3.3')
+        self.add_software_version("v1.3.3")
 \
         # Import js and css functions.
         self.js = {"assets/js/htstream.js": os.path.join(os.path.dirname(__file__), "assets", "js", "htstream.js")}
