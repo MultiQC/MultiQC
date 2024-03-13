@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # make sure samples are being processed
         if len(self.data) == 0:
-            raise ModuleNoSamplesFound
+            raise UserWarning
 
         # report number of files found
         log.info("Found " + str(len(self.data)) + " reports.")
