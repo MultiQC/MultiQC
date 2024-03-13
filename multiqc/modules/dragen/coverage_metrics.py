@@ -41,7 +41,7 @@ SINGLE_HEADER = {
     "min": 0,  # Maximum value in range, for bar / colour coding
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
-    "minRange": None,  # Minimum range for automatic bar
+    "minrange": None,  # Minimum range for automatic bar
     "scale": "GnBu",  # Colour scale for colour coding. False to disable.
     "bgcols": None,  # Dict with values: background colours for categorical data.
     "colour": "15, 150, 255",  # Colour for column grouping
@@ -467,7 +467,7 @@ TABLE_CONFIG = {
     "table_title": None,  # Title of the table. Used in the column config modal
     "save_file": False,  # Whether to save the table data to a file
     "raw_data_fn": None,  # File basename to use for raw data file
-    "sortRows": True,  # Whether to sort rows alphabetically
+    "sort_rows": True,  # Whether to sort rows alphabetically
     "only_defined_headers": True,  # Only show columns that are defined in the headers config
     "col1_header": None,  # The header used for the first column with sample names.
     "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)

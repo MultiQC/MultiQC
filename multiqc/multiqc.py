@@ -19,6 +19,8 @@ import tempfile
 import time
 import json
 import traceback
+from importlib.metadata import EntryPoint
+from typing import Dict, Union, Callable, List
 
 import jinja2
 import requests
@@ -27,7 +29,7 @@ import rich_click as click
 from packaging import version
 from rich.syntax import Syntax
 
-from .modules.base_module import ModuleNoSamplesFound
+from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule
 from .plots import table
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 from .utils.util_functions import strtobool
@@ -740,18 +742,16 @@ def run(
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):
         mod_starttime = time.time()
-        this_module = list(mod_dict.keys())[0]
-        mod_cust_config = list(mod_dict.values())[0]
-        if mod_cust_config is None:
-            mod_cust_config = {}
+        this_module: str = list(mod_dict.keys())[0]
+        mod_cust_config: Dict = list(mod_dict.values())[0] or {}
         try:
-            mod = config.avail_modules[this_module].load()
-            mod.mod_cust_config = mod_cust_config  # feels bad doing this, but seems to work
-            output = mod()
-            if not isinstance(output, list):
-                output = [output]
-            for m in output:
-                report.modules_output.append(m)
+            entry_point: EntryPoint = config.avail_modules[this_module]
+            module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
+            module_initializer.mod_cust_config = mod_cust_config
+            modules = module_initializer()
+            if not isinstance(modules, list):
+                modules = [modules]
+            report.modules_output.extend(modules)
 
             if config.make_report:
                 # Copy over css & js files if requested by the theme

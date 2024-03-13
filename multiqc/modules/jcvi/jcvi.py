@@ -299,12 +299,12 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "jcvi_feature_length_plot",
             "title": "JCVI: Feature length repartition",
             "ylab": "# Genes",
-            "xlab": "Gene length (bp)",
-            "xDecimals": False,
+            "xlab": "Gene length",
+            "xsuffix": "bp",
             "data_labels": [
-                {"name": "Genes", "ylab": "# Genes", "xlab": "Gene length (bp)"},
-                {"name": "Exons", "ylab": "# Exons", "xlab": "Exon length (bp)"},
-                {"name": "Introns", "ylab": "# Introns", "xlab": "Intron length (bp)"},
+                {"name": "Genes", "ylab": "# Genes", "xlab": "Gene length"},
+                {"name": "Exons", "ylab": "# Exons", "xlab": "Exon length"},
+                {"name": "Introns", "ylab": "# Introns", "xlab": "Intron length"},
             ],
         }
 

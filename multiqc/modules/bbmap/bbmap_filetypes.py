@@ -202,7 +202,13 @@ file_types = {
         },
         "cols": {"GC": float, "Count": int},
         "plot_func": plot_basic_hist,
-        "plot_params": {"xlab": "Proportion GC", "ylab": "# Reads"},
+        "plot_params": {
+            "xlab": "Proportion GC",
+            "ylab": "# Reads",
+            "xsuffix": "%",
+            "xmin": 0,
+            "xmax": 100,
+        },
     },
     "idhist": {
         "title": "Identity histogram",
@@ -282,7 +288,7 @@ file_types = {
         "help_text": "",
         "cols": {"Length": int, "Count": int},
         "plot_func": plot_basic_hist,
-        "plot_params": {"xlab": "Read length (base pairs)", "ylab": "# Reads"},
+        "plot_params": {"xlab": "Read length (base pairs)", "xsuffix": "bp", "ylab": "# Reads"},
     },
     "mhist": {
         "title": "Match, substitution, deletion, and insertion rates",

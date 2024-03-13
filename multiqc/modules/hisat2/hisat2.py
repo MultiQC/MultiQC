@@ -123,8 +123,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.hisat2_data, headers)
 
     def hisat2_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Split the data into SE and PE
         sedata = {}
         pedata = {}

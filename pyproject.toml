@@ -13,7 +13,6 @@ dependencies = [
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
     "markdown",
-    "matplotlib>=2.1.1",
     "numpy",
     "packaging",
     "requests",
@@ -68,7 +67,7 @@ Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 multiqc = "multiqc.__main__:run_multiqc"
 
 [project.entry-points."multiqc.modules.v1"]
-adapterRemoval = "multiqc.modules.adapterRemoval:MultiqcModule"
+adapterremoval = "multiqc.modules.adapterremoval:MultiqcModule"
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
 anglerfish = "multiqc.modules.anglerfish:MultiqcModule"
 bakta = "multiqc.modules.bakta:MultiqcModule"
@@ -220,7 +219,6 @@ default = "multiqc.templates.default"
 sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
-highcharts = "multiqc.templates.highcharts"
 geo = "multiqc.templates.geo"
 
 ### See https://multiqc.info/docs/#multiqc-plugins for documentation

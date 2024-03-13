@@ -2,7 +2,7 @@ import logging
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.prinseqplusplus_data, "prinseqplusplus")
 
         self.prinseqplusplus_general_stats()
-        self.prinseqplusplus_beeswarm_plot()
+        self.prinseqplusplus_violin_plot()
 
     def parse_logs(self, f):
         """Parsing Logs."""
@@ -95,8 +95,8 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    def prinseqplusplus_beeswarm_plot(self):
-        """Beeswarm plot of all possible filtering results"""
+    def prinseqplusplus_violin_plot(self):
+        """Violin plot of all possible filtering results"""
         # This would be nicer as a stacked-bar plot, but as we don't have
         # the total read count it doesn't really make sense.
 
@@ -124,11 +124,11 @@ class MultiqcModule(BaseMultiqcModule):
             name="Filtered Reads",
             anchor="prinseqplusplus-filtered-reads",
             description="Shows the number of reads removed by the various PRINSEQ++ filter options",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.prinseqplusplus_data,
                 headers,
                 {
-                    "id": "prinseplusplus-filtered-reads-beeswarm",
+                    "id": "prinseplusplus-filtered-reads-violin",
                     "title": "PRINSEQ++: Filtered Reads",
                 },
             ),

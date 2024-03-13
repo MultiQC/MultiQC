@@ -473,7 +473,7 @@ module_order:
   - leehom
   - librarian
   - nonpareil
-  - adapterRemoval
+  - adapterremoval
   - bbduk
   - clipandmerge
   - cutadapt

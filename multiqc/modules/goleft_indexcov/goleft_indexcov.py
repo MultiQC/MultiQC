@@ -160,10 +160,10 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "goleft indexcov: Problematic low and non-uniform coverage bins",
             "xlab": "Proportion of bins with depth < 0.15",
             "ylab": "Proportion of bins with depth outside of (0.85, 1.15)",
-            "yCeiling": 1.0,
-            "yFloor": 0.0,
-            "xCeiling": 1.0,
-            "xFloor": 0.0,
+            "ymax": 1.0,
+            "ymin": 0.0,
+            "x_clipmax": 1.0,
+            "x_clipmin": 0.0,
         }
         extra = ""
         if len(self.bin_plot_data_empty_samples) > 0:

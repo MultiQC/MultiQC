@@ -2,7 +2,7 @@
 # Default configurations for how modules can find their log files.
 # Loaded by the config module so that these patterns can be overwritten in user config files.
 
-adapterRemoval:
+adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"
   num_lines: 1
