@@ -42,11 +42,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Initialize ordered dictionary (key: samples, values: their respective json files)
-        self.data = OrderedDict()
+        self.htstream_data = OrderedDict()
         self.overview_stats = {}
         self.report_sections = {}
         self.app_order = []
-        self.add_software_version("v1.3.3")
+        self.add_software_version(None)
+
         # Import js and css functions.
         self.js = {"assets/js/htstream.js": os.path.join(os.path.dirname(__file__), "assets", "js", "htstream.js")}
         self.css = {"assets/css/htstream.css": os.path.join(os.path.dirname(__file__), "assets", "css", "htstream.css")}
@@ -61,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # exclude sample name if necessary (other implementation of this function wasn't working)
-            if s_name in self.data.keys():
+            if s_name in self.htstream_data.keys():
                 log.debug("Duplicate sample name found! Overwriting: {}".format(file["s_name"]))
 
             # parse json file
@@ -71,16 +72,19 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Add data to MultiQC and data structures
             self.add_data_source(file)
-            self.data[s_name] = file_data
+            self.htstream_data[s_name] = file_data
 
-        self.data = self.ignore_samples(self.data)
+        self.htstream_data = self.ignore_samples(self.htstream_data)
 
         # make sure samples are being processed
-        if len(self.data) == 0:
+        if len(self.htstream_data) == 0:
+            log.warning("Found " + str(len(self.htstream_data)) + " reports.")
             raise ModuleNoSamplesFound
 
+        log.info("Found " + str(len(self.htstream_data)) + " reports.")
+
         # report number of files found
-        log.info("Found " + str(len(self.data)) + " reports.")
+        log.info("Found " + str(len(self.htstream_data)) + " reports.")
 
         # parse config file
         hconfig = getattr(config, "htstream_config", {})
@@ -107,13 +111,13 @@ class MultiqcModule(BaseMultiqcModule):
                 raise
 
         # number of smaples
-        hconfig["htstream_number_of_samples"] = len(self.data.keys())
+        hconfig["htstream_number_of_samples"] = len(self.htstream_data.keys())
 
         # intro json holding HTStream specific parameters, FASTQC does similar things but with actual data
         self.intro += '<div id="htstream_config" style="display: none;">{}</div>'.format(json.dumps(hconfig))
 
         # parse json containing stats on each sample and generate reports
-        self.process_data(self.data)
+        self.process_data(self.htstream_data)
         self.generate_reports()
 
     #########################
@@ -291,4 +295,4 @@ class MultiqcModule(BaseMultiqcModule):
                 log.warning(msg)
                 raise
 
-        self.write_data_file(self.data, "multiqc_htstream")
+        self.write_data_file(self.htstream_data, "multiqc_htstream")
