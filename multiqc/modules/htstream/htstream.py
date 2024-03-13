@@ -9,7 +9,7 @@ import json
 import os
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import modules
 from .apps import __hts_import
