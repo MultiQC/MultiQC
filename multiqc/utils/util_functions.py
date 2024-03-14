@@ -185,8 +185,8 @@ def choose_emoji():
 
 def dump_json(data, **kwargs):
     """
-    Replace non-JSON-conforming NaNs with None, and dump with a custom encoder to handle lambda functions
-    Note that a custom JSONEncoder will work for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
     """
 
     # Recursively replace NaNs with None
