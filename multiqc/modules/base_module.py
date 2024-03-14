@@ -13,6 +13,7 @@ from collections import defaultdict
 
 import markdown
 
+from multiqc.plots import bargraph, linegraph, scatter, violin, heatmap, table, box
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -596,24 +597,6 @@ class BaseMultiqcModule:
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
-    ##################################################
-    #### DEPRECATED FORWARDERS
-    def plot_bargraph(self, data, cats=None, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import bargraph
-
-        if pconfig is None:
-            pconfig = {}
-        return bargraph.plot(data, cats, pconfig)
-
-    def plot_xy_data(self, data, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import linegraph
-
-        if pconfig is None:
-            pconfig = {}
-        return linegraph.plot(data, pconfig)
-
 
 class BaseModule(BaseMultiqcModule):
     # v2 MultiQC module, suitable for interactive use
@@ -631,3 +614,24 @@ class BaseModule(BaseMultiqcModule):
         Add sections to the report. Overridden in child classes.
         """
         pass
+
+    def bargraph(self, *args, **kwargs):
+        return bargraph.plot(report, *args, **kwargs)
+
+    def linegraph(self, *args, **kwargs):
+        return linegraph.plot(report, *args, **kwargs)
+
+    def scatter(self, *args, **kwargs):
+        return scatter.plot(report, *args, **kwargs)
+
+    def violin(self, *args, **kwargs):
+        return violin.plot(report, *args, **kwargs)
+
+    def boxplot(self, *args, **kwargs):
+        return box.plot(report, *args, **kwargs)
+
+    def heatmap(self, *args, **kwargs):
+        return heatmap.plot(report, *args, **kwargs)
+
+    def table(self, *args, **kwargs):
+        return table.plot(report, *args, **kwargs)
