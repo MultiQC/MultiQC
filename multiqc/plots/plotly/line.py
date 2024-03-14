@@ -88,12 +88,20 @@ class LinePlot(Plot):
                 lines.append(remove_nones_and_empty_dicts(new_line))
 
             dataset.lines = lines
-            # Update default trace parameters
+
+            mode = pconfig.get("style", "lines")
+            if config.lineplot_style == "lines+markers":
+                mode = "lines+markers"
+
             dataset.trace_params.update(
-                mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-                line={"width": 2 if config.lineplot_style == "lines" else 0.6},
-                marker={"size": 4},
+                mode=mode,
+                line={"width": 2},
             )
+            if mode == "lines+markers":
+                dataset.trace_params.update(
+                    line={"width": 0.6},
+                    marker={"size": 5},
+                )
             return dataset
 
         def create_figure(
