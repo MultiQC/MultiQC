@@ -46,4 +46,4 @@ def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict
                 # debugging of modules
                 raise
 
-    return table.plot(dt)
+    return table.plot([dt])
