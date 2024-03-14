@@ -157,18 +157,15 @@ class DataTable:
                         shared_key_suffix = config.base_count_prefix
                     else:
                         multiplier = 1
-                    if headers[idx][k].get("modify") is None:
+                    if "modify" not in headers[idx][k]:
                         headers[idx][k]["modify"] = lambda x: x * multiplier
-                    if headers[idx][k].get("min") is None:
+                    if "min" not in headers[idx][k] is None:
                         headers[idx][k]["min"] = 0
-                    if headers[idx][k].get("format") is None:
+                    if "format" not in headers[idx][k] is None:
                         if multiplier == 1:
                             headers[idx][k]["format"] = "{:,d}"
-                suffix = headers[idx][k].get("suffix")
-                if suffix is None and shared_key_suffix is not None:
-                    suffix = " " + shared_key_suffix
-                if suffix is not None:
-                    headers[idx][k]["suffix"] = suffix
+                if "suffix" not in headers[idx][k] and shared_key_suffix is not None:
+                    headers[idx][k]["suffix"] = " " + shared_key_suffix
 
                 # Use defaults / data keys if headers not given
                 headers[idx][k]["namespace"] = headers[idx][k].get("namespace", pconfig.get("namespace", ""))

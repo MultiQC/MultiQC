@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Adapter Removal",
-            anchor="adapterRemoval",
+            anchor="adapterremoval",
             target="Adapter Removal",
             href="https://github.com/MikkelSchubert/adapterremoval",
             info=" rapid adapter trimming, identification, and read merging ",
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         parsed_data = None
-        for f in self.find_log_files("adapterRemoval", filehandles=True):
+        for f in self.find_log_files("adapterremoval", filehandles=True):
             self.s_name = f["s_name"]
             try:
                 parsed_data = self.parse_settings_file(f)

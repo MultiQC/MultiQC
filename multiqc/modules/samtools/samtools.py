@@ -51,7 +51,7 @@ class MultiqcModule(
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")
 
-        n["flagstat"] = self.parse_samtools_flagstats()
+        n["flagstat"] = self.parse_samtools_flagstat()
         if n["flagstat"] > 0:
             log.info(f"Found {n['flagstat']} flagstat reports")
 
