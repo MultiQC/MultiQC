@@ -156,16 +156,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": " bp",
                 "format": "{:,.1f}",
-                # Neutral metric, depending on sequencing technology. Use a
-                # sliding colour change to differentiate.
-                "scale": "Blues",
+                # Longer reads is considered better for long-read technologies.
+                # Use green to signal that.
+                "scale": "Greens",
             },
             "sequali_total_reads": {
                 "title": "Total reads",
                 "description": f"Total Sequences ({multiqc.config.read_count_desc})",
                 "shared_key": "read_count",
-                # Neutral metric, do not use red or green.
-                "scale": "Blues",
+                # More data is better, generally.
+                "scale": "Greens",
             },
             "sequali_duplication_percentage": {
                 "title": "% est. dups.",
