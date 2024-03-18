@@ -435,7 +435,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_headers = {
             "best_match": {
                 "title": "Best Match",
-                "description": "Best maatch as found by kmer analysis",
+                "description": "Best match as found by kmer analysis",
             },
             "libraries_affected": {
                 "title": "Libraries Affected (%)",
