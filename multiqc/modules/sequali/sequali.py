@@ -164,8 +164,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Total reads",
                 "description": f"Total Sequences ({multiqc.config.read_count_desc})",
                 "shared_key": "read_count",
-                # More data is better, generally.
-                "scale": "Greens",
+                # More data is better, generally. Unfortunately we cannot use
+                # greens here also, as it is in the adjacent column.
+                # So we resort to another unicolor scale that is not red.
+                # Between blues and purples, using Deep Purple to signal for
+                # good quality has a distinct advantage:
+                # https://www.youtube.com/watch?v=Q2FzZSBD5LE
+                "scale": "Purples",
             },
             "sequali_duplication_percentage": {
                 "title": "% est. dups.",
