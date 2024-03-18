@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Geometric mean of all lengths",
                 "min": 0,
                 "suffix": " bp",
-                "format": "{:,}",
+                "format": "{:,.1f}",
                 # Neutral metric, depending on sequencing technology. Use a
                 # sliding colour change to differentiate.
                 "scale": "Blues",
