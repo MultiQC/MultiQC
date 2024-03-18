@@ -31,6 +31,7 @@ from rich.syntax import Syntax
 
 from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule
 from .plots import table
+from .plots.plotly.from_dump import load_plot_from_json
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 from .utils.util_functions import strtobool
 
@@ -333,6 +334,47 @@ class _RunError(Exception):
     def __init__(self, message: str = "", sys_exit_code: int = 1):
         self.message = message
         self.sys_exit_code = sys_exit_code
+
+
+def load(*args, **kwargs):
+    """
+    Run without generating an HTML report. Thin wrapper around `run` for adding more data within
+    interactive environments.
+    """
+    kwargs["no_report"] = True
+    return run(*args, **kwargs)
+
+
+def list_modules():
+    """
+    Return a list of the modules that have been loaded.
+    """
+    return [m.name for m in report.modules_output]
+
+
+def list_samples():
+    """
+    Return a list of the samples that have been loaded.
+    """
+    sample_names = set()
+    for fname, data_by_sample in report.saved_raw_data.items():
+        sample_names.update(data_by_sample.keys())
+    return sorted(sample_names)
+
+
+def list_plots():
+    """
+    Return a list of the plots that have been loaded for a given module,
+    along with the number of datasets in each plot.
+    """
+    return list(f"{id}: {len(plot['datasets'])}" for id, plot in report.plot_data.items())
+
+
+def show_plot(plot_id: str, dataset_id=0):
+    """
+    Show a plot in the notebook.
+    """
+    return load_plot_from_json(report.plot_data[plot_id], dataset_id)
 
 
 # Main function that runs MultiQC. Available to use within an interactive Python environment
@@ -892,7 +934,6 @@ def _run_modules(
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
-    report.modules_output = list()
     sys_exit_code = 0
     total_mods_starttime = time.time()
     for mod_idx, mod_dict in enumerate(run_modules):

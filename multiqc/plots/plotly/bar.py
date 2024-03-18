@@ -67,7 +67,7 @@ class Dataset(BaseDataset):
         for cat in cats:
             # Split long category names
             if "name" not in cat:
-                raise ValueError(f"Bar plot {dataset.plot.id}: missing 'name' key in category")
+                raise ValueError(f"Bar plot {dataset.plot_id}: missing 'name' key in category")
             cat["name"] = "<br>".join(split_long_string(cat["name"]))
 
             # Reformat color to be ready to add alpha in Plotly-JS

@@ -283,6 +283,12 @@ class Plot(ABC):
         report.plot_data[self.id] = dump
         return html
 
+    # @abstractmethod
+    # def fig_from_dump(self, dump: Dict) -> go.Figure:
+    #     """
+    #     Load a Plot object from a JSON dictionary
+    #     """
+
     def flat_plot(self) -> str:
         html = "".join(
             [
