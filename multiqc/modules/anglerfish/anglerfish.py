@@ -3,13 +3,13 @@
 import json
 import logging
 
-from multiqc.modules.base_module import BaseModule, ModuleNoSamplesFound
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseModule):
+class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Anglerfish",
@@ -20,7 +20,6 @@ class MultiqcModule(BaseModule):
         )
         self.data_by_sample = dict()
 
-    def parse(self):
         for f in self.find_log_files("anglerfish", filehandles=True):
             self._parse_anglerfish_json(f)
 
@@ -37,7 +36,6 @@ class MultiqcModule(BaseModule):
         # Parse whole JSON to save all its content
         self.write_data_file(self.data_by_sample, "multiqc_anglerfish")
 
-    def add_sections(self):
         # General Stats Table
         self._add_general_stats_table()
 
