@@ -6,11 +6,17 @@ import logging
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
+# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Anglerfish module class
+    """
+
     def __init__(self):
+        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Anglerfish",
             anchor="Anglerfish",
@@ -18,23 +24,25 @@ class MultiqcModule(BaseMultiqcModule):
             info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
             # doi="", No DOI available
         )
-        self.data_by_sample = dict()
+
+        # Find and load any anglerfish reports
+        self.anglerfish_data = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self._parse_anglerfish_json(f)
 
         # Filter to strip out ignored sample names
-        self.data_by_sample = self.ignore_samples(self.data_by_sample)
+        self.anglerfish_data = self.ignore_samples(self.anglerfish_data)
 
         # Stop execution of the data if no anglerfish data is found.
-        if len(self.data_by_sample) == 0:
+        if len(self.anglerfish_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.data_by_sample)} reports")
+        log.info(f"Found {len(self.anglerfish_data)} reports")
 
         # Write parsed report data to a file
         # Parse whole JSON to save all its content
-        self.write_data_file(self.data_by_sample, "multiqc_anglerfish")
+        self.write_data_file(self.anglerfish_data, "multiqc_anglerfish")
 
         # General Stats Table
         self._add_general_stats_table()
@@ -56,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Fetch a sample name from the command
         s_name = f["s_name"]
         self.add_data_source(f, s_name)
-        self.data_by_sample[s_name] = {}
+        self.anglerfish_data[s_name] = {}
 
         # Add version info
         self.add_software_version(parsed_json["anglerfish_version"], s_name)
@@ -70,15 +78,15 @@ class MultiqcModule(BaseMultiqcModule):
                 total_reads += float(k.get("#reads", 0))
                 for key in k:
                     try:
-                        self.data_by_sample[s_name][f"{key}_{index}"] = float(k[key])
+                        self.anglerfish_data[s_name][f"{key}_{index}"] = float(k[key])
                     except ValueError:
-                        self.data_by_sample[s_name][f"{key}_{index}"] = k[key]
+                        self.anglerfish_data[s_name][f"{key}_{index}"] = k[key]
                 index += 1
-            self.data_by_sample[s_name]["sample_stats_amount"] = index
-            self.data_by_sample[s_name]["total_read"] = total_reads
+            self.anglerfish_data[s_name]["sample_stats_amount"] = index
+            self.anglerfish_data[s_name]["total_read"] = total_reads
         except KeyError:
             # No sample stat in file or sample stat missing info
-            self.data_by_sample[s_name]["sample_stats_amount"] = -1
+            self.anglerfish_data[s_name]["sample_stats_amount"] = -1
 
         # Parse Undetermined Indexes
         # Index for each undetermined (count, index) pair
@@ -87,15 +95,15 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             for k in parsed_json["undetermined"]:
                 if len(k) > 0:
-                    self.data_by_sample[s_name][f"undetermined_count_{index}"] = float(k["count"])
+                    self.anglerfish_data[s_name][f"undetermined_count_{index}"] = float(k["count"])
                     total_count += float(k["count"])
-                    self.data_by_sample[s_name][f"undetermined_index_{index}"] = k["undetermined_index"]
+                    self.anglerfish_data[s_name][f"undetermined_index_{index}"] = k["undetermined_index"]
                     index += 1
-            self.data_by_sample[s_name]["undetermined_amount"] = index
+            self.anglerfish_data[s_name]["undetermined_amount"] = index
         except KeyError:
             # No undetermined in file or undetermined missing info
-            self.data_by_sample[s_name]["undetermined_amount"] = -1
-        self.data_by_sample[s_name]["total_count"] = total_count
+            self.anglerfish_data[s_name]["undetermined_amount"] = -1
+        self.anglerfish_data[s_name]["total_count"] = total_count
 
     # General stats table
     def _add_general_stats_table(self):
@@ -103,20 +111,20 @@ class MultiqcModule(BaseMultiqcModule):
         # Prep data for general stat table
         # Multiple sample names per file requires dict where the first key is not file name
         data = {}
-        for s_name in self.data_by_sample:
-            total_read = self.data_by_sample[s_name]["total_read"]
-            total_count = self.data_by_sample[s_name]["total_count"]
+        for s_name in self.anglerfish_data:
+            total_read = self.anglerfish_data[s_name]["total_read"]
+            total_count = self.anglerfish_data[s_name]["total_count"]
             try:
-                for k in range(self.data_by_sample[s_name]["sample_stats_amount"]):
-                    key = self.data_by_sample[s_name][f"sample_name_{k}"]
+                for k in range(self.anglerfish_data[s_name]["sample_stats_amount"]):
+                    key = self.anglerfish_data[s_name][f"sample_name_{k}"]
                     data[key] = {}
                     data["undetermined"] = {}
                     data[f"total_read_{s_name}"] = {}
-                    reads = self.data_by_sample[s_name][f"#reads_{k}"]
+                    reads = self.anglerfish_data[s_name][f"#reads_{k}"]
                     data[key]["#reads"] = reads
                     # data[f"total_read_{s_name}"]["#reads"] = total_read
-                    data[key]["mean_read_len"] = self.data_by_sample[s_name][f"mean_read_len_{k}"]
-                    data[key]["std_read_len"] = self.data_by_sample[s_name][f"std_read_len_{k}"]
+                    data[key]["mean_read_len"] = self.anglerfish_data[s_name][f"mean_read_len_{k}"]
+                    data[key]["std_read_len"] = self.anglerfish_data[s_name][f"std_read_len_{k}"]
                     data[key]["library"] = float((reads / total_read) * 100)
                     data["undetermined"]["library"] = float((total_count / total_read) * 100)
             except KeyError:
@@ -164,15 +172,15 @@ class MultiqcModule(BaseMultiqcModule):
         for >= 10 samples: generate a violin plot"""
         data = {}
         total_samples = 0
-        for s_name in self.data_by_sample:
-            index = self.data_by_sample[s_name]["sample_stats_amount"]
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["sample_stats_amount"]
             if index > 0:
                 total_samples += index
                 for i in range(index):
-                    sample_name = self.data_by_sample[s_name][f"sample_name_{i}"]
+                    sample_name = self.anglerfish_data[s_name][f"sample_name_{i}"]
                     data[f"Sample: {sample_name}"] = {}
-                    data[f"Sample: {sample_name}"]["Mean"] = self.data_by_sample[s_name][f"mean_read_len_{i}"]
-                    data[f"Sample: {sample_name}"]["Standard Deviation"] = self.data_by_sample[s_name][
+                    data[f"Sample: {sample_name}"]["Mean"] = self.anglerfish_data[s_name][f"mean_read_len_{i}"]
+                    data[f"Sample: {sample_name}"]["Standard Deviation"] = self.anglerfish_data[s_name][
                         f"std_read_len_{i}"
                     ]
             else:
@@ -200,14 +208,14 @@ class MultiqcModule(BaseMultiqcModule):
     def _undetermined_index_chart(self):
         """Generate Undetermined indexes Bar Plot"""
         data = {}
-        for s_name in self.data_by_sample:
-            index = self.data_by_sample[s_name]["undetermined_amount"]
+        for s_name in self.anglerfish_data:
+            index = self.anglerfish_data[s_name]["undetermined_amount"]
             # Index smaller than 0 caused by KeyError from no undetermined data
             if index > 0:
                 for i in range(index):
-                    undetermined_index = self.data_by_sample[s_name][f"undetermined_index_{i}"]
+                    undetermined_index = self.anglerfish_data[s_name][f"undetermined_index_{i}"]
                     data[undetermined_index] = {}
-                    data[undetermined_index][undetermined_index] = self.data_by_sample[s_name][
+                    data[undetermined_index][undetermined_index] = self.anglerfish_data[s_name][
                         f"undetermined_count_{i}"
                     ]
             else:
