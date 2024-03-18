@@ -6,7 +6,7 @@ import textwrap
 from collections import defaultdict
 
 import multiqc
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -70,8 +70,6 @@ class MultiqcModule(BaseMultiqcModule):
         max_lengths = set()
         for sample_file in self.find_log_files("sequali", filehandles=True):
             sample_name = sample_file["s_name"]
-            if self.is_ignore_sample(sample_name):
-                continue
             self.add_data_source(sample_file)
             filename = sample_file["fn"]
             filehandle = sample_file["f"]
@@ -80,6 +78,16 @@ class MultiqcModule(BaseMultiqcModule):
             except json.JSONDecodeError:
                 log.error(f"Could not decode JSON data in {filename}")
                 continue
+            else:
+                self.data[sample_name] = sample_dict
+
+        # Filter to strip out ignored sample names
+        self.data = self.ignore_samples(self.data)
+        if len(self.data) == 0:
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.data)} reports")
+
+        for sample_name, sample_dict in self.data.items():
             try:
                 sequali_version = sample_dict["meta"]["sequali_version"]
                 versions.add(sequali_version)
@@ -89,7 +97,6 @@ class MultiqcModule(BaseMultiqcModule):
                 log.error("JSON file is not a proper Sequali report")
                 continue
             self.add_software_version(sequali_version, sample_name)
-            self.data[sample_name] = sample_dict
 
         summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in self.data.items()}
         self.write_data_file(summary_data, "multiqc_sequali")
@@ -105,7 +112,6 @@ class MultiqcModule(BaseMultiqcModule):
             self.lengths_differ = False
         if max_length >= 1000:
             self.use_xlog = True
-        log.info(f"Found {len(self.data)} reports")
 
         self.sequali_general_stats()
         self.read_count_plot()
