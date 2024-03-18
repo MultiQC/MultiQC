@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_software_version(sequali_version, sample_name)
             self.data[sample_name] = sample_dict
 
-        summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in self.data}
+        summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in self.data.items()}
         self.write_data_file(summary_data, "multiqc_sequali")
 
         if len(versions) != 1:
