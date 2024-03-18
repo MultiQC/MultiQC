@@ -163,8 +163,6 @@ class MultiqcModule(BaseMultiqcModule):
             "sequali_total_reads": {
                 "title": "Total reads",
                 "description": f"Total Sequences ({multiqc.config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * multiqc.config.read_count_multiplier,
                 "shared_key": "read_count",
                 # Neutral metric, do not use red or green.
                 "scale": "Blues",
