@@ -72,6 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample_name = sample_file["s_name"]
             if self.is_ignore_sample(sample_name):
                 continue
+            self.add_data_source(sample_file)
             filename = sample_file["fn"]
             filehandle = sample_file["f"]
             try:
