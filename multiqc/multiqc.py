@@ -424,7 +424,8 @@ def run(
     custom_css_files=(),
     **kwargs,
 ) -> RunResult:
-    """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+    """
+    MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
     It searches a given directory for analysis logs and compiles a HTML report.
     It's a general use tool, perfect for summarising the output from numerous
@@ -437,12 +438,6 @@ def run(
 
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-    # Set up logging level
-    loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
-    if quiet:
-        loglevel = "WARNING"
-        config.quiet = True
-    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
     # Throw an error if we are using an unsupported version of Python
     if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
@@ -452,66 +447,61 @@ def run(
             "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION),
         )
 
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_terminal=util_functions.force_term_colors(),
-        color_system=None if no_ansi else "auto",
-    )
+    console = _set_up_logging(verbose, quiet, no_ansi)
+
     console.print(
         f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug(f"This is MultiQC v{config.version}")
 
-    try:
-        _init(
-            analysis_dir=analysis_dir,
-            dirs=dirs,
-            dirs_depth=dirs_depth,
-            no_clean_sname=no_clean_sname,
-            title=title,
-            report_comment=report_comment,
-            template=template,
-            module=module,
-            require_logs=require_logs,
-            exclude=exclude,
-            outdir=outdir,
-            ignore=ignore,
-            ignore_samples=ignore_samples,
-            use_filename_as_sample_name=use_filename_as_sample_name,
-            replace_names=replace_names,
-            sample_names=sample_names,
-            sample_filters=sample_filters,
-            file_list=file_list,
-            filename=filename,
-            make_data_dir=make_data_dir,
-            no_data_dir=no_data_dir,
-            data_format=data_format,
-            zip_data_dir=zip_data_dir,
-            force=force,
-            ignore_symlinks=ignore_symlinks,
-            no_report=no_report,
-            export_plots=export_plots,
-            plots_flat=plots_flat,
-            plots_interactive=plots_interactive,
-            strict=strict,
-            lint=lint,
-            development=development,
-            make_pdf=make_pdf,
-            no_megaqc_upload=no_megaqc_upload,
-            config_file=config_file,
-            cl_config=cl_config,
-            profile_runtime=profile_runtime,
-            no_ansi=no_ansi,
-            custom_css_files=custom_css_files,
-            **kwargs,
-        )
+    _init(
+        analysis_dir=analysis_dir,
+        dirs=dirs,
+        dirs_depth=dirs_depth,
+        no_clean_sname=no_clean_sname,
+        title=title,
+        report_comment=report_comment,
+        template=template,
+        module=module,
+        require_logs=require_logs,
+        exclude=exclude,
+        outdir=outdir,
+        ignore=ignore,
+        ignore_samples=ignore_samples,
+        use_filename_as_sample_name=use_filename_as_sample_name,
+        replace_names=replace_names,
+        sample_names=sample_names,
+        sample_filters=sample_filters,
+        file_list=file_list,
+        filename=filename,
+        make_data_dir=make_data_dir,
+        no_data_dir=no_data_dir,
+        data_format=data_format,
+        zip_data_dir=zip_data_dir,
+        force=force,
+        ignore_symlinks=ignore_symlinks,
+        no_report=no_report,
+        export_plots=export_plots,
+        plots_flat=plots_flat,
+        plots_interactive=plots_interactive,
+        strict=strict,
+        lint=lint,
+        development=development,
+        make_pdf=make_pdf,
+        no_megaqc_upload=no_megaqc_upload,
+        config_file=config_file,
+        cl_config=cl_config,
+        profile_runtime=profile_runtime,
+        no_ansi=no_ansi,
+        custom_css_files=custom_css_files,
+        **kwargs,
+    )
 
+    try:
         run_modules, run_module_names = _file_search(
             file_list=file_list,
             ignore=ignore,
             ignore_samples=ignore_samples,
-            filename=filename,
         )
 
         # Create the temporary working directories
@@ -529,13 +519,17 @@ def run(
             run_module_names=run_module_names,
         )
 
-        _make_general_stats_table()
+        _general_stats_table()
 
         _export_sources()
 
-        _write_json()
+        _write_json_dump()
 
-        _write_html_and_data(filename, tmp_dir, template_mod)
+        _write_html_and_data(
+            tmp_dir=tmp_dir,
+            template_mod=template_mod,
+            filename=filename,
+        )
 
     except RunError as e:
         if e.message:
@@ -572,6 +566,24 @@ def run(
     log.move_tmp_log(logger)
 
     return RunResult(sys_exit_code=sys_exit_code)
+
+
+def _set_up_logging(verbose, quiet, no_ansi):
+    # Set up logging level
+    loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
+    if quiet:
+        loglevel = "WARNING"
+        config.quiet = True
+    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
+
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        color_system=None if no_ansi else "auto",
+    )
+
+    return console
 
 
 def _init(
@@ -778,7 +790,6 @@ def _file_search(
     file_list=False,
     ignore=(),
     ignore_samples=(),
-    filename=None,
 ) -> Tuple[List, List]:
     """
     Search log files and set up the list of modules to run.
@@ -1136,7 +1147,7 @@ def _run_modules(
     plugin_hooks.mqc_trigger("after_modules")
 
 
-def _make_general_stats_table() -> None:
+def _general_stats_table() -> None:
     """
     Construct HTML for the general stats table.
     """
@@ -1179,6 +1190,10 @@ def _make_general_stats_table() -> None:
 
 
 def _export_sources() -> None:
+    """
+    Dump data sources.
+    """
+
     if config.data_dir is not None:
         # Write the report sources to disk
         report.data_sources_tofile()
@@ -1187,10 +1202,11 @@ def _export_sources() -> None:
         report.dois_tofile(report.modules_output)
 
 
-def _write_json() -> None:
+def _write_json_dump() -> None:
     """
     Write JSON with plot data. Useful for MegaQC and for loading in interactive environments.
     """
+
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
@@ -1207,13 +1223,14 @@ def _write_json() -> None:
 
 
 def _write_html_and_data(
-    filename: str,
     tmp_dir: str,
     template_mod,
+    filename: str,
 ) -> None:
     """
     Make the final report path & data directories
     """
+
     if filename == "stdout":
         config.output_fn = sys.stdout
         logger.info("Printing report to stdout")
