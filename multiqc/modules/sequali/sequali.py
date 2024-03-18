@@ -140,6 +140,15 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "format": "{:.2f}",
+                # GC percentage is not "wrong" in any case. We want a color
+                # scale that clearly distuingishes GC rich vs AT-rich. The
+                # middle 50% should be white, as it is neutral. The
+                # color scale should not include red or green which are coupled
+                # with the 'bad' or 'good' value judgement respectively.
+                # This way we samples with a anomalous GC percentage will
+                # clearly stand out from the others, which is desirable.
+                # The PuOr scale fits these criteria.
+                "scale": "PuOr",
             },
             "sequali_mean_sequence_length": {
                 "title": "Mean length",
@@ -147,6 +156,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": " bp",
                 "format": "{:,}",
+                # Neutral metric, depending on sequencing technology. Use a
+                # sliding colour change to differentiate.
+                "scale": "Blues",
             },
             "sequali_total_reads": {
                 "title": "Total reads",
@@ -154,6 +166,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "modify": lambda x: x * multiqc.config.read_count_multiplier,
                 "shared_key": "read_count",
+                # Neutral metric, do not use red or green.
+                "scale": "Blues",
             },
             "sequali_duplication_percentage": {
                 "title": "% est. dups.",
@@ -162,6 +176,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "format": "{:.2f}",
+                # The more the worse. Use Reds to signal.
+                "scale": "Reds",
             },
         }
         self.general_stats_addcols(general_stats, headers)
@@ -414,9 +430,26 @@ class MultiqcModule(BaseMultiqcModule):
         table_data = {}
         for sequence, count in most_present:
             table_data[sequence] = {
-                "Best Match": sequence_matches[sequence],
-                "Libraries affected (%)": 100 * count / total,
+                "best_match": sequence_matches[sequence],
+                "libraries_affected": 100 * count / total,
             }
+
+        table_headers = {
+            "best_match": {
+                "title": "Best Match",
+                "description": "Best maatch as found by kmer analysis",
+            },
+            "libraries_affected": {
+                "title": "Libraries Affected (%)",
+                "description": "The percentage of libraries where this sequence is overrepresented.",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "format": "{:.2f}",
+                # The more, the worse; use Red scaling.
+                "scale": "Reds",
+            },
+        }
 
         table_config = {
             "id": "sequali_top_overrepresented_sequences_table",
@@ -426,7 +459,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Top overrepresented sequences",
             anchor="sequali_top_overrepresented_sequences",
             description="The top 20 overrepresented sequences in all libraries",
-            plot=table.plot(table_data, pconfig=table_config),
+            plot=table.plot(table_data, table_headers, table_config),
         )
 
     def adapter_content_plot(self):
