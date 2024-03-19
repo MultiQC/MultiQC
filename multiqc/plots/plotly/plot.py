@@ -38,7 +38,7 @@ class BaseDataset(ABC):
     Structured version of dataset config dictionary
     """
 
-    plot: "Plot"
+    plot_id: str
     label: str
     uid: str
     dconfig: Dict  # user dataset-specific configuration
@@ -47,9 +47,7 @@ class BaseDataset(ABC):
     pct_range: Dict
 
     def dump_for_javascript(self) -> Dict:
-        d = {k: v for k, v in self.__dict__.items()}
-        del d["plot"]
-        return d
+        return {k: v for k, v in self.__dict__.items()}
 
     def create_figure(self, layout: go.Layout, is_log=False, is_pct=False):
         """
@@ -97,7 +95,7 @@ class Plot(ABC):
         # Per-dataset configurations
         self.datasets: List[BaseDataset] = [
             BaseDataset(
-                self,
+                plot_id=self.id,
                 label=str(i + 1),
                 uid=self.id,
                 dconfig=dict(),
