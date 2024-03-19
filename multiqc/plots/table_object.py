@@ -56,8 +56,8 @@ class DataTable:
 
     def _build(
         self,
-        data: List,
-        headers: List,
+        data: List[Dict],
+        headers: List[Dict],
         pconfig: Dict,
     ):
         # Allow user to overwrite any given config for this plot
@@ -85,6 +85,7 @@ class DataTable:
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
                 pconfig["only_defined_headers"] = False
+                keys = list()
 
             # Add header keys from the data
             if pconfig.get("only_defined_headers", True) is False:
@@ -99,8 +100,7 @@ class DataTable:
                 try:
                     headers[idx]
                 except IndexError:
-                    headers.append(list)
-                    headers[idx] = dict()
+                    headers.append(dict())
                 else:
                     # Convert the existing headers into a dict (e.g. if parsed from a config)
                     od_tuples = [(key, headers[idx][key]) for key in headers[idx].keys()]
