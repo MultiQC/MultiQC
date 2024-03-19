@@ -1,4 +1,5 @@
 """ MultiQC modules base class, contains helper functions """
+
 from typing import List, Union, Optional, Dict
 
 import fnmatch
