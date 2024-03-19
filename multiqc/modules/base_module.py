@@ -14,7 +14,6 @@ from collections import defaultdict
 
 import markdown
 
-from multiqc.plots import bargraph, linegraph, scatter, violin, heatmap, table, box
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ class BaseMultiqcModule:
 
         self.sections = list()
 
-    def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
+    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -122,6 +121,22 @@ class BaseMultiqcModule:
             path_filters: List[str] = [path_filters]
         if isinstance(path_filters_exclude, str):
             path_filters_exclude: List[str] = [path_filters_exclude]
+
+        # Old, depreciated syntax support. Likely to be removed in a future version.
+        if isinstance(sp_key, dict):
+            report.files[self.name] = list()
+            for sf in report.searchfiles:
+                if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
+                    report.files[self.name].append({"fn": sf[0], "root": sf[1]})
+            sp_key = self.name
+            logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
+            if len(report.files[self.name]) > 0:
+                logger.warning(logwarn)
+            else:
+                logger.debug(logwarn)
+        elif not isinstance(sp_key, str):
+            logger.warning("Did not understand find_log_files() search key")
+            return
 
         for f in report.files[sp_key]:
             # Make a note of the filename so that we can report it if something crashes
@@ -598,41 +613,20 @@ class BaseMultiqcModule:
         report.saved_raw_data[fn] = data
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
+    ##################################################
+    #### DEPRECATED FORWARDERS
+    def plot_bargraph(self, data, cats=None, pconfig=None):
+        """Depreciated function. Forwards to new location."""
+        from multiqc.plots import bargraph
 
-class BaseModule(BaseMultiqcModule):
-    # v2 MultiQC module, suitable for interactive use
-    def __init__(self, *args, **kwargs):
-        super(BaseModule, self).__init__(*args, **kwargs)
+        if pconfig is None:
+            pconfig = {}
+        return bargraph.plot(data, cats, pconfig)
 
-    def parse(self):
-        """
-        Parse log files into an intermediate format. Overridden in child classes.
-        """
-        pass
+    def plot_xy_data(self, data, pconfig=None):
+        """Depreciated function. Forwards to new location."""
+        from multiqc.plots import linegraph
 
-    def add_sections(self):
-        """
-        Add sections to the report. Overridden in child classes.
-        """
-        pass
-
-    def bargraph(self, *args, **kwargs):
-        return bargraph.plot(report, *args, **kwargs)
-
-    def linegraph(self, *args, **kwargs):
-        return linegraph.plot(report, *args, **kwargs)
-
-    def scatter(self, *args, **kwargs):
-        return scatter.plot(report, *args, **kwargs)
-
-    def violin(self, *args, **kwargs):
-        return violin.plot(report, *args, **kwargs)
-
-    def boxplot(self, *args, **kwargs):
-        return box.plot(report, *args, **kwargs)
-
-    def heatmap(self, *args, **kwargs):
-        return heatmap.plot(report, *args, **kwargs)
-
-    def table(self, *args, **kwargs):
-        return table.plot(report, *args, **kwargs)
+        if pconfig is None:
+            pconfig = {}
+        return linegraph.plot(data, pconfig)
