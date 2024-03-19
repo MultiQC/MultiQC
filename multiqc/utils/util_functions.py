@@ -3,6 +3,8 @@
 import io
 import json
 import logging
+from collections import defaultdict, OrderedDict
+
 import math
 import os
 import shutil
@@ -201,8 +203,7 @@ def dump_json(data, **kwargs):
             return None
         elif isinstance(obj, float) and math.isnan(obj):
             return None
-        else:
-            return obj
+        return obj
 
     return json.dumps(replace_nan(data), **kwargs)
 
@@ -259,3 +260,20 @@ def multiqc_dump_json(report):
             except Exception:
                 pass
     return exported_data
+
+
+def replace_defaultdicts(data):
+    """
+    Recursively replace dict-likes as dicts for nice yaml representation.
+    """
+
+    def _replace(obj):
+        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+            return {k: _replace(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_replace(v) for v in obj]
+        elif isinstance(obj, set):
+            return {_replace(v) for v in obj}
+        return obj
+
+    return _replace(data)
