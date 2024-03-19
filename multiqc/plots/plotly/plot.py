@@ -256,6 +256,8 @@ class Plot(ABC):
             html = self.flat_plot()
         else:
             html = self.interactive_plot(report)
+            if config.export_plots:
+                self.flat_plot()
         return html
 
     def interactive_plot(self, report) -> str:
