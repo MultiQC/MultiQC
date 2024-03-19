@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.anglerfish_data = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
-            self._parse_anglerfish_json(f)
+            self.parse_anglerfish_json(f)
 
         # Filter to strip out ignored sample names
         self.anglerfish_data = self.ignore_samples(self.anglerfish_data)
@@ -45,18 +45,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.anglerfish_data, "multiqc_anglerfish")
 
         # General Stats Table
-        self._add_general_stats_table()
+        self.anglerfish_general_stats_table()
 
         # Adds section for Sample Stats Read length table/violin plot
-        self._plot_sample_stats()
+        self.anglerfish_sample_stats()
         # Adds section for Undetermined indexes plot
-        self._undetermined_index_chart()
+        self.anglerfish_undetermined_index_chart()
 
-    def _parse_anglerfish_json(self, f):
+    def parse_anglerfish_json(self, f):
         """Parse the JSON output from Anglerfish and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
-        except json.JSONDecodeError:
+        except Exception:
             file = f["fn"]
             log.warning(f"Could not parse Anglerfish JSON: '{file}'")
             return
@@ -70,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(parsed_json["anglerfish_version"], s_name)
 
         # Parse Sample Stats
-        # Index for each sample and their reads in order to iterate without knowing sample names
+        ## Index for each sample and their reads in order to iterate without knowing sample names
         index = 0
         total_reads = 0
         try:
@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.anglerfish_data[s_name]["sample_stats_amount"] = -1
 
         # Parse Undetermined Indexes
-        # Index for each undetermined (count, index) pair
+        ## Index for each undetermined (count, index) pair
         index = 0
         total_count = 0
         try:
@@ -106,7 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.anglerfish_data[s_name]["total_count"] = total_count
 
     # General stats table
-    def _add_general_stats_table(self):
+    def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
         # Prep data for general stat table
         # Multiple sample names per file requires dict where the first key is not file name
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(data, headers)
 
-    def _plot_sample_stats(self):
+    def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.
         For < 10 samples: generate a table
         for >= 10 samples: generate a violin plot"""
@@ -205,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=p,
         )
 
-    def _undetermined_index_chart(self):
+    def anglerfish_undetermined_index_chart(self):
         """Generate Undetermined indexes Bar Plot"""
         data = {}
         for s_name in self.anglerfish_data:
@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
                         f"undetermined_count_{i}"
                     ]
             else:
-                # For non-existing undetermined and faulty undetermined
+                # For non existing undetermined and faulty undetermined
                 log.debug(f"Missing Undetermined Data in Anglerfish json: {s_name}")
         # Only add undetermined section if undetermined data exists
         if len(data) == 0:
