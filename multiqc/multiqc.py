@@ -303,77 +303,33 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
-def load(
-    analysis_dir,
-    dirs=False,
-    dirs_depth=None,
-    no_clean_sname=False,
-    title=None,
-    report_comment=None,
-    template=None,
-    module=(),
-    require_logs=False,
-    exclude=(),
-    outdir=None,
-    ignore=(),
-    ignore_samples=(),
-    use_filename_as_sample_name=False,
-    replace_names=None,
-    sample_names=None,
-    sample_filters=None,
-    file_list=False,
-    filename=None,
-    make_data_dir=False,
-    no_data_dir=False,
-    data_format=None,
-    zip_data_dir=False,
-    force=True,
-    ignore_symlinks=False,
-    no_report=False,
-    export_plots=False,
-    plots_flat=False,
-    plots_interactive=False,
-    strict=False,
-    lint=False,  # Deprecated since v1.17
-    development=False,
-    make_pdf=False,
-    no_megaqc_upload=False,
-    config_file=(),
-    cl_config=(),
-    verbose=0,
-    quiet=False,
-    profile_runtime=False,
-    no_ansi=False,
-    custom_css_files=(),
-    **kwargs,
-):
-    """
-    Run without generating an HTML report. Thin wrapper around `run` for adding more data within
-    interactive environments.
-    """
-    # kwargs["no_report"] = True
-    # return run(*args, **kwargs)
-
-
 class RunResult:
     """
-    To return the running information from the run:
+    Returned by a MultiQC run for interactive use. Contains the following information:
 
+    * appropriate error code (e.g. 1 if a module broke, 0 on success)
+    * error message if a module broke
     * report instance
     * config instance
-    * appropriate error code (e.g. 1 if a module broke, 0 on success)
-    * message (e.g. if a module broke)
 
     """
 
-    def __init__(self, message: str = "", sys_exit_code: int = 0):
-        self.message = message
+    def __init__(
+        self,
+        sys_exit_code: int = 0,
+        message: str = "",
+    ):
         self.sys_exit_code = sys_exit_code
+        self.message = message
         self.report = report
         self.config = config
 
 
-class RunError(Exception):
+class _RunError(Exception):
+    """
+    Used internally in `run` to pass errors from sub-steps.
+    """
+
     def __init__(self, message: str = "", sys_exit_code: int = 1):
         self.message = message
         self.sys_exit_code = sys_exit_code
@@ -441,10 +397,11 @@ def run(
 
     # Throw an error if we are using an unsupported version of Python
     if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
-        raise RunError(
-            "You are running MultiQC with Python {}. "
+        return RunResult(
+            message="You are running MultiQC with Python {}. "
             "Please upgrade Python! MultiQC does not support Python < {}, "
             "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION),
+            sys_exit_code=1,
         )
 
     console = _set_up_logging(verbose, quiet, no_ansi)
@@ -531,7 +488,7 @@ def run(
             filename=filename,
         )
 
-    except RunError as e:
+    except _RunError as e:
         if e.message:
             logger.critical(e.message)
         return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
@@ -798,7 +755,7 @@ def _file_search(
     # Add files if --file-list option is given
     if file_list:
         if len(config.analysis_dir) > 1:
-            raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
+            raise _RunError("If --file-list is given, analysis_dir should have only one plain text file.")
         file_list_path = config.analysis_dir[0]
         config.analysis_dir = []
         with open(file_list_path) as in_handle:
@@ -807,7 +764,7 @@ def _file_search(
                     path = os.path.abspath(line.strip())
                     config.analysis_dir.append(path)
         if len(config.analysis_dir) == 0:
-            raise RunError(
+            raise _RunError(
                 f"No files or directories were added from {file_list_path} using --file-list option."
                 f"Please, check that {file_list_path} contains correct paths."
             )
@@ -858,7 +815,7 @@ def _file_search(
         if unknown_modules:
             logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
         if len(unknown_modules) == len(config.run_modules):
-            raise RunError("No available modules to run!")
+            raise _RunError("No available modules to run!")
         config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
@@ -869,7 +826,7 @@ def _file_search(
             config.exclude_modules = tuple(x for x in config.exclude_modules if x != "general_stats")
         run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
-        raise RunError("No analysis modules specified!")
+        raise _RunError("No analysis modules specified!")
     run_module_names = [list(m.keys())[0] for m in run_modules]
     logger.debug(f"Analysing modules: {', '.join(run_module_names)}")
 
@@ -900,7 +857,7 @@ def _file_search(
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
     if not _required_logs_found(run_module_names):
-        raise RunError()
+        raise _RunError()
 
     return run_modules, run_module_names
 
@@ -1063,7 +1020,7 @@ def _run_modules(
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
     if not _required_logs_found([m.anchor for m in report.modules_output]):
-        raise RunError()
+        raise _RunError()
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -1087,7 +1044,7 @@ def _run_modules(
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
-        raise RunError(sys_exit_code=sys_exit_code)
+        raise _RunError(sys_exit_code=sys_exit_code)
 
     if config.make_report:
         # Sort the report module output if we have a config
@@ -1348,7 +1305,7 @@ def _write_html_and_data(
                     logger.error(f"Output directory {config.plots_dir} already exists.")
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
-                    raise RunError()
+                    raise _RunError()
             logger.info(
                 "Plots       : {}{}".format(
                     os.path.relpath(config.plots_dir),
