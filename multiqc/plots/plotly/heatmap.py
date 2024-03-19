@@ -33,59 +33,60 @@ def plot(
     return p.add_to_report(report)
 
 
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    rows: List[List[ElemT]]
+    xcats: List[str]
+    ycats: List[str]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+        xcats: Optional[List[str]] = None,
+        ycats: Optional[List[str]] = None,
+    ) -> "Dataset":
+        if isinstance(rows, dict):
+            # Convert dict to a list of lists
+            if not ycats:
+                ycats = list(rows.keys())
+            if not xcats:
+                xcats = []
+                for y, value_by_x in rows.items():
+                    for x, value in value_by_x.items():
+                        if x not in xcats:
+                            xcats.append(x)
+            rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
+
+        dataset = Dataset(
+            **dataset.__dict__,
+            rows=rows,
+            xcats=xcats,
+            ycats=ycats,
+        )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: Optional[go.Layout] = None,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        return go.Figure(
+            data=go.Heatmap(
+                z=self.rows,
+                x=self.xcats,
+                y=self.ycats,
+                **self.trace_params,
+            ),
+            layout=layout or self.layout,
+        )
+
+
 class HeatmapPlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        rows: List[List[ElemT]]
-        xcats: List[str]
-        ycats: List[str]
-
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-            xcats: Optional[List[str]] = None,
-            ycats: Optional[List[str]] = None,
-        ) -> "HeatmapPlot.Dataset":
-            if isinstance(rows, dict):
-                # Convert dict to a list of lists
-                if not ycats:
-                    ycats = list(rows.keys())
-                if not xcats:
-                    xcats = []
-                    for y, value_by_x in rows.items():
-                        for x, value in value_by_x.items():
-                            if x not in xcats:
-                                xcats.append(x)
-                rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
-
-            dataset = HeatmapPlot.Dataset(
-                **dataset.__dict__,
-                rows=rows,
-                xcats=xcats,
-                ycats=ycats,
-            )
-            return dataset
-
-        def create_figure(
-            self,
-            layout: Optional[go.Layout] = None,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            return go.Figure(
-                data=go.Heatmap(
-                    z=self.rows,
-                    x=self.xcats,
-                    y=self.ycats,
-                    **self.trace_params,
-                ),
-                layout=layout or self.layout,
-            )
-
     def __init__(
         self,
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
@@ -122,8 +123,8 @@ class HeatmapPlot(Plot):
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[HeatmapPlot.Dataset] = [
-            HeatmapPlot.Dataset.create(
+        self.datasets: List[Dataset] = [
+            Dataset.create(
                 self.datasets[0],
                 rows=rows,
                 xcats=xcats,

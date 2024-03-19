@@ -39,112 +39,108 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     return p.add_to_report(report)
 
 
-class LinePlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        lines: List[Dict]
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    lines: List[Dict]
 
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            lines: List[Dict],
-            pconfig: Dict,
-        ) -> "LinePlot.Dataset":
-            dataset: LinePlot.Dataset = LinePlot.Dataset(
-                **dataset.__dict__,
-                lines=lines,
-            )
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        lines: List[Dict],
+        pconfig: Dict,
+    ) -> "Dataset":
+        dataset: Dataset = Dataset(
+            **dataset.__dict__,
+            lines=lines,
+        )
 
-            # Prevent Plotly from parsing strings as numbers
-            if pconfig.get("categories") or dataset.dconfig.get("categories"):
-                dataset.layout["xaxis"]["type"] = "category"
+        # Prevent Plotly from parsing strings as numbers
+        if pconfig.get("categories") or dataset.dconfig.get("categories"):
+            dataset.layout["xaxis"]["type"] = "category"
 
-            # convert HighCharts-style hardcoded trace parameters to Plotly style
-            lines = []
-            for src_line in dataset.lines:
-                new_line = {
-                    "name": src_line["name"],
-                    "data": src_line["data"],
-                    "color": src_line.get("color"),
-                    "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+        # convert HighCharts-style hardcoded trace parameters to Plotly style
+        lines = []
+        for src_line in dataset.lines:
+            new_line = {
+                "name": src_line["name"],
+                "data": src_line["data"],
+                "color": src_line.get("color"),
+                "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+                "line": {
+                    "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
+                    "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                },
+            }
+            if "marker" in src_line:
+                new_line["mode"] = "lines+markers"
+                new_line["marker"] = {
+                    "symbol": src_line["marker"].get("symbol"),
                     "line": {
-                        "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
-                        "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                        "width": src_line["marker"].get("line", {}).get("width", src_line["marker"].get("lineWidth")),
+                        "color": src_line["marker"].get("line", {}).get("color", src_line["marker"].get("lineColor")),
                     },
                 }
-                if "marker" in src_line:
-                    new_line["mode"] = "lines+markers"
-                    new_line["marker"] = {
-                        "symbol": src_line["marker"].get("symbol"),
-                        "line": {
-                            "width": src_line["marker"]
-                            .get("line", {})
-                            .get("width", src_line["marker"].get("lineWidth")),
-                            "color": src_line["marker"]
-                            .get("line", {})
-                            .get("color", src_line["marker"].get("lineColor")),
-                        },
-                    }
-                lines.append(remove_nones_and_empty_dicts(new_line))
+            lines.append(remove_nones_and_empty_dicts(new_line))
 
-            dataset.lines = lines
+        dataset.lines = lines
 
-            mode = pconfig.get("style", "lines")
-            if config.lineplot_style == "lines+markers":
-                mode = "lines+markers"
+        mode = pconfig.get("style", "lines")
+        if config.lineplot_style == "lines+markers":
+            mode = "lines+markers"
 
+        dataset.trace_params.update(
+            mode=mode,
+            line={"width": 2},
+        )
+        if mode == "lines+markers":
             dataset.trace_params.update(
-                mode=mode,
-                line={"width": 2},
+                line={"width": 0.6},
+                marker={"size": 5},
             )
-            if mode == "lines+markers":
-                dataset.trace_params.update(
-                    line={"width": 0.6},
-                    marker={"size": 5},
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        layout.height += len(self.lines) * 5  # extra space for legend
+
+        fig = go.Figure(layout=layout)
+        for line in self.lines:
+            xs = [x[0] for x in line["data"]]
+            ys = [x[1] for x in line["data"]]
+            params = dict(
+                marker=line.get("marker", {}),
+                line=line.get("line", {}),
+                showlegend=line.get("showlegend", None),
+                mode=line.get("mode", None),
+            )
+            params = update_dict(params, self.trace_params, none_only=True)
+            params["marker"]["color"] = line.get("color")
+
+            fig.add_trace(
+                go.Scatter(
+                    x=xs,
+                    y=ys,
+                    name=line["name"],
+                    text=[line["name"]] * len(xs),
+                    **params,
                 )
-            return dataset
+            )
+        return fig
 
-        def create_figure(
-            self,
-            layout: go.Layout,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            if self.plot.flat:
-                layout.height += len(self.lines) * 5  # extra space for legend
 
-            fig = go.Figure(layout=layout)
-            for line in self.lines:
-                xs = [x[0] for x in line["data"]]
-                ys = [x[1] for x in line["data"]]
-                params = dict(
-                    marker=line.get("marker", {}),
-                    line=line.get("line", {}),
-                    showlegend=line.get("showlegend", None),
-                    mode=line.get("mode", None),
-                )
-                params = update_dict(params, self.trace_params, none_only=True)
-                params["marker"]["color"] = line.get("color")
-
-                fig.add_trace(
-                    go.Scatter(
-                        x=xs,
-                        y=ys,
-                        name=line["name"],
-                        text=[line["name"]] * len(xs),
-                        **params,
-                    )
-                )
-            return fig
-
+class LinePlot(Plot):
     def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):
         super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
 
-        self.datasets: List[LinePlot.Dataset] = [
-            LinePlot.Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
+        self.datasets: List[Dataset] = [
+            Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
         ]
 
         # Make a tooltip always show on hover over any point on plot
