@@ -493,6 +493,7 @@ module_order:
   - afterqc
   - fastp
   - fastqc
+  - sequali
   - filtlong
   - prinseqplusplus
   - pychopper
