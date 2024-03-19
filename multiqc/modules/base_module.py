@@ -38,7 +38,7 @@ class BaseMultiqcModule:
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
