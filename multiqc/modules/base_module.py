@@ -56,12 +56,12 @@ class BaseMultiqcModule:
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({anchor: self.mod_cust_config.get("custom_config", {})})
 
+        # Sanitise anchor ID and check for duplicates
+        self.anchor = report.save_htmlid(self.anchor)
+
         # See if we have a user comment in the config
         if self.anchor in config.section_comments:
             self.comment = config.section_comments[self.anchor]
-
-        # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
 
         if self.info is None:
             self.info = ""
