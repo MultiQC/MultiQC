@@ -20,7 +20,7 @@ import time
 import json
 import traceback
 from importlib.metadata import EntryPoint
-from typing import Dict, Union, Callable, List
+from typing import Dict, Union, Callable, List, Optional, Tuple
 
 import jinja2
 import requests
@@ -300,7 +300,39 @@ def run_cli(**kwargs):
     multiqc_run = run(**kwargs)
 
     # End execution using the exit code returned from MultiQC
-    sys.exit(multiqc_run["sys_exit_code"])
+    sys.exit(multiqc_run.sys_exit_code)
+
+
+class RunResult:
+    """
+    Returned by a MultiQC run for interactive use. Contains the following information:
+
+    * appropriate error code (e.g. 1 if a module broke, 0 on success)
+    * error message if a module broke
+    * report instance
+    * config instance
+
+    """
+
+    def __init__(
+        self,
+        sys_exit_code: int = 0,
+        message: str = "",
+    ):
+        self.sys_exit_code = sys_exit_code
+        self.message = message
+        self.report = report
+        self.config = config
+
+
+class _RunError(Exception):
+    """
+    Used internally in `run` to pass errors from sub-steps.
+    """
+
+    def __init__(self, message: str = "", sys_exit_code: int = 1):
+        self.message = message
+        self.sys_exit_code = sys_exit_code
 
 
 # Main function that runs MultiQC. Available to use within an interactive Python environment
@@ -347,8 +379,9 @@ def run(
     no_ansi=False,
     custom_css_files=(),
     **kwargs,
-):
-    """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
+) -> RunResult:
+    """
+    MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
     It searches a given directory for analysis logs and compiles a HTML report.
     It's a general use tool, perfect for summarising the output from numerous
@@ -362,6 +395,137 @@ def run(
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
+    # Throw an error if we are using an unsupported version of Python
+    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+        return RunResult(
+            message="You are running MultiQC with Python {}. "
+            "Please upgrade Python! MultiQC does not support Python < {}, "
+            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION),
+            sys_exit_code=1,
+        )
+
+    console = _set_up_logging(verbose, quiet, no_ansi)
+
+    console.print(
+        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
+    )
+    logger.debug(f"This is MultiQC v{config.version}")
+
+    _init(
+        analysis_dir=analysis_dir,
+        dirs=dirs,
+        dirs_depth=dirs_depth,
+        no_clean_sname=no_clean_sname,
+        title=title,
+        report_comment=report_comment,
+        template=template,
+        module=module,
+        require_logs=require_logs,
+        exclude=exclude,
+        outdir=outdir,
+        ignore=ignore,
+        ignore_samples=ignore_samples,
+        use_filename_as_sample_name=use_filename_as_sample_name,
+        replace_names=replace_names,
+        sample_names=sample_names,
+        sample_filters=sample_filters,
+        file_list=file_list,
+        filename=filename,
+        make_data_dir=make_data_dir,
+        no_data_dir=no_data_dir,
+        data_format=data_format,
+        zip_data_dir=zip_data_dir,
+        force=force,
+        ignore_symlinks=ignore_symlinks,
+        no_report=no_report,
+        export_plots=export_plots,
+        plots_flat=plots_flat,
+        plots_interactive=plots_interactive,
+        strict=strict,
+        lint=lint,
+        development=development,
+        make_pdf=make_pdf,
+        no_megaqc_upload=no_megaqc_upload,
+        config_file=config_file,
+        cl_config=cl_config,
+        profile_runtime=profile_runtime,
+        no_ansi=no_ansi,
+        custom_css_files=custom_css_files,
+        **kwargs,
+    )
+
+    try:
+        run_modules, run_module_names = _file_search(
+            file_list=file_list,
+            ignore=ignore,
+            ignore_samples=ignore_samples,
+        )
+
+        # Create the temporary working directories
+        tmp_dir = tempfile.mkdtemp()
+        logger.debug(f"Using temporary directory for creating report: {tmp_dir}")
+
+        # Load the template
+        template_mod = config.avail_templates[config.template].load()
+
+        _run_modules(
+            tmp_dir=tmp_dir,
+            template_mod=template_mod,
+            filename=filename,
+            run_modules=run_modules,
+            run_module_names=run_module_names,
+        )
+
+        _general_stats_table()
+
+        _export_sources()
+
+        _write_json_dump()
+
+        _write_html_and_data(
+            tmp_dir=tmp_dir,
+            template_mod=template_mod,
+            filename=filename,
+        )
+
+    except _RunError as e:
+        if e.message:
+            logger.critical(e.message)
+        return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
+
+    plugin_hooks.mqc_trigger("execution_finish")
+
+    report.runtimes["total"] = time.time() - start_execution_time
+    if config.profile_runtime:
+        logger.warning(f"Run took {report.runtimes['total']:.2f} seconds")
+        logger.warning(f" - {report.runtimes['total_sp']:.2f}s: Searching files")
+        logger.warning(f" - {report.runtimes['total_mods']:.2f}s: Running modules")
+        if config.make_report:
+            logger.warning(f" - {report.runtimes['total_compression']:.2f}s: Compressing report data")
+            logger.info(f"For more information, see the 'Run Time' section in {os.path.relpath(config.output_fn)}")
+
+    if report.num_mpl_plots > 0 and not config.plots_force_flat:
+        if not config.plots_force_interactive:
+            console.print(
+                "[blue]|           multiqc[/] | "
+                "Flat-image plots used. Disable with '--interactive'. "
+                "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
+            )
+
+    sys_exit_code = 0
+    if config.strict and len(report.lint_errors) > 0:
+        logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
+        sys_exit_code = 1
+
+    logger.info("MultiQC complete")
+
+    # Move the log file into the data directory
+    log.move_tmp_log(logger)
+
+    return RunResult(sys_exit_code=sys_exit_code)
+
+
+def _set_up_logging(verbose, quiet, no_ansi):
     # Set up logging level
     loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
     if quiet:
@@ -369,26 +533,57 @@ def run(
         config.quiet = True
     log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
 
-    # Throw an error if we are using an unsupported version of Python
-    if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
-        logger.critical(
-            "You are running MultiQC with Python {}. "
-            "Please upgrade Python! MultiQC does not support Python < {}, "
-            "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
-        )
-        return {"report": None, "config": None, "sys_exit_code": 1}
-
     console = rich.console.Console(
         stderr=True,
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
     )
-    console.print(
-        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
-    )
-    logger.debug(f"This is MultiQC v{config.version}")
 
+    return console
+
+
+def _init(
+    analysis_dir,
+    dirs=False,
+    dirs_depth=None,
+    no_clean_sname=False,
+    title=None,
+    report_comment=None,
+    template=None,
+    module=(),
+    require_logs=False,
+    exclude=(),
+    outdir=None,
+    use_filename_as_sample_name=False,
+    replace_names=None,
+    sample_names=None,
+    sample_filters=None,
+    make_data_dir=False,
+    no_data_dir=False,
+    data_format=None,
+    zip_data_dir=False,
+    force=True,
+    ignore_symlinks=False,
+    no_report=False,
+    export_plots=False,
+    plots_flat=False,
+    plots_interactive=False,
+    strict=False,
+    lint=False,  # Deprecated since v1.17
+    development=False,
+    make_pdf=False,
+    no_megaqc_upload=False,
+    config_file=(),
+    cl_config=(),
+    profile_runtime=False,
+    no_ansi=False,
+    custom_css_files=(),
+    **kwargs,
+) -> None:
+    """
+    Load config and set up key variables.
+    """
     # Load config files
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -505,6 +700,7 @@ def run(
         if "png" not in config.export_plot_formats:
             config.export_plot_formats.append("png")
     if make_pdf:
+        config.make_pdf = True
         config.template = "simple"
     if no_megaqc_upload:
         config.megaqc_upload = False
@@ -532,47 +728,10 @@ def run(
         config.custom_css_files.extend(custom_css_files)
     config.kwargs = kwargs  # Plugin command line options
 
-    # Discarding the CLI variables to make sure we use only config down below.
-    del analysis_dir
-    del dirs
-    del dirs_depth
-    del no_clean_sname
-    del title
-    del report_comment
-    del template
-    del module
-    del require_logs
-    del exclude
-    del outdir
-    del use_filename_as_sample_name
-    del replace_names
-    del sample_names
-    del sample_filters
-    del make_data_dir
-    del no_data_dir
-    del data_format
-    del zip_data_dir
-    del force
-    del ignore_symlinks
-    del no_report
-    del export_plots
-    del plots_flat
-    del plots_interactive
-    del strict
-    del lint
-    del no_megaqc_upload
-    del config_file
-    del cl_config
-    del verbose
-    del quiet
-    del profile_runtime
-    del no_ansi
-    del custom_css_files
-
     plugin_hooks.mqc_trigger("execution_start")
 
     logger.debug(f"Working dir : {os.getcwd()}")
-    if make_pdf:
+    if config.make_pdf:
         logger.info("--pdf specified. Using non-interactive HTML template.")
     logger.debug(f"Template    : {config.template}")
     if config.strict:
@@ -583,10 +742,20 @@ def run(
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 
+
+def _file_search(
+    file_list=False,
+    ignore=(),
+    ignore_samples=(),
+) -> Tuple[List, List]:
+    """
+    Search log files and set up the list of modules to run.
+    """
+
     # Add files if --file-list option is given
     if file_list:
         if len(config.analysis_dir) > 1:
-            raise ValueError("If --file-list is given, analysis_dir should have only one plain text file.")
+            raise _RunError("If --file-list is given, analysis_dir should have only one plain text file.")
         file_list_path = config.analysis_dir[0]
         config.analysis_dir = []
         with open(file_list_path) as in_handle:
@@ -595,9 +764,10 @@ def run(
                     path = os.path.abspath(line.strip())
                     config.analysis_dir.append(path)
         if len(config.analysis_dir) == 0:
-            logger.error(f"No files or directories were added from {file_list_path} using --file-list option.")
-            logger.error(f"Please, check that {file_list_path} contains correct paths.")
-            raise ValueError("Any files or directories to be searched.")
+            raise _RunError(
+                f"No files or directories were added from {file_list_path} using --file-list option."
+                f"Please, check that {file_list_path} contains correct paths."
+            )
 
     if len(ignore) > 0:
         logger.debug(f"Ignoring files, directories and paths that match: {', '.join(ignore)}")
@@ -607,24 +777,6 @@ def run(
     if len(ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
         config.sample_names_ignore.extend(ignore_samples)
-    if filename == "stdout":
-        config.output_fn = sys.stdout
-        logger.info("Printing report to stdout")
-    else:
-        if filename is not None and filename.endswith(".html"):
-            filename = filename[:-5]
-        if filename is None and config.title is not None:
-            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
-            filename += "_multiqc_report"
-        if filename is not None:
-            if "output_fn_name" not in config.nondefault_config:
-                config.output_fn_name = f"{filename}.html"
-            if "data_dir_name" not in config.nondefault_config:
-                config.data_dir_name = f"{filename}_data"
-            if "plots_dir_name" not in config.nondefault_config:
-                config.plots_dir_name = f"{filename}_plots"
-        if not config.output_fn_name.endswith(".html"):
-            config.output_fn_name = f"{config.output_fn_name}.html"
 
     # Print some status updates
     if config.title is not None:
@@ -663,8 +815,7 @@ def run(
         if unknown_modules:
             logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
         if len(unknown_modules) == len(config.run_modules):
-            logger.critical("No available modules to run!")
-            return {"report": report, "config": config, "sys_exit_code": 1}
+            raise _RunError("No available modules to run!")
         config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
@@ -675,14 +826,49 @@ def run(
             config.exclude_modules = tuple(x for x in config.exclude_modules if x != "general_stats")
         run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
-        logger.critical("No analysis modules specified!")
-        return {"report": report, "config": config, "sys_exit_code": 1}
+        raise _RunError("No analysis modules specified!")
     run_module_names = [list(m.keys())[0] for m in run_modules]
     logger.debug(f"Analysing modules: {', '.join(run_module_names)}")
 
-    # Create the temporary working directories
-    tmp_dir = tempfile.mkdtemp()
-    logger.debug(f"Using temporary directory for creating report: {tmp_dir}")
+    # Add custom content section names
+    try:
+        if "custom_content" in run_module_names:
+            run_module_names.extend(config.custom_data.keys())
+    except AttributeError:
+        pass  # custom_data not in config
+
+    # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
+    if "software_versions" not in run_module_names:
+        run_module_names.append("software_versions")
+
+    for d in config.analysis_dir:
+        logger.info(f"Search path : {os.path.abspath(d)}")
+
+    # FILE SEARCH. Heavy part. Go over provided paths and prepare a list of relevant log files.
+    report.get_filelist(run_module_names)
+    # END FILE SEARCH
+
+    # Only run the modules for which any files were found
+    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+    if "custom_content" not in non_empty_modules:
+        non_empty_modules.add("custom_content")
+    run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
+    run_module_names = [list(m.keys())[0] for m in run_modules]
+    if not _required_logs_found(run_module_names):
+        raise _RunError()
+
+    return run_modules, run_module_names
+
+
+def _run_modules(
+    tmp_dir: str,
+    template_mod,
+    run_modules: List[Dict[str, Optional[Dict]]],
+    run_module_names: List[str],
+    filename: str,
+) -> None:
     config.data_tmp_dir = os.path.join(tmp_dir, "multiqc_data")
     if filename != "stdout" and config.make_data_dir is True:
         config.data_dir = config.data_tmp_dir
@@ -698,42 +884,11 @@ def run(
     if not config.make_report:
         config.output_fn = None
 
-    # Load the template
-    template_mod = config.avail_templates[config.template].load()
-
     # Add an output subdirectory if specified by template
     try:
         config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
     except AttributeError:
         pass  # No subdirectory variable given
-
-    # Add custom content section names
-    try:
-        if "custom_content" in run_module_names:
-            run_module_names.extend(config.custom_data.keys())
-    except AttributeError:
-        pass  # custom_data not in config
-
-    # Always run software_versions module to collect version YAML files
-    # Use config.skip_versions_section to exclude from report
-    if "software_versions" not in run_module_names:
-        run_module_names.append("software_versions")
-
-    # Get the list of files to search
-    for d in config.analysis_dir:
-        logger.info(f"Search path : {os.path.abspath(d)}")
-    report.get_filelist(run_module_names)
-
-    # Only run the modules for which any files were found
-    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
-    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
-    if "custom_content" not in non_empty_modules:
-        non_empty_modules.add("custom_content")
-    run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
-    run_module_names = [list(m.keys())[0] for m in run_modules]
-
-    if not _required_logs_found(run_module_names):
-        return {"report": report, "config": config, "sys_exit_code": 1}
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
@@ -744,13 +899,21 @@ def run(
         mod_starttime = time.time()
         this_module: str = list(mod_dict.keys())[0]
         mod_cust_config: Dict = list(mod_dict.values())[0] or {}
+        # noinspection PyBroadException
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
             module_initializer.mod_cust_config = mod_cust_config
+
+            # *********************************************
+            # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
             modules = module_initializer()
+            # END RUN MODULE
+            # *********************************************
+
             if not isinstance(modules, list):
                 modules = [modules]
+
             report.modules_output.extend(modules)
 
             if config.make_report:
@@ -857,7 +1020,7 @@ def run(
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
     if not _required_logs_found([m.anchor for m in report.modules_output]):
-        return {"report": report, "config": config, "sys_exit_code": 1}
+        raise _RunError()
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -877,11 +1040,11 @@ def run(
 
     # Did we find anything?
     if len(report.modules_output) == 0:
-        logger.warning("No analysis results found. Cleaning up..")
+        logger.warning("No analysis results found. Cleaning up…")
         shutil.rmtree(tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
-        return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
+        raise _RunError(sys_exit_code=sys_exit_code)
 
     if config.make_report:
         # Sort the report module output if we have a config
@@ -940,6 +1103,12 @@ def run(
 
     plugin_hooks.mqc_trigger("after_modules")
 
+
+def _general_stats_table() -> None:
+    """
+    Construct HTML for the general stats table.
+    """
+
     # Remove empty data sections from the General Stats table
     empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
     empty_keys.sort(reverse=True)
@@ -976,6 +1145,12 @@ def run(
     else:
         config.skip_generalstats = True
 
+
+def _export_sources() -> None:
+    """
+    Dump data sources.
+    """
+
     if config.data_dir is not None:
         # Write the report sources to disk
         report.data_sources_tofile()
@@ -983,12 +1158,11 @@ def run(
         # Create a file with the module DOIs
         report.dois_tofile(report.modules_output)
 
-    if config.make_report:
-        # Compress the report plot JSON data
-        runtime_compression_start = time.time()
-        logger.debug("Compressing plot data")
-        report.plot_compressed_json = report.compress_json(report.plot_data)
-        report.runtimes["total_compression"] = time.time() - runtime_compression_start
+
+def _write_json_dump() -> None:
+    """
+    Write JSON with plot data. Useful for MegaQC and for loading in interactive environments.
+    """
 
     plugin_hooks.mqc_trigger("before_report_generation")
 
@@ -1004,8 +1178,35 @@ def run(
         with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
             f.write(json.dumps(report.plot_data))
 
-    # Make the final report path & data directories
-    if filename != "stdout":
+
+def _write_html_and_data(
+    tmp_dir: str,
+    template_mod,
+    filename: str,
+) -> None:
+    """
+    Make the final report path & data directories
+    """
+
+    if filename == "stdout":
+        config.output_fn = sys.stdout
+        logger.info("Printing report to stdout")
+    else:
+        if filename is not None and filename.endswith(".html"):
+            filename = filename[:-5]
+        if filename is None and config.title is not None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+            filename += "_multiqc_report"
+        if filename is not None:
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
+            config.output_fn_name = f"{config.output_fn_name}.html"
+
         if config.make_report:
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
@@ -1104,7 +1305,7 @@ def run(
                     logger.error(f"Output directory {config.plots_dir} already exists.")
                     logger.info("Use -f or --force to overwrite existing reports")
                     shutil.rmtree(tmp_dir)
-                    return {"report": report, "config": config, "sys_exit_code": 1}
+                    raise _RunError()
             logger.info(
                 "Plots       : {}{}".format(
                     os.path.relpath(config.plots_dir),
@@ -1188,6 +1389,12 @@ def run(
         except:  # noqa: E722
             raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
 
+        # Compress the report plot JSON data
+        runtime_compression_start = time.time()
+        logger.debug("Compressing plot data")
+        report.plot_compressed_json = report.compress_json(report.plot_data)
+        report.runtimes["total_compression"] = time.time() - runtime_compression_start
+
         # Use jinja2 to render the template and overwrite
         config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
         report_output = j_template.render(report=report, config=config)
@@ -1218,7 +1425,7 @@ def run(
         shutil.rmtree(config.data_dir)
 
     # Try to create a PDF if requested
-    if make_pdf:
+    if config.make_pdf:
         try:
             pdf_fn_name = config.output_fn.replace(".html", ".pdf")
             pandoc_call = [
@@ -1253,42 +1460,6 @@ def run(
                     + f"\n{traceback.format_exc()}\n"
                     + ("=" * 60)
                 )
-
-    plugin_hooks.mqc_trigger("execution_finish")
-
-    report.runtimes["total"] = time.time() - start_execution_time
-    if config.profile_runtime:
-        logger.warning(f"Run took {report.runtimes['total']:.2f} seconds")
-        logger.warning(f" - {report.runtimes['total_sp']:.2f}s: Searching files")
-        logger.warning(f" - {report.runtimes['total_mods']:.2f}s: Running modules")
-        if config.make_report:
-            logger.warning(f" - {report.runtimes['total_compression']:.2f}s: Compressing report data")
-            logger.info(f"For more information, see the 'Run Time' section in {os.path.relpath(config.output_fn)}")
-
-    if report.num_mpl_plots > 0 and not config.plots_force_flat:
-        if not config.plots_force_interactive:
-            console.print(
-                "[blue]|           multiqc[/] | "
-                "Flat-image plots used. Disable with '--interactive'. "
-                "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
-            )
-
-    if config.strict and len(report.lint_errors) > 0:
-        logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
-        sys_exit_code = 1
-
-    logger.info("MultiQC complete")
-
-    # Move the log file into the data directory
-    log.move_tmp_log(logger)
-
-    # Return the running information from the run:
-    #
-    # * report instance
-    # * config instance
-    # * appropriate error code (eg. 1 if a module broke, 0 on success)
-    #
-    return {"report": report, "config": config, "sys_exit_code": sys_exit_code}
 
 
 def _required_logs_found(modules_with_logs):
