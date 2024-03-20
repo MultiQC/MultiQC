@@ -1,5 +1,4 @@
 import copy
-import dataclasses
 import logging
 from collections import defaultdict
 from typing import Dict, List, Union, Optional
@@ -7,7 +6,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDatasetModel
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, BasePlotModel
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -24,14 +23,11 @@ def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlot(pconfig, points_lists)
+    p = ScatterPlotModel.create(pconfig, points_lists)
 
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return p.add_to_report()
 
 
-@dataclasses.dataclass
 class DatasetModel(BaseDatasetModel):
     points: List[PointT]
 
@@ -70,6 +66,7 @@ class DatasetModel(BaseDatasetModel):
         layout: Optional[go.Layout] = None,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -171,29 +168,33 @@ class DatasetModel(BaseDatasetModel):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-
-class ScatterPlot(Plot):
-    def __init__(self, pconfig: Dict, points_lists: List[List[PointT]]):
-        super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
-
-        self.datasets: List[DatasetModel] = [
-            DatasetModel.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
-        ]
-
-        # Make a tooltip always show on hover over nearest point on plot
-        self.layout.hoverdistance = -1
-
-    def tt_label(self) -> Optional[str]:
-        """Default tooltip label"""
-        return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
-
-    def save_data_file(self, dataset: DatasetModel) -> None:
+    def save_data_file(self) -> None:
         data = [
             {
                 "Name": point["name"],
                 "X": point["x"],
                 "Y": point["y"],
             }
-            for point in dataset.points
+            for point in self.points
         ]
-        util_functions.write_data_file(data, dataset.uid)
+        util_functions.write_data_file(data, self.uid)
+
+
+class ScatterPlotModel(BasePlotModel):
+    datasets: List[DatasetModel]
+
+    @staticmethod
+    def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlotModel":
+        model = BasePlotModel.initialize(
+            plot_type=PlotType.SCATTER,
+            pconfig=pconfig,
+            n_datasets=len(points_lists),
+            default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
+        )
+
+        model.datasets = [DatasetModel.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+
+        # Make a tooltip always show on hover over nearest point on plot
+        model.layout.hoverdistance = -1
+
+        return model

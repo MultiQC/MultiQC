@@ -15,7 +15,7 @@ from multiqc.plots.plotly.table import make_table
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False) -> str:
+def plot(dts: List[DataTable], show_table_by_default=False, clean_html_id=True) -> str:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
@@ -47,7 +47,7 @@ def plot(dts: List[DataTable], show_table_by_default=False) -> str:
         # Show violin alone.
         # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
         # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-        html = warning + plot.add_to_report()
+        html = warning + plot.add_to_report(clean_html_id=clean_html_id)
     elif plot.no_violin:
         # Show table alone
         table_html, configuration_modal = make_table(dts[0])
@@ -55,7 +55,7 @@ def plot(dts: List[DataTable], show_table_by_default=False) -> str:
     else:
         # Render both, add a switch between table and violin
         table_html, configuration_modal = make_table(dts[0], violin_id=plot.id)
-        violin_html = plot.add_to_report()
+        violin_html = plot.add_to_report(clean_html_id=clean_html_id)
 
         violin_visibility = "style='display: none;'" if plot.show_table_by_default else ""
         html = f"<div id='mqc_violintable_wrapper_{plot.id}' {violin_visibility}>{warning}{violin_html}</div>"

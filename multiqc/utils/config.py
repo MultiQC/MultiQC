@@ -177,7 +177,6 @@ with open(searchp_fn) as f:
     sp = yaml.safe_load(f)
 
 # Other defaults that can't be set in YAML
-data_tmp_dir = "/tmp"  # will be overwritten by core script
 modules_dir = os.path.join(MULTIQC_DIR, "modules")
 creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
 working_dir = os.getcwd()
@@ -189,7 +188,6 @@ megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
 run_modules: List[str] = []
 exclude_modules: List[str] = []
 data_dir: Optional[str] = None
-plots_tmp_dir: Optional[str] = None
 plots_dir: Optional[str] = None
 custom_data: Dict = {}
 report_section_order: Dict = {}

@@ -295,12 +295,13 @@ class BasePlotModel(BaseModel):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self) -> str:
+    def add_to_report(self, clean_html_id=True) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
         # Setting IDs again now that we have "report" object to guarantee uniqueness
-        self.id = report.save_htmlid(self.id)
+        if clean_html_id:
+            self.id = report.save_htmlid(self.id)
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID

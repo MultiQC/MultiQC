@@ -7,6 +7,7 @@ Imported by __init__.py so available as multiqc.run()
 """
 
 import base64
+import dataclasses
 import errno
 import io
 import os
@@ -15,11 +16,11 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import json
 import traceback
 from importlib.metadata import EntryPoint
+from pathlib import Path
 from typing import Dict, Union, Callable, List, Optional, Tuple
 
 import jinja2
@@ -31,7 +32,13 @@ from rich.syntax import Syntax
 
 from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule
 from .plots import table
-from .plots.plotly.from_dump import load_plot_from_json
+from .plots.plotly.bar import BarPlotModel
+from .plots.plotly.box import BoxPlotModel
+from .plots.plotly.heatmap import HeatmapPlotModel
+from .plots.plotly.line import LinePlotModel
+from .plots.plotly.plot import go, PlotType, BasePlotModel
+from .plots.plotly.scatter import ScatterPlotModel
+from .plots.plotly.violin import ViolinPlotModel
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 from .utils.util_functions import strtobool
 
@@ -304,6 +311,7 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
+@dataclasses.dataclass
 class RunResult:
     """
     Returned by a MultiQC run for interactive use. Contains the following information:
@@ -315,15 +323,10 @@ class RunResult:
 
     """
 
-    def __init__(
-        self,
-        sys_exit_code: int = 0,
-        message: str = "",
-    ):
-        self.sys_exit_code = sys_exit_code
-        self.message = message
-        self.report = report
-        self.config = config
+    sys_exit_code: int = 0
+    message: str = ""
+    report = report
+    config = config
 
 
 class _RunError(Exception):
@@ -336,33 +339,57 @@ class _RunError(Exception):
         self.sys_exit_code = sys_exit_code
 
 
-def load(*args, **kwargs):
-    """
-    Run without generating an HTML report. Thin wrapper around `run` for adding more data within
-    interactive environments.
-    """
-    kwargs["no_report"] = True
-    return run(*args, **kwargs)
+def load(analysis_dir, *args, **kwargs) -> RunResult:
+    # Try find multiqc_data.json in the given directory and load it into the report.
+    json_path = Path(analysis_dir) / "multiqc_data.json"
+    if json_path.exists():
+        _init(None, *args, **kwargs)
+        logger.info(f"Loading data from {json_path}")
+        with json_path.open("r") as f:
+            data = json.load(f)
+        for id, plot_dump in data["report_plot_data"].items():
+            logger.info(f"  Loaded plot {id}")
+            report.plot_data[id] = plot_dump
+        return RunResult()
+    else:
+        # Run without generating an HTML report. Thin wrapper around `run` for adding more data
+        # within interactive environments.
+        kwargs["no_report"] = True
+        return run(analysis_dir, *args, **kwargs)
 
 
-def list_modules():
+def list_modules() -> List[str]:
     """
     Return a list of the modules that have been loaded.
     """
-    return [m.name for m in report.modules_output]
+    return list(report.data_sources.keys())
 
 
-def list_samples():
+def list_data_sources() -> List[str]:
+    """
+    Return a list of the data sources that have been loaded.
+    """
+    file_list = []
+    for mod, sections in report.data_sources.items():
+        for section, sources in sections.items():
+            for sname, source in sources.items():
+                file_list.append(source)
+    return file_list
+
+
+def list_samples() -> List[str]:
     """
     Return a list of the samples that have been loaded.
     """
     sample_names = set()
-    for fname, data_by_sample in report.saved_raw_data.items():
-        sample_names.update(data_by_sample.keys())
+    for mod, sections in report.data_sources.items():
+        for section, sources in sections.items():
+            for sname, source in sources.items():
+                sample_names.add(sname)
     return sorted(sample_names)
 
 
-def list_plots():
+def list_plots() -> List[str]:
     """
     Return a list of the plots that have been loaded for a given module,
     along with the number of datasets in each plot.
@@ -370,11 +397,39 @@ def list_plots():
     return list(f"{id}: {len(plot['datasets'])}" for id, plot in report.plot_data.items())
 
 
-def show_plot(plot_id: str, dataset_id=0):
+def _load_plot(dump: Dict) -> BasePlotModel:
+    """
+    Load a plot and datasets from a JSON dump.
+    """
+    plot_type = PlotType(dump["plot_type"])
+    dump["layout"] = go.Layout(dump["layout"])
+    if plot_type == PlotType.LINE:
+        return LinePlotModel(**dump)
+    elif plot_type == PlotType.BAR:
+        return BarPlotModel(**dump)
+    elif plot_type == PlotType.BOX:
+        return BoxPlotModel(**dump)
+    elif plot_type == PlotType.SCATTER:
+        return ScatterPlotModel(**dump)
+    elif plot_type == PlotType.HEATMAP:
+        return HeatmapPlotModel(**dump)
+    elif plot_type == PlotType.VIOLIN:
+        return ViolinPlotModel(**dump)
+    else:
+        raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
+
+
+def show_plot(plot_id: str, dataset_id=0, is_log=False, is_pct=False) -> go.Figure:
     """
     Show a plot in the notebook.
     """
-    return load_plot_from_json(report.plot_data[plot_id], dataset_id)
+    dump = report.plot_data[plot_id]
+    model = _load_plot(dump)
+    return model.get_figure(dataset_id, is_log=is_log, is_pct=is_pct)
+
+
+def reset():
+    report.reset()
 
 
 # Main function that runs MultiQC. Available to use within an interactive Python environment
@@ -420,6 +475,7 @@ def run(
     profile_runtime=False,
     no_ansi=False,
     custom_css_files=(),
+    clean_up=True,
     **kwargs,
 ) -> RunResult:
     """
@@ -436,7 +492,6 @@ def run(
 
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
-
     # Throw an error if we are using an unsupported version of Python
     if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
         return RunResult(
@@ -446,14 +501,7 @@ def run(
             sys_exit_code=1,
         )
 
-    console = _set_up_logging(verbose, quiet, no_ansi)
-
-    console.print(
-        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
-    )
-    logger.debug(f"This is MultiQC v{config.version}")
-
-    _init(
+    console = _init(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -503,15 +551,11 @@ def run(
             ignore_samples=ignore_samples,
         )
 
-        # Create the temporary working directories
-        tmp_dir = tempfile.mkdtemp()
-        logger.debug(f"Using temporary directory for creating report: {tmp_dir}")
-
         # Load the template
         template_mod = config.avail_templates[config.template].load()
 
         _run_modules(
-            tmp_dir=tmp_dir,
+            tmp_dir=report.tmp_dir,
             template_mod=template_mod,
             filename=filename,
             run_modules=run_modules,
@@ -525,7 +569,7 @@ def run(
         _write_json_dump()
 
         _write_html_and_data(
-            tmp_dir=tmp_dir,
+            tmp_dir=report.tmp_dir,
             template_mod=template_mod,
             filename=filename,
         )
@@ -546,7 +590,7 @@ def run(
             logger.warning(f" - {report.runtimes['total_compression']:.2f}s: Compressing report data")
             logger.info(f"For more information, see the 'Run Time' section in {os.path.relpath(config.output_fn)}")
 
-    if report.num_mpl_plots > 0 and not config.plots_force_flat:
+    if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:
             console.print(
                 "[blue]|           multiqc[/] | "
@@ -561,28 +605,11 @@ def run(
 
     logger.info("MultiQC complete")
 
-    # Move the log file into the data directory
-    log.move_tmp_log(logger)
+    if clean_up:
+        # Move the log file into the data directory
+        log.move_tmp_log(logger)
 
     return RunResult(sys_exit_code=sys_exit_code)
-
-
-def _set_up_logging(verbose, quiet, no_ansi):
-    # Set up logging level
-    loglevel = log.LEVELS.get(min(verbose, 1), "INFO")
-    if quiet:
-        loglevel = "WARNING"
-        config.quiet = True
-    log.init_log(logger, loglevel=loglevel, no_ansi=no_ansi)
-
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_terminal=util_functions.force_term_colors(),
-        color_system=None if no_ansi else "auto",
-    )
-
-    return console
 
 
 def _init(
@@ -619,13 +646,35 @@ def _init(
     config_file=(),
     cl_config=(),
     profile_runtime=False,
+    verbose=False,
+    quiet=False,
     no_ansi=False,
     custom_css_files=(),
     **kwargs,
-) -> None:
+) -> rich.console.Console:
     """
-    Load config and set up key variables.
+    Set up logging, load config and set up key variables.
     """
+    report.init()
+
+    # Set up logging
+    log_level = "DEBUG" if verbose else "INFO"
+    if quiet:
+        log_level = "WARNING"
+        config.quiet = True
+    log.init_log(logger, tmp_dir=report.tmp_dir, log_level=log_level, no_ansi=no_ansi)
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        color_system=None if no_ansi else "auto",
+    )
+    console.print(
+        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
+    )
+    logger.debug(f"This is MultiQC v{config.version}")
+    logger.debug(f"Using temporary directory: {report.tmp_dir}")
+
     # Load config files
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -634,8 +683,6 @@ def _init(
     # Command-line config YAML
     if len(cl_config) > 0:
         config.mqc_cl_config(cl_config)
-
-    report.init()
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
@@ -783,6 +830,7 @@ def _init(
         )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
+    return console
 
 
 def _file_search(
@@ -904,6 +952,14 @@ def _file_search(
     return run_modules, run_module_names
 
 
+def _data_tmp_dir() -> str:
+    return os.path.join(report.tmp_dir, "multiqc_data")
+
+
+def _plots_tmp_dir() -> str:
+    return os.path.join(report.tmp_dir, "multiqc_plots")
+
+
 def _run_modules(
     tmp_dir: str,
     template_mod,
@@ -911,15 +967,13 @@ def _run_modules(
     run_module_names: List[str],
     filename: str,
 ) -> None:
-    config.data_tmp_dir = os.path.join(tmp_dir, "multiqc_data")
     if filename != "stdout" and config.make_data_dir is True:
-        config.data_dir = config.data_tmp_dir
+        config.data_dir = _data_tmp_dir()
         os.makedirs(config.data_dir)
     else:
         config.data_dir = None
-    config.plots_tmp_dir = os.path.join(tmp_dir, "multiqc_plots")
     if filename != "stdout" and config.export_plots is True:
-        config.plots_dir = config.plots_tmp_dir
+        config.plots_dir = _plots_tmp_dir()
         os.makedirs(config.plots_dir)
     else:
         config.plots_dir = None
@@ -1182,7 +1236,9 @@ def _general_stats_table() -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        report.general_stats_html = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        report.general_stats_html = table.plot(
+            report.general_stats_data, report.general_stats_headers, pconfig, clean_html_id=False
+        )
     else:
         config.skip_generalstats = True
 
@@ -1321,9 +1377,9 @@ def _write_html_and_data(
                 )
             )
             # Modules have run, so data directory should be complete by now. Move its contents.
-            logger.debug(f"Moving data file from '{config.data_tmp_dir}' to '{config.data_dir}'")
+            logger.debug(f"Moving data file from '{_data_tmp_dir()}' to '{config.data_dir}'")
             shutil.copytree(
-                config.data_tmp_dir,
+                _data_tmp_dir(),
                 config.data_dir,
                 # Override default shutil.copy2 function to copy files. The default
                 # function copies times and mode, which we want to avoid on purpose
@@ -1331,7 +1387,7 @@ def _write_html_and_data(
                 # shutil.copyfile only copies the file without any metadata.
                 copy_function=shutil.copyfile,
             )
-            shutil.rmtree(config.data_tmp_dir)
+            shutil.rmtree(_data_tmp_dir())
 
         if config.output_fn is not None:
             logger.debug(f"Full report path: {os.path.realpath(config.output_fn)}")
@@ -1355,9 +1411,9 @@ def _write_html_and_data(
             )
 
             # Modules have run, so plots directory should be complete by now. Move its contents.
-            logger.debug(f"Moving plots directory from '{config.plots_tmp_dir}' to '{config.plots_dir}'")
+            logger.debug(f"Moving plots directory from '{_plots_tmp_dir()}' to '{config.plots_dir}'")
             shutil.copytree(
-                config.plots_tmp_dir,
+                _plots_tmp_dir(),
                 config.plots_dir,
                 # Override default shutil.copy2 function to copy files. The default
                 # function copies times and mode, which we want to avoid on purpose
@@ -1365,7 +1421,7 @@ def _write_html_and_data(
                 # shutil.copyfile only copies the file without any metadata.
                 copy_function=shutil.copyfile,
             )
-            shutil.rmtree(config.plots_tmp_dir)
+            shutil.rmtree(_plots_tmp_dir())
 
     plugin_hooks.mqc_trigger("before_template")
 

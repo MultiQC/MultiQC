@@ -10,6 +10,7 @@ import json
 import mimetypes
 import os
 import re
+import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -28,59 +29,51 @@ logger = config.logger
 
 
 # Uninitialised global variables for static typing
+tmp_dir: str
 multiqc_command: str
 modules_output: List  # List of BaseMultiqcModule objects
-general_stats_data: List[Dict]
-general_stats_headers: List[Dict]
 general_stats_html: str
-data_sources: Dict[str, Dict[str, Dict]]
-plot_data: Dict
-html_ids: List[str]
 lint_errors: List[str]
-num_hc_plots: int
-num_mpl_plots: int
+num_flat_plots: int
 saved_raw_data: Dict
 last_found_file: Optional[str]
 runtimes: Dict[str, Union[float, Dict]]
 file_search_stats: Dict[str, int]
 searchfiles: List
 files: Dict
-software_versions: Dict[str, Dict[str, List]]
+
+# Fields below is kept between interactive runs
+data_sources: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+html_ids: List[str] = []
+plot_data: Dict = dict()
+general_stats_data: List[Dict] = []
+general_stats_headers: List[Dict] = []
+# Map of Software tools to a set of unique version strings
+software_versions: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
 
 
 def init():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
+    global tmp_dir
     global multiqc_command
     global modules_output
-    global general_stats_data
-    global general_stats_headers
     global general_stats_html
-    global data_sources
-    global plot_data
-    global html_ids
     global lint_errors
-    global num_hc_plots
-    global num_mpl_plots
+    global num_flat_plots
     global saved_raw_data
     global last_found_file
     global runtimes
     global file_search_stats
     global searchfiles
     global files
-    global software_versions
 
+    tmp_dir = tempfile.mkdtemp()
     multiqc_command = ""
     modules_output = list()
-    general_stats_data = list()
-    general_stats_headers = list()
     general_stats_html = ""
-    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-    plot_data = dict()
-    html_ids = list()
     lint_errors = list()
-    num_hc_plots = 0
-    num_mpl_plots = 0
+    num_flat_plots = 0
     saved_raw_data = dict()
     last_found_file = None
     runtimes = {
@@ -104,7 +97,24 @@ def init():
     searchfiles = list()
     # Discovered files for each search key
     files = dict()
-    # Map of Software tools to a set of unique version strings
+
+
+def reset():
+    """
+    Reset interactive session.
+    """
+    global data_sources
+    global html_ids
+    global plot_data
+    global general_stats_data
+    global general_stats_headers
+    global software_versions
+
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+    html_ids = list()
+    plot_data = dict()
+    general_stats_data = list()
+    general_stats_headers = list()
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
@@ -562,6 +572,8 @@ def save_htmlid(html_id, skiplint=False):
     i = 1
     html_id_base = html_id_clean
     while html_id_clean in html_ids:
+        if html_id_clean == "general_stats_table":
+            raise ValueError("HTML ID 'general_stats_table' is reserved and cannot be used")
         html_id_clean = f"{html_id_base}-{i}"
         i += 1
         if config.strict and not skiplint:

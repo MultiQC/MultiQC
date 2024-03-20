@@ -6,30 +6,27 @@ import logging
 import os
 import shutil
 import sys
-import tempfile
 
 import coloredlogs
 
 from multiqc.utils import config, util_functions
 
-LEVELS = {0: "INFO", 1: "DEBUG"}
 log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 
-def init_log(logger, loglevel=0, no_ansi=False):
+def init_log(logger, tmp_dir: str, log_level: str, no_ansi: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
     Also prints verbose log to the multiqc data directory if available.
     (multiqc_data/multiqc.log)
 
-    Args:
-        loglevel (str): Determines the level of the log output.
+    loglevel (str): Determines the level of the log output.
     """
     # File for logging
     global log_tmp_dir, log_tmp_fn
-    log_tmp_dir = tempfile.mkdtemp()
+    log_tmp_dir = tmp_dir
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
     # Logging templates
@@ -50,12 +47,12 @@ def init_log(logger, loglevel=0, no_ansi=False):
 
     # Set up the console logging stream
     console = logging.StreamHandler()
-    console.setLevel(getattr(logging, loglevel))
+    console.setLevel(getattr(logging, log_level))
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
     level_styles["debug"] = {"faint": True}
     field_styles = coloredlogs.DEFAULT_FIELD_STYLES
     field_styles["module"] = {"color": "blue"}
-    if loglevel == "DEBUG":
+    if log_level == "DEBUG":
         if no_ansi:
             console.setFormatter(logging.Formatter(debug_template))
         else:

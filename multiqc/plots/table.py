@@ -19,7 +19,12 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
+def plot(
+    data: Union[List[Dict], Dict],
+    headers: Optional[Union[List[Dict], Dict]] = None,
+    pconfig=None,
+    **kwargs,
+):
     """Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
@@ -46,4 +51,4 @@ def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict
                 # debugging of modules
                 raise
 
-    return table.plot([dt])
+    return table.plot([dt], **kwargs)
