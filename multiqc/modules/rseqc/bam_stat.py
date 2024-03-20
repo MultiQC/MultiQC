@@ -104,7 +104,7 @@ def parse_reports(self):
     defaults = {
         "min": 0,
         "shared_key": "read_count",
-        "decimalPlaces": 2,
+        "tt_decimals": 2,
         "modify": lambda x: x * config.read_count_multiplier,
         "suffix": config.read_count_prefix,
     }

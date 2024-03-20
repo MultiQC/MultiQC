@@ -767,7 +767,7 @@ pconfig = {
     "ycats_samples": True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
     "colstops": [],                # Scale colour stops. See below.
     "reverseColors": False,        # Reverse the order of the colour axis
-    "decimalPlaces": 2,            # Number of decimal places for tooltip
+    "tt_decimals": 2,              # Number of decimal places for tooltip
     "legend": True,                # Colour axis key enabled or not
     "datalabels": True,            # Show values in each cell. Defaults True when less than 20 samples.
     "height": 500                  # The default height of the interactive plot, in pixels

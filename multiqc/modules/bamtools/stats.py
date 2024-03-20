@@ -94,14 +94,14 @@ def parse_reports(self):
     defaults = {
         "min": 0,
         "max": 100,
-        "decimalPlaces": 2,
+        "tt_decimals": 2,
         "suffix": "%",
     }
     num_defaults = {
         "min": 0,
         "modify": lambda x: x * config.read_count_multiplier,
         "suffix": config.read_count_prefix,
-        "decimalPlaces": 2,
+        "tt_decimals": 2,
     }
 
     keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
