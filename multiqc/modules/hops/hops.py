@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
                 [3, "#F2B26C"],
                 [4, "#AD2A2B"],
             ],
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
             "legend": True,
             "datalabels": False,
             "xcats_samples": False,
