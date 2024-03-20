@@ -134,7 +134,7 @@ class ViolinPlot extends Plot {
           color: layout["xaxis"]["tickfont"]["color"],
         },
       };
-      if (header["xaxis"] !== undefined) {
+      if (header["xaxis"] !== undefined && header["xaxis"] !== null) {
         layout["xaxis" + (metricIdx + 1)] = Object.assign(layout["xaxis" + (metricIdx + 1)], header["xaxis"]);
       }
       let title = header.title + "  ";
@@ -143,12 +143,12 @@ class ViolinPlot extends Plot {
       layout["yaxis" + (metricIdx + 1)]["tickvals"] = [metricIdx];
       layout["yaxis" + (metricIdx + 1)]["ticktext"] = [title];
 
-      if (header["hoverformat"] !== undefined) {
+      if (header["hoverformat"] !== undefined && header["hoverformat"] !== null) {
         layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
       }
 
       // Set color for each violin individually
-      if (header["color"]) {
+      if (header["color"] !== undefined && header["color"] !== null) {
         layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
       }
     });
