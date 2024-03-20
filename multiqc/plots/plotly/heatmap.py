@@ -3,7 +3,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDatasetModel, split_long_string
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -34,18 +34,18 @@ def plot(
 
 
 @dataclasses.dataclass
-class Dataset(BaseDataset):
+class DatasetModel(BaseDatasetModel):
     rows: List[List[ElemT]]
     xcats: List[str]
     ycats: List[str]
 
     @staticmethod
     def create(
-        dataset: BaseDataset,
+        dataset: BaseDatasetModel,
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         xcats: Optional[List[str]] = None,
         ycats: Optional[List[str]] = None,
-    ) -> "Dataset":
+    ) -> "DatasetModel":
         if isinstance(rows, dict):
             # Convert dict to a list of lists
             if not ycats:
@@ -58,7 +58,7 @@ class Dataset(BaseDataset):
                             xcats.append(x)
             rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
 
-        dataset = Dataset(
+        dataset = DatasetModel(
             **dataset.__dict__,
             rows=rows,
             xcats=xcats,
@@ -123,8 +123,8 @@ class HeatmapPlot(Plot):
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[Dataset] = [
-            Dataset.create(
+        self.datasets: List[DatasetModel] = [
+            DatasetModel.create(
                 self.datasets[0],
                 rows=rows,
                 xcats=xcats,
@@ -317,7 +317,7 @@ class HeatmapPlot(Plot):
             )
         return buttons
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: DatasetModel) -> None:
         data = [
             ["."] + dataset.xcats,
         ]

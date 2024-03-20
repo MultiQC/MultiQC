@@ -6,7 +6,7 @@ from typing import Dict, List, Union
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDatasetModel
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -37,16 +37,16 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
 
 
 @dataclasses.dataclass
-class Dataset(BaseDataset):
+class DatasetModel(BaseDatasetModel):
     data: List[BoxT]
     samples: List[str]
 
     @staticmethod
     def create(
-        dataset: BaseDataset,
+        dataset: BaseDatasetModel,
         data_by_sample: Dict[str, BoxT],
-    ) -> "Dataset":
-        dataset = Dataset(
+    ) -> "DatasetModel":
+        dataset = DatasetModel(
             **dataset.__dict__,
             data=list(data_by_sample.values()),
             samples=list(data_by_sample.keys()),
@@ -100,8 +100,8 @@ class BoxPlot(Plot):
     ):
         super().__init__(PlotType.BOX, pconfig, n_datasets=len(list_of_data_by_sample))
 
-        self.datasets: List[Dataset] = [
-            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(self.datasets, list_of_data_by_sample)
+        self.datasets: List[DatasetModel] = [
+            DatasetModel.create(ds, data_by_sample) for ds, data_by_sample in zip(self.datasets, list_of_data_by_sample)
         ]
 
         height = determine_barplot_height(max_n_samples)
@@ -132,7 +132,7 @@ class BoxPlot(Plot):
             ),
         )
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: DatasetModel) -> None:
         vals_by_sample = {}
         for sample, values in zip(dataset.samples, dataset.data):
             vals_by_sample[sample] = values

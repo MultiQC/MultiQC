@@ -21,13 +21,13 @@ class ViolinPlot extends Plot {
       return header["hidden"] !== true;
     });
 
-    let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
+    let violinValuesBySampleByMetric = dataset["violin_value_by_sample_by_metric"];
     let scatterValuesBySampleByMetric = {};
     metrics.forEach((metric) => {
       let header = headerByMetric[metric];
       let scatterValuesBySample = {};
       if (header["show_points"]) {
-        if (header["show_only_outliers"]) scatterValuesBySample = dataset["scatter_values_by_sample_by_metric"][metric];
+        if (header["show_only_outliers"]) scatterValuesBySample = dataset["scatter_value_by_sample_by_metric"][metric];
         else scatterValuesBySample = violinValuesBySampleByMetric[metric];
       }
       scatterValuesBySampleByMetric[metric] = scatterValuesBySample;

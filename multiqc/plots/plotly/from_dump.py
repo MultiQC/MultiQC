@@ -1,7 +1,7 @@
 from typing import Dict
 
 import plotly.graph_objects as go
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, FLAT_PLOT_WIDTH
 from multiqc.plots.plotly import line
 
 
@@ -11,7 +11,7 @@ def load_plot_from_json(dump: Dict, dataset_id: int) -> go.Figure:
     """
     plot_type = PlotType(dump["plot_type"])
     dataset_dump = dump["datasets"][dataset_id]
-    dataset = BaseDataset(
+    dataset = BaseDatasetModel(
         plot_id=dump["id"],
         label=str(dataset_id + 1),
         uid=dump["id"],
@@ -22,10 +22,10 @@ def load_plot_from_json(dump: Dict, dataset_id: int) -> go.Figure:
     )
     layout = go.Layout(dump["layout"])  # make a copy
     layout.update(**dataset_dump["layout"])
-    layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
+    layout.width = layout.width or FLAT_PLOT_WIDTH
 
     if plot_type == PlotType.LINE:
-        return line.Dataset(
+        return line.DatasetModel(
             **dataset.__dict__,
             lines=dataset_dump["lines"],
         ).create_figure(

@@ -7,7 +7,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
+from multiqc.plots.plotly.plot import Plot, PlotType, BaseDatasetModel
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -32,16 +32,16 @@ def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
 
 
 @dataclasses.dataclass
-class Dataset(BaseDataset):
+class DatasetModel(BaseDatasetModel):
     points: List[PointT]
 
     @staticmethod
     def create(
-        dataset: BaseDataset,
+        dataset: BaseDatasetModel,
         points: List[Dict],
         pconfig: Dict,
-    ) -> "Dataset":
-        dataset = Dataset(
+    ) -> "DatasetModel":
+        dataset = DatasetModel(
             **dataset.__dict__,
             points=points,
         )
@@ -176,8 +176,8 @@ class ScatterPlot(Plot):
     def __init__(self, pconfig: Dict, points_lists: List[List[PointT]]):
         super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
 
-        self.datasets: List[Dataset] = [
-            Dataset.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
+        self.datasets: List[DatasetModel] = [
+            DatasetModel.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
         ]
 
         # Make a tooltip always show on hover over nearest point on plot
@@ -187,7 +187,7 @@ class ScatterPlot(Plot):
         """Default tooltip label"""
         return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
 
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self, dataset: DatasetModel) -> None:
         data = [
             {
                 "Name": point["name"],
