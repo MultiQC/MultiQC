@@ -148,7 +148,7 @@ class ViolinPlot extends Plot {
       }
 
       // Set color for each violin individually
-      if (header["color"] !== undefined) {
+      if (header["color"]) {
         layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
       }
     });
@@ -162,7 +162,7 @@ class ViolinPlot extends Plot {
       let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
       // Set color for each violin individually
-      if (header["color"] !== undefined) {
+      if (header["color"]) {
         params["fillcolor"] = "rgb(" + header["color"] + ")";
         params["line"]["color"] = "rgb(" + header["color"] + ")";
       }
