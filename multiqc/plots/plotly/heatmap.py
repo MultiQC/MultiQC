@@ -295,13 +295,13 @@ class HeatmapPlotModel(BasePlotModel):
 
         return model
 
-    def buttons(self) -> List[str]:
+    def buttons(self, flat: bool) -> List[str]:
         """
         Heatmap-specific controls, only for the interactive version.
         """
-        buttons = super().buttons()
+        buttons = super().buttons(flat=flat)
 
-        if not self.flat:
+        if not flat:
             # find min val across all datasets across all cols and rows
             buttons.append(
                 f"""

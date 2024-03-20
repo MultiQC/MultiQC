@@ -466,10 +466,10 @@ class ViolinPlotModel(BasePlotModel):
             main_table_dt=main_table_dt,
         )
 
-    def buttons(self) -> []:
+    def buttons(self, flat) -> []:
         """Add a control panel to the plot"""
         buttons = []
-        if not self.flat and any(len(ds.metrics) > 1 for ds in self.datasets):
+        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",
@@ -486,7 +486,7 @@ class ViolinPlotModel(BasePlotModel):
                 )
             )
 
-        return buttons + super().buttons()
+        return buttons + super().buttons(flat=flat)
 
     def show(self, table=None, violin=None, **kwargs):
         """

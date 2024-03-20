@@ -23,7 +23,7 @@ def make_table(
     Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
     :param violin_id: optional, will add a button to switch to a violin plot with this ID
-    :add_control_panel: whether to add the control panel with buttons above the table
+    :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
     t_headers = dict()

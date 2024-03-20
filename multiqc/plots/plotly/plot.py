@@ -108,7 +108,6 @@ class BasePlotModel(BaseModel):
         :param plot_type: plot type
         :param pconfig: plot configuration dictionary
         :param n_datasets: number of datasets to pre-initialize dataset models
-        :param is_flat: create a flat plot vs. interactive
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
@@ -271,16 +270,17 @@ class BasePlotModel(BaseModel):
         """
         Public method: show the plot in a Jupyter notebook.
         """
-        return self.get_figure(*args, **kwargs)
+        return self.get_figure(*args, flat=False, **kwargs)
 
-    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, **kwargs) -> go.Figure:
+    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
         dataset = self.datasets[dataset_id]
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
-        layout.width = layout.width or FLAT_PLOT_WIDTH
+        if flat:
+            layout.width = FLAT_PLOT_WIDTH
         for axis in self.axis_controlled_by_switches:
             layout[axis].type = "linear"
             minval = layout[axis].autorangeoptions["minallowed"]
@@ -324,7 +324,7 @@ class BasePlotModel(BaseModel):
     def interactive_plot(self) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self.__control_panel()
+        html += self.__control_panel(flat=False)
 
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
@@ -357,7 +357,7 @@ class BasePlotModel(BaseModel):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self.__control_panel()
+            html += self.__control_panel(flat=True)
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
@@ -365,25 +365,25 @@ class BasePlotModel(BaseModel):
                 dataset.save_data_file()
 
             html += _fig_to_static_html(
-                self.get_figure(ds_idx),
+                self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
             if self.add_pct_tab:
                 html += _fig_to_static_html(
-                    self.get_figure(ds_idx, is_pct=True),
+                    self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
                     uid=f"{dataset.uid}-pct",
                 )
             if self.add_log_tab:
                 html += _fig_to_static_html(
-                    self.get_figure(ds_idx, is_log=True),
+                    self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
                     uid=f"{dataset.uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += _fig_to_static_html(
-                    self.get_figure(ds_idx, is_pct=True, is_log=True),
+                    self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     uid=f"{dataset.uid}-pct-log",
                 )
@@ -399,12 +399,12 @@ class BasePlotModel(BaseModel):
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 
-    def buttons(self) -> List[str]:
+    def buttons(self, flat: bool) -> List[str]:
         """
         Build buttons for control panel
         """
         switch_buttons = ""
-        cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
+        cls = "mpl_switch_group" if flat else "interactive-switch-group"
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
@@ -439,15 +439,15 @@ class BasePlotModel(BaseModel):
             switch_buttons += "</div>\n\n"
 
         export_btn = ""
-        if not self.flat:
+        if not flat:
             export_btn = self._btn(cls="export-plot", label="Export Plot")
         return [switch_buttons, export_btn]
 
-    def __control_panel(self) -> str:
+    def __control_panel(self, flat: bool) -> str:
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
-        buttons = "\n".join(self.buttons())
+        buttons = "\n".join(self.buttons(flat=flat))
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
