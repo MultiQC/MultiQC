@@ -57,7 +57,7 @@ class Relatedness2Mixin:
                         "id": f"vcftools-relatedness2-heatmap-{idx}",
                         "title": "VCFTools: Relatedness2",
                         "square": True,
-                        "decimalPlaces": 7,
+                        "tt_decimals": 7,
                     },
                 ),
             )

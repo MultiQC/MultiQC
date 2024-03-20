@@ -440,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the methylation plot"""
 
         # Config for the plot
-        defaults = {"max": 100, "min": 0, "suffix": "%", "decimalPlaces": 1}
+        defaults = {"max": 100, "min": 0, "suffix": "%", "tt_decimals": 1}
         keys = {
             "percent_cpg_meth": dict(defaults, **{"title": "Methylated CpG"}),
             "percent_chg_meth": dict(defaults, **{"title": "Methylated CHG"}),
