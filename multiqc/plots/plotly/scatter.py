@@ -197,4 +197,4 @@ class ScatterPlotModel(BasePlotModel):
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1
 
-        return model
+        return ScatterPlotModel(**model.__dict__)

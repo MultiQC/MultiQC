@@ -8,7 +8,7 @@ from multiqc.utils import util_functions
 logger = logging.getLogger(__name__)
 
 
-ElemT = Union[str, float, int]
+ElemT = Union[str, float, int, None]
 
 
 def plot(
@@ -96,8 +96,8 @@ class HeatmapPlotModel(BasePlotModel):
     datasets: List[DatasetModel]
     xcats_samples: bool
     ycats_samples: bool
-    min: Optional[int] = None
-    max: Optional[int] = None
+    min: Optional[float] = None
+    max: Optional[float] = None
 
     @staticmethod
     def create(
@@ -133,8 +133,8 @@ class HeatmapPlotModel(BasePlotModel):
         )
 
         model.square = pconfig.get("square", True)  # Keep heatmap cells square
-        model.xcats_samples = pconfig.get("xcats_samples", False)
-        model.ycats_samples = pconfig.get("ycats_samples", False)
+        xcats_samples = pconfig.get("xcats_samples", False)
+        ycats_samples = pconfig.get("ycats_samples", False)
 
         # Extend each dataset object with a list of samples
         model.datasets = [
@@ -146,20 +146,20 @@ class HeatmapPlotModel(BasePlotModel):
             )
         ]
 
-        model.min = model.pconfig.get("min", None)
-        if model.min is None:
+        minval = model.pconfig.get("min", None)
+        if minval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            model.min = val if model.min is None else min(model.min, val)
-        model.max = model.pconfig.get("max", None)
-        if model.max is None:
+                            minval = val if minval is None else min(minval, val)
+        maxval = model.pconfig.get("max", None)
+        if maxval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            model.max = val if model.max is None else max(model.max, val)
+                            maxval = val if maxval is None else max(maxval, val)
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
@@ -293,7 +293,13 @@ class HeatmapPlotModel(BasePlotModel):
             if pconfig.get("datalabels") is None and num_rows * num_cols < 400:
                 ds.trace_params["texttemplate"] = "%{z:." + str(decimal_places) + "f}"
 
-        return model
+        return HeatmapPlotModel(
+            **model.__dict__,
+            xcats_samples=xcats_samples,
+            ycats_samples=ycats_samples,
+            min=minval,
+            max=maxval,
+        )
 
     def buttons(self, flat: bool) -> List[str]:
         """
