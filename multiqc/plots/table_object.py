@@ -282,17 +282,18 @@ class DataTable(BaseModel):
                     headers[d_idx][k][custom_k] = custom_v
 
                 # Process values: apply "modify" and remove from header
-                for s_name, samp in data[d_idx].items():
-                    if "modify" in headers[d_idx][k]:
-                        if callable(headers[d_idx][k]["modify"]):
-                            val = samp[k]
-                            # noinspection PyBroadException
-                            try:
-                                val = headers[d_idx][k]["modify"](val)
-                            except Exception as e:  # User-provided modify function can raise any exception
-                                logger.debug(f"Error modifying table value {k} : {val} - {e}")
-                            samp[k] = val
-                        del headers[d_idx][k]["modify"]
+                if "modify" in headers[d_idx][k]:
+                    if callable(headers[d_idx][k]["modify"]):
+                        for s_name, samp in data[d_idx].items():
+                            if k in samp:
+                                val = samp[k]
+                                # noinspection PyBroadException
+                                try:
+                                    val = headers[d_idx][k]["modify"](val)
+                                except Exception as e:  # User-provided modify function can raise any exception
+                                    logger.debug(f"Error modifying table value {k} : {val} - {e}")
+                                samp[k] = val
+                    del headers[d_idx][k]["modify"]
 
                 # Work out max and min value if not given
                 setdmax = False
