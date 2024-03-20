@@ -21,51 +21,7 @@ def plot(dts: List[DataTable], show_table_by_default=False, clean_html_id=True) 
     """
     plot = ViolinPlotModel.create(dts, show_table_by_default)
 
-    assert len(dts) > 0
-
-    warning = ""
-    if plot.show_table_by_default and not plot.show_table:
-        warning = (
-            f'<p class="text-muted" id="table-violin-info-{plot.id}">'
-            + '<span class="glyphicon glyphicon-exclamation-sign" '
-            + 'title="An interactive table is not available because of the large number of samples. '
-            + "A violin plot is generated instead, showing density of values for each metric, as "
-            + 'well as hoverable points for outlier samples in each metric."'
-            + f' data-toggle="tooltip"></span> Showing {plot.n_samples} samples.</p>'
-        )
-    elif not plot.show_table:
-        warning = (
-            f'<p class="text-muted" id="table-violin-info-{plot.id}">'
-            + '<span class="glyphicon glyphicon-exclamation-sign" '
-            + 'title="An interactive table is not available because of the large number of samples. '
-            + "The violin plot displays hoverable points only for outlier samples in each metric, "
-            + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
-            + f' data-toggle="tooltip"></span> Showing {plot.n_samples} samples.</p>'
-        )
-
-    if not plot.show_table:
-        # Show violin alone.
-        # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
-        # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-        html = warning + plot.add_to_report(clean_html_id=clean_html_id)
-    elif plot.no_violin:
-        # Show table alone
-        table_html, configuration_modal = make_table(dts[0])
-        html = warning + table_html + configuration_modal
-    else:
-        # Render both, add a switch between table and violin
-        table_html, configuration_modal = make_table(dts[0], violin_id=plot.id)
-        violin_html = plot.add_to_report(clean_html_id=clean_html_id)
-
-        violin_visibility = "style='display: none;'" if plot.show_table_by_default else ""
-        html = f"<div id='mqc_violintable_wrapper_{plot.id}' {violin_visibility}>{warning}{violin_html}</div>"
-
-        table_visibility = "style='display: none;'" if not plot.show_table_by_default else ""
-        html += f"<div id='mqc_violintable_wrapper_{dts[0].id}' {table_visibility}>{table_html}</div>"
-
-        html += configuration_modal
-
-    return html
+    return plot.add_to_report(clean_html_id=clean_html_id)
 
 
 class XAxis(BaseModel):
@@ -106,12 +62,12 @@ class DatasetModel(BaseDatasetModel):
         value_by_sample_by_metric = {}
         header_by_metric: Dict[str, Any] = {}
 
-        for idx, k, header in dt.get_headers_in_order():
-            metric = header["rid"]
+        for idx, metric_name, header in dt.get_headers_in_order():
+            full_metric_id = header.rid
 
             value_by_sample = dict()
             for s_name, val_by_metric in dt.data[idx].items():
-                v = val_by_metric.get(k)
+                v = val_by_metric.get(metric_name)
 
                 # Take non-empty values for the violin
                 if v is None or str(v).strip() == "":
@@ -126,31 +82,25 @@ class DatasetModel(BaseDatasetModel):
                             value_by_sample[s_name] = float(v)
                         except ValueError:
                             pass
-                if "modify" in header and callable(header["modify"]):
-                    # noinspection PyBroadException
-                    try:
-                        value_by_sample[s_name] = header["modify"](v)
-                    except Exception:  # User-provided modify function can raise any exception
-                        pass
 
                 value_by_sample[s_name] = v
 
-            value_by_sample_by_metric[metric] = value_by_sample
+            value_by_sample_by_metric[full_metric_id] = value_by_sample
 
-        for idx, k, header in dt.get_headers_in_order():
-            metric = header["rid"]
-            header_by_metric[metric] = {
-                "namespace": header["namespace"],
-                "title": header["title"],
-                "description": header["description"],
-                "dmax": header.get("dmax"),
-                "dmin": header.get("dmin"),
-                "suffix": header.get("suffix", ""),
-                "color": header.get("colour", header.get("color")),
-                "hidden": header.get("hidden") or False,
-                "tt_decimals": header.get("tt_decimals", header.get("decimalPlaces", 2)),
+        for idx, metric_name, header in dt.get_headers_in_order():
+            full_metric_id = header.rid
+            header_by_metric[full_metric_id] = {
+                "namespace": header.namespace,
+                "title": header.title,
+                "description": header.description,
+                "dmax": header.dmax,
+                "dmin": header.dmin,
+                "suffix": header.suffix or "",
+                "color": header.colour,
+                "hidden": header.hidden,
+                "tt_decimals": header.tt_decimals if header.tt_decimals is not None else 2,
                 # Plotly-specific parameters
-                "xaxis": XAxis(ticksuffix=header.get("suffix")),
+                "xaxis": XAxis(ticksuffix=header.suffix),
                 "show_points": True,
                 "show_only_outliers": False,
             }
@@ -435,7 +385,7 @@ class ViolinPlotModel(BasePlotModel):
     no_violin: bool
     show_table: bool
     show_table_by_default: bool
-    main_table_id: str
+    main_table_dt: Optional[DataTable] = None
 
     @staticmethod
     def create(
@@ -500,6 +450,7 @@ class ViolinPlotModel(BasePlotModel):
         show_table = True
         if n_samples > config.max_table_rows and not no_violin:
             show_table = False
+            main_table_dt = None
             if show_table_by_default:
                 logger.debug(
                     f"Table '{model.id}': sample number {n_samples} > {config.max_table_rows}, "
@@ -508,11 +459,11 @@ class ViolinPlotModel(BasePlotModel):
 
         return ViolinPlotModel(
             **model.__dict__,
-            main_table_id=main_table_dt.id,
             no_violin=no_violin,
             show_table=show_table,
             show_table_by_default=show_table_by_default,
             n_samples=n_samples,
+            main_table_dt=main_table_dt,
         )
 
     def buttons(self) -> []:
@@ -523,7 +474,7 @@ class ViolinPlotModel(BasePlotModel):
                 self._btn(
                     cls="mqc_table_configModal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_id}_configModal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.id}_configModal"},
                 )
             )
         if self.show_table:
@@ -531,11 +482,70 @@ class ViolinPlotModel(BasePlotModel):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-id": self.main_table_id, "violin-id": self.id},
+                    data_attrs={"table-id": self.main_table_dt.id, "violin-id": self.id},
                 )
             )
 
         return buttons + super().buttons()
+
+    def show(self, table=None, violin=None, **kwargs):
+        """
+        Show the table or violin plot based on the input parameters.
+        """
+        if self.show_table_by_default and violin is not True or table is True:
+            table_html, configuration_modal = make_table(self.main_table_dt, add_control_panel=False)
+            from IPython.display import HTML
+
+            return HTML(table_html)
+        else:
+            return self.get_figure(**kwargs)
+
+    def add_to_report(self, clean_html_id=True) -> str:
+        warning = ""
+        if self.show_table_by_default and not self.show_table:
+            warning = (
+                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + 'title="An interactive table is not available because of the large number of samples. '
+                + "A violin plot is generated instead, showing density of values for each metric, as "
+                + 'well as hoverable points for outlier samples in each metric."'
+                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+            )
+        elif not self.show_table:
+            warning = (
+                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                + '<span class="glyphicon glyphicon-exclamation-sign" '
+                + 'title="An interactive table is not available because of the large number of samples. '
+                + "The violin plot displays hoverable points only for outlier samples in each metric, "
+                + 'and the hiding/highlighting functionality through the toolbox only works for outliers"'
+                + f' data-toggle="tooltip"></span> Showing {self.n_samples} samples.</p>'
+            )
+
+        if not self.show_table:
+            # Show violin alone.
+            # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
+            # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
+            html = warning + super().add_to_report(clean_html_id=clean_html_id)
+        elif self.no_violin:
+            assert self.main_table_dt is not None
+            # Show table alone
+            table_html, configuration_modal = make_table(self.main_table_dt)
+            html = warning + table_html + configuration_modal
+        else:
+            assert self.main_table_dt is not None
+            # Render both, add a switch between table and violin
+            table_html, configuration_modal = make_table(self.main_table_dt, violin_id=self.id)
+            violin_html = super().add_to_report(clean_html_id=clean_html_id)
+
+            violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
+            html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
+
+            table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
+            html += f"<div id='mqc_violintable_wrapper_{self.main_table_dt.id}' {table_visibility}>{table_html}</div>"
+
+            html += configuration_modal
+
+        return html
 
 
 def find_outliers(

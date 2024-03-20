@@ -32,7 +32,7 @@ def plot(
     :return: HTML ready to be inserted into the page
     """
     # Make a datatable object
-    dt = table_object.DataTable(data, headers, pconfig)
+    dt = table_object.DataTable.create(data, headers, pconfig)
 
     mod = get_template_mod()
     if "table" in mod.__dict__ and callable(mod.table):

@@ -267,6 +267,12 @@ class BasePlotModel(BaseModel):
             flat=flat,
         )
 
+    def show(self, *args, **kwargs):
+        """
+        Public method: show the plot in a Jupyter notebook.
+        """
+        return self.get_figure(*args, **kwargs)
+
     def get_figure(self, dataset_id: int, is_log=False, is_pct=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
@@ -334,7 +340,7 @@ class BasePlotModel(BaseModel):
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.plot_data[self.id] = self.model_dump()
+        report.plot_data[self.id] = self.model_dump(warnings=False)
         return html
 
     def flat_plot(self) -> str:

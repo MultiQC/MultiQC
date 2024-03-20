@@ -347,8 +347,14 @@ def load(analysis_dir, *args, **kwargs) -> RunResult:
         logger.info(f"Loading data from {json_path}")
         with json_path.open("r") as f:
             data = json.load(f)
+
+        for mod, sections in data["report_data_sources"].items():
+            logger.info(f"Loaded module {mod}")
+            for section, sources in sections.items():
+                for sname, source in sources.items():
+                    report.data_sources[mod][section][sname] = source
         for id, plot_dump in data["report_plot_data"].items():
-            logger.info(f"  Loaded plot {id}")
+            logger.info(f"Loaded plot {id}")
             report.plot_data[id] = plot_dump
         return RunResult()
     else:
@@ -394,7 +400,10 @@ def list_plots() -> List[str]:
     Return a list of the plots that have been loaded for a given module,
     along with the number of datasets in each plot.
     """
-    return list(f"{id}: {len(plot['datasets'])}" for id, plot in report.plot_data.items())
+    return list(
+        f"{id} ({len(plot['datasets'])} datasets)" if len(plot["datasets"]) > 1 else id
+        for id, plot in report.plot_data.items()
+    )
 
 
 def _load_plot(dump: Dict) -> BasePlotModel:
@@ -419,13 +428,13 @@ def _load_plot(dump: Dict) -> BasePlotModel:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
 
 
-def show_plot(plot_id: str, dataset_id=0, is_log=False, is_pct=False) -> go.Figure:
+def show_plot(plot_id: str, dataset_id=0, **kwargs) -> go.Figure:
     """
     Show a plot in the notebook.
     """
     dump = report.plot_data[plot_id]
     model = _load_plot(dump)
-    return model.get_figure(dataset_id, is_log=is_log, is_pct=is_pct)
+    return model.show(dataset_id=dataset_id, **kwargs)
 
 
 def reset():
@@ -539,6 +548,8 @@ def run(
         config_file=config_file,
         cl_config=cl_config,
         profile_runtime=profile_runtime,
+        verbose=verbose,
+        quiet=quiet,
         no_ansi=no_ansi,
         custom_css_files=custom_css_files,
         **kwargs,
@@ -646,7 +657,7 @@ def _init(
     config_file=(),
     cl_config=(),
     profile_runtime=False,
-    verbose=False,
+    verbose=0,
     quiet=False,
     no_ansi=False,
     custom_css_files=(),
@@ -658,7 +669,7 @@ def _init(
     report.init()
 
     # Set up logging
-    log_level = "DEBUG" if verbose else "INFO"
+    log_level = "DEBUG" if verbose > 0 else "INFO"
     if quiet:
         log_level = "WARNING"
         config.quiet = True

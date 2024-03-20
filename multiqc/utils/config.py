@@ -117,7 +117,7 @@ table_columns_visible: Dict
 table_columns_placement: Dict
 table_columns_name: Dict
 table_cond_formatting_colours: List[Dict[str, str]]
-table_cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str
 thousandsSep_format: str
 remove_sections: List
