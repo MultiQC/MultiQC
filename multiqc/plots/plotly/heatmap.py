@@ -273,7 +273,7 @@ class HeatmapPlotModel(BasePlotModel):
                 [1, "#a50026"],
             ]
 
-        decimal_places = pconfig.get("decimalPlaces", 2)
+        decimal_places = pconfig.get("tt_decimals", 2)
 
         xlab = pconfig.get("xlab", "x")
         ylab = pconfig.get("ylab", "y")
