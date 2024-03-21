@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs PF",
                 "description": "ZMWs pass filters",
                 "scale": "BuGn",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
                 "hidden": True,
             },
@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs input",
                 "description": "ZMWs input",
                 "scale": "Purples",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
             },
         }
