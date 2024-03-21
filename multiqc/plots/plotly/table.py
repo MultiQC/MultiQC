@@ -108,6 +108,16 @@ def make_table(
         for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
+
+                # Try parse as int or float
+                try:
+                    val = int(val)
+                except ValueError:
+                    try:
+                        val = float(val)
+                    except ValueError:
+                        pass
+
                 kname = f"{header.namespace}_{rid}"
                 raw_vals[s_name][kname] = val
 
@@ -128,15 +138,10 @@ def make_table(
                 else:
                     percentage = 100
 
+                # Try applying format
                 try:
-                    # "format" is a format string?
-                    valstring = str(header.format.format(val))
+                    valstring = header.format.format(val)
                 except ValueError:
-                    try:
-                        valstring = str(header.format.format(float(val)))
-                    except ValueError:
-                        valstring = str(val)
-                except Exception:
                     valstring = str(val)
 
                 # This is horrible, but Python locale settings are worse
