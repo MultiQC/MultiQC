@@ -133,6 +133,8 @@ class DatasetModel(BaseDatasetModel):
             value_by_sample = value_by_sample_by_metric[metric]
             if not value_by_sample:
                 logger.debug(f"No non-empty values found for metric: {header['title']}")
+                if "modify" in header and callable(header["modify"]):
+                    del header["modify"]  # To keep the data JSON-serializable
                 continue
 
             values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
@@ -142,6 +144,8 @@ class DatasetModel(BaseDatasetModel):
                 value_by_sample = {s: v for s, v in value_by_sample.items() if np.isfinite(v)}
                 if not value_by_sample:
                     logger.warning(f"All values are NaN or Inf for metric: {header['title']}")
+                    if "modify" in header and callable(header["modify"]):
+                        del header["modify"]  # To keep the data JSON-serializable
                     continue
 
             header["show_points"] = len(value_by_sample) <= config.violin_min_threshold_no_points

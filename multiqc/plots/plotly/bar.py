@@ -67,7 +67,7 @@ class DatasetModel(BaseDatasetModel):
 
             # Reformat color to be ready to add alpha in Plotly-JS
             color = spectra.html(cat["color"])
-            cat["color"] = ",".join([f"{x:.2f}" for x in color.rgb])
+            cat["color"] = ",".join([f"{int(x * 256)}" for x in color.rgb])
 
             # Check that the number of samples is the same for all categories
             assert len(samples) == len(cat["data"])
