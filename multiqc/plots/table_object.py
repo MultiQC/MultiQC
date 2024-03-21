@@ -26,7 +26,7 @@ class ColumnModel(BaseModel):
     description: str
     namespace: str
     scale: Union[str, bool]
-    format: str
+    format: Optional[str]  # None represent "leave value as is"
     hidden: bool
     colour: str
     placement: float = None
