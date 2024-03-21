@@ -385,6 +385,7 @@ class ViolinPlotModel(BasePlotModel):
     no_violin: bool
     show_table: bool
     show_table_by_default: bool
+    n_samples: int
     main_table_dt: Optional[DataTable] = None
 
     @staticmethod
@@ -469,7 +470,7 @@ class ViolinPlotModel(BasePlotModel):
     def buttons(self, flat) -> []:
         """Add a control panel to the plot"""
         buttons = []
-        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
+        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.main_table_dt is not None:
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",
