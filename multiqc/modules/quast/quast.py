@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Misassemblies",
                 "description": "The number of positions in the assembled contigs where the left flanking sequence aligns over 1 kbp away from the right flanking sequence on the reference (relocation) or they overlap on more than 1 kbp (relocation) or flanking sequences align on different strands (inversion) or different chromosomes (translocation).",
                 "scale": "RdYlGn-rev",
-                "format": "{,:.0f}",
+                "format": "{:,.0f}",
             },
             "# mismatches per 100 kbp": {
                 "title": "Mismatches/100kbp",
