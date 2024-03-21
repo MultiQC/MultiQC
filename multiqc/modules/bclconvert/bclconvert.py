@@ -269,7 +269,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise ModuleNoSamplesFound
 
-        print(runinfo_file)
         self.add_data_source(
             runinfo_file,
             module="bclconvert",
