@@ -108,18 +108,17 @@ def make_table(
         for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
+                kname = f"{header.namespace}_{rid}"
+                raw_vals[s_name][kname] = val
 
                 # Try parse as int or float
-                try:
+                if str(val).isdigit():
                     val = int(val)
-                except ValueError:
+                else:
                     try:
                         val = float(val)
                     except ValueError:
                         pass
-
-                kname = f"{header.namespace}_{rid}"
-                raw_vals[s_name][kname] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     try:
@@ -139,9 +138,12 @@ def make_table(
                     percentage = 100
 
                 # Try applying format
-                try:
-                    valstring = header.format.format(val)
-                except ValueError:
+                if header.format is not None:
+                    try:
+                        valstring = header.format.format(val)
+                    except ValueError:
+                        valstring = str(val)
+                else:
                     valstring = str(val)
 
                 # This is horrible, but Python locale settings are worse
