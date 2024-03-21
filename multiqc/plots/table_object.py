@@ -1,4 +1,5 @@
 """ MultiQC datatable class, used by tables and violin plots """
+from copy import deepcopy
 
 import math
 
@@ -75,6 +76,10 @@ class DataTable(BaseModel):
             data = [data]
         if not isinstance(headers, list):
             headers = [headers]
+
+        # make copy of data in case we apply "modify" to values. in the future, we don't want
+        # to use "modify", and pass the original data to javascript for it to display nicely.
+        data = [deepcopy(d) for d in data]
 
         if pconfig and "id" in pconfig:
             id = pconfig.pop("id")
@@ -293,7 +298,7 @@ class DataTable(BaseModel):
                                 except Exception as e:  # User-provided modify function can raise any exception
                                     logger.debug(f"Error modifying table value {k} : {val} - {e}")
                                 samp[k] = val
-                    del headers[d_idx][k]["modify"]
+                        del headers[d_idx][k]["modify"]
 
                 # Work out max and min value if not given
                 setdmax = False
