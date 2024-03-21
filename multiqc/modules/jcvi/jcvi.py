@@ -45,17 +45,14 @@ class MultiqcModule(BaseMultiqcModule):
             "genes": {
                 "title": "Number of genes",
                 "description": "Number of genes",
-                "format": "{:i}",
             },
             "transcripts": {
                 "title": "Number of transcripts",
                 "description": "Number of transcripts",
-                "format": "{:i}",
             },
             "mean_gene_size": {
                 "title": "Mean gene length (bp)",
                 "description": "Mean gene length",
-                "format": "{:i}",
             },
         }
         self.general_stats_addcols(self.jcvi, headers)

@@ -23,6 +23,7 @@ dependencies = [
     "rich>=10",
     "rich-click",
     "spectra>=0.0.10",
+    "pydantic",
 ]
 requires-python = ">=3.8"
 authors = [

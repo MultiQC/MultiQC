@@ -26,7 +26,6 @@ class MultiqcModule(BaseMultiqcModule):
             "n_loci": {
                 "title": "# loci",
                 "description": "Number of loci built",
-                "format": "{:,.i}",
                 "scale": "RdYlGn",
             },
             "n_used_fw_reads": {
@@ -54,7 +53,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "PopID",
                 "description": "Population ID as defined in the Population Map file.",
                 "scale": False,
-                "format": "{:,.s}",
             },
             "Private": {
                 "title": "Private",

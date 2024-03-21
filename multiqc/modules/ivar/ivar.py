@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(final_xcats) != len(final_data[0]):
             log.error(f"Number of primers do not match: {len(final_xcats)} vs {len(final_data[0])}")
 
-        if len(final_ycats) == len(final_data):
+        if len(final_ycats) != len(final_data):
             log.error(f"Number of samples and primers do not match: {len(final_ycats)} vs {len(final_data)}")
 
         if self.ivar_primers is not None:
