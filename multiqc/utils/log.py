@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import sys
+import tempfile
 
 import coloredlogs
 
@@ -15,7 +16,7 @@ log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 
-def init_log(logger, tmp_dir: str, log_level: str, no_ansi: bool = False):
+def init_log(logger, log_level: str, no_ansi: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -26,7 +27,7 @@ def init_log(logger, tmp_dir: str, log_level: str, no_ansi: bool = False):
     """
     # File for logging
     global log_tmp_dir, log_tmp_fn
-    log_tmp_dir = tmp_dir
+    log_tmp_dir = tempfile.mkdtemp()
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
     # Logging templates

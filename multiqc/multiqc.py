@@ -673,7 +673,7 @@ def _init(
     if quiet:
         log_level = "WARNING"
         config.quiet = True
-    log.init_log(logger, tmp_dir=report.tmp_dir, log_level=log_level, no_ansi=no_ansi)
+    log.init_log(logger, log_level=log_level, no_ansi=no_ansi)
     console = rich.console.Console(
         stderr=True,
         highlight=False,
