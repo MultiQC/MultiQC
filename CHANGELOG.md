@@ -11,6 +11,9 @@
 
 ### New modules
 
+- [**ngs-bits**](https://github.com/imgag/ngs-bits) ([#2231](https://github.com/ewels/MultiQC/pull/2231))
+  - ngs-bits is a collection of short-read sequencing tools.
+
 ### Module updates
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
