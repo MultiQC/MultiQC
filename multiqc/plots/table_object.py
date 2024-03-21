@@ -7,7 +7,7 @@ import random
 import re
 import string
 from collections import defaultdict
-from typing import List, Tuple, Dict, Optional, Union, Mapping
+from typing import List, Tuple, Dict, Optional, Union, Mapping, Callable
 
 from pydantic import BaseModel
 
@@ -208,7 +208,7 @@ class DataTable(BaseModel):
                 headers[d_idx][k]["title"] = headers[d_idx][k].get("title", k)
                 headers[d_idx][k]["description"] = headers[d_idx][k].get("description", headers[d_idx][k]["title"])
                 headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", pconfig.get("scale", "GnBu"))
-                headers[d_idx][k]["format"] = headers[d_idx][k].get("format", pconfig.get("format", "{:,.1f}"))
+                headers[d_idx][k]["format"] = headers[d_idx][k].get("format", pconfig.get("format", None))
                 headers[d_idx][k]["colour"] = headers[d_idx][k].get("colour", pconfig.get("colour", None))
                 headers[d_idx][k]["hidden"] = headers[d_idx][k].get("hidden", pconfig.get("hidden", False))
                 headers[d_idx][k]["max"] = headers[d_idx][k].get("max", pconfig.get("max", None))
@@ -298,7 +298,8 @@ class DataTable(BaseModel):
                         val = v_by_metric[k]
                         if val is None:
                             continue
-                        # Try parse as int or float
+
+                        # Try parse as a number
                         if str(val).isdigit():
                             val = int(val)
                         else:
@@ -306,30 +307,36 @@ class DataTable(BaseModel):
                                 val = float(val)
                             except ValueError:
                                 pass
+
                         # Apply modify
                         if "modify" in headers[d_idx][k] and callable(headers[d_idx][k]["modify"]):
                             # noinspection PyBroadException
                             try:
                                 val = headers[d_idx][k]["modify"](val)
                             except Exception as e:  # User-provided modify function can raise any exception
-                                logger.error(f"Error modifying table value '{k}' {val}: {e}")
+                                logger.error(f"Error modifying table value '{k}': '{val}'. {e}")
                         raw_dataset[s_name][k] = val
 
                         # Now also calculate formatted values
                         valstr = str(val)
-                        fmt = headers[d_idx][k].get("format")
+                        fmt: Union[None, str, Callable] = headers[d_idx][k].get("format")
+                        if fmt is None:
+                            if isinstance(val, float):
+                                fmt = "{:,.1f}"
+                            elif isinstance(val, int):
+                                fmt = "{:,d}"
                         if fmt is not None:
                             if callable(fmt):
                                 try:
                                     valstr = fmt(val)
                                 except Exception as e:
-                                    logger.error(f"Error applying format to table value '{k}' {val}: {e}")
-                            else:
+                                    logger.error(f"Error applying format to table value '{k}': '{val}'. {e}")
+                            elif isinstance(val, (int, float)):
                                 try:
                                     valstr = fmt.format(val)
                                 except Exception as e:
                                     logger.error(
-                                        f"Error applying format string '{fmt}' to table value '{k}' {val}: {e}. "
+                                        f"Error applying format string '{fmt}' to table value '{k}': '{val}'. {e}. "
                                         f"Check if your format string is correct."
                                     )
                         formatted_dataset[s_name][k] = valstr

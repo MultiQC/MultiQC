@@ -56,14 +56,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Bases",
                 "description": "Number of bases",
                 "min": 0,
-                "format": "{:i}%",
                 "hidden": True,
             },
             "CDS": {
                 "title": "CDS",
                 "description": "Number of CDS",
                 "min": 0,
-                "format": "{:i}%",
             },
         }
         self.general_stats_addcols(self.prokka, headers)
@@ -154,47 +152,38 @@ class MultiqcModule(BaseMultiqcModule):
             "contigs": {
                 "title": "# contigs",
                 "description": "Number of contigs in assembly",
-                "format": "{:i}",
             },
             "bases": {
                 "title": "# bases",
                 "description": "Number of nucleotide bases in assembly",
-                "format": "{:i}",
             },
             "CDS": {
                 "title": "# CDS",
                 "description": "Number of annotated CDS",
-                "format": "{:i}",
             },
             "rRNA": {
                 "title": "# rRNA",
                 "description": "Number of annotated rRNA",
-                "format": "{:i}",
             },
             "tRNA": {
                 "title": "# tRNA",
                 "description": "Number of annotated tRNA",
-                "format": "{:i}",
             },
             "tmRNA": {
                 "title": "# tmRNA",
                 "description": "Number of annotated tmRNA",
-                "format": "{:i}",
             },
             "misc_RNA": {
                 "title": "# misc RNA",
                 "description": "Number of annotated misc. RNA",
-                "format": "{:i}",
             },
             "sig_peptide": {
                 "title": "# sig_peptide",
                 "description": "Number of annotated sig_peptide",
-                "format": "{:i}",
             },
             "repeat_region": {
                 "title": "# CRISPR arrays",
                 "description": "Number of annotated CRSIPR arrays",
-                "format": "{:i}",
             },
         }
         table_config = {

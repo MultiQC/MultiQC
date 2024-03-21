@@ -113,7 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
             "n_cluster": {
                 "title": "Clusters",
                 "description": "Number of clusters created during the clustering. (1 cluster = 1 transcript)",
-                "format": "{:,.d}",
                 "scale": "Spectral",
             },
             "mean_cluster_size": {
@@ -188,13 +187,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Full-length",
                 "description": "Number of CCS where both primers have been detected",
                 "scale": "GnBu",
-                "format": "{:,.d}",
             },
             "num_reads_flnc": {
                 "title": "Non-chimeric full-length",
                 "description": "Number of non-chimeric CCS where both primers have been detected",
                 "scale": "RdYlGn",
-                "format": "{:,.d}",
             },
             "num_reads_flnc_polya": {
                 "title": "Poly(A) free non-chimeric full-length",
@@ -203,7 +200,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "tail has been removed"
                 ),
                 "scale": "GnBu",
-                "format": "{:,.d}",
             },
         }
         return self.add_section(
