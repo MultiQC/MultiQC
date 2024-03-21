@@ -501,7 +501,6 @@ def run(
         strict_helpers.run_tests()
     if development:
         config.development = True
-        config.export_plots = True
         if "png" not in config.export_plot_formats:
             config.export_plot_formats.append("png")
     if make_pdf:
