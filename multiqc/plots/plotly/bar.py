@@ -44,81 +44,82 @@ def plot(
     return p.add_to_report(report)
 
 
-class BarPlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        cats: List[Dict]
-        samples: List[str]
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    cats: List[Dict]
+    samples: List[str]
 
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            cats: List[Dict],
-            samples: List[str],
-        ) -> "BarPlot.Dataset":
-            # Need to reverse samples as the bar plot will show them reversed
-            samples = list(reversed(samples))
-            for cat in cats:
-                # Reverse the data to match the reversed samples
-                cat["data"] = list(reversed(cat["data"]))
-                if "data_pct" in cat:
-                    cat["data_pct"] = list(reversed(cat["data_pct"]))
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        cats: List[Dict],
+        samples: List[str],
+    ) -> "Dataset":
+        # Need to reverse samples as the bar plot will show them reversed
+        samples = list(reversed(samples))
+        for cat in cats:
+            # Reverse the data to match the reversed samples
+            cat["data"] = list(reversed(cat["data"]))
+            if "data_pct" in cat:
+                cat["data_pct"] = list(reversed(cat["data_pct"]))
 
-            # Post-process categories
-            for cat in cats:
-                # Split long category names
-                if "name" not in cat:
-                    raise ValueError(f"Bar plot {dataset.plot.id}: missing 'name' key in category")
-                cat["name"] = "<br>".join(split_long_string(cat["name"]))
+        # Post-process categories
+        for cat in cats:
+            # Split long category names
+            if "name" not in cat:
+                raise ValueError(f"Bar plot {dataset.plot_id}: missing 'name' key in category")
+            cat["name"] = "<br>".join(split_long_string(cat["name"]))
 
-                # Reformat color to be ready to add alpha in Plotly-JS
-                color = spectra.html(cat["color"])
-                cat["color"] = ",".join([f"{x:.2f}" for x in color.rgb])
+            # Reformat color to be ready to add alpha in Plotly-JS
+            color = spectra.html(cat["color"])
+            cat["color"] = ",".join([f"{int(x * 256)}" for x in color.rgb])
 
-                # Check that the number of samples is the same for all categories
-                assert len(samples) == len(cat["data"])
+            # Check that the number of samples is the same for all categories
+            assert len(samples) == len(cat["data"])
 
-            dataset = BarPlot.Dataset(
-                **dataset.__dict__,
-                cats=cats,
-                samples=samples,
+        dataset = Dataset(
+            **dataset.__dict__,
+            cats=cats,
+            samples=samples,
+        )
+
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        fig = go.Figure(layout=layout)
+
+        for cat in self.cats:
+            data = cat["data_pct"] if is_pct else cat["data"]
+
+            params = copy.deepcopy(self.trace_params)
+            params["marker"]["color"] = f"rgb({cat['color']})"
+            fig.add_trace(
+                go.Bar(
+                    y=self.samples,
+                    x=data,
+                    name=cat["name"],
+                    **params,
+                ),
             )
+        return fig
 
-            return dataset
 
-        def create_figure(
-            self,
-            layout: go.Layout,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            fig = go.Figure(layout=layout)
-
-            for cat in self.cats:
-                data = cat["data_pct"] if is_pct else cat["data"]
-
-                params = copy.deepcopy(self.trace_params)
-                params["marker"]["color"] = f"rgb({cat['color']})"
-                fig.add_trace(
-                    go.Bar(
-                        y=self.samples,
-                        x=data,
-                        name=cat["name"],
-                        **params,
-                    ),
-                )
-            return fig
-
+class BarPlot(Plot):
     def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
         super().__init__(PlotType.BAR, pconfig, len(cats_lists))
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        self.datasets: List[BarPlot.Dataset] = [
-            BarPlot.Dataset.create(d, cats=cats, samples=samples)
+        self.datasets: List[Dataset] = [
+            Dataset.create(d, cats=cats, samples=samples)
             for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
         ]
 

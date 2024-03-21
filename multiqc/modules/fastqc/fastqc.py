@@ -1143,7 +1143,7 @@ class MultiqcModule(BaseMultiqcModule):
                 [0.5, "#fee391"],
                 [1, "#5cb85c"],
             ],
-            "decimalPlaces": 1,
+            "tt_decimals": 1,
             "legend": False,
             "datalabels": False,
             "xcats_samples": False,

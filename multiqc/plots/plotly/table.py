@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from multiqc.plots.table_object import DataTable
 from multiqc.utils import config, mqc_colour, util_functions, report
@@ -8,7 +8,7 @@ from multiqc.utils import config, mqc_colour, util_functions, report
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: DataTable) -> str:
+def plot(dt: List[DataTable]) -> str:
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
@@ -16,7 +16,7 @@ def plot(dt: DataTable) -> str:
 
 def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str]:
     """
-    Build the HTML needed for a MultiQC table.
+    Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
     :param violin_id: optional, will add a button to switch to a violin plot with this ID
     """

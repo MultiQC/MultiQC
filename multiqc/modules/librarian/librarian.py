@@ -96,7 +96,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xcats_samples": False,
             "ycats_samples": True,
             "colstops": [[0, "#FFFFFF"], [1, "#FF0000"]],
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
         }
 
         self.add_section(
