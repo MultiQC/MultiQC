@@ -11,71 +11,86 @@ import mimetypes
 import os
 import re
 import time
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from pathlib import Path
+from typing import Dict, Union, List, Optional
+
 import rich
 import rich.progress
 import yaml
-from yaml.representer import Representer
 
 from multiqc.utils import lzstring
 
 from . import config
+from .util_functions import replace_defaultdicts
 
 logger = config.logger
 
-# Treat defaultdict and OrderedDict as normal dicts for YAML output
-yaml.add_representer(defaultdict, Representer.represent_dict)
-yaml.add_representer(OrderedDict, Representer.represent_dict)
+
+# Uninitialised global variables for static typing
+multiqc_command: str
+modules_output: List  # List of BaseMultiqcModule objects
+general_stats_data: List[Dict]
+general_stats_headers: List[Dict]
+general_stats_html: str
+data_sources: Dict[str, Dict[str, Dict]]
+plot_data: Dict
+html_ids: List[str]
+lint_errors: List[str]
+num_hc_plots: int
+num_mpl_plots: int
+saved_raw_data: Dict
+last_found_file: Optional[str]
+runtimes: Dict[str, Union[float, Dict]]
+file_search_stats: Dict[str, int]
+searchfiles: List
+files: Dict
+software_versions: Dict[str, Dict[str, List]]
 
 
-# Set up global variables shared across modules
-# Inside a function so that the global vars are reset if MultiQC is run more than once within a single session / environment
 def init():
+    # Set up global variables shared across modules. Inside a function so that the global
+    # vars are reset if MultiQC is run more than once within a single session / environment.
+    global multiqc_command
+    global modules_output
     global general_stats_data
-    general_stats_data = list()
-
     global general_stats_headers
-    general_stats_headers = list()
-
     global general_stats_html
-    general_stats_html = ""
-
     global data_sources
-    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-
     global plot_data
-    plot_data = dict()
-
     global html_ids
-    html_ids = list()
-
     global lint_errors
-    lint_errors = list()
-
     global num_hc_plots
-    num_hc_plots = 0
-
     global num_mpl_plots
-    num_mpl_plots = 0
-
     global saved_raw_data
-    saved_raw_data = dict()
-
     global last_found_file
-    last_found_file = None
-
     global runtimes
+    global file_search_stats
+    global searchfiles
+    global files
+    global software_versions
+
+    multiqc_command = ""
+    modules_output = list()
+    general_stats_data = list()
+    general_stats_headers = list()
+    general_stats_html = ""
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+    plot_data = dict()
+    html_ids = list()
+    lint_errors = list()
+    num_hc_plots = 0
+    num_mpl_plots = 0
+    saved_raw_data = dict()
+    last_found_file = None
     runtimes = {
-        "total": 0,
-        "total_sp": 0,
-        "total_mods": 0,
-        "total_compression": 0,
+        "total": 0.0,
+        "total_sp": 0.0,
+        "total_mods": 0.0,
+        "total_compression": 0.0,
         "sp": defaultdict(),
         "mods": defaultdict(),
     }
-
-    global file_search_stats
     file_search_stats = {
         "skipped_symlinks": 0,
         "skipped_not_a_file": 0,
@@ -86,16 +101,10 @@ def init():
         "skipped_directory_fn_ignore_dirs": 0,
         "skipped_file_contents_search_errors": 0,
     }
-
-    global searchfiles
     searchfiles = list()
-
-    # Make a dict of discovered files for each seach key
-    global files
+    # Discovered files for each search key
     files = dict()
-
-    # Map of software tools to a set of unique version strings
-    global software_versions
+    # Map of Software tools to a set of unique version strings
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
@@ -355,6 +364,7 @@ def search_file(pattern, f, module_key):
             return False
 
     # Search by file contents
+    repattern = None
     if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
@@ -479,7 +489,7 @@ def data_sources_tofile():
             jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
             print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
         elif config.data_format == "yaml":
-            yaml.dump(data_sources, f, default_flow_style=False)
+            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
             for mod in data_sources:
@@ -504,7 +514,7 @@ def dois_tofile(modules_output):
             jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
             print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
         elif config.data_format == "yaml":
-            yaml.dump(dois, f, default_flow_style=False)
+            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
         else:
             body = ""
             for mod, dois in dois.items():
@@ -533,9 +543,9 @@ def save_htmlid(html_id, skiplint=False):
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
 
     # Validate if linting
+    modname = ""
+    codeline = ""
     if config.strict and not skiplint:
-        modname = ""
-        codeline = ""
         callstack = inspect.stack()
         for n in callstack:
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
@@ -543,10 +553,10 @@ def save_htmlid(html_id, skiplint=False):
                 modname = f">{callpath}< "
                 codeline = n[4][0].strip()
                 break
-    if config.strict and not skiplint and html_id != html_id_clean:
-        errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
-        logger.error(errmsg)
-        lint_errors.append(errmsg)
+        if html_id != html_id_clean:
+            errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
+            logger.error(errmsg)
+            lint_errors.append(errmsg)
 
     # Check for duplicates
     i = 1
