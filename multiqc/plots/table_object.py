@@ -1,5 +1,4 @@
 """ MultiQC datatable class, used by tables and violin plots """
-from copy import deepcopy
 
 import math
 
@@ -8,7 +7,7 @@ import random
 import re
 import string
 from collections import defaultdict
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union, Mapping
 
 from pydantic import BaseModel
 
@@ -47,6 +46,9 @@ class ColumnModel(BaseModel):
     bars_zero_centrepoint: bool = False
 
 
+ValueT = Union[int, float, str, bool, None]
+
+
 class DataTable(BaseModel):
     """
     Data table class. Prepares and holds data and configuration
@@ -54,14 +56,14 @@ class DataTable(BaseModel):
     """
 
     id: str
-    data: List[Dict[str, Dict[str, Union[int, float, str, bool]]]] = []
+    data: List[Dict[str, Dict[str, ValueT]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
     headers: List[Dict[str, ColumnModel]] = []
     pconfig: Dict
 
     @staticmethod
     def create(
-        data: Union[List[Dict], Dict],
+        data: Union[List[Mapping[str, Mapping[str, ValueT]]], Mapping[str, Mapping[str, ValueT]]],
         headers: Optional[Union[List[Dict[str, ColumnModel]], Dict[str, ColumnModel]]] = None,
         pconfig: Optional[Dict] = None,
     ) -> "DataTable":
@@ -76,10 +78,6 @@ class DataTable(BaseModel):
             data = [data]
         if not isinstance(headers, list):
             headers = [headers]
-
-        # make copy of data in case we apply "modify" to values. in the future, we don't want
-        # to use "modify", and pass the original data to javascript for it to display nicely.
-        data = [deepcopy(d) for d in data]
 
         if pconfig and "id" in pconfig:
             id = pconfig.pop("id")
@@ -107,6 +105,8 @@ class DataTable(BaseModel):
             "153,153,153",  # Grey
         ]
 
+        modified_data = []
+
         # Go through each table section
         for d_idx, dataset in enumerate(data):
             # Get the header keys
@@ -121,8 +121,8 @@ class DataTable(BaseModel):
             if pconfig.get("only_defined_headers", True) is False:
                 # Get the keys from the data
                 keys = list()
-                for samp in dataset.values():
-                    for k in samp.keys():
+                for v_by_metric in dataset.values():
+                    for k in v_by_metric.keys():
                         if k not in keys:
                             keys.append(k)
 
@@ -145,21 +145,24 @@ class DataTable(BaseModel):
             keys = [str(k) for k in keys]
             for k in list(headers[d_idx].keys()):
                 headers[d_idx][str(k)] = headers[d_idx].pop(k)
+
             # Ensure that all sample names are strings as well
             cdata = dict()
-            for k, v in data[d_idx].items():
-                cdata[str(k)] = v
+            for s_name, d in data[d_idx].items():
+                cdata[str(s_name)] = d
             data[d_idx] = cdata
+
+            # Ensure metric names are strings
             for s_name in data[d_idx].keys():
-                for k in list(data[d_idx][s_name].keys()):
-                    data[d_idx][s_name][str(k)] = data[d_idx][s_name].pop(k)
+                for metric in list(data[d_idx][s_name].keys()):
+                    data[d_idx][s_name][str(metric)] = data[d_idx][s_name].pop(metric)
 
             # Check that we have some data in each column
             empties = list()
             for k in keys:
                 n = 0
-                for samp in dataset.values():
-                    if k in samp:
+                for v_by_metric in dataset.values():
+                    if k in v_by_metric:
                         n += 1
                 if n == 0:
                     empties.append(k)
@@ -167,6 +170,7 @@ class DataTable(BaseModel):
                 keys = [j for j in keys if j != k]
                 del headers[d_idx][k]
 
+            modified_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
                 if "rid" not in headers[d_idx][k]:
@@ -286,19 +290,19 @@ class DataTable(BaseModel):
                 for custom_k, custom_v in config.custom_table_header_config.get(id, {}).get(k, {}).items():
                     headers[d_idx][k][custom_k] = custom_v
 
-                # Process values: apply "modify" and remove from header
-                if "modify" in headers[d_idx][k]:
-                    if callable(headers[d_idx][k]["modify"]):
-                        for s_name, samp in data[d_idx].items():
-                            if k in samp:
-                                val = samp[k]
-                                # noinspection PyBroadException
-                                try:
-                                    val = headers[d_idx][k]["modify"](val)
-                                except Exception as e:  # User-provided modify function can raise any exception
-                                    logger.debug(f"Error modifying table value {k} : {val} - {e}")
-                                samp[k] = val
-                        del headers[d_idx][k]["modify"]
+                # Filter keys and apply "modify" to values. Builds a copy of a dataset
+                for s_name, v_by_metric in data[d_idx].items():
+                    if k in v_by_metric:
+                        val = v_by_metric[k]
+                        if "modify" in headers[d_idx][k] and callable(headers[d_idx][k]["modify"]):
+                            # noinspection PyBroadException
+                            try:
+                                val = headers[d_idx][k]["modify"](val)
+                            except Exception as e:  # User-provided modify function can raise any exception
+                                logger.debug(f"Error modifying table value {k} : {val} - {e}")
+                        modified_dataset[s_name][k] = val
+                if "modify" in headers[d_idx][k] and callable(headers[d_idx][k]["modify"]):
+                    del headers[d_idx][k]["modify"]
 
                 # Work out max and min value if not given
                 setdmax = False
@@ -317,16 +321,16 @@ class DataTable(BaseModel):
 
                 # Figure out the min / max if not supplied
                 if setdmax or setdmin:
-                    for s_name, samp in data[d_idx].items():
+                    for s_name, v_by_metric in modified_dataset.items():
                         try:
-                            val = float(samp[k])
+                            val = float(v_by_metric[k])
                             if math.isfinite(val) and not math.isnan(val):
                                 if setdmax:
                                     headers[d_idx][k]["dmax"] = max(headers[d_idx][k]["dmax"], val)
                                 if setdmin:
                                     headers[d_idx][k]["dmin"] = min(headers[d_idx][k]["dmin"], val)
                         except (ValueError, TypeError):
-                            val = samp[k]  # couldn't convert to float - keep as a string
+                            val = v_by_metric[k]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
                     # Limit auto-generated scales with floor, ceiling and minrange.
@@ -338,6 +342,8 @@ class DataTable(BaseModel):
                         drange = headers[d_idx][k]["dmax"] - headers[d_idx][k]["dmin"]
                         if drange < float(headers[d_idx][k]["minrange"]):
                             headers[d_idx][k]["dmax"] = headers[d_idx][k]["dmin"] + float(headers[d_idx][k]["minrange"])
+
+            modified_data.append(modified_dataset)
 
         # Collect settings for shared keys
         shared_keys = defaultdict(lambda: dict())
@@ -368,7 +374,7 @@ class DataTable(BaseModel):
 
         # Skip any data that is not used in the table
         # Would be ignored for making the table anyway, but can affect whether a violin plot is used
-        for d_idx, dataset in enumerate(data):
+        for d_idx, dataset in enumerate(modified_data):
             for s_name in list(dataset.keys()):
                 if not any(h in data[d_idx][s_name].keys() for h in headers[d_idx]):
                     del data[d_idx][s_name]
@@ -376,7 +382,7 @@ class DataTable(BaseModel):
         # Assign to class
         return DataTable(
             id=id,
-            data=data,
+            data=modified_data,
             headers_in_order=dict(headers_in_order),
             headers=headers,
             pconfig=pconfig,
