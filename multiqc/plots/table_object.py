@@ -26,7 +26,6 @@ class ColumnModel(BaseModel):
     description: str
     namespace: str
     scale: Union[str, bool]
-    format: Optional[str]  # None represent "leave value as is"
     hidden: bool
     colour: str
     placement: float = None
@@ -56,7 +55,8 @@ class DataTable(BaseModel):
     """
 
     id: str
-    data: List[Dict[str, Dict[str, ValueT]]] = []
+    raw_data: List[Dict[str, Dict[str, ValueT]]] = []
+    formatted_data: List[Dict[str, Dict[str, str]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
     headers: List[Dict[str, ColumnModel]] = []
     pconfig: Dict
@@ -64,7 +64,7 @@ class DataTable(BaseModel):
     @staticmethod
     def create(
         data: Union[List[Mapping[str, Mapping[str, ValueT]]], Mapping[str, Mapping[str, ValueT]]],
-        headers: Optional[Union[List[Dict[str, ColumnModel]], Dict[str, ColumnModel]]] = None,
+        headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
         pconfig: Optional[Dict] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
@@ -105,7 +105,8 @@ class DataTable(BaseModel):
             "153,153,153",  # Grey
         ]
 
-        modified_data = []
+        raw_data = []
+        formatted_data = []
 
         # Go through each table section
         for d_idx, dataset in enumerate(data):
@@ -170,7 +171,8 @@ class DataTable(BaseModel):
                 keys = [j for j in keys if j != k]
                 del headers[d_idx][k]
 
-            modified_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
+            raw_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
+            formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
                 if "rid" not in headers[d_idx][k]:
@@ -290,19 +292,40 @@ class DataTable(BaseModel):
                 for custom_k, custom_v in config.custom_table_header_config.get(id, {}).get(k, {}).items():
                     headers[d_idx][k][custom_k] = custom_v
 
-                # Filter keys and apply "modify" to values. Builds a copy of a dataset
+                # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
                 for s_name, v_by_metric in data[d_idx].items():
                     if k in v_by_metric:
                         val = v_by_metric[k]
+                        if val is None:
+                            continue
+                        # Try parse as int or float
+                        if str(val).isdigit():
+                            val = int(val)
+                        else:
+                            try:
+                                val = float(val)
+                            except ValueError:
+                                pass
+                        # Apply modify
                         if "modify" in headers[d_idx][k] and callable(headers[d_idx][k]["modify"]):
                             # noinspection PyBroadException
                             try:
                                 val = headers[d_idx][k]["modify"](val)
                             except Exception as e:  # User-provided modify function can raise any exception
                                 logger.debug(f"Error modifying table value {k} : {val} - {e}")
-                        modified_dataset[s_name][k] = val
-                if "modify" in headers[d_idx][k] and callable(headers[d_idx][k]["modify"]):
-                    del headers[d_idx][k]["modify"]
+                        raw_dataset[s_name][k] = val
+
+                        # Now also calculate formatted values
+                        valstr = str(val)
+                        if headers[d_idx][k].get("format") is not None:
+                            if callable(headers[d_idx][k]["format"]):
+                                valstr = headers[d_idx][k]["format"](val)
+                            else:
+                                try:
+                                    valstr = headers[d_idx][k]["format"].format(val)
+                                except (ValueError, TypeError):
+                                    pass
+                        formatted_dataset[s_name][k] = valstr
 
                 # Work out max and min value if not given
                 setdmax = False
@@ -321,7 +344,7 @@ class DataTable(BaseModel):
 
                 # Figure out the min / max if not supplied
                 if setdmax or setdmin:
-                    for s_name, v_by_metric in modified_dataset.items():
+                    for s_name, v_by_metric in raw_dataset.items():
                         try:
                             val = float(v_by_metric[k])
                             if math.isfinite(val) and not math.isnan(val):
@@ -343,7 +366,8 @@ class DataTable(BaseModel):
                         if drange < float(headers[d_idx][k]["minrange"]):
                             headers[d_idx][k]["dmax"] = headers[d_idx][k]["dmin"] + float(headers[d_idx][k]["minrange"])
 
-            modified_data.append(modified_dataset)
+            raw_data.append(raw_dataset)
+            formatted_data.append(formatted_dataset)
 
         # Collect settings for shared keys
         shared_keys = defaultdict(lambda: dict())
@@ -372,17 +396,24 @@ class DataTable(BaseModel):
 
                 headers_in_order[headers[d_idx][k]["placement"]].append((d_idx, k))
 
-        # Skip any data that is not used in the table
-        # Would be ignored for making the table anyway, but can affect whether a violin plot is used
-        for d_idx, dataset in enumerate(modified_data):
-            for s_name in list(dataset.keys()):
-                if not any(h in data[d_idx][s_name].keys() for h in headers[d_idx]):
-                    del data[d_idx][s_name]
+        # # Skip any data that is not used in the table
+        # # Would be ignored for making the table anyway, but can affect whether a violin plot is used
+        # for d_idx, dataset in enumerate(raw_data):
+        #     for s_name in list(dataset.keys()):
+        #         if not any(h in data[d_idx][s_name].keys() for h in headers[d_idx]):
+        #             del raw_data[d_idx][s_name]
+
+        # Remove callable headers that are not compatible with JSON
+        headers = [
+            {metric: {k: v for k, v in d.items() if k not in ["modify", "format"]} for metric, d in h.items()}
+            for h in headers
+        ]
 
         # Assign to class
         return DataTable(
             id=id,
-            data=modified_data,
+            raw_data=raw_data,
+            formatted_data=formatted_data,
             headers_in_order=dict(headers_in_order),
             headers=headers,
             pconfig=pconfig,

@@ -66,7 +66,7 @@ class DatasetModel(BaseDatasetModel):
             full_metric_id = header.rid
 
             value_by_sample = dict()
-            for s_name, val_by_metric in dt.data[idx].items():
+            for s_name, val_by_metric in dt.raw_data[idx].items():
                 v = val_by_metric.get(metric_name)
 
                 # Take non-empty values for the violin

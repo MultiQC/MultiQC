@@ -37,7 +37,7 @@ def make_table(
     if table_title is None:
         table_title = dt.id.replace("_", " ").title()
 
-    for idx, k, header in dt.get_headers_in_order():
+    for idx, metric, header in dt.get_headers_in_order():
         rid = header.rid
 
         # Build the table header cell
@@ -80,7 +80,7 @@ def make_table(
           <td>{header.namespace}</td>
           <td>{header.title}</td>
           <td>{header.description}</td>
-          <td><code>{k}</code></td>
+          <td><code>{metric}</code></td>
           <td>{header.shared_key or ""}</td>
         </tr>"""
 
@@ -105,23 +105,15 @@ def make_table(
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for s_name, samp in dt.data[idx].items():
-            if k in samp:
-                val = samp[k]
+        for s_name in dt.raw_data[idx].keys():
+            if metric in dt.raw_data[idx][s_name]:
+                val = dt.raw_data[idx][s_name][metric]
+                valstring = dt.formatted_data[idx][s_name][metric]
                 if val is None:
                     continue
 
                 kname = f"{header.namespace}_{rid}"
                 raw_vals[s_name][kname] = val
-
-                # Try parse as int or float
-                if str(val).isdigit():
-                    val = int(val)
-                else:
-                    try:
-                        val = float(val)
-                    except ValueError:
-                        pass
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     try:
@@ -139,15 +131,6 @@ def make_table(
                         percentage = 0
                 else:
                     percentage = 100
-
-                # Try applying format
-                if header.format is not None:
-                    try:
-                        valstring = header.format.format(val)
-                    except ValueError:
-                        valstring = str(val)
-                else:
-                    valstring = str(val)
 
                 # This is horrible, but Python locale settings are worse
                 if config.thousandsSep_format is None:
@@ -213,7 +196,7 @@ def make_table(
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
+                    print(f"Value {val} is not hashable for table {dt.id}, column {metric}, sample {s_name}")
 
                 # Categorical background colours supplied
                 if hashable and val in header.bgcols.keys():
@@ -226,7 +209,7 @@ def make_table(
                 elif hashable and header.scale:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
-                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{k}"')
+                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{metric}"')
                         )
                     else:
                         col = ""
@@ -255,7 +238,7 @@ def make_table(
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug(f"Removing header {k} from table, as no data")
+            logger.debug(f"Removing header {metric} from table, as no data")
 
     #
     # Put everything together
@@ -373,8 +356,8 @@ def make_table(
         html += f"<tr{row_hidden}>"
         # Sample name row header
         html += f'<th class="rowheader" data-original-sn="{s_name}">{s_name}</th>'
-        for k in t_headers:
-            html += t_rows[s_name].get(k, empty_cells[k])
+        for metric in t_headers:
+            html += t_rows[s_name].get(metric, empty_cells[metric])
         html += "</tr>"
     html += "</tbody></table></div>"
     if len(t_rows) > 10 and config.collapse_tables:
