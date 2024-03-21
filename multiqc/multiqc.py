@@ -510,7 +510,7 @@ def run(
             sys_exit_code=1,
         )
 
-    console = _init(
+    _init(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -603,7 +603,7 @@ def run(
 
     if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:
-            console.print(
+            log.rich_console.print(
                 "[blue]|           multiqc[/] | "
                 "Flat-image plots used. Disable with '--interactive'. "
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
@@ -662,25 +662,15 @@ def _init(
     no_ansi=False,
     custom_css_files=(),
     **kwargs,
-) -> rich.console.Console:
+):
     """
     Set up logging, load config and set up key variables.
     """
     report.init()
 
     # Set up logging
-    log_level = "DEBUG" if verbose > 0 else "INFO"
-    if quiet:
-        log_level = "WARNING"
-        config.quiet = True
-    log.init_log(logger, log_level=log_level, no_ansi=no_ansi)
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_terminal=util_functions.force_term_colors(),
-        color_system=None if no_ansi else "auto",
-    )
-    console.print(
+    log.init_log(logger, verbose=verbose, quiet=quiet, no_ansi=no_ansi)
+    log.rich_console.print(
         f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug(f"This is MultiQC v{config.version}")
@@ -840,7 +830,6 @@ def _init(
         )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
-    return console
 
 
 def _file_search(
@@ -1094,12 +1083,7 @@ def _run_modules(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            console = rich.console.Console(
-                stderr=True,
-                force_terminal=util_functions.force_term_colors(),
-                color_system=None if config.no_ansi else "auto",
-            )
-            console.print(
+            log.rich_console.print(
                 rich.panel.Panel(
                     CustomTraceback(),
                     title=f"Oops! The '[underline]{this_module}[/]' MultiQC module broke...",
