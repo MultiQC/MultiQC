@@ -312,19 +312,26 @@ class DataTable(BaseModel):
                             try:
                                 val = headers[d_idx][k]["modify"](val)
                             except Exception as e:  # User-provided modify function can raise any exception
-                                logger.debug(f"Error modifying table value {k} : {val} - {e}")
+                                logger.error(f"Error modifying table value '{k}' {val}: {e}")
                         raw_dataset[s_name][k] = val
 
                         # Now also calculate formatted values
                         valstr = str(val)
-                        if headers[d_idx][k].get("format") is not None:
-                            if callable(headers[d_idx][k]["format"]):
-                                valstr = headers[d_idx][k]["format"](val)
+                        fmt = headers[d_idx][k].get("format")
+                        if fmt is not None:
+                            if callable(fmt):
+                                try:
+                                    valstr = fmt(val)
+                                except Exception as e:
+                                    logger.error(f"Error applying format to table value '{k}' {val}: {e}")
                             else:
                                 try:
-                                    valstr = headers[d_idx][k]["format"].format(val)
-                                except (ValueError, TypeError):
-                                    pass
+                                    valstr = fmt.format(val)
+                                except Exception as e:
+                                    logger.error(
+                                        f"Error applying format string '{fmt}' to table value '{k}' {val}: {e}. "
+                                        f"Check if your format string is correct."
+                                    )
                         formatted_dataset[s_name][k] = valstr
 
                 # Work out max and min value if not given
