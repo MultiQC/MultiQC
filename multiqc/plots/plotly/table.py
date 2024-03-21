@@ -108,6 +108,9 @@ def make_table(
         for s_name, samp in dt.data[idx].items():
             if k in samp:
                 val = samp[k]
+                if val is None:
+                    continue
+
                 kname = f"{header.namespace}_{rid}"
                 raw_vals[s_name][kname] = val
 
