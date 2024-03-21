@@ -4,9 +4,9 @@ https://github.com/brentp/goleft/tree/master/indexcov
 """
 
 
-import collections
+from collections import defaultdict
 import logging
-from typing import Optional
+from typing import Optional, Dict
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse ROC data
-        self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
+        self.roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             self.parse_roc_plot_data(f)
             self.add_data_source(f)
