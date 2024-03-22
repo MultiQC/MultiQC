@@ -337,7 +337,7 @@ def get_filelist(run_module_names):
     for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
         if "skipped_" in key and file_search_stats[key] > 0:
             summaries.append(f"{key}: {file_search_stats[key]}")
-    logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
+    logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
 def search_file(pattern, f, module_key):
