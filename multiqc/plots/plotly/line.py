@@ -32,11 +32,7 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    p = LinePlot(pconfig, lists_of_lines)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return LinePlot(pconfig, lists_of_lines)
 
 
 @dataclasses.dataclass

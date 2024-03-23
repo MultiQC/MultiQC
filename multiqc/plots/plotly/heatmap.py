@@ -26,11 +26,7 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(rows, pconfig, xcats, ycats)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return HeatmapPlot(rows, pconfig, xcats, ycats)
 
 
 @dataclasses.dataclass
@@ -300,16 +296,16 @@ class HeatmapPlot(Plot):
             <div class="mqc_hcplot_range_sliders">
                 <div>
                     <label for="{self.id}_range_slider_min_txt">Min:</label>
-                    <input id="{self.id}_range_slider_min_txt" type="number" class="form-control" 
+                    <input id="{self.id}_range_slider_min_txt" type="number" class="form-control"
                         value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_min" type="range" 
+                    <input id="{self.id}_range_slider_min" type="range"
                         value="{self.min}" data-target="{self.id}" data-minmax="min" min="{self.min}" max="{self.max}" step="any" />
                 </div>
                 <div style="margin-left: 30px;">
                     <label for="{self.id}_range_slider_max_txt">Max:</label>
-                    <input id="{self.id}_range_slider_max_txt" type="number" class="form-control" 
+                    <input id="{self.id}_range_slider_max_txt" type="number" class="form-control"
                         value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" />
-                    <input id="{self.id}_range_slider_max" type="range" 
+                    <input id="{self.id}_range_slider_max" type="range"
                         value="{self.max}" data-target="{self.id}" data-minmax="max" min="{self.min}" max="{self.max}" step="any" />
                 </div>
             </div>
