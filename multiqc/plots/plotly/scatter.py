@@ -24,11 +24,7 @@ def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlot(pconfig, points_lists)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ScatterPlot(pconfig, points_lists)
 
 
 @dataclasses.dataclass

@@ -17,13 +17,9 @@ logger = logging.getLogger(__name__)
 
 def plot(dts: List[DataTable], show_table_by_default=False) -> str:
     """
-    Build and add the plot data to the report, return an HTML wrapper.
+    Build and add the plot data to the report, return the ViolinPlot
     """
-    p = ViolinPlot.from_dt(dts, show_table_by_default)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ViolinPlot.from_dt(dts, show_table_by_default)
 
 
 @dataclasses.dataclass

@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import markdown
 
+from multiqc.plots.plotly.plot import Plot as PlotABC
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -282,6 +283,11 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
+        if isinstance(plot, PlotABC):
+            plot_html = plot.add_to_report(report)
+        else:
+            plot_html = plot
+
         self.sections.append(
             {
                 "name": name,
@@ -289,10 +295,10 @@ class BaseMultiqcModule:
                 "description": description,
                 "comment": comment,
                 "helptext": helptext,
-                "plot": plot,
+                "plot": plot_html,
                 "content": content,
                 "print_section": any(
-                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content]]
+                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot_html, content]]
                 ),
             }
         )

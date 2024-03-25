@@ -32,16 +32,12 @@ def plot(
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = BarPlot(
+    return BarPlot(
         pconfig,
         cats_lists,
         samples_lists,
         max_n_samples=max([len(samples) for samples in samples_lists]),
     )
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
 
 
 @dataclasses.dataclass
