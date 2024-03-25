@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
+def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -32,11 +32,7 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    p = LinePlot(pconfig, lists_of_lines)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return LinePlot(pconfig, lists_of_lines)
 
 
 @dataclasses.dataclass

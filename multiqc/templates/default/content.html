@@ -56,6 +56,7 @@ the output from each module and print it in sections.
                 <div class="well">{{ s['helptext'] }}</div>
               </div>
             {% endif %}
+            {{ s['content_before_plot'] if s['content_before_plot'] }}
             {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}
             {{ s['content'] if s['content'] }}
 

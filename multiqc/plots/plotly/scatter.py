@@ -17,18 +17,14 @@ logger = logging.getLogger(__name__)
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
+def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlot(pconfig, points_lists)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ScatterPlot(pconfig, points_lists)
 
 
 @dataclasses.dataclass
