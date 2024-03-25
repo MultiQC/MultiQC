@@ -231,6 +231,7 @@ class BaseMultiqcModule:
         description="",
         comment="",
         helptext="",
+        content_before_plot="",
         plot: Plot = None,
         content="",
         autoformat=True,
@@ -291,10 +292,14 @@ class BaseMultiqcModule:
                 "description": description,
                 "comment": comment,
                 "helptext": helptext,
+                "content_before_plot": content_before_plot,
                 "plot": plot_html,
                 "content": content,
                 "print_section": any(
-                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot_html, content]]
+                    [
+                        n is not None and len(n) > 0
+                        for n in [description, comment, helptext, content_before_plot, plot_html, content]
+                    ]
                 ),
             }
         )
