@@ -289,7 +289,7 @@ and get ordered numerically: `2.0`, `13`); dates in ISO format will be parsed as
 
 If you want to force the X-axis to be treated as plain strings, set `categories=True` in the plot config.
 
-![dates](../../../docs/images/line_plot_dates.png)
+![dates](../../../docs/images/test.png)
 
 ### Switching datasets
 
