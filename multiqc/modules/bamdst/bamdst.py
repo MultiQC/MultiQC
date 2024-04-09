@@ -96,7 +96,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_chromosome_by_sample, "multiqc_bamdst_chromosomes")
 
         self.build_tables(data_by_sample)
-        self._build_per_chrom_plot(data_by_chromosome_by_sample)
+        if data_by_chromosome_by_sample:
+            self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
     def _parse_coverage_report(self, f: Dict) -> Dict:
         """
