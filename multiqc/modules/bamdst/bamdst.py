@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Bamdst """
-
+"""MultiQC module to parse output from Bamdst"""
 
 import logging
 from collections import defaultdict
@@ -352,8 +351,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter contigs
         filt_data_by_chrom_by_sample = self._filter_contigs(data_by_chrom_by_sample)
-        contigs = set.union(*[set(d.keys()) for d in data_by_chrom_by_sample.values()])
-        filt_contigs = set.union(*[set(d.keys()) for d in filt_data_by_chrom_by_sample.values()])
+        contigs = set()
+        for s_name, data_by_chrom in data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                contigs.add(chrom)
+        filt_contigs = set()
+        for s_name, data_by_chrom in filt_data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                filt_contigs.add(chrom)
+
         if contigs == filt_contigs or len(filt_contigs) == 0:
             datasets = [data_by_chrom_by_sample]
             data_labels = None
@@ -372,8 +378,7 @@ class MultiqcModule(BaseMultiqcModule):
                     depth_datasets[-1][s_name][chrom] = d["Avg depth"]
                     cov_datasets[-1][s_name][chrom] = d["Coverage%"]
 
-        num_chroms = max([len(by_chrom.keys()) for by_chrom in depth_datasets[0].values()])
-        if num_chroms > 1:
+        if len(contigs) > 1:
             perchrom_depth_plot = linegraph.plot(
                 depth_datasets,
                 pconfig={
