@@ -194,7 +194,7 @@ class Plot(ABC):
             for axis in self._axis_controlled_by_switches:
                 self.layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
         for idx, dataset in enumerate(self.datasets):
             if n_datasets > 1:
                 dataset.uid += f"_{idx + 1}"
