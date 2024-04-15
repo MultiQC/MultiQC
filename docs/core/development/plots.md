@@ -280,6 +280,15 @@ Plots should always have titles, especially as they can stand by themselves
 when exported. The title should have the format `Modulename: Plot Name`
 :::
 
+### X-axis format
+
+Plotly will try to automatically parse the X-axis values. Strings that look like a
+number will be interpreted as numbers (e.g. `"13"` and `"2.0"` will turn into `13` and `2.0`
+and get ordered numerically: `2.0`, `13`); dates in ISO format will be parsed as datestamps
+(e.g. `"2021-01-01"` will turn into a `datetime` object and ordered chronologically).
+
+If you want to force the X-axis to be treated as plain strings, set `categories=True` in the plot config.
+
 ### Switching datasets
 
 You can also have a single plot with buttons to switch between different
