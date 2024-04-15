@@ -49,7 +49,7 @@ class BaseDataset(ABC):
     def dump_for_javascript(self) -> Dict:
         return {k: v for k, v in self.__dict__.items()}
 
-    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False) -> go.Figure:
         """
         To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
