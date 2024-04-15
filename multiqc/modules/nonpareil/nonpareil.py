@@ -49,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.data_by_sample) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.data_by_sample)} reports")
-        self.write_data_file(self.data_by_sample, "nonpareil")
+        self.write_data_file(self.data_by_sample, "multiqc_nonpareil")
 
         # Add versions
         for s_name, data in self.data_by_sample.items():
