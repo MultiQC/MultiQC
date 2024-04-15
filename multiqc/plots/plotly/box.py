@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 BoxT = List[Union[int, float]]
 
 
-def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
+def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:

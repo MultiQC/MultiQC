@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
+def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -94,7 +94,7 @@ class Dataset(BaseDataset):
                 threshold = 1.0
                 while threshold <= 6.0:
                     n_outliers = np.count_nonzero((x_z_scores > threshold) | (y_z_scores > threshold))
-                    logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
+                    # logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
                     if n_annotated + n_outliers <= MAX_ANNOTATIONS:
                         break
                     # If there are too many outliers, we increase the threshold until we have less than 10

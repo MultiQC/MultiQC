@@ -971,8 +971,9 @@ def run(
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        general_stats_table = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
-        report.general_stats_html = general_stats_table.add_to_report(report)
+        report.general_stats_html = table.plot(
+            report.general_stats_data, report.general_stats_headers, pconfig
+        ).add_to_report(report)
     else:
         config.skip_generalstats = True
 

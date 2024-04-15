@@ -1,4 +1,5 @@
 """Plotly bargraph functionality."""
+
 import copy
 import dataclasses
 import logging
@@ -20,7 +21,7 @@ def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
     pconfig: Dict,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
