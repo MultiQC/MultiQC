@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali",
             href="https://github.com/rhpvorderman/sequali",
             info="Universal sequencing QC",
-            doi="https://zenodo.org/doi/10.5281/zenodo.10822485",
+            doi="10.5281/zenodo.10822485",
         )
 
         versions = set()
