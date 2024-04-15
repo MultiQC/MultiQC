@@ -194,7 +194,7 @@ class Plot(ABC):
             for axis in self._axis_controlled_by_switches:
                 self.layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
         for idx, dataset in enumerate(self.datasets):
             if n_datasets > 1:
                 dataset.uid += f"_{idx + 1}"
@@ -629,10 +629,16 @@ def _dataset_layout(
                                 break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
-        if ysuffix is not None and "{y}" + ysuffix in tt_label:
-            tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
-        if xsuffix is not None and "{x}" + xsuffix in tt_label:
-            tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+        if ysuffix is not None:
+            if "{y}" + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
+            if "{y} " + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y} " + ysuffix, "{y}")
+        if xsuffix is not None:
+            if "{x}" + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+            if "{x} " + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x} " + xsuffix, "{x}")
 
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):
