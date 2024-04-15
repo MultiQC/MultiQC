@@ -1,8 +1,9 @@
-""" MultiQC submodule to parse output from Picard ValidateSamFile """
+"""MultiQC submodule to parse output from Picard ValidateSamFile"""
 
 import logging
 
 from multiqc.plots import table
+from multiqc.plots.plotly.plot import Plot
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -225,16 +226,14 @@ def _add_section_to_report(module, data):
             pass_count += 1
 
     # Add overview note
-    plot_html = []
     note_html = _generate_overview_note(
         pass_count=pass_count, only_warning_count=only_warning_count, error_count=error_count, total_count=len(data)
     )
-    plot_html.append(note_html)
 
     # Add the detailed table, but only if we have something to show
+    plot = None
     if error_count or only_warning_count:
-        table_html = _generate_detailed_table(data)
-        plot_html.append(table_html)
+        plot = _generate_detailed_table(data)
 
     # Finally, add the html to the report as a section
     module.add_section(
@@ -252,7 +251,8 @@ def _add_section_to_report(module, data):
             read [this broadinstitute article](
             https://software.broadinstitute.org/gatk/documentation/article.php?id
             =7571).""",
-        plot="\n".join(plot_html),
+        content_before_plot=note_html,
+        plot=plot,
     )
 
 
@@ -288,7 +288,7 @@ def _get_general_stats_headers():
     return headers
 
 
-def _generate_overview_note(pass_count, only_warning_count, error_count, total_count):
+def _generate_overview_note(pass_count, only_warning_count, error_count, total_count) -> str:
     """Generates and returns the HTML note that provides a summary of validation
     status."""
 
@@ -301,22 +301,15 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     for b in pbars:
         if b[0]:
             note_html.append(
-                '<div class="progress-bar progress-bar-{pbcol}" style="width: {pct}%" '
-                'data-toggle="tooltip" title="{count} {sample} {txt}">{'
-                "count}</div>".format(
-                    pbcol=b[1],
-                    count=int(b[0]),
-                    pct=(b[0] / float(total_count)) * 100.0,
-                    txt=b[2],
-                    sample="samples" if b[0] > 1 else "sample",
-                )
+                f'<div class="progress-bar progress-bar-{b[1]}" style="width: {(b[0] / float(total_count)) * 100.0}%" '
+                f'data-toggle="tooltip" title="{int(b[0])} {"samples" if b[0] > 1 else "sample"} {b[2]}">{int(b[0])}</div>'
             )
     note_html.append("</div>")
 
     return "\n".join(note_html)
 
 
-def _generate_detailed_table(data):
+def _generate_detailed_table(data) -> Plot:
     """
     Generates and returns the HTML table that overviews the details found.
     """
