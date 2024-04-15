@@ -147,3 +147,14 @@ report_section_order:
   fastqc_status_checks:
     order: -1000
 ```
+
+### Showing FastQC status checks
+
+FastQC uses thresholds to mark samples as "pass", "warn" or "fail" for various checks.
+If you prefer the MultiQC module to ignore those thresholds, and use standard MultiQC
+colors for samples instead, use the following config:
+
+```yaml
+fastqc_config:
+  status_checks: false
+```

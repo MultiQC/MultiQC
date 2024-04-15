@@ -32,13 +32,13 @@ from rich.syntax import Syntax
 
 from .modules.base_module import ModuleNoSamplesFound, BaseMultiqcModule
 from .plots import table
-from .plots.plotly.bar import BarPlotModel
-from .plots.plotly.box import BoxPlotModel
-from .plots.plotly.heatmap import HeatmapPlotModel
-from .plots.plotly.line import LinePlotModel
-from .plots.plotly.plot import go, PlotType, BasePlotModel
-from .plots.plotly.scatter import ScatterPlotModel
-from .plots.plotly.violin import ViolinPlotModel
+from .plots.plotly.bar import BarPlot
+from .plots.plotly.box import BoxPlot
+from .plots.plotly.heatmap import HeatmapPlot
+from .plots.plotly.line import LinePlot
+from .plots.plotly.plot import go, PlotType, Plot
+from .plots.plotly.scatter import ScatterPlot
+from .plots.plotly.violin import ViolinPlot
 from .utils import config, log, megaqc, plugin_hooks, report, software_versions, strict_helpers, util_functions
 from .utils.util_functions import strtobool
 
@@ -343,7 +343,7 @@ def load(analysis_dir, *args, **kwargs) -> RunResult:
     # Try find multiqc_data.json in the given directory and load it into the report.
     json_path = Path(analysis_dir) / "multiqc_data.json"
     if json_path.exists():
-        _init(None, *args, **kwargs)
+        _init_config(None, *args, **kwargs)
         logger.info(f"Loading data from {json_path}")
         with json_path.open("r") as f:
             data = json.load(f)
@@ -406,24 +406,24 @@ def list_plots() -> List[str]:
     )
 
 
-def _load_plot(dump: Dict) -> BasePlotModel:
+def _load_plot(dump: Dict) -> Plot:
     """
     Load a plot and datasets from a JSON dump.
     """
     plot_type = PlotType(dump["plot_type"])
     dump["layout"] = go.Layout(dump["layout"])
     if plot_type == PlotType.LINE:
-        return LinePlotModel(**dump)
+        return LinePlot(**dump)
     elif plot_type == PlotType.BAR:
-        return BarPlotModel(**dump)
+        return BarPlot(**dump)
     elif plot_type == PlotType.BOX:
-        return BoxPlotModel(**dump)
+        return BoxPlot(**dump)
     elif plot_type == PlotType.SCATTER:
-        return ScatterPlotModel(**dump)
+        return ScatterPlot(**dump)
     elif plot_type == PlotType.HEATMAP:
-        return HeatmapPlotModel(**dump)
+        return HeatmapPlot(**dump)
     elif plot_type == PlotType.VIOLIN:
-        return ViolinPlotModel(**dump)
+        return ViolinPlot(**dump)
     else:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
 
@@ -510,7 +510,7 @@ def run(
             sys_exit_code=1,
         )
 
-    console = _init(
+    console = _init_config(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -623,7 +623,7 @@ def run(
     return RunResult(sys_exit_code=sys_exit_code)
 
 
-def _init(
+def _init_config(
     analysis_dir,
     dirs=False,
     dirs_depth=None,
@@ -799,7 +799,6 @@ def _init(
         if "png" not in config.export_plot_formats:
             config.export_plot_formats.append("png")
     if make_pdf:
-        config.make_pdf = True
         config.template = "simple"
     if no_megaqc_upload:
         config.megaqc_upload = False

@@ -1,4 +1,4 @@
-""" MultiQC functions to plot a linegraph """
+"""MultiQC functions to plot a linegraph"""
 
 import inspect
 import logging
@@ -47,7 +47,7 @@ def plot(data: Union[List[Dict[str, PointT]], Dict[str, PointT]], pconfig=None):
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
         data = [data]
-    if "data_labels" in pconfig:
+    if pconfig.get("data_labels"):
         if len(pconfig["data_labels"]) != len(data):
             raise ValueError(
                 f"Length of data_labels does not match the number of datasets. "

@@ -9,19 +9,17 @@ from pydantic import BaseModel
 
 from multiqc.utils import config, util_functions
 from multiqc.plots.table_object import DataTable
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, BasePlotModel
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
 from multiqc.plots.plotly.table import make_table
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False, clean_html_id=True) -> str:
+def plot(dts: List[DataTable], show_table_by_default=False) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    plot = ViolinPlotModel.create(dts, show_table_by_default)
-
-    return plot.add_to_report(clean_html_id=clean_html_id)
+    return ViolinPlot.create(dts, show_table_by_default)
 
 
 class XAxis(BaseModel):
@@ -265,11 +263,13 @@ class DatasetModel(BaseDatasetModel):
         is_log=False,
         is_pct=False,
         add_scatter=True,
-    ):
+    ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
         """
         metrics = [m for m in self.metrics if not self.header_by_metric[m].hidden]
+        if len(metrics) == 0:
+            return go.Figure(layout=layout)
 
         layout = copy.deepcopy(layout)
         layout.grid.rows = len(metrics)
@@ -378,7 +378,7 @@ class DatasetModel(BaseDatasetModel):
         util_functions.write_data_file(data, self.uid)
 
 
-class ViolinPlotModel(BasePlotModel):
+class ViolinPlot(Plot):
     datasets: List[DatasetModel]
     violin_height: int = VIOLIN_HEIGHT  # single violin height
     extra_height: int = EXTRA_HEIGHT  # extra space for the title and footer
@@ -392,11 +392,11 @@ class ViolinPlotModel(BasePlotModel):
     def create(
         dts: List[DataTable],
         show_table_by_default: bool = False,
-    ) -> "ViolinPlotModel":
+    ) -> "ViolinPlot":
         assert len(dts) > 0
         main_table_dt = dts[0]  # used for the table
 
-        model = BasePlotModel.initialize(
+        model = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=main_table_dt.pconfig,
             n_datasets=len(dts),
@@ -458,7 +458,7 @@ class ViolinPlotModel(BasePlotModel):
                     "Will render only a violin plot instead of the table"
                 )
 
-        return ViolinPlotModel(
+        return ViolinPlot(
             **model.__dict__,
             no_violin=no_violin,
             show_table=show_table,

@@ -1,7 +1,6 @@
-""" MultiQC report module. Holds the output from each
+"""MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
-helper functions to generate markup for report. """
-
+helper functions to generate markup for report."""
 
 import fnmatch
 import inspect
@@ -26,7 +25,6 @@ from . import config
 from .util_functions import replace_defaultdicts
 
 logger = config.logger
-
 
 # Uninitialised global variables for static typing
 tmp_dir: str

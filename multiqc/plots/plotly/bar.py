@@ -1,4 +1,5 @@
 """Plotly bargraph functionality."""
+
 import copy
 import logging
 from collections import defaultdict
@@ -9,7 +10,13 @@ import plotly.graph_objects as go
 import spectra
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, split_long_string, BasePlotModel
+from multiqc.plots.plotly.plot import (
+    PlotType,
+    BaseDatasetModel,
+    Plot,
+    BarPlotModel,
+    split_long_string,
+)
 from multiqc.utils import util_functions, config
 
 logger = logging.getLogger(__name__)
@@ -19,7 +26,7 @@ def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
     pconfig: Dict,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
@@ -31,13 +38,12 @@ def plot(
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    plot = BarPlotModel.create(
+    return BarPlot.create(
         pconfig=pconfig,
         cats_lists=cats_lists,
         samples_lists=samples_lists,
         max_n_samples=max([len(samples) for samples in samples_lists]),
     )
-    return plot.add_to_report()
 
 
 class DatasetModel(BaseDatasetModel):
@@ -116,7 +122,7 @@ class DatasetModel(BaseDatasetModel):
         util_functions.write_data_file(val_by_cat_by_sample, self.uid)
 
 
-class BarPlotModel(BasePlotModel):
+class BarPlot(Plot):
     datasets: List[DatasetModel]
 
     @staticmethod
@@ -129,7 +135,7 @@ class BarPlotModel(BasePlotModel):
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        model = BasePlotModel.initialize(
+        model = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_datasets=len(cats_lists),
@@ -308,4 +314,4 @@ class BarPlotModel(BasePlotModel):
                 # But reversing the legend so the largest bars are still on the top
                 model.layout.legend.traceorder = "reversed"
 
-        return BarPlotModel(**model.__dict__)
+        return BarPlot(**model.__dict__)
