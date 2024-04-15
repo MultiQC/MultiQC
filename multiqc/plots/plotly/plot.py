@@ -258,6 +258,11 @@ class Plot(ABC):
             html = self.interactive_plot(report)
             if config.export_plots:
                 self.flat_plot()
+
+        for dataset in self.datasets:
+            if self.id != "general_stats_table":
+                self.save_data_file(dataset)
+
         return html
 
     def interactive_plot(self, report) -> str:
@@ -301,9 +306,6 @@ class Plot(ABC):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.pconfig.get("save_data_file", True) and self.id != "general_stats_table":
-                self.save_data_file(dataset)
-
             html += self._fig_to_static_html(
                 self._make_flat_fig(dataset),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
@@ -455,16 +457,18 @@ class Plot(ABC):
         # Save the plot to the data directory if export is requested
         if config.export_plots:
             for file_ext in config.export_plot_formats:
-                plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
-                plot_fn.parent.mkdir(parents=True, exist_ok=True)
+                plot_path = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
+                plot_path.parent.mkdir(parents=True, exist_ok=True)
+                short_path = Path(config.plots_dir_name) / file_ext / f"{uid}.{file_ext}"
+                logger.debug(f"Writing plot to {short_path}")
                 if file_ext == "svg":
                     # Cannot add logo to SVGs
-                    fig.write_image(plot_fn, **write_kwargs)
+                    fig.write_image(plot_path, **write_kwargs)
                 else:
                     img_buffer = io.BytesIO()
                     fig.write_image(img_buffer, **write_kwargs)
                     img_buffer = Plot.add_logo(img_buffer, format=file_ext)
-                    with open(plot_fn, "wb") as f:
+                    with open(plot_path, "wb") as f:
                         f.write(img_buffer.getvalue())
                     img_buffer.close()
 
