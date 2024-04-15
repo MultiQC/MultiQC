@@ -17,7 +17,7 @@ def plot(
     pconfig: Dict,
     xcats: Optional[List[str]] = None,
     ycats: Optional[List[str]] = None,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -26,11 +26,7 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(rows, pconfig, xcats, ycats)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return HeatmapPlot(rows, pconfig, xcats, ycats)
 
 
 @dataclasses.dataclass

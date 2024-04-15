@@ -1,4 +1,5 @@
 """Plotly bargraph functionality."""
+
 import copy
 import dataclasses
 import logging
@@ -20,7 +21,7 @@ def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
     pconfig: Dict,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
@@ -32,16 +33,12 @@ def plot(
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = BarPlot(
+    return BarPlot(
         pconfig,
         cats_lists,
         samples_lists,
         max_n_samples=max([len(samples) for samples in samples_lists]),
     )
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
 
 
 @dataclasses.dataclass

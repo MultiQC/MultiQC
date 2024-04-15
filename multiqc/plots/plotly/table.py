@@ -2,13 +2,14 @@ import logging
 from collections import defaultdict
 from typing import Tuple, Optional, List
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
 from multiqc.utils import config, mqc_colour, util_functions, report
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable]) -> str:
+def plot(dt: List[DataTable]) -> Plot:
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)

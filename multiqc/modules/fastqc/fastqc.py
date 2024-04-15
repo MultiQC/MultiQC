@@ -964,13 +964,15 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Percentage of Total Sequences",
         }
 
+        plot = None
+        content = None
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data.values()]) < 1:
-            plot_html = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(
+            content = '<div class="alert alert-info">{} samples had less than 1% of reads made up of overrepresented sequences</div>'.format(
                 len(data)
             )
         else:
-            plot_html = bargraph.plot(data, cats, pconfig)
+            plot = bargraph.plot(data, cats, pconfig)
 
         self.add_section(
             name="Overrepresented sequences by sample",
@@ -998,7 +1000,8 @@ class MultiqcModule(BaseMultiqcModule):
             to the end of the file. It is therefore possible that a sequence which is overrepresented
             but doesn't appear at the start of the file for some reason could be missed by this module._
             """,
-            plot=plot_html,
+            plot=plot,
+            content=content,
         )
 
         # Add a table of the top overrepresented sequences
@@ -1118,10 +1121,12 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             )
 
+        plot = None
+        content = None
         if len(data) > 0:
-            plot_html = linegraph.plot(data, pconfig)
+            plot = linegraph.plot(data, pconfig)
         else:
-            plot_html = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
+            content = '<div class="alert alert-info">No samples found with any adapter contamination > 0.1%</div>'
 
         # Note - colours are messy as we've added adapter names here. Not
         # possible to break down pass / warn / fail for each adapter, which
@@ -1147,7 +1152,8 @@ class MultiqcModule(BaseMultiqcModule):
             right through to the end of the read so the percentages you see will only
             increase as the read length goes on._
             """,
-            plot=plot_html,
+            plot=plot,
+            content=content,
         )
 
     def status_heatmap(self):
