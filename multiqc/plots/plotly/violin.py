@@ -212,13 +212,13 @@ class Dataset(BaseDataset):
         is_log=False,
         is_pct=False,
         add_scatter=True,
-    ) -> Optional[go.Figure]:
+    ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
         """
         metrics = [m for m in self.metrics if not self.header_by_metric[m].get("hidden", False)]
         if len(metrics) == 0:
-            return None
+            return go.Figure(layout=layout)
 
         layout = copy.deepcopy(layout)
         layout.grid.rows = len(metrics)

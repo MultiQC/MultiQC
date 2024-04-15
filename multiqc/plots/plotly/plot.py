@@ -49,7 +49,7 @@ class BaseDataset(ABC):
     def dump_for_javascript(self) -> Dict:
         return {k: v for k, v in self.__dict__.items()}
 
-    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False) -> Optional[go.Figure]:
+    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False) -> go.Figure:
         """
         To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
@@ -306,37 +306,29 @@ class Plot(ABC):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            fig = self._make_flat_fig(dataset)
-            if fig is not None:
-                html += self._fig_to_static_html(
-                    fig,
-                    active=ds_idx == 0 and not self.p_active and not self.l_active,
-                    uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
-                )
+            html += self._fig_to_static_html(
+                self._make_flat_fig(dataset),
+                active=ds_idx == 0 and not self.p_active and not self.l_active,
+                uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+            )
             if self.add_pct_tab:
-                fig = self._make_flat_fig(dataset, is_pct=True)
-                if fig is not None:
-                    html += self._fig_to_static_html(
-                        fig,
-                        active=ds_idx == 0 and self.p_active,
-                        uid=f"{dataset.uid}-pct",
-                    )
+                html += self._fig_to_static_html(
+                    self._make_flat_fig(dataset, is_pct=True),
+                    active=ds_idx == 0 and self.p_active,
+                    uid=f"{dataset.uid}-pct",
+                )
             if self.add_log_tab:
-                fig = self._make_flat_fig(dataset, is_log=True)
-                if fig is not None:
-                    html += self._fig_to_static_html(
-                        fig,
-                        active=ds_idx == 0 and self.l_active,
-                        uid=f"{dataset.uid}-log",
-                    )
+                html += self._fig_to_static_html(
+                    self._make_flat_fig(dataset, is_log=True),
+                    active=ds_idx == 0 and self.l_active,
+                    uid=f"{dataset.uid}-log",
+                )
             if self.add_pct_tab and self.add_log_tab:
-                fig = self._make_flat_fig(dataset, is_pct=True, is_log=True)
-                if fig is not None:
-                    html += self._fig_to_static_html(
-                        fig,
-                        active=ds_idx == 0 and self.p_active and self.l_active,
-                        uid=f"{dataset.uid}-pct-log",
-                    )
+                html += self._fig_to_static_html(
+                    self._make_flat_fig(dataset, is_pct=True, is_log=True),
+                    active=ds_idx == 0 and self.p_active and self.l_active,
+                    uid=f"{dataset.uid}-pct-log",
+                )
 
         html += "</div>"
         return html
@@ -422,7 +414,7 @@ class Plot(ABC):
         Save dataset to disk.
         """
 
-    def _make_flat_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> Optional[go.Figure]:
+    def _make_flat_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> go.Figure:
         """
         Create a Plotly Figure object.
         """
