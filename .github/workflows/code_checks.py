@@ -10,19 +10,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 MODULES_DIR = os.path.join(BASE_DIR, "multiqc", "modules")
 num_errors = 0
 
-must_be_present_after = {
-    "self.add_data_source": "self.find_log_files",
-    "self.write_data_file": "self.find_log_files",
-    "doi=": "super(MultiqcModule, self).__init__(",
-    "self.add_software_version": "self.find_log_files",
-}
+must_be_present_after = [
+    ("self.add_data_source", "self.find_log_files"),
+    ("self.write_data_file", "self.find_log_files"),
+    ("doi=", "super(MultiqcModule, self).__init__("),
+    ("self.add_software_version", "self.find_log_files"),
+]
 
-must_be_avoided_after = {
-    'f["contents_lines"]': "self.find_log_files",
-}
+must_be_avoided_after = [
+    ('f["contents_lines"]', "self.find_log_files", "Use 'f[\"f\"].splitlines()' instead"),
+]
 
 # Check that add_data_source() is called for each module
-for must_be_present, search_term in must_be_present_after.items():
+for must_be_present, search_term in must_be_present_after:
     print(f"[bold black on yellow]  Checking for '{must_be_present}'  [/]")
     missing_files = []
     for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
@@ -37,7 +37,7 @@ for must_be_present, search_term in must_be_present_after.items():
         print(file[1])
     print("\n\n")
 
-for must_be_avoided, search_term in must_be_avoided_after.items():
+for must_be_avoided, search_term, suggestion in must_be_avoided_after:
     print(f"[bold black on yellow]  Checking that '{must_be_avoided}' is not found  [/]")
     found_files = []
     for fn in glob.glob(os.path.join(MODULES_DIR, "*", "*.py")):
@@ -45,7 +45,10 @@ for must_be_avoided, search_term in must_be_avoided_after.items():
             contents = fh.read()
             if search_term in contents and must_be_avoided in contents:
                 relpath = os.path.relpath(fn, MODULES_DIR)
-                found_files.append((relpath, f"Found '{must_be_avoided}' in /{relpath}"))
+                message = f"Found '{must_be_avoided}' in /{relpath}"
+                if suggestion:
+                    message += f" ({suggestion})"
+                found_files.append((relpath, message))
                 num_errors += 1
 
     for file in sorted(found_files, key=lambda x: x[0]):
