@@ -15,15 +15,11 @@ from multiqc.plots.plotly.table import make_table
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False) -> str:
+def plot(dts: List[DataTable], show_table_by_default=False) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    p = ViolinPlot.from_dt(dts, show_table_by_default)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ViolinPlot.from_dt(dts, show_table_by_default)
 
 
 @dataclasses.dataclass

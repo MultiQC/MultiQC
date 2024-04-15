@@ -1,4 +1,4 @@
-""" MultiQC modules base class, contains helper functions """
+"""MultiQC modules base class, contains helper functions"""
 
 from typing import List, Union, Optional, Dict
 
@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import markdown
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -230,7 +231,8 @@ class BaseMultiqcModule:
         description="",
         comment="",
         helptext="",
-        plot="",
+        content_before_plot="",
+        plot: Plot = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -281,6 +283,7 @@ class BaseMultiqcModule:
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
+        plot_html = plot.add_to_report(report) if plot else ""
 
         self.sections.append(
             {
@@ -289,10 +292,14 @@ class BaseMultiqcModule:
                 "description": description,
                 "comment": comment,
                 "helptext": helptext,
-                "plot": plot,
+                "content_before_plot": content_before_plot,
+                "plot": plot_html,
                 "content": content,
                 "print_section": any(
-                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content]]
+                    [
+                        n is not None and len(n) > 0
+                        for n in [description, comment, helptext, content_before_plot, plot_html, content]
+                    ]
                 ),
             }
         )
