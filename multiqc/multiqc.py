@@ -411,7 +411,7 @@ def run(
     )
     logger.debug(f"This is MultiQC v{config.version}")
 
-    _init(
+    _init_config(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -543,7 +543,7 @@ def _set_up_logging(verbose, quiet, no_ansi):
     return console
 
 
-def _init(
+def _init_config(
     analysis_dir,
     dirs=False,
     dirs_depth=None,
