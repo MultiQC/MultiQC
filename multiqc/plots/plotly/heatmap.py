@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, split_long_string, Plot, HeatmapPlotModel
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, split_long_string, Plot
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class HeatmapPlot(Plot):
         pconfig: Dict,
         xcats: Optional[List[str]],
         ycats: Optional[List[str]],
-    ) -> "HeatmapPlotModel":
+    ) -> "HeatmapPlot":
         model = Plot.initialize(plot_type=PlotType.HEATMAP, pconfig=pconfig, n_datasets=1)
 
         if isinstance(rows, list):

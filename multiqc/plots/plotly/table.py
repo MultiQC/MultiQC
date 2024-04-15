@@ -9,10 +9,10 @@ from multiqc.utils import config, mqc_colour, util_functions, report
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable], **kwargs) -> Plot:
+def plot(dt: List[DataTable]) -> Plot:
     from multiqc.plots.plotly import violin
 
-    return violin.plot(dt, show_table_by_default=True, **kwargs)
+    return violin.plot(dt, show_table_by_default=True)
 
 
 def make_table(

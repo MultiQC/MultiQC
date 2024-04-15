@@ -14,7 +14,6 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     BaseDatasetModel,
     Plot,
-    BarPlotModel,
     split_long_string,
 )
 from multiqc.utils import util_functions, config
@@ -131,7 +130,7 @@ class BarPlot(Plot):
         cats_lists: List,
         samples_lists: List,
         max_n_samples: int,
-    ) -> "BarPlotModel":
+    ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
