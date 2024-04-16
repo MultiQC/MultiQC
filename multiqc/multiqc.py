@@ -510,7 +510,7 @@ def run(
             sys_exit_code=1,
         )
 
-    console = _init_config(
+    _init_config(
         analysis_dir=analysis_dir,
         dirs=dirs,
         dirs_depth=dirs_depth,
@@ -603,7 +603,7 @@ def run(
 
     if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:
-            console.print(
+            log.rich_console.print(
                 "[blue]|           multiqc[/] | "
                 "Flat-image plots used. Disable with '--interactive'. "
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
@@ -662,7 +662,7 @@ def _init_config(
     no_ansi=False,
     custom_css_files=(),
     **kwargs,
-) -> rich.console.Console:
+):
     """
     Set up logging, load config and set up key variables.
     """
@@ -829,7 +829,6 @@ def _init_config(
         )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
-    return console
 
 
 def _file_search(

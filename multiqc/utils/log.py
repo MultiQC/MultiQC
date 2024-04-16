@@ -16,8 +16,10 @@ from multiqc.utils import config, util_functions
 log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
+rich_console: rich.console.Console
 
-def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False) -> rich.console.Console:
+
+def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -30,6 +32,8 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False) -> rich.c
     if quiet:
         log_level = "WARNING"
         config.quiet = True
+
+    global rich_console
     rich_console = rich.console.Console(
         stderr=True,
         highlight=False,
