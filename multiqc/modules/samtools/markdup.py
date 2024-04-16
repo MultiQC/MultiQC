@@ -1,5 +1,6 @@
 # coding: utf-8
-""" MultiQC submodule to parse output from Samtools markdup """
+"""MultiQC submodule to parse output from Samtools markdup"""
+
 import json
 import logging
 import re
@@ -28,7 +29,7 @@ class MarkdupReportMixin:
 
         for f in self.find_log_files("samtools/markdup_txt"):
             raw_d = dict()
-            for line in f["contents_lines"]:
+            for line in f["f"].splitlines():
                 if ":" in line:
                     key, value = line.split(":")
                     try:

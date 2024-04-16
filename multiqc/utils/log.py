@@ -30,6 +30,8 @@ def init_log(logger, verbose: int, quiet: bool, no_ansi: bool = False):
     """
     # File for logging
     global log_tmp_dir, log_tmp_fn
+    # Have to create a separate directory for the log file otherwise Windows will complain
+    # about same file used by different processes:
     log_tmp_dir = tempfile.mkdtemp()
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 

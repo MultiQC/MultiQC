@@ -67,7 +67,7 @@ class BaseDatasetModel(BaseModel):
         raise NotImplementedError
 
 
-class BasePlotModel(BaseModel):
+class Plot(BaseModel):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
@@ -216,7 +216,7 @@ class BasePlotModel(BaseModel):
             for axis in axis_controlled_by_switches:
                 layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
         datasets = []
         for idx in range(n_datasets):
             dataset = BaseDatasetModel(
@@ -250,7 +250,7 @@ class BasePlotModel(BaseModel):
             dataset.dconfig = dconfig
             datasets.append(dataset)
 
-        return BasePlotModel(
+        return Plot(
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
@@ -319,6 +319,11 @@ class BasePlotModel(BaseModel):
             html = self.interactive_plot()
             if config.export_plots:
                 self.flat_plot()
+
+        for dataset in self.datasets:
+            if self.id != "general_stats_table":
+                dataset.save_data_file()
+
         return html
 
     def interactive_plot(self) -> str:
@@ -361,11 +366,8 @@ class BasePlotModel(BaseModel):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.pconfig.get("save_data_file", True) and self.id != "general_stats_table":
-                dataset.save_data_file()
-
             html += _fig_to_static_html(
-                self.get_figure(ds_idx, flat=True),
+                self.get_figure(dataset, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
@@ -471,16 +473,18 @@ def _fig_to_static_html(
     # Save the plot to the data directory if export is requested
     if config.export_plots:
         for file_ext in config.export_plot_formats:
-            plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
-            plot_fn.parent.mkdir(parents=True, exist_ok=True)
+            plot_path = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
+            plot_path.parent.mkdir(parents=True, exist_ok=True)
+            short_path = Path(config.plots_dir_name) / file_ext / f"{uid}.{file_ext}"
+            logger.debug(f"Writing plot to {short_path}")
             if file_ext == "svg":
                 # Cannot add logo to SVGs
-                fig.write_image(plot_fn, **write_kwargs)
+                fig.write_image(plot_path, **write_kwargs)
             else:
                 img_buffer = io.BytesIO()
                 fig.write_image(img_buffer, **write_kwargs)
                 img_buffer = add_logo(img_buffer, format=file_ext)
-                with open(plot_fn, "wb") as f:
+                with open(plot_path, "wb") as f:
                     f.write(img_buffer.getvalue())
                 img_buffer.close()
 
@@ -648,10 +652,16 @@ def _dataset_layout(
                                 break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
-        if ysuffix is not None and "{y}" + ysuffix in tt_label:
-            tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
-        if xsuffix is not None and "{x}" + xsuffix in tt_label:
-            tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+        if ysuffix is not None:
+            if "{y}" + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
+            if "{y} " + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y} " + ysuffix, "{y}")
+        if xsuffix is not None:
+            if "{x}" + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+            if "{x} " + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x} " + xsuffix, "{x}")
 
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):

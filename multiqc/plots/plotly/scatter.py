@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, BasePlotModel
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -16,16 +16,14 @@ logger = logging.getLogger(__name__)
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
+def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlotModel.create(pconfig, points_lists)
-
-    return p.add_to_report()
+    return ScatterPlot.create(pconfig, points_lists)
 
 
 class DatasetModel(BaseDatasetModel):
@@ -95,7 +93,7 @@ class DatasetModel(BaseDatasetModel):
                 threshold = 1.0
                 while threshold <= 6.0:
                     n_outliers = np.count_nonzero((x_z_scores > threshold) | (y_z_scores > threshold))
-                    logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
+                    # logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
                     if n_annotated + n_outliers <= MAX_ANNOTATIONS:
                         break
                     # If there are too many outliers, we increase the threshold until we have less than 10
@@ -180,12 +178,12 @@ class DatasetModel(BaseDatasetModel):
         util_functions.write_data_file(data, self.uid)
 
 
-class ScatterPlotModel(BasePlotModel):
+class ScatterPlot(Plot):
     datasets: List[DatasetModel]
 
     @staticmethod
-    def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlotModel":
-        model = BasePlotModel.initialize(
+    def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlot":
+        model = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
             n_datasets=len(points_lists),
@@ -197,4 +195,4 @@ class ScatterPlotModel(BasePlotModel):
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1
 
-        return ScatterPlotModel(**model.__dict__)
+        return ScatterPlot(**model.__dict__)

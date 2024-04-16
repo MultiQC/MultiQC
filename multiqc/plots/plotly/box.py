@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, BasePlotModel
+from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 BoxT = List[Union[int, float]]
 
 
-def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
+def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:
@@ -24,13 +24,11 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = BoxPlotModel.create(
+    return BoxPlot.create(
         pconfig=pconfig,
         list_of_data_by_sample=list_of_data_by_sample,
         max_n_samples=max(len(d) for d in list_of_data_by_sample),
     )
-
-    return p.add_to_report()
 
 
 class DatasetModel(BaseDatasetModel):
@@ -94,7 +92,7 @@ class DatasetModel(BaseDatasetModel):
         util_functions.write_data_file(vals_by_sample, self.uid)
 
 
-class BoxPlotModel(BasePlotModel):
+class BoxPlot(Plot):
     datasets: List[DatasetModel]
 
     @staticmethod
@@ -102,8 +100,8 @@ class BoxPlotModel(BasePlotModel):
         pconfig: Dict,
         list_of_data_by_sample: List[Dict[str, BoxT]],
         max_n_samples: int,
-    ) -> "BoxPlotModel":
-        model = BasePlotModel.initialize(
+    ) -> "BoxPlot":
+        model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             n_datasets=len(list_of_data_by_sample),
@@ -141,4 +139,4 @@ class BoxPlotModel(BasePlotModel):
                 font=dict(color="black"),
             ),
         )
-        return BoxPlotModel(**model.__dict__)
+        return BoxPlot(**model.__dict__)
