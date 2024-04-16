@@ -11,6 +11,8 @@
 
 ### New modules
 
+- **Glimpse**: Add support for Glimpse concordance metrics [#2491](https://github.com/MultiQC/MultiQC/issues/2491)
+
 ### Module updates
 
 - **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
