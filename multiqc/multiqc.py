@@ -669,7 +669,7 @@ def _init_config(
     report.init()
 
     # Set up logging
-    log.init_log(logger, verbose=verbose, quiet=quiet, no_ansi=no_ansi)
+    log.init_log(logger, quiet=quiet, verbose=verbose, no_ansi=no_ansi)
     log.rich_console.print(
         f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
