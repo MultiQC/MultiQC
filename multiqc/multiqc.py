@@ -669,17 +669,7 @@ def _init_config(
     report.init()
 
     # Set up logging
-    log_level = "DEBUG" if verbose > 0 else "INFO"
-    if quiet:
-        log_level = "WARNING"
-        config.quiet = True
-    log.init_log(logger, log_level=log_level, no_ansi=no_ansi)
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_terminal=util_functions.force_term_colors(),
-        color_system=None if no_ansi else "auto",
-    )
+    console = log.init_log(logger, quiet, verbose, no_ansi)
     console.print(
         f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )

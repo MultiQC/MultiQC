@@ -9,6 +9,7 @@ import sys
 import tempfile
 
 import coloredlogs
+import rich.console
 
 from multiqc.utils import config, util_functions
 
@@ -16,7 +17,7 @@ log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 
-def init_log(logger, log_level: str, no_ansi: bool = False):
+def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False) -> rich.console.Console:
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -25,6 +26,17 @@ def init_log(logger, log_level: str, no_ansi: bool = False):
 
     loglevel (str): Determines the level of the log output.
     """
+    log_level = "DEBUG" if verbose > 0 else "INFO"
+    if quiet:
+        log_level = "WARNING"
+        config.quiet = True
+    rich_console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_terminal=util_functions.force_term_colors(),
+        color_system=None if no_ansi else "auto",
+    )
+
     # File for logging
     global log_tmp_dir, log_tmp_fn
     # Have to create a separate directory for the log file otherwise Windows will complain
@@ -76,6 +88,8 @@ def init_log(logger, log_level: str, no_ansi: bool = False):
     file_handler.setLevel(getattr(logging, "DEBUG"))  # always DEBUG for the file
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
+
+    return rich_console
 
 
 def move_tmp_log(logger):
