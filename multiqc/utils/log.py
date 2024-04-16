@@ -19,7 +19,7 @@ log_tmp_fn = "/dev/null"
 rich_console: rich.console.Console
 
 
-def init_log(logger, verbose: int, quiet: bool, no_ansi: bool = False):
+def init_log(logger, verbose: int, quiet: bool, no_ansi: bool = False) -> rich.console.Console:
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
