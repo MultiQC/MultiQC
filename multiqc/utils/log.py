@@ -35,7 +35,7 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
 
     global rich_console
     rich_console = rich.console.Console(
-        stderr=True,
+        stderr=False,
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
@@ -65,7 +65,7 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
             no_ansi = True
 
     # Set up the console logging stream
-    console = logging.StreamHandler()
+    console = logging.StreamHandler(sys.stdout)
     console.setLevel(getattr(logging, log_level))
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
     level_styles["debug"] = {"faint": True}
@@ -94,7 +94,7 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     logger.addHandler(file_handler)
 
 
-def move_tmp_log(logger):
+def move_tmp_log():
     """Move the temporary log file to the MultiQC data directory
     if it exists."""
 

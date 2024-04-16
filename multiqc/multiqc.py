@@ -618,7 +618,7 @@ def run(
 
     if clean_up:
         # Move the log file into the data directory
-        log.move_tmp_log(logger)
+        log.move_tmp_log()
 
     return RunResult(sys_exit_code=sys_exit_code)
 
