@@ -48,28 +48,14 @@ class ErrSplReportMixin:
         return len(data_by_sample)
 
     def summary_table(self, data_by_sample):
-        table_data = {sname: {} for sname in data_by_sample}
-        for sample, d_by_type in data_by_sample.items():
-            vals = list(d_by_type.values())
-            table_data[sample]["numreads"] = sum([m["numreads"] for m in vals])
-            table_data[sample]["covbases"] = sum([m["covbases"] for m in vals])
-            for m in vals:
-                m["size"] = m["endpos"] - m["startpos"] + 1
-            total_size = sum([m["size"] for m in vals])
-            # Average weighted by size. Multiplying by individual weight and dividing by total weight
-            table_data[sample]["coverage"] = sum([m["coverage"] * m["size"] for m in vals]) / total_size
-            table_data[sample]["meandepth"] = sum([m["meandepth"] * m["size"] for m in vals]) / total_size
-            table_data[sample]["meanbaseq"] = sum([m["meanbaseq"] * m["size"] for m in vals]) / total_size
-            table_data[sample]["meanmapq"] = sum([m["meanmapq"] * m["size"] for m in vals]) / total_size
-
         headers = {
             "variants": {
                 "title": "Variants types",
-                "description": "Types of variants (SNPs, indels, both)"
+                "description": "Types of variants (SNPs, indels, both)",
             },
             "bins": {
                 "title": "Bins group",
-                "description": "Bins group number"
+                "description": "Bins group number",
             },
             "val_gt_RR": {
                 "title": "Genotype Reference-Reference",
@@ -185,7 +171,7 @@ class ErrSplReportMixin:
                 "Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across all samples."
             ),
             plot=table.plot(
-                table_data,
+                data_by_sample,
                 copy.deepcopy(headers),
                 pconfig={
                     "id": "glimpse-err-spl-table",

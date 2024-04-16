@@ -12,4 +12,5 @@ the different concordance metrics.
 
 The supported files are generated from the `GLIMPSE2_concordance` command.
 The following files are for the moment supported:
-  - `*.error.spl.txt`
+
+- `*.error.spl.txt`
