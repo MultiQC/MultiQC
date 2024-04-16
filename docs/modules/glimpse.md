@@ -11,3 +11,6 @@ The concordance rates values are displayed in a scatter plot, with the option to
 the different concordance metrics.
 
 The supported files are generated from the `GLIMPSE2_concordance` command.
+The following files are for the moment supported:
+  - `*.error.spl.txt`
+  - `*.error.grp.txt`
