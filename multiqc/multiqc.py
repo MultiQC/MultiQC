@@ -669,8 +669,8 @@ def _init_config(
     report.init()
 
     # Set up logging
-    console = log.init_log(logger, quiet=quiet, verbose=verbose, no_ansi=no_ansi)
-    console.print(
+    log.init_log(logger, quiet=quiet, verbose=verbose, no_ansi=no_ansi)
+    log.rich_console.print(
         f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
     )
     logger.debug(f"This is MultiQC v{config.version}")
@@ -1082,12 +1082,7 @@ def _run_modules(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            console = rich.console.Console(
-                stderr=True,
-                force_terminal=util_functions.force_term_colors(),
-                color_system=None if config.no_ansi else "auto",
-            )
-            console.print(
+            log.rich_console.print(
                 rich.panel.Panel(
                     CustomTraceback(),
                     title=f"Oops! The '[underline]{this_module}[/]' MultiQC module broke...",

@@ -93,8 +93,6 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
-    return rich_console
-
 
 def move_tmp_log(logger):
     """Move the temporary log file to the MultiQC data directory
