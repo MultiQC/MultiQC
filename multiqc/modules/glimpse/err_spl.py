@@ -241,7 +241,7 @@ def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
             variants=str(variants),
             bins=int(bins),
             val_gt_RR=int(val_gt_RR),
-            val_gt_RA=int(val_gt_RA)
+            val_gt_RA=int(val_gt_RA),
             val_gt_AA=int(val_gt_AA),
             filtered_gp=int(filtered_gp),
             RR_hom_matches=int(RR_hom_matches),
