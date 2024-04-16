@@ -367,7 +367,7 @@ class Plot(BaseModel):
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
             html += _fig_to_static_html(
-                self.get_figure(dataset, flat=True),
+                self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
