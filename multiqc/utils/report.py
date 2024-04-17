@@ -9,7 +9,6 @@ import json
 import mimetypes
 import os
 import re
-import sys
 import tempfile
 import time
 from collections import defaultdict
@@ -315,9 +314,8 @@ def get_filelist(run_module_names):
         total=len(searchfiles),
         desc="Searching",
         unit="file",
-        file=sys.stdout,
         disable=config.no_ansi or config.quiet,
-        bar_format=f"{BLUE}| {'searching':>17} {RESET}| " + "{bar:50} {percentage:3.0f}% {n_fmt}/{total_fmt} {desc}",
+        bar_format=f"{BLUE}| {'searching':>17} {RESET}| " + "{bar} {percentage:3.0f}% {n_fmt}/{total_fmt} {desc}",
     ) as pbar:
         for i, sf in enumerate(searchfiles):
             # Update the progress bar description with the file being searched
