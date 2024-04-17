@@ -24,7 +24,6 @@ def plot(
     data: Union[List[Dict], Dict],
     headers: Optional[Union[List[Dict], Dict]] = None,
     pconfig=None,
-    clean_html_id=True,
 ):
     """Helper HTML for a violin plot.
     :param data: A list of data dicts
@@ -59,4 +58,4 @@ def plot(
                 # debugging of modules
                 raise
 
-    return violin.plot(dts, clean_html_id=clean_html_id)
+    return violin.plot(dts)

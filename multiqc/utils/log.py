@@ -56,7 +56,7 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     # Set up the rich console
     global rich_console
     rich_console = rich.console.Console(
-        stderr=True,
+        stderr=False,
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
@@ -124,7 +124,7 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     logger.addHandler(file_handler)
 
 
-def move_tmp_log(logger):
+def move_tmp_log():
     """Move the temporary log file to the MultiQC data directory
     if it exists."""
 
