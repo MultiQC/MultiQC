@@ -10,6 +10,7 @@ import tempfile
 import rich
 from rich.logging import RichHandler
 from rich.theme import Theme
+import rich.jupyter
 
 from multiqc.utils import config, util_functions
 
@@ -52,6 +53,10 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     if not no_ansi:
         if not sys.stderr.isatty() and not util_functions.force_term_colors():
             no_ansi = True
+
+    # Reset margin-bottom to remove the gian gap between lines.
+    # See https://github.com/Textualize/rich/issues/3335 for more context
+    rich.jupyter.JUPYTER_HTML_FORMAT = rich.jupyter.JUPYTER_HTML_FORMAT.replace('style="', 'style="margin-bottom:0px;')
 
     # Set up the rich console
     global rich_console
