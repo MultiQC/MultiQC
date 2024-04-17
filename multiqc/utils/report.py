@@ -15,8 +15,9 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional
 
+import rich
+import rich.progress
 import yaml
-import tqdm
 
 from multiqc.utils import lzstring
 
@@ -299,37 +300,31 @@ def get_filelist(run_module_names):
     for path in config.analysis_dir:
         handle_analysis_path(Path(path))
 
-    # ANSI escape code for dim text
-    if not config.no_ansi:
-        DIM = "\033[2m"
-        BLUE = "\033[34m"
-        RESET = "\033[0m"
-    else:
-        DIM = ""
-        BLUE = ""
-        RESET = ""
-
-    # Set up the tqdm progress bar
-    with tqdm.tqdm(
-        total=len(searchfiles),
-        desc="Searching",
-        unit="file",
+    # Search through collected files
+    console = rich.console.Console(
+        stderr=True,
+        highlight=False,
+        force_interactive=False if config.no_ansi else None,
+        color_system=None if config.no_ansi else "auto",
+    )
+    progress_obj = rich.progress.Progress(
+        "[blue]|[/]      ",
+        rich.progress.SpinnerColumn(),
+        "[blue]{task.description}[/] |",
+        rich.progress.BarColumn(),
+        "[progress.percentage]{task.percentage:>3.0f}%",
+        "[green]{task.completed}/{task.total}",
+        "[dim]{task.fields[s_fn]}",
+        console=console,
         disable=config.no_ansi or config.quiet,
-        bar_format=f"{BLUE}| {'searching':>17} {RESET}| " + "{bar} {percentage:3.0f}% {n_fmt}/{total_fmt} {desc}",
-    ) as pbar:
-        for i, sf in enumerate(searchfiles):
-            # Update the progress bar description with the file being searched
-            if i % 100 == 0:
-                pbar.set_description_str(f"{DIM}{os.path.join(sf[1], sf[0])[-50:]}{RESET}")
-            pbar.update(1)
-
-            # Your file processing logic
+    )
+    with progress_obj as progress:
+        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+        for sf in searchfiles:
+            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
             if not add_file(sf[0], sf[1]):
                 file_search_stats["skipped_no_match"] += 1
-
-        # Clear the description after the loop is complete
-        pbar.set_description_str(f"{'':>50}")
-        pbar.refresh()
+        progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
     if config.profile_runtime:
