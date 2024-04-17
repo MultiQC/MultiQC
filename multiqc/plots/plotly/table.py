@@ -182,13 +182,17 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                                         cmatches[ftype] = True
                                     if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
                                         cmatches[ftype] = True
-                                    if "eq" in cmp and float(cmp["eq"]) == float(val):
+                                    if "eq" in cmp and float(val) == float(cmp["eq"]):
                                         cmatches[ftype] = True
-                                    if "ne" in cmp and float(cmp["ne"]) != float(val):
+                                    if "ne" in cmp and float(val) != float(cmp["ne"]):
                                         cmatches[ftype] = True
-                                    if "gt" in cmp and float(cmp["gt"]) < float(val):
+                                    if "gt" in cmp and float(val) > float(cmp["gt"]):
                                         cmatches[ftype] = True
-                                    if "lt" in cmp and float(cmp["lt"]) > float(val):
+                                    if "lt" in cmp and float(val) < float(cmp["lt"]):
+                                        cmatches[ftype] = True
+                                    if "ge" in cmp and float(val) >= float(cmp["ge"]):
+                                        cmatches[ftype] = True
+                                    if "le" in cmp and float(val) <= float(cmp["le"]):
                                         cmatches[ftype] = True
                                 except Exception:
                                     logger.warning(f"Not able to apply table conditional formatting to '{val}' ({cmp})")
