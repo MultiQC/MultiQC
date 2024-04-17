@@ -19,17 +19,6 @@ log_tmp_fn = "/dev/null"
 rich_console: rich.console.Console
 
 
-def is_running_in_notebook():
-    try:
-        from IPython import get_ipython
-
-        if "IPKernelApp" in get_ipython().config:
-            return True
-    except (ImportError, AttributeError):
-        pass
-    return False
-
-
 def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     """
     Initializes logging.
@@ -51,10 +40,6 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
     )
-    if not is_running_in_notebook():
-        rich_console.print(
-            f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
-        )
 
     # File for logging
     global log_tmp_dir, log_tmp_fn
