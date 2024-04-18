@@ -27,7 +27,7 @@ def get_template_mod():
 PointT = Dict[Union[float, int, str, None], Union[float, int, str, None]]
 
 
-def plot(data: Union[List[Dict[str, PointT]], Dict[str, PointT]], pconfig=None):
+def plot(data: Union[List[Dict[str, PointT]], Dict[str, PointT]], pconfig=None) -> Union[line.LinePlot, str]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs

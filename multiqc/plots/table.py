@@ -24,7 +24,7 @@ def plot(
     data: Union[List[Dict], Dict],
     headers: Optional[Union[List[Dict], Dict]] = None,
     pconfig=None,
-) -> Plot:
+) -> Union[str, Plot]:
     """Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
