@@ -2,6 +2,7 @@ import logging
 from typing import List, Dict, Union, Optional
 
 from multiqc.plots import table_object
+from multiqc.plots.plotly.plot import Plot
 from multiqc.utils import config
 from multiqc.plots.plotly import table
 
@@ -19,7 +20,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
+def plot(
+    data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None
+) -> Union[str, Plot]:
     """Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.

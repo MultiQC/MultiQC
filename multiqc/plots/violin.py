@@ -20,7 +20,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None):
+def plot(
+    data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None
+) -> Union[str, violin.ViolinPlot]:
     """Helper HTML for a violin plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
