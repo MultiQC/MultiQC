@@ -65,7 +65,6 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
-        legacy_windows=True,
         theme=Theme(
             styles={
                 "logging.level.info": "",
