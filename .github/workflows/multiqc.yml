@@ -67,16 +67,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: yezz123/setup-uv@v1
+      - uses: yezz123/setup-uv@v4
 
       - name: Set the VIRTUAL_ENV variable for uv to work
         run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
 
       - name: Install MultiQC
-        run: |
-          # Temporary hack to remove duplicated pip package (hopefully will be addressed in uv or GitHub)
-          rm -rf ${VIRTUAL_ENV}/lib/python3.*/site-packages/pip-23.*
-          uv pip install -e .
+        run: uv pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -166,11 +163,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - uses: yezz123/setup-uv@v1
+      - uses: yezz123/setup-uv@v4
 
       # Install MultiQC
       - name: Install MultiQC
-        run: pip install -e .
+        run: uv pip install .
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
