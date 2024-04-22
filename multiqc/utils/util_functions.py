@@ -1,4 +1,4 @@
-""" MultiQC Utility functions, used in a variety of places. """
+"""MultiQC Utility functions, used in a variety of places."""
 
 import io
 import json
@@ -125,7 +125,7 @@ def write_data_file(
             jsonstr = dump_json(data, indent=4, ensure_ascii=False)
             print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
         elif data_format == "yaml":
-            yaml.dump(data, f, default_flow_style=False)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
