@@ -34,6 +34,10 @@ def plot(
     # Make a datatable object
     dt = table_object.DataTable.create(data, headers, pconfig)
 
+    return plot_dt(dt)
+
+
+def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
     mod = get_template_mod()
     if "table" in mod.__dict__ and callable(mod.table):
         # Collect unique sample names
@@ -44,7 +48,7 @@ def plot(
 
         # noinspection PyBroadException
         try:
-            return mod.table(dt, s_names, pconfig)
+            return mod.table(dt, s_names, dt.pconfig)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive

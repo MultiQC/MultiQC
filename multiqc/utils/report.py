@@ -13,7 +13,7 @@ import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List, Optional, Any
 
 import rich
 import rich.progress
@@ -33,7 +33,7 @@ modules_output: List  # List of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
-saved_raw_data: Dict
+saved_raw_data: Dict[str, Dict[str, Any]]  # Indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Dict[str, Union[float, Dict]]
 file_search_stats: Dict[str, int]

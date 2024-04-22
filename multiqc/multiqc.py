@@ -19,6 +19,7 @@ import sys
 import time
 import json
 import traceback
+from collections import defaultdict
 from importlib.metadata import EntryPoint
 from pathlib import Path
 from typing import Dict, Union, Callable, List, Optional, Tuple
@@ -340,6 +341,10 @@ class _RunError(Exception):
 
 
 def load(analysis_dir, *args, **kwargs) -> RunResult:
+    """
+    Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
+    with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
+    """
     # Try find multiqc_data.json in the given directory and load it into the report.
     json_path = Path(analysis_dir) / "multiqc_data.json"
     if json_path.exists():
@@ -368,7 +373,7 @@ def list_modules() -> List[str]:
     """
     Return a list of the modules that have been loaded.
     """
-    return list(report.data_sources.keys())
+    return [m.name for m in report.modules_output]
 
 
 def list_data_sources() -> List[str]:
@@ -435,6 +440,55 @@ def show_plot(plot_id: str, dataset_id=0, **kwargs) -> go.Figure:
     dump = report.plot_data[plot_id]
     model = _load_plot(dump)
     return model.show(dataset_id=dataset_id, **kwargs)
+
+
+def get_general_stats_data(sample: Optional[str] = None) -> Dict:
+    data = defaultdict(dict)
+    for data_by_sample in report.general_stats_data:
+        for s, val_by_key in data_by_sample.items():
+            if sample and s != sample:
+                continue
+            for key, val in val_by_key.items():
+                if key in data[s]:
+                    print("Duplicated key in general stats")
+                    # TODO: prepend with header.namespace
+                data[s][key] = val
+    if sample:
+        if not data:
+            raise ValueError(f"Sample '{sample}' not found in loaded data. Available samples: {list_samples()}")
+        return data[sample]
+
+    return data
+
+
+def get_module_data(module: Optional[str] = None, sample: Optional[str] = None, key: Optional[str] = None) -> Dict:
+    """
+    Return parsed module data indexed - optionally - by data key, then and sample. Module is either the module
+    name or the anchor.
+    """
+    data_by_module = {}
+    for m in report.modules_output:
+        if module and (m.name != module and m.anchor != module):
+            continue
+
+        module_data = m.saved_raw_data
+        if sample:
+            module_data = {k: v.get(sample, {}) for k, v in module_data.items()}
+        if key:
+            module_data = module_data.get(key, {})
+        elif len(module_data) == 1:  # only one key, flatten
+            module_data = module_data[list(module_data.keys())[0]]
+
+        data_by_module[m.name] = module_data
+
+    if module:
+        if not data_by_module:
+            raise ValueError(
+                f"Module '{module}' not found in loaded data. Available modules: {list(data_by_module.keys())}"
+            )
+        return data_by_module[module]
+
+    return data_by_module
 
 
 def reset():
@@ -661,6 +715,7 @@ def _init_config(
     quiet=False,
     no_ansi=False,
     custom_css_files=(),
+    module_order=(),
     **kwargs,
 ):
     """
@@ -815,6 +870,9 @@ def _init_config(
         config.no_ansi = True
     if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
+    if module_order:
+        config.module_order = module_order
+
     config.kwargs = kwargs  # Plugin command line options
 
     plugin_hooks.mqc_trigger("execution_start")
@@ -887,7 +945,9 @@ def _file_search(
                 report.lint_errors.append(errmsg)
 
     # Get the list of modules we want to run, in the order that we want them
-    run_modules = [m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()]
+    run_modules: List[Dict[str, Dict]] = [
+        m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()
+    ]
     run_modules.extend([{m: {}} for m in config.avail_modules.keys() if m not in mod_keys and m not in run_modules])
     run_modules.extend(
         [

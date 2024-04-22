@@ -1,6 +1,6 @@
 """MultiQC modules base class, contains helper functions"""
 
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Any
 
 import fnmatch
 import io
@@ -103,6 +103,17 @@ class BaseMultiqcModule:
                     self.comment = markdown.markdown(self.comment)
 
         self.sections = list()
+
+        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+
+    @property
+    def saved_raw_data(self):
+        """
+        Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
+        underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
+        their child modules, and we would lose that data.
+        """
+        return self.__saved_raw_data
 
     def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
@@ -618,6 +629,9 @@ class BaseMultiqcModule:
 
         # Save the file
         report.saved_raw_data[fn] = data
+        # Keep also in the module instance, so it's possible to map back data to specific module
+        self.__saved_raw_data[fn] = data
+
         util_functions.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################
