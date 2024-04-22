@@ -157,7 +157,6 @@ jobs:
       - name: Visual Studio Command Prompt tool
         run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
 
-      # Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -165,7 +164,9 @@ jobs:
 
       - uses: yezz123/setup-uv@v4
 
-      # Install MultiQC
+      - name: Set the VIRTUAL_ENV variable for uv to work
+        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
+
       - name: Install MultiQC
         run: uv pip install .
 
