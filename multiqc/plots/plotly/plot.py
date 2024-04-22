@@ -38,20 +38,18 @@ class BaseDataset(ABC):
     Structured version of dataset config dictionary
     """
 
-    plot: "Plot"
+    plot_id: str
     label: str
     uid: str
     dconfig: Dict  # user dataset-specific configuration
-    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unclicked
+    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict
     pct_range: Dict
 
     def dump_for_javascript(self) -> Dict:
-        d = {k: v for k, v in self.__dict__.items()}
-        del d["plot"]
-        return d
+        return {k: v for k, v in self.__dict__.items()}
 
-    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False):
+    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False) -> go.Figure:
         """
         To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
@@ -97,7 +95,7 @@ class Plot(ABC):
         # Per-dataset configurations
         self.datasets: List[BaseDataset] = [
             BaseDataset(
-                self,
+                plot_id=self.id,
                 label=str(i + 1),
                 uid=self.id,
                 dconfig=dict(),
@@ -148,7 +146,7 @@ class Plot(ABC):
             width=width,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="Black", family="Lucida Grande"),
+            font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
             margin=go.layout.Margin(
@@ -184,19 +182,19 @@ class Plot(ABC):
         )
 
         self._axis_controlled_by_switches = self.axis_controlled_by_switches()
-        if self.pconfig.get("xLog"):
-            self.layout.xaxis.type = "log"
+        if self.pconfig.get("xlog", self.pconfig.get("xLog")):
+            self._set_axis_log_scale(self.layout.xaxis)
             if "xaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("xaxis")
-        if self.pconfig.get("yLog"):
-            self.layout.yaxis.type = "log"
+        if self.pconfig.get("ylog", self.pconfig.get("yLog")):
+            self._set_axis_log_scale(self.layout.yaxis)
             if "yaxis" in self._axis_controlled_by_switches:
                 self._axis_controlled_by_switches.remove("yaxis")
         if self.add_log_tab and self.l_active:
             for axis in self._axis_controlled_by_switches:
                 self.layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
         for idx, dataset in enumerate(self.datasets):
             if n_datasets > 1:
                 dataset.uid += f"_{idx + 1}"
@@ -208,14 +206,23 @@ class Plot(ABC):
 
             if not isinstance(dconfig, (str, dict)):
                 logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
-            dconfig = dconfig if isinstance(dconfig, dict) else {"label": dconfig}
-            dataset.label = dconfig.get("name", idx + 1)
-            if "label" in dconfig:
-                dataset.label = dconfig["label"]
-                dconfig["ylab"] = dconfig["label"]
+            dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
+            dataset.label = dconfig.get("name", dconfig.get("label", idx + 1))
+            if "ylab" not in dconfig and "ylab" not in self.pconfig:
+                dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
             dataset.dconfig = dconfig
+
+    @staticmethod
+    def _set_axis_log_scale(axis):
+        axis.type = "log"
+        minval = axis.autorangeoptions["minallowed"]
+        maxval = axis.autorangeoptions["maxallowed"]
+        minval = math.log10(minval) if minval is not None and minval > 0 else None
+        maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+        axis.autorangeoptions["minallowed"] = minval
+        axis.autorangeoptions["maxallowed"] = maxval
 
     @staticmethod
     def axis_controlled_by_switches() -> List[str]:
@@ -249,6 +256,13 @@ class Plot(ABC):
             html = self.flat_plot()
         else:
             html = self.interactive_plot(report)
+            if config.export_plots:
+                self.flat_plot()
+
+        for dataset in self.datasets:
+            if self.id != "general_stats_table":
+                self.save_data_file(dataset)
+
         return html
 
     def interactive_plot(self, report) -> str:
@@ -280,7 +294,7 @@ class Plot(ABC):
                 '<p class="text-info">',
                 "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -292,9 +306,6 @@ class Plot(ABC):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.pconfig.get("save_data_file", True) and self.id != "general_stats_table":
-                self.save_data_file(dataset)
-
             html += self._fig_to_static_html(
                 self._make_flat_fig(dataset),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
@@ -325,7 +336,8 @@ class Plot(ABC):
     def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        data_attrs["pid"] = self.id
+        if "pid" not in data_attrs:
+            data_attrs["pid"] = self.id
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 
@@ -445,16 +457,18 @@ class Plot(ABC):
         # Save the plot to the data directory if export is requested
         if config.export_plots:
             for file_ext in config.export_plot_formats:
-                plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
-                plot_fn.parent.mkdir(parents=True, exist_ok=True)
+                plot_path = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
+                plot_path.parent.mkdir(parents=True, exist_ok=True)
+                short_path = Path(config.plots_dir_name) / file_ext / f"{uid}.{file_ext}"
+                logger.debug(f"Writing plot to {short_path}")
                 if file_ext == "svg":
                     # Cannot add logo to SVGs
-                    fig.write_image(plot_fn, **write_kwargs)
+                    fig.write_image(plot_path, **write_kwargs)
                 else:
                     img_buffer = io.BytesIO()
                     fig.write_image(img_buffer, **write_kwargs)
                     img_buffer = Plot.add_logo(img_buffer, format=file_ext)
-                    with open(plot_fn, "wb") as f:
+                    with open(plot_path, "wb") as f:
                         f.write(img_buffer.getvalue())
                     img_buffer.close()
 
@@ -556,37 +570,79 @@ def _dataset_layout(
 
     # Format on-hover tooltips
     ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
-    if ylabformat and "%" in ylabformat:
-        ysuffix = "%"
-
     xsuffix = pconfig.get("xsuffix")
+
+    # Options deprecated in 1.21
+    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
+    if ysuffix is None and ylabformat:
+        if "}" in ylabformat:
+            ysuffix = ylabformat.split("}")[1]
     xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
-    if xlabformat and "%" in xlabformat:
-        xsuffix = "%"
+    if xsuffix is None and xlabformat:
+        if "}" in xlabformat:
+            xsuffix = xlabformat.split("}")[1]
+
+    # Set or remove space in known suffixes
+    KNOWN_SUFFIXES = ["%", "x", "X", "k", "M", " bp", " kbp", " Mbp"]
+    for suf in KNOWN_SUFFIXES:
+        if ysuffix is not None and ysuffix == suf.strip():
+            ysuffix = suf
+        if xsuffix is not None and xsuffix == suf.strip():
+            xsuffix = suf
+
+    # Set % suffix from ylab if it's in form like "% reads"
+    ylab = pconfig.get("ylab")
+    xlab = pconfig.get("xlab")
+    if ysuffix is None and ylab:
+        if "%" in ylab or "percentage" in ylab.lower():
+            ysuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if ylab.endswith(f" ({suf.strip()})"):
+                ysuffix = suf
+    if xsuffix is None and xlab:
+        if "%" in xlab or "percentage" in xlab.lower():
+            xsuffix = "%"
+        for suf in KNOWN_SUFFIXES:
+            if xlab.endswith(f" ({suf.strip()})"):
+                xsuffix = suf
 
     if "tt_label" in pconfig:
-        # clean label, add missing <br> into the beginning, and populate tt_suffix if missing
+        # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig["tt_label"]
         tt_label = _clean_config_tt_label(tt_label)
 
-        # if "%" character is inside the Y label, add suffix to the Y ticks as well
-        parts = tt_label.split("%{")
-        for part in parts:
-            if ysuffix is None and part.startswith("y") and "}" in part:
-                ysuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in ysuffix:
-                    ysuffix = ysuffix.split(",")[0]
-            elif xsuffix is None and part.startswith("x") and "}" in part:
-                xsuffix = part.split("}")[1].replace("</b>", "").replace(":", "").rstrip()
-                if "," in xsuffix:
-                    xsuffix = xsuffix.split(",")[0]
+        if ysuffix is None or xsuffix is None:
+            # if "%" or other suffix is in the hover label, parse that suffix to add it to the ticks
+            parts = tt_label.split("%{")
+            for part in parts:
+                if ysuffix is None and part.startswith("y") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                ysuffix = suf
+                                break
+                elif xsuffix is None and part.startswith("x") and "}" in part:
+                    info = part.split("}")[1].replace("</b>", "")
+                    info = info.split(":")[0].split(",")[0].strip().split(" ")[0]
+                    if info:
+                        for suf in KNOWN_SUFFIXES:
+                            if info == suf.strip():
+                                xsuffix = suf
+                                break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
-        if ysuffix is not None and "{y}" + ysuffix in tt_label:
-            tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
-        if xsuffix is not None and "{x}" + xsuffix in tt_label:
-            tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+        if ysuffix is not None:
+            if "{y}" + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
+            if "{y} " + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y} " + ysuffix, "{y}")
+        if xsuffix is not None:
+            if "{x}" + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+            if "{x} " + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x} " + xsuffix, "{x}")
 
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):
@@ -600,19 +656,22 @@ def _dataset_layout(
         hovertemplate = None
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    tt_decimals = pconfig.get("tt_decimals", pconfig.get("decimalPlaces"))
-    y_hoverformat = f",.{tt_decimals}f" if tt_decimals is not None else None
+    y_decimals = pconfig.get("tt_decimals", pconfig.get("y_decimals", pconfig.get("decimalPlaces")))
+    y_hoverformat = f",.{y_decimals}f" if y_decimals is not None else None
+
+    x_decimals = pconfig.get("x_decimals")
+    x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
 
     layout = dict(
         title=dict(text=pconfig.get("title")),
         xaxis=dict(
-            hoverformat=None,
+            hoverformat=x_hoverformat,
             ticksuffix=xsuffix or "",
             title=dict(text=pconfig.get("xlab")),
             rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("xFloor"),
-                clipmax=pconfig.get("xCeiling"),
+                clipmin=pconfig.get("x_clipmin", pconfig.get("xFloor")),
+                clipmax=pconfig.get("x_clipmax", pconfig.get("xCeiling")),
                 minallowed=pconfig.get("xmin"),
                 maxallowed=pconfig.get("xmax"),
             ),
@@ -623,8 +682,8 @@ def _dataset_layout(
             title=dict(text=pconfig.get("ylab")),
             rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("yFloor"),
-                clipmax=pconfig.get("yCeiling"),
+                clipmin=pconfig.get("y_clipmin", pconfig.get("yFloor")),
+                clipmax=pconfig.get("y_clipmax", pconfig.get("yCeiling")),
                 minallowed=pconfig.get("ymin"),
                 maxallowed=pconfig.get("ymax"),
             ),

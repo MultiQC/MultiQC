@@ -115,8 +115,7 @@ config = {
     # Customising the plot
     "title": None,                            # Plot title - should be in format "Module Name: Plot Title"
     "ylab": None,                             # Y axis label
-    "ymax": None,                             # Max y limit
-    "ymin": None,                             # Min y limit
+    "ymax": None,                             # Max bar size limit (default is calculated from data)
     "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label
     "xsuffix": "%",                           # Suffix for the x-axis values and labels. Parsed from tt_label by default
     "ysuffix": "%",                           # Suffix for the y-axis values and labels. Parsed from tt_label by default
@@ -245,26 +244,27 @@ pconfig = {
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
     "xlab": None,                # X axis label
     "ylab": None,                # Y axis label
-    "xCeiling": None,            # Maximum value for automatic axis limit (good for percentages)
-    "xFloor": None,              # Minimum value for automatic axis limit
-    "xMinRange": None,           # Minimum range for axis
-    "xmax": None,                # Max x limit
-    "xmin": None,                # Min x limit
-    "xLog": False,               # Use log10 x axis?
-    "yCeiling": None,            # Maximum value for automatic axis limit (good for percentages)
-    "yFloor": None,              # Minimum value for automatic axis limit
-    "yMinRange": None,           # Minimum range for axis
-    "ymax": None,                # Max y limit
-    "ymin": None,                # Min y limit
-    "yLog": False,               # Use log10 y axis?
-    "yPlotBands": None,          # Highlighted background bands
-    "xPlotBands": None,          # Highlighted background bands
-    "yPlotLines": None,          # Highlighted background lines
-    "xPlotLines": None,          # Highlighted background lines
+    "xmax": None,                # Hard max x limit
+    "xmin": None,                # Hard min x limit
+    "ymax": None,                # Hard max y limit
+    "ymin": None,                # Hard min y limit
+    "x_clipmax": None,           # Max value allowed for automatic axis limit
+    "x_clipmin": None,           # Min value allowed for automatic axis limit
+    "y_clipmax": None,           # Max value allowed for automatic axis limit
+    "y_clipmin": None,           # Min value allowed for automatic axis limit
+    "x_minrange": None,          # Min range for x-axis (5 would allow 0..5, but also 15..20, etc.)
+    "y_minrange": None,          # Min range for y-axis (5 would allow 0..5, but also 15..20, etc.)
+    "xlog": False,               # Use log10 for the x-axis
+    "ylog": False,               # Use log10 scale for the y-axis
+    "y_bands": None,             # Horizontal colored background bands
+    "x_bands": None,             # Vertical colored background bands
+    "y_lines": None,             # Extra horizontal lines
+    "x_lines": None,             # Extra vertical lines
     "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
-    "height": 500                # The default height of the plot, in pixels
+    "height": 500,               # The default height of the plot, in pixels
+    "style": "line",             # The style of the line. Can be "line" or "lines+markers"
 }
 html = linegraph.plot(..., pconfig)
 ```
@@ -279,6 +279,15 @@ If left unset the Plot Export panel will call the filename
 Plots should always have titles, especially as they can stand by themselves
 when exported. The title should have the format `Modulename: Plot Name`
 :::
+
+### X-axis format
+
+Plotly will try to automatically parse the X-axis values. Strings that look like a
+number will be interpreted as numbers (e.g. `"13"` and `"2.0"` will turn into `13` and `2.0`
+and get ordered numerically: `2.0`, `13`); dates in ISO format will be parsed as datestamps
+(e.g. `"2021-01-01"` will turn into a `datetime` object and ordered chronologically).
+
+If you want to force the X-axis to be treated as plain strings, set `categories=True` in the plot config.
 
 ### Switching datasets
 
@@ -337,12 +346,11 @@ pconfig = {
     "extra_series": {
         "name": "x = y",
         "data": [[0, 0], [max_x_val, max_y_val]],
-        "dashStyle": "Dash",
-        "lineWidth": 1,
+        "dash": "dash",
+        "width": 1,
         "color": "#000000",
         "marker": {"enabled": False},
-        "enableMouseTracking": False,
-        "showInLegend": False,
+        "showlegend": False,
     }
 }
 html = linegraph.plot(data, pconfig)
@@ -365,31 +373,7 @@ data = {
 html = box.plot(data, pconfig=...)
 ```
 
-It is also possible to pass a dictionary of statistics directly, instead of a list:
-
-```python
-data = {
-    "sample 1": {
-        "min": 1,
-        "q1": 3,
-        "median": 5,
-        "q3": 7,
-        "max": 9,
-        "mean": 5.5,
-    },
-    "sample 2": {
-        "min": 0,
-        "q1": 2,
-        "median": 6,
-        "q3": 6,
-        "max": 10,
-        "mean": 4.5,
-    },
-}
-html = box.plot(data, pconfig=...)
-```
-
-And similar to other plot types, multiple datasets can be passed as `data`, along with
+Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
 
 ## Scatter Plots
@@ -446,6 +430,14 @@ pconfig = {
     "marker_line_colour": "#999",  # string, colour of point border
     "marker_line_width": 1,  # int, width of point border
     "square": False,  # Force the plot to stay square? (Maintain aspect ratio)
+    "xmin": None,  # Hard min x limit
+    "xmax": None,  # Hard max x limit
+    "ymin": None,  # Hard min y limit
+    "ymax": None,  # Hard max y limit
+    "x_clipmin": None,  # Min value allowed for automatic axis limit
+    "x_clipmax": None,  # Max value allowed for automatic axis limit
+    "y_clipmin": None,  # Min value allowed for automatic axis limit
+    "y_clipmax": None,  # Max value allowed for automatic axis limit
 }
 ```
 
@@ -479,7 +471,7 @@ single_header = {
     "min": None,                     # Maximum value in range, for bar / colour coding
     "ceiling": None,                 # Maximum value for automatic bar limit
     "floor": None,                   # Minimum value for automatic bar limit
-    "minRange": None,                # Minimum range for automatic bar
+    "minrange": None,                # Minimum range for automatic bar
     "scale": "GnBu",                 # Colour scale for colour coding. False to disable.
     "bgcols": None,                  # Dict with values: background colours for categorical data.
     "colour": "<auto>",              # Colour for column grouping
@@ -489,7 +481,7 @@ single_header = {
     "cond_formatting_colours": None, # Styles for conditional formatting of table cell values
     "shared_key": None,              # See below for description
     "modify": None,                  # Lambda function to modify values
-    "hidden": False                  # Set to True to hide the column on page load
+    "hidden": False,                 # Set to True to hide the column on page load
 }
 ```
 
@@ -502,15 +494,15 @@ table_config = {
     "table_title": "<table id>",               # Title of the table. Used in the column config modal
     "save_file": False,                        # Whether to save the table data to a file
     "raw_data_fn": "multiqc_<table_id>_table", # File basename to use for raw data file
-    "sortRows": True,                          # Whether to sort rows alphabetically
+    "sort_rows": True,                          # Whether to sort rows alphabetically
     "only_defined_headers": True,              # Only show columns that are defined in the headers config
     "col1_header": "Sample Name",              # The header used for the first column
-    "no_beeswarm": False,                      # Force a table to always be plotted (beeswarm by default if many rows)
+    "no_violin": False,                        # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
 
 Most of the header keys can also be specified in the table config
-(`namespace`, `scale`, `format`, `colour`, `hidden`, `max`, `min`, `ceiling`, `floor`, `minRange`, `shared_key`, `modify`).
+(`namespace`, `scale`, `format`, `colour`, `hidden`, `max`, `min`, `ceiling`, `floor`, `minrange`, `shared_key`, `modify`).
 These will then be applied to all columns prior to applying column-specific heading config.
 
 A very basic example of creating a table is shown below:
@@ -746,14 +738,37 @@ names = ["one", "two", "three", "four", "five", "six"]
 html = heatmap.plot(data, xcats=names, pconfig=...)
 ```
 
+Alternatively you can supply a dictionary of dictionaries, in which case
+xcats and ycats are optional:
+
+```python
+data = {
+    "sample 1": {
+        "one": 0.9,
+        "two": 0.87,
+        "three": 0.73,
+        "four": 0.6,
+        "five": 0.2,
+    },
+    "sample 2": {
+        "two": 1,
+        "three": 0.7,
+        "four": 0.6,
+        "six": 0.3,
+    },
+}
+html = heatmap.plot(data, pconfig=...)
+```
+
 Much like the other plots, you can change the way that the heatmap looks
 using a config dictionary:
 
 ```python
 pconfig = {
     "title": None,                 # Plot title - should be in format "Module Name: Plot Title"
-    "xTitle": None,                # X-axis title
-    "yTitle": None,                # Y-axis title
+    "xlab": None,                  # X-axis title
+    "ylab": None,                  # Y-axis title
+    "zlab": None,                  # Z-axis title, shown in the hover tooltip
     "min": None,                   # Minimum value (default: auto)
     "max": None,                   # Maximum value (default: auto)
     "square": True,                # Force the plot to stay square? (Maintain aspect ratio)
@@ -761,7 +776,7 @@ pconfig = {
     "ycats_samples": True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
     "colstops": [],                # Scale colour stops. See below.
     "reverseColors": False,        # Reverse the order of the colour axis
-    "decimalPlaces": 2,            # Number of decimal places for tooltip
+    "tt_decimals": 2,              # Number of decimal places for tooltip
     "legend": True,                # Colour axis key enabled or not
     "datalabels": True,            # Show values in each cell. Defaults True when less than 20 samples.
     "height": 500                  # The default height of the interactive plot, in pixels

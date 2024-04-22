@@ -1,6 +1,7 @@
-""" MultiQC functions to plot a scatter plot """
+"""MultiQC functions to plot a scatter plot"""
 
 import logging
+from typing import Union
 
 from multiqc.utils import config
 from multiqc.plots.plotly import scatter
@@ -21,7 +22,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, pconfig=None):
+def plot(data, pconfig=None) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
@@ -39,7 +40,6 @@ def plot(data, pconfig=None):
     if not isinstance(data, list):
         data = [data]
 
-    # Generate the data dict structure expected by HighCharts series
     plotdata = list()
     for data_index, ds in enumerate(data):
         d = list()
@@ -80,8 +80,6 @@ def plot(data, pconfig=None):
         plotdata.append(d)
 
     if pconfig.get("square"):
-        # Making sure HighCharts doesn't get creative in adding different paddings
-        pconfig["endOnTick"] = False
         if "ymax" not in pconfig and "xmax" not in pconfig:
             # Find the max value
             max_val = 0

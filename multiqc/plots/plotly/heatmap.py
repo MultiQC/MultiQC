@@ -13,11 +13,11 @@ ElemT = Union[str, float, int]
 
 
 def plot(
-    rows: List[List[ElemT]],
-    xcats: List[str],
-    ycats: List[str],
+    rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
     pconfig: Dict,
-) -> str:
+    xcats: Optional[List[str]] = None,
+    ycats: Optional[List[str]] = None,
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -26,63 +26,83 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(pconfig, rows, xcats, ycats)
+    return HeatmapPlot(rows, pconfig, xcats, ycats)
 
-    from multiqc.utils import report
 
-    return p.add_to_report(report)
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    rows: List[List[ElemT]]
+    xcats: List[str]
+    ycats: List[str]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+        xcats: Optional[List[str]] = None,
+        ycats: Optional[List[str]] = None,
+    ) -> "Dataset":
+        if isinstance(rows, dict):
+            # Convert dict to a list of lists
+            if not ycats:
+                ycats = list(rows.keys())
+            if not xcats:
+                xcats = []
+                for y, value_by_x in rows.items():
+                    for x, value in value_by_x.items():
+                        if x not in xcats:
+                            xcats.append(x)
+            rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
+
+        dataset = Dataset(
+            **dataset.__dict__,
+            rows=rows,
+            xcats=xcats,
+            ycats=ycats,
+        )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: Optional[go.Layout] = None,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        return go.Figure(
+            data=go.Heatmap(
+                z=self.rows,
+                x=self.xcats,
+                y=self.ycats,
+                **self.trace_params,
+            ),
+            layout=layout or self.layout,
+        )
 
 
 class HeatmapPlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        rows: List[List[ElemT]]
-        xcats: List[str]
-        ycats: List[str]
-
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            pconfig: Dict,
-            rows: List[List[ElemT]],
-            xcats: List[str],
-            ycats: List[str],
-        ) -> "HeatmapPlot.Dataset":
-            dataset = HeatmapPlot.Dataset(
-                **dataset.__dict__,
-                rows=rows,
-                xcats=xcats,
-                ycats=ycats,
-            )
-            return dataset
-
-        def create_figure(
-            self,
-            layout: Optional[go.Layout] = None,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            return go.Figure(
-                data=go.Heatmap(
-                    z=self.rows,
-                    x=self.xcats,
-                    y=self.ycats,
-                    **self.trace_params,
-                ),
-                layout=layout or self.layout,
-            )
-
     def __init__(
         self,
+        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         pconfig: Dict,
-        rows: List[List[ElemT]],
-        xcats: List[str],
-        ycats: List[str],
+        xcats: Optional[List[str]],
+        ycats: Optional[List[str]],
     ):
         super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
+
+        if isinstance(rows, list):
+            if ycats and not isinstance(ycats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: ycats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the rows in the input data."
+                )
+            if xcats and not isinstance(xcats, list):
+                raise ValueError(
+                    f"Heatmap plot {self.id}: xcats must be passed as a list when the input data is a 2d list. "
+                    f"The order of that list should match the order of the columns in the input data."
+                )
 
         self.layout.update(
             yaxis=dict(
@@ -93,15 +113,15 @@ class HeatmapPlot(Plot):
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
+            showlegend=pconfig.get("legend", True),
         )
 
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[HeatmapPlot.Dataset] = [
-            HeatmapPlot.Dataset.create(
+        self.datasets: List[Dataset] = [
+            Dataset.create(
                 self.datasets[0],
-                pconfig=pconfig,
                 rows=rows,
                 xcats=xcats,
                 ycats=ycats,
@@ -113,22 +133,21 @@ class HeatmapPlot(Plot):
             for dataset in self.datasets:
                 for row in dataset.rows:
                     for val in row:
-                        if val is not None:
-                            assert isinstance(val, (int, float))
+                        if val is not None and isinstance(val, (int, float)):
                             self.min = val if self.min is None else min(self.min, val)
         self.max = self.pconfig.get("max", None)
         if self.max is None:
             for dataset in self.datasets:
                 for row in dataset.rows:
                     for val in row:
-                        if val is not None:
+                        if val is not None and isinstance(val, (int, float)):
                             self.max = val if self.max is None else max(self.max, val)
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
-        num_rows = len(ycats)
-        num_cols = len(xcats)
+        num_rows = len(self.datasets[0].ycats)
+        num_cols = len(self.datasets[0].xcats)
         MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
@@ -141,16 +160,16 @@ class HeatmapPlot(Plot):
             if n >= 20:
                 return 26
             if n >= 15:
-                return 30
+                return 33
             if n >= 10:
-                return 35
+                return 45
             if n >= 5:
-                return 40
+                return 60
             if n >= 3:
-                return 50
-            if n >= 2:
                 return 80
-            return 100
+            if n >= 2:
+                return 100
+            return 120
 
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
@@ -162,12 +181,12 @@ class HeatmapPlot(Plot):
         height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
         if not self.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
-            logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
+            # logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
         if height > MAX_HEIGHT or width > MAX_WIDTH:
-            logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
+            # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             if self.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
@@ -177,16 +196,16 @@ class HeatmapPlot(Plot):
                 width = int(num_cols * x_px_per_elem)
                 height = int(num_rows * y_px_per_elem)
 
-        logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
+        # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
             self.layout.yaxis.tickmode = "array"
-            self.layout.yaxis.tickvals = list(range(len(ycats)))
+            self.layout.yaxis.tickvals = list(range(num_rows))
             self.layout.yaxis.ticktext = ycats
         if x_px_per_elem > 18:
             self.layout.xaxis.tickmode = "array"
-            self.layout.xaxis.tickvals = list(range(len(xcats)))
+            self.layout.xaxis.tickvals = list(range(num_cols))
             self.layout.xaxis.ticktext = xcats
         if pconfig.get("angled_xticks", True) is False and x_px_per_elem >= 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
@@ -235,7 +254,14 @@ class HeatmapPlot(Plot):
                 [0.9, "#d73027"],
                 [1, "#a50026"],
             ]
-        decimal_places = pconfig.get("decimalPlaces", 2)
+
+        decimal_places = pconfig.get("tt_decimals", 2)
+
+        xlab = pconfig.get("xlab", "x")
+        ylab = pconfig.get("ylab", "y")
+        zlab = pconfig.get("zlab", "z")
+        hovertemplate = f"{xlab}: %{{x}}<br>{ylab}: %{{y}}<br>{zlab}: %{{z}}<extra></extra>"
+
         for ds in self.datasets:
             ds.trace_params = {
                 "colorscale": colorscale,
@@ -243,6 +269,7 @@ class HeatmapPlot(Plot):
                 "showscale": pconfig.get("legend", True),
                 "zmin": pconfig.get("min", None),
                 "zmax": pconfig.get("max", None),
+                "hovertemplate": hovertemplate,
             }
             # Enable datalabels if there are less than 20x20 cells, unless heatmap_config.datalabels is set explicitly
             if pconfig.get("datalabels") is None and num_rows * num_cols < 400:

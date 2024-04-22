@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Minimum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_max_contig": {
@@ -95,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Maximum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_avg_contig": {
@@ -103,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Average contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_n50": {
@@ -111,21 +111,21 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "N50 contig length",
                 "min": 0,
                 "scale": "YlGnBu",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_mem": {
                 "title": "Memory",
                 "description": "Memory used, MB",
                 "min": 0,
-                "suffix": "&nbsp;MB",
+                "suffix": " MB",
                 "scale": "Reds",
             },
             "megahit_time": {
                 "title": "Time",
                 "description": "Time elapsed",
                 "min": 0,
-                "suffix": "&nbsp;s",
+                "suffix": " s",
                 "scale": "Greys",
             },
         }

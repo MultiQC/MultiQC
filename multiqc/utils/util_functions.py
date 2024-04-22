@@ -1,11 +1,11 @@
-#!/usr/bin/env python
-
 """ MultiQC Utility functions, used in a variety of places. """
-
 
 import io
 import json
 import logging
+from collections import defaultdict, OrderedDict
+
+import math
 import os
 import shutil
 import sys
@@ -68,17 +68,6 @@ def write_data_file(
     if data_format is None:
         data_format = config.data_format
 
-    # JSON encoder class to handle lambda functions
-    class MQCJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if callable(obj):
-                # noinspection PyBroadException
-                try:
-                    return obj(1)
-                except Exception:
-                    return None
-            return json.JSONEncoder.default(self, obj)
-
     body = None
     # Some metrics can't be coerced to tab-separated output, test and handle exceptions
     if data_format in ["tsv", "csv"]:
@@ -133,7 +122,7 @@ def write_data_file(
     fpath = os.path.join(config.data_dir, fn)
     with io.open(fpath, "w", encoding="utf-8") as f:
         if data_format == "json":
-            jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
+            jsonstr = dump_json(data, indent=4, ensure_ascii=False)
             print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
         elif data_format == "yaml":
             yaml.dump(data, f, default_flow_style=False)
@@ -165,10 +154,10 @@ def strtobool(val) -> bool:
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
     """
-    val = val.lower()
-    if val in ("y", "yes", "t", "true", "on", "1"):
+    val_str = str(val).lower()
+    if val_str in ("y", "yes", "t", "true", "on", "1"):
         return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    elif val_str in ("n", "no", "f", "false", "off", "0"):
         return False
     else:
         raise ValueError(f"invalid truth value {val!r}")
@@ -194,3 +183,97 @@ def choose_emoji():
         if date_range_start <= today <= date_range_end:
             return emoji
     return "mag"
+
+
+def dump_json(data, **kwargs):
+    """
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
+    """
+
+    # Recursively replace NaNs with None
+    def replace_nan(obj):
+        if isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_nan(v) for v in obj]
+        elif isinstance(obj, set):
+            return {replace_nan(v) for v in obj}
+        elif callable(obj):
+            return None
+        elif isinstance(obj, float) and math.isnan(obj):
+            return None
+        return obj
+
+    return json.dumps(replace_nan(data), **kwargs)
+
+
+def multiqc_dump_json(report):
+    """
+    Export the parsed data in memory to a JSON file.
+    Used for MegaQC and other data export.
+    WARNING: May be depreciated and removed in future versions.
+    """
+    exported_data = dict()
+    export_vars = {
+        "report": [
+            "data_sources",
+            "general_stats_data",
+            "general_stats_headers",
+            "multiqc_command",
+            "plot_data",
+            "saved_raw_data",
+        ],
+        "config": [
+            "analysis_dir",
+            "creation_date",
+            "git_hash",
+            "intro_text",
+            "report_comment",
+            "report_header_info",
+            "script_path",
+            "short_version",
+            "subtitle",
+            "title",
+            "version",
+            "output_dir",
+        ],
+    }
+    for s in export_vars:
+        for k in export_vars[s]:
+            try:
+                d = None
+                if s == "config":
+                    d = {f"{s}_{k}": getattr(config, k)}
+                elif s == "report":
+                    d = {f"{s}_{k}": getattr(report, k)}
+                if d:
+                    dump_json(d, ensure_ascii=False)  # Test that exporting to JSON works
+                    exported_data.update(d)
+            except (TypeError, KeyError, AttributeError) as e:
+                log.warning(f"Couldn't export data key '{s}.{k}': {e}")
+        # Get the absolute paths of analysis directories
+        exported_data["config_analysis_dir_abs"] = list()
+        for d in exported_data.get("config_analysis_dir", []):
+            try:
+                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+            except Exception:
+                pass
+    return exported_data
+
+
+def replace_defaultdicts(data):
+    """
+    Recursively replace dict-likes as dicts for nice yaml representation.
+    """
+
+    def _replace(obj):
+        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+            return {k: _replace(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_replace(v) for v in obj]
+        elif isinstance(obj, set):
+            return {_replace(v) for v in obj}
+        return obj
+
+    return _replace(data)

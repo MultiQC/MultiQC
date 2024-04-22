@@ -4,7 +4,7 @@ http://bamtools.sourceforge.net/#bam-stat-py """
 import logging
 import re
 
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
 from multiqc.utils import config
 
 # Initialise the logger
@@ -94,14 +94,14 @@ def parse_reports(self):
     defaults = {
         "min": 0,
         "max": 100,
-        "decimalPlaces": 2,
+        "tt_decimals": 2,
         "suffix": "%",
     }
     num_defaults = {
         "min": 0,
         "modify": lambda x: x * config.read_count_multiplier,
         "suffix": config.read_count_prefix,
-        "decimalPlaces": 2,
+        "tt_decimals": 2,
     }
 
     keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
@@ -120,7 +120,7 @@ def parse_reports(self):
     self.add_section(
         name="Bamtools Stats",
         anchor="bamtools-stats",
-        plot=beeswarm.plot(
+        plot=violin.plot(
             self.bamtools_stats_data,
             keys,
             pconfig={

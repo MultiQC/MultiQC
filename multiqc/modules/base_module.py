@@ -1,5 +1,6 @@
-""" MultiQC modules base class, contains helper functions """
-from typing import List, Union, Optional
+"""MultiQC modules base class, contains helper functions"""
+
+from typing import List, Union, Optional, Dict
 
 import fnmatch
 import io
@@ -13,6 +14,7 @@ from collections import defaultdict
 
 import markdown
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -22,7 +24,10 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-class BaseMultiqcModule(object):
+class BaseMultiqcModule:
+    # Custom options from user config that can overwrite base module values
+    mod_cust_config: Dict = {}
+
     def __init__(
         self,
         name="base",
@@ -34,24 +39,23 @@ class BaseMultiqcModule(object):
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi=None,
+        doi: Optional[str] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        self.name = mod_cust_config.get("name", name)
-        self.anchor = mod_cust_config.get("anchor", anchor)
-        target = mod_cust_config.get("target", target)
-        self.href = mod_cust_config.get("href", href)
-        self.info = mod_cust_config.get("info", info)
-        self.comment = mod_cust_config.get("comment", comment)
-        self.extra = mod_cust_config.get("extra", extra)
-        self.doi = mod_cust_config.get("doi", (doi or []))
+        self.name = self.mod_cust_config.get("name", name)
+        self.anchor = self.mod_cust_config.get("anchor", anchor)
+        target = self.mod_cust_config.get("target", target)
+        self.href = self.mod_cust_config.get("href", href)
+        self.info = self.mod_cust_config.get("info", info)
+        self.comment = self.mod_cust_config.get("comment", comment)
+        self.extra = self.mod_cust_config.get("extra", extra)
+        self.doi = self.mod_cust_config.get("doi", (doi or []))
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        config.update({anchor: mod_cust_config.get("custom_config", {})})
+        config.update({anchor: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
         self.anchor = report.save_htmlid(self.anchor)
@@ -110,15 +114,14 @@ class BaseMultiqcModule(object):
                  for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
-
         # Pick up path filters if specified.
         # Allows modules to be called multiple times with different sets of files
-        path_filters = getattr(self, "mod_cust_config", {}).get("path_filters")
-        path_filters_exclude = getattr(self, "mod_cust_config", {}).get("path_filters_exclude")
+        path_filters: Union[str, List[str]] = self.mod_cust_config.get("path_filters", [])
+        path_filters_exclude: Union[str, List[str]] = self.mod_cust_config.get("path_filters_exclude", [])
         if isinstance(path_filters, str):
-            path_filters = [path_filters]
+            path_filters: List[str] = [path_filters]
         if isinstance(path_filters_exclude, str):
-            path_filters_exclude = [path_filters_exclude]
+            path_filters_exclude: List[str] = [path_filters_exclude]
 
         # Old, depreciated syntax support. Likely to be removed in a future version.
         if isinstance(sp_key, dict):
@@ -228,7 +231,8 @@ class BaseMultiqcModule(object):
         description="",
         comment="",
         helptext="",
-        plot="",
+        content_before_plot="",
+        plot: Optional[Union[Plot, str]] = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -245,9 +249,8 @@ class BaseMultiqcModule(object):
                 anchor = f"{self.anchor}-section-{sl}"
 
         # Append custom module anchor to the section if set
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        if "anchor" in mod_cust_config:
-            anchor = f"{mod_cust_config['anchor']}_{anchor}"
+        if "anchor" in self.mod_cust_config:
+            anchor = f"{self.mod_cust_config['anchor']}_{anchor}"
 
         # Sanitise anchor ID and check for duplicates
         anchor = report.save_htmlid(anchor)
@@ -280,6 +283,7 @@ class BaseMultiqcModule(object):
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
+        plot_html = plot.add_to_report(report) if isinstance(plot, Plot) else (plot or "")
 
         self.sections.append(
             {
@@ -288,10 +292,14 @@ class BaseMultiqcModule(object):
                 "description": description,
                 "comment": comment,
                 "helptext": helptext,
-                "plot": plot,
+                "content_before_plot": content_before_plot,
+                "plot": plot_html,
                 "content": content,
                 "print_section": any(
-                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content]]
+                    [
+                        n is not None and len(n) > 0
+                        for n in [description, comment, helptext, content_before_plot, plot_html, content]
+                    ]
                 ),
             }
         )
@@ -598,9 +606,8 @@ class BaseMultiqcModule(object):
         to report.write_data_file() to create the file in the report directory"""
 
         # Append custom module anchor if set
-        mod_cust_config = getattr(self, "mod_cust_config", {})
-        if "anchor" in mod_cust_config:
-            fn = f"{fn}_{mod_cust_config['anchor']}"
+        if "anchor" in self.mod_cust_config:
+            fn = f"{fn}_{self.mod_cust_config['anchor']}"
 
         # Generate a unique filename if the file already exists (running module multiple times)
         i = 1

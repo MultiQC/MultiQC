@@ -1,4 +1,4 @@
-""" MultiQC functions to plot a box plot """
+"""MultiQC functions to plot a box plot"""
 
 from typing import List, Dict, Union, OrderedDict
 
@@ -6,6 +6,7 @@ import inspect
 import logging
 import re
 
+from multiqc.plots.plotly.box import BoxT
 from multiqc.utils import config, report
 from multiqc.plots.plotly import box
 
@@ -23,10 +24,12 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(list_of_data_by_sample: Union[Dict[str, Dict], List[Dict[str, Dict]]], pconfig=None):
+def plot(
+    list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]], pconfig=None
+) -> Union[str, box.BoxPlot]:
     """
     Plot a box plot. Expects either:
-    - a dict mapping sample names to data point lists (numbers),
+    - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
     if pconfig is None:

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
-
 """ MultiQC config module. Holds a single copy of
 config variables to be used across all other modules """
+
+from pathlib import Path
 from typing import List, Dict, Optional, Union
 
 import inspect
@@ -25,15 +25,26 @@ logger = logging.getLogger("multiqc")
 # Get the MultiQC version
 version = importlib_metadata.version("multiqc")
 short_version = version
-script_path = os.path.dirname(os.path.realpath(__file__))
 git_hash = None
 git_hash_short = None
+script_path = str(Path(__file__).parent)  # dynamically used by util_functions.multiqc_dump_json()
+git_root = None
 try:
-    git_hash = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+    git_root = subprocess.check_output(
+        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
     ).strip()
-    git_hash_short = git_hash[:7]
-    version = f"{version} ({git_hash_short})"
+    git_root = Path(git_root)
+    # .git
+    # multiqc/
+    #   utils/
+    #       config.py  <- __file__
+    expected_git_root = Path(script_path).parent.parent
+    if git_root == expected_git_root:
+        git_hash = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+        ).strip()
+        git_hash_short = git_hash[:7]
+        version = f"{version} ({git_hash_short})"
 except Exception:
     pass
 
@@ -79,6 +90,7 @@ prepend_dirs_depth: int
 prepend_dirs_sep: str
 file_list: bool
 require_logs: bool
+version_check_url: str
 
 make_data_dir: bool
 zip_data_dir: bool
@@ -88,12 +100,14 @@ megaqc_access_token: str
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
+make_pdf: bool
 plots_force_flat: bool
 plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
 lineplot_style: str
 lineplot_max_samples: int
+barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int

@@ -1,14 +1,15 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
 from multiqc.utils import config, mqc_colour, util_functions, report
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: DataTable) -> str:
+def plot(dt: List[DataTable]) -> Plot:
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
@@ -16,7 +17,7 @@ def plot(dt: DataTable) -> str:
 
 def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str]:
     """
-    Build the HTML needed for a MultiQC table.
+    Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
     :param violin_id: optional, will add a button to switch to a violin plot with this ID
     """
@@ -145,7 +146,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
 
                     # This is horrible, but Python locale settings are worse
                     if config.thousandsSep_format is None:
-                        config.thousandsSep_format = '<span class="mqc_thousandSep"></span>'
+                        config.thousandsSep_format = '<span class="mqc_small_space"></span>'
                     if config.decimalPoint_format is None:
                         config.decimalPoint_format = "."
                     valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
@@ -153,8 +154,12 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                         "THOUSAND", config.thousandsSep_format
                     )
 
-                # Percentage suffixes etc
-                valstring += header.get("suffix", "")
+                suffix = header.get("suffix")
+                if suffix:
+                    # Add a space before the suffix, but not as an actual character, so ClipboardJS would copy
+                    # the whole value without the space. Also, remove &nbsp; that we don't want ClipboardJS to copy.
+                    suffix = suffix.replace("&nbsp;", " ").strip()
+                    valstring += "<span class='mqc_small_space'></span>" + suffix
 
                 # Conditional formatting
                 # Build empty dict for cformatting matches
@@ -177,13 +182,17 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                                         cmatches[ftype] = True
                                     if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
                                         cmatches[ftype] = True
-                                    if "eq" in cmp and float(cmp["eq"]) == float(val):
+                                    if "eq" in cmp and float(val) == float(cmp["eq"]):
                                         cmatches[ftype] = True
-                                    if "ne" in cmp and float(cmp["ne"]) != float(val):
+                                    if "ne" in cmp and float(val) != float(cmp["ne"]):
                                         cmatches[ftype] = True
-                                    if "gt" in cmp and float(cmp["gt"]) < float(val):
+                                    if "gt" in cmp and float(val) > float(cmp["gt"]):
                                         cmatches[ftype] = True
-                                    if "lt" in cmp and float(cmp["lt"]) > float(val):
+                                    if "lt" in cmp and float(val) < float(cmp["lt"]):
+                                        cmatches[ftype] = True
+                                    if "ge" in cmp and float(val) >= float(cmp["ge"]):
+                                        cmatches[ftype] = True
+                                    if "le" in cmp and float(val) <= float(cmp["le"]):
                                         cmatches[ftype] = True
                                 except Exception:
                                     logger.warning(f"Not able to apply table conditional formatting to '{val}' ({cmp})")
@@ -204,14 +213,13 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 except TypeError:
                     hashable = False
                     print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
+
                 # Categorical background colours supplied
                 if hashable and val in header.get("bgcols", {}).keys():
                     col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td val="{val}" class="{rid} {h}" {c}>{v}</td>'.format(
-                        val=val, rid=rid, h=hide, c=col, v=valstring
-                    )
+                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstring}</td>'
 
                 # Build table cell background colour bar
                 elif hashable and header["scale"]:
@@ -227,9 +235,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = '<td val="{val}" class="data-coloured {rid} {h}">{c}</td>'.format(
-                        val=val, rid=rid, h=hide, c=wrapper_html
-                    )
+                    t_rows[s_name][rid] = f'<td val="{val}" class="data-coloured {rid} {hide}">{wrapper_html}</td>'
 
                 # Scale / background colours are disabled
                 else:
@@ -258,45 +264,65 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     html = ""
     if not config.simple_output:
         # Copy Table Button
-        html += f"""
+        buttons = []
+
+        buttons.append(
+            f"""
         <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.id}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
+        )
 
         # Configure Columns Button
         if len(t_headers) > 1:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" 
                 data-target="#{dt.id}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
+            )
 
         # Sort By Highlight button
-        html += f"""
+        buttons.append(
+            f"""
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" 
             data-target="#{dt.id}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
+        )
 
         # Scatter Plot Button
         if len(t_headers) > 1:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" 
                 data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
+            )
 
         if violin_id is not None:
-            html += f"""
+            buttons.append(
+                f"""
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" 
                 data-table-id="{dt.id}" data-violin-id="{violin_id}">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """
+            )
+
+        buttons.append(
+            f"""
+        <button type="button" class="export-plot btn btn-default btn-sm" 
+            data-pid="{violin_id or dt.id}" data-type="table"
+        >Export as CSV</button>
+        """
+        )
 
         # "Showing x of y columns" text
         row_visibilities = [all(t_rows_empty[s_name].values()) for s_name in t_rows_empty]
@@ -312,8 +338,15 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
             t_showing_cols_txt = f' and <sup id="{dt.id}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{len(t_headers)}</sub> columns'
 
         # Build table header text
-        html += f"""
+        buttons.append(
+            f"""
         <small id="{dt.id}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
+        """
+        )
+
+        panel = "\n".join(buttons)
+        html += f"""
+        <div class='row'>\n<div class='col-xs-12'>\n{panel}\n</div>\n</div>
         """
 
     # Build the table itself
@@ -331,7 +364,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     # Build the table body
     html += "<tbody>"
     t_row_keys = t_rows.keys()
-    if dt.pconfig.get("sortRows") is not False:
+    if dt.pconfig.get("sort_rows", dt.pconfig.get("sortRows")) is not False:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
         # Hide the row if all cells are empty or hidden

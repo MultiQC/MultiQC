@@ -160,13 +160,12 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot perfect library as dashed line
         pconfig["extra_series"].append(
             {
-                "name": "a perfect library where each read is unique",
+                "name": "A perfect library where each read is unique",
                 "data": [[0, 0], [max_yx, max_y]],
-                "dashStyle": "Dash",
-                "lineWidth": 1,
+                "dash": "dash",
+                "line": {"width": 1},
                 "color": "#000000",
-                "marker": {"enabled": False},
-                "showInLegend": False,
+                "showlegend": False,
             }
         )
 
@@ -312,7 +311,7 @@ def _prepare_labels(is_basepairs, max_y_cov, x_axis, y_axis):
         cnt_lbl = "{value:,.0f}"
     if is_basepairs:
         cnt_lbl = "{value:,.2f} " + config.base_count_prefix
-        cnt_suffix = "&nbsp;" + config.base_count_prefix
+        cnt_suffix = " " + config.base_count_prefix
         if config.base_count_multiplier == 1:
             cnt_lbl = "{value:,.0f}"
 
@@ -369,12 +368,10 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_su
             x = float(xs_by_sample[sn])
             point = {
                 "color": scale.get_colour(si),
-                "showInLegend": False,
+                "showlegend": False,
                 "marker": {
-                    "enabled": True,
                     "symbol": "diamond",
-                    "lineColor": "black",
-                    "lineWidth": 1,
+                    "line": {"color": "black", "width": 1},
                 },
             }
             if sn in yx_by_sample:

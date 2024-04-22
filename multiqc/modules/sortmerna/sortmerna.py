@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Get custom table header, default to 'rRNA'
-        tab_header = getattr(config, "sortmerna", {}).get("seqname", "% rRNA")
+        tab_header = getattr(config, "sortmerna", {}).get("seqname", "rRNA")
 
         # Add rRNA rate to the general stats table
         headers = {
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.sortmerna, headers)
 
         # Make barplot
-        self.sortmerna_detailed_barplot()
+        self.sortmerna_detailed_rates_barplot()
 
     def parse_sortmerna(self, f):
         s_name = None
@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for line in f["f"]:
             if "Reads file" in line:
-                parts = re.split(r":|=", line)
+                parts = re.split(r"[:=]", line)
                 s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = dict()
             if "Results:" in line and not post_results_start:  # old versions
@@ -83,13 +83,13 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if post_results_start and not post_database_start:
                 if "Total reads =" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["total"] = int(m.group())
                     else:
                         err = True
                 elif "Total reads passing" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["rRNA"] = int(m.group())
                         self.sortmerna[s_name]["rRNA_pct"] = (
@@ -98,7 +98,7 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         err = True
                 elif "Total reads failing" in line:
-                    m = re.search("\d+", line)
+                    m = re.search(r"\d+", line)
                     if m:
                         self.sortmerna[s_name]["non_rRNA"] = int(m.group())
                         self.sortmerna[s_name]["non_rRNA_pct"] = (
@@ -129,9 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.sortmerna.pop(s_name, "None")
         s_name = None
 
-    def sortmerna_detailed_barplot(self):
-        """Make the HighCharts HTML to plot the sortmerna rates"""
-
+    def sortmerna_detailed_rates_barplot(self):
         # Specify the order of the different possible categories
         keys = {}
         metrics = set()
@@ -144,6 +142,12 @@ class MultiqcModule(BaseMultiqcModule):
             keys[key] = {"name": key.replace("_count", "")}
 
         # Config for the plot
-        pconfig = {"id": "sortmerna-detailed-plot", "title": "SortMeRNA: Hit Counts", "ylab": "Reads"}
+        pconfig = {
+            "id": "sortmerna-detailed-plot",
+            "title": "SortMeRNA: Hit Counts",
+            "ylab": "Reads",
+        }
 
-        self.add_section(plot=bargraph.plot(self.sortmerna, sorted(keys), pconfig))
+        self.add_section(
+            plot=bargraph.plot(self.sortmerna, sorted(keys), pconfig),
+        )

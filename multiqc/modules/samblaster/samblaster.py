@@ -82,8 +82,8 @@ class MultiqcModule(BaseMultiqcModule):
             r"samblaster: (Removed|Marked)\s+(\d+)\s+of\s+(\d+) \((\d+.\d+)%\)\s*(total)?\s*read ids as duplicates"
         )
 
-        input_file_regex = "samblaster: Opening (\S+) for read."
-        rgtag_name_regex = "\\\\tID:(\S*?)\\\\t"
+        input_file_regex = r"samblaster: Opening (\S+) for read."
+        rgtag_name_regex = r"\\\\tID:(\S*?)\\\\t"
         data = {}
         s_name = None
         version = None

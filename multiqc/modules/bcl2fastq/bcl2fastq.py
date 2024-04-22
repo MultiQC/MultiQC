@@ -129,7 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bcl2fastq_undetermined",
                     "title": "bcl2fastq: Undetermined barcodes by lane",
                     "ylab": "Reads",
-                    "tt_percentages": False,
                     "use_legend": True,
                     "sort_samples": False,  # keep top barcode on top
                 },
@@ -474,7 +473,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "bcl2fastq-lane-stats-table",
             "table_title": "bcl2fastq Lane Statistics",
             "col1_header": "Run ID - Lane",
-            "no_beeswarm": True,
         }
         return table.plot(self.bcl2fastq_bylane, headers, table_config)
 

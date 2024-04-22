@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.21dev"
+version = "1.22dev"
 dependencies = [
     "click",
     "coloredlogs",
@@ -51,9 +51,6 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-matplotlib = [
-    "matplotlib>=2.1.1",
-]
 dev = [
     "pre-commit",
     "ruff",
@@ -70,7 +67,7 @@ Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 multiqc = "multiqc.__main__:run_multiqc"
 
 [project.entry-points."multiqc.modules.v1"]
-adapterRemoval = "multiqc.modules.adapterRemoval:MultiqcModule"
+adapterremoval = "multiqc.modules.adapterremoval:MultiqcModule"
 afterqc = "multiqc.modules.afterqc:MultiqcModule"
 anglerfish = "multiqc.modules.anglerfish:MultiqcModule"
 bakta = "multiqc.modules.bakta:MultiqcModule"
@@ -130,6 +127,7 @@ hops = "multiqc.modules.hops:MultiqcModule"
 htseq = "multiqc.modules.htseq:MultiqcModule"
 humid = "multiqc.modules.humid:MultiqcModule"
 interop = "multiqc.modules.interop:MultiqcModule"
+isoseq = "multiqc.modules.isoseq:MultiqcModule"
 ivar = "multiqc.modules.ivar:MultiqcModule"
 jcvi = "multiqc.modules.jcvi:MultiqcModule"
 jellyfish = "multiqc.modules.jellyfish:MultiqcModule"
@@ -181,6 +179,7 @@ rockhopper = "multiqc.modules.rockhopper:MultiqcModule"
 rsem = "multiqc.modules.rsem:MultiqcModule"
 rseqc = "multiqc.modules.rseqc:MultiqcModule"
 seqera_cli = "multiqc.modules.seqera_cli:MultiqcModule"
+sequali = "multiqc.modules.sequali:MultiqcModule"
 salmon = "multiqc.modules.salmon:MultiqcModule"
 sambamba = "multiqc.modules.sambamba:MultiqcModule"
 samblaster = "multiqc.modules.samblaster:MultiqcModule"
@@ -198,6 +197,7 @@ snpsplit = "multiqc.modules.snpsplit:MultiqcModule"
 somalier = "multiqc.modules.somalier:MultiqcModule"
 sortmerna = "multiqc.modules.sortmerna:MultiqcModule"
 sourmash = "multiqc.modules.sourmash:MultiqcModule"
+spaceranger = "multiqc.modules.spaceranger:MultiqcModule"
 stacks = "multiqc.modules.stacks:MultiqcModule"
 star = "multiqc.modules.star:MultiqcModule"
 supernova = "multiqc.modules.supernova:MultiqcModule"
@@ -219,7 +219,6 @@ default = "multiqc.templates.default"
 sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
-highcharts = "multiqc.templates.highcharts"
 geo = "multiqc.templates.geo"
 
 ### See https://multiqc.info/docs/#multiqc-plugins for documentation

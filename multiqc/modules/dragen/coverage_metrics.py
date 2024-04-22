@@ -41,7 +41,7 @@ SINGLE_HEADER = {
     "min": 0,  # Maximum value in range, for bar / colour coding
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
-    "minRange": None,  # Minimum range for automatic bar
+    "minrange": None,  # Minimum range for automatic bar
     "scale": "GnBu",  # Colour scale for colour coding. False to disable.
     "bgcols": None,  # Dict with values: background colours for categorical data.
     "colour": "15, 150, 255",  # Colour for column grouping
@@ -148,12 +148,6 @@ Some rules:
   * If it still does not work, then you might need to take a look
     at the "make_consistent_metric" and maybe at the "make_user_configs".
 
-- Some "title"s below contain the "&nbsp;" html entity to widen the column's title.
-  Otherwise long values can overlap with adjacent values in right columns/rows below.
-  Basically it is just a dirty little trick, which can be useful in rare cases.
-  These entities will be deleted for the general table, since its columns' titles
-  contain extra region suffixes, which make the columns wide enough.
-
 - If you want to use "greater than or equal to" sign, then take a look at these:
     ">="
     &ge;
@@ -224,18 +218,6 @@ Ideas:
   elif float -> "{:,.Nf}", where N is the number of after-point digits.
   else -> "{:,.1f}, which is default by the MultiQC.
 
-- The problem with overlapping adjacent columns/rows, when column's
-  title block is shorter than single value blocks below.
-  There is a solution, which can automatically improve the appearance
-  of html tables. After data/headers have been collected, a special
-  function converts the column's value to string, concatenates with
-  "suffix" if present and appends at least abs(maxlen(values) - len(title))
-  "&nbsp;" entities. Simple, but does not solve the issue in general.
-  Additional JS script could analyze tables' data and attributes(eg font)
-  to decide how much extra padding space is needed to increase table's
-  readability further to some extent.
-
-
 Final notes:
 
 - Most configs below are for demonstration purposes only.
@@ -265,7 +247,7 @@ METRICS = {
     "aligned reads in region" + V2: {
         "order_priority": 0.2,
         "max": 100,
-        "suffix": " %",
+        "suffix": "%",
         "scale": "Purples",
         "colour": "255, 0, 0",
         "exclude": False,
@@ -292,7 +274,7 @@ METRICS = {
         "max": 100,
         "colour": "0, 0, 255",
         "scale": "Greens",
-        "suffix": " %",
+        "suffix": "%",
         "bgcols": {"NA": "#00FFFF"},
         "exclude": False,
     },
@@ -300,14 +282,14 @@ METRICS = {
         "order_priority": 1.0,
         "title": "X cov",
         "suffix": " x",
-        "colour": "255, 255, 0",
+        "colour": "179,179,50",  # Olive
     },
     "average chr y coverage over region": {
         "order_priority": 1.1,
         "title": "Y cov",
         "suffix": " x",
         "scale": "YlOrRd",
-        "colour": "255, 255, 0",
+        "colour": "179,179,50",  # Olive
     },
     "xavgcov/yavgcov ratio over region": {
         "order_priority": 1.2,
@@ -328,14 +310,14 @@ METRICS = {
         "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
-        "colour": "0, 255, 255",
+        "colour": "55,126,184",  # Blue
     },
     "average mitochondrial coverage over region": {
         "order_priority": 4,
-        "title": "MT cov&nbsp;&nbsp;",
+        "title": "MT cov",
         "scale": "Purples",
         "suffix": " x",
-        "colour": "255, 0, 255",
+        "colour": "152,78,163",  # Purple
     },
     "average autosomal coverage over region": {
         "order_priority": 6,
@@ -369,8 +351,8 @@ METRICS = {
     # But if you want to handle a certain number manually, then you can
     # add a float-string key with desired configs in the "extra".
     "uniformity of coverage (pct > d.d*mean) over region": {
-        "suffix": " %",
-        "colour": "55, 255, 55",
+        "suffix": "%",
+        "colour": "77,175,74",  # Green
         "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
@@ -409,8 +391,8 @@ METRICS = {
     "pct of region with coverage [ix:inf)": {
         "max": 100,
         "scale": "Purples",
-        "suffix": " %",
-        "colour": "255, 50, 25",
+        "suffix": "%",
+        "colour": "228,26,28",  # Red
         "exclude": False,
         WGS: {
             # "scale": "Reds",
@@ -421,7 +403,7 @@ METRICS = {
         "extra": {
             # "PCT of region with coverage [0x: inf)" metric.
             ("0x", "inf"): {
-                "title": "≥0x" + 8 * "&nbsp;",
+                "title": "≥0x",
                 # Simple example of colors with rules.
                 # "cond_formatting_rules": {
                 #    "red_bad": [{"s_contains": ""}], # Each value is red by default.
@@ -459,11 +441,11 @@ METRICS = {
     "pct of region with coverage [ix:jx)": {
         "max": 100,
         "scale": "Reds",
-        "suffix": " %",
+        "suffix": "%",
         # "exclude_own": True,
         "extra": {
             ("0x", "1x"): {
-                "title": "0x&nbsp;&nbsp;&nbsp;",
+                "title": "0x",
                 WGS: {
                     "description": "Percentage of sites in genome with no coverage.",
                 },
@@ -485,16 +467,16 @@ TABLE_CONFIG = {
     "table_title": None,  # Title of the table. Used in the column config modal
     "save_file": False,  # Whether to save the table data to a file
     "raw_data_fn": None,  # File basename to use for raw data file
-    "sortRows": True,  # Whether to sort rows alphabetically
+    "sort_rows": True,  # Whether to sort rows alphabetically
     "only_defined_headers": True,  # Only show columns that are defined in the headers config
     "col1_header": None,  # The header used for the first column with sample names.
-    "no_beeswarm": False,  # Force a table to always be plotted (beeswarm by default if many rows)
+    "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)
 }
 # Below are region-specific configs with higher priority.
 REGION_TABLE_CONFIG = {
     WGS: {
         "table_title": "WGS",
-        # "no_beeswarm": True,
+        # "no_violin": True,
         # "save_file": True,
         # "raw_data_fn": "Genome_raw_file",
     },
@@ -790,9 +772,7 @@ def create_table_handlers():
                         """
                         if "title" in gen_headers[m_id]:
                             gen_headers[m_id]["title"] = (
-                                re.sub("&nbsp;", "", gen_headers[m_id]["title"])
-                                + " "
-                                + improve_gen_phenotype(phenotype)
+                                gen_headers[m_id]["title"] + " " + improve_gen_phenotype(phenotype)
                             )
 
         return gen_data, clean_headers(order_headers(gen_headers))
@@ -1381,8 +1361,8 @@ def create_coverage_headers_handler():
                     "min": 0,
                     "format": base_format,
                     "description": f"Total number ({config.base_count_desc}) of aligned bases.",
-                    "title": config.base_count_prefix + " Aln bases",
-                    "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
+                    "title": "Aln bases",
+                    "shared_key": "base_count",
                 }
             }
         else:
@@ -1391,8 +1371,8 @@ def create_coverage_headers_handler():
                     "min": 0,
                     "format": read_format,
                     "description": f"Total number ({config.read_count_desc}) of aligned reads.",
-                    "title": config.read_count_prefix + " Aln reads",
-                    "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
+                    "title": "Aln reads",
+                    "shared_key": "read_count",
                 }
             }
 
@@ -1408,14 +1388,14 @@ def create_coverage_headers_handler():
             configs = {
                 "min": 0,
                 "format": base_format,
-                "title": config.base_count_prefix + " Bases on target",
+                "title": "Bases on target",
                 "description": description + ".",
-                "modify": lambda x: x if isinstance(x, str) else x * base_count_multiplier,
+                "shared_key": "base_count",
             }
             configs2 = {
                 "min": 0,
                 "max": 100,
-                "suffix": " %",
+                "suffix": "%",
                 "format": base_format,
                 "title": "Bases on target",
                 "description": description + " relative to the number of uniquely mapped bases to the genome.",
@@ -1433,14 +1413,14 @@ def create_coverage_headers_handler():
             configs = {
                 "min": 0,
                 "format": read_format,
-                "title": config.read_count_prefix + " Reads on target",
+                "title": "Reads on target",
                 "description": description,
-                "modify": lambda x: x if isinstance(x, str) else x * read_count_multiplier,
+                "shared_key": "read_count",
             }
             configs2 = {
                 "min": 0,
                 "max": 100,
-                "suffix": " %",
+                "suffix": "%",
                 "format": read_format,
                 "title": "Reads on target",
                 "description": "Number of uniquely mapped reads to "
@@ -1572,7 +1552,7 @@ def create_coverage_headers_handler():
             multiplier = entity_match.group(1)
             percent = str(float(multiplier) * 100) + "%"
             configs = {
-                "suffix": " %",
+                "suffix": "%",
                 "min": 0,
                 "max": 100,
                 "title": "Uniformity(>" + multiplier + "&#215;mean)",
@@ -1623,9 +1603,6 @@ def create_coverage_headers_handler():
             description = "Percentage of sites in " + region
             if JX == "inf":
                 title = "≥" + IX + "x"
-                # Add extra html entities to widen the title.
-                if len(IX) < 6:
-                    title += "&nbsp;" * (6 - len(IX))
 
                 if IX == "0":
                     description += " with any coverage."
@@ -1643,7 +1620,7 @@ def create_coverage_headers_handler():
                 "configs": {
                     "min": 0,
                     "max": 100,
-                    "suffix": " %",
+                    "suffix": "%",
                     "title": title,
                     "description": description,
                 },

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
 """
 Helper functions to manipulate colours and colour scales
 """
+
 import hashlib
 
 # Default logger will be replaced by caller

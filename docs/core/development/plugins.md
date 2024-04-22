@@ -110,7 +110,7 @@ the value given by the user with the `--project` flag in a hook:
 
 ```python
 if config.kwargs['project'] is not None:
-  # do some stuff
+    # do some stuff
 ```
 
 See the [click documentation](http://click.pocoo.org/) or the main
@@ -134,18 +134,19 @@ that hook fires. Your custom code can import the core MultiQC modules to
 access configuration and loggers. For example:
 
 ```python
-#!/usr/bin/env python
-""" MultiQC hook functions - we tie into the MultiQC
-core here to add in extra functionality. """
+"""
+MultiQC hook functions - we tie into the MultiQC
+core here to add in extra functionality.
+"""
 
 import logging
-from multiqc.utils import report, config
+from multiqc.utils import report
 
 log = logging.getLogger('multiqc')
 
 def after_modules():
-  """ Plugin code to run when MultiQC modules have completed  """
-  num_modules = len(report.modules_output)
-  status_string = f"MultiQC hook - {num_modules} modules reported!"
-  log.critical(status_string)
+    """ Plugin code to run when MultiQC modules have completed  """
+    num_modules = len(report.modules_output)
+    status_string = f"MultiQC hook - {num_modules} modules reported!"
+    log.critical(status_string)
 ```

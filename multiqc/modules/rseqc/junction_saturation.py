@@ -68,8 +68,6 @@ def parse_reports(self):
         "xmax": 100,
         "tt_label": "<strong>{point.x}% of reads</strong>: {point.y:.2f}",
         "data_labels": [{"name": "All Junctions"}, {"name": "Known Junctions"}, {"name": "Novel Junctions"}],
-        "cursor": "pointer",
-        "click_func": "single_sample_plot",
     }
     self.add_section(
         name="Junction Saturation",

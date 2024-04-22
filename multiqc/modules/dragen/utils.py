@@ -3,14 +3,12 @@ from multiqc import config
 read_format = "{:,.1f}"
 if config.read_count_multiplier == 1:
     read_format = "{:,.0f}"
-# read_format += '&nbsp;' + config.read_count_prefix
 
-base_format = "{:,.1f}&nbsp;"
+base_format = "{:,.1f}"
 if config.base_count_multiplier == 1:
     base_format = "{:,.0f}"
 elif config.base_count_multiplier == 0.000000001:
     base_format = "{:,.2f}"
-# base_format += '&nbsp;' + config.base_count_prefix
 
 
 class Metric:
@@ -202,7 +200,7 @@ STD_TABLE_CONFIGS = [
     "min",
     "ceiling",
     "floor",
-    "minRange",
+    "minrange",
     "scale",
     "bgcols",
     "colour",

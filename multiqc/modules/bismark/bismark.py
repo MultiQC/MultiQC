@@ -6,7 +6,7 @@ import re
 
 from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, linegraph
+from multiqc.plots import bargraph, violin, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -440,7 +440,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the methylation plot"""
 
         # Config for the plot
-        defaults = {"max": 100, "min": 0, "suffix": "%", "decimalPlaces": 1}
+        defaults = {"max": 100, "min": 0, "suffix": "%", "tt_decimals": 1}
         keys = {
             "percent_cpg_meth": dict(defaults, **{"title": "Methylated CpG"}),
             "percent_chg_meth": dict(defaults, **{"title": "Methylated CHG"}),
@@ -450,7 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Cytosine Methylation",
             anchor="bismark-methylation",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.bismark_data["methextract"],
                 keys,
                 {

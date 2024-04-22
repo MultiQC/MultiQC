@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """ MultiQC module to parse similarity matrix output by sourmash compare """
 
 import logging
@@ -74,7 +72,7 @@ class CompareMixin:
                         "id": f"sourmash-compare-heatmap-{id}",
                         "title": "Sourmash: Compare",
                         "square": True,
-                        "decimalPlaces": 7,
+                        "tt_decimals": 7,
                     },
                 ),
             )

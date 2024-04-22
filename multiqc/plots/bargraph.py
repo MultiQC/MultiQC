@@ -1,9 +1,9 @@
-""" MultiQC functions to plot a bargraph """
-
+"""MultiQC functions to plot a bargraph"""
 
 import inspect
 import logging
 from collections import OrderedDict
+from typing import Union
 
 import math
 import re
@@ -27,7 +27,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, cats=None, pconfig=None):
+def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
     """Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also, can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
@@ -178,8 +178,6 @@ def plot(data, cats=None, pconfig=None):
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    # identical to default scale of the Highcharts JS library, this is not strictly
-    # needed. But it future proofs when we replace Highcharts with something else.
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for si, sd in enumerate(plotdata):
         for di, d in enumerate(sd):

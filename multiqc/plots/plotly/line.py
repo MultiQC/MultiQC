@@ -2,7 +2,9 @@ import dataclasses
 import io
 import logging
 import os
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Tuple
+
+import math
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
@@ -13,10 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 # {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
-LineT = Dict[str, Union[str, List[List[float]]]]
+LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
+def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -30,177 +32,170 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    p = LinePlot(pconfig, lists_of_lines)
+    return LinePlot(pconfig, lists_of_lines)
 
-    from multiqc.utils import report
 
-    return p.add_to_report(report)
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    lines: List[Dict]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        lines: List[Dict],
+        pconfig: Dict,
+    ) -> "Dataset":
+        dataset: Dataset = Dataset(
+            **dataset.__dict__,
+            lines=lines,
+        )
+
+        # Prevent Plotly from parsing strings as numbers
+        if pconfig.get("categories") or dataset.dconfig.get("categories"):
+            dataset.layout["xaxis"]["type"] = "category"
+
+        # convert HighCharts-style hardcoded trace parameters to Plotly style
+        lines = []
+        for src_line in dataset.lines:
+            new_line = {
+                "name": src_line["name"],
+                "data": src_line["data"],
+                "color": src_line.get("color"),
+                "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+                "line": {
+                    "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
+                    "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                },
+            }
+            if "marker" in src_line:
+                new_line["mode"] = "lines+markers"
+                new_line["marker"] = {
+                    "symbol": src_line["marker"].get("symbol"),
+                    "line": {
+                        "width": src_line["marker"].get("line", {}).get("width", src_line["marker"].get("lineWidth")),
+                        "color": src_line["marker"].get("line", {}).get("color", src_line["marker"].get("lineColor")),
+                    },
+                }
+            lines.append(remove_nones_and_empty_dicts(new_line))
+
+        dataset.lines = lines
+
+        mode = pconfig.get("style", "lines")
+        if config.lineplot_style == "lines+markers":
+            mode = "lines+markers"
+
+        dataset.trace_params.update(
+            mode=mode,
+            line={"width": 2},
+        )
+        if mode == "lines+markers":
+            dataset.trace_params.update(
+                line={"width": 0.6},
+                marker={"size": 5},
+            )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        layout.height += len(self.lines) * 5  # extra space for legend
+
+        fig = go.Figure(layout=layout)
+        for line in self.lines:
+            xs = [x[0] for x in line["data"]]
+            ys = [x[1] for x in line["data"]]
+            params = dict(
+                marker=line.get("marker", {}),
+                line=line.get("line", {}),
+                showlegend=line.get("showlegend", None),
+                mode=line.get("mode", None),
+            )
+            params = update_dict(params, self.trace_params, none_only=True)
+            params["marker"]["color"] = line.get("color")
+
+            fig.add_trace(
+                go.Scatter(
+                    x=xs,
+                    y=ys,
+                    name=line["name"],
+                    text=[line["name"]] * len(xs),
+                    **params,
+                )
+            )
+        return fig
 
 
 class LinePlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        lines: List[Dict]
-
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            lines: List[Dict],
-            pconfig: Dict,
-        ) -> "LinePlot.Dataset":
-            dataset = LinePlot.Dataset(
-                **dataset.__dict__,
-                lines=lines,
-            )
-            dataset.dconfig["categories"] = dataset.dconfig.get("categories", pconfig.get("categories", []))
-            if dataset.dconfig["categories"]:
-                # Prevent JavaScript from automatically parsing categorical values as numbers
-                dataset.layout["xaxis"]["type"] = "category"
-                # check that all lines have the same number of categories
-                assert all(
-                    len(line["data"]) == len(dataset.dconfig["categories"]) for line in dataset.lines
-                ), dataset.uid
-
-            # convert HighCharts hardcoded trace parameters to Plotly
-            lines = []
-            for src_line in dataset.lines:
-                new_line = {
-                    "name": src_line["name"],
-                    "data": src_line["data"],
-                    "color": src_line.get("color"),
-                }
-                lines.append(new_line)
-                new_line["marker"] = {}
-                if "dashStyle" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["dash"] = convert_dash_style(src_line["dashStyle"])
-                if "lineWidth" in src_line:
-                    new_line["line"] = new_line.get("line", {})
-                    new_line["line"]["width"] = src_line["lineWidth"]
-                if "showInLegend" in src_line:
-                    new_line["showlegend"] = src_line["showInLegend"]
-                if "marker" in src_line:
-                    new_line["marker"] = new_line.get("marker", {})
-                    new_line["marker"]["line"] = new_line["marker"].get("line", {})
-                    if "lineWidth" in src_line["marker"]:
-                        new_line["marker"]["line"]["width"] = src_line["marker"]["lineWidth"]
-                    if "lineColor" in src_line["marker"]:
-                        new_line["marker"]["line"]["color"] = src_line["marker"]["lineColor"]
-                    if "symbol" in src_line["marker"]:
-                        new_line["mode"] = "lines+markers"
-                        new_line["marker"]["symbol"] = src_line["marker"]["symbol"]
-            dataset.lines = lines
-            # Update default trace parameters
-            dataset.trace_params.update(
-                mode="lines" if config.lineplot_style == "lines" else "lines+markers",
-                line={"width": 2 if config.lineplot_style == "lines" else 0.6},
-                marker={"size": 4},
-            )
-            return dataset
-
-        def create_figure(
-            self,
-            layout: go.Layout,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            if self.plot.flat:
-                layout.height += len(self.lines) * 5  # extra space for legend
-
-            fig = go.Figure(layout=layout)
-            for line in self.lines:
-                if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                    xs = [x[0] for x in line["data"]]
-                    ys = [x[1] for x in line["data"]]
-                elif self.dconfig.get("categories"):
-                    assert len(line["data"]) == len(self.dconfig["categories"])
-                    xs = self.dconfig["categories"]
-                    ys = line["data"]
-                else:
-                    xs = [x for x in range(len(line["data"]))]
-                    ys = line["data"]
-
-                params = dict(
-                    marker=line.get("marker", {}),
-                    line=line.get("line", {}),
-                    showlegend=line.get("showlegend", None),
-                    mode=line.get("mode", None),
-                )
-                params = update_dict(params, self.trace_params, none_only=True)
-                params["marker"]["color"] = line.get("color")
-
-                fig.add_trace(
-                    go.Scatter(
-                        x=xs,
-                        y=ys,
-                        name=line["name"],
-                        text=[line["name"]] * len(xs),
-                        **params,
-                    )
-                )
-            return fig
-
     def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):
         super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
 
-        self.datasets: List[LinePlot.Dataset] = [
-            LinePlot.Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
+        self.datasets: List[Dataset] = [
+            Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
         ]
 
         # Make a tooltip always show on hover over any point on plot
         self.layout.hoverdistance = -1
 
-        y_min_range = pconfig.get("yMinRange")
-        y_bands = pconfig.get("yPlotBands")
-        x_bands = pconfig.get("xPlotBands")
-        x_lines = pconfig.get("xPlotLines")
-        y_lines = pconfig.get("yPlotLines")
-        if y_min_range or y_bands or y_lines:
+        y_minrange = pconfig.get("y_minrange", pconfig.get("yMinRange"))
+        x_minrange = pconfig.get("x_minrange", pconfig.get("xMinRange"))
+        y_bands = pconfig.get("y_bands", pconfig.get("yPlotBands"))
+        x_bands = pconfig.get("x_bands", pconfig.get("xPlotBands"))
+        x_lines = pconfig.get("x_lines", pconfig.get("xPlotLines"))
+        y_lines = pconfig.get("y_lines", pconfig.get("yPlotLines"))
+        if y_minrange or y_bands or y_lines:
             # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range
+            # find the min and the max from data points, and manually set the range.
             for dataset in self.datasets:
-                ymin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
-                if ymin is None:
-                    ymin = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                ymax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
-                if ymax is None:
-                    ymax = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
-                if ymin is None or ymax is None:
-                    for line in dataset.lines:
-                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                            ys = [x[1] for x in line["data"]]
-                        else:
-                            ys = line["data"]
-                        if ymin is None:
-                            ymin = min(ys)
-                        if ymax is None:
-                            ymax = max(ys)
-                            ymax += (ymax - ymin) * 0.05
-                dataset.layout["yaxis"]["range"] = [ymin, ymax]
+                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+                for line in dataset.lines:
+                    ys = [x[1] for x in line["data"]]
+                    if len(ys) > 0:
+                        minval = min(ys) if minval is None else min(minval, min(ys))
+                        maxval = max(ys) if maxval is None else max(maxval, max(ys))
+                if maxval is not None and minval is not None:
+                    maxval += (maxval - minval) * 0.05
+                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if y_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + y_minrange)
+                if self.layout.yaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        if x_bands or x_lines:
+        if not pconfig.get("categories", False) and x_minrange or x_bands or x_lines:
             # same as above but for x-axis
             for dataset in self.datasets:
-                xmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
-                if xmin is None:
-                    xmin = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                xmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
-                if xmax is None:
-                    xmax = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
-                if xmin is None or xmax is None:
-                    for line in dataset.lines:
-                        if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                            xs = [x[0] for x in line["data"]]
-                        else:
-                            xs = [x for x in range(len(line["data"]))]
-                        if xmin is None:
-                            xmin = min(xs)
-                        if xmax is None:
-                            xmax = max(xs)
-                dataset.layout["xaxis"]["range"] = [xmin, xmax]
+                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+                for line in dataset.lines:
+                    xs = [x[0] for x in line["data"]]
+                    if len(xs) > 0:
+                        minval = min(xs) if minval is None else min(minval, min(xs))
+                        maxval = max(xs) if maxval is None else max(maxval, max(xs))
+                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if x_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + x_minrange)
+                if self.layout.xaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["xaxis"]["range"] = [minval, maxval]
 
         self.layout.shapes = (
             [
@@ -245,8 +240,8 @@ class LinePlot(Plot):
                     x1=1,
                     y1=line["value"],
                     line={
-                        "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "width": line.get("width", 2),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -262,8 +257,8 @@ class LinePlot(Plot):
                     x1=line["value"],
                     y1=1,
                     line={
-                        "width": line["width"],
-                        "dash": convert_dash_style(line.get("dashStyle")),
+                        "width": line.get("width", 2),
+                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
                         "color": line["color"],
                     },
                 )
@@ -324,7 +319,7 @@ class LinePlot(Plot):
 
 def convert_dash_style(dash_style: str) -> str:
     """Convert dash style from Highcharts to Plotly"""
-    return {
+    mapping = {
         "Solid": "solid",
         "ShortDash": "dash",
         "ShortDot": "dot",
@@ -336,4 +331,16 @@ def convert_dash_style(dash_style: str) -> str:
         "LongDash": "longdash",
         "LongDashDot": "longdashdot",
         "LongDashDotDot": "longdashdot",
-    }.get(dash_style, "solid")
+    }
+    if dash_style in mapping.values():  # Plotly style?
+        return dash_style
+    elif dash_style in mapping.keys():  # Highcharts style?
+        return mapping[dash_style]
+    return "solid"
+
+
+def remove_nones_and_empty_dicts(d: Dict) -> Dict:
+    """Remove None and empty dicts from a dict recursively."""
+    if not isinstance(d, Dict):
+        return d
+    return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}

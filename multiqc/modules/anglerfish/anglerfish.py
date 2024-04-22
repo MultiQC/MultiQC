@@ -4,7 +4,7 @@ import json
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, beeswarm, table
+from multiqc.plots import bargraph, violin, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -41,13 +41,13 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.anglerfish_data)} reports")
 
         # Write parsed report data to a file
-        ## Parse whole JSON to save all its content
+        # Parse whole JSON to save all its content
         self.write_data_file(self.anglerfish_data, "multiqc_anglerfish")
 
         # General Stats Table
         self.anglerfish_general_stats_table()
 
-        # Adds section for Sample Stats Read length table/beeswarm plot
+        # Adds section for Sample Stats Read length table/violin plot
         self.anglerfish_sample_stats()
         # Adds section for Undetermined indexes plot
         self.anglerfish_undetermined_index_chart()
@@ -108,8 +108,8 @@ class MultiqcModule(BaseMultiqcModule):
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
-        # Prepp data for general stat table
-        ## Multiple sample names per file requires dict where the first key is not file name
+        # Prep data for general stat table
+        # Multiple sample names per file requires dict where the first key is not file name
         data = {}
         for s_name in self.anglerfish_data:
             total_read = self.anglerfish_data[s_name]["total_read"]
@@ -168,8 +168,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def anglerfish_sample_stats(self):
         """Generate plot for read length from sample stats.
-        For >10 samples: generate table plot
-        for >= 10 samples: generate beeswarm plot"""
+        For < 10 samples: generate a table
+        for >= 10 samples: generate a violin plot"""
         data = {}
         total_samples = 0
         for s_name in self.anglerfish_data:
@@ -193,11 +193,11 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "Sample_Stat_Read_Length",
             "title": "Anglerfish: Read Lengths Summary",
         }
-        # Plot table if less than 10 samples exist, beeswarm if more
+        # Plot table if less than 10 samples exist, a violin if more
         if total_samples < 10:
             p = table.plot(data, None, config)
         else:
-            p = beeswarm.plot(data, None, config)
+            p = violin.plot(data, None, config)
         self.add_section(
             name="Read Lengths Summary",
             anchor="anglerfish-sample-statistics",
@@ -226,11 +226,10 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         config = {
-            "id": "Anglerfish_undetermined_index_plot",
+            "id": "anglerfish_undetermined_index_plot",
             "cpswitch": False,
             "title": "Anglerfish: Undetermined Indexes",
             "ylab": "Index Count",
-            "tt_percentages": False,
         }
         self.add_section(
             name="Undetermined Indexes",

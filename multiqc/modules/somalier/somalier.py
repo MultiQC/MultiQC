@@ -391,7 +391,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "somalier_stats",
             "namespace": "Somalier",
             "title": "Somalier: Statistics",
-            "no_beeswarm": True,
+            "no_violin": True,
             "raw_data_fn": "multiqc_somalier_stats",
         }
 
@@ -540,6 +540,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "somalier_het_check_plot",
                 "title": "Somalier: Sample Observed Heterozygosity",
                 "xlab": "Mean depth",
+                "xsuffix": "x",
                 "ylab": "Standard deviation of allele-balance",
             }
 

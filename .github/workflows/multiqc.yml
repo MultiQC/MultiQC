@@ -58,8 +58,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Check out MultiQC code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        env:
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -144,12 +145,6 @@ jobs:
             echo "Empty directory should not produce a report" >&2
             exit 1
           fi
-
-      - name: Test for missing CSPs
-        if: matrix.python-version == env.latest_python
-        run: |
-          uv pip install beautifulsoup4
-          python test/print_missing_csp.py --report full_report.html --whitelist CSP.txt
 
   run_windows:
     name: Windows

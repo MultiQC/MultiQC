@@ -284,8 +284,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def reads_by_quality_plot(self):
-        """Make the HighCharts HTML to plot the reads by quality"""
-
         def _get_total_reads(data_dict):
             stat_type = self._stat_types[0]
             for stat_type in self._stat_types:

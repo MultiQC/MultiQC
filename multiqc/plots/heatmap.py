@@ -1,7 +1,7 @@
-""" MultiQC functions to plot a heatmap """
-
+"""MultiQC functions to plot a heatmap"""
 
 import logging
+from typing import Union
 
 from multiqc.utils import config
 from multiqc.plots.plotly import heatmap
@@ -22,9 +22,9 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, xcats, ycats=None, pconfig=None):
+def plot(data, xcats=None, ycats=None, pconfig=None) -> Union[heatmap.HeatmapPlot, str]:
     """Plot a 2D heatmap.
-    :param data: List of lists, each a representing a row of values.
+    :param data: List of lists, each a representing a row of values; or a dict of dicts
     :param xcats: Labels for x-axis
     :param ycats: Labels for y-axis. Defaults to same as x.
     :param pconfig: optional dict with config key:value pairs.
@@ -52,4 +52,4 @@ def plot(data, xcats, ycats=None, pconfig=None):
                 # debugging of modules
                 raise
 
-    return heatmap.plot(data, xcats, ycats, pconfig)
+    return heatmap.plot(data, pconfig, xcats, ycats)

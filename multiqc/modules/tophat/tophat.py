@@ -129,8 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "aligned_not_multimapped_discordant": {"color": "#437bb1", "name": "Aligned"},

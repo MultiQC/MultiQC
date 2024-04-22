@@ -27,7 +27,7 @@ def parse_log_files(self):
 
         # process the file content
         d = {}
-        for line in f["contents_lines"]:
+        for line in f["f"].splitlines():
             nr_neighbours, count = line.strip("\n").split(" ")
             d[int(nr_neighbours)] = int(count)
 

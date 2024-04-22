@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """ MultiQC submodule to parse output from Samtools stats """
 
 import logging
 import re
 
 from multiqc import config
-from multiqc.plots import bargraph, beeswarm
+from multiqc.plots import bargraph, violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -93,31 +91,27 @@ class StatsReportMixin:
                 "modify": lambda x: x * 100.0,
             },
             "non-primary_alignments": {
-                "title": f"{config.read_count_prefix} Non-Primary",
+                "title": "Non-primary",
                 "description": f"Non-primary alignments ({config.read_count_desc})",
-                "min": 0,
                 "scale": "PuBu",
-                "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
             },
             "reads_mapped": {
-                "title": f"{config.read_count_prefix} Reads Mapped",
-                "description": f"Reads Mapped in the bam file ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
+                "title": "Reads mapped",
+                "description": f"Reads mapped in the bam file ({config.read_count_desc})",
                 "shared_key": "read_count",
             },
             "reads_mapped_percent": {
                 "title": "% Mapped",
-                "description": "% Mapped Reads",
+                "description": "% Mapped reads",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn",
             },
             "reads_properly_paired_percent": {
-                "title": "% Proper Pairs",
-                "description": "% Properly Paired Reads",
+                "title": "% Proper pairs",
+                "description": "% Properly paired reads",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -127,8 +121,8 @@ class StatsReportMixin:
                 else False,
             },
             "reads_MQ0_percent": {
-                "title": "% MapQ 0 Reads",
-                "description": "% of Reads that are Ambiguously Placed (MapQ=0)",
+                "title": "% MapQ 0 reads",
+                "description": "% of reads that are ambiguously placed (MapQ=0)",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
@@ -136,14 +130,12 @@ class StatsReportMixin:
                 "hidden": True,
             },
             "raw_total_sequences": {
-                "title": f"{config.read_count_prefix} Total seqs",
+                "title": "Total seqs",
                 "description": f"Total sequences in the bam file ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
             },
         }
-        self.general_stats_addcols(self.samtools_stats, stats_headers)
+        self.general_stats_addcols(self.samtools_stats, stats_headers, namespace="stats")
 
         # Make bargraph plot of mapped/unmapped reads
         self.alignment_section(self.samtools_stats)
@@ -154,14 +146,14 @@ class StatsReportMixin:
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": config.read_count_prefix,
-            "decimalPlaces": 2,
+            "tt_decimals": 2,
             "shared_key": "read_count",
         }
         bases = {
             "min": 0,
             "modify": lambda x: float(x) * config.base_count_multiplier,
             "suffix": config.base_count_prefix,
-            "decimalPlaces": 2,
+            "tt_decimals": 2,
             "shared_key": "base_count",
         }
         keys["raw_total_sequences"] = dict(reads, **{"title": "Total sequences"})
@@ -194,15 +186,15 @@ class StatsReportMixin:
         )
 
         self.add_section(
-            name="Alignment metrics",
+            name="Alignment stats",
             anchor="samtools-stats",
             description="This module parses the output from <code>samtools stats</code>. All numbers in millions.",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.samtools_stats,
                 keys,
                 {
                     "id": "samtools-stats-dp",
-                    "title": "Samtools stats: Alignment Metrics",
+                    "title": "Samtools stats: Alignment Stats",
                 },
             ),
         )
@@ -228,7 +220,7 @@ class StatsReportMixin:
                     "skipping samtools plot for: {}".format(sample_id)
                 )
         self.add_section(
-            name="Percent Mapped",
+            name="Percent mapped",
             anchor="samtools-stats-alignment",
             description="Alignment metrics from <code>samtools stats</code>; mapped vs. unmapped reads vs. reads mapped with MQ0.",
             helptext="""
@@ -253,7 +245,6 @@ class StatsReportMixin:
 
 
 def alignment_chart(data):
-    """Make the HighCharts HTML to plot the alignment rates"""
     keys = {
         "reads_mapped_MQ1": {"color": "#437bb1", "name": "Mapped (with MQ>0)"},
         "reads_MQ0": {"color": "#FF9933", "name": "MQ0"},
