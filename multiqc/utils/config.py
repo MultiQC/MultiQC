@@ -1,5 +1,5 @@
-""" MultiQC config module. Holds a single copy of
-config variables to be used across all other modules """
+"""MultiQC config module. Holds a single copy of
+config variables to be used across all other modules"""
 
 from pathlib import Path
 from typing import List, Dict, Optional, Union
@@ -192,6 +192,7 @@ plots_dir: Optional[str] = None
 custom_data: Dict = {}
 report_section_order: Dict = {}
 output_fn: Optional[str] = None
+filename: Optional[str] = None
 megaqc_upload: bool = False
 
 ##### Available modules

@@ -346,23 +346,26 @@ def load(analysis_dir, *args, **kwargs) -> RunResult:
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
     # Try find multiqc_data.json in the given directory and load it into the report.
-    json_path = Path(analysis_dir) / "multiqc_data.json"
-    if json_path.exists():
-        _init_config(None, *args, **kwargs)
-        logger.info(f"Loading data from {json_path}")
-        with json_path.open("r") as f:
-            data = json.load(f)
+    json_path_found = False
+    if not isinstance(analysis_dir, list):
+        json_path = Path(analysis_dir) / "multiqc_data.json"
+        if json_path.exists():
+            json_path_found = True
+            _init_config(None, *args, **kwargs)
+            logger.info(f"Loading data from {json_path}")
+            with json_path.open("r") as f:
+                data = json.load(f)
 
-        for mod, sections in data["report_data_sources"].items():
-            logger.info(f"Loaded module {mod}")
-            for section, sources in sections.items():
-                for sname, source in sources.items():
-                    report.data_sources[mod][section][sname] = source
-        for id, plot_dump in data["report_plot_data"].items():
-            logger.info(f"Loaded plot {id}")
-            report.plot_data[id] = plot_dump
-        return RunResult()
-    else:
+            for mod, sections in data["report_data_sources"].items():
+                logger.info(f"Loaded module {mod}")
+                for section, sources in sections.items():
+                    for sname, source in sources.items():
+                        report.data_sources[mod][section][sname] = source
+            for id, plot_dump in data["report_plot_data"].items():
+                logger.info(f"Loaded plot {id}")
+                report.plot_data[id] = plot_dump
+            return RunResult()
+    if not json_path_found:
         # Run without generating an HTML report. Thin wrapper around `run` for adding more data
         # within interactive environments.
         kwargs["no_report"] = True
@@ -444,15 +447,14 @@ def show_plot(plot_id: str, dataset_id=0, **kwargs) -> go.Figure:
 
 def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     data = defaultdict(dict)
-    for data_by_sample in report.general_stats_data:
+    for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
         for s, val_by_key in data_by_sample.items():
             if sample and s != sample:
                 continue
             for key, val in val_by_key.items():
-                if key in data[s]:
-                    print("Duplicated key in general stats")
-                    # TODO: prepend with header.namespace
-                data[s][key] = val
+                if key in header:
+                    key = f"{header[key].get('namespace', '')}.{key}"
+                    data[s][key] = val
     if sample:
         if not data:
             raise ValueError(f"Sample '{sample}' not found in loaded data. Available samples: {list_samples()}")
@@ -493,6 +495,50 @@ def get_module_data(module: Optional[str] = None, sample: Optional[str] = None, 
 
 def reset():
     report.reset()
+
+
+def add_custom_content_section(
+    name,
+    anchor,
+    description="",
+    content_before_plot="",
+    plot: Optional[Union[Plot, str]] = None,
+    content="",
+    comment="",
+    helptext="",
+):
+    """
+    Add a custom content section to the report. This can be used to add a custom table or other content.
+    """
+    module = BaseMultiqcModule(
+        name=name,
+        anchor=anchor,
+        info=description,
+        comment=comment,
+    )
+    module.add_section(
+        name=name,
+        anchor=anchor,
+        description=description,
+        helptext=helptext,
+        content_before_plot=content_before_plot,
+        plot=plot,
+        content=content,
+        comment=comment,
+    )
+
+
+def write_report():
+    """
+    Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
+    """
+    config.make_report = True
+    template_mod = config.avail_templates[config.template].load()
+    _write_html_and_data(
+        tmp_dir=report.tmp_dir,
+        template_mod=template_mod,
+        filename=config.filename,
+    )
 
 
 # Main function that runs MultiQC. Available to use within an interactive Python environment
@@ -582,7 +628,6 @@ def run(
         replace_names=replace_names,
         sample_names=sample_names,
         sample_filters=sample_filters,
-        file_list=file_list,
         filename=filename,
         make_data_dir=make_data_dir,
         no_data_dir=no_data_dir,
@@ -693,6 +738,7 @@ def _init_config(
     replace_names=None,
     sample_names=None,
     sample_filters=None,
+    filename=None,
     make_data_dir=False,
     no_data_dir=False,
     data_format=None,
@@ -846,6 +892,8 @@ def _init_config(
             config.export_plot_formats.append("png")
     if make_pdf:
         config.template = "simple"
+    if filename:
+        config.filename = filename
     if no_megaqc_upload:
         config.megaqc_upload = False
     else:
@@ -1036,8 +1084,6 @@ def _run_modules(
         os.makedirs(config.plots_dir)
     else:
         config.plots_dir = None
-    if not config.make_report:
-        config.output_fn = None
 
     # Add an output subdirectory if specified by template
     try:
@@ -1070,32 +1116,31 @@ def _run_modules(
 
             report.modules_output.extend(modules)
 
-            if config.make_report:
-                # Copy over css & js files if requested by the theme
-                try:
-                    for to, path in report.modules_output[-1].css.items():
-                        copy_to = os.path.join(tmp_dir, to)
-                        os.makedirs(os.path.dirname(copy_to))
-                        shutil.copyfile(path, copy_to)
-                except OSError as e:
-                    if e.errno == errno.EEXIST:
-                        pass
-                    else:
-                        raise
-                except AttributeError:
+            # Copy over css & js files if requested by the theme
+            try:
+                for to, path in report.modules_output[-1].css.items():
+                    copy_to = os.path.join(tmp_dir, to)
+                    os.makedirs(os.path.dirname(copy_to))
+                    shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
                     pass
-                try:
-                    for to, path in report.modules_output[-1].js.items():
-                        copy_to = os.path.join(tmp_dir, to)
-                        os.makedirs(os.path.dirname(copy_to))
-                        shutil.copyfile(path, copy_to)
-                except OSError as e:
-                    if e.errno == errno.EEXIST:
-                        pass
-                    else:
-                        raise
-                except AttributeError:
+                else:
+                    raise
+            except AttributeError:
+                pass
+            try:
+                for to, path in report.modules_output[-1].js.items():
+                    copy_to = os.path.join(tmp_dir, to)
+                    os.makedirs(os.path.dirname(copy_to))
+                    shutil.copyfile(path, copy_to)
+            except OSError as e:
+                if e.errno == errno.EEXIST:
                     pass
+                else:
+                    raise
+            except AttributeError:
+                pass
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")

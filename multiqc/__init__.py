@@ -22,6 +22,8 @@ from .multiqc import (
     get_module_data,
     get_general_stats_data,
     reset,
+    write_report,
+    add_custom_content_section,
 )
 from .utils import config
 
@@ -39,6 +41,8 @@ __all__ = [
     "get_module_data",  # for interactive use
     "get_general_stats_data",  # for interactive use
     "reset",  # for interactive use
+    "write_report",  # for interactive use
+    "add_custom_content_section",  # for interactive use
     "config",
     "__version__",
 ]
