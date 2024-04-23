@@ -18,9 +18,10 @@ log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 rich_console: rich.console.Console
+logger = logging.getLogger("multiqc")
 
 
-def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
+def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -29,6 +30,10 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
 
     loglevel (str): Determines the level of the log output.
     """
+    # Google Colab notebooks duplicate log messages without this, see
+    # https://stackoverflow.com/a/55877763/341474
+    logger.propagate = False
+
     # File for logging
     global log_tmp_dir, log_tmp_fn
     # Have to create a separate directory for the log file otherwise Windows will complain
