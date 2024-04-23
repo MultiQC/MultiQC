@@ -769,7 +769,7 @@ def _init_config(
     """
     report.init()
 
-    log.init_log(logger, quiet=quiet, verbose=verbose, no_ansi=no_ansi)
+    log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug(f"Using temporary directory: {report.tmp_dir}")
 

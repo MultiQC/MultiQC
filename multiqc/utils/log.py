@@ -17,6 +17,7 @@ log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 rich_console: rich.console.Console
+logger = logging.getLogger("multiqc")
 
 
 def is_running_in_notebook():
@@ -30,7 +31,7 @@ def is_running_in_notebook():
     return False
 
 
-def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
+def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -44,6 +45,11 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
         log_level = "WARNING"
         config.quiet = True
 
+    # Google Colab notebooks duplicate log messages without this, see
+    # https://stackoverflow.com/a/55877763/341474
+    logger.propagate = False
+
+    # Rich console to print tracebacks from user modules
     global rich_console
     rich_console = rich.console.Console(
         stderr=False,
