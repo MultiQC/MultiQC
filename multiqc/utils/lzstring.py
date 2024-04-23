@@ -34,15 +34,21 @@ class BitWriter:
         self.buffer = io.BytesIO()
 
     def write(self, value: int, bits: int):
+        # Retrieve values from self to save later. This saves a lot of
+        # dictionary lookups.
+        bit_store = self.bit_store
+        bits_remaining = self.bits_remaining
         for i in range(bits):
-            self.bit_store <<= 1
-            self.bit_store |= value & 1
+            bit_store <<= 1
+            bit_store |= value & 1
             value >>= 1
-            self.bits_remaining -= 1
-            if self.bits_remaining == 0:
+            bits_remaining -= 1
+            if bits_remaining == 0:
                 self.buffer.write(struct.pack("B", self.bit_store))
-                self.bit_store = 0
-                self.bits_remaining = 8
+                bit_store = 0
+                bits_remaining = 8
+        self.bit_store = bit_store
+        self.bits_remaining = bits_remaining
 
     def getvalue(self):
         value = self.buffer.getvalue()
