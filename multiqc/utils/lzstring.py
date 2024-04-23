@@ -9,8 +9,10 @@ lz-string for python v1.0.4 (https://github.com/gkovacs/lz-string-python)
 
 License: https://github.com/gkovacs/lz-string-python/blob/master/LICENSE.md
 """
+import base64
 import io
 import math
+import struct
 from dataclasses import dataclass
 
 keyStrBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
@@ -25,6 +27,30 @@ class Entry:
     index: int
 
 
+class BitWriter:
+    def __init__(self):
+        self.bit_store = 0
+        self.bits_remaining = 8
+        self.buffer = io.BytesIO()
+
+    def write(self, value: int, bits: int):
+        for i in range(bits):
+            self.bit_store <<= 1
+            self.bit_store |= value & 1
+            value >>= 1
+            self.bits_remaining -= 1
+            if self.bits_remaining == 0:
+                self.buffer.write(struct.pack("B", self.bit_store))
+                self.bit_store = 0
+                self.bits_remaining = 8
+
+    def getvalue(self):
+        value = self.buffer.getvalue()
+        # Flush the last char
+        leftover = self.bit_store << self.bits_remaining
+        return value + struct.pack("B", leftover)
+
+
 def getBaseValue(alphabet, character):
     if alphabet not in baseReverseDic:
         baseReverseDic[alphabet] = {}
@@ -33,7 +59,7 @@ def getBaseValue(alphabet, character):
     return baseReverseDic[alphabet][character]
 
 
-def _compress(uncompressed, bitsPerChar, getCharFromInt):
+def _compress(uncompressed):
     if uncompressed is None:
         return ""
 
@@ -48,9 +74,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
     context_enlargeIn = 2  # Compensate for the first entry which should not count
     context_dictSize = 3
     context_numBits = 2
-    context_data = io.StringIO()
-    context_data_val = 0
-    context_data_position = 0
+    context_data = BitWriter()
 
     for context_c in uncompressed:
         if context_c not in context_dictionary:
@@ -64,63 +88,21 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
         else:
             if context_w in context_dictionaryToCreate:
                 if ord(context_w[0]) < 256:
-                    for i in range(context_numBits):
-                        context_data_val = context_data_val << 1
-                        if context_data_position == bitsPerChar - 1:
-                            context_data_position = 0
-                            context_data.write(getCharFromInt(context_data_val))
-                            context_data_val = 0
-                        else:
-                            context_data_position += 1
+                    context_data.write(0, context_numBits)
                     value = ord(context_w[0])
-                    for i in range(8):
-                        context_data_val = (context_data_val << 1) | (value & 1)
-                        if context_data_position == bitsPerChar - 1:
-                            context_data_position = 0
-                            context_data.write(getCharFromInt(context_data_val))
-                            context_data_val = 0
-                        else:
-                            context_data_position += 1
-                        value = value >> 1
-
+                    context_data.write(value, 8)
                 else:
-                    value = 1
-                    for i in range(context_numBits):
-                        context_data_val = (context_data_val << 1) | value
-                        if context_data_position == bitsPerChar - 1:
-                            context_data_position = 0
-                            context_data.write(getCharFromInt(context_data_val))
-                            context_data_val = 0
-                        else:
-                            context_data_position += 1
-                        value = 0
+                    context_data.write(1, context_numBits)
                     value = ord(context_w[0])
-                    for i in range(16):
-                        context_data_val = (context_data_val << 1) | (value & 1)
-                        if context_data_position == bitsPerChar - 1:
-                            context_data_position = 0
-                            context_data.write(getCharFromInt(context_data_val))
-                            context_data_val = 0
-                        else:
-                            context_data_position += 1
-                        value = value >> 1
+                    context_data.write(value, 16)
                 context_enlargeIn -= 1
                 if context_enlargeIn == 0:
-                    context_enlargeIn = math.pow(2, context_numBits)
+                    context_enlargeIn = 1 << context_numBits
                     context_numBits += 1
                 del context_dictionaryToCreate[context_w]
             else:
                 value = context_dictionary[context_w]
-                for i in range(context_numBits):
-                    context_data_val = (context_data_val << 1) | (value & 1)
-                    if context_data_position == bitsPerChar - 1:
-                        context_data_position = 0
-                        context_data.write(getCharFromInt(context_data_val))
-                        context_data_val = 0
-                    else:
-                        context_data_position += 1
-                    value = value >> 1
-
+                context_data.write(value, context_numBits)
             context_enlargeIn -= 1
             if context_enlargeIn == 0:
                 context_enlargeIn = math.pow(2, context_numBits)
@@ -135,45 +117,13 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
     if context_w != "":
         if context_w in context_dictionaryToCreate:
             if ord(context_w[0]) < 256:
-                for i in range(context_numBits):
-                    context_data_val = context_data_val << 1
-                    if context_data_position == bitsPerChar - 1:
-                        context_data_position = 0
-                        context_data.write(getCharFromInt(context_data_val))
-                        context_data_val = 0
-                    else:
-                        context_data_position += 1
+                context_data.write(0, context_numBits)
                 value = ord(context_w[0])
-                for i in range(8):
-                    context_data_val = (context_data_val << 1) | (value & 1)
-                    if context_data_position == bitsPerChar - 1:
-                        context_data_position = 0
-                        context_data.write(getCharFromInt(context_data_val))
-                        context_data_val = 0
-                    else:
-                        context_data_position += 1
-                    value = value >> 1
+                context_data.write(value, 8)
             else:
-                value = 1
-                for i in range(context_numBits):
-                    context_data_val = (context_data_val << 1) | value
-                    if context_data_position == bitsPerChar - 1:
-                        context_data_position = 0
-                        context_data.write(getCharFromInt(context_data_val))
-                        context_data_val = 0
-                    else:
-                        context_data_position += 1
-                    value = 0
+                context_data.write(1, context_numBits)
                 value = ord(context_w[0])
-                for i in range(16):
-                    context_data_val = (context_data_val << 1) | (value & 1)
-                    if context_data_position == bitsPerChar - 1:
-                        context_data_position = 0
-                        context_data.write(getCharFromInt(context_data_val))
-                        context_data_val = 0
-                    else:
-                        context_data_position += 1
-                    value = value >> 1
+                context_data.write(value, 16)
             context_enlargeIn -= 1
             if context_enlargeIn == 0:
                 context_enlargeIn = math.pow(2, context_numBits)
@@ -181,15 +131,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
             del context_dictionaryToCreate[context_w]
         else:
             value = context_dictionary[context_w]
-            for i in range(context_numBits):
-                context_data_val = (context_data_val << 1) | (value & 1)
-                if context_data_position == bitsPerChar - 1:
-                    context_data_position = 0
-                    context_data.write(getCharFromInt(context_data_val))
-                    context_data_val = 0
-                else:
-                    context_data_position += 1
-                value = value >> 1
+            context_data.write(value, context_numBits)
 
     context_enlargeIn -= 1
     if context_enlargeIn == 0:
@@ -198,24 +140,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
 
     # Mark the end of the stream
     value = 2
-    for i in range(context_numBits):
-        context_data_val = (context_data_val << 1) | (value & 1)
-        if context_data_position == bitsPerChar - 1:
-            context_data_position = 0
-            context_data.write(getCharFromInt(context_data_val))
-            context_data_val = 0
-        else:
-            context_data_position += 1
-        value = value >> 1
-
-    # Flush the last char
-    while True:
-        context_data_val = context_data_val << 1
-        if context_data_position == bitsPerChar - 1:
-            context_data.write(getCharFromInt(context_data_val))
-            break
-        else:
-            context_data_position += 1
+    context_data.write(2, context_numBits)
 
     return context_data.getvalue()
 
@@ -367,35 +292,11 @@ def _decompress(length, resetValue, getNextValue):
 
 class LZString:
     @staticmethod
-    def compress(uncompressed):
-        return _compress(uncompressed, 16, chr)
-
-    @staticmethod
-    def compressToUint8Array(uncompressed):
-        return bytes([ord(x) for x in _compress(uncompressed, 8, chr)])
-
-    @staticmethod
-    def compressToUTF16(uncompressed):
-        if uncompressed is None:
-            return ""
-        return _compress(uncompressed, 15, lambda a: chr(a + 32)) + " "
-
-    @staticmethod
     def compressToBase64(uncompressed):
         if uncompressed is None:
             return ""
-        res = _compress(uncompressed, 6, keyStrBase64.__getitem__)
-        # To produce valid Base64
-        end = len(res) % 4
-        if end > 0:
-            res += "=" * (4 - end)
-        return res
-
-    @staticmethod
-    def compressToEncodedURIComponent(uncompressed):
-        if uncompressed is None:
-            return ""
-        return _compress(uncompressed, 6, lambda a: keyStrUriSafe[a])
+        res = _compress(uncompressed)
+        return base64.b64encode(res).decode("ascii")
 
     @staticmethod
     def decompress(compressed):
