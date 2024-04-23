@@ -384,7 +384,7 @@ class LZString:
     def compressToBase64(uncompressed):
         if uncompressed is None:
             return ""
-        res = _compress(uncompressed, 6, lambda a: keyStrBase64[a])
+        res = _compress(uncompressed, 6, keyStrBase64.__getitem__)
         # To produce valid Base64
         end = len(res) % 4
         if end > 0:
