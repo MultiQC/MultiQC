@@ -769,12 +769,7 @@ def _init_config(
     """
     report.init()
 
-    # Set up logging
     log.init_log(logger, quiet=quiet, verbose=verbose, no_ansi=no_ansi)
-    mag_glass = ":mag: " if not util_functions.force_term_colors() else ""
-    log.rich_console.print(
-        f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] {mag_glass}[dim]| v{config.version}\n"
-    )
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug(f"Using temporary directory: {report.tmp_dir}")
 
