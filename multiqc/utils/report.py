@@ -6,6 +6,7 @@ import fnmatch
 import inspect
 import io
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -24,7 +25,7 @@ from multiqc.utils import lzstring
 from . import config
 from .util_functions import replace_defaultdicts
 
-logger = config.logger
+logger = logging.getLogger("multiqc")
 
 # Uninitialised global variables for static typing
 tmp_dir: str

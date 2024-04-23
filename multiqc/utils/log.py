@@ -45,10 +45,6 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
         log_level = "WARNING"
         config.quiet = True
 
-    # Google Colab notebooks duplicate log messages without this, see
-    # https://stackoverflow.com/a/55877763/341474
-    logger.propagate = False
-
     # Rich console to print tracebacks from user modules
     global rich_console
     rich_console = rich.console.Console(
@@ -110,6 +106,12 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
+    # Google Colab notebooks duplicate log messages without this, see
+    # https://stackoverflow.com/a/55877763/341474
+    if is_running_in_notebook:
+        logger.propagate = False
+
+    # Print intro
     if not config.no_ansi:
         BOLD = "\033[1m"
         DIM = "\033[2m"
