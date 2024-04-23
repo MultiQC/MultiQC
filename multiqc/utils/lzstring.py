@@ -9,7 +9,7 @@ lz-string for python v1.0.4 (https://github.com/gkovacs/lz-string-python)
 
 License: https://github.com/gkovacs/lz-string-python/blob/master/LICENSE.md
 """
-
+import io
 import math
 from dataclasses import dataclass
 
@@ -37,6 +37,9 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
     if uncompressed is None:
         return ""
 
+    if isinstance(uncompressed, bytes):
+        uncompressed = uncompressed.decode()
+
     context_dictionary = {}
     context_dictionaryToCreate = {}
     context_c = ""
@@ -45,15 +48,11 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
     context_enlargeIn = 2  # Compensate for the first entry which should not count
     context_dictSize = 3
     context_numBits = 2
-    context_data = []
+    context_data = io.StringIO()
     context_data_val = 0
     context_data_position = 0
 
-    for ii in range(len(uncompressed)):
-        if isinstance(uncompressed, (bytes)):
-            context_c = chr(uncompressed[ii])
-        else:
-            context_c = uncompressed[ii]
+    for context_c in uncompressed:
         if context_c not in context_dictionary:
             context_dictionary[context_c] = context_dictSize
             context_dictSize += 1
@@ -69,7 +68,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                         context_data_val = context_data_val << 1
                         if context_data_position == bitsPerChar - 1:
                             context_data_position = 0
-                            context_data.append(getCharFromInt(context_data_val))
+                            context_data.write(getCharFromInt(context_data_val))
                             context_data_val = 0
                         else:
                             context_data_position += 1
@@ -78,7 +77,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                         context_data_val = (context_data_val << 1) | (value & 1)
                         if context_data_position == bitsPerChar - 1:
                             context_data_position = 0
-                            context_data.append(getCharFromInt(context_data_val))
+                            context_data.write(getCharFromInt(context_data_val))
                             context_data_val = 0
                         else:
                             context_data_position += 1
@@ -90,7 +89,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                         context_data_val = (context_data_val << 1) | value
                         if context_data_position == bitsPerChar - 1:
                             context_data_position = 0
-                            context_data.append(getCharFromInt(context_data_val))
+                            context_data.write(getCharFromInt(context_data_val))
                             context_data_val = 0
                         else:
                             context_data_position += 1
@@ -100,7 +99,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                         context_data_val = (context_data_val << 1) | (value & 1)
                         if context_data_position == bitsPerChar - 1:
                             context_data_position = 0
-                            context_data.append(getCharFromInt(context_data_val))
+                            context_data.write(getCharFromInt(context_data_val))
                             context_data_val = 0
                         else:
                             context_data_position += 1
@@ -116,7 +115,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                     context_data_val = (context_data_val << 1) | (value & 1)
                     if context_data_position == bitsPerChar - 1:
                         context_data_position = 0
-                        context_data.append(getCharFromInt(context_data_val))
+                        context_data.write(getCharFromInt(context_data_val))
                         context_data_val = 0
                     else:
                         context_data_position += 1
@@ -140,7 +139,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                     context_data_val = context_data_val << 1
                     if context_data_position == bitsPerChar - 1:
                         context_data_position = 0
-                        context_data.append(getCharFromInt(context_data_val))
+                        context_data.write(getCharFromInt(context_data_val))
                         context_data_val = 0
                     else:
                         context_data_position += 1
@@ -149,7 +148,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                     context_data_val = (context_data_val << 1) | (value & 1)
                     if context_data_position == bitsPerChar - 1:
                         context_data_position = 0
-                        context_data.append(getCharFromInt(context_data_val))
+                        context_data.write(getCharFromInt(context_data_val))
                         context_data_val = 0
                     else:
                         context_data_position += 1
@@ -160,7 +159,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                     context_data_val = (context_data_val << 1) | value
                     if context_data_position == bitsPerChar - 1:
                         context_data_position = 0
-                        context_data.append(getCharFromInt(context_data_val))
+                        context_data.write(getCharFromInt(context_data_val))
                         context_data_val = 0
                     else:
                         context_data_position += 1
@@ -170,7 +169,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                     context_data_val = (context_data_val << 1) | (value & 1)
                     if context_data_position == bitsPerChar - 1:
                         context_data_position = 0
-                        context_data.append(getCharFromInt(context_data_val))
+                        context_data.write(getCharFromInt(context_data_val))
                         context_data_val = 0
                     else:
                         context_data_position += 1
@@ -186,7 +185,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
                 context_data_val = (context_data_val << 1) | (value & 1)
                 if context_data_position == bitsPerChar - 1:
                     context_data_position = 0
-                    context_data.append(getCharFromInt(context_data_val))
+                    context_data.write(getCharFromInt(context_data_val))
                     context_data_val = 0
                 else:
                     context_data_position += 1
@@ -203,7 +202,7 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
         context_data_val = (context_data_val << 1) | (value & 1)
         if context_data_position == bitsPerChar - 1:
             context_data_position = 0
-            context_data.append(getCharFromInt(context_data_val))
+            context_data.write(getCharFromInt(context_data_val))
             context_data_val = 0
         else:
             context_data_position += 1
@@ -213,12 +212,12 @@ def _compress(uncompressed, bitsPerChar, getCharFromInt):
     while True:
         context_data_val = context_data_val << 1
         if context_data_position == bitsPerChar - 1:
-            context_data.append(getCharFromInt(context_data_val))
+            context_data.write(getCharFromInt(context_data_val))
             break
         else:
             context_data_position += 1
 
-    return "".join(context_data)
+    return context_data.getvalue()
 
 
 def _decompress(length, resetValue, getNextValue):
