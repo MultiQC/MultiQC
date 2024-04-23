@@ -9,6 +9,7 @@ import json
 import mimetypes
 import os
 import re
+import sys
 import tempfile
 import time
 from collections import defaultdict
@@ -18,11 +19,13 @@ from typing import Dict, Union, List, Optional, Any
 import rich
 import rich.progress
 import yaml
+from tqdm import tqdm
 
 from multiqc.utils import lzstring
+from multiqc.utils import log
 
 from . import config
-from .util_functions import replace_defaultdicts
+from .util_functions import replace_defaultdicts, is_running_in_notebook
 
 logger = config.logger
 
@@ -300,31 +303,63 @@ def get_filelist(run_module_names):
     for path in config.analysis_dir:
         handle_analysis_path(Path(path))
 
-    # Search through collected files
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_interactive=False if config.no_ansi else None,
-        color_system=None if config.no_ansi else "auto",
-    )
-    progress_obj = rich.progress.Progress(
-        "[blue]|[/]      ",
-        rich.progress.SpinnerColumn(),
-        "[blue]{task.description}[/] |",
-        rich.progress.BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        "[green]{task.completed}/{task.total}",
-        "[dim]{task.fields[s_fn]}",
-        console=console,
-        disable=config.no_ansi or config.quiet,
-    )
-    with progress_obj as progress:
-        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
-        for sf in searchfiles:
-            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
-            if not add_file(sf[0], sf[1]):
-                file_search_stats["skipped_no_match"] += 1
-        progress.update(mqc_task, s_fn="")
+    if is_running_in_notebook():
+        PRINT_FNAME = False
+        # ANSI escape code for dim text
+        if not config.no_ansi:
+            DIM = "\033[2m"
+            BLUE = "\033[34m"
+            RESET = "\033[0m"
+        else:
+            DIM = ""
+            BLUE = ""
+            RESET = ""
+
+        bar_format = f"{BLUE}| {'searching':>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt}"
+        if PRINT_FNAME:
+            bar_format += " {desc}"
+
+        # Set up the tqdm progress bar
+        with tqdm(
+            total=len(searchfiles),
+            desc="Searching",
+            unit="file",
+            file=sys.stdout,
+            disable=config.no_ansi or config.quiet,
+            bar_format=bar_format,
+        ) as pbar:
+            for i, sf in enumerate(searchfiles):
+                # Update the progress bar description with the file being searched
+                if PRINT_FNAME and i % 100 == 0:
+                    pbar.set_description_str(f"{DIM}{os.path.join(sf[1], sf[0])[-50:]}{RESET}")
+                pbar.update(1)
+
+                # Your file processing logic
+                if not add_file(sf[0], sf[1]):
+                    file_search_stats["skipped_no_match"] += 1
+
+            # Clear the description after the loop is complete
+            pbar.set_description("")
+            pbar.refresh()
+    else:
+        progress_obj = rich.progress.Progress(
+            "[blue]|[/]      ",
+            rich.progress.SpinnerColumn(),
+            "[blue]{task.description}[/] |",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[green]{task.completed}/{task.total}",
+            "[dim]{task.fields[s_fn]}",
+            console=log.rich_console,
+            disable=config.no_ansi or config.quiet,
+        )
+        with progress_obj as progress:
+            mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+            for sf in searchfiles:
+                progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
+                if not add_file(sf[0], sf[1]):
+                    file_search_stats["skipped_no_match"] += 1
+            progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
     if config.profile_runtime:

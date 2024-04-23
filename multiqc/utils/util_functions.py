@@ -17,7 +17,7 @@ import yaml
 
 from . import config
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def robust_rmtree(path, logger=None, max_retries=10):
@@ -115,7 +115,7 @@ def write_data_file(
             if config.development:
                 raise
             data_format = "yaml"
-            log.debug(f"{fn} could not be saved as tsv/csv, falling back to YAML. {e}")
+            logger.debug(f"{fn} could not be saved as tsv/csv, falling back to YAML. {e}")
 
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
@@ -129,7 +129,7 @@ def write_data_file(
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
-    log.debug(f"Wrote data file {fn}")
+    logger.debug(f"Wrote data file {fn}")
 
 
 def force_term_colors():
@@ -251,7 +251,7 @@ def multiqc_dump_json(report):
                     dump_json(d, ensure_ascii=False)  # Test that exporting to JSON works
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
-                log.warning(f"Couldn't export data key '{s}.{k}': {e}")
+                logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
         # Get the absolute paths of analysis directories
         exported_data["config_analysis_dir_abs"] = list()
         for d in exported_data.get("config_analysis_dir", []):
@@ -277,3 +277,14 @@ def replace_defaultdicts(data):
         return obj
 
     return _replace(data)
+
+
+def is_running_in_notebook():
+    try:
+        from IPython import get_ipython
+
+        if "IPKernelApp" in get_ipython().config:
+            return True
+    except (ImportError, AttributeError):
+        pass
+    return False

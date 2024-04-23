@@ -21,6 +21,7 @@ dependencies = [
     "pyaml-env",
     "rich>=10",
     "rich-click",
+    "coloredlogs",
     "spectra>=0.0.10",
     "pydantic",
 ]
