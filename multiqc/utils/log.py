@@ -51,10 +51,6 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
         force_terminal=util_functions.force_term_colors(),
         color_system=None if no_ansi else "auto",
     )
-    if not is_running_in_notebook():
-        rich_console.print(
-            f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :mag: [dim]| v{config.version}\n"
-        )
 
     # File for logging
     global log_tmp_dir, log_tmp_fn
@@ -107,6 +103,22 @@ def init_log(logger, quiet: bool, verbose: int, no_ansi: bool = False):
     file_handler.setLevel(getattr(logging, "DEBUG"))  # always DEBUG for the file
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
+
+    if not config.no_ansi:
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+        RESET = "\033[0m"
+    else:
+        BOLD = ""
+        DIM = ""
+        DARK_ORANGE = ""
+        RESET = ""
+    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}| v{config.version}"
+    if is_running_in_notebook():
+        print(intro)
+    else:
+        print(f"\n  {intro}\n")
 
 
 def move_tmp_log():
