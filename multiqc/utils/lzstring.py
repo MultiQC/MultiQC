@@ -111,7 +111,7 @@ def _compress(uncompressed):
                 context_data.write(value, context_numBits)
             context_enlargeIn -= 1
             if context_enlargeIn == 0:
-                context_enlargeIn = math.pow(2, context_numBits)
+                context_enlargeIn = 1 << context_numBits
                 context_numBits += 1
 
             # Add wc to the dictionary.
@@ -132,7 +132,7 @@ def _compress(uncompressed):
                 context_data.write(value, 16)
             context_enlargeIn -= 1
             if context_enlargeIn == 0:
-                context_enlargeIn = math.pow(2, context_numBits)
+                context_enlargeIn = 1 << context_numBits
                 context_numBits += 1
             del context_dictionaryToCreate[context_w]
         else:
@@ -141,7 +141,7 @@ def _compress(uncompressed):
 
     context_enlargeIn -= 1
     if context_enlargeIn == 0:
-        context_enlargeIn = math.pow(2, context_numBits)
+        context_enlargeIn = 1 << context_numBits
         context_numBits += 1
 
     # Mark the end of the stream
