@@ -30,10 +30,6 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
 
     loglevel (str): Determines the level of the log output.
     """
-    # Google Colab notebooks duplicate log messages without this, see
-    # https://stackoverflow.com/a/55877763/341474
-    logger.propagate = False
-
     # File for logging
     global log_tmp_dir, log_tmp_fn
     # Have to create a separate directory for the log file otherwise Windows will complain
@@ -126,6 +122,11 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
     else:
         console_handler.setFormatter(InfoFormatter())
     logger.addHandler(console_handler)
+
+    if rich_console.is_jupyter:
+        # Google Colab notebooks duplicate log messages without this, see
+        # https://stackoverflow.com/a/55877763/341474
+        logger.propagate = False
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
