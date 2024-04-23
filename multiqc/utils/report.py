@@ -1,9 +1,9 @@
 """ MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report. """
-
-
+import base64
 import fnmatch
+import gzip
 import inspect
 import io
 import json
@@ -19,7 +19,6 @@ import rich
 import rich.progress
 import yaml
 
-from multiqc.utils import lzstring
 
 from . import config
 from .util_functions import replace_defaultdicts
@@ -575,11 +574,14 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """Take a Python data object. Convert to JSON and compress using lzstring"""
+    """Take a Python data object. Convert to JSON and compress using gzip.
+    Represent in base64 format."""
     json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
     json_string = sanitise_json(json_string)
-    x = lzstring.LZString()
-    return x.compressToBase64(json_string)
+    json_bytes = json_string.encode("utf-8")
+    json_gzip = gzip.compress(json_bytes, compresslevel=9, mtime=0)
+    base64_bytes = base64.b64encode(json_gzip)
+    return base64_bytes.decode("ascii")
 
 
 def sanitise_json(json_string):

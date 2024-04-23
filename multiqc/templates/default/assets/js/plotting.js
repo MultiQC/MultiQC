@@ -143,12 +143,12 @@ function initPlot(dump) {
 }
 
 // Execute when page load has finished loading
-$(function () {
+$(async function () {
   // Show loading warning
   let loading_warning = $(".mqc_loading_warning").show();
 
   // Decompress the JSON plot data and init plot objects
-  let mqc_plotdata = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
+  let mqc_plotdata = JSON.parse(await decompress_mqc_plotdata(mqc_compressed_plotdata));
   mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
   let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
