@@ -93,13 +93,12 @@ def _compress(uncompressed):
             context_w = context_wc
         else:
             if context_w in context_dictionaryToCreate:
+                value = ord(context_w[0])
                 if ord(context_w[0]) < 256:
                     context_data.write(0, context_numBits)
-                    value = ord(context_w[0])
                     context_data.write(value, 8)
                 else:
                     context_data.write(1, context_numBits)
-                    value = ord(context_w[0])
                     context_data.write(value, 16)
                 context_enlargeIn -= 1
                 if context_enlargeIn == 0:
@@ -122,13 +121,12 @@ def _compress(uncompressed):
     # Output the code for w.
     if context_w != "":
         if context_w in context_dictionaryToCreate:
+            value = ord(context_w[0])
             if ord(context_w[0]) < 256:
                 context_data.write(0, context_numBits)
-                value = ord(context_w[0])
                 context_data.write(value, 8)
             else:
                 context_data.write(1, context_numBits)
-                value = ord(context_w[0])
                 context_data.write(value, 16)
             context_enlargeIn -= 1
             if context_enlargeIn == 0:
@@ -145,7 +143,6 @@ def _compress(uncompressed):
         context_numBits += 1
 
     # Mark the end of the stream
-    value = 2
     context_data.write(2, context_numBits)
 
     return context_data.getvalue()
