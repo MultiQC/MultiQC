@@ -152,7 +152,8 @@ def init_log(
             DARK_ORANGE = ""
             RESET = ""
         intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}| v{config.version}"
-        print(intro)
+        if not quiet:
+            print(intro)
 
     else:
         # Set up the console logging stream
@@ -196,7 +197,8 @@ def init_log(
             console_handler.setFormatter(InfoFormatter())
         logger.addHandler(console_handler)
 
-        rich_console.print(rich_click.rich_click.HEADER_TEXT)
+        if not quiet:
+            rich_console.print(rich_click.rich_click.HEADER_TEXT)
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
