@@ -41,7 +41,12 @@ logger = config.logger
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-click.rich_click.HEADER_TEXT = f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] :{util_functions.choose_emoji()}: [dim]| v{config.version}"
+# Choose emoji. Do not use emoji on Windows because of the UnicodeEncodeError error:
+# https://github.com/MultiQC/MultiQC/actions/runs/8814275065/job/24193771822
+emoji = f":{util_functions.choose_emoji()}: " if os.name != "nt" else ""
+click.rich_click.HEADER_TEXT = (
+    f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] {emoji}[dim]| v{config.version}"
+)
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
