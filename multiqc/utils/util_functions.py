@@ -279,7 +279,7 @@ def replace_defaultdicts(data):
     return _replace(data)
 
 
-def is_running_in_notebook():
+def is_running_in_notebook() -> bool:
     try:
         from IPython import get_ipython
 
@@ -288,3 +288,14 @@ def is_running_in_notebook():
     except (ImportError, AttributeError):
         pass
     return False
+
+
+def no_unicode() -> bool:
+    # When LANG or PYTHONIOENCODING or is not set, Rich won't be able to print fancy unicode
+    # characters for the progress bar, and the runtime would crash with UnicodeEncodeError:
+    # https://github.com/MultiQC/MultiQC/actions/runs/8814275065/job/24193771822
+    # See https://github.com/Textualize/rich/issues/212
+    return (
+        "utf".casefold() not in os.environ.get("LANG", "").casefold()
+        and "utf".casefold() not in os.environ.get("PYTHONIOENCODING", "").casefold()
+    )
