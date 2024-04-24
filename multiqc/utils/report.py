@@ -44,13 +44,13 @@ searchfiles: List
 files: Dict
 
 # Fields below is kept between interactive runs
-data_sources: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-html_ids: List[str] = []
+data_sources: Dict[str, Dict[str, Dict]]
+html_ids: List[str]
 plot_data: Dict = dict()
-general_stats_data: List[Dict] = []
-general_stats_headers: List[Dict] = []
+general_stats_data: List[Dict]
+general_stats_headers: List[Dict]
 # Map of Software tools to a set of unique version strings
-software_versions: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
+software_versions: Dict[str, Dict[str, List]]
 
 
 def init():
@@ -68,12 +68,18 @@ def init():
     global file_search_stats
     global searchfiles
     global files
+    global data_sources
+    global html_ids
+    global plot_data
+    global general_stats_data
+    global general_stats_headers
+    global software_versions
 
     tmp_dir = tempfile.mkdtemp()
     multiqc_command = ""
-    modules_output = list()
+    modules_output = []
     general_stats_html = ""
-    lint_errors = list()
+    lint_errors = []
     num_flat_plots = 0
     saved_raw_data = dict()
     last_found_file = None
@@ -96,27 +102,23 @@ def init():
         "skipped_file_contents_search_errors": 0,
     }
     searchfiles = list()
-    # Discovered files for each search key
-    files = dict()
+    files = dict()  # Discovered files for each search key
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+    html_ids = []
+    plot_data = dict()
+    general_stats_data = []
+    general_stats_headers = []
+    software_versions = defaultdict(lambda: defaultdict(list))
 
 
 def reset():
     """
     Reset interactive session.
     """
-    global data_sources
-    global html_ids
-    global plot_data
-    global general_stats_data
-    global general_stats_headers
-    global software_versions
+    init()
 
-    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-    html_ids = list()
-    plot_data = dict()
-    general_stats_data = list()
-    general_stats_headers = list()
-    software_versions = defaultdict(lambda: defaultdict(list))
+
+init()
 
 
 def is_searching_in_source_dir(path: Path) -> bool:

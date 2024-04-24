@@ -6,13 +6,21 @@ Initialises when multiqc module is loaded.
 Makes the following available under the main multiqc namespace:
 - run()
 - config
-- config.logger
 - __version__
 """
 
-import logging
+import sys
 
-from .multiqc import (
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
+
+if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
+    raise RuntimeError(
+        "You are running MultiQC with Python {}. "
+        "Please upgrade Python! MultiQC does not support Python < {}, "
+        "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
+    )
+
+from .multiqc import (  # noqa: E402
     run,
     load,
     list_modules,
@@ -25,9 +33,7 @@ from .multiqc import (
     write_report,
     add_custom_content_section,
 )
-from .utils import config
-
-config.logger = logging.getLogger(__name__)
+from .utils import config  # noqa: E402
 
 __version__ = config.version
 

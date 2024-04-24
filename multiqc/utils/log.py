@@ -13,6 +13,7 @@ import rich
 from rich.logging import RichHandler
 from rich.theme import Theme
 import rich.jupyter
+import rich_click
 
 from multiqc.utils import config, util_functions
 
@@ -178,10 +179,7 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
             console_handler.setFormatter(InfoFormatter())
         logger.addHandler(console_handler)
 
-        mag_glass = ":mag: " if not util_functions.force_term_colors() else ""
-        rich_console.print(
-            f"\n  [dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/] {mag_glass}[dim]| v{config.version}\n"
-        )
+        rich_console.print(rich_click.rich_click.HEADER_TEXT)
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")

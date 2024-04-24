@@ -1,0 +1,334 @@
+import base64
+import errno
+import io
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+import traceback
+
+import jinja2
+
+from multiqc.core.utils import _RunError, _data_tmp_dir, _plots_tmp_dir
+from multiqc.utils import config, megaqc, plugin_hooks, report, util_functions
+
+logger = config.logger
+
+
+def _export_sources() -> None:
+    """
+    Dump data sources.
+    """
+
+    if config.data_dir is not None:
+        # Write the report sources to disk
+        report.data_sources_tofile()
+
+        # Create a file with the module DOIs
+        report.dois_tofile(report.modules_output)
+
+
+def _write_json_dump() -> None:
+    """
+    Write JSON with plot data. Useful for MegaQC and for loading in interactive environments.
+    """
+
+    plugin_hooks.mqc_trigger("before_report_generation")
+
+    # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
+    if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
+        multiqc_json_dump = util_functions.multiqc_dump_json(report)
+        if config.data_dump_file:
+            util_functions.write_data_file(multiqc_json_dump, "multiqc_data", False, "json")
+        if config.megaqc_url:
+            megaqc.multiqc_api_post(multiqc_json_dump)
+
+    if config.development:
+        with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
+            f.write(json.dumps(report.plot_data))
+
+
+def _write_html_and_data(
+    tmp_dir: str,
+    template_mod,
+    filename: str,
+) -> None:
+    """
+    Make the final report path & data directories
+    """
+
+    if filename == "stdout":
+        config.output_fn = sys.stdout
+        logger.info("Printing report to stdout")
+    else:
+        if filename is not None and filename.endswith(".html"):
+            filename = filename[:-5]
+        if filename is None and config.title is not None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+            filename += "_multiqc_report"
+        if filename is not None:
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
+            config.output_fn_name = f"{config.output_fn_name}.html"
+
+        if config.make_report:
+            config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+        # del config.data_dir_name
+        # del config.plots_dir_name
+        deleted_report = False
+        deleted_data_dir = False
+        deleted_export_plots = False
+        # Check for existing reports and remove if -f was specified
+        if (
+            (config.make_report and os.path.exists(config.output_fn))
+            or (config.make_data_dir and os.path.exists(config.data_dir))
+            or (config.export_plots and os.path.exists(config.plots_dir))
+        ):
+            if config.force:
+                if config.make_report and os.path.exists(config.output_fn):
+                    deleted_report = True
+                    os.remove(config.output_fn)
+                if config.make_data_dir and os.path.exists(config.data_dir):
+                    deleted_data_dir = True
+                    shutil.rmtree(config.data_dir)
+                if config.export_plots and os.path.exists(config.plots_dir):
+                    deleted_export_plots = True
+                    shutil.rmtree(config.plots_dir)
+            else:
+                # Set up the base names of the report and the data dir
+                report_num = 1
+                dir_base = os.path.basename(config.data_dir)
+                plots_base = os.path.basename(config.plots_dir)
+
+                # Iterate through appended numbers until we find one that's free
+                while (
+                    (config.make_report and os.path.exists(config.output_fn))
+                    or (config.make_data_dir and os.path.exists(config.data_dir))
+                    or (config.export_plots and os.path.exists(config.plots_dir))
+                ):
+                    if config.make_report:
+                        report_base, report_ext = os.path.splitext(config.output_fn_name)
+                        config.output_fn = os.path.join(config.output_dir, f"{report_base}_{report_num}{report_ext}")
+                    config.data_dir = os.path.join(config.output_dir, f"{dir_base}_{report_num}")
+                    config.plots_dir = os.path.join(config.output_dir, f"{plots_base}_{report_num}")
+                    report_num += 1
+                if config.make_report:
+                    config.output_fn_name = os.path.basename(config.output_fn)
+                config.data_dir_name = os.path.basename(config.data_dir)
+                config.plots_dir_name = os.path.basename(config.plots_dir)
+                logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
+
+        # Make directories for report if needed
+        if config.make_report:
+            if not os.path.exists(os.path.dirname(config.output_fn)):
+                os.makedirs(os.path.dirname(config.output_fn))
+            logger.info(
+                "Report      : {}{}".format(
+                    os.path.relpath(config.output_fn),
+                    "   (overwritten)" if deleted_report else "",
+                )
+            )
+        else:
+            logger.info("Report      : None")
+
+        if config.make_data_dir is False:
+            logger.info("Data        : None")
+        else:
+            # Make directories for data_dir
+            logger.info(
+                "Data        : {}{}".format(
+                    os.path.relpath(config.data_dir),
+                    "   (overwritten)" if deleted_data_dir else "",
+                )
+            )
+            # Modules have run, so data directory should be complete by now. Move its contents.
+            logger.debug(f"Moving data file from '{_data_tmp_dir()}' to '{config.data_dir}'")
+            shutil.copytree(
+                _data_tmp_dir(),
+                config.data_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
+            shutil.rmtree(_data_tmp_dir())
+
+        if config.output_fn is not None:
+            logger.debug(f"Full report path: {os.path.realpath(config.output_fn)}")
+
+        # Copy across the static plot images if requested
+        if config.export_plots:
+            config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
+            if os.path.exists(config.plots_dir):
+                if config.force:
+                    shutil.rmtree(config.plots_dir)
+                else:
+                    logger.error(f"Output directory {config.plots_dir} already exists.")
+                    logger.info("Use -f or --force to overwrite existing reports")
+                    shutil.rmtree(tmp_dir)
+                    raise _RunError()
+            logger.info(
+                "Plots       : {}{}".format(
+                    os.path.relpath(config.plots_dir),
+                    "   (overwritten)" if deleted_export_plots else "",
+                )
+            )
+
+            # Modules have run, so plots directory should be complete by now. Move its contents.
+            logger.debug(f"Moving plots directory from '{_plots_tmp_dir()}' to '{config.plots_dir}'")
+            shutil.copytree(
+                _plots_tmp_dir(),
+                config.plots_dir,
+                # Override default shutil.copy2 function to copy files. The default
+                # function copies times and mode, which we want to avoid on purpose
+                # to get around the problem with mounted CIFS shares (see #625).
+                # shutil.copyfile only copies the file without any metadata.
+                copy_function=shutil.copyfile,
+            )
+            shutil.rmtree(_plots_tmp_dir())
+
+    plugin_hooks.mqc_trigger("before_template")
+
+    # Generate report if required
+    if config.make_report:
+        # Load in parent template files first if a child theme
+        parent_template = None
+        try:
+            parent_template = config.avail_templates[template_mod.template_parent].load()
+        except AttributeError:
+            pass  # Not a child theme
+        else:
+            shutil.copytree(parent_template.template_dir, tmp_dir, dirs_exist_ok=True)
+
+        # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
+        # parent template files are overwritten)
+        shutil.copytree(template_mod.template_dir, tmp_dir, dirs_exist_ok=True)
+
+        # Function to include file contents in Jinja template
+        def include_file(name, fdir=tmp_dir, b64=False):
+            try:
+                if fdir is None:
+                    fdir = ""
+                path = os.path.join(fdir, name)
+
+                if config.development:
+                    if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+                    elif parent_template and os.path.exists(
+                        dev_path := os.path.join(parent_template.template_dir, name)
+                    ):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        path = dev_path
+
+                    if re.match(r".*\.min\.(js|css)$", name):
+                        unminimized_name = re.sub(r"\.min\.", ".", name)
+                        if os.path.exists(os.path.join(fdir, unminimized_name)):
+                            name = unminimized_name
+
+                    if name.endswith(".js"):
+                        return f'</script><script type="text/javascript" src="{name}">'
+                    if name.endswith(".css"):
+                        return f'</style><link rel="stylesheet" href="{name}">'
+
+                if b64:
+                    with io.open(path, "rb") as f:
+                        return base64.b64encode(f.read()).decode("utf-8")
+                else:
+                    with io.open(path, "r", encoding="utf-8") as f:
+                        return f.read()
+            except (OSError, IOError) as e:
+                logger.error(f"Could not include file '{name}': {e}")
+
+        # Load the report template
+        try:
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
+            env.globals["include_file"] = include_file
+            j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
+        except:  # noqa: E722
+            raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
+
+        # Compress the report plot JSON data
+        runtime_compression_start = time.time()
+        logger.debug("Compressing plot data")
+        report.plot_compressed_json = report.compress_json(report.plot_data)
+        report.runtimes["total_compression"] = time.time() - runtime_compression_start
+
+        # Use jinja2 to render the template and overwrite
+        config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
+        report_output = j_template.render(report=report, config=config)
+        if filename == "stdout":
+            print(report_output.encode("utf-8"), file=sys.stdout)
+        else:
+            try:
+                with io.open(config.output_fn, "w", encoding="utf-8") as f:
+                    print(report_output, file=f)
+            except IOError as e:
+                raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
+
+            # Copy over files if requested by the theme
+            try:
+                for f in template_mod.copy_files:
+                    fn = os.path.join(tmp_dir, f)
+                    dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
+                    shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
+            except AttributeError:
+                pass  # No files to copy
+
+    # Clean up temporary directory
+    shutil.rmtree(tmp_dir)
+
+    # Zip the data directory if requested
+    if config.zip_data_dir and config.data_dir is not None:
+        shutil.make_archive(config.data_dir, "zip", config.data_dir)
+        shutil.rmtree(config.data_dir)
+
+    # Try to create a PDF if requested
+    if config.make_pdf:
+        try:
+            pdf_fn_name = config.output_fn.replace(".html", ".pdf")
+            pandoc_call = [
+                "pandoc",
+                "--standalone",
+                config.output_fn,
+                "--output",
+                pdf_fn_name,
+                "--pdf-engine=xelatex",
+                "-V",
+                "documentclass=article",
+                "-V",
+                "geometry=margin=1in",
+                "-V",
+                "title=",
+            ]
+            if config.pandoc_template is not None:
+                pandoc_call.append(f"--template={config.pandoc_template}")
+            logger.debug(f"Attempting Pandoc conversion to PDF with following command:\n{' '.join(pandoc_call)}")
+            pdf_exit_code = subprocess.call(pandoc_call)
+            if pdf_exit_code != 0:
+                logger.error("Error creating PDF! Pandoc returned a non-zero exit code.")
+            else:
+                logger.info(f"PDF Report  : {pdf_fn_name}")
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                logger.error("Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/")
+            else:
+                logger.error(
+                    "Error creating PDF! Something went wrong when creating the PDF\n"
+                    + ("=" * 60)
+                    + f"\n{traceback.format_exc()}\n"
+                    + ("=" * 60)
+                )
