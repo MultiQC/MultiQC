@@ -21,7 +21,8 @@ dependencies = [
     "pyaml-env",
     "rich>=10",
     "rich-click",
-    "coloredlogs",
+    "coloredlogs",  # logging in notebooks
+    "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
     "pydantic",
 ]
