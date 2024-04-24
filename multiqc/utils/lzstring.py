@@ -116,7 +116,7 @@ def _compress(uncompressed):
         else:
             if context_w in context_dictionaryToCreate:
                 value = ord(context_w[0])
-                if ord(context_w[0]) < 256:
+                if value < 256:
                     context_data.write(0, context_numBits)
                     context_data.write(value, 8)
                 else:
@@ -144,7 +144,7 @@ def _compress(uncompressed):
     if context_w != "":
         if context_w in context_dictionaryToCreate:
             value = ord(context_w[0])
-            if ord(context_w[0]) < 256:
+            if value < 256:
                 context_data.write(0, context_numBits)
                 context_data.write(value, 8)
             else:
