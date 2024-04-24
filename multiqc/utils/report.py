@@ -306,7 +306,16 @@ def get_filelist(run_module_names):
     for path in config.analysis_dir:
         handle_analysis_path(Path(path))
 
-    if is_running_in_notebook():
+    # When LANG or PYTHONIOENCODING or is not set, Rich won't be able to print fancy unicode
+    # characters for the progress bar, and the runtime would crash with UnicodeEncodeError:
+    # https://github.com/MultiQC/MultiQC/actions/runs/8814275065/job/24193771822
+    # See https://github.com/Textualize/rich/issues/212
+    no_unicode = (
+        "utf".casefold() not in os.environ.get("LANG", "").casefold()
+        and "utf".casefold() not in os.environ.get("PYTHONIOENCODING", "").casefold()
+    )
+
+    if is_running_in_notebook() or no_unicode:
         PRINT_FNAME = False
         # ANSI escape code for dim text
         if not config.no_ansi:
