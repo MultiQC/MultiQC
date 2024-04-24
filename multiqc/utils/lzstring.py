@@ -27,34 +27,56 @@ class Entry:
     index: int
 
 
+def reverse_8bit_int(value: int) -> int:
+    """Reverses the bit order of an 8-bit int"""
+    value &= 0xFF  # Ensure 8-bit
+    value = ((value & 0b11110000) >> 4) | ((value & 0b00001111) << 4)
+    value = ((value & 0b11001100) >> 2) | ((value & 0b00110011) << 2)
+    value = ((value & 0b10101010) >> 1) | ((value & 0b01010101) << 1)
+    return value
+
+
+# Since bitwise operations are expensive create a lookup table
+REVERSE_LOOKUP = bytes(reverse_8bit_int(i) for i in range(256))
+
+
+assert REVERSE_LOOKUP[0b10000000] == 0b00000001
+assert REVERSE_LOOKUP[0b10101010] == 0b01010101
+
+
 class BitWriter:
     def __init__(self):
-        self.bit_store = 0
-        self.bits_remaining = 8
+        self.bitbuffer = 0
+        self.bits_stored = 0
         self.buffer = io.BytesIO()
 
     def write(self, value: int, bits: int):
-        # Retrieve values from self to save later. This saves a lot of
-        # dictionary lookups.
-        bit_store = self.bit_store
-        bits_remaining = self.bits_remaining
-        for i in range(bits):
-            bit_store <<= 1
-            bit_store |= value & 1
-            value >>= 1
-            bits_remaining -= 1
-            if bits_remaining == 0:
-                self.buffer.write(struct.pack("B", bit_store))
-                bit_store = 0
-                bits_remaining = 8
-        self.bit_store = bit_store
-        self.bits_remaining = bits_remaining
+        # Ensure no rogue bits are set after the bits of interest
+        bitmask = (1 << bits) - 1
+        value &= bitmask
+
+        # Python can store integers bigger than 64 bits. So no checks for overflow.
+        self.bitbuffer |= value << self.bits_stored
+        self.bits_stored += bits
+
+        if self.bits_stored >= 64:
+            integer_to_store = self.bitbuffer & 0xFFFF_FFFF_FFFF_FFFF
+            self.bitbuffer >>= 64
+            self.bits_stored -= 64
+            # The integer needs to be stored in reverse. First use little
+            # endian order to reverse the byte order. Then use a lookup table
+            # to inverse the individual bytes. This is faster than doing
+            # a lot of bitwise operations.
+            integer_bytes = struct.pack("<Q", integer_to_store)
+            self.buffer.write(integer_bytes.translate(REVERSE_LOOKUP))
 
     def getvalue(self):
         value = self.buffer.getvalue()
         # Flush the last char
-        leftover = self.bit_store << self.bits_remaining
-        return value + struct.pack("B", leftover)
+        leftover = struct.pack("<Q", self.bitbuffer)
+        leftover = leftover.translate(REVERSE_LOOKUP)
+        bytes_to_use = (self.bits_stored + 7) // 8
+        return value + leftover[:bytes_to_use]
 
 
 def getBaseValue(alphabet, character):
