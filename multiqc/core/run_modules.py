@@ -1,4 +1,5 @@
 import errno
+import logging
 import os
 import shutil
 import sys
@@ -15,7 +16,7 @@ from multiqc.core.utils import _data_tmp_dir, _plots_tmp_dir, _RunError
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import config, report, plugin_hooks, software_versions
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 def _run_modules(

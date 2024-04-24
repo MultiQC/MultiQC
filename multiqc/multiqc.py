@@ -7,6 +7,7 @@ Imported by __init__.py so available as multiqc.run()
 """
 
 import json
+import logging
 import os
 import sys
 import time
@@ -34,7 +35,7 @@ from multiqc.core.utils import RunResult, _RunError
 
 # Set up logging
 start_execution_time = time.time()
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 # Configuration for rich-click CLI help

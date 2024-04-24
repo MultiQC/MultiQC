@@ -1,15 +1,15 @@
-""" MultiQC lint helpers. Simple additional tests to run when
---strict is specified (outside scope of normal functions) """
-
+"""MultiQC lint helpers. Simple additional tests to run when
+--strict is specified (outside scope of normal functions)"""
 
 import glob
+import logging
 import os
 
 import yaml
 
 from multiqc.utils import config, report
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 def run_tests():

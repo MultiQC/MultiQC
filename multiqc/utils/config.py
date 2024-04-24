@@ -20,7 +20,7 @@ import pyaml_env
 import multiqc
 from multiqc.utils.util_functions import strtobool
 
-logger = logging.getLogger("multiqc")
+logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
 version = importlib_metadata.version("multiqc")

@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import re
@@ -9,7 +10,7 @@ from packaging import version
 from multiqc.utils import report, config, plugin_hooks, strict_helpers
 from multiqc.utils.util_functions import strtobool
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 def _cl_to_config(

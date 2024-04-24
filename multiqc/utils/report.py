@@ -6,6 +6,7 @@ import fnmatch
 import inspect
 import io
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -27,7 +28,7 @@ from multiqc.utils import log
 from . import config
 from .util_functions import replace_defaultdicts, is_running_in_notebook
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 # Uninitialised global variables for static typing
 tmp_dir: str

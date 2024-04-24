@@ -1,10 +1,11 @@
+import logging
 import os
 from typing import Dict, List, Tuple
 
 from multiqc.core.utils import _RunError
 from multiqc.utils import config, report
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 def _file_search(

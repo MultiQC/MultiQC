@@ -2,6 +2,7 @@ import base64
 import errno
 import io
 import json
+import logging
 import os
 import re
 import shutil
@@ -15,7 +16,7 @@ import jinja2
 from multiqc.core.utils import _RunError, _data_tmp_dir, _plots_tmp_dir
 from multiqc.utils import config, megaqc, plugin_hooks, report, util_functions
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
 
 def _export_sources() -> None:
