@@ -3,14 +3,7 @@
 import json
 import logging
 import os
-from collections import OrderedDict
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -27,15 +20,18 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/btad728",
         )
 
-        self.data = dict()
+        self.parse_data = dict()
         for f in self.find_log_files('hostile', filehandles=True):
             self.parse_logs(f)
-            
 
-        if len(self.data) == 0:
-            log.debug('No reports found: hostile')
-            raise UserWarning
+        # Check if no matching log files were found
+        if len(self.parse_data) == 0:
+            raise ModuleNoSamplesFound
+        
+        # Write hostile data.
+        self.write_data_file(self.parse_data, "multiqc_hostile")
 
+        # Plot    
         self.hostile_plot()
 
     def parse_logs(self, json_file):
@@ -43,32 +39,39 @@ class MultiqcModule(BaseMultiqcModule):
             Parsing json_file
         """
         try:
-            data = json.load(json_file['f'])
-                
+            parse_data = json.load(json_file['f'])
+
         except json.JSONDecodeError as e:
             log.warning(f"Could not parse JSON file {json_file['f']}")
             return
+        
+        if len(parse_data) > 0:
+            self.add_data_source(json_file)
 
         s_name = self.clean_s_name(json_file['fn'])
-        self.data[s_name] = data
-        #print(self.data)
+        self.parse_data[s_name] = parse_data
 
     def hostile_plot(self):
         """
         Extract the data
+        Plot the barplot
         """
         data = {}
-        for f_name, values in self.data.items():
+        for f_name, values in self.parse_data.items():
             s_name = values[0]['fastq1_in_name'].split(".")[0]
             database = os.path.basename(values[0]['index'])
             data[s_name] = {
                 'Cleaned reads': values[0]['reads_out'],
                 'Host reads': values[0]['reads_removed']
             }
+        
+        ## categories
         cat = ['Cleaned reads', 'Host reads']
 
         pconfig = {
             'title': 'Hostile: Reads Filtered',
+            'id': 'he_reads_plots',
+            'ylab': '# Reads',
             'plot_type': 'bargraph',
             'stacked_data': True
         }
@@ -79,3 +82,4 @@ class MultiqcModule(BaseMultiqcModule):
             description=f'This plot shows the number of cleaned reads vs host-reads per sample (database index: {database}).',
             plot=bargraph.plot(data, cat, pconfig)
         )
+### self.add_software_version cannot be used because its missing in the JSON reports produced by the tool itself.
