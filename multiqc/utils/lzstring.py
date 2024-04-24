@@ -44,7 +44,7 @@ class BitWriter:
             value >>= 1
             bits_remaining -= 1
             if bits_remaining == 0:
-                self.buffer.write(struct.pack("B", self.bit_store))
+                self.buffer.write(struct.pack("B", bit_store))
                 bit_store = 0
                 bits_remaining = 8
         self.bit_store = bit_store
