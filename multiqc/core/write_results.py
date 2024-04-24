@@ -11,12 +11,70 @@ import sys
 import time
 import traceback
 
+from multiqc.plots import table
+
 import jinja2
 
 from multiqc.core.utils import _RunError, _data_tmp_dir, _plots_tmp_dir
 from multiqc.utils import config, megaqc, plugin_hooks, report, util_functions
 
 logger = logging.getLogger(__name__)
+
+
+def _write_results(filename):
+    _html_general_stats_table()
+
+    _export_sources()
+
+    _write_json_dump()
+
+    _write_html_and_data(
+        tmp_dir=report.tmp_dir,
+        filename=filename,
+    )
+
+
+def _html_general_stats_table() -> None:
+    """
+    Construct HTML for the general stats table.
+    """
+
+    # Remove empty data sections from the General Stats table
+    empty_keys = [i for i, d in enumerate(report.general_stats_data[:]) if len(d) == 0]
+    empty_keys.sort(reverse=True)
+    for i in empty_keys:
+        del report.general_stats_data[i]
+        del report.general_stats_headers[i]
+
+    # Add general-stats IDs to table row headers
+    for idx, h in enumerate(report.general_stats_headers):
+        for k in h.keys():
+            if "rid" not in h[k]:
+                h[k]["rid"] = re.sub(r"\W+", "_", k).strip().strip("_")
+            ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
+            report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
+                f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
+            )
+
+    all_hidden = True
+    for headers in report.general_stats_headers:
+        for h in headers.values():
+            if not h.get("hidden", False):
+                all_hidden = False
+                break
+
+    # Generate the General Statistics HTML & write to file
+    if len(report.general_stats_data) > 0 and not config.skip_generalstats and not all_hidden:
+        pconfig = {
+            "id": "general_stats_table",
+            "table_title": "General Statistics",
+            "save_file": True,
+            "raw_data_fn": "multiqc_general_stats",
+        }
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        report.general_stats_html = p.add_to_report(clean_html_id=False)
+    else:
+        config.skip_generalstats = True
 
 
 def _export_sources() -> None:
@@ -52,14 +110,16 @@ def _write_json_dump() -> None:
             f.write(json.dumps(report.plot_data))
 
 
-def _write_html_and_data(
-    tmp_dir: str,
-    template_mod,
-    filename: str,
-) -> None:
+def _write_html_and_data(tmp_dir: str, filename: str) -> None:
     """
     Make the final report path & data directories
     """
+    # Add an output subdirectory if specified by template
+    template_mod = config.avail_templates[config.template].load()
+    try:
+        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
+    except AttributeError:
+        pass  # No subdirectory variable given
 
     if filename == "stdout":
         config.output_fn = sys.stdout
@@ -82,6 +142,8 @@ def _write_html_and_data(
 
         if config.make_report:
             config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        else:
+            config.output_fn = None
         config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
         config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
         # del config.data_dir_name

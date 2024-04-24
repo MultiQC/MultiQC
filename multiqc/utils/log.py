@@ -7,6 +7,8 @@ import os
 import shutil
 import sys
 import tempfile
+from collections import namedtuple
+from typing import Optional
 
 import coloredlogs
 import rich
@@ -17,14 +19,22 @@ import rich_click
 
 from multiqc.utils import config, util_functions
 
+
 log_tmp_dir = None
 log_tmp_fn = "/dev/null"
+
+LoggerParams = namedtuple("LoggerParams", "quiet verbose no_ansi")
+params = None
 
 rich_console: rich.console.Console
 logger = logging.getLogger("multiqc")
 
 
-def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
+def init_log(
+    quiet: Optional[bool] = None,
+    verbose: Optional[int] = None,
+    no_ansi: Optional[bool] = None,
+):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -33,14 +43,22 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
 
     loglevel (str): Determines the level of the log output.
     """
-    # File for logging
+    # If logging was already initialised, re-initialise only if parameters changed:
+    global params
+    if params is not None and LoggerParams(quiet, verbose, no_ansi) == params:
+        return
+    params = LoggerParams(quiet, verbose, no_ansi)
+
     global log_tmp_dir, log_tmp_fn
-    # Have to create a separate directory for the log file otherwise Windows will complain
-    # about same file used by different processes:
-    log_tmp_dir = tempfile.mkdtemp()
+
+    if log_tmp_dir is None:
+        # Have to create a separate directory for the log file otherwise Windows will complain
+        # about same file used by different processes:
+        log_tmp_dir = tempfile.mkdtemp()
+
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
-    # Remove log handlers left from previous calls to multiqc.run
+    # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
     while logger.handlers:
         logger.removeHandler(logger.handlers[0])
 
@@ -48,13 +66,12 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
     logger.setLevel(getattr(logging, "DEBUG"))
 
     # Console log level
-    log_level = "DEBUG" if verbose > 0 else "INFO"
+    log_level = "DEBUG" if verbose and verbose > 0 else "INFO"
     if quiet:
         log_level = "WARNING"
-        config.quiet = True
 
     # Automatically set no_ansi if not a tty terminal
-    if not no_ansi:
+    if no_ansi is False:
         if not sys.stderr.isatty() and not util_functions.force_term_colors():
             no_ansi = True
 
@@ -68,7 +85,7 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
         stderr=False,
         highlight=False,
         force_terminal=util_functions.force_term_colors(),
-        color_system=None if no_ansi else "auto",
+        color_system=None if no_ansi is True else "auto",
         theme=Theme(
             styles={
                 "logging.level.info": "",
@@ -100,7 +117,7 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
         field_styles["module"] = {"color": "blue"}
 
         if log_level == "DEBUG":
-            if no_ansi:
+            if no_ansi is True:
                 console.setFormatter(logging.Formatter(debug_template))
             else:
                 console.setFormatter(
@@ -109,7 +126,7 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
                     )
                 )
         else:
-            if no_ansi:
+            if no_ansi is True:
                 console.setFormatter(logging.Formatter(info_template))
             else:
                 console.setFormatter(
@@ -124,7 +141,7 @@ def init_log(quiet: bool, verbose: int, no_ansi: bool = False):
         logger.propagate = False
 
         # Print intro
-        if not config.no_ansi:
+        if no_ansi is False:
             BOLD = "\033[1m"
             DIM = "\033[2m"
             DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color

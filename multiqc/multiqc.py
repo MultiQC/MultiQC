@@ -17,7 +17,7 @@ from typing import Dict, Union, List, Optional
 
 import rich_click as click
 
-from multiqc.core.write_results import _export_sources, _write_json_dump, _write_html_and_data
+from multiqc.core.write_results import _write_html_and_data, _write_results
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
@@ -26,11 +26,10 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import go, PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.utils import config, log, plugin_hooks, report, util_functions
+from multiqc.utils import config, plugin_hooks, report, util_functions, log
 from multiqc.core.cl_to_config import _cl_to_config
 from multiqc.core.file_search import _file_search
 from multiqc.core.run_modules import _run_modules
-from multiqc.core.general_stats_table import _general_stats_table
 from multiqc.core.utils import RunResult, _RunError
 
 # Set up logging
@@ -127,7 +126,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.command(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.argument("analysis_dir", type=click.Path(exists=True), nargs=-1, required=True, metavar="[ANALYSIS DIRECTORY]")
 @click.option("-f", "--force", is_flag=True, help="Overwrite any existing reports")
-@click.option("-d", "--dirs", is_flag=True, help="Prepend directory to sample names")
+@click.option("-d", "--dirs", "prepend_dirs", is_flag=True, help="Prepend directory to sample names")
 @click.option(
     "-dd",
     "--dirs-depth",
@@ -135,11 +134,12 @@ click.rich_click.OPTION_GROUPS = {
     type=int,
     help="Prepend [yellow i]n[/] directories to sample names. Negative number to take from start of path.",
 )
+@click.option("-s", "" "transformation", flag_value="upper", default=True)
 @click.option(
     "-s",
     "--fullnames",
-    "no_clean_sname",
-    is_flag=True,
+    "fn_clean_sample_names",
+    flag_value=False,
     help="Do not clean the sample names [i](leave as full file name)[/]",
 )
 @click.option(
@@ -207,9 +207,8 @@ click.rich_click.OPTION_GROUPS = {
     is_flag=True,
     help="Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error.",
 )
-@click.option("--data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created.")
 @click.option(
-    "--no-data-dir", "no_data_dir", is_flag=True, help="Prevent the parsed data directory from being created."
+    "--data-dir/--no-data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created."
 )
 @click.option(
     "-k",
@@ -219,7 +218,9 @@ click.rich_click.OPTION_GROUPS = {
     help="Output parsed data in a different format.",
 )
 @click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
-@click.option("--no-report", "no_report", is_flag=True, help="Do not generate a report, only export data and plots")
+@click.option(
+    "--no-report", "make_report", flag_value=False, help="Do not generate a report, only export data and plots"
+)
 @click.option(
     "-p", "--export", "export_plots", is_flag=True, help="Export plots as static images in addition to the report"
 )
@@ -300,12 +301,24 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
-def load(analysis_dir, *args, **kwargs) -> RunResult:
+def parse_logs(analysis_dir, *args, **kwargs) -> RunResult:
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
     # First, try find multiqc_data.json in the given directory and load it into the report.
+    res = _load_multiqc_data_json(analysis_dir, *args, **kwargs)
+    if res:
+        return res
+
+    # multiqc_data.json was not found, so proceed to the standard run of finding logs
+    # and running modules on them.
+    kwargs["no_report"] = True  # Disable report generation
+
+    return run(analysis_dir, *args, **kwargs)
+
+
+def _load_multiqc_data_json(analysis_dir, *args, **kwargs) -> Optional[RunResult]:
     json_path_found = False
     json_path = None
     if not isinstance(analysis_dir, list):
@@ -317,27 +330,24 @@ def load(analysis_dir, *args, **kwargs) -> RunResult:
             if json_path.exists():
                 json_path_found = True
 
-    if json_path_found:
-        # Loading from previous JSON
-        _cl_to_config(None, *args, **kwargs)
-        logger.info(f"Loading data from {json_path}")
-        with json_path.open("r") as f:
-            data = json.load(f)
+    if not json_path_found:
+        return None
 
-        for mod, sections in data["report_data_sources"].items():
-            logger.info(f"Loaded module {mod}")
-            for section, sources in sections.items():
-                for sname, source in sources.items():
-                    report.data_sources[mod][section][sname] = source
-        for id, plot_dump in data["report_plot_data"].items():
-            logger.info(f"Loaded plot {id}")
-            report.plot_data[id] = plot_dump
-        return RunResult()
-    else:
-        # multiqc_data.json was not found, so proceed to the standard run of finding logs
-        # and running modules on them.
-        kwargs["no_report"] = True  # Disable report generation
-        return run(analysis_dir, *args, **kwargs)
+    # Loading from previous JSON
+    _cl_to_config(analysis_dir=None, *args, **kwargs)
+    logger.info(f"Loading data from {json_path}")
+    with json_path.open("r") as f:
+        data = json.load(f)
+
+    for mod, sections in data["report_data_sources"].items():
+        logger.info(f"Loaded module {mod}")
+        for section, sources in sections.items():
+            for sname, source in sources.items():
+                report.data_sources[mod][section][sname] = source
+    for id, plot_dump in data["report_plot_data"].items():
+        logger.info(f"Loaded plot {id}")
+        report.plot_data[id] = plot_dump
+    return RunResult()
 
 
 def list_modules() -> List[str]:
@@ -414,6 +424,10 @@ def show_plot(plot_id: str, dataset_id=0, **kwargs) -> go.Figure:
 
 
 def get_general_stats_data(sample: Optional[str] = None) -> Dict:
+    """
+    Return parsed general stats data indexed by sample, then by data key. If sample is specified, return only data
+    for that sample.
+    """
     data = defaultdict(dict)
     for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
         for s, val_by_key in data_by_sample.items():
@@ -433,8 +447,8 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
 
 def get_module_data(module: Optional[str] = None, sample: Optional[str] = None, key: Optional[str] = None) -> Dict:
     """
-    Return parsed module data indexed - optionally - by data key, then and sample. Module is either the module
-    name or the anchor.
+    Return parsed module data, indexed (optionally) by data key, then by sample. Module is either the module
+    name, or the anchor.
     """
     data_by_module = {}
     for m in report.modules_output:
@@ -462,6 +476,9 @@ def get_module_data(module: Optional[str] = None, sample: Optional[str] = None, 
 
 
 def reset():
+    """
+    Reset the report to start fresh. Drops all previously parsed data.
+    """
     report.reset()
 
 
@@ -501,10 +518,8 @@ def write_report():
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
     config.make_report = True
-    template_mod = config.avail_templates[config.template].load()
     _write_html_and_data(
         tmp_dir=report.tmp_dir,
-        template_mod=template_mod,
         filename=config.filename,
     )
 
@@ -512,45 +527,44 @@ def write_report():
 # Main function that runs MultiQC. Available to use within an interactive Python environment
 def run(
     analysis_dir,
-    dirs=False,
+    prepend_dirs=None,
     dirs_depth=None,
-    no_clean_sname=False,
+    fn_clean_sample_names=None,
     title=None,
     report_comment=None,
     template=None,
     module=(),
-    require_logs=False,
+    require_logs=None,
     exclude=(),
     outdir=None,
     ignore=(),
     ignore_samples=(),
-    use_filename_as_sample_name=False,
+    use_filename_as_sample_name=None,
     replace_names=None,
     sample_names=None,
     sample_filters=None,
     file_list=False,
     filename=None,
-    make_data_dir=False,
-    no_data_dir=False,
+    make_data_dir=None,
     data_format=None,
-    zip_data_dir=False,
-    force=True,
-    ignore_symlinks=False,
-    no_report=False,
-    export_plots=False,
-    plots_flat=False,
-    plots_interactive=False,
-    strict=False,
-    lint=False,  # Deprecated since v1.17
-    development=False,
-    make_pdf=False,
-    no_megaqc_upload=False,
+    zip_data_dir=None,
+    force=None,
+    ignore_symlinks=None,
+    make_report=None,
+    export_plots=None,
+    plots_force_flat=None,
+    plots_force_interactive=None,
+    strict=None,
+    lint=None,  # Deprecated since v1.17
+    development=None,
+    make_pdf=None,
+    no_megaqc_upload=None,
     config_file=(),
     cl_config=(),
-    verbose=0,
-    quiet=False,
-    profile_runtime=False,
-    no_ansi=False,
+    verbose=None,
+    quiet=None,
+    no_ansi=None,
+    profile_runtime=None,
     custom_css_files=(),
     clean_up=True,
     **kwargs,
@@ -570,15 +584,11 @@ def run(
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
-    logger.debug(f"This is MultiQC v{config.version}")
-    logger.debug(f"Using temporary directory: {report.tmp_dir}")
-
     _cl_to_config(
         analysis_dir=analysis_dir,
-        dirs=dirs,
+        prepend_dirs=prepend_dirs,
         dirs_depth=dirs_depth,
-        no_clean_sname=no_clean_sname,
+        fn_clean_sample_names=fn_clean_sample_names,
         title=title,
         report_comment=report_comment,
         template=template,
@@ -586,23 +596,20 @@ def run(
         require_logs=require_logs,
         exclude=exclude,
         outdir=outdir,
-        ignore=ignore,
-        ignore_samples=ignore_samples,
         use_filename_as_sample_name=use_filename_as_sample_name,
         replace_names=replace_names,
         sample_names=sample_names,
         sample_filters=sample_filters,
         filename=filename,
         make_data_dir=make_data_dir,
-        no_data_dir=no_data_dir,
         data_format=data_format,
         zip_data_dir=zip_data_dir,
         force=force,
         ignore_symlinks=ignore_symlinks,
-        no_report=no_report,
+        make_report=make_report,
         export_plots=export_plots,
-        plots_flat=plots_flat,
-        plots_interactive=plots_interactive,
+        plots_force_flat=plots_force_flat,
+        plots_force_interactive=plots_force_interactive,
         strict=strict,
         lint=lint,
         development=development,
@@ -611,9 +618,11 @@ def run(
         config_file=config_file,
         cl_config=cl_config,
         profile_runtime=profile_runtime,
+        quiet=quiet,
+        verbose=verbose,
         no_ansi=no_ansi,
         custom_css_files=custom_css_files,
-        **kwargs,
+        custom_config=kwargs,
     )
 
     try:
@@ -623,26 +632,14 @@ def run(
             ignore_samples=ignore_samples,
         )
 
-        # Load the template
-        template_mod = config.avail_templates[config.template].load()
-
         _run_modules(
             tmp_dir=report.tmp_dir,
-            template_mod=template_mod,
             filename=filename,
             run_modules=run_modules,
             run_module_names=run_module_names,
         )
 
-        _general_stats_table()
-
-        _export_sources()
-
-        _write_json_dump()
-
-        _write_html_and_data(
-            tmp_dir=report.tmp_dir,
-            template_mod=template_mod,
+        _write_results(
             filename=filename,
         )
 

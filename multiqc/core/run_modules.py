@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 def _run_modules(
     tmp_dir: str,
-    template_mod,
     run_modules: List[Dict[str, Optional[Dict]]],
     run_module_names: List[str],
     filename: str,
@@ -36,12 +35,6 @@ def _run_modules(
         os.makedirs(config.plots_dir)
     else:
         config.plots_dir = None
-
-    # Add an output subdirectory if specified by template
-    try:
-        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
-    except AttributeError:
-        pass  # No subdirectory variable given
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")

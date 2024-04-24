@@ -3,26 +3,28 @@ import os
 import platform
 import re
 import sys
+from typing import Optional, Dict
 
 import requests
 from packaging import version
 
 from multiqc.utils import report, config, plugin_hooks, strict_helpers
 from multiqc.utils.util_functions import strtobool
+from multiqc.utils import log
 
 logger = logging.getLogger(__name__)
 
 
 def _cl_to_config(
     analysis_dir,
-    dirs=False,
+    prepend_dirs=None,
     dirs_depth=None,
-    no_clean_sname=False,
+    fn_clean_sample_names=None,
     title=None,
     report_comment=None,
     template=None,
     module=(),
-    require_logs=False,
+    require_logs=None,
     exclude=(),
     outdir=None,
     use_filename_as_sample_name=False,
@@ -30,31 +32,37 @@ def _cl_to_config(
     sample_names=None,
     sample_filters=None,
     filename=None,
-    make_data_dir=False,
-    no_data_dir=False,
+    make_data_dir=None,
     data_format=None,
-    zip_data_dir=False,
-    force=True,
-    ignore_symlinks=False,
-    no_report=False,
-    export_plots=False,
-    plots_flat=False,
-    plots_interactive=False,
-    strict=False,
-    lint=False,  # Deprecated since v1.17
-    development=False,
-    make_pdf=False,
-    no_megaqc_upload=False,
+    zip_data_dir=None,
+    force=None,
+    ignore_symlinks=None,
+    make_report=None,
+    export_plots=None,
+    plots_force_flat=None,
+    plots_force_interactive=None,
+    strict=None,
+    lint=None,  # Deprecated since v1.17
+    development=None,
+    make_pdf=None,
+    no_megaqc_upload=None,
     config_file=(),
     cl_config=(),
-    profile_runtime=False,
-    no_ansi=False,
+    profile_runtime=None,
+    quiet=None,
+    verbose=None,
+    no_ansi=None,
     custom_css_files=(),
     module_order=(),
-    **kwargs,
+    custom_config: Optional[Dict] = None,
 ):
+    log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
+
+    logger.debug(f"This is MultiQC v{config.version}")
+    logger.debug(f"Using temporary directory: {report.tmp_dir}")
+
     """
-    Populate config from command line parameters.
+    Update config from command line parameters. Will only update from the non-None values.
     """
     plugin_hooks.mqc_trigger("before_config")
     config.mqc_load_userconfig(config_file)
@@ -118,8 +126,8 @@ def _cl_to_config(
         config.title = title
     if report_comment is not None:
         config.report_comment = report_comment
-    if dirs is True:
-        config.prepend_dirs = dirs
+    if prepend_dirs is not None:
+        config.prepend_dirs = prepend_dirs
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
@@ -129,29 +137,27 @@ def _cl_to_config(
     config.analysis_dir = analysis_dir
     if outdir is not None:
         config.output_dir = os.path.realpath(outdir)
-    if use_filename_as_sample_name:
-        config.use_filename_as_sample_name = True
+    if use_filename_as_sample_name is not None:
+        config.use_filename_as_sample_name = use_filename_as_sample_name
         logger.info("Using log filenames for sample names")
-    if make_data_dir:
-        config.make_data_dir = True
-    if no_data_dir:
-        config.make_data_dir = False
-    if force:
-        config.force = True
-    if ignore_symlinks:
-        config.ignore_symlinks = True
-    if zip_data_dir:
-        config.zip_data_dir = True
+    if make_data_dir is not None:
+        config.make_data_dir = make_data_dir
+    if force is not None:
+        config.force = force
+    if ignore_symlinks is not None:
+        config.ignore_symlinks = ignore_symlinks
+    if zip_data_dir is not None:
+        config.zip_data_dir = zip_data_dir
     if data_format is not None:
         config.data_format = data_format
-    if export_plots:
-        config.export_plots = True
-    if no_report:
-        config.make_report = False
-    if plots_flat:
-        config.plots_force_flat = True
-    if plots_interactive:
-        config.plots_force_interactive = True
+    if export_plots is not None:
+        config.export_plots = export_plots
+    if make_report is not None:
+        config.make_report = make_report
+    if plots_force_flat is not None:
+        config.plots_force_flat = plots_force_flat
+    if plots_force_interactive is not None:
+        config.plots_force_interactive = plots_force_interactive
     if lint or config.lint:  # Deprecated since v1.17
         logger.warning(
             "DEPRECIATED: The --lint option is renamed to --strict since MultiQC 1.17. "
@@ -159,24 +165,24 @@ def _cl_to_config(
             "update your command line and/or configs."
         )
         strict = True
-    if strict:
-        config.strict = True
-        config.lint = True  # Deprecated since v1.17
-        strict_helpers.run_tests()
-    if development:
-        config.development = True
-        if "png" not in config.export_plot_formats:
-            config.export_plot_formats.append("png")
+    if strict is not None:
+        config.strict = strict
+        config.lint = strict  # Deprecated since v1.17
+        if strict:
+            strict_helpers.run_tests()
+    if development is not None:
+        config.development = development
+        if development:
+            if "png" not in config.export_plot_formats:
+                config.export_plot_formats.append("png")
     if make_pdf:
         config.template = "simple"
     if filename:
         config.filename = filename
-    if no_megaqc_upload:
-        config.megaqc_upload = False
-    else:
-        config.megaqc_upload = True
-    if no_clean_sname:
-        config.fn_clean_sample_names = False
+    if no_megaqc_upload is not None:
+        config.megaqc_upload = not no_megaqc_upload
+    if fn_clean_sample_names is not None:
+        config.fn_clean_sample_names = fn_clean_sample_names
         logger.info("Not cleaning sample names")
     if replace_names:
         config.load_replace_names(replace_names)
@@ -187,18 +193,20 @@ def _cl_to_config(
         config.run_modules = module
     if len(exclude) > 0:
         config.exclude_modules = exclude
-    if require_logs:
-        config.require_logs = True
-    if profile_runtime:
-        config.profile_runtime = True
-    if no_ansi:
-        config.no_ansi = True
+    if require_logs is not None:
+        config.require_logs = require_logs
+    if profile_runtime is not None:
+        config.profile_runtime = profile_runtime
+    if quiet is not None:
+        config.quiet = quiet
+    if no_ansi is not None:
+        config.no_ansi = no_ansi
     if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
     if module_order:
         config.module_order = module_order
 
-    config.kwargs = kwargs  # Plugin command line options
+    config.kwargs = custom_config  # Plugin command line options
 
     plugin_hooks.mqc_trigger("execution_start")
 

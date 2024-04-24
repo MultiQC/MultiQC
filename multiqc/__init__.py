@@ -22,7 +22,7 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
 
 from .multiqc import (  # noqa: E402
     run,
-    load,
+    parse_logs,
     list_modules,
     list_samples,
     list_plots,
@@ -39,7 +39,7 @@ __version__ = config.version
 
 __all__ = [
     "run",
-    "load",  # for interactive use
+    "parse_logs",  # for interactive use
     "list_modules",  # for interactive use
     "list_samples",  # for interactive use
     "list_plots",  # for interactive use
