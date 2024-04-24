@@ -27,7 +27,7 @@ from multiqc.plots.plotly.plot import go, PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import config, plugin_hooks, report, util_functions, log
-from multiqc.core.cl_to_config import _cl_to_config
+from multiqc.core.init_config import init_config
 from multiqc.core.file_search import _file_search
 from multiqc.core.run_modules import _run_modules
 from multiqc.core.utils import RunResult, _RunError
@@ -442,34 +442,44 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
+# def _reset_config(**kwargs) -> RunResult:
+#     """
+#     Reset the config parameters for the next runs if those were set through the function parameters
+#     """
+#     config.analysis_dir = []
+#     for k, v in kwargs.items():
+#         setattr(config, k, None)
+
+
 def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
-    _cl_to_config(analysis_dir, **kwargs)
+    init_config(analysis_dir, **kwargs)
 
-    # First, try find multiqc_data.json in the given directory and load it into the report.
-    res = _load_multiqc_data_json(analysis_dir)
-    if res:
-        return res
+    report.reset_file_search()
 
-    # multiqc_data.json was not found, so proceed to the standard run of finding logs
-    # and running modules on them.
     try:
         run_modules, run_module_names = _file_search()
         _run_modules(run_modules, run_module_names)
+        report.files = {}
     except _RunError as e:
         if e.message:
             logger.critical(e.message)
-        return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
-    finally:
-        # Rest the config parameters for the next runs if those were set through the function parameters
-        for k, v in kwargs.items():
-            setattr(config, k, None)
+        res = RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
+    else:
+        res = RunResult()
+    # finally:
+    #     _reset_config(**kwargs)
+    return res
 
 
-def _load_multiqc_data_json(analysis_dir) -> Optional[RunResult]:
+def parse_data_json(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
+    """
+    Try find multiqc_data.json in the given directory and load it into the report.
+    """
+
     json_path_found = False
     json_path = None
     if not isinstance(analysis_dir, list):
@@ -482,22 +492,30 @@ def _load_multiqc_data_json(analysis_dir) -> Optional[RunResult]:
                 json_path_found = True
 
     if not json_path_found:
-        return None
+        # _reset_config(**kwargs)
+        return RunResult(message="multiqc_data.json not found in the given directory", sys_exit_code=1)
 
     # Loading from previous JSON
     logger.info(f"Loading data from {json_path}")
-    with json_path.open("r") as f:
-        data = json.load(f)
+    try:
+        with json_path.open("r") as f:
+            data = json.load(f)
 
-    for mod, sections in data["report_data_sources"].items():
-        logger.info(f"Loaded module {mod}")
-        for section, sources in sections.items():
-            for sname, source in sources.items():
-                report.data_sources[mod][section][sname] = source
-    for id, plot_dump in data["report_plot_data"].items():
-        logger.info(f"Loaded plot {id}")
-        report.plot_data[id] = plot_dump
-    return RunResult()
+        for mod, sections in data["report_data_sources"].items():
+            logger.info(f"Loaded module {mod}")
+            for section, sources in sections.items():
+                for sname, source in sources.items():
+                    report.data_sources[mod][section][sname] = source
+        for id, plot_dump in data["report_plot_data"].items():
+            logger.info(f"Loaded plot {id}")
+            report.plot_data[id] = plot_dump
+    except (json.JSONDecodeError, KeyError) as e:
+        # _reset_config(**kwargs)
+        return RunResult(message=f"Error loading data from multiqc_data.json: {e}", sys_exit_code=1)
+    else:
+        return RunResult()
+    # finally:
+    # _reset_config(**kwargs)
 
 
 def list_modules() -> List[str]:
@@ -667,7 +685,7 @@ def write_report(**kwargs):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
-    _cl_to_config(**kwargs)
+    init_config(**kwargs)
     config.make_report = True
     _write_results()
     # Rest the config parameters for the next runs if those were set through the function parameters
@@ -692,7 +710,7 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    _cl_to_config(analysis_dir=analysis_dir, **kwargs)
+    init_config(analysis_dir=analysis_dir, **kwargs)
 
     try:
         run_modules, run_module_names = _file_search()

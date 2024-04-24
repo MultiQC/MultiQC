@@ -66,9 +66,6 @@ def init():
     global saved_raw_data
     global last_found_file
     global runtimes
-    global file_search_stats
-    global searchfiles
-    global files
     global data_sources
     global html_ids
     global plot_data
@@ -92,6 +89,33 @@ def init():
         "sp": defaultdict(),
         "mods": defaultdict(),
     }
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+    html_ids = []
+    plot_data = dict()
+    general_stats_data = []
+    general_stats_headers = []
+    software_versions = defaultdict(lambda: defaultdict(list))
+
+    reset_file_search()
+
+
+def reset():
+    """
+    Reset interactive session.
+    """
+    init()
+
+
+def reset_file_search():
+    """
+    Reset the file search session. Useful in interactive session to call in the end
+    of parse_logs(), so the next run is not affected by the previous one.
+    """
+    global searchfiles
+    global files
+    global file_search_stats
+    searchfiles = list()
+    files = dict()  # Discovered files for each search key
     file_search_stats = {
         "skipped_symlinks": 0,
         "skipped_not_a_file": 0,
@@ -102,21 +126,6 @@ def init():
         "skipped_directory_fn_ignore_dirs": 0,
         "skipped_file_contents_search_errors": 0,
     }
-    searchfiles = list()
-    files = dict()  # Discovered files for each search key
-    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-    html_ids = []
-    plot_data = dict()
-    general_stats_data = []
-    general_stats_headers = []
-    software_versions = defaultdict(lambda: defaultdict(list))
-
-
-def reset():
-    """
-    Reset interactive session.
-    """
-    init()
 
 
 init()

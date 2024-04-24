@@ -15,7 +15,7 @@ from multiqc.utils import log
 logger = logging.getLogger(__name__)
 
 
-def _cl_to_config(
+def init_config(
     analysis_dir=None,
     file_list=None,
     prepend_dirs=None,
@@ -56,21 +56,24 @@ def _cl_to_config(
     module_order=(),
     **kwargs,
 ):
+    """
+    Initialize log and config.
+    Update config from command line parameters. Will only update from the non-None values.
+    """
+    config.load_from_defaults()
+
     log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
 
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug(f"Using temporary directory: {report.tmp_dir}")
 
-    """
-    Update config from command line parameters. Will only update from the non-None values.
-    """
     plugin_hooks.mqc_trigger("before_config")
-    config.mqc_load_userconfig(config_file)
+    config.load_userconfig(config_file)
     plugin_hooks.mqc_trigger("config_loaded")
 
     # Command-line config YAML
     if len(cl_config) > 0:
-        config.mqc_cl_config(cl_config)
+        config._cl_config(cl_config)
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)
@@ -124,10 +127,12 @@ def _cl_to_config(
         config.template = template
     if title is not None:
         config.title = title
+        logger.info(f"Report title: {config.title}")
     if report_comment is not None:
         config.report_comment = report_comment
     if prepend_dirs is not None:
         config.prepend_dirs = prepend_dirs
+        logger.info("Prepending directory to sample names")
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
@@ -258,12 +263,6 @@ def _set_analysis_file_config(
     if len(ignore_samples) > 0:
         logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
         config.sample_names_ignore.extend(ignore_samples)
-
-    # Print some status updates
-    if config.title is not None:
-        logger.info(f"Report title: {config.title}")
-    if config.prepend_dirs:
-        logger.info("Prepending directory to sample names")
 
     # Prep module configs
     config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]

@@ -153,19 +153,6 @@ def _run_modules(
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
 
-    # Add section for software versions if any are found
-    if not config.skip_versions_section and report.software_versions:
-        # Importing here to avoid circular imports
-        from multiqc.modules.software_versions import MultiqcModule
-
-        report.modules_output.append(MultiqcModule())
-
-    # Special-case module if we want to profile the MultiQC running time
-    if config.profile_runtime:
-        from multiqc.modules.profile_runtime import MultiqcModule
-
-        report.modules_output.append(MultiqcModule())
-
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warning("No analysis results found. Cleaning up…")
@@ -173,60 +160,5 @@ def _run_modules(
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         raise _RunError(sys_exit_code=sys_exit_code)
-
-    if config.make_report:
-        # Sort the report module output if we have a config
-        if len(getattr(config, "report_section_order", {})) > 0:
-            section_id_order = {}
-            idx = 10
-            for mod in reversed(report.modules_output):
-                section_id_order[mod.anchor] = idx
-                idx += 10
-            for anchor, ss in config.report_section_order.items():
-                if anchor not in section_id_order.keys():
-                    logger.debug(f"Reordering sections: anchor '{anchor}' not found.")
-                    continue
-                if ss.get("order") is not None:
-                    section_id_order[anchor] = ss["order"]
-                if ss.get("after") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                if ss.get("before") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["before"]] - 1
-            sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output = [
-                mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i
-            ]
-
-        # Sort the report sections if we have a config
-        # Basically the same as above, but sections within a module
-        if len(getattr(config, "report_section_order", {})) > 0:
-            # Go through each module
-            for midx, mod in enumerate(report.modules_output):
-                section_id_order = {}
-                # Get a list of the section anchors
-                idx = 10
-                for s in mod.sections:
-                    section_id_order[s["anchor"]] = idx
-                    idx += 10
-                # Go through each section to be reordered
-                for anchor, ss in config.report_section_order.items():
-                    # Section to be moved is not in this module
-                    if anchor not in section_id_order.keys():
-                        logger.debug(f"Reordering sections: anchor '{anchor}' not found for module '{mod.name}'.")
-                        continue
-                    if ss == "remove":
-                        section_id_order[anchor] = False
-                        continue
-                    if ss.get("order") is not None:
-                        section_id_order[anchor] = ss["order"]
-                    if ss.get("after") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                    if ss.get("before") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["before"]] - 1
-                # Remove module sections
-                section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
-                # Sort the module sections
-                sorted_ids = sorted(section_id_order, key=section_id_order.get)
-                report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
 
     plugin_hooks.mqc_trigger("after_modules")

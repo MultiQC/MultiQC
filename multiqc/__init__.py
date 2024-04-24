@@ -23,6 +23,7 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
 from .multiqc import (  # noqa: E402
     run,
     parse_logs,
+    list_data_sources,
     list_modules,
     list_samples,
     list_plots,
@@ -39,16 +40,18 @@ __version__ = config.version
 
 __all__ = [
     "run",
-    "parse_logs",  # for interactive use
-    "list_modules",  # for interactive use
-    "list_samples",  # for interactive use
-    "list_plots",  # for interactive use
-    "show_plot",  # for interactive use
-    "get_module_data",  # for interactive use
-    "get_general_stats_data",  # for interactive use
-    "reset",  # for interactive use
-    "write_report",  # for interactive use
-    "add_custom_content_section",  # for interactive use
     "config",
     "__version__",
+    # The rest of the functions define the interactive use API:
+    "parse_logs",
+    "list_data_sources",
+    "list_modules",
+    "list_samples",
+    "list_plots",
+    "show_plot",
+    "get_module_data",
+    "get_general_stats_data",
+    "reset",
+    "write_report",
+    "add_custom_content_section",
 ]

@@ -164,12 +164,17 @@ fn_ignore_files: List
 top_modules: List
 module_order: List[Union[str, Dict]]
 
-# Populating the variables above from the default MultiQC config
-config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
-with open(config_defaults_path) as f:
-    _default_config = yaml.safe_load(f)
-for c, v in _default_config.items():
-    globals()[c] = v
+
+def load_from_defaults():
+    # Populating the variables above from the default MultiQC config
+    config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
+    with open(config_defaults_path) as f:
+        _default_config = yaml.safe_load(f)
+    for c, v in _default_config.items():
+        globals()[c] = v
+
+
+load_from_defaults()
 
 # Module filename search patterns
 searchp_fn = os.path.join(MULTIQC_DIR, "utils", "search_patterns.yaml")
@@ -232,37 +237,37 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
 
 ##### Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
-def mqc_load_userconfig(paths=()):
+def load_userconfig(paths=()):
     """Overwrite config defaults with user config files"""
 
     # Load and parse installation config file if we find it
-    mqc_load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
+    _load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    mqc_load_config(
+    _load_config(
         os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
     )
 
     # Load and parse a user config file if we find it
-    mqc_load_config(os.path.expanduser("~/.multiqc_config.yaml"))
+    _load_config(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        mqc_load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
+        _load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
 
     # Load separate config entries from MULTIQC_* environment variables
-    mqc_add_config(mqc_env_vars_config())
+    _add_config(_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
-    mqc_load_config("multiqc_config.yaml")
+    _load_config("multiqc_config.yaml")
 
     # Custom command line config
     for p in paths:
-        mqc_load_config(p)
+        _load_config(p)
 
 
-def mqc_load_config(yaml_config_path: str):
+def _load_config(yaml_config_path: str):
     """Load and parse a config file if we find it"""
     if not os.path.isfile(yaml_config_path) and os.path.isfile(yaml_config_path.replace(".yaml", ".yml")):
         yaml_config_path = yaml_config_path.replace(".yaml", ".yml")
@@ -270,17 +275,19 @@ def mqc_load_config(yaml_config_path: str):
     if os.path.isfile(yaml_config_path):
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
-            new_config = pyaml_env.parse_config(yaml_config_path)
-            logger.debug(f"Loading config settings from: {yaml_config_path}")
-            mqc_add_config(new_config, yaml_config_path)
+            # new_config can be None if the file is empty
+            new_config: Optional[Dict] = pyaml_env.parse_config(yaml_config_path)
+            if new_config:
+                logger.debug(f"Loading config settings from: {yaml_config_path}")
+                _add_config(new_config, yaml_config_path)
         except (IOError, AttributeError) as e:
-            logger.debug(f"Config error: {e}")
+            logger.debug(f"Error loading config {yaml_config_path}: {e}")
         except yaml.scanner.ScannerError as e:
             logger.error(f"Error parsing config YAML: {e}")
             sys.exit(1)
 
 
-def mqc_cl_config(cl_config):
+def _cl_config(cl_config):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.safe_load(clc_str)
@@ -295,10 +302,10 @@ def mqc_cl_config(cl_config):
             logger.error(f"Could not parse command line config: {clc_str}")
         else:
             logger.debug(f"Found command line config: {parsed_clc}")
-            mqc_add_config(parsed_clc)
+            _add_config(parsed_clc)
 
 
-def mqc_env_vars_config() -> Dict:
+def _env_vars_config() -> Dict:
     """
     Check MULTIQC_* environment variables and set to corresponding config values if they are of scalar types.
     """
@@ -339,7 +346,7 @@ def mqc_env_vars_config() -> Dict:
     return env_config
 
 
-def mqc_add_config(conf: Dict, conf_path=None):
+def _add_config(conf: Dict, conf_path=None):
     """Add to the global config with given MultiQC config dict"""
     global custom_css_files, fn_clean_exts, fn_clean_trim
     log_new_config = {}
@@ -479,8 +486,9 @@ def update(u):
     return update_dict(globals(), u)
 
 
-def update_dict(target, source, none_only=False):
+def update_dict(target: Dict, source: Dict, none_only=False):
     """Recursively updates nested dict d from nested dict u"""
+    assert target is not None, source is not None
     for key, val in source.items():
         if isinstance(val, dict):
             target[key] = update_dict(target.get(key, {}), val)
