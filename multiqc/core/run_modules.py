@@ -12,7 +12,7 @@ import rich
 from rich.syntax import Syntax
 
 from multiqc.core.file_search import _required_logs_found
-from multiqc.core.utils import _data_tmp_dir, _plots_tmp_dir, _RunError
+from multiqc.core.utils import _RunError
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import config, report, plugin_hooks, software_versions
 
@@ -20,22 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 def _run_modules(
-    tmp_dir: str,
     run_modules: List[Dict[str, Optional[Dict]]],
     run_module_names: List[str],
-    filename: str,
 ) -> None:
-    if filename != "stdout" and config.make_data_dir is True:
-        config.data_dir = _data_tmp_dir()
-        os.makedirs(config.data_dir)
-    else:
-        config.data_dir = None
-    if filename != "stdout" and config.export_plots is True:
-        config.plots_dir = _plots_tmp_dir()
-        os.makedirs(config.plots_dir)
-    else:
-        config.plots_dir = None
-
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     sys_exit_code = 0
@@ -64,7 +51,7 @@ def _run_modules(
             # Copy over css & js files if requested by the theme
             try:
                 for to, path in report.modules_output[-1].css.items():
-                    copy_to = os.path.join(tmp_dir, to)
+                    copy_to = os.path.join(report.tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
             except OSError as e:
@@ -76,7 +63,7 @@ def _run_modules(
                 pass
             try:
                 for to, path in report.modules_output[-1].js.items():
-                    copy_to = os.path.join(tmp_dir, to)
+                    copy_to = os.path.join(report.tmp_dir, to)
                     os.makedirs(os.path.dirname(copy_to))
                     shutil.copyfile(path, copy_to)
             except OSError as e:
@@ -98,7 +85,7 @@ def _run_modules(
                 logger.debug(msg)
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
-            shutil.rmtree(tmp_dir)
+            shutil.rmtree(report.tmp_dir)
             logger.critical(
                 "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
                 + "User Cancelled Execution!\nExiting MultiQC..."
@@ -182,7 +169,7 @@ def _run_modules(
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warning("No analysis results found. Cleaning up…")
-        shutil.rmtree(tmp_dir)
+        shutil.rmtree(report.tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         raise _RunError(sys_exit_code=sys_exit_code)

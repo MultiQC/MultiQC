@@ -3,11 +3,11 @@ import os
 import platform
 import re
 import sys
-from typing import Optional, Dict
 
 import requests
 from packaging import version
 
+from multiqc.core.utils import _RunError
 from multiqc.utils import report, config, plugin_hooks, strict_helpers
 from multiqc.utils.util_functions import strtobool
 from multiqc.utils import log
@@ -16,17 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 def _cl_to_config(
-    analysis_dir,
+    analysis_dir=None,
+    file_list=None,
     prepend_dirs=None,
     dirs_depth=None,
     fn_clean_sample_names=None,
     title=None,
     report_comment=None,
     template=None,
-    module=(),
+    run_modules=(),
+    exclude_modules=(),
     require_logs=None,
-    exclude=(),
-    outdir=None,
+    output_dir=None,
     use_filename_as_sample_name=False,
     replace_names=None,
     sample_names=None,
@@ -42,19 +43,18 @@ def _cl_to_config(
     plots_force_flat=None,
     plots_force_interactive=None,
     strict=None,
-    lint=None,  # Deprecated since v1.17
     development=None,
     make_pdf=None,
     no_megaqc_upload=None,
     config_file=(),
     cl_config=(),
-    profile_runtime=None,
     quiet=None,
     verbose=None,
     no_ansi=None,
+    profile_runtime=None,
     custom_css_files=(),
     module_order=(),
-    custom_config: Optional[Dict] = None,
+    **kwargs,
 ):
     log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
 
@@ -131,12 +131,8 @@ def _cl_to_config(
     if dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = dirs_depth
-    # Clean up analysis_dir if a string (interactive environment only)
-    if isinstance(analysis_dir, str):
-        analysis_dir = [analysis_dir]
-    config.analysis_dir = analysis_dir
-    if outdir is not None:
-        config.output_dir = os.path.realpath(outdir)
+    if output_dir is not None:
+        config.output_dir = os.path.realpath(output_dir)
     if use_filename_as_sample_name is not None:
         config.use_filename_as_sample_name = use_filename_as_sample_name
         logger.info("Using log filenames for sample names")
@@ -158,13 +154,6 @@ def _cl_to_config(
         config.plots_force_flat = plots_force_flat
     if plots_force_interactive is not None:
         config.plots_force_interactive = plots_force_interactive
-    if lint or config.lint:  # Deprecated since v1.17
-        logger.warning(
-            "DEPRECIATED: The --lint option is renamed to --strict since MultiQC 1.17. "
-            "The old option will be removed in future MultiQC versions, please "
-            "update your command line and/or configs."
-        )
-        strict = True
     if strict is not None:
         config.strict = strict
         config.lint = strict  # Deprecated since v1.17
@@ -189,10 +178,10 @@ def _cl_to_config(
     if sample_names:
         config.load_sample_names(sample_names)
     config.load_show_hide(sample_filters)
-    if len(module) > 0:
-        config.run_modules = module
-    if len(exclude) > 0:
-        config.exclude_modules = exclude
+    if len(run_modules) > 0:
+        config.run_modules = run_modules
+    if len(exclude_modules) > 0:
+        config.exclude_modules = exclude_modules
     if require_logs is not None:
         config.require_logs = require_logs
     if profile_runtime is not None:
@@ -206,7 +195,14 @@ def _cl_to_config(
     if module_order:
         config.module_order = module_order
 
-    config.kwargs = custom_config  # Plugin command line options
+    _set_analysis_file_config(
+        analysis_dir=analysis_dir,
+        file_list=file_list,
+        ignore=(),
+        ignore_samples=(),
+    )
+
+    config.kwargs = kwargs  # Plugin command line options
 
     plugin_hooks.mqc_trigger("execution_start")
 
@@ -221,3 +217,63 @@ def _cl_to_config(
         )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
+
+
+def _set_analysis_file_config(
+    analysis_dir=None,
+    file_list=None,
+    ignore=(),
+    ignore_samples=(),
+):
+    # Clean up analysis_dir if a string (interactive environment only)
+    if analysis_dir is not None:
+        if isinstance(analysis_dir, str):
+            analysis_dir = [analysis_dir]
+        config.analysis_dir = analysis_dir
+    if file_list is not None:
+        config.file_list = file_list
+
+    # Add files if --file-list option is given
+    if config.file_list:
+        if len(config.analysis_dir) > 1:
+            raise _RunError("If --file-list is given, analysis_dir should have only one plain text file.")
+        file_list_path = config.analysis_dir[0]
+        config.analysis_dir = []
+        with open(file_list_path) as in_handle:
+            for line in in_handle:
+                if os.path.exists(line.strip()):
+                    path = os.path.abspath(line.strip())
+                    config.analysis_dir.append(path)
+        if len(config.analysis_dir) == 0:
+            raise _RunError(
+                f"No files or directories were added from {file_list_path} using --file-list option."
+                f"Please, check that {file_list_path} contains correct paths."
+            )
+
+    if len(ignore) > 0:
+        logger.debug(f"Ignoring files, directories and paths that match: {', '.join(ignore)}")
+        config.fn_ignore_files.extend(ignore)
+        config.fn_ignore_dirs.extend(ignore)
+        config.fn_ignore_paths.extend(ignore)
+    if len(ignore_samples) > 0:
+        logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
+        config.sample_names_ignore.extend(ignore_samples)
+
+    # Print some status updates
+    if config.title is not None:
+        logger.info(f"Report title: {config.title}")
+    if config.prepend_dirs:
+        logger.info("Prepending directory to sample names")
+
+    # Prep module configs
+    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
+    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
+
+    # Lint the module config
+    mod_keys = [list(m.keys())[0] for m in config.module_order]
+    if config.strict:
+        for m in config.avail_modules.keys():
+            if m not in mod_keys:
+                errmsg = f"LINT: Module '{m}' not found in config.module_order"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)

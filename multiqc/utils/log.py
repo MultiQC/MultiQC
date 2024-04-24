@@ -7,7 +7,6 @@ import os
 import shutil
 import sys
 import tempfile
-from collections import namedtuple
 from typing import Optional
 
 import coloredlogs
@@ -22,9 +21,6 @@ from multiqc.utils import config, util_functions
 
 log_tmp_dir = None
 log_tmp_fn = "/dev/null"
-
-LoggerParams = namedtuple("LoggerParams", "quiet verbose no_ansi")
-params = None
 
 rich_console: rich.console.Console
 logger = logging.getLogger("multiqc")
@@ -43,19 +39,10 @@ def init_log(
 
     loglevel (str): Determines the level of the log output.
     """
-    # If logging was already initialised, re-initialise only if parameters changed:
-    global params
-    if params is not None and LoggerParams(quiet, verbose, no_ansi) == params:
-        return
-    params = LoggerParams(quiet, verbose, no_ansi)
-
     global log_tmp_dir, log_tmp_fn
-
-    if log_tmp_dir is None:
-        # Have to create a separate directory for the log file otherwise Windows will complain
-        # about same file used by different processes:
-        log_tmp_dir = tempfile.mkdtemp()
-
+    # Have to create a separate directory for the log file otherwise Windows will complain
+    # about same file used by different processes:
+    log_tmp_dir = tempfile.mkdtemp()
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
     # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent

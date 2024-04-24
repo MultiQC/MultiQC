@@ -21,17 +21,32 @@ from multiqc.utils import config, megaqc, plugin_hooks, report, util_functions
 logger = logging.getLogger(__name__)
 
 
-def _write_results(filename):
+def _write_results() -> None:
     _html_general_stats_table()
 
-    _export_sources()
+    if config.filename != "stdout" and config.make_data_dir is True:
+        config.data_dir = _data_tmp_dir()
+        os.makedirs(config.data_dir)
+    else:
+        config.data_dir = None
+    if config.filename != "stdout" and config.export_plots is True:
+        config.plots_dir = _plots_tmp_dir()
+        os.makedirs(config.plots_dir)
+    else:
+        config.plots_dir = None
+
+    if config.data_dir is not None:
+        # Write the report sources to disk
+        report.data_sources_tofile()
+
+        # Create a file with the module DOIs
+        report.dois_tofile(report.modules_output)
+
+    plugin_hooks.mqc_trigger("before_report_generation")
 
     _write_json_dump()
 
-    _write_html_and_data(
-        tmp_dir=report.tmp_dir,
-        filename=filename,
-    )
+    _write_html_and_data()
 
 
 def _html_general_stats_table() -> None:
@@ -77,25 +92,10 @@ def _html_general_stats_table() -> None:
         config.skip_generalstats = True
 
 
-def _export_sources() -> None:
-    """
-    Dump data sources.
-    """
-
-    if config.data_dir is not None:
-        # Write the report sources to disk
-        report.data_sources_tofile()
-
-        # Create a file with the module DOIs
-        report.dois_tofile(report.modules_output)
-
-
 def _write_json_dump() -> None:
     """
     Write JSON with plot data. Useful for MegaQC and for loading in interactive environments.
     """
-
-    plugin_hooks.mqc_trigger("before_report_generation")
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
@@ -110,7 +110,7 @@ def _write_json_dump() -> None:
             f.write(json.dumps(report.plot_data))
 
 
-def _write_html_and_data(tmp_dir: str, filename: str) -> None:
+def _write_html_and_data() -> None:
     """
     Make the final report path & data directories
     """
@@ -120,6 +120,8 @@ def _write_html_and_data(tmp_dir: str, filename: str) -> None:
         config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
     except AttributeError:
         pass  # No subdirectory variable given
+
+    filename = config.filename
 
     if filename == "stdout":
         config.output_fn = sys.stdout
@@ -239,7 +241,8 @@ def _write_html_and_data(tmp_dir: str, filename: str) -> None:
                 else:
                     logger.error(f"Output directory {config.plots_dir} already exists.")
                     logger.info("Use -f or --force to overwrite existing reports")
-                    shutil.rmtree(tmp_dir)
+                    # if os.path.isdir(report.tmp_dir):
+                    #     shutil.rmtree(report.tmp_dir)
                     raise _RunError()
             logger.info(
                 "Plots       : {}{}".format(
@@ -272,14 +275,14 @@ def _write_html_and_data(tmp_dir: str, filename: str) -> None:
         except AttributeError:
             pass  # Not a child theme
         else:
-            shutil.copytree(parent_template.template_dir, tmp_dir, dirs_exist_ok=True)
+            shutil.copytree(parent_template.template_dir, report.tmp_dir, dirs_exist_ok=True)
 
         # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
         # parent template files are overwritten)
-        shutil.copytree(template_mod.template_dir, tmp_dir, dirs_exist_ok=True)
+        shutil.copytree(template_mod.template_dir, report.tmp_dir, dirs_exist_ok=True)
 
         # Function to include file contents in Jinja template
-        def include_file(name, fdir=tmp_dir, b64=False):
+        def include_file(name, fdir=report.tmp_dir, b64=False):
             try:
                 if fdir is None:
                     fdir = ""
@@ -318,7 +321,7 @@ def _write_html_and_data(tmp_dir: str, filename: str) -> None:
 
         # Load the report template
         try:
-            env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir))
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(report.tmp_dir))
             env.globals["include_file"] = include_file
             j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
         except:  # noqa: E722
@@ -345,14 +348,14 @@ def _write_html_and_data(tmp_dir: str, filename: str) -> None:
             # Copy over files if requested by the theme
             try:
                 for f in template_mod.copy_files:
-                    fn = os.path.join(tmp_dir, f)
+                    fn = os.path.join(report.tmp_dir, f)
                     dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
                     shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
             except AttributeError:
                 pass  # No files to copy
 
     # Clean up temporary directory
-    shutil.rmtree(tmp_dir)
+    shutil.rmtree(report.tmp_dir)
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:

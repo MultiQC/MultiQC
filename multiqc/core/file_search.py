@@ -8,59 +8,11 @@ from multiqc.utils import config, report
 logger = logging.getLogger(__name__)
 
 
-def _file_search(
-    file_list=False,
-    ignore=(),
-    ignore_samples=(),
-) -> Tuple[List, List]:
+def _file_search() -> Tuple[List, List]:
     """
     Search log files and set up the list of modules to run.
     """
-
-    # Add files if --file-list option is given
-    if file_list:
-        if len(config.analysis_dir) > 1:
-            raise _RunError("If --file-list is given, analysis_dir should have only one plain text file.")
-        file_list_path = config.analysis_dir[0]
-        config.analysis_dir = []
-        with open(file_list_path) as in_handle:
-            for line in in_handle:
-                if os.path.exists(line.strip()):
-                    path = os.path.abspath(line.strip())
-                    config.analysis_dir.append(path)
-        if len(config.analysis_dir) == 0:
-            raise _RunError(
-                f"No files or directories were added from {file_list_path} using --file-list option."
-                f"Please, check that {file_list_path} contains correct paths."
-            )
-
-    if len(ignore) > 0:
-        logger.debug(f"Ignoring files, directories and paths that match: {', '.join(ignore)}")
-        config.fn_ignore_files.extend(ignore)
-        config.fn_ignore_dirs.extend(ignore)
-        config.fn_ignore_paths.extend(ignore)
-    if len(ignore_samples) > 0:
-        logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
-        config.sample_names_ignore.extend(ignore_samples)
-
-    # Print some status updates
-    if config.title is not None:
-        logger.info(f"Report title: {config.title}")
-    if config.prepend_dirs:
-        logger.info("Prepending directory to sample names")
-
-    # Prep module configs
-    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
-    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
     mod_keys = [list(m.keys())[0] for m in config.module_order]
-
-    # Lint the module configs
-    if config.strict:
-        for m in config.avail_modules.keys():
-            if m not in mod_keys:
-                errmsg = f"LINT: Module '{m}' not found in config.module_order"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
 
     # Get the list of modules we want to run, in the order that we want them
     run_modules: List[Dict[str, Dict]] = [

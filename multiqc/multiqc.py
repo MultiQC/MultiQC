@@ -17,7 +17,7 @@ from typing import Dict, Union, List, Optional
 
 import rich_click as click
 
-from multiqc.core.write_results import _write_html_and_data, _write_results
+from multiqc.core.write_results import _write_results
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
@@ -131,9 +131,28 @@ click.rich_click.OPTION_GROUPS = {
 
 
 @click.command(context_settings=dict(help_option_names=["-h", "--help"]))
-@click.argument("analysis_dir", type=click.Path(exists=True), nargs=-1, required=True, metavar="[ANALYSIS DIRECTORY]")
-@click.option("-f", "--force", is_flag=True, help="Overwrite any existing reports")
-@click.option("-d", "--dirs", "prepend_dirs", is_flag=True, help="Prepend directory to sample names")
+@click.argument(
+    "analysis_dir",
+    type=click.Path(exists=True),
+    nargs=-1,
+    required=True,
+    metavar="[ANALYSIS DIRECTORY]",
+)
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=None,
+    help="Overwrite any existing reports",
+)
+@click.option(
+    "-d",
+    "--dirs",
+    "prepend_dirs",
+    is_flag=True,
+    default=None,
+    help="Prepend directory to sample names",
+)
 @click.option(
     "-dd",
     "--dirs-depth",
@@ -141,12 +160,12 @@ click.rich_click.OPTION_GROUPS = {
     type=int,
     help="Prepend [yellow i]n[/] directories to sample names. Negative number to take from start of path.",
 )
-@click.option("-s", "" "transformation", flag_value="upper", default=True)
 @click.option(
     "-s",
     "--fullnames",
     "fn_clean_sample_names",
     flag_value=False,
+    default=None,
     help="Do not clean the sample names [i](leave as full file name)[/]",
 )
 @click.option(
@@ -156,20 +175,61 @@ click.rich_click.OPTION_GROUPS = {
     help="Report title. Printed as page header, used for filename if not otherwise specified.",
 )
 @click.option(
-    "-b", "--comment", "report_comment", type=str, help="Custom comment, will be printed at the top of the report."
+    "-b",
+    "--comment",
+    "report_comment",
+    type=str,
+    help="Custom comment, will be printed at the top of the report.",
 )
-@click.option("-n", "--filename", type=str, help="Report filename. Use '[yellow i]stdout[/]' to print to standard out.")
-@click.option("-o", "--outdir", type=str, help="Create report in the specified output directory.")
 @click.option(
-    "-t", "--template", type=click.Choice(config.avail_templates), metavar=None, help="Report template to use."
+    "-n",
+    "--filename",
+    type=str,
+    help="Report filename. Use '[yellow i]stdout[/]' to print to standard out.",
 )
-@click.option("-x", "--ignore", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore analysis files")
 @click.option(
-    "--ignore-samples", "ignore_samples", type=str, multiple=True, metavar="GLOB EXPRESSION", help="Ignore sample names"
+    "-o",
+    "--outdir",
+    "output_dir",
+    type=str,
+    help="Create report in the specified output directory.",
 )
-@click.option("--ignore-symlinks", "ignore_symlinks", is_flag=True, help="Ignore symlinked directories and files")
 @click.option(
-    "--fn_as_s_name", "use_filename_as_sample_name", is_flag=True, help="Use the log filename as the sample name"
+    "-t",
+    "--template",
+    type=click.Choice(config.avail_templates),
+    metavar=None,
+    help="Report template to use.",
+)
+@click.option(
+    "-x",
+    "--ignore",
+    type=str,
+    multiple=True,
+    metavar="GLOB EXPRESSION",
+    help="Ignore analysis files",
+)
+@click.option(
+    "--ignore-samples",
+    "ignore_samples",
+    type=str,
+    multiple=True,
+    metavar="GLOB EXPRESSION",
+    help="Ignore sample names",
+)
+@click.option(
+    "--ignore-symlinks",
+    "ignore_symlinks",
+    is_flag=True,
+    default=None,
+    help="Ignore symlinked directories and files",
+)
+@click.option(
+    "--fn_as_s_name",
+    "use_filename_as_sample_name",
+    is_flag=True,
+    default=None,
+    help="Use the log filename as the sample name",
 )
 @click.option(
     "--replace-names",
@@ -190,11 +250,17 @@ click.rich_click.OPTION_GROUPS = {
     help="TSV file containing show/hide patterns for the report",
 )
 @click.option(
-    "-l", "--file-list", is_flag=True, help="Supply a file containing a list of file paths to be searched, one per row"
+    "-l",
+    "--file-list",
+    "file_list",
+    is_flag=True,
+    default=None,
+    help="Supply a file containing a list of file paths to be searched, one per row",
 )
 @click.option(
     "-e",
     "--exclude",
+    "exclude_modules",
     metavar="[MODULE NAME]",
     type=click.Choice(sorted(["general_stats"] + list(config.avail_modules.keys()))),
     multiple=True,
@@ -203,6 +269,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-m",
     "--module",
+    "run_modules",
     metavar="[MODULE NAME]",
     type=click.Choice(sorted(config.avail_modules.keys())),
     multiple=True,
@@ -212,10 +279,15 @@ click.rich_click.OPTION_GROUPS = {
     "--require-logs",
     "require_logs",
     is_flag=True,
+    default=None,
     help="Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error.",
 )
 @click.option(
-    "--data-dir/--no-data-dir", "make_data_dir", is_flag=True, help="Force the parsed data directory to be created."
+    "--data-dir/--no-data-dir",
+    "make_data_dir",
+    is_flag=True,
+    default=None,
+    help="Force the parsed data directory to be created.",
 )
 @click.option(
     "-k",
@@ -224,45 +296,78 @@ click.rich_click.OPTION_GROUPS = {
     type=click.Choice(list(config.data_format_extensions.keys())),
     help="Output parsed data in a different format.",
 )
-@click.option("-z", "--zip-data-dir", "zip_data_dir", is_flag=True, help="Compress the data directory.")
 @click.option(
-    "--no-report", "make_report", flag_value=False, help="Do not generate a report, only export data and plots"
+    "-z",
+    "--zip-data-dir",
+    "zip_data_dir",
+    is_flag=True,
+    default=None,
+    help="Compress the data directory.",
 )
 @click.option(
-    "-p", "--export", "export_plots", is_flag=True, help="Export plots as static images in addition to the report"
+    "--no-report",
+    "make_report",
+    flag_value=False,
+    default=None,
+    help="Do not generate a report, only export data and plots",
 )
-@click.option("-fp", "--flat", "plots_flat", is_flag=True, help="Use only flat plots [i](static images)[/]")
+@click.option(
+    "-p",
+    "--export",
+    "export_plots",
+    is_flag=True,
+    default=None,
+    help="Export plots as static images in addition to the report",
+)
+@click.option(
+    "-fp",
+    "--flat",
+    "plots_flat",
+    is_flag=True,
+    default=None,
+    help="Use only flat plots [i](static images)[/]",
+)
 @click.option(
     "-ip",
     "--interactive",
     "plots_interactive",
     is_flag=True,
+    default=None,
     help="Use only interactive plots [i](in-browser Javascript)[/]",
 )
 @click.option(
     "--strict",
     "strict",
     is_flag=True,
+    default=None,
     help="Don't catch exceptions, run additional code checks to help development.",
 )
-@click.option("--lint", "lint", is_flag=True, hidden=True, help="DEPRECATED: use --strict instead")
+@click.option(
+    "--lint",
+    is_flag=True,
+    hidden=True,
+    callback=lambda ctx, param, value: click.echo("FLAG --lint IS REMOVED: USE --strict INSTEAD"),
+)
 @click.option(
     "--development",
     "--dev",
     "development",
     is_flag=True,
+    default=None,
     help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
 )
 @click.option(
     "--pdf",
     "make_pdf",
     is_flag=True,
+    default=None,
     help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be installed.",
 )
 @click.option(
     "--no-megaqc-upload",
     "no_megaqc_upload",
     is_flag=True,
+    default=None,
     help="Don't upload generated report to MegaQC, even if MegaQC options are found",
 )
 @click.option(
@@ -273,11 +378,38 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     help="Specific config file to load, after those in MultiQC dir / home dir / working dir.",
 )
-@click.option("--cl-config", type=str, multiple=True, help="Specify MultiQC config YAML on the command line")
-@click.option("-v", "--verbose", count=True, default=0, help="Increase output verbosity.")
-@click.option("-q", "--quiet", is_flag=True, help="Only show log warnings")
-@click.option("--profile-runtime", is_flag=True, help="Add analysis of how long MultiQC takes to run to the report")
-@click.option("--no-ansi", is_flag=True, help="Disable coloured log output")
+@click.option(
+    "--cl-config",
+    type=str,
+    multiple=True,
+    help="Specify MultiQC config YAML on the command line",
+)
+@click.option(
+    "-v",
+    "--verbose",
+    count=True,
+    default=0,
+    help="Increase output verbosity.",
+)
+@click.option(
+    "-q",
+    "--quiet",
+    is_flag=True,
+    default=None,
+    help="Only show log warnings",
+)
+@click.option(
+    "--profile-runtime",
+    is_flag=True,
+    default=None,
+    help="Add analysis of how long MultiQC takes to run to the report",
+)
+@click.option(
+    "--no-ansi",
+    is_flag=True,
+    default=None,
+    help="Disable coloured log output",
+)
 @click.option(
     "--custom-css-file",
     "custom_css_files",
@@ -287,6 +419,8 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(**kwargs):
+    print(kwargs)
+
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -308,24 +442,34 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
-def parse_logs(analysis_dir, *args, **kwargs) -> RunResult:
+def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
+    _cl_to_config(analysis_dir, **kwargs)
+
     # First, try find multiqc_data.json in the given directory and load it into the report.
-    res = _load_multiqc_data_json(analysis_dir, *args, **kwargs)
+    res = _load_multiqc_data_json(analysis_dir)
     if res:
         return res
 
     # multiqc_data.json was not found, so proceed to the standard run of finding logs
     # and running modules on them.
-    kwargs["no_report"] = True  # Disable report generation
+    try:
+        run_modules, run_module_names = _file_search()
+        _run_modules(run_modules, run_module_names)
+    except _RunError as e:
+        if e.message:
+            logger.critical(e.message)
+        return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
+    finally:
+        # Rest the config parameters for the next runs if those were set through the function parameters
+        for k, v in kwargs.items():
+            setattr(config, k, None)
 
-    return run(analysis_dir, *args, **kwargs)
 
-
-def _load_multiqc_data_json(analysis_dir, *args, **kwargs) -> Optional[RunResult]:
+def _load_multiqc_data_json(analysis_dir) -> Optional[RunResult]:
     json_path_found = False
     json_path = None
     if not isinstance(analysis_dir, list):
@@ -341,7 +485,6 @@ def _load_multiqc_data_json(analysis_dir, *args, **kwargs) -> Optional[RunResult
         return None
 
     # Loading from previous JSON
-    _cl_to_config(analysis_dir=None, *args, **kwargs)
     logger.info(f"Loading data from {json_path}")
     with json_path.open("r") as f:
         data = json.load(f)
@@ -520,62 +663,20 @@ def add_custom_content_section(
     )
 
 
-def write_report():
+def write_report(**kwargs):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
+    _cl_to_config(**kwargs)
     config.make_report = True
-    _write_html_and_data(
-        tmp_dir=report.tmp_dir,
-        filename=config.filename,
-    )
+    _write_results()
+    # Rest the config parameters for the next runs if those were set through the function parameters
+    for k, v in kwargs.items():
+        setattr(config, k, None)
 
 
 # Main function that runs MultiQC. Available to use within an interactive Python environment
-def run(
-    analysis_dir,
-    prepend_dirs=None,
-    dirs_depth=None,
-    fn_clean_sample_names=None,
-    title=None,
-    report_comment=None,
-    template=None,
-    module=(),
-    require_logs=None,
-    exclude=(),
-    outdir=None,
-    ignore=(),
-    ignore_samples=(),
-    use_filename_as_sample_name=None,
-    replace_names=None,
-    sample_names=None,
-    sample_filters=None,
-    file_list=False,
-    filename=None,
-    make_data_dir=None,
-    data_format=None,
-    zip_data_dir=None,
-    force=None,
-    ignore_symlinks=None,
-    make_report=None,
-    export_plots=None,
-    plots_force_flat=None,
-    plots_force_interactive=None,
-    strict=None,
-    lint=None,  # Deprecated since v1.17
-    development=None,
-    make_pdf=None,
-    no_megaqc_upload=None,
-    config_file=(),
-    cl_config=(),
-    verbose=None,
-    quiet=None,
-    no_ansi=None,
-    profile_runtime=None,
-    custom_css_files=(),
-    clean_up=True,
-    **kwargs,
-) -> RunResult:
+def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -591,64 +692,14 @@ def run(
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    _cl_to_config(
-        analysis_dir=analysis_dir,
-        prepend_dirs=prepend_dirs,
-        dirs_depth=dirs_depth,
-        fn_clean_sample_names=fn_clean_sample_names,
-        title=title,
-        report_comment=report_comment,
-        template=template,
-        module=module,
-        require_logs=require_logs,
-        exclude=exclude,
-        outdir=outdir,
-        use_filename_as_sample_name=use_filename_as_sample_name,
-        replace_names=replace_names,
-        sample_names=sample_names,
-        sample_filters=sample_filters,
-        filename=filename,
-        make_data_dir=make_data_dir,
-        data_format=data_format,
-        zip_data_dir=zip_data_dir,
-        force=force,
-        ignore_symlinks=ignore_symlinks,
-        make_report=make_report,
-        export_plots=export_plots,
-        plots_force_flat=plots_force_flat,
-        plots_force_interactive=plots_force_interactive,
-        strict=strict,
-        lint=lint,
-        development=development,
-        make_pdf=make_pdf,
-        no_megaqc_upload=no_megaqc_upload,
-        config_file=config_file,
-        cl_config=cl_config,
-        profile_runtime=profile_runtime,
-        quiet=quiet,
-        verbose=verbose,
-        no_ansi=no_ansi,
-        custom_css_files=custom_css_files,
-        custom_config=kwargs,
-    )
+    _cl_to_config(analysis_dir=analysis_dir, **kwargs)
 
     try:
-        run_modules, run_module_names = _file_search(
-            file_list=file_list,
-            ignore=ignore,
-            ignore_samples=ignore_samples,
-        )
+        run_modules, run_module_names = _file_search()
 
-        _run_modules(
-            tmp_dir=report.tmp_dir,
-            filename=filename,
-            run_modules=run_modules,
-            run_module_names=run_module_names,
-        )
+        _run_modules(run_modules, run_module_names)
 
-        _write_results(
-            filename=filename,
-        )
+        _write_results()
 
     except _RunError as e:
         if e.message:
