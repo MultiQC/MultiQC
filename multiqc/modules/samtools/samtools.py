@@ -45,8 +45,6 @@ class MultiqcModule(
         self.general_stats_data = dict()
         n = dict()
 
-        assert True == False
-
         # Call submodule functions
         n["stats"] = self.parse_samtools_stats()
         if n["stats"] > 0:
