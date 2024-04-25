@@ -45,6 +45,13 @@ def exec_modules(
             if not isinstance(modules, list):
                 modules = [modules]
 
+            # Override duplicated outputs
+            for prev_mod in report.modules_output:
+                if prev_mod.name in set(m.name for m in modules):
+                    logger.info(
+                        f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new samples to a module with multiqc.parse_logs()'
+                    )
+                    report.modules_output.remove(prev_mod)
             report.modules_output.extend(modules)
 
         except ModuleNoSamplesFound:
