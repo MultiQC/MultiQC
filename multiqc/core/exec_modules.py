@@ -1,6 +1,4 @@
-import errno
 import logging
-import os
 import shutil
 import sys
 import time
@@ -11,15 +9,15 @@ from typing import Dict, Union, Callable, List, Optional
 import rich
 from rich.syntax import Syntax
 
-from multiqc.core.file_search import _required_logs_found
-from multiqc.core.utils import _RunError
+from multiqc.core.file_search import required_logs_found
+from multiqc.core.exceptions import RunError
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import config, report, plugin_hooks, software_versions
 
 logger = logging.getLogger(__name__)
 
 
-def _run_modules(
+def exec_modules(
     run_modules: List[Dict[str, Optional[Dict]]],
     run_module_names: List[str],
 ) -> None:
@@ -47,32 +45,6 @@ def _run_modules(
                 modules = [modules]
 
             report.modules_output.extend(modules)
-
-            # Copy over css & js files if requested by the theme
-            try:
-                for to, path in report.modules_output[-1].css.items():
-                    copy_to = os.path.join(report.tmp_dir, to)
-                    os.makedirs(os.path.dirname(copy_to))
-                    shutil.copyfile(path, copy_to)
-            except OSError as e:
-                if e.errno == errno.EEXIST:
-                    pass
-                else:
-                    raise
-            except AttributeError:
-                pass
-            try:
-                for to, path in report.modules_output[-1].js.items():
-                    copy_to = os.path.join(report.tmp_dir, to)
-                    os.makedirs(os.path.dirname(copy_to))
-                    shutil.copyfile(path, copy_to)
-            except OSError as e:
-                if e.errno == errno.EEXIST:
-                    pass
-                else:
-                    raise
-            except AttributeError:
-                pass
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
@@ -147,8 +119,8 @@ def _run_modules(
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
-    if not _required_logs_found([m.anchor for m in report.modules_output]):
-        raise _RunError()
+    if not required_logs_found([m.anchor for m in report.modules_output]):
+        raise RunError()
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
@@ -159,6 +131,6 @@ def _run_modules(
         shutil.rmtree(report.tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
-        raise _RunError(sys_exit_code=sys_exit_code)
+        raise RunError(sys_exit_code=sys_exit_code)
 
     plugin_hooks.mqc_trigger("after_modules")

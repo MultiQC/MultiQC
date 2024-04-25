@@ -473,7 +473,7 @@ def _fig_to_static_html(
     # Save the plot to the data directory if export is requested
     if config.export_plots:
         for file_ext in config.export_plot_formats:
-            plot_path = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
+            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{uid}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
             short_path = Path(config.plots_dir_name) / file_ext / f"{uid}.{file_ext}"
             logger.debug(f"Writing plot to {short_path}")

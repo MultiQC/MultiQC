@@ -175,11 +175,11 @@ the syntax is now:
 
 ```python
 self.add_section(
-  name = 'My Section',
-  anchor = 'my-html-id',
-  description = 'Description of what this plot shows.',
-  helptext = 'More extensive help text can about how to interpret this.'
-  plot = linegraph.plot(data, pconfig)
+  name='My Section',
+  anchor='my-html-id',
+  description='Description of what this plot shows.',
+  helptext='More extensive help text can about how to interpret this.',
+  plot=linegraph.plot(data, pconfig),
 )
 ```
 

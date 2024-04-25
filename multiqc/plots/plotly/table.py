@@ -4,7 +4,7 @@ from typing import Tuple, Optional, List
 
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
-from multiqc.utils import config, mqc_colour, util_functions, report
+from multiqc.utils import config, mqc_colour, report
 
 logger = logging.getLogger(__name__)
 
@@ -372,7 +372,7 @@ def make_table(
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
         fn = dt.pconfig.get("raw_data_fn", f"multiqc_{dt.id}")
-        util_functions.write_data_file(raw_vals, fn)
+        report.write_data_file(raw_vals, fn)
         report.saved_raw_data[fn] = raw_vals
 
     # Build the bootstrap modal to customise columns and order

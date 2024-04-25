@@ -7,7 +7,7 @@ import numpy as np
 import plotly.graph_objects as go
 from pydantic import BaseModel
 
-from multiqc.utils import config, util_functions
+from multiqc.utils import config, report
 from multiqc.plots.table_object import DataTable
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
 from multiqc.plots.plotly.table import make_table
@@ -375,7 +375,7 @@ class DatasetModel(BaseDatasetModel):
             for sample, value in values_by_sample.items():
                 data.setdefault(sample, {})[title] = value
 
-        util_functions.write_data_file(data, self.uid)
+        report.write_data_file(data, self.uid)
 
 
 class ViolinPlot(Plot):

@@ -17,6 +17,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Any
 
+import math
 import rich
 import rich.progress
 import yaml
@@ -30,8 +31,11 @@ from .util_functions import replace_defaultdicts, is_running_in_notebook, no_uni
 
 logger = logging.getLogger(__name__)
 
+initialized = False
+
+tmp_dir: Optional[str] = None
+
 # Uninitialised global variables for static typing
-tmp_dir: str
 multiqc_command: str
 modules_output: List  # List of BaseMultiqcModule objects
 general_stats_html: str
@@ -57,6 +61,7 @@ software_versions: Dict[str, Dict[str, List]]
 def init():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
+    global initialized
     global tmp_dir
     global multiqc_command
     global modules_output
@@ -73,7 +78,10 @@ def init():
     global general_stats_headers
     global software_versions
 
+    # Create new temporary directory for module data exports
+    initialized = True
     tmp_dir = tempfile.mkdtemp()
+    logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
     modules_output = []
     general_stats_html = ""
@@ -126,9 +134,6 @@ def reset_file_search():
         "skipped_directory_fn_ignore_dirs": 0,
         "skipped_file_contents_search_errors": 0,
     }
-
-
-init()
 
 
 def is_searching_in_source_dir(path: Path) -> bool:
@@ -653,3 +658,189 @@ def sanitise_json(json_string):
     json_string = re.sub(r"\bNaN\b", "null", json_string)
     json_string = re.sub(r"\b-?Infinity\b", "null", json_string)
     return json_string
+
+
+def data_tmp_dir() -> str:
+    """
+    Temporary directory to collect data files from running modules before copying to the final
+    destination in multiqc.core.write_results
+    """
+    path = os.path.join(tmp_dir, "multiqc_data")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def plots_tmp_dir() -> str:
+    """
+    Temporary directory to collect plot exports from running modules before copying to the final
+    destination in multiqc.core.write_results
+    """
+    path = os.path.join(tmp_dir, "multiqc_plots")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def write_data_file(
+    data: Union[Dict[str, Union[Dict, List]], List[Dict]],
+    fn: str,
+    sort_cols=False,
+    data_format=None,
+):
+    """
+    Write a data file to the report directory. Will do nothing
+    if config.data_dir is not set (i.e. when config.make_data_dir == False or config.filename == "stdout")
+    :param: data - either: a 2D dict, first key sample name (row header),
+        second key field (column header); a list of dicts; or a list of lists
+    :param: fn - Desired filename. Directory will be prepended automatically.
+    :param: sort_cols - Sort columns alphabetically
+    :param: data_format - Output format. Defaults to config.data_format (usually tsv)
+    :return: None
+    """
+
+    if config.data_dir is None:
+        return
+
+    # Get data format from config
+    if data_format is None:
+        data_format = config.data_format
+
+    body = None
+    # Some metrics can't be coerced to tab-separated output, test and handle exceptions
+    if data_format in ["tsv", "csv"]:
+        sep = "\t" if data_format == "tsv" else ","
+        # Attempt to reshape data to tsv
+        # noinspection PyBroadException
+        try:
+            # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+            headers = []
+            rows = []
+
+            for d in data.values() if isinstance(data, dict) else data:
+                if not d or (isinstance(d, list) and isinstance(d[0], dict)):
+                    continue
+                if isinstance(d, dict):
+                    for h in d.keys():
+                        if h not in headers:
+                            headers.append(h)
+            if headers:
+                if sort_cols:
+                    headers = sorted(headers)
+                headers_str = [str(item) for item in headers]
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    headers_str.insert(0, "Sample")
+                rows.append(sep.join(headers_str))
+
+            # The rest of the rows
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+                # Make a list starting with the sample name, then each field in order of the header cols
+                if headers:
+                    line = [str(d.get(h, "")) for h in headers]
+                else:
+                    line = [
+                        str(item)
+                        for item in (d.values() if isinstance(d, dict) else (d if isinstance(d, list) else [d]))
+                    ]
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    line.insert(0, str(key))
+                rows.append(sep.join(line))
+            body = "\n".join(rows)
+
+        except Exception as e:
+            if config.development:
+                raise
+            data_format = "yaml"
+            logger.debug(f"{fn} could not be saved as tsv/csv, falling back to YAML. {e}")
+
+    # Add relevant file extension to filename, save file.
+    fn = f"{fn}.{config.data_format_extensions[data_format]}"
+    fpath = os.path.join(data_tmp_dir(), fn)
+    assert data_tmp_dir() and os.path.exists(data_tmp_dir())
+    with io.open(fpath, "w", encoding="utf-8") as f:
+        if data_format == "json":
+            jsonstr = dump_json(data, indent=4, ensure_ascii=False)
+            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+        elif data_format == "yaml":
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
+        elif body:
+            # Default - tab separated output
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+    logger.debug(f"Wrote data file {fn}")
+
+
+def dump_json(data, **kwargs):
+    """
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
+    """
+
+    # Recursively replace NaNs with None
+    def replace_nan(obj):
+        if isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_nan(v) for v in obj]
+        elif isinstance(obj, set):
+            return {replace_nan(v) for v in obj}
+        elif callable(obj):
+            return None
+        elif isinstance(obj, float) and math.isnan(obj):
+            return None
+        return obj
+
+    return json.dumps(replace_nan(data), **kwargs)
+
+
+def multiqc_dump_json():
+    """
+    Export the parsed data in memory to a JSON file.
+    Used for MegaQC and other data export.
+    WARNING: May be depreciated and removed in future versions.
+    """
+    exported_data = dict()
+    export_vars = {
+        "report": [
+            "data_sources",
+            "general_stats_data",
+            "general_stats_headers",
+            "multiqc_command",
+            "plot_data",
+            "saved_raw_data",
+        ],
+        "config": [
+            "analysis_dir",
+            "creation_date",
+            "git_hash",
+            "intro_text",
+            "report_comment",
+            "report_header_info",
+            "script_path",
+            "short_version",
+            "subtitle",
+            "title",
+            "version",
+            "output_dir",
+        ],
+    }
+    for s in export_vars:
+        for k in export_vars[s]:
+            try:
+                d = None
+                if s == "config":
+                    d = {f"{s}_{k}": getattr(config, k)}
+                elif s == "report":
+                    d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
+                if d:
+                    dump_json(d, ensure_ascii=False)  # Test that exporting to JSON works
+                    exported_data.update(d)
+            except (TypeError, KeyError, AttributeError) as e:
+                logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
+        # Get the absolute paths of analysis directories
+        exported_data["config_analysis_dir_abs"] = list()
+        for d in exported_data.get("config_analysis_dir", []):
+            try:
+                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+            except Exception:
+                pass
+    return exported_data

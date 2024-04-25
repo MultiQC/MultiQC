@@ -3,7 +3,7 @@ from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, split_long_string, Plot
-from multiqc.utils import util_functions
+from multiqc.utils import report
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class DatasetModel(BaseDatasetModel):
         for ycat, row in zip(self.ycats, self.rows):
             data.append([ycat] + row)
 
-        util_functions.write_data_file(data, self.uid)
+        report.write_data_file(data, self.uid)
 
 
 class HeatmapPlot(Plot):

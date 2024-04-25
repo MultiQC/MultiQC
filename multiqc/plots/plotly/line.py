@@ -7,7 +7,7 @@ import math
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import util_functions, config
+from multiqc.utils import config, report
 from multiqc.utils.config import update_dict
 
 logger = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ class DatasetModel(BaseDatasetModel):
             with io.open(fpath, "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
-            util_functions.write_data_file(y_by_x_by_sample, self.uid)
+            report.write_data_file(y_by_x_by_sample, self.uid)
 
 
 class LinePlot(Plot):

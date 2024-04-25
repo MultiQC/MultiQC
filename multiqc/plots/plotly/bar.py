@@ -16,7 +16,7 @@ from multiqc.plots.plotly.plot import (
     Plot,
     split_long_string,
 )
-from multiqc.utils import util_functions, config
+from multiqc.utils import report, config
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +118,7 @@ class DatasetModel(BaseDatasetModel):
             for d_idx, d_val in enumerate(cat["data"]):
                 s_name = self.samples[d_idx]
                 val_by_cat_by_sample[s_name][cat["name"]] = d_val
-        util_functions.write_data_file(val_by_cat_by_sample, self.uid)
+        report.write_data_file(val_by_cat_by_sample, self.uid)
 
 
 class BarPlot(Plot):

@@ -7,7 +7,7 @@ import numpy as np
 from plotly import graph_objects as go
 
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import util_functions
+from multiqc.utils import report
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +175,7 @@ class DatasetModel(BaseDatasetModel):
             }
             for point in self.points
         ]
-        util_functions.write_data_file(data, self.uid)
+        report.write_data_file(data, self.uid)
 
 
 class ScatterPlot(Plot):

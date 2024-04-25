@@ -17,7 +17,6 @@ from typing import Dict, Union, List, Optional
 
 import rich_click as click
 
-from multiqc.core.write_results import _write_results
 from multiqc.modules.base_module import BaseMultiqcModule
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
@@ -27,11 +26,9 @@ from multiqc.plots.plotly.plot import go, PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import config, plugin_hooks, report, util_functions, log
-from multiqc.core.init_config import init_config
-from multiqc.core.file_search import _file_search
-from multiqc.core.run_modules import _run_modules
-from multiqc.core.utils import RunResult, _RunError
 from multiqc.utils.util_functions import no_unicode
+from multiqc.core import RunResult, RunError
+from multiqc import core
 
 # Set up logging
 start_execution_time = time.time()
@@ -343,12 +340,6 @@ click.rich_click.OPTION_GROUPS = {
     help="Don't catch exceptions, run additional code checks to help development.",
 )
 @click.option(
-    "--lint",
-    is_flag=True,
-    hidden=True,
-    callback=lambda ctx, param, value: click.echo("FLAG --lint IS REMOVED: USE --strict INSTEAD"),
-)
-@click.option(
     "--development",
     "--dev",
     "development",
@@ -417,10 +408,15 @@ click.rich_click.OPTION_GROUPS = {
     multiple=True,
     help="Custom CSS file to add to the final report",
 )
+@click.option(
+    "--clean-up/--no-clean-up",
+    "clean_up",
+    is_flag=True,
+    default=True,
+    help="Remove the temporary directory and log file after finishing",
+)
 @click.version_option(config.version, prog_name="multiqc")
 def run_cli(**kwargs):
-    print(kwargs)
-
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -442,34 +438,29 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
-# def _reset_config(**kwargs) -> RunResult:
-#     """
-#     Reset the config parameters for the next runs if those were set through the function parameters
-#     """
-#     config.analysis_dir = []
-#     for k, v in kwargs.items():
-#         setattr(config, k, None)
-
-
 def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
-    init_config(analysis_dir, **kwargs)
+    core.init_config(analysis_dir, **kwargs)
+
+    # We want to keep report session, so we can interactively append modules to the report
+    if report.initialized:
+        report.init()
 
     report.reset_file_search()
 
     try:
-        run_modules, run_module_names = _file_search()
-        _run_modules(run_modules, run_module_names)
+        run_modules, run_module_names = core.file_search()
+        core.exec_modules(run_modules, run_module_names)
         report.files = {}
-    except _RunError as e:
+    except RunError as e:
         if e.message:
             logger.critical(e.message)
-        res = RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
+        res = core.RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
     else:
-        res = RunResult()
+        res = core.RunResult()
     # finally:
     #     _reset_config(**kwargs)
     return res
@@ -685,9 +676,9 @@ def write_report(**kwargs):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
-    init_config(**kwargs)
+    core.init_config(**kwargs)
     config.make_report = True
-    _write_results()
+    core.write_results()
     # Rest the config parameters for the next runs if those were set through the function parameters
     for k, v in kwargs.items():
         setattr(config, k, None)
@@ -710,16 +701,18 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    init_config(analysis_dir=analysis_dir, **kwargs)
+    core.init_config(analysis_dir=analysis_dir, **kwargs)
+
+    report.init()
 
     try:
-        run_modules, run_module_names = _file_search()
+        run_modules, run_module_names = core.file_search()
 
-        _run_modules(run_modules, run_module_names)
+        core.exec_modules(run_modules, run_module_names)
 
-        _write_results()
+        core.write_results()
 
-    except _RunError as e:
+    except RunError as e:
         if e.message:
             logger.critical(e.message)
         return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)

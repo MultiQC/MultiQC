@@ -2,13 +2,13 @@ import logging
 import os
 from typing import Dict, List, Tuple
 
-from multiqc.core.utils import _RunError
+from multiqc.core.exceptions import RunError
 from multiqc.utils import config, report
 
 logger = logging.getLogger(__name__)
 
 
-def _file_search() -> Tuple[List, List]:
+def file_search() -> Tuple[List, List]:
     """
     Search log files and set up the list of modules to run.
     """
@@ -34,7 +34,7 @@ def _file_search() -> Tuple[List, List]:
         if unknown_modules:
             logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
         if len(unknown_modules) == len(config.run_modules):
-            raise _RunError("No available modules to run!")
+            raise RunError("No available modules to run!")
         config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
         run_modules = [m for m in run_modules if list(m.keys())[0] in config.run_modules]
         logger.info(f"Only using modules: {', '.join(config.run_modules)}")
@@ -45,7 +45,7 @@ def _file_search() -> Tuple[List, List]:
             config.exclude_modules = tuple(x for x in config.exclude_modules if x != "general_stats")
         run_modules = [m for m in run_modules if list(m.keys())[0] not in config.exclude_modules]
     if len(run_modules) == 0:
-        raise _RunError("No analysis modules specified!")
+        raise RunError("No analysis modules specified!")
     run_module_names = [list(m.keys())[0] for m in run_modules]
     logger.debug(f"Analysing modules: {', '.join(run_module_names)}")
 
@@ -75,13 +75,13 @@ def _file_search() -> Tuple[List, List]:
         non_empty_modules.add("custom_content")
     run_modules = [m for m in run_modules if list(m.keys())[0].lower() in non_empty_modules]
     run_module_names = [list(m.keys())[0] for m in run_modules]
-    if not _required_logs_found(run_module_names):
-        raise _RunError()
+    if not required_logs_found(run_module_names):
+        raise RunError()
 
     return run_modules, run_module_names
 
 
-def _required_logs_found(modules_with_logs):
+def required_logs_found(modules_with_logs):
     if config.require_logs:
         required_modules_with_no_logs = [
             m

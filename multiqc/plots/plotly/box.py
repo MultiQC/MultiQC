@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import util_functions
+from multiqc.utils import report
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class DatasetModel(BaseDatasetModel):
         vals_by_sample = {}
         for sample, values in zip(self.samples, self.data):
             vals_by_sample[sample] = values
-        util_functions.write_data_file(vals_by_sample, self.uid)
+        report.write_data_file(vals_by_sample, self.uid)
 
 
 class BoxPlot(Plot):

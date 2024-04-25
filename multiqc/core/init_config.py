@@ -7,7 +7,7 @@ import sys
 import requests
 from packaging import version
 
-from multiqc.core.utils import _RunError
+from multiqc.core.exceptions import RunError
 from multiqc.utils import report, config, plugin_hooks, strict_helpers
 from multiqc.utils.util_functions import strtobool
 from multiqc.utils import log
@@ -65,7 +65,6 @@ def init_config(
     log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
 
     logger.debug(f"This is MultiQC v{config.version}")
-    logger.debug(f"Using temporary directory: {report.tmp_dir}")
 
     plugin_hooks.mqc_trigger("before_config")
     config.load_userconfig(config_file)
@@ -207,6 +206,8 @@ def init_config(
         ignore_samples=(),
     )
 
+    _set_output_paths()
+
     config.kwargs = kwargs  # Plugin command line options
 
     plugin_hooks.mqc_trigger("execution_start")
@@ -241,7 +242,7 @@ def _set_analysis_file_config(
     # Add files if --file-list option is given
     if config.file_list:
         if len(config.analysis_dir) > 1:
-            raise _RunError("If --file-list is given, analysis_dir should have only one plain text file.")
+            raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
         file_list_path = config.analysis_dir[0]
         config.analysis_dir = []
         with open(file_list_path) as in_handle:
@@ -250,7 +251,7 @@ def _set_analysis_file_config(
                     path = os.path.abspath(line.strip())
                     config.analysis_dir.append(path)
         if len(config.analysis_dir) == 0:
-            raise _RunError(
+            raise RunError(
                 f"No files or directories were added from {file_list_path} using --file-list option."
                 f"Please, check that {file_list_path} contains correct paths."
             )
@@ -276,3 +277,44 @@ def _set_analysis_file_config(
                 errmsg = f"LINT: Module '{m}' not found in config.module_order"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
+
+
+def _set_output_paths():
+    """
+    Create directories where outputs will be placed
+    """
+
+    # Add an output subdirectory if specified by template
+    template_mod = config.avail_templates[config.template].load()
+    try:
+        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
+    except AttributeError:
+        pass  # No subdirectory variable given
+
+    filename = config.filename
+
+    if filename == "stdout":
+        config.output_fn = sys.stdout
+        logger.info("Printing report to stdout")
+    else:
+        if filename is not None and filename.endswith(".html"):
+            filename = filename[:-5]
+        if filename is None and config.title is not None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+            filename += "_multiqc_report"
+        if filename is not None:
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
+            config.output_fn_name = f"{config.output_fn_name}.html"
+
+        if config.make_report:
+            config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        else:
+            config.output_fn = None
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
