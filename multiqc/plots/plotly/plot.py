@@ -346,6 +346,7 @@ class Plot(BaseModel):
 
         # Saving compressed data for JavaScript to pick up and uncompress.
         report.plot_data[self.id] = self.model_dump(warnings=False)
+        report.plot_data[self.id]["layout"] = self.layout.to_plotly_json()
         return html
 
     def flat_plot(self) -> str:
