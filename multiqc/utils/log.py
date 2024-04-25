@@ -71,6 +71,7 @@ def init_log(
         highlight=False,
         force_terminal=force_term_colors(),
         color_system=None if no_ansi is True else "auto",
+        soft_wrap=True,
         theme=Theme(
             styles={
                 "logging.level.info": "",
