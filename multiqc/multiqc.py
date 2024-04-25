@@ -27,7 +27,6 @@ from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import config, plugin_hooks, report, util_functions, log
 from multiqc.utils.copy_function_signature import copy_callable_signature
-from multiqc.utils.util_functions import no_unicode
 from multiqc.core import RunResult, RunError
 from multiqc import core
 
@@ -40,10 +39,8 @@ logger = logging.getLogger(__name__)
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-if not no_unicode():
-    emoji = f" :{util_functions.choose_emoji()}:"
-else:
-    emoji = ""
+emoji = util_functions.choose_emoji(rich=True)
+emoji = f" {emoji}" if emoji else ""
 click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
 )

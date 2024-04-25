@@ -122,20 +122,24 @@ def init_log():
         # https://stackoverflow.com/a/55877763/341474
         logger.propagate = False
 
-        # Print intro
-        if config.no_ansi is False:
-            BOLD = "\033[1m"
-            DIM = "\033[2m"
-            DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
-            RESET = "\033[0m"
-        else:
-            BOLD = ""
-            DIM = ""
-            DARK_ORANGE = ""
-            RESET = ""
-        intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}v{config.version}{RESET}"
         if not config.quiet:
-            print(f"\n{intro}\n")
+            # Print intro
+            if config.no_ansi is False:
+                BOLD = "\033[1m"
+                DIM = "\033[2m"
+                DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+                RESET = "\033[0m"
+            else:
+                BOLD = ""
+                DIM = ""
+                DARK_ORANGE = ""
+                RESET = ""
+            emoji = util_functions.choose_emoji()
+            emoji = f" {emoji}" if emoji else ""
+            intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+            if not util_functions.is_running_in_notebook():
+                intro = f"\n{intro}\n"
+            print(intro)
 
     else:
         # Set up the console logging stream

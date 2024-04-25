@@ -59,26 +59,46 @@ def strtobool(val) -> bool:
         raise ValueError(f"invalid truth value {val!r}")
 
 
-def choose_emoji():
+emoji_rich_ids = {
+    "🍾": ":bottle_with_popping_cork:",
+    "🌹": ":rose:",
+    "🍀": ":four_leaf_clover:",
+    "🌏": ":globe_showing_asia-australia:",
+    "🎃": ":jack-o-lantern:",
+    "🎅": ":santa:",
+    "🎄": ":christmas_tree:",
+    "🔍": ":mag:",
+}
+
+emoji_dates = {
+    "🍾": (1, 1, 1, 5),  # New Year's Day
+    "🌹": (2, 14, 0, 0),  # Valentine's Day
+    "🍀": (3, 17, 0, 0),  # St Patrick's Day
+    "🌏": (4, 22, 0, 0),  # Earth Day
+    "🎃": (10, 31, 5, 0),  # Halloween
+    "🎅": (12, 25, 0, 0),  # Christmas Day
+    "🎄": (12, 25, 7, 7),  # Christmas
+}
+
+
+def choose_emoji(rich=False) -> str:
     """Choose an emoji to use in the report header."""
     # NB: We haven't parsed the config yet, so can't disable via config
+    if no_unicode():
+        return ""
+
     today = datetime.date.today()
-    emojis = {
-        "bottle_with_popping_cork": (1, 1, 1, 5),  # New Year's Day
-        "rose": (2, 14, 0, 0),  # Valentine's Day
-        "four_leaf_clover": (3, 17, 0, 0),  # St Patrick's Day
-        "globe_showing_asia-australia": (4, 22, 0, 0),  # Earth Day
-        "jack-o-lantern": (10, 31, 5, 0),  # Halloween
-        "santa": (12, 25, 0, 0),  # Christmas Day
-        "christmas_tree": (12, 25, 7, 7),  # Christmas
-    }
-    for emoji, (month, day, days_before, days_after) in emojis.items():
+
+    selected_emoji = "🔍"
+    for emoji, (month, day, days_before, days_after) in emoji_dates.items():
         special_date = datetime.date(today.year, month, day)
         date_range_start = special_date - datetime.timedelta(days=days_before)
         date_range_end = special_date + datetime.timedelta(days=days_after)
         if date_range_start <= today <= date_range_end:
-            return emoji
-    return "mag"
+            selected_emoji = emoji
+    if rich:
+        return emoji_rich_ids[selected_emoji]
+    return selected_emoji
 
 
 def replace_defaultdicts(data):
