@@ -62,7 +62,7 @@ def file_search() -> Tuple[List, List]:
         run_module_names.append("software_versions")
 
     for d in config.analysis_dir:
-        logger.info(f"Search path : {os.path.abspath(d)}")
+        logger.info(f"Search path: {os.path.abspath(d)}")
 
     # FILE SEARCH. Heavy part. Go over provided paths and prepare a list of relevant log files.
     report.get_filelist(run_module_names)

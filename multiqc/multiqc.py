@@ -44,7 +44,7 @@ if not no_unicode():
 else:
     emoji = ""
 click.rich_click.HEADER_TEXT = (
-    f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]| v{config.version}"
+    f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
 )
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
 click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
@@ -446,7 +446,7 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     core.init_config(analysis_dir, **kwargs)
 
     # We want to keep report session, so we can interactively append modules to the report
-    if report.initialized:
+    if not report.initialized:
         report.init()
 
     report.reset_file_search()

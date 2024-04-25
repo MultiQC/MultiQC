@@ -138,7 +138,7 @@ def init_log(
             DIM = ""
             DARK_ORANGE = ""
             RESET = ""
-        intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}| v{config.version}"
+        intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}v{config.version}{RESET}"
         if not quiet:
             print(intro)
 
