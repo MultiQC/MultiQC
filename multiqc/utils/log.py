@@ -67,7 +67,6 @@ def init_log():
         force_terminal=force_term_colors(),
         force_interactive=False if config.no_ansi else None,
         color_system=None if config.no_ansi is True else "auto",
-        soft_wrap=True,
         theme=Theme(
             styles={
                 "logging.level.info": "",
