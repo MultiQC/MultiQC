@@ -26,6 +26,7 @@ from multiqc.plots.plotly.plot import go, PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import config, plugin_hooks, report, util_functions, log
+from multiqc.utils.copy_function_signature import copy_callable_signature
 from multiqc.utils.util_functions import no_unicode
 from multiqc.core import RunResult, RunError
 from multiqc import core
@@ -438,6 +439,7 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
+@copy_callable_signature(core.init_config)
 def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
@@ -453,20 +455,19 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
 
     try:
         run_modules, run_module_names = core.file_search()
-        core.exec_modules(run_modules, run_module_names)
-        report.files = {}
+
+        core.exec_modules(run_modules, run_module_names, clean_up=False)
+
     except RunError as e:
         if e.message:
             logger.critical(e.message)
         res = core.RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
     else:
         res = core.RunResult()
-    # finally:
-    #     _reset_config(**kwargs)
     return res
 
 
-def parse_data_json(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
+def parse_data_json(analysis_dir: Union[str, List[str]]) -> RunResult:
     """
     Try find multiqc_data.json in the given directory and load it into the report.
     """
@@ -483,7 +484,6 @@ def parse_data_json(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
                 json_path_found = True
 
     if not json_path_found:
-        # _reset_config(**kwargs)
         return RunResult(message="multiqc_data.json not found in the given directory", sys_exit_code=1)
 
     # Loading from previous JSON
@@ -501,12 +501,9 @@ def parse_data_json(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
             logger.info(f"Loaded plot {id}")
             report.plot_data[id] = plot_dump
     except (json.JSONDecodeError, KeyError) as e:
-        # _reset_config(**kwargs)
         return RunResult(message=f"Error loading data from multiqc_data.json: {e}", sys_exit_code=1)
     else:
         return RunResult()
-    # finally:
-    # _reset_config(**kwargs)
 
 
 def list_modules() -> List[str]:
@@ -672,19 +669,16 @@ def add_custom_content_section(
     )
 
 
+@copy_callable_signature(core.init_config)
 def write_report(**kwargs):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
     core.init_config(**kwargs)
-    config.make_report = True
     core.write_results()
-    # Rest the config parameters for the next runs if those were set through the function parameters
-    for k, v in kwargs.items():
-        setattr(config, k, None)
 
 
-# Main function that runs MultiQC. Available to use within an interactive Python environment
+@copy_callable_signature(core.init_config)
 def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
