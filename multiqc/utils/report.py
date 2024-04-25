@@ -368,7 +368,7 @@ def get_filelist(run_module_names):
             "[green]{task.completed}/{task.total}",
             "[dim]{task.fields[s_fn]}[/]",
             console=log.rich_console,
-            disable=config.no_ansi or config.quiet,
+            disable=config.no_ansi or config.quiet or os.getenv("CI"),
         )
         with progress_obj as progress:
             mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
