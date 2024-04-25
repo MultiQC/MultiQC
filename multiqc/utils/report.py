@@ -320,6 +320,10 @@ def get_filelist(run_module_names):
     for path in config.analysis_dir:
         handle_analysis_path(Path(path))
 
+    # GitHub actions doesn't understand ansi control codes to move the cursor,
+    # so it prints each update ona a new line. Better disable it for CI.
+    disable_progress = config.no_ansi or config.quiet or os.getenv("CI")
+
     if is_running_in_notebook() or no_unicode():
         PRINT_FNAME = False
         # ANSI escape code for dim text
@@ -342,7 +346,7 @@ def get_filelist(run_module_names):
             desc="Searching",
             unit="file",
             file=sys.stdout,
-            disable=config.no_ansi or config.quiet,
+            disable=disable_progress,
             bar_format=bar_format,
         ) as pbar:
             for i, sf in enumerate(searchfiles):
@@ -368,7 +372,7 @@ def get_filelist(run_module_names):
             "[green]{task.completed}/{task.total}",
             "[dim]{task.fields[s_fn]}[/]",
             console=log.rich_console,
-            disable=config.no_ansi or config.quiet or os.getenv("CI"),
+            disable=disable_progress,
         )
         with progress_obj as progress:
             mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")

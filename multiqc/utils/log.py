@@ -86,7 +86,7 @@ def init_log():
 
     debug_template = "[%(asctime)s] %(module)-50s [%(levelname)-7s]  %(message)s"
 
-    if util_functions.is_running_in_notebook():
+    if util_functions.is_running_in_notebook() or os.getenv("PYCHARM_HOSTED") or os.getenv("CI"):
         # Use coloredlogs as Rich is breaking output formatting
         info_template = "|%(module)18s | %(message)s"
 
@@ -135,7 +135,7 @@ def init_log():
             RESET = ""
         intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}v{config.version}{RESET}"
         if not config.quiet:
-            print(intro)
+            print(f"\n{intro}\n")
 
     else:
         # Set up the console logging stream
@@ -180,7 +180,7 @@ def init_log():
         logger.addHandler(console_handler)
 
         if not config.quiet:
-            rich_console.print(rich_click.rich_click.HEADER_TEXT)
+            rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
