@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Samtools """
-
+"""MultiQC module to parse output from Samtools"""
 
 import logging
 
@@ -45,6 +44,8 @@ class MultiqcModule(
         self.general_stats_headers = dict()
         self.general_stats_data = dict()
         n = dict()
+
+        assert True == False
 
         # Call submodule functions
         n["stats"] = self.parse_samtools_stats()
