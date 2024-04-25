@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 def exec_modules(
     run_modules: List[Dict[str, Optional[Dict]]],
     run_module_names: List[str],
+    clean_up: bool = True,
 ) -> None:
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
@@ -57,7 +58,8 @@ def exec_modules(
                 logger.debug(msg)
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
-            shutil.rmtree(report.tmp_dir)
+            if clean_up:
+                shutil.rmtree(report.tmp_dir)
             logger.critical(
                 "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
                 + "User Cancelled Execution!\nExiting MultiQC..."
@@ -128,7 +130,8 @@ def exec_modules(
     # Did we find anything?
     if len(report.modules_output) == 0:
         logger.warning("No analysis results found. Cleaning up…")
-        shutil.rmtree(report.tmp_dir)
+        if clean_up:
+            shutil.rmtree(report.tmp_dir)
         logger.info("MultiQC complete")
         # Exit with an error code if a module broke
         raise RunError(sys_exit_code=sys_exit_code)

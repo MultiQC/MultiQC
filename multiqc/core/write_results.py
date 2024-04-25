@@ -23,7 +23,7 @@ from multiqc.utils import config, megaqc, plugin_hooks, report
 logger = logging.getLogger(__name__)
 
 
-def write_results() -> None:
+def write_results(clean_up=True) -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     _order_modules_and_sections()
@@ -75,7 +75,8 @@ def write_results() -> None:
         )
 
     # Clean up temporary directory
-    shutil.rmtree(report.tmp_dir)
+    if clean_up:
+        shutil.rmtree(report.tmp_dir)
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:
