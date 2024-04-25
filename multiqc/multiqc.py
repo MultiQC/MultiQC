@@ -598,10 +598,18 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     return data
 
 
-def get_module_data(module: Optional[str] = None, sample: Optional[str] = None, key: Optional[str] = None) -> Dict:
+def get_module_data(
+    module: Optional[str] = None,
+    sample: Optional[str] = None,
+    key: Optional[str] = None,
+) -> Dict:
     """
     Return parsed module data, indexed (optionally) by data key, then by sample. Module is either the module
     name, or the anchor.
+
+    Takes data from report.saved_raw_data, which populated by self.write_data_file() calls in modules.
+    This data is not necessarily normalized, e.g. numbers can be strings or numbers, depends on
+    individual module behaviour.
     """
     data_by_module = {}
     for m in report.modules_output:
@@ -664,6 +672,7 @@ def add_custom_content_section(
         content=content,
         comment=comment,
     )
+    report.modules_output.append(module)
 
 
 @copy_callable_signature(core.init_config)
