@@ -62,8 +62,13 @@ def init_config(
     """
     config.load_from_defaults()
 
-    log.init_log(quiet=quiet, verbose=verbose, no_ansi=no_ansi)
-
+    if quiet is not None:
+        config.quiet = quiet
+    if no_ansi is not None:
+        config.no_ansi = no_ansi
+    if verbose is not None:
+        config.verbose = verbose > 0
+    log.init_log()
     logger.debug(f"This is MultiQC v{config.version}")
 
     plugin_hooks.mqc_trigger("before_config")
@@ -190,10 +195,6 @@ def init_config(
         config.require_logs = require_logs
     if profile_runtime is not None:
         config.profile_runtime = profile_runtime
-    if quiet is not None:
-        config.quiet = quiet
-    if no_ansi is not None:
-        config.no_ansi = no_ansi
     if custom_css_files:
         config.custom_css_files.extend(custom_css_files)
     if module_order:

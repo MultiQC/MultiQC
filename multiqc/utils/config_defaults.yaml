@@ -40,6 +40,7 @@ data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 force: false
+verbose: false
 no_ansi: false
 quiet: false
 prepend_dirs: false

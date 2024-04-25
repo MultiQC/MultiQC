@@ -7,7 +7,6 @@ import os
 import shutil
 import sys
 import tempfile
-from typing import Optional
 
 import coloredlogs
 import rich
@@ -25,11 +24,7 @@ log_tmp_fn = "/dev/null"
 rich_console: rich.console.Console
 
 
-def init_log(
-    quiet: Optional[bool] = None,
-    verbose: Optional[int] = None,
-    no_ansi: Optional[bool] = None,
-):
+def init_log():
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -50,15 +45,15 @@ def init_log(
     logger.handlers.clear()
 
     # Console log level
-    log_level = "DEBUG" if (verbose and verbose > 0) else "INFO"
-    if quiet:
+    log_level = "DEBUG" if config.verbose else "INFO"
+    if config.quiet:
         log_level = "WARNING"
     logger.setLevel(log_level)
 
     # Automatically set no_ansi if not a tty terminal
-    if no_ansi is False:
+    if config.no_ansi is False:
         if not sys.stderr.isatty() and not force_term_colors():
-            no_ansi = True
+            config.no_ansi = True
 
     # Reset margin-bottom to remove the gian gap between lines.
     # See https://github.com/Textualize/rich/issues/3335 for more context
@@ -70,7 +65,8 @@ def init_log(
         stderr=False,
         highlight=False,
         force_terminal=force_term_colors(),
-        color_system=None if no_ansi is True else "auto",
+        force_interactive=False if config.no_ansi else None,
+        color_system=None if config.no_ansi is True else "auto",
         soft_wrap=True,
         theme=Theme(
             styles={
@@ -103,7 +99,7 @@ def init_log(
         field_styles["module"] = {"color": "blue"}
 
         if log_level == "DEBUG":
-            if no_ansi is True:
+            if config.no_ansi is True:
                 console.setFormatter(logging.Formatter(debug_template))
             else:
                 console.setFormatter(
@@ -112,7 +108,7 @@ def init_log(
                     )
                 )
         else:
-            if no_ansi is True:
+            if config.no_ansi is True:
                 console.setFormatter(logging.Formatter(info_template))
             else:
                 console.setFormatter(
@@ -127,7 +123,7 @@ def init_log(
         logger.propagate = False
 
         # Print intro
-        if no_ansi is False:
+        if config.no_ansi is False:
             BOLD = "\033[1m"
             DIM = "\033[2m"
             DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
@@ -138,7 +134,7 @@ def init_log(
             DARK_ORANGE = ""
             RESET = ""
         intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET} 🔍 {DIM}v{config.version}{RESET}"
-        if not quiet:
+        if not config.quiet:
             print(intro)
 
     else:
@@ -176,7 +172,6 @@ def init_log(
                     self._style = logging.PercentStyle("[blue]|%(module)18s[/] | %(message)s")
                 return logging.Formatter.format(self, record)
 
-        print("Log level:", log_level)
         console_handler.setLevel(log_level)
         if log_level == "DEBUG":
             console_handler.setFormatter(DebugFormatter())
@@ -184,7 +179,7 @@ def init_log(
             console_handler.setFormatter(InfoFormatter())
         logger.addHandler(console_handler)
 
-        if not quiet:
+        if not config.quiet:
             rich_console.print(rich_click.rich_click.HEADER_TEXT)
 
     # Now set up the file logging stream if we have a data directory

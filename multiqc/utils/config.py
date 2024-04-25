@@ -83,6 +83,7 @@ data_dir_name: str
 plots_dir_name: str
 data_format: str
 force: bool
+verbose: bool
 no_ansi: bool
 quiet: bool
 prepend_dirs: bool
