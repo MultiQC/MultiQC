@@ -319,7 +319,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-fp",
     "--flat",
-    "plots_flat",
+    "plots_force_flat",
     is_flag=True,
     default=None,
     help="Use only flat plots [i](static images)[/]",
@@ -327,7 +327,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-ip",
     "--interactive",
-    "plots_interactive",
+    "plots_force_interactive",
     is_flag=True,
     default=None,
     help="Use only interactive plots [i](in-browser Javascript)[/]",

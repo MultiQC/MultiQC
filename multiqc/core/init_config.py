@@ -32,6 +32,8 @@ def init_config(
     replace_names=None,
     sample_names=None,
     sample_filters=None,
+    ignore=(),
+    ignore_samples=(),
     filename=None,
     make_data_dir=None,
     data_format=None,
@@ -203,8 +205,8 @@ def init_config(
     _set_analysis_file_config(
         analysis_dir=analysis_dir,
         file_list=file_list,
-        ignore=(),
-        ignore_samples=(),
+        ignore=ignore,
+        ignore_samples=ignore_samples,
     )
 
     _set_output_paths()
