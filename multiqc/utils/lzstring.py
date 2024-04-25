@@ -44,20 +44,28 @@ assert REVERSE_LOOKUP[0b10000000] == 0b00000001
 assert REVERSE_LOOKUP[0b10101010] == 0b01010101
 
 
-class BitWriter:
+class ContextWriter:
     def __init__(self):
         self.bitbuffer = 0
         self.bits_stored = 0
         self.buffer = io.BytesIO()
+        self.context_enlarge_in = 2  # Compensate for the first entry which should not count
+        self.context_numBits = 2
 
-    def write(self, value: int, bits: int):
+    def write(self, value: int, bits: int = 0):
         # Ensure no rogue bits are set after the bits of interest
+        bits = bits or self.context_numBits
         bitmask = (1 << bits) - 1
         value &= bitmask
 
         # Python can store integers bigger than 64 bits. So no checks for overflow.
         self.bitbuffer |= value << self.bits_stored
         self.bits_stored += bits
+
+        self.context_enlarge_in -= 1
+        if self.context_enlarge_in == 0:
+            self.context_enlarge_in = 1 << self.context_numBits
+            self.context_numBits += 1
 
         if self.bits_stored >= 64:
             integer_to_store = self.bitbuffer & 0xFFFF_FFFF_FFFF_FFFF
@@ -99,10 +107,8 @@ def _compress(uncompressed):
     context_c = ""
     context_wc = ""
     context_w = ""
-    context_enlargeIn = 2  # Compensate for the first entry which should not count
     context_dictSize = 3
-    context_numBits = 2
-    context_data = BitWriter()
+    context_data = ContextWriter()
 
     for context_c in uncompressed:
         if context_c not in context_dictionary:
@@ -117,23 +123,15 @@ def _compress(uncompressed):
             if context_w in context_dictionaryToCreate:
                 value = ord(context_w[0])
                 if value < 256:
-                    context_data.write(0, context_numBits)
+                    context_data.write(0)
                     context_data.write(value, 8)
                 else:
-                    context_data.write(1, context_numBits)
+                    context_data.write(1)
                     context_data.write(value, 16)
-                context_enlargeIn -= 1
-                if context_enlargeIn == 0:
-                    context_enlargeIn = 1 << context_numBits
-                    context_numBits += 1
                 del context_dictionaryToCreate[context_w]
             else:
                 value = context_dictionary[context_w]
-                context_data.write(value, context_numBits)
-            context_enlargeIn -= 1
-            if context_enlargeIn == 0:
-                context_enlargeIn = 1 << context_numBits
-                context_numBits += 1
+                context_data.write(value)
 
             # Add wc to the dictionary.
             context_dictionary[context_wc] = context_dictSize
@@ -145,27 +143,18 @@ def _compress(uncompressed):
         if context_w in context_dictionaryToCreate:
             value = ord(context_w[0])
             if value < 256:
-                context_data.write(0, context_numBits)
+                context_data.write(0)
                 context_data.write(value, 8)
             else:
-                context_data.write(1, context_numBits)
+                context_data.write(1)
                 context_data.write(value, 16)
-            context_enlargeIn -= 1
-            if context_enlargeIn == 0:
-                context_enlargeIn = 1 << context_numBits
-                context_numBits += 1
             del context_dictionaryToCreate[context_w]
         else:
             value = context_dictionary[context_w]
-            context_data.write(value, context_numBits)
-
-    context_enlargeIn -= 1
-    if context_enlargeIn == 0:
-        context_enlargeIn = 1 << context_numBits
-        context_numBits += 1
+            context_data.write(value)
 
     # Mark the end of the stream
-    context_data.write(2, context_numBits)
+    context_data.write(2)
 
     return context_data.getvalue()
 
