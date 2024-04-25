@@ -257,7 +257,13 @@ def _render_and_export_plots():
         for s in mod.sections:
             plot = s.get("plot")
             if plot:
-                s["plot"] = plot.add_to_report(report) if isinstance(plot, Plot) else (plot or "")
+                if isinstance(plot, Plot):
+                    s["plot"] = plot.add_to_report(report)
+                elif isinstance(plot, str):
+                    s["plot"] = plot
+                else:
+                    logger.error(f"Unknown plot type for {mod.name} - {s['name']}")
+            s["plot"] = ""
 
 
 def _render_general_stats_table() -> None:
