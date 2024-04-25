@@ -14,6 +14,7 @@ on:
 env:
   # No need to run test variations across all Python versions
   latest_python: "3.12"
+  COLUMNS: 120 # Otherwise Rich console handler breaks lines at 80 chars
 
 jobs:
   changes:

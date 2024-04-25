@@ -62,7 +62,7 @@ def init_log():
     # Set up the rich console
     global rich_console
     rich_console = rich.console.Console(
-        stderr=True,
+        stderr=False,
         highlight=False,
         force_terminal=force_term_colors(),
         force_interactive=False if config.no_ansi else None,
