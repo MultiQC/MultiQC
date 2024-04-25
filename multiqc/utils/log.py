@@ -23,7 +23,6 @@ log_tmp_dir = None
 log_tmp_fn = "/dev/null"
 
 rich_console: rich.console.Console
-logger = logging.getLogger("multiqc")
 
 
 def init_log(
@@ -45,21 +44,20 @@ def init_log(
     log_tmp_dir = tempfile.mkdtemp()
     log_tmp_fn = os.path.join(log_tmp_dir, "multiqc.log")
 
-    # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
-    while logger.handlers:
-        logger.removeHandler(logger.handlers[0])
+    logger = logging.getLogger()  # root logger
 
-    # Base level setup: used both for console and file logging
-    logger.setLevel(getattr(logging, "DEBUG"))
+    # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
+    logger.handlers.clear()
 
     # Console log level
-    log_level = "DEBUG" if verbose and verbose > 0 else "INFO"
+    log_level = "DEBUG" if (verbose and verbose > 0) else "INFO"
     if quiet:
         log_level = "WARNING"
+    logger.setLevel(log_level)
 
     # Automatically set no_ansi if not a tty terminal
     if no_ansi is False:
-        if not sys.stderr.isatty() and not util_functions.force_term_colors():
+        if not sys.stderr.isatty() and not force_term_colors():
             no_ansi = True
 
     # Reset margin-bottom to remove the gian gap between lines.
@@ -71,7 +69,7 @@ def init_log(
     rich_console = rich.console.Console(
         stderr=False,
         highlight=False,
-        force_terminal=util_functions.force_term_colors(),
+        force_terminal=force_term_colors(),
         color_system=None if no_ansi is True else "auto",
         theme=Theme(
             styles={
@@ -89,7 +87,7 @@ def init_log(
         ),
     )
 
-    debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
+    debug_template = "[%(asctime)s] %(module)-50s [%(levelname)-7s]  %(message)s"
 
     if util_functions.is_running_in_notebook():
         # Use coloredlogs as Rich is breaking output formatting
@@ -97,7 +95,7 @@ def init_log(
 
         # Set up the console logging stream
         console = logging.StreamHandler(sys.stdout)
-        console.setLevel(getattr(logging, log_level))
+        console.setLevel(log_level)
         level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
         level_styles["debug"] = {"faint": True}
         field_styles = coloredlogs.DEFAULT_FIELD_STYLES
@@ -158,13 +156,13 @@ def init_log(
         class DebugFormatter(logging.Formatter):
             def format(self, record):
                 if record.levelno == logging.DEBUG:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.debug]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.debug]%(message)s[/]")
                 elif record.levelno == logging.WARNING:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.warning]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.warning]%(message)s[/]")
                 elif record.levelno == logging.ERROR:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.error]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.error]%(message)s[/]")
                 else:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  %(message)s")
+                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  %(message)s")
                 return logging.Formatter.format(self, record)
 
         class InfoFormatter(logging.Formatter):
@@ -177,7 +175,8 @@ def init_log(
                     self._style = logging.PercentStyle("[blue]|%(module)18s[/] | %(message)s")
                 return logging.Formatter.format(self, record)
 
-        console_handler.setLevel(getattr(logging, log_level))
+        print("Log level:", log_level)
+        console_handler.setLevel(log_level)
         if log_level == "DEBUG":
             console_handler.setFormatter(DebugFormatter())
         else:
@@ -189,7 +188,7 @@ def init_log(
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
-    file_handler.setLevel(getattr(logging, "DEBUG"))  # always DEBUG for the file
+    file_handler.setLevel(logging.DEBUG)  # always DEBUG for the file
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
 
@@ -229,3 +228,12 @@ def get_log_stream(logger):
         return file_stream
 
     return log_stream
+
+
+def force_term_colors():
+    """
+    Check if any environment variables are set to force Rich to use coloured output
+    """
+    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
+        return True
+    return None

@@ -37,15 +37,6 @@ def robust_rmtree(path, logger=None, max_retries=10):
     shutil.rmtree(path)
 
 
-def force_term_colors():
-    """
-    Check if any environment variables are set to force Rich to use coloured output
-    """
-    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
-        return True
-    return None
-
-
 def strtobool(val) -> bool:
     """
     Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool

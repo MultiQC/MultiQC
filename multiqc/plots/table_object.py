@@ -1,4 +1,4 @@
-""" MultiQC datatable class, used by tables and violin plots """
+"""MultiQC datatable class, used by tables and violin plots"""
 
 import math
 
