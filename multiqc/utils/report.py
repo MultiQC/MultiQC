@@ -366,7 +366,7 @@ def get_filelist(run_module_names):
             rich.progress.BarColumn(),
             "[progress.percentage]{task.percentage:>3.0f}%",
             "[green]{task.completed}/{task.total}",
-            "[dim]{task.fields[s_fn]}",
+            # "[dim]{task.fields[s_fn]}[/]",
             console=log.rich_console,
             disable=config.no_ansi or config.quiet,
         )
