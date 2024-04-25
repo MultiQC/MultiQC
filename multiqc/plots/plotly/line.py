@@ -161,7 +161,7 @@ class DatasetModel(BaseDatasetModel):
                 fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
 
             fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
-            fpath = os.path.join(config.data_dir, fn)
+            fpath = os.path.join(report.data_tmp_dir(), fn)
             with io.open(fpath, "w", encoding="utf-8") as f:
                 f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
         else:
