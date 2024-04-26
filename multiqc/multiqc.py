@@ -437,7 +437,7 @@ def run_cli(**kwargs):
 
 
 @copy_callable_signature(core.init_config)
-def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
+def parse_logs(analysis_dir: Union[str, List[str]], **kwargs):
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
@@ -445,8 +445,8 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     core.init_config(analysis_dir, **kwargs)
 
     # We want to keep report session, so we can interactively append modules to the report
-    if not report.initialized:
-        report.init()
+    # if not report.initialized:
+    #     report.reset()
 
     report.reset_file_search()
 
@@ -458,13 +458,9 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs) -> RunResult:
     except RunError as e:
         if e.message:
             logger.critical(e.message)
-        res = core.RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
-    else:
-        res = core.RunResult()
-    return res
 
 
-def parse_data_json(analysis_dir: Union[str, List[str]]) -> RunResult:
+def parse_data_json(analysis_dir: Union[str, List[str]]):
     """
     Try find multiqc_data.json in the given directory and load it into the report.
     """
@@ -481,7 +477,7 @@ def parse_data_json(analysis_dir: Union[str, List[str]]) -> RunResult:
                 json_path_found = True
 
     if not json_path_found:
-        return RunResult(message="multiqc_data.json not found in the given directory", sys_exit_code=1)
+        logger.error("multiqc_data.json not found in the given directory")
 
     # Loading from previous JSON
     logger.info(f"Loading data from {json_path}")
@@ -498,9 +494,7 @@ def parse_data_json(analysis_dir: Union[str, List[str]]) -> RunResult:
             logger.info(f"Loaded plot {id}")
             report.plot_data[id] = plot_dump
     except (json.JSONDecodeError, KeyError) as e:
-        return RunResult(message=f"Error loading data from multiqc_data.json: {e}", sys_exit_code=1)
-    else:
-        return RunResult()
+        logger.error(f"Error loading data from multiqc_data.json: {e}")
 
 
 def list_modules() -> List[str]:
@@ -681,7 +675,17 @@ def write_report(**kwargs):
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
     core.init_config(**kwargs)
-    core.write_results()
+
+    if len(report.modules_output) == 0:
+        logger.error("No analysis results found to make a report")
+        return
+
+    try:
+        core.write_results()
+
+    except RunError as e:
+        if e.message:
+            logger.critical(e.message)
 
 
 @copy_callable_signature(core.init_config)
@@ -703,7 +707,7 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
 
     core.init_config(analysis_dir=analysis_dir, **kwargs)
 
-    report.init()
+    report.__initialise()
 
     try:
         run_modules, run_module_names = core.file_search()

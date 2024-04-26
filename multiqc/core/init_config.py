@@ -146,7 +146,8 @@ def init_config(
         config.output_dir = os.path.realpath(output_dir)
     if use_filename_as_sample_name is not None:
         config.use_filename_as_sample_name = use_filename_as_sample_name
-        logger.info("Using log filenames for sample names")
+        if use_filename_as_sample_name:
+            logger.info("Using log filenames for sample names")
     if make_data_dir is not None:
         config.make_data_dir = make_data_dir
     if force is not None:

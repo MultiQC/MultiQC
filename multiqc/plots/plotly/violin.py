@@ -498,6 +498,7 @@ class ViolinPlot(Plot):
             from IPython.display import HTML
 
             return HTML(table_html)
+
         else:
             return self.get_figure(**kwargs)
 

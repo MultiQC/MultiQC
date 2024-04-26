@@ -1,9 +1,9 @@
-import dataclasses
-
+import logging
 from multiqc.utils import config, report
 
+logger = logging.getLogger("multiqc")
 
-@dataclasses.dataclass
+
 class RunResult:
     """
     Returned by a MultiQC run for interactive use. Contains the following information:
@@ -15,10 +15,11 @@ class RunResult:
 
     """
 
-    sys_exit_code: int = 0
-    message: str = ""
-    report = report
-    config = config
+    def __init__(self, sys_exit_code: int = 0, message: str = ""):
+        self.sys_exit_code = sys_exit_code
+        self.message = message
+        self.report = report
+        self.config = config
 
 
 class RunError(Exception):

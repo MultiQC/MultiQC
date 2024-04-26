@@ -58,7 +58,7 @@ general_stats_headers: List[Dict]
 software_versions: Dict[str, Dict[str, List]]
 
 
-def init():
+def __initialise():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
@@ -107,13 +107,6 @@ def init():
     reset_file_search()
 
 
-def reset():
-    """
-    Reset interactive session.
-    """
-    init()
-
-
 def reset_file_search():
     """
     Reset the file search session. Useful in interactive session to call in the end
@@ -134,6 +127,16 @@ def reset_file_search():
         "skipped_directory_fn_ignore_dirs": 0,
         "skipped_file_contents_search_errors": 0,
     }
+
+
+def reset():
+    """
+    Reset interactive session.
+    """
+    __initialise()
+
+
+__initialise()
 
 
 def is_searching_in_source_dir(path: Path) -> bool:

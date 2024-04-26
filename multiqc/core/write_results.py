@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 def write_results(clean_up=True) -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
+    # Did we find anything?
+    if len(report.modules_output) == 0:
+        logger.warning("No analysis results found to make a report")
+        return
+
     _order_modules_and_sections()
 
     # Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir()
@@ -170,11 +175,6 @@ def _order_modules_and_sections():
     """
     Finalise modules and sections: place in the write order, add special-case modules
     """
-
-    # Did we find anything?
-    if len(report.modules_output) == 0:
-        logger.warning("No analysis results found to make a report")
-        return
 
     # Add section for software versions if any are found
     if not config.skip_versions_section and report.software_versions:
