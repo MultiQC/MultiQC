@@ -142,13 +142,24 @@ function initPlot(dump) {
   return null;
 }
 
+function decompress_mqc_plotdata(base64Str) {
+  const binaryString = atob(base64Str);
+  const bytes = Uint8Array.from(binaryString, (m) => m.codePointAt(0));
+  const decompressedBytes = pako.inflate(bytes);
+
+  const decoder = new TextDecoder("utf-8");
+  const jsonStr = decoder.decode(decompressedBytes);
+  return jsonStr;
+}
+
 // Execute when page load has finished loading
-$(async function () {
+$(function () {
   // Show loading warning
   let loading_warning = $(".mqc_loading_warning").show();
 
   // Decompress the JSON plot data and init plot objects
-  let mqc_plotdata = JSON.parse(await decompress_mqc_plotdata(mqc_compressed_plotdata));
+  let mqc_plotdata = JSON.parse(decompress_mqc_plotdata(mqc_compressed_plotdata));
+
   mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
   let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
