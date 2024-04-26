@@ -430,7 +430,9 @@ homer/FreqDistribution:
 hops:
   fn: "heatmap_overview_Wevid.json"
 hostile:
-  contents: '"reads_in"'
+  fn: "*.json"
+  contents: '"reads_in"' 
+  num_lines: 10
 humid/stats:
   fn: "stats.dat"
   contents: "total: "
