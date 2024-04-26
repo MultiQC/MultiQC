@@ -431,7 +431,7 @@ hops:
   fn: "heatmap_overview_Wevid.json"
 hostile:
   fn: "*.json"
-  contents: '"reads_in"' 
+  contents: '"reads_in"'
   num_lines: 10
 humid/stats:
   fn: "stats.dat"
