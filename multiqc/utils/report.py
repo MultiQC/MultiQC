@@ -1,6 +1,7 @@
-""" MultiQC report module. Holds the output from each
+"""MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
-helper functions to generate markup for report. """
+helper functions to generate markup for report."""
+
 import base64
 import fnmatch
 import gzip
@@ -579,7 +580,7 @@ def compress_json(data):
     json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
     json_string = sanitise_json(json_string)
     json_bytes = json_string.encode("utf-8")
-    json_gzip = gzip.compress(json_bytes, compresslevel=9, mtime=0)
+    json_gzip = gzip.compress(json_bytes)
     base64_bytes = base64.b64encode(json_gzip)
     return base64_bytes.decode("ascii")
 
