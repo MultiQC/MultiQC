@@ -3,6 +3,7 @@ module. Is available to subsequent modules. Contains
 helper functions to generate markup for report."""
 
 import fnmatch
+import functools
 import inspect
 import io
 import json
@@ -218,6 +219,45 @@ def get_filelist(run_module_names):
                 spatterns[3][key] = sps
         else:
             spatterns[0][key] = sps
+
+        # sort patterns for faster access. File searches with less lines or
+        # smaller filesizes go first.
+        def max_on_pattern_key(x, pattern_key=""):
+            key, sps = x
+            num_lines = 0
+            for sp in sps:
+                num_lines = max(num_lines, sp.get(pattern_key, 0))
+            return num_lines
+
+        new_spatterns = [{}, {}, {}, {}, {}, {}, {}]
+        new_spatterns[0] = spatterns[0]  # Only filename matching
+        new_spatterns[1] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[1].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
+            )
+        )
+        new_spatterns[2] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[2].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
+            )
+        )
+        new_spatterns[3] = spatterns[3]
+        new_spatterns[4] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[4].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
+            )
+        )
+        new_spatterns[5] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[5].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
+            )
+        )
+        new_spatterns[6] = spatterns[6]
+        spatterns = new_spatterns
 
     if len(ignored_patterns) > 0:
         logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
