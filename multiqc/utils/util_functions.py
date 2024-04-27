@@ -120,10 +120,9 @@ def write_data_file(
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
     fpath = os.path.join(config.data_dir, fn)
-    with io.open(fpath, "w", encoding="utf-8") as f:
+    with io.open(fpath, "w", encoding="utf-8", errors="ignore") as f:
         if data_format == "json":
-            jsonstr = dump_json(data, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
             yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
         elif body:
@@ -185,7 +184,7 @@ def choose_emoji():
     return "mag"
 
 
-def dump_json(data, **kwargs):
+def dump_json(data, filehandle=None, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
     Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
@@ -205,7 +204,10 @@ def dump_json(data, **kwargs):
             return None
         return obj
 
-    return json.dumps(replace_nan(data), **kwargs)
+    if filehandle:
+        json.dump(replace_nan(data), filehandle, **kwargs)
+    else:
+        return json.dumps(replace_nan(data), **kwargs)
 
 
 def multiqc_dump_json(report):
