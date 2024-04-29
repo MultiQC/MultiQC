@@ -1,13 +1,35 @@
 """ MultiQC submodule to parse output from GLIMPSE_concordance """
 
 import logging
-import re
+from typing import Dict, Union
+from copy import deepcopy
 
-from multiqc import config
-from multiqc.plots import scatter
+from multiqc.plots import scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
+
+EXPECTED_COLUMNS = [
+    "#GCsS",
+    "id",
+    "sample_name",
+    "#val_gt_RR",
+    "#val_gt_RA",
+    "#val_gt_AA",
+    "#filtered_gp",
+    "RR_hom_matches",
+    "RA_het_matches",
+    "AA_hom_matches",
+    "RR_hom_mismatches",
+    "RA_het_mismatches",
+    "AA_hom_mismatches",
+    "RR_hom_mismatches_rate_percent",
+    "RA_het_mismatches_rate_percent",
+    "AA_hom_mimatches",
+    "non_reference_discordanc_rate_percent",
+    "best_gt_rsquared",
+    "imputed_ds_rsquared"
+]
 
 
 class ErrSplReportMixin:
@@ -172,7 +194,7 @@ class ErrSplReportMixin:
             ),
             plot=table.plot(
                 data_by_sample,
-                copy.deepcopy(headers),
+                deepcopy(headers),
                 pconfig={
                     "id": "glimpse-err-spl-table",
                     "title": "Glimpse concordance: errors by sample summary",
@@ -180,7 +202,9 @@ class ErrSplReportMixin:
             ),
         )
 
-        self.general_stats_addcols(table_data, headers, namespace="err_spl")
+        # TODO: Question for @LouisLeNezet - what is table_data?
+        # self.general_stats_addcols(table_data, headers, namespace="err_spl")
+
     def accuracy_by_sample(self, data_by_sample):
         """Make a plot showing the accuracy of the genotypes by sample"""
         pconfig = {
@@ -206,7 +230,7 @@ class ErrSplReportMixin:
             description="Accuracy plot by sample and minor allele frequency.",
             plot=scatter.plot(data_by_sample, pconfig)
         )
-        
+
 
 def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
     """
@@ -259,25 +283,3 @@ def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
         )
 
     return parsed_data
-
-EXPECTED_COLUMNS = [
-    "#GCsS",
-    "id",
-    "sample_name",
-    "#val_gt_RR",
-    "#val_gt_RA",
-    "#val_gt_AA",
-    "#filtered_gp",
-    "RR_hom_matches",
-    "RA_het_matches",
-    "AA_hom_matches",
-    "RR_hom_mismatches",
-    "RA_het_mismatches",
-    "AA_hom_mismatches",
-    "RR_hom_mismatches_rate_percent",
-    "RA_het_mismatches_rate_percent",
-    "AA_hom_mimatches",
-    "non_reference_discordanc_rate_percent",
-    "best_gt_rsquared",
-    "imputed_ds_rsquared"
-]
