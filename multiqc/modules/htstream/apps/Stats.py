@@ -32,7 +32,7 @@ class Stats:
     ########################
     # Table Function
     def table(self, json, index):
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # pconfig
         config = {"id": "htstream_stats_table_line_" + unique_id, "title": "HTStream: Stats"}
@@ -89,7 +89,7 @@ class Stats:
     def base_by_cycle(self, json, read):
         # Read Code and Unique ID
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # Multi Sample Line Config, it's called entropy (even though its not)
         config = {
@@ -230,7 +230,7 @@ class Stats:
     def quality_by_cycle(self, json, read):
         # Read Code and Unique ID
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # config dictionary for mean Q score line graph
         line_config = {
@@ -341,7 +341,7 @@ class Stats:
     def read_length(self, json, read):
         # Read cor and unique IDs
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # config dictionary for linegraph
         line_config = {
