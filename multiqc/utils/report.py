@@ -2,7 +2,9 @@
 module. Is available to subsequent modules. Contains
 helper functions to generate markup for report."""
 
+import base64
 import fnmatch
+import gzip
 import inspect
 import io
 import json
@@ -18,7 +20,6 @@ import rich
 import rich.progress
 import yaml
 
-from multiqc.utils import lzstring
 
 from . import config
 from .util_functions import replace_defaultdicts, dump_json
@@ -647,10 +648,11 @@ def save_htmlid(html_id, skiplint=False):
 
 def compress_json(data):
     """
-    Take a Python data object. Convert to JSON and compress using lzstring
+    Take a Python data object. Convert to JSON and compress using gzip.
+    Represent in base64 format.
     """
-    # Using the dump_json helper that removes NaNs and Infinity thst can crash
-    # the browser when parsing the JSON.
     json_string = dump_json(data)
-    x = lzstring.LZString()
-    return x.compressToBase64(json_string)
+    json_bytes = json_string.encode("utf-8")
+    json_gzip = gzip.compress(json_bytes)
+    base64_bytes = base64.b64encode(json_gzip)
+    return base64_bytes.decode("ascii")
