@@ -11,10 +11,6 @@ from .err_spl import ErrSplReportMixin  # Import the Glimpse submodules
 log = logging.getLogger(__name__)
 
 
-# Initialise the logger
-log = logging.getLogger(__name__)
-
-
 class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
     """Glimpse has a number of different commands and outputs.
     This MultiQC module supports some but not all."""
