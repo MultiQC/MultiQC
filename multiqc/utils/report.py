@@ -13,7 +13,7 @@ import re
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple
 
 import rich
 import rich.progress
@@ -108,6 +108,34 @@ def init():
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
+def line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
+    """
+    Iterate over fileblocks that only contain complete lines. The last
+    character of each block is always '\n', no truncated lines are present.
+    A tuple with the number of newlines and the block is yielded on each
+    iteration.
+
+    The default block_size is 4096, which is equal to the filesystem block
+    size.
+    """
+    remainder = ""
+    while True:
+        block = fp.read(block_size)
+        if block == "":  # EOF
+            # The last line may not have a terminating newline character
+            if remainder:
+                yield 1, remainder
+            return
+        number_of_newlines = block.count("\n")
+        if number_of_newlines == 0:
+            remainder += block
+            continue
+        block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
+        yield number_of_newlines, remainder + block[:block_end]
+        # Store the remainder for the next iteration.
+        remainder = block[block_end:]
+
+
 class SearchFile:
     """
     Wrap file handler and provide a lazy line iterator on it with caching.
@@ -128,8 +156,9 @@ class SearchFile:
         self.root = root
         self.path = os.path.join(root, filename)
         self._filesize = None
-        self.content_lines = []
+        self.content_line_blocks = []
         self._filehandle = None
+        self._iterator = None
 
     @property
     def filesize(self) -> Optional[int]:
@@ -141,26 +170,29 @@ class SearchFile:
                 self._filesize = None
         return self._filesize
 
-    def line_iterator(self):
+    def line_block_iterator(self) -> Iterator[Tuple[int, str]]:
         """
-        Iterate over `self.content_lines`, try to read more lines from file handler when needed.
+        Iterate over `self.content_line_blocks`, try to read more blocks from
+        file handler when needed.
 
-        Essentially it's a lazy `f.readlines()` with caching.
+        Essentially it's a lazy `f.readlines()` with caching and multiple
+        lines present per block.
 
         Can be called multiple times for the same open file handler.
         """
-        for line in self.content_lines:
-            yield line
+        for count_and_block_tuple in self.content_line_blocks:
+            yield count_and_block_tuple
         if self._filehandle is None:
             try:
                 self._filehandle = io.open(self.path, "rt", encoding="utf-8")
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+            self._iterator = line_block_iterator(self._filehandle)
         try:
-            for line in self._filehandle:
-                self.content_lines.append(line)
-                yield line
+            for count_and_block_tuple in self._iterator:
+                self.content_line_blocks.append(count_and_block_tuple)
+                yield count_and_block_tuple
 
         except UnicodeDecodeError as e:
             if config.report_readerrors:
@@ -175,28 +207,31 @@ class SearchFile:
             raise
         else:
             # When no lines are parsed, self.content_lines should be empty
-            if not self.content_lines and config.report_readerrors:
+            if not self.content_line_blocks and config.report_readerrors:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
             return  # No errors.
         self._filehandle.close()
         self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
+        self._iterator = line_block_iterator(self._filehandle)
         try:
-            if self.content_lines:
+            if self.content_line_blocks:
                 # Skip all the lines that were already read
-                self._filehandle.readlines(len(self.content_lines))
-            for line in self._filehandle:
-                self.content_lines.append(line)
-                yield line
+                for _ in self.content_line_blocks:
+                    next(self._iterator)
+            for count_and_block_tuple in self._iterator:
+                self.content_line_blocks.append(count_and_block_tuple)
+                yield count_and_block_tuple
         except Exception as e:
             if config.report_readerrors:
                 logger.debug(f"Still couldn't read the file, skipping: {self.path}, {e}")
 
-        if not self.content_lines and config.report_readerrors:
+        if not self.content_line_blocks and config.report_readerrors:
             logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
 
     def close(self):
         if self._filehandle:
             self._filehandle.close()
+        self._iterator = None
         self._filehandle = None
 
     def closed(self):
@@ -513,13 +548,16 @@ def search_file(pattern, f: SearchFile, module_key):
         num_lines = pattern.get("num_lines", config.filesearch_lines_limit)
         expected_contents = pattern.get("contents")
         try:
-            # Zipping with range(num_lines) halts at the desired number.
-            for i, line in zip(range(num_lines), f.line_iterator()):
-                if expected_contents and expected_contents in line:
+            total_newlines = 0
+            for line_count, line_block in f.line_block_iterator():
+                if expected_contents and expected_contents in line_block:
                     contents_matched = True
                     break
-                if repattern and repattern.match(line):
+                if repattern and repattern.match(line_block):
                     contents_matched = True
+                    break
+                total_newlines += line_count
+                if total_newlines >= num_lines:
                     break
         except Exception:
             file_search_stats["skipped_file_contents_search_errors"] += 1
@@ -557,14 +595,14 @@ def exclude_file(sp, f: SearchFile):
         # Compile regex patterns if we have any
         if "exclude_contents_re" in sp:
             sp["exclude_contents_re"] = [re.compile(pat) for pat in sp["exclude_contents_re"]]
-        for line in f.line_iterator():
+        for num_lines, line_block in f.line_block_iterator():
             if "exclude_contents" in sp:
                 for pat in sp["exclude_contents"]:
-                    if pat in line:
+                    if pat in line_block:
                         return True
             if "exclude_contents_re" in sp:
                 for pat in sp["exclude_contents_re"]:
-                    if re.search(pat, line):
+                    if re.search(pat, line_block):
                         return True
     return False
 
