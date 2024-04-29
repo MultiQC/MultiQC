@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from multiqc.plots import scatter, table
 
-# Initialise the logger
+# Initialise the loggerq
 log = logging.getLogger(__name__)
 
 EXPECTED_COLUMNS = [
