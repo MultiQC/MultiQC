@@ -1,8 +1,9 @@
-""" MultiQC Utility functions, used in a variety of places. """
+"""MultiQC Utility functions, used in a variety of places."""
 
-import io
 import json
 import logging
+from collections import defaultdict, OrderedDict
+
 import math
 import os
 import shutil
@@ -118,12 +119,11 @@ def write_data_file(
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
     fpath = os.path.join(config.data_dir, fn)
-    with io.open(fpath, "w", encoding="utf-8") as f:
+    with open(fpath, "w", encoding="utf-8", errors="ignore") as f:
         if data_format == "json":
-            jsonstr = dump_json(data, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
-            yaml.dump(data, f, default_flow_style=False)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
@@ -183,10 +183,11 @@ def choose_emoji():
     return "mag"
 
 
-def dump_json(data, **kwargs):
+def dump_json(data, filehandle=None, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
-    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs: https://stackoverflow.com/a/28640141
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
+    https://stackoverflow.com/a/28640141
     """
 
     # Recursively replace NaNs with None
@@ -197,14 +198,18 @@ def dump_json(data, **kwargs):
             return [replace_nan(v) for v in obj]
         elif isinstance(obj, set):
             return {replace_nan(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(replace_nan(v) for v in obj)
         elif callable(obj):
             return None
         elif isinstance(obj, float) and math.isnan(obj):
             return None
-        else:
-            return obj
+        return obj
 
-    return json.dumps(replace_nan(data), **kwargs)
+    if filehandle:
+        json.dump(replace_nan(data), filehandle, **kwargs)
+    else:
+        return json.dumps(replace_nan(data), **kwargs)
 
 
 def multiqc_dump_json(report):
@@ -259,3 +264,22 @@ def multiqc_dump_json(report):
             except Exception:
                 pass
     return exported_data
+
+
+def replace_defaultdicts(data):
+    """
+    Recursively replace dict-likes as dicts for nice yaml representation.
+    """
+
+    def _replace(obj):
+        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+            return {k: _replace(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_replace(v) for v in obj]
+        elif isinstance(obj, set):
+            return {_replace(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(_replace(v) for v in obj)
+        return obj
+
+    return _replace(data)

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
+def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -32,11 +32,7 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    p = LinePlot(pconfig, lists_of_lines)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return LinePlot(pconfig, lists_of_lines)
 
 
 @dataclasses.dataclass
@@ -156,8 +152,8 @@ class LinePlot(Plot):
             # We don't want the bands to affect the calculated axis range, so we
             # find the min and the max from data points, and manually set the range.
             for dataset in self.datasets:
-                minval = None
-                maxval = None
+                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 for line in dataset.lines:
                     ys = [x[1] for x in line["data"]]
                     if len(ys) > 0:
@@ -165,10 +161,6 @@ class LinePlot(Plot):
                         maxval = max(ys) if maxval is None else max(maxval, max(ys))
                 if maxval is not None and minval is not None:
                     maxval += (maxval - minval) * 0.05
-                if minval is None:
-                    minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                if maxval is None:
-                    maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:
@@ -185,17 +177,13 @@ class LinePlot(Plot):
         if not pconfig.get("categories", False) and x_minrange or x_bands or x_lines:
             # same as above but for x-axis
             for dataset in self.datasets:
-                minval = None
-                maxval = None
+                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 for line in dataset.lines:
                     xs = [x[0] for x in line["data"]]
                     if len(xs) > 0:
                         minval = min(xs) if minval is None else min(minval, min(xs))
                         maxval = max(xs) if maxval is None else max(maxval, max(xs))
-                if minval is None:
-                    minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                if maxval is None:
-                    maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:

@@ -15,15 +15,11 @@ from multiqc.plots.plotly.table import make_table
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False) -> str:
+def plot(dts: List[DataTable], show_table_by_default=False) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
-    p = ViolinPlot.from_dt(dts, show_table_by_default)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ViolinPlot.from_dt(dts, show_table_by_default)
 
 
 @dataclasses.dataclass
@@ -212,11 +208,13 @@ class Dataset(BaseDataset):
         is_log=False,
         is_pct=False,
         add_scatter=True,
-    ):
+    ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
         """
         metrics = [m for m in self.metrics if not self.header_by_metric[m].get("hidden", False)]
+        if len(metrics) == 0:
+            return go.Figure(layout=layout)
 
         layout = copy.deepcopy(layout)
         layout.grid.rows = len(metrics)

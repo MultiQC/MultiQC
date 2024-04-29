@@ -17,7 +17,7 @@ def plot(
     pconfig: Dict,
     xcats: Optional[List[str]] = None,
     ycats: Optional[List[str]] = None,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -26,11 +26,7 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(rows, pconfig, xcats, ycats)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return HeatmapPlot(rows, pconfig, xcats, ycats)
 
 
 @dataclasses.dataclass
@@ -185,12 +181,12 @@ class HeatmapPlot(Plot):
         height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
         if not self.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
-            logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
+            # logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
         if height > MAX_HEIGHT or width > MAX_WIDTH:
-            logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
+            # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             if self.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
@@ -200,7 +196,7 @@ class HeatmapPlot(Plot):
                 width = int(num_cols * x_px_per_elem)
                 height = int(num_rows * y_px_per_elem)
 
-        logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
+        # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
