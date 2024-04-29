@@ -108,7 +108,7 @@ def init():
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
-def line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
+def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
     """
     Iterate over fileblocks that only contain complete lines. The last
     character of each block is always '\n' unless it is the last line and no
@@ -142,25 +142,29 @@ class SearchFile:
     """
     Wrap file handler and provide a lazy line block iterator on it with caching.
 
-    The class is a context manager with context being an open file handler.
+    The class is a context manager with context being an open file handler:
 
-    The `self.line_iterator` method is a distinct context manager over the file lines,
-    and thanks for caching can be called multiple times for the same open file handler.
+    The `self.line_block_iterator()` method is a distinct context manager over
+    the file line blocks, that can be called multiple times for the same open file handler
+    due to line block caching.
+
+    with SearchFile(fn, root):
+        for line_count, block in f.line_block_iterator():
+            # process block
+
+        # start again, this time will read from cache:
+        for line_count, block in f.line_block_iterator():
+            # process block again
     """
-
-    filename: str
-    root: str
-    path: str
-    _filesize: Optional[int]
 
     def __init__(self, filename: str, root: str):
         self.filename = filename
         self.root = root
-        self.path = os.path.join(root, filename)
-        self._filesize = None
-        self.content_line_blocks = []
-        self._filehandle = None
-        self._iterator = None
+        self.path: str = os.path.join(root, filename)
+        self._filehandle: Optional[TextIO] = None
+        self._iterator: Optional[Iterator[Tuple[int, str]]] = None
+        self._blocks: List[Tuple[int, str]] = []  # cache of read blocks with line count found in each block
+        self._filesize: Optional[int] = None
 
     @property
     def filesize(self) -> Optional[int]:
@@ -174,15 +178,23 @@ class SearchFile:
 
     def line_block_iterator(self) -> Iterator[Tuple[int, str]]:
         """
-        Iterate over `self.content_line_blocks`, try to read more blocks from
-        file handler when needed.
+        Optimized file line iterator.
 
-        Essentially it's a lazy `f.readlines()` with caching and multiple
-        lines present per block.
+        Yields a tuple with the number of newlines and a chunk.
 
         Can be called multiple times for the same open file handler.
+
+        Serves as a replacement for f.readlines() that is:
+        - lazy
+        - caches 4kb+ blocks
+        - returns multiple lines concatenated with '\n' if found in block
+
+        This way, we can compare whole blocks versus the search patterns, instead of individual lines,
+        and each comparison comes with a lot of Python runtime overhead.
+
+        First loops over the cache `self._blocks`, then tries to read more blocks from the file handler.
         """
-        for count_and_block_tuple in self.content_line_blocks:
+        for count_and_block_tuple in self._blocks:
             yield count_and_block_tuple
         if self._filehandle is None:
             try:
@@ -190,10 +202,10 @@ class SearchFile:
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
-            self._iterator = line_block_iterator(self._filehandle)
+            self._iterator = file_line_block_iterator(self._filehandle)
         try:
             for count_and_block_tuple in self._iterator:
-                self.content_line_blocks.append(count_and_block_tuple)
+                self._blocks.append(count_and_block_tuple)
                 yield count_and_block_tuple
 
         except UnicodeDecodeError as e:
@@ -209,25 +221,25 @@ class SearchFile:
             raise
         else:
             # When no lines are parsed, self.content_lines should be empty
-            if not self.content_line_blocks and config.report_readerrors:
+            if not self._blocks and config.report_readerrors:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
             return  # No errors.
         self._filehandle.close()
         self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
-        self._iterator = line_block_iterator(self._filehandle)
+        self._iterator = file_line_block_iterator(self._filehandle)
         try:
-            if self.content_line_blocks:
+            if self._blocks:
                 # Skip all the lines that were already read
-                for _ in self.content_line_blocks:
+                for _ in self._blocks:
                     next(self._iterator)
             for count_and_block_tuple in self._iterator:
-                self.content_line_blocks.append(count_and_block_tuple)
+                self._blocks.append(count_and_block_tuple)
                 yield count_and_block_tuple
         except Exception as e:
             if config.report_readerrors:
                 logger.debug(f"Still couldn't read the file, skipping: {self.path}, {e}")
 
-        if not self.content_line_blocks and config.report_readerrors:
+        if not self._blocks and config.report_readerrors:
             logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
 
     def close(self):
