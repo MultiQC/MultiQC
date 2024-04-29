@@ -19,7 +19,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
 
-import math
 import rich
 import rich.progress
 import yaml
@@ -28,7 +27,7 @@ from tqdm import tqdm
 from multiqc.utils import log
 
 from . import config
-from .util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode
+from .util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
 
 logger = logging.getLogger(__name__)
 
@@ -886,35 +885,6 @@ def write_data_file(
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
     logger.debug(f"Wrote data file {fn}")
-
-
-def dump_json(data, filehandle=None, **kwargs):
-    """
-    Recursively replace non-JSON-conforming NaNs and lambdas with None.
-    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
-    https://stackoverflow.com/a/28640141
-    """
-
-    # Recursively replace NaNs with None
-    def replace_nan(obj):
-        if isinstance(obj, dict):
-            return {k: replace_nan(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [replace_nan(v) for v in obj]
-        elif isinstance(obj, set):
-            return {replace_nan(v) for v in obj}
-        elif isinstance(obj, tuple):
-            return tuple(replace_nan(v) for v in obj)
-        elif callable(obj):
-            return None
-        elif isinstance(obj, float) and math.isnan(obj):
-            return None
-        return obj
-
-    if filehandle:
-        json.dump(replace_nan(data), filehandle, **kwargs)
-    else:
-        return json.dumps(replace_nan(data), **kwargs)
 
 
 def multiqc_dump_json():

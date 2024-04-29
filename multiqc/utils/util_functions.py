@@ -1,5 +1,6 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+import json
 import logging
 from collections import defaultdict, OrderedDict
 
@@ -8,7 +9,7 @@ import shutil
 import sys
 import time
 import datetime
-
+import math
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +119,35 @@ def replace_defaultdicts(data):
         return obj
 
     return _replace(data)
+
+
+def dump_json(data, filehandle=None, **kwargs):
+    """
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
+    https://stackoverflow.com/a/28640141
+    """
+
+    # Recursively replace NaNs with None
+    def replace_nan(obj):
+        if isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_nan(v) for v in obj]
+        elif isinstance(obj, set):
+            return {replace_nan(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(replace_nan(v) for v in obj)
+        elif callable(obj):
+            return None
+        elif isinstance(obj, float) and math.isnan(obj):
+            return None
+        return obj
+
+    if filehandle:
+        json.dump(replace_nan(data), filehandle, **kwargs)
+    else:
+        return json.dumps(replace_nan(data), **kwargs)
 
 
 def is_running_in_notebook() -> bool:

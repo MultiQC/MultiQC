@@ -8,7 +8,7 @@ import logging
 import requests
 
 from . import config
-from .report import dump_json
+from .util_functions import dump_json
 
 log = logging.getLogger(__name__)
 
