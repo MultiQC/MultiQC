@@ -3,7 +3,6 @@ module. Is available to subsequent modules. Contains
 helper functions to generate markup for report."""
 
 import fnmatch
-import functools
 import inspect
 import io
 import json
@@ -324,44 +323,27 @@ def get_filelist(run_module_names):
         else:
             spatterns[0][key] = sps
 
-        # sort patterns for faster access. File searches with less lines or
-        # smaller filesizes go first.
-        def max_on_pattern_key(x, pattern_key=""):
-            key, sps = x
-            num_lines = 0
-            for sp in sps:
-                num_lines = max(num_lines, sp.get(pattern_key, 0))
-            return num_lines
+    def _sort_by_key(sps: Dict[str, List[Dict[str, str]]], key: str) -> Dict:
+        """Sort search patterns dict by key like num_lines or max_filesize."""
 
-        new_spatterns = [{}, {}, {}, {}, {}, {}, {}]
-        new_spatterns[0] = spatterns[0]  # Only filename matching
-        new_spatterns[1] = dict(
-            sorted(
-                ((key, sps) for key, sps in spatterns[1].items()),
-                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
-            )
-        )
-        new_spatterns[2] = dict(
-            sorted(
-                ((key, sps) for key, sps in spatterns[2].items()),
-                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
-            )
-        )
-        new_spatterns[3] = spatterns[3]
-        new_spatterns[4] = dict(
-            sorted(
-                ((key, sps) for key, sps in spatterns[4].items()),
-                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
-            )
-        )
-        new_spatterns[5] = dict(
-            sorted(
-                ((key, sps) for key, sps in spatterns[5].items()),
-                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
-            )
-        )
-        new_spatterns[6] = spatterns[6]
-        spatterns = new_spatterns
+        def _sort_key(kv) -> int:
+            _, sps = kv
+            # Since modules can have multiple search patterns, we sort by the slowest one:
+            return max([sp.get(key, 0) for sp in sps])
+
+        return dict(sorted(sps.items(), key=_sort_key))
+
+    # Sort patterns for faster access. File searches with fewer lines or
+    # smaller file sizes go first.
+    sorted_spatterns = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns[0] = spatterns[0]  # Only filename matching
+    sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
+    sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
+    sorted_spatterns[3] = spatterns[3]
+    sorted_spatterns[4] = _sort_by_key(spatterns[4], "num_lines")
+    sorted_spatterns[5] = _sort_by_key(spatterns[5], "max_filesize")
+    sorted_spatterns[6] = spatterns[6]
+    spatterns = sorted_spatterns
 
     if len(ignored_patterns) > 0:
         logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
