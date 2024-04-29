@@ -190,19 +190,21 @@ def dump_json(data, filehandle=None, **kwargs):
     https://stackoverflow.com/a/28640141
     """
 
-    # Recursively replace NaNs with None
     def replace_nan(obj):
-        if isinstance(obj, dict):
-            return {k: replace_nan(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
+        """
+        Recursively replace NaNs and Infinities with None
+        """
+        # Do checking in order of likelyhood of occurence
+        if isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
+        elif isinstance(obj, (list, tuple, set)):
+            # JSON only knows list so convert tuples and sets to list.
             return [replace_nan(v) for v in obj]
-        elif isinstance(obj, set):
-            return {replace_nan(v) for v in obj}
-        elif isinstance(obj, tuple):
-            return tuple(replace_nan(v) for v in obj)
+        elif isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
         elif callable(obj):
-            return None
-        elif isinstance(obj, float) and math.isnan(obj):
             return None
         return obj
 
