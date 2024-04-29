@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 BoxT = List[Union[int, float]]
 
 
-def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
+def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:
@@ -25,72 +25,69 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = BoxPlot(
+    return BoxPlot(
         pconfig,
         list_of_data_by_sample,
         max_n_samples=max(len(d) for d in list_of_data_by_sample),
     )
 
-    from multiqc.utils import report
 
-    return p.add_to_report(report)
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    data: List[BoxT]
+    samples: List[str]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        data_by_sample: Dict[str, BoxT],
+    ) -> "Dataset":
+        dataset = Dataset(
+            **dataset.__dict__,
+            data=list(data_by_sample.values()),
+            samples=list(data_by_sample.keys()),
+        )
+        # Need to reverse samples as the box plot will show them reversed
+        dataset.samples = list(reversed(dataset.samples))
+        dataset.data = list(reversed(dataset.data))
+
+        dataset.trace_params.update(
+            boxpoints="outliers",
+            jitter=0.5,
+            orientation="h",
+            marker=dict(
+                color="#4899e8",  # just use blue to indicate interactivity
+            ),
+            # to remove the redundant sample name before "median" in the unified hover box
+            hoverinfo="x",
+        )
+        dataset.layout["yaxis"]["title"] = None
+        return dataset
+
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        fig = go.Figure(layout=layout)
+
+        for sname, values in zip(self.samples, self.data):
+            params = copy.deepcopy(self.trace_params)
+            fig.add_trace(
+                go.Box(
+                    x=values,
+                    name=sname,
+                    **params,
+                ),
+            )
+        return fig
 
 
 class BoxPlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        data: List[BoxT]
-        samples: List[str]
-
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            data_by_sample: Dict[str, BoxT],
-        ) -> "BoxPlot.Dataset":
-            dataset = BoxPlot.Dataset(
-                **dataset.__dict__,
-                data=list(data_by_sample.values()),
-                samples=list(data_by_sample.keys()),
-            )
-            # Need to reverse samples as the box plot will show them reversed
-            dataset.samples = list(reversed(dataset.samples))
-            dataset.data = list(reversed(dataset.data))
-
-            dataset.trace_params.update(
-                boxpoints="outliers",
-                jitter=0.5,
-                orientation="h",
-                marker=dict(
-                    color="#4899e8",  # just use blue to indicate interactivity
-                ),
-                # to remove the redundant sample name before "median" in the unified hover box
-                hoverinfo="x",
-            )
-            dataset.layout["yaxis"]["title"] = None
-            return dataset
-
-        def create_figure(
-            self,
-            layout: go.Layout,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            fig = go.Figure(layout=layout)
-
-            for sname, values in zip(self.samples, self.data):
-                params = copy.deepcopy(self.trace_params)
-                fig.add_trace(
-                    go.Box(
-                        x=values,
-                        name=sname,
-                        **params,
-                    ),
-                )
-            return fig
-
     def __init__(
         self,
         pconfig: Dict,
@@ -99,9 +96,8 @@ class BoxPlot(Plot):
     ):
         super().__init__(PlotType.BOX, pconfig, n_datasets=len(list_of_data_by_sample))
 
-        self.datasets: List[BoxPlot.Dataset] = [
-            BoxPlot.Dataset.create(ds, data_by_sample)
-            for ds, data_by_sample in zip(self.datasets, list_of_data_by_sample)
+        self.datasets: List[Dataset] = [
+            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(self.datasets, list_of_data_by_sample)
         ]
 
         height = determine_barplot_height(max_n_samples)

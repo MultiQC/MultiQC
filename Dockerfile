@@ -42,4 +42,7 @@ WORKDIR /home/multiqc
 
 # Check everything is working smoothly
 RUN echo "Docker build log: Testing multiqc" 1>&2 && \
-    multiqc --help \
+    multiqc --help 
+
+# Display the command line help if the container is run without any parameters
+CMD multiqc --help

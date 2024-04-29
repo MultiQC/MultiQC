@@ -108,8 +108,8 @@ class MultiqcModule(BaseMultiqcModule):
     # General stats table
     def anglerfish_general_stats_table(self):
         """Add Anglerfish statistics to the general statistics table"""
-        # Prepp data for general stat table
-        ## Multiple sample names per file requires dict where the first key is not file name
+        # Prep data for general stat table
+        # Multiple sample names per file requires dict where the first key is not file name
         data = {}
         for s_name in self.anglerfish_data:
             total_read = self.anglerfish_data[s_name]["total_read"]
@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         config = {
-            "id": "Anglerfish_undetermined_index_plot",
+            "id": "anglerfish_undetermined_index_plot",
             "cpswitch": False,
             "title": "Anglerfish: Undetermined Indexes",
             "ylab": "Index Count",

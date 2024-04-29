@@ -1,14 +1,15 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
 from multiqc.utils import config, mqc_colour, util_functions, report
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: DataTable) -> str:
+def plot(dt: List[DataTable]) -> Plot:
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
@@ -16,7 +17,7 @@ def plot(dt: DataTable) -> str:
 
 def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str]:
     """
-    Build the HTML needed for a MultiQC table.
+    Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
     :param violin_id: optional, will add a button to switch to a violin plot with this ID
     """
@@ -181,13 +182,17 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                                         cmatches[ftype] = True
                                     if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
                                         cmatches[ftype] = True
-                                    if "eq" in cmp and float(cmp["eq"]) == float(val):
+                                    if "eq" in cmp and float(val) == float(cmp["eq"]):
                                         cmatches[ftype] = True
-                                    if "ne" in cmp and float(cmp["ne"]) != float(val):
+                                    if "ne" in cmp and float(val) != float(cmp["ne"]):
                                         cmatches[ftype] = True
-                                    if "gt" in cmp and float(cmp["gt"]) < float(val):
+                                    if "gt" in cmp and float(val) > float(cmp["gt"]):
                                         cmatches[ftype] = True
-                                    if "lt" in cmp and float(cmp["lt"]) > float(val):
+                                    if "lt" in cmp and float(val) < float(cmp["lt"]):
+                                        cmatches[ftype] = True
+                                    if "ge" in cmp and float(val) >= float(cmp["ge"]):
+                                        cmatches[ftype] = True
+                                    if "le" in cmp and float(val) <= float(cmp["le"]):
                                         cmatches[ftype] = True
                                 except Exception:
                                     logger.warning(f"Not able to apply table conditional formatting to '{val}' ({cmp})")

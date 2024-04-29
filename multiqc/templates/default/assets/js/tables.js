@@ -51,18 +51,26 @@ $(function () {
       $("#mqc_violintable_wrapper_" + violinId).hide();
     });
 
-    // Copy table contents to clipboard
-    let clipboard = new ClipboardJS(".mqc_table_copy_btn");
-
-    clipboard.on("success", function (e) {
-      e.clearSelection();
-    });
     $(".mqc_table_copy_btn").click(function () {
       let btn = $(this);
-      btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
-      setTimeout(function () {
-        btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copy table');
-      }, 2000);
+      let table = $(btn.data("clipboard-target"))[0];
+
+      const range = document.createRange();
+      range.selectNode(table);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges();
+
+        btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+        setTimeout(() => {
+          btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy table: ", err);
+      }
     });
 
     // Make table headers fixed when table body scrolls (use CSS transforms)

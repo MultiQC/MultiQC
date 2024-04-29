@@ -100,6 +100,7 @@ megaqc_access_token: str
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
+make_pdf: bool
 plots_force_flat: bool
 plots_force_interactive: bool
 plots_flat_numseries: int

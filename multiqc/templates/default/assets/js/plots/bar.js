@@ -25,7 +25,7 @@ class BarPlot extends Plot {
       let data = this.pActive ? cat["data_pct"] : cat.data;
       return {
         data: data.filter((_, si) => !samplesSettings[si].hidden),
-        color: cat.color,
+        color: cat.color, // formatted as "r,g,b", to be wrapped with "rgb()" or "rgba()"
         name: cat.name,
       };
     });

@@ -1,4 +1,4 @@
-""" MultiQC modules base class, contains helper functions """
+"""MultiQC modules base class, contains helper functions"""
 
 from typing import List, Union, Optional, Dict
 
@@ -14,6 +14,7 @@ from collections import defaultdict
 
 import markdown
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.utils import config, report, software_versions, util_functions
 
 logger = logging.getLogger(__name__)
@@ -126,8 +127,9 @@ class BaseMultiqcModule:
         if isinstance(sp_key, dict):
             report.files[self.name] = list()
             for sf in report.searchfiles:
-                if report.search_file(sp_key, {"fn": sf[0], "root": sf[1]}, module_key=None):
-                    report.files[self.name].append({"fn": sf[0], "root": sf[1]})
+                with report.SearchFile(sf[0], sf[1]) as f:
+                    if report.search_file(sp_key, f, module_key=None):
+                        report.files[self.name].append({"fn": sf[0], "root": sf[1]})
             sp_key = self.name
             logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
             if len(report.files[self.name]) > 0:
@@ -145,7 +147,7 @@ class BaseMultiqcModule:
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analysis dirs
-                exlusion_hits = itertools.chain(
+                exclusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
                         (
@@ -155,7 +157,7 @@ class BaseMultiqcModule:
                         for analysis_dir in config.analysis_dir
                     ),
                 )
-                if any(exlusion_hits):
+                if any(exclusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
@@ -230,7 +232,8 @@ class BaseMultiqcModule:
         description="",
         comment="",
         helptext="",
-        plot="",
+        content_before_plot="",
+        plot: Optional[Union[Plot, str]] = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -281,6 +284,7 @@ class BaseMultiqcModule:
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
+        plot_html = plot.add_to_report(report) if isinstance(plot, Plot) else (plot or "")
 
         self.sections.append(
             {
@@ -289,10 +293,14 @@ class BaseMultiqcModule:
                 "description": description,
                 "comment": comment,
                 "helptext": helptext,
-                "plot": plot,
+                "content_before_plot": content_before_plot,
+                "plot": plot_html,
                 "content": content,
                 "print_section": any(
-                    [n is not None and len(n) > 0 for n in [description, comment, helptext, plot, content]]
+                    [
+                        n is not None and len(n) > 0
+                        for n in [description, comment, helptext, content_before_plot, plot_html, content]
+                    ]
                 ),
             }
         )

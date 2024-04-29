@@ -17,7 +17,7 @@ def plot(
     pconfig: Dict,
     xcats: Optional[List[str]] = None,
     ycats: Optional[List[str]] = None,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -26,66 +26,63 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(rows, pconfig, xcats, ycats)
+    return HeatmapPlot(rows, pconfig, xcats, ycats)
 
-    from multiqc.utils import report
 
-    return p.add_to_report(report)
+@dataclasses.dataclass
+class Dataset(BaseDataset):
+    rows: List[List[ElemT]]
+    xcats: List[str]
+    ycats: List[str]
+
+    @staticmethod
+    def create(
+        dataset: BaseDataset,
+        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+        xcats: Optional[List[str]] = None,
+        ycats: Optional[List[str]] = None,
+    ) -> "Dataset":
+        if isinstance(rows, dict):
+            # Convert dict to a list of lists
+            if not ycats:
+                ycats = list(rows.keys())
+            if not xcats:
+                xcats = []
+                for y, value_by_x in rows.items():
+                    for x, value in value_by_x.items():
+                        if x not in xcats:
+                            xcats.append(x)
+            rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
+
+        dataset = Dataset(
+            **dataset.__dict__,
+            rows=rows,
+            xcats=xcats,
+            ycats=ycats,
+        )
+        return dataset
+
+    def create_figure(
+        self,
+        layout: Optional[go.Layout] = None,
+        is_log=False,
+        is_pct=False,
+    ) -> go.Figure:
+        """
+        Create a Plotly figure for a dataset
+        """
+        return go.Figure(
+            data=go.Heatmap(
+                z=self.rows,
+                x=self.xcats,
+                y=self.ycats,
+                **self.trace_params,
+            ),
+            layout=layout or self.layout,
+        )
 
 
 class HeatmapPlot(Plot):
-    @dataclasses.dataclass
-    class Dataset(BaseDataset):
-        rows: List[List[ElemT]]
-        xcats: List[str]
-        ycats: List[str]
-
-        @staticmethod
-        def create(
-            dataset: BaseDataset,
-            rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-            xcats: Optional[List[str]] = None,
-            ycats: Optional[List[str]] = None,
-        ) -> "HeatmapPlot.Dataset":
-            if isinstance(rows, dict):
-                # Convert dict to a list of lists
-                if not ycats:
-                    ycats = list(rows.keys())
-                if not xcats:
-                    xcats = []
-                    for y, value_by_x in rows.items():
-                        for x, value in value_by_x.items():
-                            if x not in xcats:
-                                xcats.append(x)
-                rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
-
-            dataset = HeatmapPlot.Dataset(
-                **dataset.__dict__,
-                rows=rows,
-                xcats=xcats,
-                ycats=ycats,
-            )
-            return dataset
-
-        def create_figure(
-            self,
-            layout: Optional[go.Layout] = None,
-            is_log=False,
-            is_pct=False,
-        ) -> go.Figure:
-            """
-            Create a Plotly figure for a dataset
-            """
-            return go.Figure(
-                data=go.Heatmap(
-                    z=self.rows,
-                    x=self.xcats,
-                    y=self.ycats,
-                    **self.trace_params,
-                ),
-                layout=layout or self.layout,
-            )
-
     def __init__(
         self,
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
@@ -122,8 +119,8 @@ class HeatmapPlot(Plot):
         self.square = pconfig.get("square", True)  # Keep heatmap cells square
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[HeatmapPlot.Dataset] = [
-            HeatmapPlot.Dataset.create(
+        self.datasets: List[Dataset] = [
+            Dataset.create(
                 self.datasets[0],
                 rows=rows,
                 xcats=xcats,
@@ -184,12 +181,12 @@ class HeatmapPlot(Plot):
         height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
         if not self.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
-            logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
+            # logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
         if height > MAX_HEIGHT or width > MAX_WIDTH:
-            logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
+            # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
             if self.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
@@ -199,7 +196,7 @@ class HeatmapPlot(Plot):
                 width = int(num_cols * x_px_per_elem)
                 height = int(num_rows * y_px_per_elem)
 
-        logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
+        # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
@@ -258,7 +255,7 @@ class HeatmapPlot(Plot):
                 [1, "#a50026"],
             ]
 
-        decimal_places = pconfig.get("decimalPlaces", 2)
+        decimal_places = pconfig.get("tt_decimals", 2)
 
         xlab = pconfig.get("xlab", "x")
         ylab = pconfig.get("ylab", "y")

@@ -1,8 +1,10 @@
-""" MultiQC Utility functions, used in a variety of places. """
+"""MultiQC Utility functions, used in a variety of places."""
 
-import io
 import json
 import logging
+from collections import defaultdict, OrderedDict
+
+import math
 import os
 import shutil
 import sys
@@ -65,17 +67,6 @@ def write_data_file(
     if data_format is None:
         data_format = config.data_format
 
-    # JSON encoder class to handle lambda functions
-    class MQCJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if callable(obj):
-                # noinspection PyBroadException
-                try:
-                    return obj(1)
-                except Exception:
-                    return None
-            return json.JSONEncoder.default(self, obj)
-
     body = None
     # Some metrics can't be coerced to tab-separated output, test and handle exceptions
     if data_format in ["tsv", "csv"]:
@@ -128,12 +119,11 @@ def write_data_file(
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
     fpath = os.path.join(config.data_dir, fn)
-    with io.open(fpath, "w", encoding="utf-8") as f:
+    with open(fpath, "w", encoding="utf-8", errors="ignore") as f:
         if data_format == "json":
-            jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
-            yaml.dump(data, f, default_flow_style=False)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
@@ -193,15 +183,33 @@ def choose_emoji():
     return "mag"
 
 
-# Custom encoder to handle lambda functions
-class MQCJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if callable(obj):
-            try:
-                return obj(1)
-            except Exception:
-                return None
-        return json.JSONEncoder.default(self, obj)
+def dump_json(data, filehandle=None, **kwargs):
+    """
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
+    https://stackoverflow.com/a/28640141
+    """
+
+    # Recursively replace NaNs with None
+    def replace_nan(obj):
+        if isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [replace_nan(v) for v in obj]
+        elif isinstance(obj, set):
+            return {replace_nan(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(replace_nan(v) for v in obj)
+        elif callable(obj):
+            return None
+        elif isinstance(obj, float) and math.isnan(obj):
+            return None
+        return obj
+
+    if filehandle:
+        json.dump(replace_nan(data), filehandle, **kwargs)
+    else:
+        return json.dumps(replace_nan(data), **kwargs)
 
 
 def multiqc_dump_json(report):
@@ -244,7 +252,7 @@ def multiqc_dump_json(report):
                 elif s == "report":
                     d = {f"{s}_{k}": getattr(report, k)}
                 if d:
-                    json.dumps(d, cls=MQCJSONEncoder, ensure_ascii=False)  # Test that exporting to JSON works
+                    dump_json(d, ensure_ascii=False)  # Test that exporting to JSON works
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
                 log.warning(f"Couldn't export data key '{s}.{k}': {e}")
@@ -256,3 +264,22 @@ def multiqc_dump_json(report):
             except Exception:
                 pass
     return exported_data
+
+
+def replace_defaultdicts(data):
+    """
+    Recursively replace dict-likes as dicts for nice yaml representation.
+    """
+
+    def _replace(obj):
+        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+            return {k: _replace(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_replace(v) for v in obj]
+        elif isinstance(obj, set):
+            return {_replace(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(_replace(v) for v in obj)
+        return obj
+
+    return _replace(data)

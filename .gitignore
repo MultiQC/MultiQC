@@ -1,7 +1,8 @@
 # MultiQC results
 multiqc_config.yaml
 multiqc_report.html
-multiqc_data
+multiqc_data/
+multiqc_plots/
 examples/
 result/
 tmp/
@@ -53,5 +54,7 @@ test_data/
 website/
 usage/
 
-multiqc/templates/plotly/assets/js/packages/plotly-2.27.0.js
-default_multiqc_report*
+notebooks/
+node_modules/
+package-lock.json
+package.json

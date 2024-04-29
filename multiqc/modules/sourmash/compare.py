@@ -72,7 +72,7 @@ class CompareMixin:
                         "id": f"sourmash-compare-heatmap-{id}",
                         "title": "Sourmash: Compare",
                         "square": True,
-                        "decimalPlaces": 7,
+                        "tt_decimals": 7,
                     },
                 ),
             )

@@ -263,7 +263,8 @@ pconfig = {
     "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
-    "height": 500                # The default height of the plot, in pixels
+    "height": 500,               # The default height of the plot, in pixels
+    "style": "line",             # The style of the line. Can be "line" or "lines+markers"
 }
 html = linegraph.plot(..., pconfig)
 ```
@@ -278,6 +279,15 @@ If left unset the Plot Export panel will call the filename
 Plots should always have titles, especially as they can stand by themselves
 when exported. The title should have the format `Modulename: Plot Name`
 :::
+
+### X-axis format
+
+Plotly will try to automatically parse the X-axis values. Strings that look like a
+number will be interpreted as numbers (e.g. `"13"` and `"2.0"` will turn into `13` and `2.0`
+and get ordered numerically: `2.0`, `13`); dates in ISO format will be parsed as datestamps
+(e.g. `"2021-01-01"` will turn into a `datetime` object and ordered chronologically).
+
+If you want to force the X-axis to be treated as plain strings, set `categories=True` in the plot config.
 
 ### Switching datasets
 
@@ -766,7 +776,7 @@ pconfig = {
     "ycats_samples": True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
     "colstops": [],                # Scale colour stops. See below.
     "reverseColors": False,        # Reverse the order of the colour axis
-    "decimalPlaces": 2,            # Number of decimal places for tooltip
+    "tt_decimals": 2,              # Number of decimal places for tooltip
     "legend": True,                # Colour axis key enabled or not
     "datalabels": True,            # Show values in each cell. Defaults True when less than 20 samples.
     "height": 500                  # The default height of the interactive plot, in pixels

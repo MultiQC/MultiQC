@@ -31,6 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # variables to store reads for undetermined read recalculation
         self.per_lane_undetermined_reads = dict()
         self.total_reads_in_lane_per_file = dict()
+
         bclconvert_data = dict()
         for demux in demuxes.values():
             self.parse_demux_data(demux, bclconvert_data, len(demuxes))
@@ -72,7 +73,6 @@ class MultiqcModule(BaseMultiqcModule):
             bclconvert_by_lane,
             bclconvert_by_sample,
             counts_by_sample_by_lane,
-            source_files,
         ) = self._split_data_by_lane_and_sample(bclconvert_data)
 
         # Filter to strip out ignored sample names
@@ -84,15 +84,6 @@ class MultiqcModule(BaseMultiqcModule):
         if len(bclconvert_by_lane) == 0 and len(bclconvert_by_sample) == 0:
             raise ModuleNoSamplesFound
         log.info(f"{len(bclconvert_by_lane)} lanes and {len(bclconvert_by_sample)} samples found")
-
-        # Print source files
-        for s in source_files.keys():
-            self.add_data_source(
-                s_name=s,
-                source=",".join(list(set(source_files[s]))),
-                module="bclconvert",
-                section="bclconvert-bysample",
-            )
 
         # Calculate mean quality scores
         for sample_id, sample in bclconvert_by_sample.items():
@@ -265,7 +256,9 @@ class MultiqcModule(BaseMultiqcModule):
         raise ModuleNoSamplesFound
 
     def _parse_single_runinfo_file(self, runinfo_file):
-        # Get run id and cluster length from RunInfo.xml
+        """
+        Get run id and cluster length from RunInfo.xml
+        """
         try:
             root = ET.fromstring(runinfo_file["f"])
             run_id = root.find("Run").get("Id")
@@ -275,6 +268,13 @@ class MultiqcModule(BaseMultiqcModule):
         except:  # noqa: E722
             log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
             raise ModuleNoSamplesFound
+
+        self.add_data_source(
+            runinfo_file,
+            module="bclconvert",
+            section="bclconvert-runinfo-xml",
+        )
+
         if self._is_single_end_reads(root):
             cluster_length = int(read_length_r1)
         else:
@@ -367,11 +367,17 @@ class MultiqcModule(BaseMultiqcModule):
                     self.per_lane_undetermined_reads[lane_id] = 0
 
                 sname = row["SampleID"]
+                self.add_data_source(
+                    demux_file,
+                    s_name=sname,
+                    module="bclconvert",
+                    section="bclconvert-runinfo-demux-csv",
+                )
                 if sname != "Undetermined":
                     # Don't include undetermined reads at all in any of the calculations...
                     if sname not in lane["samples"]:
                         lane["samples"][sname] = self._reads_dictionary()
-                        lane["samples"][sname]["filename"] = os.path.join(demux_file["root"], demux_file["fn"])
+                        lane["samples"][sname]["filename"] = filename
                         lane["samples"][sname]["samples"] = {}
 
                     sample = lane["samples"][sname]  # this sample in this lane
@@ -431,6 +437,12 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             lane = run_data[lane_id]
             sample = row["SampleID"]
+            self.add_data_source(
+                qmetrics_file,
+                s_name=sample,
+                module="bclconvert",
+                section="bclconvert-runinfo-quality-metrics-csv",
+            )
             if sample != "Undetermined":  # don't include undetermined reads at all in any of the calculations...
                 if sample not in run_data[lane_id]["samples"]:
                     log.warning(f"Found unrecognised sample {sample} in Quality Metrics file, skipping")
@@ -491,14 +503,13 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             data["depth"] = "NA"
 
-    def _split_data_by_lane_and_sample(self, bclconvert_data) -> Tuple[Dict, Dict, Dict, Dict]:
+    def _split_data_by_lane_and_sample(self, bclconvert_data) -> Tuple[Dict, Dict, Dict]:
         """
         Populate a collection of "stats across all lanes" and "stats across all samples"
         """
         bclconvert_by_lane = dict()
         bclconvert_by_sample = dict()
         count_by_sample_by_lane = defaultdict(lambda: defaultdict(int))  # counts only - used for a stacked bargraph
-        source_files = dict()
         for run_id, r in bclconvert_data.items():
             # set stats for each lane (across all samples) in bclconvert_bylane dictionary
             for lane_id, lane in r.items():
@@ -544,14 +555,9 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         s["depth"] += float(sample["basesQ30"]) / self._get_genome_size()
 
-                    if sample_id not in ["top_unknown_barcodes"]:
-                        if sample_id not in source_files:
-                            source_files[sample_id] = []
-                        source_files[sample_id].append(sample["filename"])
-
                     count_by_sample_by_lane[sample_id][lane_key_name] += sample["clusters"]
 
-        return bclconvert_by_lane, bclconvert_by_sample, count_by_sample_by_lane, source_files
+        return bclconvert_by_lane, bclconvert_by_sample, count_by_sample_by_lane
 
     def sample_stats_table(self, bclconvert_data, bclconvert_by_sample):
         sample_stats_data = dict()

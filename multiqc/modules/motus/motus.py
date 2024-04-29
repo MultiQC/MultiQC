@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": f"{config.read_count_prefix} reads",
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
             "shared_key": "read_count",
         }
         cats = {
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": f"{config.read_count_prefix} reads",
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
             "shared_key": "read_count",
         }
         cats = {
@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
         """mOTUs bar chart of mOTU types"""
         common = {
             "min": 0,
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
         }
         cats = {
             "Number of ref-mOTUs": dict(common, **{"name": "Known mOTUs"}),

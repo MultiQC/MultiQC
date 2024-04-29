@@ -7,3 +7,8 @@
 build/
 dist/
 *.egg-info
+
+venv
+venv38
+venv311
+result
