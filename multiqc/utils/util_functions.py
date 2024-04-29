@@ -113,6 +113,8 @@ def replace_defaultdicts(data):
             return [_replace(v) for v in obj]
         elif isinstance(obj, set):
             return {_replace(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(_replace(v) for v in obj)
         return obj
 
     return _replace(data)
