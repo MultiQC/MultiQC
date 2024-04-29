@@ -1,9 +1,9 @@
-""" MultiQC report module. Holds the output from each
+"""MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
-helper functions to generate markup for report. """
-
+helper functions to generate markup for report."""
 
 import fnmatch
+import functools
 import inspect
 import io
 import json
@@ -22,7 +22,7 @@ import yaml
 from multiqc.utils import lzstring
 
 from . import config
-from .util_functions import replace_defaultdicts
+from .util_functions import replace_defaultdicts, dump_json
 
 logger = config.logger
 
@@ -219,6 +219,45 @@ def get_filelist(run_module_names):
                 spatterns[3][key] = sps
         else:
             spatterns[0][key] = sps
+
+        # sort patterns for faster access. File searches with less lines or
+        # smaller filesizes go first.
+        def max_on_pattern_key(x, pattern_key=""):
+            key, sps = x
+            num_lines = 0
+            for sp in sps:
+                num_lines = max(num_lines, sp.get(pattern_key, 0))
+            return num_lines
+
+        new_spatterns = [{}, {}, {}, {}, {}, {}, {}]
+        new_spatterns[0] = spatterns[0]  # Only filename matching
+        new_spatterns[1] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[1].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
+            )
+        )
+        new_spatterns[2] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[2].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
+            )
+        )
+        new_spatterns[3] = spatterns[3]
+        new_spatterns[4] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[4].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="num_lines"),
+            )
+        )
+        new_spatterns[5] = dict(
+            sorted(
+                ((key, sps) for key, sps in spatterns[5].items()),
+                key=functools.partial(max_on_pattern_key, pattern_key="max_filesize"),
+            )
+        )
+        new_spatterns[6] = spatterns[6]
+        spatterns = new_spatterns
 
     if len(ignored_patterns) > 0:
         logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
@@ -486,9 +525,10 @@ def data_sources_tofile():
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
-            jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
+            # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
+            # them to normal dicts
             yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
@@ -509,11 +549,12 @@ def dois_tofile(modules_output):
             dois[mod.anchor] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
-    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+    with open(os.path.join(config.data_dir, fn), "w") as f:
         if config.data_format == "json":
-            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
+            # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
+            # them to normal dicts
             yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
         else:
             body = ""
@@ -575,24 +616,11 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """Take a Python data object. Convert to JSON and compress using lzstring"""
-    json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
-    json_string = sanitise_json(json_string)
+    """
+    Take a Python data object. Convert to JSON and compress using lzstring
+    """
+    # Using the dump_json helper that removes NaNs and Infinity thst can crash
+    # the browser when parsing the JSON.
+    json_string = dump_json(data)
     x = lzstring.LZString()
     return x.compressToBase64(json_string)
-
-
-def sanitise_json(json_string):
-    """
-    The Python json module uses a bunch of values which are valid JavaScript
-    but invalid JSON. These crash the browser when parsing the JSON.
-    Nothing in the MultiQC front-end uses these values, so instead we just
-    do a find-and-replace for them and switch them with `null`, which works fine.
-
-    Side effect: Any string values that include the word "Infinity"
-    (case-sensitive) will have it switched for "null". Hopefully that doesn't happen
-    a lot, otherwise we'll have to do this in a more complicated manner.
-    """
-    json_string = re.sub(r"\bNaN\b", "null", json_string)
-    json_string = re.sub(r"\b-?Infinity\b", "null", json_string)
-    return json_string

@@ -1177,7 +1177,7 @@ def _write_json_dump() -> None:
 
     if config.development:
         with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
-            f.write(json.dumps(report.plot_data))
+            json.dump(report.plot_data, f)
 
 
 def _write_html_and_data(
