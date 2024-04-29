@@ -18,70 +18,66 @@ class MultiqcModule(BaseMultiqcModule):
             name="Hostile",
             anchor="hostile",
             href="https://github.com/bede/hostile",
-            info="Short and Long host reads removal tools.",
+            info="is a short and long host reads removal tool",
             doi="10.1093/bioinformatics/btad728",
         )
 
-        self.parse_data = dict()
+        data_by_sample = dict()
         for f in self.find_log_files("hostile", filehandles=True):
-            self.parse_logs(f)
+            try:
+                parsed_entries = json.load(f["f"])
+            except json.JSONDecodeError:
+                log.warning(f"Could not parse JSON file {f['f']}")
+                continue
+            else:
+                for entry in parsed_entries:
+                    s_name = self.clean_s_name(entry["fastq1_in_name"])
 
-        # add version
-        self.add_software_version(self.version, f)
+                    if s_name in data_by_sample:
+                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                    data_by_sample[s_name] = entry
+
+                    self.add_data_source(f, s_name=s_name)
+
+                    version = entry.get("version")
+                    if version:
+                        self.add_software_version(version, sample=s_name)
 
         # Ignore samples
-        self.parse_data = self.ignore_samples(self.parse_data)
+        data_by_sample = self.ignore_samples(data_by_sample)
 
         # Check if no matching log files were found
-        if len(self.parse_data) == 0:
+        if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
 
         # Number of files found
-        log.info(f"Found {len(self.parse_data)} reports")
+        log.info(f"Found {len(data_by_sample)} reports")
 
         # Write hostile data.
-        self.write_data_file(self.parse_data, "multiqc_hostile")
+        self.write_data_file(data_by_sample, "multiqc_hostile")
 
         # Plot
-        self.hostile_plot()
+        self.hostile_plot(data_by_sample)
 
-    def parse_logs(self, json_file):
-        """
-        Parsing json_file
-        """
-        try:
-            parse_data = json.load(json_file["f"])
-
-        except json.JSONDecodeError:
-            log.warning(f"Could not parse JSON file {json_file['f']}")
-            return
-
-        if len(parse_data) > 0:
-            self.add_data_source(json_file)
-
-        s_name = self.clean_s_name(json_file["fn"])
-        self.parse_data[s_name] = parse_data
-
-        # print(self.parse_data[s_name][0])
-        if "version" in self.parse_data[s_name][0]:
-            self.version = self.parse_data[s_name][0]["version"]
-        else:
-            self.version = "0.4.0"
-
-    def hostile_plot(self):
-        """
-        Extract the data
-        Plot the barplot
-        """
+    def hostile_plot(self, data_by_sample):
         data = {}
 
-        for f_name, values in self.parse_data.items():
-            s_name = values[0]["fastq1_in_name"].split(".")[0]
-            database = os.path.basename(values[0]["index"])
-            data[s_name] = {"Cleaned reads": values[0]["reads_out"], "Host reads": values[0]["reads_removed"]}
+        databases = set()
+        for s_name, entry in data_by_sample.items():
+            databases.add(os.path.basename(entry["index"]))
+            data[s_name] = {"Clean reads": entry["reads_out"], "Removed reads": entry["reads_removed"]}
 
-        ## categories
-        cats = ["Cleaned reads", "Host reads"]
+        databases_message = ""
+        if len(databases) == 1:
+            databases_message = f"Database index: {list(databases)[0]}"
+        elif len(databases) > 1:
+            log.warning(f"Multiple database indices found in data: {', '.join(list(sorted(databases)))}")
+            databases_message = (
+                f"Warning: multiple database indices found in data: {', '.join(list(sorted(databases)))}, "
+                f"so comparison between samples might be incorrect"
+            )
+
+        cats = ["Clean reads", "Removed reads"]
 
         pconfig = {
             "title": "Hostile: Reads Filtered",
@@ -91,8 +87,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="Reads Filtering",
+            name="Read Filtering",
             anchor="hostile-reads",
-            description=f"This plot shows the number of cleaned reads vs host-reads per sample (database index: {database}).",
+            description=(
+                f"The number of reads after filtering (cleaned reads) vs. the number of removed host reads. "
+                f"{databases_message}"
+            ),
             plot=bargraph.plot(data, cats, pconfig),
         )
