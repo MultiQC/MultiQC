@@ -107,6 +107,110 @@ def init():
     software_versions = defaultdict(lambda: defaultdict(list))
 
 
+class SearchFile:
+    """
+    Wrap file handler and provide a lazy line iterator on it with caching.
+
+    The class is a context manager with context being an open file handler.
+
+    The `self.line_iterator` method is a distinct context manager over the file lines,
+    and thanks for caching can be called multiple times for the same open file handler.
+    """
+
+    filename: str
+    root: str
+    path: str
+    _filesize: Optional[int]
+
+    def __init__(self, filename: str, root: str):
+        self.filename = filename
+        self.root = root
+        self.path = os.path.join(root, filename)
+        self._filesize = None
+        self.content_lines = []
+        self._filehandle = None
+
+    @property
+    def filesize(self) -> Optional[int]:
+        if self._filesize is None:
+            try:
+                self._filesize = os.path.getsize(self.path)
+            except (IOError, OSError, ValueError, UnicodeDecodeError):
+                logger.debug(f"Couldn't read file when checking filesize: {self.filename}")
+                self._filesize = None
+        return self._filesize
+
+    def line_iterator(self):
+        """
+        Iterate over `self.content_lines`, try to read more lines from file handler when needed.
+
+        Essentially it's a lazy `f.readlines()` with caching.
+
+        Can be called multiple times for the same open file handler.
+        """
+        for line in self.content_lines:
+            yield line
+        if self._filehandle is None:
+            try:
+                self._filehandle = io.open(self.path, "rt", encoding="utf-8")
+            except Exception as e:
+                if config.report_readerrors:
+                    logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+        try:
+            for line in self._filehandle:
+                self.content_lines.append(line)
+                yield line
+
+        except UnicodeDecodeError as e:
+            if config.report_readerrors:
+                logger.debug(
+                    f"Couldn't read file as a utf-8 text when looking for output: {self.path}, {e}. "
+                    f"Usually because it's a binary file. But sometimes there are single non-unicode "
+                    f"characters, so attempting reading while skipping such characters."
+                )
+        except Exception as e:
+            if config.report_readerrors:
+                logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+            raise
+        else:
+            # When no lines are parsed, self.content_lines should be empty
+            if not self.content_lines and config.report_readerrors:
+                logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
+            return  # No errors.
+        self._filehandle.close()
+        self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
+        try:
+            if self.content_lines:
+                # Skip all the lines that were already read
+                self._filehandle.readlines(len(self.content_lines))
+            for line in self._filehandle:
+                self.content_lines.append(line)
+                yield line
+        except Exception as e:
+            if config.report_readerrors:
+                logger.debug(f"Still couldn't read the file, skipping: {self.path}, {e}")
+
+        if not self.content_lines and config.report_readerrors:
+            logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
+
+    def close(self):
+        if self._filehandle:
+            self._filehandle.close()
+        self._filehandle = None
+
+    def closed(self):
+        return bool(self._filehandle)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def to_dict(self):
+        return {"fn": self.filename, "root": self.root}
+
+
 def is_searching_in_source_dir(path: Path) -> bool:
     """
     Checks whether MultiQC is searching for files in the source code folder
@@ -254,7 +358,7 @@ def get_filelist(run_module_names):
         directories. Runs through all search patterns and returns True
         if a match is found.
         """
-        f = {"fn": fn, "root": root}
+        f = SearchFile(fn, root)
 
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
@@ -267,19 +371,13 @@ def get_filelist(run_module_names):
             file_search_stats["skipped_ignore_pattern"] += 1
             return False
 
-        # Limit search to small files, to avoid 30GB FastQ files etc.
-        try:
-            f["filesize"] = os.path.getsize(os.path.join(root, fn))
-        except (IOError, OSError, ValueError, UnicodeDecodeError):
-            logger.debug(f"Couldn't read file when checking filesize: {fn}")
-        else:
-            if f["filesize"] > config.log_filesize_limit:
-                file_search_stats["skipped_filesize_limit"] += 1
-                return False
+        if f.filesize is not None and f.filesize > config.log_filesize_limit:
+            file_search_stats["skipped_filesize_limit"] += 1
+            return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
-            (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f.filename) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(f.path)
             if encoding is not None:
                 return False
             if ftype is not None and ftype.startswith("image"):
@@ -287,25 +385,25 @@ def get_filelist(run_module_names):
 
         # Test file for each search pattern
         file_matched = False
-        for patterns in spatterns:
-            for key, sps in patterns.items():
-                start = time.time()
-                for sp in sps:
-                    if search_file(sp, f, key):
-                        # Check that we shouldn't exclude this file
-                        if not exclude_file(sp, f):
-                            # Looks good! Remember this file
-                            files[key].append(f)
-                            file_search_stats[key] = file_search_stats.get(key, 0) + 1
-                            file_matched = True
-                        # Don't keep searching this file for other modules
-                        if not sp.get("shared", False) and key not in config.filesearch_file_shared:
-                            runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-                            return True
-                        # Don't look at other patterns for this module
-                        break
-                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-
+        with f:  # Ensure any open filehandles are closed.
+            for patterns in spatterns:
+                for key, sps in patterns.items():
+                    start = time.time()
+                    for sp in sps:
+                        if search_file(sp, f, key):
+                            # Check that we shouldn't exclude this file
+                            if not exclude_file(sp, f):
+                                # Looks good! Remember this file
+                                files[key].append(f.to_dict())
+                                file_search_stats[key] = file_search_stats.get(key, 0) + 1
+                                file_matched = True
+                            # Don't keep searching this file for other modules
+                            if not sp.get("shared", False) and key not in config.filesearch_file_shared:
+                                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
+                                return True
+                            # Don't look at other patterns for this module
+                            break
+                    runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
         return file_matched
 
     # Go through the analysis directories and get file list
@@ -351,7 +449,7 @@ def get_filelist(run_module_names):
     logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
 
 
-def search_file(pattern, f, module_key):
+def search_file(pattern, f: SearchFile, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
@@ -361,108 +459,59 @@ def search_file(pattern, f, module_key):
     contents_matched = False
 
     # Search pattern specific filesize limit
-    if pattern.get("max_filesize") is not None and "filesize" in f:
-        if f["filesize"] > pattern.get("max_filesize"):
+    max_filesize = pattern.get("max_filesize")
+    if max_filesize is not None and f.filesize:
+        if f.filesize > max_filesize:
             file_search_stats["skipped_module_specific_max_filesize"] += 1
             return False
 
     # Search by file name (glob)
-    if pattern.get("fn") is not None:
-        if fnmatch.fnmatch(f["fn"], pattern["fn"]):
+    filename_pattern = pattern.get("fn")
+    if filename_pattern is not None:
+        if fnmatch.fnmatch(f.filename, filename_pattern):
             fn_matched = True
-            if pattern.get("contents") is None and pattern.get("contents_re") is None:
-                return True
         else:
             return False
 
     # Search by file name (regex)
-    if pattern.get("fn_re") is not None:
-        if re.match(pattern["fn_re"], f["fn"]):
+    filename_regex_pattern = pattern.get("fn_re")
+    if filename_regex_pattern is not None:
+        if re.match(filename_regex_pattern, f.filename):
             fn_matched = True
-            if pattern.get("contents") is None and pattern.get("contents_re") is None:
-                return True
         else:
             return False
 
+    contents_pattern = pattern.get("contents")
+    contents_regex_pattern = pattern.get("contents_re")
+    if fn_matched and contents_pattern is None and contents_regex_pattern is None:
+        return True
+
     # Search by file contents
-    repattern = None
-    if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
+    if contents_pattern is not None or contents_regex_pattern is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
-            f["contents_lines"] = []
-            file_path = os.path.join(f["root"], f["fn"])
-
-            try:
-                fh = io.open(file_path, "r", encoding="utf-8")
-            except Exception as e:
-                if config.report_readerrors:
-                    logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-                file_search_stats["skipped_file_contents_search_errors"] += 1
-                return False
-            else:
-                try:
-                    for i, line in enumerate(fh):
-                        f["contents_lines"].append(line)
-                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
-                            break
-                except UnicodeDecodeError as e:
-                    if config.report_readerrors:
-                        logger.debug(
-                            f"Couldn't read file as a utf-8 text when looking for output: {file_path}, {e}. "
-                            f"Usually because it's a binary file. But sometimes there are single non-unicode "
-                            f"characters, so attempting reading while skipping such characters."
-                        )
-                    try:
-                        with io.open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
-                            for i, line in enumerate(fh):
-                                f["contents_lines"].append(line)
-                                if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
-                                    break
-                    except Exception as e:
-                        if config.report_readerrors:
-                            logger.debug(f"Still couldn't read the file, skipping: {file_path}, {e}")
-                        file_search_stats["skipped_file_contents_search_errors"] += 1
-                        return False
-                    else:
-                        if not f["contents_lines"]:
-                            if config.report_readerrors:
-                                logger.debug(f"No utf-8 lines were read from the file, skipping {file_path}")
-                            file_search_stats["skipped_file_contents_search_errors"] += 1
-                            return False
-                except Exception as e:
-                    if config.report_readerrors:
-                        logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-                    file_search_stats["skipped_file_contents_search_errors"] += 1
-                    return False
-            finally:
-                fh.close()
-
-        # Go through the parsed file contents
-        for i, line in enumerate(f["contents_lines"]):
-            # Break if we've searched enough lines for this pattern
-            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
-                break
-
-            # Search by file contents (string)
-            if pattern.get("contents") is not None:
-                if pattern["contents"] in line:
+        else:
+            repattern = None
+        num_lines = pattern.get("num_lines", config.filesearch_lines_limit)
+        expected_contents = pattern.get("contents")
+        try:
+            # Zipping with range(num_lines) halts at the desired number.
+            for i, line in zip(range(num_lines), f.line_iterator()):
+                if expected_contents and expected_contents in line:
                     contents_matched = True
-                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                        return True
                     break
-            # Search by file contents (regex)
-            elif pattern.get("contents_re") is not None:
-                if re.search(repattern, line):
+                if repattern and repattern.match(line):
                     contents_matched = True
-                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                        return True
                     break
+        except Exception:
+            file_search_stats["skipped_file_contents_search_errors"] += 1
+            return False
+        if filename_pattern is None and filename_regex_pattern is None and contents_matched:
+            return True
+        return fn_matched and contents_matched
 
-    return fn_matched and contents_matched
 
-
-def exclude_file(sp, f):
+def exclude_file(sp, f: SearchFile):
     """
     Exclude discovered files if they match the special exclude_
     search pattern keys
@@ -476,13 +525,13 @@ def exclude_file(sp, f):
     # Search by file name (glob)
     if "exclude_fn" in sp:
         for pat in sp["exclude_fn"]:
-            if fnmatch.fnmatch(f["fn"], pat):
+            if fnmatch.fnmatch(f.filename, pat):
                 return True
 
     # Search by file name (regex)
     if "exclude_fn_re" in sp:
         for pat in sp["exclude_fn_re"]:
-            if re.match(pat, f["fn"]):
+            if re.match(pat, f.filename):
                 return True
 
     # Search the contents of the file
@@ -490,16 +539,15 @@ def exclude_file(sp, f):
         # Compile regex patterns if we have any
         if "exclude_contents_re" in sp:
             sp["exclude_contents_re"] = [re.compile(pat) for pat in sp["exclude_contents_re"]]
-        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
-            for line in fh:
-                if "exclude_contents" in sp:
-                    for pat in sp["exclude_contents"]:
-                        if pat in line:
-                            return True
-                if "exclude_contents_re" in sp:
-                    for pat in sp["exclude_contents_re"]:
-                        if re.search(pat, line):
-                            return True
+        for line in f.line_iterator():
+            if "exclude_contents" in sp:
+                for pat in sp["exclude_contents"]:
+                    if pat in line:
+                        return True
+            if "exclude_contents_re" in sp:
+                for pat in sp["exclude_contents_re"]:
+                    if re.search(pat, line):
+                        return True
     return False
 
 
