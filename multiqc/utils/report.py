@@ -703,8 +703,10 @@ def compress_json(data):
     Take a Python data object. Convert to JSON and compress using gzip.
     Represent in base64 format.
     """
-    json_string = dump_json(data)
-    json_bytes = json_string.encode("utf-8")
-    json_gzip = gzip.compress(json_bytes)
-    base64_bytes = base64.b64encode(json_gzip)
+    # Stream to an in-memory buffer rather than compressing the big string
+    # at once. This saves memory.
+    buffer = io.BytesIO()
+    gzip_buffer = gzip.open(buffer, "wt", encoding="utf-8", compresslevel=9)
+    dump_json(data, gzip_buffer)
+    base64_bytes = base64.b64encode(buffer.getvalue())
     return base64_bytes.decode("ascii")
