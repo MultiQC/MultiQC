@@ -111,7 +111,9 @@ def init():
 def line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
     """
     Iterate over fileblocks that only contain complete lines. The last
-    character of each block is always '\n', no truncated lines are present.
+    character of each block is always '\n' unless it is the last line and no
+    terminating newline was present. No truncated lines are present in the
+    blocks, allowing for searching per-line-matching contents.
     A tuple with the number of newlines and the block is yielded on each
     iteration.
 
@@ -138,7 +140,7 @@ def line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[in
 
 class SearchFile:
     """
-    Wrap file handler and provide a lazy line iterator on it with caching.
+    Wrap file handler and provide a lazy line block iterator on it with caching.
 
     The class is a context manager with context being an open file handler.
 
