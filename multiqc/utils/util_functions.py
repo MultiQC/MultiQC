@@ -186,7 +186,7 @@ def choose_emoji():
 def dump_json(data, filehandle=None, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
-    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
+    Note that a custom JSONEncoder would not work for NaNs:
     https://stackoverflow.com/a/28640141
     """
 
@@ -204,8 +204,6 @@ def dump_json(data, filehandle=None, **kwargs):
             return [replace_nan(v) for v in obj]
         elif isinstance(obj, dict):
             return {k: replace_nan(v) for k, v in obj.items()}
-        elif callable(obj):
-            return None
         return obj
 
     class JsonEncoderWithArraySupport(json.JSONEncoder):
@@ -219,6 +217,8 @@ def dump_json(data, filehandle=None, **kwargs):
         def default(self, o):
             if isinstance(o, array.array):
                 return replace_nan(o.tolist())
+            if callable(o):
+                return None
             return super().default(o)
 
     if filehandle:
