@@ -147,7 +147,7 @@ class BaseMultiqcModule:
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analysis dirs
-                exlusion_hits = itertools.chain(
+                exclusion_hits = itertools.chain(
                     (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
                         (
@@ -157,7 +157,7 @@ class BaseMultiqcModule:
                         for analysis_dir in config.analysis_dir
                     ),
                 )
-                if any(exlusion_hits):
+                if any(exclusion_hits):
                     logger.debug(
                         f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
                     )
