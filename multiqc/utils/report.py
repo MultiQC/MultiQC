@@ -109,6 +109,15 @@ def init():
 
 
 class SearchFile:
+    """
+    Wrap file handler and provide a lazy line iterator on it with caching.
+
+    The class is a context manager with context being an open file handler.
+
+    The `self.line_iterator` method is a distinct context manager over the file lines,
+    and thanks for caching can be called multiple times for the same open file handler.
+    """
+
     filename: str
     root: str
     path: str
@@ -133,6 +142,13 @@ class SearchFile:
         return self._filesize
 
     def line_iterator(self):
+        """
+        Iterate over `self.content_lines`, try to read more lines from file handler when needed.
+
+        Essentially it's a lazy `f.readlines()` with caching.
+
+        Can be called multiple times for the same open file handler.
+        """
         for line in self.content_lines:
             yield line
         if self._filehandle is None:
@@ -489,7 +505,6 @@ def search_file(pattern, f: SearchFile, module_key):
         return True
 
     # Search by file contents
-    repattern = None
     if contents_pattern is not None or contents_regex_pattern is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
@@ -499,7 +514,6 @@ def search_file(pattern, f: SearchFile, module_key):
         expected_contents = pattern.get("contents")
         try:
             # Zipping with range(num_lines) halts at the desired number.
-            i = 0
             for i, line in zip(range(num_lines), f.line_iterator()):
                 if expected_contents and expected_contents in line:
                     contents_matched = True
