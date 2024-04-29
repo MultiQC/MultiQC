@@ -216,7 +216,7 @@ def dump_json(data, filehandle=None, **kwargs):
 
         def default(self, o):
             if isinstance(o, array.array):
-                return o.tolist()
+                return replace_nan(o.tolist())
             return super().default(o)
 
     if filehandle:
