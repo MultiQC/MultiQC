@@ -232,7 +232,7 @@ class BaseMultiqcModule:
         comment="",
         helptext="",
         content_before_plot="",
-        plot: Plot = None,
+        plot: Optional[Union[Plot, str]] = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -283,7 +283,7 @@ class BaseMultiqcModule:
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
-        plot_html = plot.add_to_report(report) if plot else ""
+        plot_html = plot.add_to_report(report) if isinstance(plot, Plot) else (plot or "")
 
         self.sections.append(
             {

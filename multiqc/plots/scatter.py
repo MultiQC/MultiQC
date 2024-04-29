@@ -1,6 +1,7 @@
-""" MultiQC functions to plot a scatter plot """
+"""MultiQC functions to plot a scatter plot"""
 
 import logging
+from typing import Union
 
 from multiqc.utils import config
 from multiqc.plots.plotly import scatter
@@ -21,7 +22,7 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, pconfig=None):
+def plot(data, pconfig=None) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md

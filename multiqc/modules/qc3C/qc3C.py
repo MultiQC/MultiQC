@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from qc3C """
-
+"""MultiQC module to parse output from qc3C"""
 
 import itertools
 import json
@@ -844,7 +843,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse qc3C JSON: '{f['fn']}'")
             return
 
-        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(os.path.abspath(f["root"])), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 
