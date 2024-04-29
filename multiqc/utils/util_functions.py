@@ -1,5 +1,4 @@
 """MultiQC Utility functions, used in a variety of places."""
-
 import json
 import logging
 from collections import defaultdict, OrderedDict
@@ -252,7 +251,10 @@ def multiqc_dump_json(report):
                 elif s == "report":
                     d = {f"{s}_{k}": getattr(report, k)}
                 if d:
-                    dump_json(d, ensure_ascii=False)  # Test that exporting to JSON works
+                    with open(os.devnull, "wt") as f:
+                        # Test that exporting to JSON works. Write to
+                        # /dev/null so no memory is required.
+                        dump_json(d, f, ensure_ascii=False)
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
                 log.warning(f"Couldn't export data key '{s}.{k}': {e}")
