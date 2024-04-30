@@ -20,8 +20,9 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
         "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
     )
 
-from .multiqc import (  # noqa: E402
-    run,
+from multiqc.multiqc import run  # noqa: E402
+from multiqc.utils import config  # noqa: E402
+from multiqc.core.interactive import (  # noqa: E402
     parse_logs,
     list_data_sources,
     list_modules,
@@ -34,7 +35,6 @@ from .multiqc import (  # noqa: E402
     write_report,
     add_custom_content_section,
 )
-from .utils import config  # noqa: E402
 
 __version__ = config.version
 
