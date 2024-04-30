@@ -33,8 +33,7 @@ def write_results(clean_up=True) -> None:
 
     _order_modules_and_sections()
 
-    # Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir()
-    _render_and_export_plots()
+    render_and_export_plots()
 
     _render_general_stats_table()
 
@@ -249,9 +248,9 @@ def _order_modules_and_sections():
                 report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
 
 
-def _render_and_export_plots():
+def render_and_export_plots():
     """
-    Construct HTML for all plots in each section in each module
+    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir()
     """
     for mod in report.modules_output:
         for s in mod.sections:

@@ -130,6 +130,11 @@ def list_plots() -> List[str]:
     Return a list of the plots that have been loaded for a given module,
     along with the number of datasets in each plot.
     """
+
+    # Force render plots to populate report.plot_data. They won't be re-rendered
+    # again on second call of core.render_and_export_plots(), so no performance hit.
+    core.render_and_export_plots()
+
     return list(
         f"{id} ({len(plot['datasets'])} datasets)" if len(plot["datasets"]) > 1 else id
         for id, plot in report.plot_data.items()
