@@ -15,12 +15,20 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import go, PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.utils import report
+from multiqc.utils import report, config
 from multiqc.utils.copy_function_signature import copy_callable_signature
 
 # Set up logging
 start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
+
+
+def load_config(config_file: str):
+    """
+    Load config from a MultiQC config file.
+    """
+    config.user_config_files.append(Path(config_file).absolute())
+    config.load_config(config_file)
 
 
 @copy_callable_signature(core.init_config)
@@ -228,6 +236,7 @@ def reset():
     """
     Reset the report to start fresh. Drops all previously parsed data.
     """
+    config.reset()
     report.reset()
 
 

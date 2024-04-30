@@ -3,6 +3,7 @@ import os
 import platform
 import re
 import sys
+from pathlib import Path
 
 import requests
 from packaging import version
@@ -48,7 +49,7 @@ def init_config(
     development=None,
     make_pdf=None,
     no_megaqc_upload=None,
-    config_file=(),
+    config_files=(),
     cl_config=(),
     quiet=None,
     verbose=None,
@@ -59,8 +60,10 @@ def init_config(
     **kwargs,
 ):
     """
-    Initialize log and config.
-    Update config from command line parameters. Will only update from the non-None values.
+    Initialize or re-initialize log and config.
+
+    Will reload config from defaults and from the previously added user config files, and then update from
+    the non-None arguments above.
     """
     config.load_from_defaults()
 
@@ -74,12 +77,17 @@ def init_config(
     logger.debug(f"This is MultiQC v{config.version}")
 
     plugin_hooks.mqc_trigger("before_config")
-    config.load_userconfig(config_file)
-    plugin_hooks.mqc_trigger("config_loaded")
+    # Set up user configs (they are kept for the whole interactive session)
+    for path in config_files:
+        path = Path(path).absolute()
+        if path not in config.user_config_files:
+            config.user_config_files.append(path)
+    config.load_userconfig()
 
     # Command-line config YAML
     if len(cl_config) > 0:
         config._cl_config(cl_config)
+    plugin_hooks.mqc_trigger("config_loaded")
 
     # Log the command used to launch MultiQC
     report.multiqc_command = " ".join(sys.argv)

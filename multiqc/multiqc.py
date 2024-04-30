@@ -350,7 +350,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-c",
     "--config",
-    "config_file",
+    "config_files",
     type=click.Path(exists=True, readable=True),
     multiple=True,
     help="Specific config file to load, after those in MultiQC dir / home dir / working dir.",

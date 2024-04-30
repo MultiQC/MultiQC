@@ -51,7 +51,7 @@ except Exception:
 # Constants
 MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
-##### MultiQC Defaults
+# MultiQC Defaults
 # Declaring variables for static typing
 title: str
 subtitle: str
@@ -60,7 +60,6 @@ report_comment: str
 report_header_info: List[Dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
-config_file: str
 custom_logo: str
 custom_logo_url: str
 custom_logo_title: str
@@ -177,6 +176,18 @@ def load_from_defaults():
 
 load_from_defaults()
 
+
+# Keeping track of loaded files to support re-initialization
+user_config_files: List[Path] = []
+
+
+def reset():
+    """Reset the interactive session"""
+    load_from_defaults()
+    global user_config_files
+    user_config_files = []
+
+
 # Module filename search patterns
 searchp_fn = os.path.join(MULTIQC_DIR, "utils", "search_patterns.yaml")
 with open(searchp_fn) as f:
@@ -236,39 +247,37 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
     sys.exit(1)
 
 
-##### Functions to load user config files. These are called by the main MultiQC script.
+# Functions to load user config files. These are called by the main MultiQC script.
 # Note that config files are loaded in a specific order and values can overwrite each other.
-def load_userconfig(paths=()):
+def load_userconfig():
     """Overwrite config defaults with user config files"""
 
     # Load and parse installation config file if we find it
-    _load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
+    load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    _load_config(
-        os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
-    )
+    load_config(os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml"))
 
     # Load and parse a user config file if we find it
-    _load_config(os.path.expanduser("~/.multiqc_config.yaml"))
+    load_config(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        _load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
+        load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
 
     # Load separate config entries from MULTIQC_* environment variables
     _add_config(_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
-    _load_config("multiqc_config.yaml")
+    load_config("multiqc_config.yaml")
 
     # Custom command line config
-    for p in paths:
-        _load_config(p)
+    for p in user_config_files:
+        load_config(str(p))
 
 
-def _load_config(yaml_config_path: str):
+def load_config(yaml_config_path: str):
     """Load and parse a config file if we find it"""
     if not os.path.isfile(yaml_config_path) and os.path.isfile(yaml_config_path.replace(".yaml", ".yml")):
         yaml_config_path = yaml_config_path.replace(".yaml", ".yml")

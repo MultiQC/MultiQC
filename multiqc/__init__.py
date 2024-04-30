@@ -23,6 +23,7 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
 from multiqc.multiqc import run  # noqa: E402
 from multiqc.utils import config  # noqa: E402
 from multiqc.core.interactive import (  # noqa: E402
+    load_config,
     parse_logs,
     list_data_sources,
     list_modules,
@@ -43,6 +44,7 @@ __all__ = [
     "config",
     "__version__",
     # The rest of the functions define the interactive use API:
+    "load_config",
     "parse_logs",
     "list_data_sources",
     "list_modules",
