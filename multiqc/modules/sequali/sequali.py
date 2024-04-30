@@ -4,6 +4,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
+from typing import Dict, Any
 
 import multiqc
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -49,6 +50,26 @@ def avg_x_label(x_label: str):
     return min_x + ((max_x - min_x) // 2)
 
 
+def prune_sample_dict(sample_dict: Dict[str, Any]):
+    """
+    Function to remove unused keys from the parsed data. This prevents loading
+    them into memory long-term wich reduces memory usage.
+    """
+    # This is a per sample data gathering of all the base qualities
+    # per position for a stacked bar plot to clearly see the distribution.
+    # Too hard to aggregate for MultiQC.
+    del sample_dict["per_position_quality_distribution"]
+    # Per tile quality is not analysed by multiqc and uses a lot of space
+    del sample_dict["per_tile_quality"]
+    # Nanopore metrics for pore data do not have modules yet
+    del sample_dict["nanopore_metrics"]
+    # Only the mean is used for the per position mean quality and spread data,
+    # so remove the rest of the data
+    percentiles_list = sample_dict["per_position_mean_quality_and_spread"]["percentiles"]
+    new_percentiles_list = [(percentile, values) for percentile, values in percentiles_list if percentile == "mean"]
+    sample_dict["per_position_mean_quality_and_spread"]["percentiles"] = new_percentiles_list
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     Sequali module class
@@ -64,12 +85,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         versions = set()
-        self.data = {}
-
+        data = {}
         min_lengths = set()
         max_lengths = set()
         for sample_file in self.find_log_files("sequali", filehandles=True):
             sample_name = sample_file["s_name"]
+            if self.is_ignore_sample(sample_name):
+                continue
             self.add_data_source(sample_file)
             filename = sample_file["fn"]
             filehandle = sample_file["f"]
@@ -78,16 +100,14 @@ class MultiqcModule(BaseMultiqcModule):
             except json.JSONDecodeError:
                 log.error(f"Could not decode JSON data in {filename}")
                 continue
-            else:
-                self.data[sample_name] = sample_dict
-
-        # Filter to strip out ignored sample names
-        self.data = self.ignore_samples(self.data)
-        if len(self.data) == 0:
+            # Save memory by pruning the sample dict's unused keys.
+            prune_sample_dict(sample_dict)
+            data[sample_name] = sample_dict
+        if len(data) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(self.data)} reports")
+        log.info(f"Found {len(data)} reports")
 
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             try:
                 sequali_version = sample_dict["meta"]["sequali_version"]
                 versions.add(sequali_version)
@@ -98,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             self.add_software_version(sequali_version, sample_name)
 
-        summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in self.data.items()}
+        summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in data.items()}
         self.write_data_file(summary_data, "multiqc_sequali")
 
         if len(versions) != 1:
@@ -113,20 +133,20 @@ class MultiqcModule(BaseMultiqcModule):
         if max_length >= 1000:
             self.use_xlog = True
 
-        self.sequali_general_stats()
-        self.read_count_plot()
-        self.per_position_quality_plot()
-        self.per_sequence_quality_plot()
-        self.per_position_gc_content_plot()
-        self.per_sequence_gc_content_plot()
-        self.sequence_length_distribution_plot()
-        self.sequence_duplication_levels_plot()
-        self.top_overrepresented_sequences_table()
-        self.adapter_content_plot()
+        self.sequali_general_stats(data)
+        self.read_count_plot(data)
+        self.per_position_quality_plot(data)
+        self.per_sequence_quality_plot(data)
+        self.per_position_gc_content_plot(data)
+        self.per_sequence_gc_content_plot(data)
+        self.sequence_length_distribution_plot(data)
+        self.sequence_duplication_levels_plot(data)
+        self.top_overrepresented_sequences_table(data)
+        self.adapter_content_plot(data)
 
-    def sequali_general_stats(self):
+    def sequali_general_stats(self, data):
         general_stats = dict()
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
             stats_entry = {
                 "sequali_gc_percentage": (
@@ -191,10 +211,10 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(general_stats, headers)
 
-    def read_count_plot(self):
+    def read_count_plot(self, data):
         """Stacked bar plot showing counts of reads"""
         plot_data = {}
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             total_reads = sample_dict["summary"]["total_reads"]
             remaining_percentage = sample_dict["duplication_fractions"]["remaining_fraction"]
             unique_reads = round(remaining_percentage * total_reads)
@@ -229,10 +249,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=plot,
         )
 
-    def per_position_quality_plot(self):
+    def per_position_quality_plot(self, data):
         plot_data = {}
         all_x_labels = set()
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             per_pos_qual = sample_dict["per_position_mean_quality_and_spread"]
             x_labels = per_pos_qual["x_labels"]
             all_x_labels.update(set())
@@ -270,9 +290,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def per_sequence_quality_plot(self):
+    def per_sequence_quality_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             qual_dict = sample_dict["per_sequence_quality_scores"]
             x_labels = qual_dict["x_labels"]
             average_quality_counts = qual_dict["average_quality_counts"]
@@ -304,9 +324,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def per_position_gc_content_plot(self):
+    def per_position_gc_content_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             per_position_base_content = sample_dict["per_position_base_content"]
             x_labels = per_position_base_content["x_labels"]
             x_positions = [avg_x_label(x_label) for x_label in x_labels]
@@ -333,9 +353,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def per_sequence_gc_content_plot(self):
+    def per_sequence_gc_content_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             gc_dict = sample_dict["per_sequence_gc_content"]
             # Take the smoothened results here. Less resolution, but also less
             # confusing at first glance.
@@ -363,7 +383,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def sequence_length_distribution_plot(self):
+    def sequence_length_distribution_plot(self, data):
         if not self.lengths_differ:
             self.add_section(
                 name="Sequence Length Distribution",
@@ -372,7 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             return
         plot_data = dict()
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             seqlength_dict = sample_dict["sequence_length_distribution"]
             x_labels = seqlength_dict["length_ranges"]
             counts = seqlength_dict["counts"]
@@ -394,9 +414,9 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def sequence_duplication_levels_plot(self):
+    def sequence_duplication_levels_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             estimated_fractions = sample_dict["duplication_fractions"]["estimated_duplication_fractions"]
             plot_data[sample_name] = {label: fraction * 100 for label, fraction in estimated_fractions.items()}
 
@@ -417,11 +437,11 @@ class MultiqcModule(BaseMultiqcModule):
             plot=linegraph.plot(plot_data, plot_config),
         )
 
-    def top_overrepresented_sequences_table(self):
+    def top_overrepresented_sequences_table(self, data):
         sequence_matches = {}
         sequence_counts = defaultdict(lambda: 0)
         sequence_fractions = defaultdict(lambda: 0.0)
-        for sample_data, sample_dict in self.data.items():
+        for sample_data, sample_dict in data.items():
             overrepresented_sequences = sample_dict["overrepresented_sequences"]["overrepresented_sequences"]
             for entry in overrepresented_sequences:
                 sequence = entry["sequence"]
@@ -435,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
         most_present = sorted(sequence_counts.items(), key=lambda x: (x[1], sequence_fractions[x[0]]), reverse=True)[
             :20
         ]
-        total = len(self.data)
+        total = len(data)
         table_data = {}
         for sequence, count in most_present:
             table_data[sequence] = {
@@ -471,10 +491,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(table_data, table_headers, table_config),
         )
 
-    def adapter_content_plot(self):
+    def adapter_content_plot(self, data):
         plot_data = {}
 
-        for sample_name, sample_dict in self.data.items():
+        for sample_name, sample_dict in data.items():
             adapter_content = sample_dict["adapter_content"]
             x_labels = adapter_content["x_labels"]
             x_points = [avg_x_label(x_label) for x_label in x_labels]
