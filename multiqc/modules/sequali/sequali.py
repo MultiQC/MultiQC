@@ -4,6 +4,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
+from typing import Dict, Any
 
 import multiqc
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -49,6 +50,26 @@ def avg_x_label(x_label: str):
     return min_x + ((max_x - min_x) // 2)
 
 
+def prune_sample_dict(sample_dict: Dict[str, Any]):
+    """
+    Function to remove unused keys from the parsed data. This prevents loading
+    them into memory long-term wich reduces memory usage.
+    """
+    # This is a per sample data gathering of all the base qualities
+    # per position for a stacked bar plot to clearly see the distribution.
+    # Too hard to aggregate for MultiQC.
+    del sample_dict["per_position_quality_distribution"]
+    # Per tile quality is not analysed by multiqc and uses a lot of space
+    del sample_dict["per_tile_quality"]
+    # Nanopore metrics for pore data do not have modules yet
+    del sample_dict["nanopore_metrics"]
+    # Only the mean is used for the per position mean quality and spread data,
+    # so remove the rest of the data
+    percentiles_list = sample_dict["per_position_mean_quality_and_spread"]["percentiles"]
+    new_percentiles_list = [(percentile, values) for percentile, values in percentiles_list if percentile == "mean"]
+    sample_dict["per_position_mean_quality_and_spread"]["percentiles"] = new_percentiles_list
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
     Sequali module class
@@ -79,6 +100,8 @@ class MultiqcModule(BaseMultiqcModule):
             except json.JSONDecodeError:
                 log.error(f"Could not decode JSON data in {filename}")
                 continue
+            # Save memory by pruning the sample dict's unused keys.
+            prune_sample_dict(sample_dict)
             data[sample_name] = sample_dict
         if len(data) == 0:
             raise ModuleNoSamplesFound
