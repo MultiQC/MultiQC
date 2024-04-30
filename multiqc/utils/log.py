@@ -87,7 +87,7 @@ def init_log():
 
     if util_functions.is_running_in_notebook() or os.getenv("PYCHARM_HOSTED") or os.getenv("CI"):
         # Use coloredlogs as Rich is breaking output formatting
-        info_template = "|%(name)18s | %(message)s"
+        info_template = "%(name)18s | %(message)s"
 
         # Set up the console logging stream
         console = logging.StreamHandler(sys.stdout)

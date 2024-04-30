@@ -263,7 +263,8 @@ def _render_and_export_plots():
                     s["plot"] = plot
                 else:
                     logger.error(f"Unknown plot type for {mod.name} - {s['name']}")
-            s["plot"] = ""
+            else:
+                s["plot"] = ""
 
 
 def _render_general_stats_table() -> None:

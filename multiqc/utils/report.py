@@ -344,7 +344,7 @@ def handle_analysis_path(item: Path):
             handle_analysis_path(item)
 
 
-def get_filelist(run_module_names):
+def search_files(run_module_names):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.

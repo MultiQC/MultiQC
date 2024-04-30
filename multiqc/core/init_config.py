@@ -294,6 +294,7 @@ def _set_analysis_file_config(
 def _set_output_paths():
     """
     Create directories where outputs will be placed
+    # TODO: call this only on write_results
     """
 
     # Add an output subdirectory if specified by template

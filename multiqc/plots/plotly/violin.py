@@ -494,10 +494,19 @@ class ViolinPlot(Plot):
         Show the table or violin plot based on the input parameters.
         """
         if self.show_table_by_default and violin is not True or table is True:
-            table_html, configuration_modal = make_table(self.main_table_dt, add_control_panel=False)
-            from IPython.display import HTML
+            data = {}
+            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+                rid = header.rid
+                for s_name in self.main_table_dt.raw_data[idx].keys():
+                    if metric in self.main_table_dt.raw_data[idx][s_name]:
+                        val = self.main_table_dt.raw_data[idx][s_name][metric]
+                        if val is not None:
+                            data.setdefault(s_name, {})[rid] = val
 
-            return HTML(table_html)
+            import pandas as pd
+
+            df = pd.DataFrame(data).T
+            return df  # Jupyter knows how to display dataframes
 
         else:
             return self.get_figure(**kwargs)

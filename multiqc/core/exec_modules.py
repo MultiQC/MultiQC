@@ -9,7 +9,6 @@ from typing import Dict, Union, Callable, List, Optional
 import rich
 from rich.syntax import Syntax
 
-from multiqc.core.file_search import required_logs_found
 from multiqc.core.exceptions import RunError
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import config, report, plugin_hooks, software_versions
@@ -18,10 +17,24 @@ logger = logging.getLogger(__name__)
 
 
 def exec_modules(
-    run_modules: List[Dict[str, Optional[Dict]]],
-    run_module_names: List[str],
+    searched_modules: List[Dict[str, Optional[Dict]]],
     clean_up: bool = True,
 ) -> None:
+    """
+    Execute the modules that have been found and loaded.
+    """
+    # Only run the modules for which any files were found
+    non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
+
+    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+    if "custom_content" not in non_empty_modules:
+        non_empty_modules.add("custom_content")
+
+    run_modules = [m for m in searched_modules if list(m.keys())[0].lower() in non_empty_modules]
+    run_module_names = [list(m.keys())[0] for m in run_modules]
+    if not required_logs_found(run_module_names):
+        raise RunError()
+
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     sys_exit_code = 0
@@ -38,21 +51,22 @@ def exec_modules(
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
-            modules = module_initializer()
+            this_modules = module_initializer()
             # END RUN MODULE
             # *********************************************
 
-            if not isinstance(modules, list):
-                modules = [modules]
+            # Single module initializer can create multiple module objects (see custom_content)
+            if not isinstance(this_modules, list):
+                this_modules = [this_modules]
 
             # Override duplicated outputs
             for prev_mod in report.modules_output:
-                if prev_mod.name in set(m.name for m in modules):
+                if prev_mod.name in set(m.name for m in this_modules):
                     logger.info(
                         f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new samples to a module with multiqc.parse_logs()'
                     )
                     report.modules_output.remove(prev_mod)
-            report.modules_output.extend(modules)
+            report.modules_output.extend(this_modules)
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
@@ -144,3 +158,21 @@ def exec_modules(
         raise RunError(sys_exit_code=sys_exit_code)
 
     plugin_hooks.mqc_trigger("after_modules")
+
+
+def required_logs_found(modules_with_logs):
+    if config.require_logs:
+        required_modules_with_no_logs = [
+            m
+            for m in getattr(config, "run_modules", [])
+            if m.lower() not in [m.lower() for m in modules_with_logs]
+            and m.lower() not in getattr(config, "exclude_modules", [])
+        ]
+        if required_modules_with_no_logs:
+            logger.critical(
+                "The following modules were explicitly requested but no log files were found: {}".format(
+                    ", ".join(required_modules_with_no_logs)
+                )
+            )
+            return False
+    return True

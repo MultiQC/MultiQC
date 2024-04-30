@@ -46,9 +46,9 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs):
     report.reset_file_search()
 
     try:
-        run_modules, run_module_names = core.file_search()
+        searched_modules = core.file_search()
 
-        core.exec_modules(run_modules, run_module_names, clean_up=False)
+        core.exec_modules(searched_modules, clean_up=False)
 
     except RunError as e:
         if e.message:
@@ -106,7 +106,7 @@ def list_data_sources() -> List[str]:
 
 def list_modules() -> List[str]:
     """
-    Return a list of the modules that have been loaded.
+    Return a list of the modules that have been loaded in order.
     """
     return [m.name for m in report.modules_output]
 
@@ -269,6 +269,8 @@ def add_custom_content_section(
         content=content,
         comment=comment,
     )
+    # report.plot_data[self.id] = self.model_dump(warnings=False)
+    # report.plot_data[self.id]["layout"] = self.layout.to_plotly_json()
     report.modules_output.append(module)
 
 
