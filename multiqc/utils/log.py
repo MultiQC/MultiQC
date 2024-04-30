@@ -83,11 +83,11 @@ def init_log():
         ),
     )
 
-    debug_template = "[%(asctime)s] %(module)-50s [%(levelname)-7s]  %(message)s"
+    debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
 
     if util_functions.is_running_in_notebook() or os.getenv("PYCHARM_HOSTED") or os.getenv("CI"):
         # Use coloredlogs as Rich is breaking output formatting
-        info_template = "|%(module)18s | %(message)s"
+        info_template = "|%(name)18s | %(message)s"
 
         # Set up the console logging stream
         console = logging.StreamHandler(sys.stdout)
@@ -95,7 +95,7 @@ def init_log():
         level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
         level_styles["debug"] = {"faint": True}
         field_styles = coloredlogs.DEFAULT_FIELD_STYLES
-        field_styles["module"] = {"color": "blue"}
+        field_styles["name"] = {"color": "blue"}
 
         if log_level == "DEBUG":
             if config.no_ansi is True:
@@ -156,23 +156,23 @@ def init_log():
         class DebugFormatter(logging.Formatter):
             def format(self, record):
                 if record.levelno == logging.DEBUG:
-                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.debug]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.debug]%(message)s[/]")
                 elif record.levelno == logging.WARNING:
-                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.warning]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.warning]%(message)s[/]")
                 elif record.levelno == logging.ERROR:
-                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  [logging.level.error]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.error]%(message)s[/]")
                 else:
-                    self._style = logging.PercentStyle("[blue]%(module)-50s[/]  %(message)s")
+                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  %(message)s")
                 return logging.Formatter.format(self, record)
 
         class InfoFormatter(logging.Formatter):
             def format(self, record):
                 if record.levelno == logging.WARNING:
-                    self._style = logging.PercentStyle("[blue]|%(module)18s[/] | [logging.level.warning]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]|%(name)18s[/] | [logging.level.warning]%(message)s[/]")
                 elif record.levelno == logging.ERROR:
-                    self._style = logging.PercentStyle("[blue]|%(module)18s[/] | [logging.level.error]%(message)s[/]")
+                    self._style = logging.PercentStyle("[blue]|%(name)18s[/] | [logging.level.error]%(message)s[/]")
                 else:
-                    self._style = logging.PercentStyle("[blue]|%(module)18s[/] | %(message)s")
+                    self._style = logging.PercentStyle("[blue]|%(name)18s[/] | %(message)s")
                 return logging.Formatter.format(self, record)
 
         console_handler.setLevel(log_level)
