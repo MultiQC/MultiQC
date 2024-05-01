@@ -141,17 +141,18 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     for module in report.modules_output:
         result[module.name]: List[Union[str, Dict[str, str]]] = list()
         for section in module.sections:
+            section_id = section["name"] or section["anchor"]
             if "plot_id" not in section:
-                logger.warning(f"No plot_id in section {section['name']} in module {module.name}")
+                logger.warning(f"No plot_id in section {section_id} in module {module.name}")
                 continue
             plot_id = section["plot_id"]
             if plot_id not in report.plot_by_id:
                 raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
             plot = report.plot_by_id[plot_id]
             if len(plot.datasets) == 1:
-                result[module.name].append(section["name"])
+                result[module.name].append(section_id)
             if len(plot.datasets) > 1:
-                result[module.name].append({section["name"]: [d.label for d in plot.datasets]})
+                result[module.name].append({section_id: [d.label for d in plot.datasets]})
 
     print(
         'List of available plots sections, by module. Use multiqc.show_plot("<module">, "<section>") to show plot. '
@@ -176,7 +177,7 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    sec = next((s for s in mod.sections if s["name"] == section or s["anchor"] == section), None)
+    sec = next((s for s in mod.sections if (s["name"] and s["name"] == section) or s["anchor"] == section), None)
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
