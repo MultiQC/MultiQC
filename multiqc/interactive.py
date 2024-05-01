@@ -17,7 +17,6 @@ from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import report, config
 from multiqc.utils.copy_function_signature import copy_callable_signature
-from IPython.core.display import HTML
 
 # Set up logging
 start_execution_time = time.time()
@@ -191,6 +190,8 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
                     break
         return plot.show(dataset_id=ds_id, **kwargs)
     elif sec.get("content"):
+        from IPython.core.display import HTML
+
         return HTML(sec["content"])
 
     if dataset:
