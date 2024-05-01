@@ -141,6 +141,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_plot(status_checks)
         if status_checks:
             self.status_heatmap()
+        # Delete FastQC data as it is not used any more after generating the
+        # reports and it uses a lot of memory.
+        del self.fastqc_data
 
     def parse_fastqc_report(self, file_contents, s_name=None, f=None):
         """Takes contents from a fastq_data.txt file and parses out required
