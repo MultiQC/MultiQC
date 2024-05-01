@@ -104,6 +104,8 @@ class BaseMultiqcModule:
 
         self.sections = list()
 
+        self.hidden = False
+
         self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
 
     @property
@@ -165,7 +167,7 @@ class BaseMultiqcModule:
                             fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
                             for pfe in path_filters_exclude
                         )
-                        for analysis_dir in config.analysis_dir
+                        for analysis_dir in report.analysis_files
                     ),
                 )
                 if any(exclusion_hits):
@@ -181,7 +183,7 @@ class BaseMultiqcModule:
                     (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
                     *(
                         (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
-                        for analysis_dir in config.analysis_dir
+                        for analysis_dir in report.analysis_files
                     ),
                 )
                 if not any(inclusion_hits):
@@ -244,7 +246,7 @@ class BaseMultiqcModule:
         comment="",
         helptext="",
         content_before_plot="",
-        plot: Optional[Union[Plot, str]] = None,
+        plot: Optional[Plot] = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -296,6 +298,7 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
+        # self.sections is passed into Jinja template:
         self.sections.append(
             {
                 "name": name,
@@ -304,11 +307,14 @@ class BaseMultiqcModule:
                 "comment": comment,
                 "helptext": helptext,
                 "content_before_plot": content_before_plot,
-                "plot": plot,
                 "content": content,
                 "print_section": any([description, comment, helptext, content_before_plot, plot, content]),
             }
         )
+        if plot is not None:
+            self.sections[-1]["plot_id"] = plot.id
+            # separately keeping track of Plot objects to be rendered further
+            report.plot_by_id[plot.id] = plot
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:

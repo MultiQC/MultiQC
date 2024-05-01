@@ -12,20 +12,21 @@ from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import go, PlotType, Plot
+from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.utils import report, config
 from multiqc.utils.copy_function_signature import copy_callable_signature
+from IPython.core.display import HTML
 
 # Set up logging
 start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
 
 
-def load_config(config_file: str):
+def load_config(config_file: str, **kwargs):
     """
-    Load config from a MultiQC config file.
+    Load config on top of the current config from a MultiQC config file.
     """
     config.user_config_files.append(Path(config_file).absolute())
     config.load_config(config_file)
@@ -125,20 +126,71 @@ def list_samples() -> List[str]:
     return sorted(samples)
 
 
-def list_plots() -> List[str]:
+def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     """
     Return a list of the plots that have been loaded for a given module,
     along with the number of datasets in each plot.
     """
 
-    # Force render plots to populate report.plot_data. They won't be re-rendered
-    # again on second call of core.render_and_export_plots(), so no performance hit.
-    core.render_and_export_plots()
+    result = dict()
+    for module in report.modules_output:
+        result[module.name]: List[Union[str, Dict[str, str]]] = list()
+        for section in module.sections:
+            if "plot_id" not in section:
+                logger.warning(f"No plot_id in section {section['name']} in module {module.name}")
+                continue
+            plot_id = section["plot_id"]
+            if plot_id not in report.plot_by_id:
+                raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
+            plot = report.plot_by_id[plot_id]
+            if len(plot.datasets) == 1:
+                result[module.name].append(section["name"])
+            if len(plot.datasets) > 1:
+                result[module.name].append({section["name"]: [d.label for d in plot.datasets]})
 
-    return list(
-        f"{id} ({len(plot['datasets'])} datasets)" if len(plot["datasets"]) > 1 else id
-        for id, plot in report.plot_data.items()
+    print(
+        'List of available plots sections, by module. Use multiqc.show_plot("<module">, "<section>") to show plot. '
+        + (
+            "\nIf plot has several datasets, pass the dataset name: "
+            'multiqc.show_plot("<module>", "<section>", "<dataset>")'
+            if any(len(plot.datasets) > 1 for plot in report.plot_by_id.values())
+            else ""
+        )
     )
+    return result
+
+
+def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs):
+    """
+    Show a plot in the notebook.
+    """
+    # if module not in list_modules():
+    #     raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
+
+    mod = next((m for m in report.modules_output if m.name == module or m.anchor == module), None)
+    if not mod:
+        raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
+
+    sec = next((s for s in mod.sections if s["name"] == section or s["anchor"] == section), None)
+    if not sec:
+        raise ValueError(f'Section "{section}" is not found in module "{module}"')
+
+    if sec.get("plot_id"):
+        plot = report.plot_by_id[sec["plot_id"]]
+        ds_id = 0
+        if dataset:
+            for i, d in enumerate(plot.datasets):
+                if d.label == dataset:
+                    ds_id = i
+                    break
+        return plot.show(dataset_id=ds_id, **kwargs)
+    elif sec.get("content"):
+        return HTML(sec["content"])
+
+    if dataset:
+        raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
+    else:
+        raise ValueError(f'Plot section "{section}" in module "{module}" not found')
 
 
 def _load_plot(dump: Dict) -> Plot:
@@ -146,7 +198,6 @@ def _load_plot(dump: Dict) -> Plot:
     Load a plot and datasets from a JSON dump.
     """
     plot_type = PlotType(dump["plot_type"])
-    dump["layout"] = go.Layout(dump["layout"])
     if plot_type == PlotType.LINE:
         return LinePlot(**dump)
     elif plot_type == PlotType.BAR:
@@ -161,15 +212,6 @@ def _load_plot(dump: Dict) -> Plot:
         return ViolinPlot(**dump)
     else:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
-
-
-def show_plot(plot_id: str, dataset_id=0, **kwargs) -> go.Figure:
-    """
-    Show a plot in the notebook.
-    """
-    dump = report.plot_data[plot_id]
-    model = _load_plot(dump)
-    return model.show(dataset_id=dataset_id, **kwargs)
 
 
 def get_general_stats_data(sample: Optional[str] = None) -> Dict:
@@ -274,8 +316,6 @@ def add_custom_content_section(
         content=content,
         comment=comment,
     )
-    # report.plot_data[self.id] = self.model_dump(warnings=False)
-    # report.plot_data[self.id]["layout"] = self.layout.to_plotly_json()
     report.modules_output.append(module)
 
 

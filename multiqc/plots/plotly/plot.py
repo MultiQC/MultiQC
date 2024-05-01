@@ -10,7 +10,7 @@ from typing import Dict, Union, List, Optional, Tuple
 
 import math
 import plotly.graph_objects as go
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, field_validator, field_serializer
 
 from multiqc.plots.plotly import check_plotly_version
 from multiqc.utils import mqc_colour, config, report
@@ -86,13 +86,20 @@ class Plot(BaseModel):
     square: bool = False
     flat: bool = False
 
+    class Config:
+        arbitrary_types_allowed = True
+        use_enum_values = True
+
     @field_serializer("layout")
     def serialize_dt(self, layout: go.Layout, _info):
         return layout.to_plotly_json()
 
-    class Config:
-        arbitrary_types_allowed = True
-        use_enum_values = True
+    @field_validator("layout", mode="before")
+    @classmethod
+    def parse_layout(cls, d):
+        if isinstance(d, dict):
+            return go.Layout(**d)
+        return d
 
     @staticmethod
     def initialize(
@@ -346,7 +353,6 @@ class Plot(BaseModel):
 
         # Saving compressed data for JavaScript to pick up and uncompress.
         report.plot_data[self.id] = self.model_dump(warnings=False)
-        report.plot_data[self.id]["layout"] = self.layout.to_plotly_json()
         return html
 
     def flat_plot(self) -> str:

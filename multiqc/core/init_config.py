@@ -57,6 +57,8 @@ def init_config(
     profile_runtime=None,
     custom_css_files=(),
     module_order=(),
+    extra_fn_clean_exts=(),
+    extra_fn_clean_trim=(),
     **kwargs,
 ):
     """
@@ -210,15 +212,41 @@ def init_config(
         config.custom_css_files.extend(custom_css_files)
     if module_order:
         config.module_order = module_order
+    if extra_fn_clean_exts:
+        config.fn_clean_exts = list(extra_fn_clean_exts) + config.fn_clean_exts
+    if extra_fn_clean_trim:
+        config.fn_clean_trim = list(extra_fn_clean_trim) + config.fn_clean_trim
 
-    _set_analysis_file_config(
-        analysis_dir=analysis_dir,
-        file_list=file_list,
-        ignore=ignore,
-        ignore_samples=ignore_samples,
-    )
+    # Clean up analysis_dir if a string (interactive environment only)
+    if analysis_dir is not None:
+        if isinstance(analysis_dir, str):
+            analysis_dir = [analysis_dir]
+        config.analysis_dir = analysis_dir
+    if file_list is not None:
+        if len(config.analysis_dir) > 1:
+            raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
+        config.file_list = file_list
 
-    _set_output_paths()
+    if len(ignore) > 0:
+        logger.debug(f"Ignoring files, directories and paths that match: {', '.join(ignore)}")
+        config.fn_ignore_files.extend(ignore)
+        config.fn_ignore_dirs.extend(ignore)
+        config.fn_ignore_paths.extend(ignore)
+    if len(ignore_samples) > 0:
+        logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
+        config.sample_names_ignore.extend(ignore_samples)
+
+    # Prep module configs
+    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
+    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
+    # Lint the module config
+    mod_keys = [list(m.keys())[0] for m in config.module_order]
+    if config.strict:
+        for m in config.avail_modules.keys():
+            if m not in mod_keys:
+                errmsg = f"LINT: Module '{m}' not found in config.module_order"
+                logger.error(errmsg)
+                report.lint_errors.append(errmsg)
 
     config.kwargs = kwargs  # Plugin command line options
 
@@ -235,99 +263,3 @@ def init_config(
         )
 
     logger.debug("Running Python " + sys.version.replace("\n", " "))
-
-
-def _set_analysis_file_config(
-    analysis_dir=None,
-    file_list=None,
-    ignore=(),
-    ignore_samples=(),
-):
-    # Clean up analysis_dir if a string (interactive environment only)
-    if analysis_dir is not None:
-        if isinstance(analysis_dir, str):
-            analysis_dir = [analysis_dir]
-        config.analysis_dir = analysis_dir
-    if file_list is not None:
-        config.file_list = file_list
-
-    # Add files if --file-list option is given
-    if config.file_list:
-        if len(config.analysis_dir) > 1:
-            raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
-        file_list_path = config.analysis_dir[0]
-        config.analysis_dir = []
-        with open(file_list_path) as in_handle:
-            for line in in_handle:
-                if os.path.exists(line.strip()):
-                    path = os.path.abspath(line.strip())
-                    config.analysis_dir.append(path)
-        if len(config.analysis_dir) == 0:
-            raise RunError(
-                f"No files or directories were added from {file_list_path} using --file-list option."
-                f"Please, check that {file_list_path} contains correct paths."
-            )
-
-    if len(ignore) > 0:
-        logger.debug(f"Ignoring files, directories and paths that match: {', '.join(ignore)}")
-        config.fn_ignore_files.extend(ignore)
-        config.fn_ignore_dirs.extend(ignore)
-        config.fn_ignore_paths.extend(ignore)
-    if len(ignore_samples) > 0:
-        logger.debug(f"Ignoring sample names that match: {', '.join(ignore_samples)}")
-        config.sample_names_ignore.extend(ignore_samples)
-
-    # Prep module configs
-    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
-    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
-
-    # Lint the module config
-    mod_keys = [list(m.keys())[0] for m in config.module_order]
-    if config.strict:
-        for m in config.avail_modules.keys():
-            if m not in mod_keys:
-                errmsg = f"LINT: Module '{m}' not found in config.module_order"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-
-
-def _set_output_paths():
-    """
-    Create directories where outputs will be placed
-    # TODO: call this only on write_results
-    """
-
-    # Add an output subdirectory if specified by template
-    template_mod = config.avail_templates[config.template].load()
-    try:
-        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
-    except AttributeError:
-        pass  # No subdirectory variable given
-
-    filename = config.filename
-
-    if filename == "stdout":
-        config.output_fn = sys.stdout
-        logger.info("Printing report to stdout")
-    else:
-        if filename is not None and filename.endswith(".html"):
-            filename = filename[:-5]
-        if filename is None and config.title is not None:
-            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
-            filename += "_multiqc_report"
-        if filename is not None:
-            if "output_fn_name" not in config.nondefault_config:
-                config.output_fn_name = f"{filename}.html"
-            if "data_dir_name" not in config.nondefault_config:
-                config.data_dir_name = f"{filename}_data"
-            if "plots_dir_name" not in config.nondefault_config:
-                config.plots_dir_name = f"{filename}_plots"
-        if not config.output_fn_name.endswith(".html"):
-            config.output_fn_name = f"{config.output_fn_name}.html"
-
-        if config.make_report:
-            config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
-        else:
-            config.output_fn = None
-        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
-        config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)

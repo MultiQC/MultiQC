@@ -28,6 +28,7 @@ from multiqc.utils import log
 
 from . import config
 from .util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
+from ..plots.plotly.plot import Plot
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ tmp_dir: Optional[str] = None
 
 # Uninitialised global variables for static typing
 multiqc_command: str
+analysis_files: List[str]  # Input files to search
 modules_output: List  # List of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
@@ -51,7 +53,8 @@ files: Dict
 # Fields below is kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
-plot_data: Dict = dict()
+plot_data: Dict[str, None] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict]
 general_stats_headers: List[Dict]
 # Map of Software tools to a set of unique version strings
@@ -64,6 +67,7 @@ def __initialise():
     global initialized
     global tmp_dir
     global multiqc_command
+    global analysis_files
     global modules_output
     global general_stats_html
     global lint_errors
@@ -74,6 +78,7 @@ def __initialise():
     global data_sources
     global html_ids
     global plot_data
+    global plot_by_id
     global general_stats_data
     global general_stats_headers
     global software_versions
@@ -83,6 +88,7 @@ def __initialise():
     tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
+    analysis_files = []
     modules_output = []
     general_stats_html = ""
     lint_errors = []
@@ -100,6 +106,7 @@ def __initialise():
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids = []
     plot_data = dict()
+    plot_by_id = dict()
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
@@ -112,10 +119,12 @@ def reset_file_search():
     Reset the file search session. Useful in interactive session to call in the end
     of parse_logs(), so the next run is not affected by the previous one.
     """
+    global analysis_files
     global searchfiles
     global files
     global file_search_stats
-    searchfiles = list()
+    analysis_files = []
+    searchfiles = []
     files = dict()  # Discovered files for each search key
     file_search_stats = {
         "skipped_symlinks": 0,
@@ -489,7 +498,7 @@ def search_files(run_module_names):
 
     # Go through the analysis directories and get file list
     total_sp_starttime = time.time()
-    for path in config.analysis_dir:
+    for path in analysis_files:
         handle_analysis_path(Path(path))
 
     # GitHub actions doesn't understand ansi control codes to move the cursor,

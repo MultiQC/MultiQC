@@ -4,7 +4,7 @@ import sys
 import time
 import traceback
 from importlib.metadata import EntryPoint
-from typing import Dict, Union, Callable, List, Optional
+from typing import Dict, Union, Callable, List
 
 import rich
 from rich.syntax import Syntax
@@ -17,29 +17,31 @@ logger = logging.getLogger(__name__)
 
 
 def exec_modules(
-    searched_modules: List[Dict[str, Optional[Dict]]],
+    mod_dicts_in_order: List[Dict[str, Dict]],
     clean_up: bool = True,
 ) -> None:
     """
     Execute the modules that have been found and loaded.
     """
+
     # Only run the modules for which any files were found
     non_empty_modules = {key.split("/")[0].lower() for key, files in report.files.items() if len(files) > 0}
-
-    # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
-    if "custom_content" not in non_empty_modules:
-        non_empty_modules.add("custom_content")
-
-    run_modules = [m for m in searched_modules if list(m.keys())[0].lower() in non_empty_modules]
-    run_module_names = [list(m.keys())[0] for m in run_modules]
-    if not required_logs_found(run_module_names):
+    mod_dicts_in_order = [
+        m
+        for m in mod_dicts_in_order
+        if list(m.keys())[0].lower() in non_empty_modules
+        # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
+        or list(m.keys())[0].lower() == "custom_content"
+    ]
+    mod_names = [list(m.keys())[0] for m in mod_dicts_in_order]
+    if not required_logs_found(mod_names):
         raise RunError()
 
     # Run the modules!
     plugin_hooks.mqc_trigger("before_modules")
     sys_exit_code = 0
     total_mods_starttime = time.time()
-    for mod_idx, mod_dict in enumerate(run_modules):
+    for mod_idx, mod_dict in enumerate(mod_dicts_in_order):
         mod_starttime = time.time()
         this_module: str = list(mod_dict.keys())[0]
         mod_cust_config: Dict = list(mod_dict.values())[0] or {}
@@ -137,7 +139,7 @@ def exec_modules(
             # Exit code 1 for CI failures etc
             sys_exit_code = 1
 
-        report.runtimes["mods"][run_module_names[mod_idx]] = time.time() - mod_starttime
+        report.runtimes["mods"][mod_names[mod_idx]] = time.time() - mod_starttime
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
     # Again, if config.require_logs is set, check if for all explicitly requested

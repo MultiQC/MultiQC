@@ -489,7 +489,7 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons(flat=flat)
 
-    def show(self, table=None, violin=None, **kwargs):
+    def show(self, table=None, violin=None, dataset_id=None, **kwargs):
         """
         Show the table or violin plot based on the input parameters.
         """
@@ -509,7 +509,8 @@ class ViolinPlot(Plot):
             return df  # Jupyter knows how to display dataframes
 
         else:
-            return self.get_figure(**kwargs)
+            dataset_id = dataset_id or 0
+            return self.get_figure(dataset_id=dataset_id, **kwargs)
 
     def add_to_report(self, clean_html_id=True) -> str:
         warning = ""

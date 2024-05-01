@@ -12,6 +12,7 @@ import time
 import traceback
 from typing import Set
 
+from multiqc.core.file_search import include_or_exclude_modules
 from multiqc.plots import table
 
 import jinja2
@@ -31,11 +32,15 @@ def write_results(clean_up=True) -> None:
         logger.warning("No analysis results found to make a report")
         return
 
-    _order_modules_and_sections()
+    if config.make_report:
+        _order_modules_and_sections()
+
+    _set_output_paths()
 
     render_and_export_plots()
 
-    _render_general_stats_table()
+    if not config.skip_generalstats:
+        _render_general_stats_table()
 
     overwritten = _create_or_override_dirs() if config.filename != "stdout" else set()
 
@@ -86,6 +91,47 @@ def write_results(clean_up=True) -> None:
     if config.zip_data_dir and config.data_dir is not None:
         shutil.make_archive(config.data_dir, "zip", config.data_dir)
         shutil.rmtree(config.data_dir)
+
+
+def _set_output_paths():
+    """
+    Set config output paths
+    """
+
+    # Add an output subdirectory if specified by template
+    template_mod = config.avail_templates[config.template].load()
+    try:
+        config.output_dir = os.path.join(config.output_dir, template_mod.output_subdir)
+    except AttributeError:
+        pass  # No subdirectory variable given
+
+    filename = config.filename
+
+    if filename == "stdout":
+        config.output_fn = sys.stdout
+        logger.info("Printing report to stdout")
+    else:
+        if filename is not None and filename.endswith(".html"):
+            filename = filename[:-5]
+        if filename is None and config.title is not None:
+            filename = re.sub(r"[^\w.-]", "", re.sub(r"[-\s]+", "-", config.title)).strip()
+            filename += "_multiqc_report"
+        if filename is not None:
+            if "output_fn_name" not in config.nondefault_config:
+                config.output_fn_name = f"{filename}.html"
+            if "data_dir_name" not in config.nondefault_config:
+                config.data_dir_name = f"{filename}_data"
+            if "plots_dir_name" not in config.nondefault_config:
+                config.plots_dir_name = f"{filename}_plots"
+        if not config.output_fn_name.endswith(".html"):
+            config.output_fn_name = f"{config.output_fn_name}.html"
+
+        if config.make_report:
+            config.output_fn = os.path.join(config.output_dir, config.output_fn_name)
+        else:
+            config.output_fn = None
+        config.data_dir = os.path.join(config.output_dir, config.data_dir_name)
+        config.plots_dir = os.path.join(config.output_dir, config.plots_dir_name)
 
 
 def _move_exported_plots():
@@ -175,6 +221,12 @@ def _order_modules_and_sections():
     Finalise modules and sections: place in the write order, add special-case modules
     """
 
+    # In case if user passed exclude_modules or include_modules again:
+    mod_anchors = include_or_exclude_modules([mod.anchor for mod in report.modules_output])
+    for mod in report.modules_output:
+        if mod.anchor not in mod_anchors:
+            mod.hidden = True
+
     # Add section for software versions if any are found
     if not config.skip_versions_section and report.software_versions:
         # Importing here to avoid circular imports
@@ -192,17 +244,45 @@ def _order_modules_and_sections():
         if not any([isinstance(m, ProfileRuntimeModule) for m in report.modules_output]):
             report.modules_output.append(ProfileRuntimeModule())
 
-    if config.make_report:
-        # Sort the report module output if we have a config
-        if len(getattr(config, "report_section_order", {})) > 0:
-            section_id_order = {}
+    # Sort the report module output if we have a config
+    if len(config.report_section_order) > 0:
+        section_id_order = {}
+        idx = 10
+        for mod in reversed(report.modules_output):
+            section_id_order[mod.anchor] = idx
+            idx += 10
+        for anchor, ss in config.report_section_order.items():
+            if anchor not in section_id_order.keys():
+                logger.debug(f"Reordering sections: anchor '{anchor}' not found.")
+                continue
+            if ss.get("order") is not None:
+                section_id_order[anchor] = ss["order"]
+            if ss.get("after") in section_id_order.keys():
+                section_id_order[anchor] = section_id_order[ss["after"]] + 1
+            if ss.get("before") in section_id_order.keys():
+                section_id_order[anchor] = section_id_order[ss["before"]] - 1
+        sorted_ids = sorted(section_id_order, key=section_id_order.get)
+        report.modules_output = [mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i]
+
+    # Sort the report sections if we have a config
+    # Basically the same as above, but sections within a module
+    if len(config.report_section_order) > 0:
+        # Go through each module
+        for midx, mod in enumerate(report.modules_output):
+            section_id_order = dict()
+            # Get a list of the section anchors
             idx = 10
-            for mod in reversed(report.modules_output):
-                section_id_order[mod.anchor] = idx
+            for s in mod.sections:
+                section_id_order[s["anchor"]] = idx
                 idx += 10
+            # Go through each section to be reordered
             for anchor, ss in config.report_section_order.items():
+                # Section to be moved is not in this module
                 if anchor not in section_id_order.keys():
-                    logger.debug(f"Reordering sections: anchor '{anchor}' not found.")
+                    logger.debug(f"Reordering sections: anchor '{anchor}' not found for module '{mod.name}'.")
+                    continue
+                if ss == "remove":
+                    section_id_order[anchor] = False
                     continue
                 if ss.get("order") is not None:
                     section_id_order[anchor] = ss["order"]
@@ -210,51 +290,22 @@ def _order_modules_and_sections():
                     section_id_order[anchor] = section_id_order[ss["after"]] + 1
                 if ss.get("before") in section_id_order.keys():
                     section_id_order[anchor] = section_id_order[ss["before"]] - 1
+            # Remove module sections
+            section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
+            # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output = [
-                mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i
-            ]
-
-        # Sort the report sections if we have a config
-        # Basically the same as above, but sections within a module
-        if len(config.report_section_order) > 0:
-            # Go through each module
-            for midx, mod in enumerate(report.modules_output):
-                section_id_order = dict()
-                # Get a list of the section anchors
-                idx = 10
-                for s in mod.sections:
-                    section_id_order[s["anchor"]] = idx
-                    idx += 10
-                # Go through each section to be reordered
-                for anchor, ss in config.report_section_order.items():
-                    # Section to be moved is not in this module
-                    if anchor not in section_id_order.keys():
-                        logger.debug(f"Reordering sections: anchor '{anchor}' not found for module '{mod.name}'.")
-                        continue
-                    if ss == "remove":
-                        section_id_order[anchor] = False
-                        continue
-                    if ss.get("order") is not None:
-                        section_id_order[anchor] = ss["order"]
-                    if ss.get("after") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                    if ss.get("before") in section_id_order.keys():
-                        section_id_order[anchor] = section_id_order[ss["before"]] - 1
-                # Remove module sections
-                section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
-                # Sort the module sections
-                sorted_ids = sorted(section_id_order, key=section_id_order.get)
-                report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
+            report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
 
 
 def render_and_export_plots():
     """
-    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir()
+    Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
     """
     for mod in report.modules_output:
+        if mod.hidden:
+            continue
         for s in mod.sections:
-            plot = s.get("plot")
+            plot = report.plot_by_id.get(s.get("plot_id"))
             if plot:
                 if isinstance(plot, Plot):
                     s["plot"] = plot.add_to_report(report)
@@ -296,7 +347,7 @@ def _render_general_stats_table() -> None:
                 break
 
     # Generate the General Statistics HTML & write to file
-    if len(report.general_stats_data) > 0 and not config.skip_generalstats and not all_hidden:
+    if len(report.general_stats_data) > 0 and not all_hidden:
         pconfig = {
             "id": "general_stats_table",
             "table_title": "General Statistics",
@@ -351,6 +402,8 @@ def _write_report():
     """
     # Copy over css & js files if requested by the theme
     for mod in report.modules_output:
+        if mod.hidden:
+            continue
         try:
             for to, path in mod.css.items():
                 copy_to = os.path.join(report.tmp_dir, to)
@@ -442,7 +495,7 @@ def _write_report():
     report.runtimes["total_compression"] = time.time() - runtime_compression_start
 
     # Use jinja2 to render the template and overwrite
-    config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
+    report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
     report_output = j_template.render(report=report, config=config)
     if config.filename == "stdout":
         print(report_output.encode("utf-8"), file=sys.stdout)

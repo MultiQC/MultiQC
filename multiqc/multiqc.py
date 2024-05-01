@@ -446,9 +446,9 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     report.__initialise()
 
     try:
-        searched_modules = core.file_search()
+        mod_dicts_in_order = core.file_search()
 
-        core.exec_modules(searched_modules)
+        core.exec_modules(mod_dicts_in_order)
 
         core.write_results()
 
