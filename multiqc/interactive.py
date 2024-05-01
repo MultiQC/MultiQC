@@ -24,11 +24,17 @@ start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
 
 
-def load_config(config_file: str, **kwargs):
+def load_config(config_file: str):
     """
     Load config on top of the current config from a MultiQC config file.
     """
-    config.user_config_files.append(Path(config_file).absolute())
+    core.init_config()
+
+    path = Path(config_file)
+    if not path.exists():
+        raise ValueError(f"Config file '{config_file}' not found")
+
+    config.user_config_files.append(path.absolute())
     config.load_config(config_file)
 
 

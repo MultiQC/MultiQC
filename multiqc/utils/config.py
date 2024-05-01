@@ -278,23 +278,26 @@ def load_userconfig():
 
 
 def load_config(yaml_config_path: str):
-    """Load and parse a config file if we find it"""
-    if not os.path.isfile(yaml_config_path) and os.path.isfile(yaml_config_path.replace(".yaml", ".yml")):
-        yaml_config_path = yaml_config_path.replace(".yaml", ".yml")
+    """
+    Load and parse a config file if we find it
+    """
+    path = Path(yaml_config_path)
+    if not path.is_file() and path.with_suffix(".yml").is_file():
+        path = path.with_suffix(".yml")
 
-    if os.path.isfile(yaml_config_path):
+    if path.is_file():
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
             # new_config can be None if the file is empty
-            new_config: Optional[Dict] = pyaml_env.parse_config(yaml_config_path)
+            new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
             if new_config:
-                logger.debug(f"Loading config settings from: {yaml_config_path}")
-                _add_config(new_config, yaml_config_path)
+                logger.info(f"Loading config settings from: {path}")
+                _add_config(new_config, str(path))
         except (IOError, AttributeError) as e:
-            logger.debug(f"Error loading config {yaml_config_path}: {e}")
+            logger.warning(f"Error loading config {path}: {e}")
         except yaml.scanner.ScannerError as e:
             logger.error(f"Error parsing config YAML: {e}")
-            sys.exit(1)
+            raise
 
 
 def _cl_config(cl_config):

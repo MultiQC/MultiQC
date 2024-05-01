@@ -517,7 +517,7 @@ def search_files(run_module_names):
             BLUE = ""
             RESET = ""
 
-        bar_format = f"{BLUE}| {'searching':>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt}"
+        bar_format = f"{BLUE}{'searching':>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt}"
         if PRINT_FNAME:
             bar_format += " {desc}"
 
@@ -545,7 +545,7 @@ def search_files(run_module_names):
             pbar.refresh()
     else:
         progress_obj = rich.progress.Progress(
-            "[blue]|[/]      ",
+            "[blue][/]      ",
             rich.progress.SpinnerColumn(),
             "[blue]{task.description}[/] |",
             rich.progress.BarColumn(),
