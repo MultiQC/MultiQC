@@ -20,9 +20,9 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin, ErrGrpReportMixin):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="Glimpse",
+            name="GLIMPSE",
             anchor="glimpse",
-            target="Glimpse",
+            target="GLIMPSE",
             href="https://odelaneau.github.io/GLIMPSE/",
             info="Set of tools for low-coverage whole genome sequencing imputation",
             doi="10.1101/2022.11.28.518213 ",
@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin, ErrGrpReportMixin):
         self.general_stats_data = dict()
 
         # Call submodule functions
-        n_reports_found = 0
+        n_reports_found = 1
 
         # Call submodule functions
         n_reports_found += self.parse_glimpse_err_spl()
