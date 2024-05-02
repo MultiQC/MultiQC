@@ -104,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 MultiQC works by recursively looking through all files found in the analysis directories.
                 After skipping any that are too big / binary file types etc, it uses the search patterns
-                defined in `multiqc/utils/search_patterns.yaml`.
+                defined in `multiqc/search_patterns.yaml`.
                 These work by matching either file names or file contents. Generally speaking, matching
                 filenames is super fast and matching file contents is slower.
 
