@@ -403,6 +403,7 @@ module_order:
   - happy
   - mirtop
   - sambamba
+  - glimpse
   # Post-alignment processing
   - gopeaks
   - homer

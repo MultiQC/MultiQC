@@ -41,6 +41,7 @@ class ErrSplReportMixin:
 
         data_by_sample = dict()
         for f in self.find_log_files("glimpse/err_spl"):
+            print(f["f"])  # File contents
             metrics = parse_err_spl_report(f)
             if len(metrics) > 0:
                 if f["s_name"] in data_by_sample:
@@ -201,9 +202,6 @@ class ErrSplReportMixin:
                 },
             ),
         )
-
-        # TODO: Question for @LouisLeNezet - what is table_data?
-        # self.general_stats_addcols(table_data, headers, namespace="err_spl")
 
     def accuracy_by_sample(self, data_by_sample):
         """Make a plot showing the accuracy of the genotypes by sample"""

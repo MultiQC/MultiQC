@@ -1,17 +1,17 @@
 """MultiQC submodule to parse output from Glimpse concordance analysis"""
 
+
 import logging
 
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-
-from .err_spl import ErrSplReportMixin  # Import the Glimpse submodules
+# Import the GLIMPSE submodules
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
+class MultiqcModule(BaseMultiqcModule):  # , ErrSplReportMixin):
     """Glimpse has a number of different commands and outputs.
     This MultiQC module supports some but not all."""
 
@@ -29,15 +29,16 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
         # Set up class objects to hold parsed data
         self.general_stats_headers = dict()
         self.general_stats_data = dict()
-        n = dict()
 
         # Call submodule functions
-        n["err_spl"] = self.parse_err_spl()
-        if n["err_spl"] > 0:
-            log.info(f"Found {n['stats']} errors by sample reports")
+        n_reports_found = 1
+
+        # Call submodule functions
+        # n_reports_found += self.parse_glimpse_err_spl()
+        log.info("Test log message")
 
         # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if n_reports_found == 0:
             raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
