@@ -1,17 +1,11 @@
-""" MultiQC submodule to parse output from Glimpse concordance analysis """
+"""MultiQC submodule to parse output from Glimpse concordance analysis"""
 
 import logging
-import re
 
-from multiqc import config
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import scatter
 
-# Initialise the logger
-log = logging.getLogger(__name__)
 
-# Import the Glimpse submodules
-from .err_spl import ErrSplReportMixin
+from .err_spl import ErrSplReportMixin  # Import the Glimpse submodules
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -41,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
         n["err_spl"] = self.parse_err_spl()
         if n["err_spl"] > 0:
             log.info(f"Found {n['stats']} errors by sample reports")
-        
+
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
