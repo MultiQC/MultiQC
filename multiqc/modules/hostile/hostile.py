@@ -65,6 +65,11 @@ class MultiqcModule(BaseMultiqcModule):
         databases = set()
         for s_name, entry in data_by_sample.items():
             databases.add(os.path.basename(entry["index"]))
+            if entry["reads_out"] + entry["reads_removed"] != entry["reads_in"]:
+                raise ValueError(
+                    f"Reads out + reads removed != reads in for sample {s_name}: "
+                    f"{entry['reads_out']} + {entry['reads_removed']} != {entry['reads_in']}"
+                )
             data[s_name] = {"Clean reads": entry["reads_out"], "Removed reads": entry["reads_removed"]}
 
         databases_message = ""
@@ -73,8 +78,9 @@ class MultiqcModule(BaseMultiqcModule):
         elif len(databases) > 1:
             log.warning(f"Multiple database indices found in data: {', '.join(list(sorted(databases)))}")
             databases_message = (
-                f"Warning: multiple database indices found in data: {', '.join(list(sorted(databases)))}, "
-                f"so comparison between samples might be incorrect"
+                f"<div class='alert alert-warning'>Warning: multiple database indices found in data: "
+                f"{', '.join(['<code>' + d + '</code>' for d in sorted(databases)])}. "
+                f"Comparison between samples cleaned with different databases might be incorrect</div>"
             )
 
         cats = ["Clean reads", "Removed reads"]
@@ -91,6 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="hostile-reads",
             description=(
                 f"The number of reads after filtering (cleaned reads) vs. the number of removed host reads. "
+                f"The numbers sum up to the total number of input reads. "
                 f"{databases_message}"
             ),
             plot=bargraph.plot(data, cats, pconfig),
