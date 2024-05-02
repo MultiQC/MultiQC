@@ -26,6 +26,7 @@ jobs:
         with:
           repository: MultiQC/website
           path: ./MultiQC_website
+          ref: "move-sp"
 
       - name: Set up Node.js 18.x
         uses: actions/setup-node@v4
