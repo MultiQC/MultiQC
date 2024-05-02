@@ -1398,13 +1398,15 @@ def _write_html_and_data(
 
         # Use jinja2 to render the template and overwrite
         config.analysis_dir = [os.path.realpath(d) for d in config.analysis_dir]
-        report_output = j_template.render(report=report, config=config)
+        report_output_generator = j_template.generate(report=report, config=config)
         if filename == "stdout":
-            print(report_output.encode("utf-8"), file=sys.stdout)
+            for report_block in report_output_generator:
+                sys.stdout.write(report_block)
         else:
             try:
                 with io.open(config.output_fn, "w", encoding="utf-8") as f:
-                    print(report_output, file=f)
+                    for report_block in report_output_generator:
+                        f.write(report_block)
             except IOError as e:
                 raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
 
