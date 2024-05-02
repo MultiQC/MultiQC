@@ -6,16 +6,18 @@ import logging
 from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the GLIMPSE submodules
+from .err_spl import ErrSplReportMixin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule):  # , ErrSplReportMixin):
+class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
     """Glimpse has a number of different commands and outputs.
     This MultiQC module supports some but not all."""
 
     def __init__(self):
+        log.info("Test log message")
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Glimpse",
@@ -31,10 +33,10 @@ class MultiqcModule(BaseMultiqcModule):  # , ErrSplReportMixin):
         self.general_stats_data = dict()
 
         # Call submodule functions
-        n_reports_found = 1
+        n_reports_found = 0
 
         # Call submodule functions
-        # n_reports_found += self.parse_glimpse_err_spl()
+        n_reports_found += self.parse_glimpse_err_spl()
         log.info("Test log message")
 
         # Exit if we didn't find anything

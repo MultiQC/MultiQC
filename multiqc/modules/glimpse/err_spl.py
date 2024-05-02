@@ -33,42 +33,45 @@ EXPECTED_COLUMNS = [
 
 
 class ErrSplReportMixin:
-    """Mixin class, loaded by main glimpse MultiqcModule class."""
+    """Mixin class, loaded by main Glimpse MultiqcModule class."""
     # parsing functions -------------------------------------------------------------
 
     def parse_glimpse_err_spl(self):
         """Find Glimpse concordance errors by samples logs and parse their data"""
 
-        data_by_sample = dict()
-        for f in self.find_log_files("glimpse/err_spl"):
-            print(f["f"])  # File contents
-            metrics = parse_err_spl_report(f)
-            if len(metrics) > 0:
-                if f["s_name"] in data_by_sample:
+        self.glimpse_err_spl = dict()
+        for f in self.find_log_files("glimpse/err_spl", filehandles=True):
+            parsed_data = parse_err_spl_report(f["f"])
+            if len(parsed_data) > 1:
+                if f["s_name"] in self.glimpse_err_spl:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="err_spl")
-                data_by_sample[f["s_name"]] = metrics
+                self.glimpse_err_spl[f["s_name"]] = parsed_data
 
         # Filter to strip out ignored sample names
-        data_by_sample = self.ignore_samples(data_by_sample)
-        if len(data_by_sample) == 0:
+        self.glimpse_err_spl = self.ignore_samples(self.glimpse_err_spl)
+
+        n_reports_found = len(self.gatk_varianteval)
+        if n_reports_found == 0:
             return 0
+
+        log.info(f"Found {n_reports_found} errors by samples reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
         # Write parsed report data to a file (restructure first)
-        self.write_data_file(data_by_sample, "multiqc_glimpse_err_spl")
+        self.write_data_file(self.glimpse_err_spl, "multiqc_glimpse_err_spl")
 
         # Make a table summarising the stats across all samples
-        self.summary_table(data_by_sample)
+        self.summary_table(self.glimpse_err_spl)
 
         # Make a line plot showing accuracy stats by sample, with a tab switch between stats
-        self.accuracy_by_sample(data_by_sample)
+        self.accuracy_by_sample(self.glimpse_err_spl)
 
         # Return the number of logs that were found
-        return len(data_by_sample)
+        return n_reports_found
 
     def summary_table(self, data_by_sample):
         headers = {
