@@ -461,6 +461,7 @@ module_order:
   - tophat
   - bowtie2
   - bowtie1
+  - hostile
   - cellranger
   - snpsplit
   - odgi

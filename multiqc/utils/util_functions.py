@@ -1,5 +1,6 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+import array
 import json
 import logging
 from collections import defaultdict, OrderedDict
@@ -121,33 +122,48 @@ def replace_defaultdicts(data):
     return _replace(data)
 
 
-def dump_json(data, filehandle=None, **kwargs):
+def dump_json(data, filehandle, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
-    Note that a custom JSONEncoder would have worked for lambdas, but not for NaNs:
+    Note that a custom JSONEncoder would not work for NaNs:
     https://stackoverflow.com/a/28640141
     """
 
-    # Recursively replace NaNs with None
     def replace_nan(obj):
-        if isinstance(obj, dict):
-            return {k: replace_nan(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
+        """
+        Recursively replace NaNs and Infinities with None
+        """
+        # Do checking in order of likelyhood of occurence
+        if isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
+        elif isinstance(obj, (list, tuple, set)):
+            # JSON only knows list so convert tuples and sets to list.
             return [replace_nan(v) for v in obj]
-        elif isinstance(obj, set):
-            return {replace_nan(v) for v in obj}
-        elif isinstance(obj, tuple):
-            return tuple(replace_nan(v) for v in obj)
-        elif callable(obj):
-            return None
-        elif isinstance(obj, float) and math.isnan(obj):
-            return None
+        elif isinstance(obj, dict):
+            return {k: replace_nan(v) for k, v in obj.items()}
         return obj
 
+    class JsonEncoderWithArraySupport(json.JSONEncoder):
+        """
+        Encode array.array instances to list. Use the default method
+        for this as it gets called only when an array instance is encountered
+        and is then immediately serialized into a string. This saves memory
+        compared to unpacking all arrays to list at once.
+        """
+
+        def default(self, o):
+            if isinstance(o, array.array):
+                return replace_nan(o.tolist())
+            if callable(o):
+                return None
+            return super().default(o)
+
     if filehandle:
-        json.dump(replace_nan(data), filehandle, **kwargs)
+        json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
     else:
-        return json.dumps(replace_nan(data), **kwargs)
+        return json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, **kwargs)
 
 
 def is_running_in_notebook() -> bool:
@@ -170,3 +186,57 @@ def no_unicode() -> bool:
         "utf".casefold() not in os.environ.get("LANG", "").casefold()
         and "utf".casefold() not in os.environ.get("PYTHONIOENCODING", "").casefold()
     )
+
+
+def compress_number_lists_for_json(obj):
+    """
+    Take an object that should be JSON and compress all the lists of integer
+    and lists of float as array.array. This saves space and the arrays can
+    easily be converted back again, using the dump_json function above.
+
+    The technical explanation:
+    A python list is an array of pointers to python objects:
+    {
+        list metadata including length
+        a pointer to an array of pointers: [
+            PyObject *
+            PyObject *
+            etc.
+        ]
+    }
+    A python float is very simple and takes 24 bytes.
+    {
+        PyTypeObject *type
+        Py_ssize_t refcount
+        double the actual floating point.
+    }
+    A python integer is slightly more complicated, but similar to the float. It
+    takes 28 bytes for 32-bit data, 32 bytes for 64-bit, 36 bytes for 96-bit etc.
+
+    An array.array is more simple.
+    {
+        array metadata including length
+        a pointer to an array of machine values: [
+            double,
+            double,
+            double,
+            etc.
+        ]
+        more metadata
+    }
+    Using 8-byte machine values rather than Python objects saves thus
+    24 bytes per float.
+    """
+    if isinstance(obj, (list, tuple)):
+        try:
+            # Try integer list first, because it does not accept floats.
+            return array.array("q", obj)
+        except TypeError:
+            pass
+        try:
+            return array.array("d", obj)
+        except TypeError:
+            return [compress_number_lists_for_json(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: compress_number_lists_for_json(v) for k, v in obj.items()}
+    return obj

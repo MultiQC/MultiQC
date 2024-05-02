@@ -182,22 +182,30 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add section with undetermined barcodes
         if create_undetermined_barplots:
-            self.add_section(
-                name="Undetermined barcodes by lane",
-                anchor="undetermine_by_lane",
-                description="Undetermined barcodes by lanes",
-                plot=bargraph.plot(
-                    self.get_bar_data_from_undetermined(bclconvert_by_lane),
-                    None,
-                    {
-                        "id": "bclconvert_undetermined",
-                        "title": "bclconvert: Undetermined barcodes by lane",
-                        "ylab": "Count",
-                        "use_legend": True,
-                        "tt_suffix": "reads",
-                    },
-                ),
-            )
+            undetermined_data = self.get_bar_data_from_undetermined(bclconvert_by_lane)
+            if undetermined_data:
+                self.add_section(
+                    name="Undetermined barcodes by lane",
+                    anchor="undetermine_by_lane",
+                    description="Undetermined barcodes by lanes",
+                    plot=bargraph.plot(
+                        undetermined_data,
+                        None,
+                        {
+                            "id": "bclconvert_undetermined",
+                            "title": "bclconvert: Undetermined barcodes by lane",
+                            "ylab": "Count",
+                            "use_legend": True,
+                            "tt_suffix": "reads",
+                        },
+                    ),
+                )
+            else:
+                self.add_section(
+                    name="Undetermined barcodes by lane",
+                    anchor="undetermine_by_lane",
+                    content="<div class='alert alert-info'>No undetermined barcodes found</div>",
+                )
 
     @staticmethod
     @functools.lru_cache

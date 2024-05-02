@@ -429,6 +429,10 @@ homer/FreqDistribution:
   fn: "petag.FreqDistribution_1000.txt"
 hops:
   fn: "heatmap_overview_Wevid.json"
+hostile:
+  fn: "*.json"
+  contents: '"reads_removed_proportion"'
+  num_lines: 100
 humid/stats:
   fn: "stats.dat"
   contents: "total: "
