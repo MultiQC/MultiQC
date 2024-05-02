@@ -125,11 +125,10 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     for module in report.modules_output:
         result[module.name]: List[Union[str, Dict[str, str]]] = list()
         for section in module.sections:
-            section_id = section["name"] or section["anchor"]
-            if "plot_id" not in section:
-                logger.warning(f"No plot_id in section {section_id} in module {module.name}")
+            if not section.plot_id:
                 continue
-            plot_id = section["plot_id"]
+            section_id = section.name or section.anchor
+            plot_id = section.plot_id
             if plot_id not in report.plot_by_id:
                 raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
             plot = report.plot_by_id[plot_id]
