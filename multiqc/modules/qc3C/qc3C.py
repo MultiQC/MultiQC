@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)

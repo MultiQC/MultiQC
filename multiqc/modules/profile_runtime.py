@@ -1,10 +1,10 @@
-""" Super Special-Case MultiQC module to produce report section on MultiQC run time """
+"""Super Special-Case MultiQC module to produce report section on MultiQC run time"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
-from multiqc.utils import report
+from multiqc import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)

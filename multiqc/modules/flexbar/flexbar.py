@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from Flexbar """
-
+"""MultiQC module to parse output from Flexbar"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

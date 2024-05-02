@@ -15,7 +15,8 @@ from rich.theme import Theme
 import rich.jupyter
 import rich_click
 
-from multiqc.utils import config, util_functions
+from multiqc import config
+from multiqc.utils import util_functions
 
 
 log_tmp_dir = None

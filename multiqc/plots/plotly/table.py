@@ -4,7 +4,8 @@ from typing import Tuple, Optional, List
 
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 

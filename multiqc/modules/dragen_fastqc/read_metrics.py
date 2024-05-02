@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .util import average_pos_from_size

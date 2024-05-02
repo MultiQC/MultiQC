@@ -1,9 +1,9 @@
-""" MultiQC module to parse output from Anglerfish """
+"""MultiQC module to parse output from Anglerfish"""
 
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
 # Initialise the logger

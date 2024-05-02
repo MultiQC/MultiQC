@@ -17,9 +17,11 @@ from multiqc.plots import table
 
 import jinja2
 
+from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
-from multiqc.utils import config, megaqc, plugin_hooks, report
+from multiqc.core import plugin_hooks
+from multiqc.utils import megaqc
 
 logger = logging.getLogger(__name__)
 
@@ -273,7 +275,7 @@ def _order_modules_and_sections():
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:
-                section_id_order[s["anchor"]] = idx
+                section_id_order[s.anchor] = idx
                 idx += 10
             # Go through each section to be reordered
             for anchor, ss in config.report_section_order.items():
@@ -294,7 +296,7 @@ def _order_modules_and_sections():
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s["anchor"] == i]
+            report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
 
 
 def render_and_export_plots():
@@ -305,16 +307,16 @@ def render_and_export_plots():
         if mod.hidden:
             continue
         for s in mod.sections:
-            plot = report.plot_by_id.get(s.get("plot_id"))
-            if plot:
+            if s.plot_id:
+                plot = report.plot_by_id[s.plot_id]
                 if isinstance(plot, Plot):
-                    s["plot"] = plot.add_to_report(report)
+                    s.plot = plot.add_to_report(report)
                 elif isinstance(plot, str):
-                    s["plot"] = plot
+                    s.plot = plot
                 else:
-                    logger.error(f"Unknown plot type for {mod.name} - {s['name']}")
+                    logger.error(f"Unknown plot type for {mod.name} - {s.name}")
             else:
-                s["plot"] = ""
+                s.plot = ""
 
 
 def _render_general_stats_table() -> None:

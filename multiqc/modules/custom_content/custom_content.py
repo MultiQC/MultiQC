@@ -1,5 +1,4 @@
-""" Core MultiQC module to parse output from custom script output """
-
+"""Core MultiQC module to parse output from custom script output"""
 
 import base64
 import json
@@ -11,10 +10,9 @@ from typing import List, Dict
 
 import yaml
 
-from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc import config, report
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
-from multiqc.utils import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)

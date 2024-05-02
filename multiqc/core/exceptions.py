@@ -1,5 +1,5 @@
 import logging
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger("multiqc")
 

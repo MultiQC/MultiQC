@@ -1,10 +1,9 @@
-""" MultiQC module to parse logs from SnpEff """
-
+"""MultiQC module to parse logs from SnpEff"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger

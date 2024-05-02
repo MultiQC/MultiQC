@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.dragen.utils import Metric, make_headers
 from multiqc.plots import table
 

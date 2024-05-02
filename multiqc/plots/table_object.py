@@ -11,7 +11,7 @@ from typing import List, Tuple, Dict, Optional, Union, Mapping, Callable
 
 from pydantic import BaseModel
 
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
 

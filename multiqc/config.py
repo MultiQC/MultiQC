@@ -1,10 +1,14 @@
-"""MultiQC config module. Holds a single copy of
-config variables to be used across all other modules"""
+"""
+MultiQC config module. Holds a single copy of config variables to be used
+across all other modules.
+
+On import, only loads defaults from config_defaults.yaml. To populate from
+custom parameters, call load_user_config() from the user_config module
+"""
 
 from pathlib import Path
 from typing import List, Dict, Optional, Union
 
-import inspect
 
 # Default logger will be replaced by caller
 import logging
@@ -17,8 +21,7 @@ import importlib_metadata
 import yaml
 import pyaml_env
 
-import multiqc
-from multiqc.utils.util_functions import strtobool
+from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +30,11 @@ version = importlib_metadata.version("multiqc")
 short_version = version
 git_hash = None
 git_hash_short = None
-script_path = str(Path(__file__).parent)  # dynamically used by util_functions.multiqc_dump_json()
+
+MODULE_DIR = Path(__file__).parent.absolute()
+script_path = str(MODULE_DIR)  # dynamically used by report.multiqc_dump_json()
+REPO_DIR = MODULE_DIR.parent.absolute()
+
 git_root = None
 try:
     git_root = subprocess.check_output(
@@ -47,9 +54,6 @@ try:
         version = f"{version} ({git_hash_short})"
 except Exception:
     pass
-
-# Constants
-MULTIQC_DIR = os.path.dirname(os.path.realpath(inspect.getfile(multiqc)))
 
 # MultiQC Defaults
 # Declaring variables for static typing
@@ -163,38 +167,73 @@ fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Dict[str, Dict]]
 module_order: List[Union[str, Dict]]
+session_user_config_files: List[Path] = []
 
 
-def load_from_defaults():
-    # Populating the variables above from the default MultiQC config
-    config_defaults_path = os.path.join(MULTIQC_DIR, "utils", "config_defaults.yaml")
-    with open(config_defaults_path) as f:
+def load_defaults():
+    """
+    Load config from defaults. Happens before even logger is created
+    """
+    config_defaults_path = MODULE_DIR / "config_defaults.yaml"
+    with config_defaults_path.open() as f:
         _default_config = yaml.safe_load(f)
     for c, v in _default_config.items():
         globals()[c] = v
 
 
-load_from_defaults()
-
-
-# Keeping track of loaded files to support re-initialization
-user_config_files: List[Path] = []
+load_defaults()
 
 
 def reset():
     """Reset the interactive session"""
-    load_from_defaults()
-    global user_config_files
-    user_config_files = []
+    global session_user_config_files
+    session_user_config_files = []
+    load_defaults()
+
+
+def load_user_files():
+    """
+    Overwrite config defaults with user config files.
+
+    Not called automatically because needs the logger to be initiated.
+
+    Note that config files are loaded in a specific order and values can overwrite each other.
+    """
+
+    # Load and parse installation config file if we find it
+    load_config_file(REPO_DIR / "multiqc_config.yaml")
+
+    # Load and parse a config file in $XDG_CONFIG_HOME
+    # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+    load_config_file(
+        os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
+    )
+
+    # Load and parse a user config file if we find it
+    load_config_file(os.path.expanduser("~/.multiqc_config.yaml"))
+
+    # Load and parse a config file path set in an ENV variable if we find it
+    if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
+        load_config_file(os.environ.get("MULTIQC_CONFIG_PATH"))
+
+    # Load separate config entries from MULTIQC_* environment variables
+    _add_config(_env_vars_config())
+
+    # Load and parse a config file in this working directory if we find it
+    load_config_file("multiqc_config.yaml")
+
+    # Custom config files passed with -c or interactive.load_config()
+    for path in session_user_config_files:
+        load_config_file(str(path))
 
 
 # Module filename search patterns
-searchp_fn = os.path.join(MULTIQC_DIR, "utils", "search_patterns.yaml")
+searchp_fn = os.path.join(MODULE_DIR, "search_patterns.yaml")
 with open(searchp_fn) as f:
     sp = yaml.safe_load(f)
 
 # Other defaults that can't be set in YAML
-modules_dir = os.path.join(MULTIQC_DIR, "modules")
+modules_dir = os.path.join(MODULE_DIR, "modules")
 creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
 working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
@@ -247,37 +286,7 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
     sys.exit(1)
 
 
-# Functions to load user config files. These are called by the main MultiQC script.
-# Note that config files are loaded in a specific order and values can overwrite each other.
-def load_userconfig():
-    """Overwrite config defaults with user config files"""
-
-    # Load and parse installation config file if we find it
-    load_config(os.path.join(os.path.dirname(MULTIQC_DIR), "multiqc_config.yaml"))
-
-    # Load and parse a config file in $XDG_CONFIG_HOME
-    # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    load_config(os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml"))
-
-    # Load and parse a user config file if we find it
-    load_config(os.path.expanduser("~/.multiqc_config.yaml"))
-
-    # Load and parse a config file path set in an ENV variable if we find it
-    if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        load_config(os.environ.get("MULTIQC_CONFIG_PATH"))
-
-    # Load separate config entries from MULTIQC_* environment variables
-    _add_config(_env_vars_config())
-
-    # Load and parse a config file in this working directory if we find it
-    load_config("multiqc_config.yaml")
-
-    # Custom command line config
-    for p in user_config_files:
-        load_config(str(p))
-
-
-def load_config(yaml_config_path: str):
+def load_config_file(yaml_config_path: Union[str, Path]):
     """
     Load and parse a config file if we find it
     """
@@ -300,7 +309,7 @@ def load_config(yaml_config_path: str):
             raise
 
 
-def _cl_config(cl_config):
+def load_cl_config(cl_config):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.safe_load(clc_str)
@@ -497,18 +506,3 @@ nondefault_config = dict()
 def update(u):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
-
-
-def update_dict(target: Dict, source: Dict, none_only=False):
-    """Recursively updates nested dict d from nested dict u"""
-    assert target is not None, source is not None
-    for key, val in source.items():
-        if isinstance(val, dict):
-            target[key] = update_dict(target.get(key, {}), val)
-        else:
-            if not none_only or target.get(key) is None:
-                if isinstance(val, list):
-                    target[key] = val.copy()
-                else:
-                    target[key] = val
-    return target

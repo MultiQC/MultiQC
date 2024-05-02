@@ -157,21 +157,7 @@ The old syntax (supplying a `dict` instead of a string to the function without a
 
 #### Adding report sections
 
-Until now, report sections were added by creating a list called `self.sections` and adding to it. If you only had a single section, the routine was to instead append to the `self.intro` string.
-
-These methods have been depreciated in favour of a new function called `self.add_section()`. For example, instead of the previous:
-
-```python
-self.sections = list()
-self.sections.append({
-  'name': 'My Section',
-  'anchor': 'my-html-id',
-  'content': '<p>Description of what this plot shows.</p>' +
-             linegraph.plot(data, pconfig)
-})
-```
-
-the syntax is now:
+Report sections can be added by the method called `self.add_section()`. For example:
 
 ```python
 self.add_section(
@@ -183,9 +169,7 @@ self.add_section(
 )
 ```
 
-Note that content should now be split up into three new keys: `description`, `helptext` and `plot`. This will allow consistent formatting and future developments with improved module help text. Text is wrapped in `<p>` tags by the function, so these are no longer needed. Raw content can still be provided in a `content` string as before if required.
-
-All fields are optional. If `name` is omitted then the end result will be the same as previously done with `self.intro += content`.
+Text passed as `description` and `helptext` is wrapped in `<p>` tags, and additional raw content can be provided with a `content` or `content_before_plot` string if required.
 
 #### Updated number formatting
 

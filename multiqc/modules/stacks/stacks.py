@@ -1,11 +1,10 @@
-""" MultiQC module to parse Stacks 2 denovo output"""
-
+"""MultiQC module to parse Stacks 2 denovo output"""
 
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
 # Initialise the logger

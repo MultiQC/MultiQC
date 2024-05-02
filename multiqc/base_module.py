@@ -1,5 +1,6 @@
 """MultiQC modules base class, contains helper functions"""
 
+import dataclasses
 from typing import List, Union, Optional, Dict, Any
 
 import fnmatch
@@ -15,13 +16,28 @@ from collections import defaultdict
 import markdown
 
 from multiqc.plots.plotly.plot import Plot
-from multiqc.utils import config, report, software_versions
+from multiqc import config, report
+from multiqc.core import software_versions
 
 logger = logging.getLogger(__name__)
 
 
 class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
+
+
+@dataclasses.dataclass
+class Section:
+    name: str
+    anchor: str
+    description: str
+    comment: str = ""
+    helptext: str = ""
+    content_before_plot: str = ""
+    content: str = ""
+    plot: str = ""
+    print_section: bool = True
+    plot_id: Optional[str] = None
 
 
 class BaseMultiqcModule:
@@ -102,11 +118,14 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
 
-        self.sections = list()
+        self.sections: List[Section] = []
 
         self.hidden = False
 
         self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+
+        self.css: Dict[str, str] = dict()
+        self.js: Dict[str, str] = dict()
 
     @property
     def saved_raw_data(self):
@@ -246,7 +265,7 @@ class BaseMultiqcModule:
         comment="",
         helptext="",
         content_before_plot="",
-        plot: Optional[Plot] = None,
+        plot: Optional[Union[Plot, str]] = None,
         content="",
         autoformat=True,
         autoformat_type="markdown",
@@ -298,23 +317,27 @@ class BaseMultiqcModule:
         comment = comment.strip()
         helptext = helptext.strip()
 
-        # self.sections is passed into Jinja template:
-        self.sections.append(
-            {
-                "name": name,
-                "anchor": anchor,
-                "description": description,
-                "comment": comment,
-                "helptext": helptext,
-                "content_before_plot": content_before_plot,
-                "content": content,
-                "print_section": any([description, comment, helptext, content_before_plot, plot, content]),
-            }
+        section = Section(
+            name=name,
+            anchor=anchor,
+            description=description,
+            comment=comment,
+            helptext=helptext,
+            content_before_plot=content_before_plot,
+            content=content,
+            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
         )
+
         if plot is not None:
-            self.sections[-1]["plot_id"] = plot.id
-            # separately keeping track of Plot objects to be rendered further
-            report.plot_by_id[plot.id] = plot
+            if isinstance(plot, Plot):
+                section.plot_id = plot.id
+                # separately keeping track of Plot objects to be rendered further
+                report.plot_by_id[plot.id] = plot
+            elif isinstance(plot, str):
+                section.plot = plot
+
+        # self.sections is passed into Jinja template:
+        self.sections.append(section)
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:

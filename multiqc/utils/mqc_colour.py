@@ -13,7 +13,7 @@ from typing import Tuple
 import numpy as np
 import spectra
 
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
 

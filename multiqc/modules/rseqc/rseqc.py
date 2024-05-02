@@ -1,9 +1,9 @@
-""" MultiQC module to parse output from RSeQC """
+"""MultiQC module to parse output from RSeQC"""
 
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)

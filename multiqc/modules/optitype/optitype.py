@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from optitype """
-
+"""MultiQC module to parse output from optitype"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

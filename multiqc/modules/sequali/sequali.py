@@ -7,7 +7,7 @@ from collections import defaultdict
 from typing import Dict, Any
 
 import multiqc
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ import numpy as np
 from plotly import graph_objects as go
 
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import report
+from multiqc import report
 
 logger = logging.getLogger(__name__)
 

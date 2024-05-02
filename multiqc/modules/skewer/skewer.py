@@ -1,10 +1,9 @@
-""" MultiQC module to parse logs from Skewer """
-
+"""MultiQC module to parse logs from Skewer"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

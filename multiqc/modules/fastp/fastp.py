@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Fastp """
-
+"""MultiQC module to parse output from Fastp"""
 
 import json
 import logging
@@ -7,7 +6,7 @@ import re
 from typing import Dict, Optional, Tuple
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger

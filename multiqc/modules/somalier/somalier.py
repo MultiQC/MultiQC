@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from somalier """
-
+"""MultiQC module to parse output from somalier"""
 
 import csv
 import logging
@@ -9,7 +8,7 @@ from math import isinf, isnan
 
 import spectra
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
 

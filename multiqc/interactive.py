@@ -5,9 +5,14 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional
 
-from multiqc import core
-from multiqc.core import RunError
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc import report, config
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.init_config import update_config
+from multiqc.core.file_search import file_search
+from multiqc.core.exec_modules import exec_modules
+from multiqc.core.write_results import write_results
+from multiqc.core.exceptions import RunError
+from multiqc.core.copy_function_signature import copy_callable_signature
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
@@ -15,8 +20,6 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.utils import report, config
-from multiqc.utils.copy_function_signature import copy_callable_signature
 
 # Set up logging
 start_execution_time = time.time()
@@ -27,35 +30,28 @@ def load_config(config_file: str):
     """
     Load config on top of the current config from a MultiQC config file.
     """
-    core.init_config()
+    update_config()
 
     path = Path(config_file)
     if not path.exists():
         raise ValueError(f"Config file '{config_file}' not found")
 
-    config.user_config_files.append(path.absolute())
-    config.load_config(config_file)
+    config.session_user_config_files.append(path.absolute())
+    config.load_config_file(config_file)
 
 
-@copy_callable_signature(core.init_config)
+@copy_callable_signature(update_config)
 def parse_logs(analysis_dir: Union[str, List[str]], **kwargs):
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
-    core.init_config(analysis_dir, **kwargs)
-
-    # We want to keep report session, so we can interactively append modules to the report
-    # if not report.initialized:
-    #     report.reset()
+    update_config(analysis_dir, **kwargs)
 
     report.reset_file_search()
-
     try:
-        searched_modules = core.file_search()
-
-        core.exec_modules(searched_modules, clean_up=False)
-
+        searched_modules = file_search()
+        exec_modules(searched_modules, clean_up=False)
     except RunError as e:
         if e.message:
             logger.critical(e.message)
@@ -177,12 +173,12 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    sec = next((s for s in mod.sections if (s["name"] and s["name"] == section) or s["anchor"] == section), None)
+    sec = next((s for s in mod.sections if (s.name and s.name == section) or s.anchor == section), None)
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
-    if sec.get("plot_id"):
-        plot = report.plot_by_id[sec["plot_id"]]
+    if sec.plot_id:
+        plot = report.plot_by_id[sec.plot_id]
         ds_id = 0
         if dataset:
             for i, d in enumerate(plot.datasets):
@@ -190,10 +186,10 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
                     ds_id = i
                     break
         return plot.show(dataset_id=ds_id, **kwargs)
-    elif sec.get("content"):
+    elif sec.content:
         from IPython.core.display import HTML
 
-        return HTML(sec["content"])
+        return HTML(sec.content)
 
     if dataset:
         raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
@@ -327,19 +323,19 @@ def add_custom_content_section(
     report.modules_output.append(module)
 
 
-@copy_callable_signature(core.init_config)
+@copy_callable_signature(update_config)
 def write_report(**kwargs):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
-    core.init_config(**kwargs)
+    update_config(**kwargs)
 
     if len(report.modules_output) == 0:
         logger.error("No analysis results found to make a report")
         return
 
     try:
-        core.write_results()
+        write_results()
 
     except RunError as e:
         if e.message:

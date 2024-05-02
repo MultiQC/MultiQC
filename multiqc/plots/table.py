@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Optional
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot
-from multiqc.utils import config
+from multiqc import config
 from multiqc.plots.plotly import table
 
 logger = logging.getLogger(__name__)

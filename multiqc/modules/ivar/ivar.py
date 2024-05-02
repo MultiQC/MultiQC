@@ -1,11 +1,10 @@
-""" MultiQC module to parse output files from iVar """
-
+"""MultiQC module to parse output files from iVar"""
 
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 
 # Initialise the logger

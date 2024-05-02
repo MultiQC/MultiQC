@@ -1,10 +1,9 @@
 """MultiQC module to parse output from OUS variant calling pipeline"""
 
-
 import csv
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)

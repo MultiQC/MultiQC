@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from NanoStat """
-
+"""MultiQC module to parse output from NanoStat"""
 
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 

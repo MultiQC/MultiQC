@@ -13,7 +13,8 @@ import plotly.graph_objects as go
 from pydantic import BaseModel, field_validator, field_serializer
 
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.utils import mqc_colour, config, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 

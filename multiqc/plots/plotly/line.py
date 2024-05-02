@@ -7,8 +7,8 @@ import math
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import config, report
-from multiqc.utils.config import update_dict
+from multiqc import config, report
+from multiqc.utils.util_functions import update_dict
 
 logger = logging.getLogger(__name__)
 

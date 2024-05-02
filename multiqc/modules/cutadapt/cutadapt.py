@@ -1,4 +1,5 @@
-""" MultiQC module to parse output from Cutadapt """
+"""MultiQC module to parse output from Cutadapt"""
+
 import functools
 import logging
 import os
@@ -8,7 +9,7 @@ import json
 
 from packaging import version
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger

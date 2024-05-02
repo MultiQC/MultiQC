@@ -24,11 +24,14 @@ import rich.progress
 import yaml
 from tqdm import tqdm
 
-from multiqc.utils import log
+from multiqc import config
+from multiqc.core import init_log
+from multiqc.utils.util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
+from multiqc.plots.plotly.plot import Plot
 
-from . import config
-from .util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
-from ..plots.plotly.plot import Plot
+# This does not cause circular imports because BaseMultiqcModule is used only in
+# quoted type hints, and quoted type hints are lazily evaluated:
+from multiqc.base_module import BaseMultiqcModule
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +42,7 @@ tmp_dir: Optional[str] = None
 # Uninitialised global variables for static typing
 multiqc_command: str
 analysis_files: List[str]  # Input files to search
-modules_output: List  # List of BaseMultiqcModule objects
+modules_output: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
@@ -552,7 +555,7 @@ def search_files(run_module_names):
             "[progress.percentage]{task.percentage:>3.0f}%",
             "[green]{task.completed}/{task.total}",
             "[dim]{task.fields[s_fn]}[/]",
-            console=log.rich_console,
+            console=init_log.rich_console,
             disable=disable_progress,
         )
         with progress_obj as progress:

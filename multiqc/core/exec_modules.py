@@ -9,9 +9,10 @@ from typing import Dict, Union, Callable, List
 import rich
 from rich.syntax import Syntax
 
+from multiqc import config, report
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core.exceptions import RunError
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.utils import config, report, plugin_hooks, software_versions
+from multiqc.core import plugin_hooks, software_versions
 
 logger = logging.getLogger(__name__)
 

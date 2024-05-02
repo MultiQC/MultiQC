@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from DamageProfiler """
-
+"""MultiQC module to parse output from DamageProfiler"""
 
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

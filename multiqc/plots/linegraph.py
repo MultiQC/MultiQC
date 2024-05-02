@@ -5,7 +5,8 @@ import logging
 import re
 from typing import List, Dict, Union, Tuple
 
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
 logger = logging.getLogger(__name__)

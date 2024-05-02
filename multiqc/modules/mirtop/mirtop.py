@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from mirtop"""
-
+"""MultiQC module to parse output from mirtop"""
 
 import json
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from multiqc.core.exceptions import RunError
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
 

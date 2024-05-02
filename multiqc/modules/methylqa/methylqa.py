@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from methylQA """
-
+"""MultiQC module to parse output from methylQA"""
 
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

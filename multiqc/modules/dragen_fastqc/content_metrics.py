@@ -4,9 +4,9 @@ import json
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
-from multiqc.utils import report
+from multiqc import report
 
 from .util import average_from_range, average_pos_from_metric
 

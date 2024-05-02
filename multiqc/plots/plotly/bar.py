@@ -16,7 +16,7 @@ from multiqc.plots.plotly.plot import (
     Plot,
     split_long_string,
 )
-from multiqc.utils import report, config
+from multiqc import report, config
 
 logger = logging.getLogger(__name__)
 

@@ -6,8 +6,8 @@ import inspect
 import logging
 import re
 
+from multiqc import config, report
 from multiqc.plots.plotly.box import BoxT
-from multiqc.utils import config, report
 from multiqc.plots.plotly import box
 
 logger = logging.getLogger(__name__)

@@ -1,22 +1,16 @@
 import logging
 import os
-import platform
-import re
 import sys
 from pathlib import Path
 
-import requests
-from packaging import version
-
+from multiqc import report, config
 from multiqc.core.exceptions import RunError
-from multiqc.utils import report, config, plugin_hooks, strict_helpers
-from multiqc.utils.util_functions import strtobool
-from multiqc.utils import log
+from multiqc.core import init_log, plugin_hooks, strict_helpers
 
 logger = logging.getLogger(__name__)
 
 
-def init_config(
+def update_config(
     analysis_dir=None,
     file_list=None,
     prepend_dirs=None,
@@ -62,81 +56,36 @@ def init_config(
     **kwargs,
 ):
     """
-    Initialize or re-initialize log and config.
+    Update config and logger from parameters.
 
-    Will reload config from defaults and from the previously added user config files, and then update from
-    the non-None arguments above.
+    Will reload config from defaults and from the previously added user config files,
+    and then update from the non-None arguments above.
     """
-    config.load_from_defaults()
 
+    # Reload from defaults
+    config.load_defaults()
+
+    # Set up logger
     if quiet is not None:
         config.quiet = quiet
     if no_ansi is not None:
         config.no_ansi = no_ansi
     if verbose is not None:
         config.verbose = verbose > 0
-    log.init_log()
+    init_log.init_log()
     logger.debug(f"This is MultiQC v{config.version}")
+    logger.debug("Running Python " + sys.version.replace("\n", " "))
 
     plugin_hooks.mqc_trigger("before_config")
+
     # Set up user configs (they are kept for the whole interactive session)
     for path in config_files:
-        path = Path(path).absolute()
-        if path not in config.user_config_files:
-            config.user_config_files.append(path)
-    config.load_userconfig()
+        if path not in config.session_user_config_files:
+            config.session_user_config_files.append(Path(path).absolute())
 
     # Command-line config YAML
     if len(cl_config) > 0:
-        config._cl_config(cl_config)
-    plugin_hooks.mqc_trigger("config_loaded")
-
-    # Log the command used to launch MultiQC
-    report.multiqc_command = " ".join(sys.argv)
-    logger.debug(f"Command used: {report.multiqc_command}")
-
-    # Check that we're running the latest version of MultiQC
-    if config.no_version_check is not True:
-        try:
-            # Fetch the version info from the API
-            meta = {
-                "version_multiqc": config.short_version,
-                "version_python": platform.python_version(),
-                "operating_system": platform.system(),
-                "is_docker": os.path.exists("/.dockerenv"),
-                "is_singularity": os.path.exists("/.singularity.d"),
-                "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
-                "is_ci": strtobool(os.getenv("CI", False)),
-            }
-            wait_seconds = 2
-            try:
-                r = requests.get(config.version_check_url, params=meta, timeout=wait_seconds)
-            except requests.exceptions.Timeout as e:
-                logger.debug(
-                    f"Timed out after waiting for {wait_seconds}s for multiqc.info to check latest version: {e}"
-                )
-            except requests.exceptions.RequestException as e:
-                logger.debug(f"Could not connect to multiqc.info for version check: {e}")
-            else:
-                release_info = r.json()
-                # Broadcast log messages if found
-                for msg in release_info.get("broadcast_messages", []):
-                    if msg.get("message"):
-                        level = msg.get("level")
-                        if level not in ["debug", "info", "warning", "error", "critical"]:
-                            level = "info"
-                        getattr(logger, level)(msg["message"])
-                # Available update log if newer
-                remove_version = version.parse(re.sub(r"[^0-9.]", "", release_info["latest_release"]["version"]))
-                this_version = version.parse(re.sub(r"[^0-9.]", "", config.short_version))
-                if remove_version > this_version:
-                    logger.warning(f"MultiQC Version {release_info['latest_release']['version']} now available!")
-                logger.debug(
-                    f"Latest MultiQC version is {release_info['latest_release']['version']}, "
-                    f"released {release_info['latest_release']['release_date']}"
-                )
-        except Exception as e:
-            logger.debug(f"Could not connect to multiqc.info for version check: {e}")
+        config.load_cl_config(cl_config)
 
     # Set up key variables (overwrite config vars from command line)
     if template is not None:
@@ -250,16 +199,5 @@ def init_config(
 
     config.kwargs = kwargs  # Plugin command line options
 
+    plugin_hooks.mqc_trigger("config_loaded")
     plugin_hooks.mqc_trigger("execution_start")
-
-    logger.debug(f"Working dir : {os.getcwd()}")
-    if config.make_pdf:
-        logger.info("--pdf specified. Using non-interactive HTML template.")
-    logger.debug(f"Template    : {config.template}")
-    if config.strict:
-        logger.info(
-            "Strict mode specified. Will exit early if a module or a template crashed, and will "
-            "give warnings if anything is not optimally configured in a module or a template."
-        )
-
-    logger.debug("Running Python " + sys.version.replace("\n", " "))

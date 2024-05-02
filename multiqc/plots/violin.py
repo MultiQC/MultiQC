@@ -1,8 +1,8 @@
 import logging
 from typing import List, Dict, Optional, Union
 
+from multiqc import config
 from multiqc.plots import table_object
-from multiqc.utils import config
 from multiqc.plots.plotly import violin
 
 logger = logging.getLogger(__name__)

@@ -7,7 +7,7 @@ import os
 
 import yaml
 
-from multiqc.utils import config, report
+from multiqc import report, config
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def check_mods_docs_readme():
 
     docs_mods = []
 
-    docs_dir = os.path.join(os.path.dirname(config.MULTIQC_DIR), "docs", "modules")
+    docs_dir = os.path.join(config.REPO_DIR, "docs", "modules")
     if not os.path.isdir(docs_dir) and os.environ.get("GITHUB_WORKSPACE"):
         docs_dir = os.path.join(os.environ.get("GITHUB_WORKSPACE"), "docs", "modules")
     if not os.path.isdir(docs_dir):

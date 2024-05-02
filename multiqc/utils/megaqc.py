@@ -7,8 +7,8 @@ import logging
 
 import requests
 
-from . import config
-from .util_functions import dump_json
+from multiqc import config
+from multiqc.utils.util_functions import dump_json
 
 log = logging.getLogger(__name__)
 

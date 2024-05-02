@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from BISCUITqc """
-
+"""MultiQC module to parse output from BISCUITqc"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, violin
 
 # Initialize the logger

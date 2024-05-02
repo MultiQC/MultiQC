@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
-from multiqc.utils import report
+from multiqc import report
 
 logger = logging.getLogger(__name__)
 

@@ -13,10 +13,15 @@ import time
 
 import rich_click as click
 
-from multiqc.utils import config, plugin_hooks, report, util_functions, log
-from multiqc.utils.copy_function_signature import copy_callable_signature
-from multiqc.core import RunResult, RunError
-from multiqc import core
+from multiqc import config, report
+from multiqc.core import plugin_hooks, init_log
+from multiqc.core.exec_modules import exec_modules
+from multiqc.core.file_search import file_search
+from multiqc.core.init_config import update_config
+from multiqc.core.write_results import write_results
+from multiqc.core.exceptions import RunResult, RunError
+from multiqc.core.copy_function_signature import copy_callable_signature
+from multiqc.utils import util_functions
 
 # Set up logging
 start_execution_time = time.time()
@@ -424,7 +429,7 @@ def run_cli(**kwargs):
     sys.exit(multiqc_run.sys_exit_code)
 
 
-@copy_callable_signature(core.init_config)
+@copy_callable_signature(update_config)
 def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
@@ -441,16 +446,26 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    core.init_config(analysis_dir=analysis_dir, **kwargs)
+    update_config(analysis_dir=analysis_dir, **kwargs)
 
-    report.__initialise()
+    logger.debug(f"Working dir : {os.getcwd()}")
+    if config.make_pdf:
+        logger.info("--pdf specified. Using non-interactive HTML template.")
+    logger.debug(f"Template    : {config.template}")
+    if config.strict:
+        logger.info(
+            "Strict mode specified. Will exit early if a module or a template crashed, and will "
+            "give warnings if anything is not optimally configured in a module or a template."
+        )
+    report.multiqc_command = " ".join(sys.argv)
+    logger.debug(f"Command used: {report.multiqc_command}")
 
     try:
-        mod_dicts_in_order = core.file_search()
+        mod_dicts_in_order = file_search()
 
-        core.exec_modules(mod_dicts_in_order)
+        exec_modules(mod_dicts_in_order)
 
-        core.write_results()
+        write_results()
 
     except RunError as e:
         if e.message:
@@ -470,7 +485,7 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
 
     if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:
-            log.rich_console.print(
+            init_log.rich_console.print(
                 "[blue]|           multiqc[/] | "
                 "Flat-image plots used. Disable with '--interactive'. "
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
@@ -485,6 +500,6 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
 
     if clean_up:
         # Move the log file into the data directory
-        log.move_tmp_log()
+        init_log.move_tmp_log()
 
     return RunResult(sys_exit_code=sys_exit_code)

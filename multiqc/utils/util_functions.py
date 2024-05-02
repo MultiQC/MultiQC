@@ -1,5 +1,7 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+from typing import Dict
+
 import array
 import json
 import logging
@@ -240,3 +242,18 @@ def compress_number_lists_for_json(obj):
     if isinstance(obj, dict):
         return {k: compress_number_lists_for_json(v) for k, v in obj.items()}
     return obj
+
+
+def update_dict(target: Dict, source: Dict, none_only=False):
+    """Recursively updates nested dict d from nested dict u"""
+    assert target is not None, source is not None
+    for key, val in source.items():
+        if isinstance(val, dict):
+            target[key] = update_dict(target.get(key, {}), val)
+        else:
+            if not none_only or target.get(key) is None:
+                if isinstance(val, list):
+                    target[key] = val.copy()
+                else:
+                    target[key] = val
+    return target

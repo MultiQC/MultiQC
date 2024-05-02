@@ -3,7 +3,7 @@
 import logging
 from typing import Union
 
-from multiqc.utils import config
+from multiqc import config
 from multiqc.plots.plotly import heatmap
 
 logger = logging.getLogger(__name__)
