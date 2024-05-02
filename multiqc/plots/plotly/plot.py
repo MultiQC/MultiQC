@@ -15,6 +15,7 @@ import plotly.graph_objects as go
 
 from multiqc.plots.plotly import check_plotly_version
 from multiqc.utils import mqc_colour, config, report
+from multiqc.utils.util_functions import compress_number_lists_for_json
 
 logger = logging.getLogger(__name__)
 
@@ -395,18 +396,20 @@ class Plot(ABC):
 
     def dump_for_javascript(self) -> Dict:
         """Serialise the plot data to pick up in plotly-js"""
-        return {
-            "id": self.id,
-            "layout": self.layout.to_plotly_json(),
-            "datasets": [d.dump_for_javascript() for d in self.datasets],
-            "plot_type": self.plot_type.value,
-            "pct_axis_update": self.pct_axis_update,
-            "axis_controlled_by_switches": self._axis_controlled_by_switches,
-            "p_active": self.p_active,
-            "l_active": self.l_active,
-            "square": self.pconfig.get("square"),
-            "config": self.pconfig,  # for megaqc
-        }
+        return compress_number_lists_for_json(
+            {
+                "id": self.id,
+                "layout": self.layout.to_plotly_json(),
+                "datasets": [d.dump_for_javascript() for d in self.datasets],
+                "plot_type": self.plot_type.value,
+                "pct_axis_update": self.pct_axis_update,
+                "axis_controlled_by_switches": self._axis_controlled_by_switches,
+                "p_active": self.p_active,
+                "l_active": self.l_active,
+                "square": self.pconfig.get("square"),
+                "config": self.pconfig,  # for megaqc
+            }
+        )
 
     @abstractmethod
     def save_data_file(self, data: BaseDataset) -> None:
