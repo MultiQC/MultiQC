@@ -1,9 +1,10 @@
-""" MultiQC report module. Holds the output from each
+"""MultiQC report module. Holds the output from each
 module. Is available to subsequent modules. Contains
-helper functions to generate markup for report. """
+helper functions to generate markup for report."""
 
-
+import base64
 import fnmatch
+import gzip
 import inspect
 import io
 import json
@@ -13,16 +14,15 @@ import re
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple
 
 import rich
 import rich.progress
 import yaml
 
-from multiqc.utils import lzstring
 
 from . import config
-from .util_functions import replace_defaultdicts
+from .util_functions import replace_defaultdicts, dump_json
 
 logger = config.logger
 
@@ -106,6 +106,159 @@ def init():
     files = dict()
     # Map of Software tools to a set of unique version strings
     software_versions = defaultdict(lambda: defaultdict(list))
+
+
+def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
+    """
+    Iterate over fileblocks that only contain complete lines. The last
+    character of each block is always '\n' unless it is the last line and no
+    terminating newline was present. No truncated lines are present in the
+    blocks, allowing for searching per-line-matching contents.
+    A tuple with the number of newlines and the block is yielded on each
+    iteration.
+
+    The default block_size is 4096, which is equal to the filesystem block
+    size.
+    """
+    remainder = ""
+    while True:
+        block = fp.read(block_size)
+        if block == "":  # EOF
+            # The last line may not have a terminating newline character
+            if remainder:
+                yield 1, remainder
+            return
+        number_of_newlines = block.count("\n")
+        if number_of_newlines == 0:
+            remainder += block
+            continue
+        block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
+        yield number_of_newlines, remainder + block[:block_end]
+        # Store the remainder for the next iteration.
+        remainder = block[block_end:]
+
+
+class SearchFile:
+    """
+    Wrap file handler and provide a lazy line block iterator on it with caching.
+
+    The class is a context manager with context being an open file handler:
+
+    The `self.line_block_iterator()` method is a distinct context manager over
+    the file line blocks, that can be called multiple times for the same open file handler
+    due to line block caching.
+
+    with SearchFile(fn, root):
+        for line_count, block in f.line_block_iterator():
+            # process block
+
+        # start again, this time will read from cache:
+        for line_count, block in f.line_block_iterator():
+            # process block again
+    """
+
+    def __init__(self, filename: str, root: str):
+        self.filename = filename
+        self.root = root
+        self.path: str = os.path.join(root, filename)
+        self._filehandle: Optional[TextIO] = None
+        self._iterator: Optional[Iterator[Tuple[int, str]]] = None
+        self._blocks: List[Tuple[int, str]] = []  # cache of read blocks with line count found in each block
+        self._filesize: Optional[int] = None
+
+    @property
+    def filesize(self) -> Optional[int]:
+        if self._filesize is None:
+            try:
+                self._filesize = os.path.getsize(self.path)
+            except (IOError, OSError, ValueError, UnicodeDecodeError):
+                logger.debug(f"Couldn't read file when checking filesize: {self.filename}")
+                self._filesize = None
+        return self._filesize
+
+    def line_block_iterator(self) -> Iterator[Tuple[int, str]]:
+        """
+        Optimized file line iterator.
+
+        Yields a tuple with the number of newlines and a chunk.
+
+        Can be called multiple times for the same open file handler.
+
+        Serves as a replacement for f.readlines() that is:
+        - lazy
+        - caches 4kb+ blocks
+        - returns multiple lines concatenated with '\n' if found in block
+
+        This way, we can compare whole blocks versus the search patterns, instead of individual lines,
+        and each comparison comes with a lot of Python runtime overhead.
+
+        First loops over the cache `self._blocks`, then tries to read more blocks from the file handler.
+        """
+        for count_and_block_tuple in self._blocks:
+            yield count_and_block_tuple
+        if self._filehandle is None:
+            try:
+                self._filehandle = io.open(self.path, "rt", encoding="utf-8")
+            except Exception as e:
+                if config.report_readerrors:
+                    logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+            self._iterator = file_line_block_iterator(self._filehandle)
+        try:
+            for count_and_block_tuple in self._iterator:
+                self._blocks.append(count_and_block_tuple)
+                yield count_and_block_tuple
+
+        except UnicodeDecodeError as e:
+            if config.report_readerrors:
+                logger.debug(
+                    f"Couldn't read file as a utf-8 text when looking for output: {self.path}, {e}. "
+                    f"Usually because it's a binary file. But sometimes there are single non-unicode "
+                    f"characters, so attempting reading while skipping such characters."
+                )
+        except Exception as e:
+            if config.report_readerrors:
+                logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+            raise
+        else:
+            # When no lines are parsed, self.content_lines should be empty
+            if not self._blocks and config.report_readerrors:
+                logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
+            return  # No errors.
+        self._filehandle.close()
+        self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
+        self._iterator = file_line_block_iterator(self._filehandle)
+        try:
+            if self._blocks:
+                # Skip all the lines that were already read
+                for _ in self._blocks:
+                    next(self._iterator)
+            for count_and_block_tuple in self._iterator:
+                self._blocks.append(count_and_block_tuple)
+                yield count_and_block_tuple
+        except Exception as e:
+            if config.report_readerrors:
+                logger.debug(f"Still couldn't read the file, skipping: {self.path}, {e}")
+
+        if not self._blocks and config.report_readerrors:
+            logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
+
+    def close(self):
+        if self._filehandle:
+            self._filehandle.close()
+        self._iterator = None
+        self._filehandle = None
+
+    def closed(self):
+        return bool(self._filehandle)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    def to_dict(self):
+        return {"fn": self.filename, "root": self.root}
 
 
 def is_searching_in_source_dir(path: Path) -> bool:
@@ -220,6 +373,28 @@ def get_filelist(run_module_names):
         else:
             spatterns[0][key] = sps
 
+    def _sort_by_key(sps: Dict[str, List[Dict[str, str]]], key: str) -> Dict:
+        """Sort search patterns dict by key like num_lines or max_filesize."""
+
+        def _sort_key(kv) -> int:
+            _, sps = kv
+            # Since modules can have multiple search patterns, we sort by the slowest one:
+            return max([sp.get(key, 0) for sp in sps])
+
+        return dict(sorted(sps.items(), key=_sort_key))
+
+    # Sort patterns for faster access. File searches with fewer lines or
+    # smaller file sizes go first.
+    sorted_spatterns = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns[0] = spatterns[0]  # Only filename matching
+    sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
+    sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
+    sorted_spatterns[3] = spatterns[3]
+    sorted_spatterns[4] = _sort_by_key(spatterns[4], "num_lines")
+    sorted_spatterns[5] = _sort_by_key(spatterns[5], "max_filesize")
+    sorted_spatterns[6] = spatterns[6]
+    spatterns = sorted_spatterns
+
     if len(ignored_patterns) > 0:
         logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
 
@@ -233,7 +408,7 @@ def get_filelist(run_module_names):
         directories. Runs through all search patterns and returns True
         if a match is found.
         """
-        f = {"fn": fn, "root": root}
+        f = SearchFile(fn, root)
 
         # Check that this is a file and not a pipe or anything weird
         if not os.path.isfile(os.path.join(root, fn)):
@@ -246,19 +421,13 @@ def get_filelist(run_module_names):
             file_search_stats["skipped_ignore_pattern"] += 1
             return False
 
-        # Limit search to small files, to avoid 30GB FastQ files etc.
-        try:
-            f["filesize"] = os.path.getsize(os.path.join(root, fn))
-        except (IOError, OSError, ValueError, UnicodeDecodeError):
-            logger.debug(f"Couldn't read file when checking filesize: {fn}")
-        else:
-            if f["filesize"] > config.log_filesize_limit:
-                file_search_stats["skipped_filesize_limit"] += 1
-                return False
+        if f.filesize is not None and f.filesize > config.log_filesize_limit:
+            file_search_stats["skipped_filesize_limit"] += 1
+            return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f["fn"]) and config.ignore_images:
-            (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f.filename) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(f.path)
             if encoding is not None:
                 return False
             if ftype is not None and ftype.startswith("image"):
@@ -266,25 +435,25 @@ def get_filelist(run_module_names):
 
         # Test file for each search pattern
         file_matched = False
-        for patterns in spatterns:
-            for key, sps in patterns.items():
-                start = time.time()
-                for sp in sps:
-                    if search_file(sp, f, key):
-                        # Check that we shouldn't exclude this file
-                        if not exclude_file(sp, f):
-                            # Looks good! Remember this file
-                            files[key].append(f)
-                            file_search_stats[key] = file_search_stats.get(key, 0) + 1
-                            file_matched = True
-                        # Don't keep searching this file for other modules
-                        if not sp.get("shared", False) and key not in config.filesearch_file_shared:
-                            runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-                            return True
-                        # Don't look at other patterns for this module
-                        break
-                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
-
+        with f:  # Ensure any open filehandles are closed.
+            for patterns in spatterns:
+                for key, sps in patterns.items():
+                    start = time.time()
+                    for sp in sps:
+                        if search_file(sp, f, key):
+                            # Check that we shouldn't exclude this file
+                            if not exclude_file(sp, f):
+                                # Looks good! Remember this file
+                                files[key].append(f.to_dict())
+                                file_search_stats[key] = file_search_stats.get(key, 0) + 1
+                                file_matched = True
+                            # Don't keep searching this file for other modules
+                            if not sp.get("shared", False) and key not in config.filesearch_file_shared:
+                                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
+                                return True
+                            # Don't look at other patterns for this module
+                            break
+                    runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
         return file_matched
 
     # Go through the analysis directories and get file list
@@ -330,7 +499,7 @@ def get_filelist(run_module_names):
     logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
 
 
-def search_file(pattern, f, module_key):
+def search_file(pattern, f: SearchFile, module_key):
     """
     Function to searach a single file for a single search pattern.
     """
@@ -340,108 +509,62 @@ def search_file(pattern, f, module_key):
     contents_matched = False
 
     # Search pattern specific filesize limit
-    if pattern.get("max_filesize") is not None and "filesize" in f:
-        if f["filesize"] > pattern.get("max_filesize"):
+    max_filesize = pattern.get("max_filesize")
+    if max_filesize is not None and f.filesize:
+        if f.filesize > max_filesize:
             file_search_stats["skipped_module_specific_max_filesize"] += 1
             return False
 
     # Search by file name (glob)
-    if pattern.get("fn") is not None:
-        if fnmatch.fnmatch(f["fn"], pattern["fn"]):
+    filename_pattern = pattern.get("fn")
+    if filename_pattern is not None:
+        if fnmatch.fnmatch(f.filename, filename_pattern):
             fn_matched = True
-            if pattern.get("contents") is None and pattern.get("contents_re") is None:
-                return True
         else:
             return False
 
     # Search by file name (regex)
-    if pattern.get("fn_re") is not None:
-        if re.match(pattern["fn_re"], f["fn"]):
+    filename_regex_pattern = pattern.get("fn_re")
+    if filename_regex_pattern is not None:
+        if re.match(filename_regex_pattern, f.filename):
             fn_matched = True
-            if pattern.get("contents") is None and pattern.get("contents_re") is None:
-                return True
         else:
             return False
 
+    contents_pattern = pattern.get("contents")
+    contents_regex_pattern = pattern.get("contents_re")
+    if fn_matched and contents_pattern is None and contents_regex_pattern is None:
+        return True
+
     # Search by file contents
-    repattern = None
-    if pattern.get("contents") is not None or pattern.get("contents_re") is not None:
+    if contents_pattern is not None or contents_regex_pattern is not None:
         if pattern.get("contents_re") is not None:
             repattern = re.compile(pattern["contents_re"])
-        if "contents_lines" not in f or ("num_lines" in pattern and len(f["contents_lines"]) < pattern["num_lines"]):
-            f["contents_lines"] = []
-            file_path = os.path.join(f["root"], f["fn"])
-
-            try:
-                fh = io.open(file_path, "r", encoding="utf-8")
-            except Exception as e:
-                if config.report_readerrors:
-                    logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-                file_search_stats["skipped_file_contents_search_errors"] += 1
-                return False
-            else:
-                try:
-                    for i, line in enumerate(fh):
-                        f["contents_lines"].append(line)
-                        if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
-                            break
-                except UnicodeDecodeError as e:
-                    if config.report_readerrors:
-                        logger.debug(
-                            f"Couldn't read file as a utf-8 text when looking for output: {file_path}, {e}. "
-                            f"Usually because it's a binary file. But sometimes there are single non-unicode "
-                            f"characters, so attempting reading while skipping such characters."
-                        )
-                    try:
-                        with io.open(file_path, "r", encoding="utf-8", errors="ignore") as fh:
-                            for i, line in enumerate(fh):
-                                f["contents_lines"].append(line)
-                                if i >= config.filesearch_lines_limit and i >= pattern.get("num_lines", 0):
-                                    break
-                    except Exception as e:
-                        if config.report_readerrors:
-                            logger.debug(f"Still couldn't read the file, skipping: {file_path}, {e}")
-                        file_search_stats["skipped_file_contents_search_errors"] += 1
-                        return False
-                    else:
-                        if not f["contents_lines"]:
-                            if config.report_readerrors:
-                                logger.debug(f"No utf-8 lines were read from the file, skipping {file_path}")
-                            file_search_stats["skipped_file_contents_search_errors"] += 1
-                            return False
-                except Exception as e:
-                    if config.report_readerrors:
-                        logger.debug(f"Couldn't read file when looking for output: {file_path}, {e}")
-                    file_search_stats["skipped_file_contents_search_errors"] += 1
-                    return False
-            finally:
-                fh.close()
-
-        # Go through the parsed file contents
-        for i, line in enumerate(f["contents_lines"]):
-            # Break if we've searched enough lines for this pattern
-            if pattern.get("num_lines") and i >= pattern.get("num_lines"):
-                break
-
-            # Search by file contents (string)
-            if pattern.get("contents") is not None:
-                if pattern["contents"] in line:
+        else:
+            repattern = None
+        num_lines = pattern.get("num_lines", config.filesearch_lines_limit)
+        expected_contents = pattern.get("contents")
+        try:
+            total_newlines = 0
+            for line_count, line_block in f.line_block_iterator():
+                if expected_contents and expected_contents in line_block:
                     contents_matched = True
-                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                        return True
                     break
-            # Search by file contents (regex)
-            elif pattern.get("contents_re") is not None:
-                if re.search(repattern, line):
+                if repattern and repattern.match(line_block):
                     contents_matched = True
-                    if pattern.get("fn") is None and pattern.get("fn_re") is None:
-                        return True
                     break
+                total_newlines += line_count
+                if total_newlines >= num_lines:
+                    break
+        except Exception:
+            file_search_stats["skipped_file_contents_search_errors"] += 1
+            return False
+        if filename_pattern is None and filename_regex_pattern is None and contents_matched:
+            return True
+        return fn_matched and contents_matched
 
-    return fn_matched and contents_matched
 
-
-def exclude_file(sp, f):
+def exclude_file(sp, f: SearchFile):
     """
     Exclude discovered files if they match the special exclude_
     search pattern keys
@@ -455,13 +578,13 @@ def exclude_file(sp, f):
     # Search by file name (glob)
     if "exclude_fn" in sp:
         for pat in sp["exclude_fn"]:
-            if fnmatch.fnmatch(f["fn"], pat):
+            if fnmatch.fnmatch(f.filename, pat):
                 return True
 
     # Search by file name (regex)
     if "exclude_fn_re" in sp:
         for pat in sp["exclude_fn_re"]:
-            if re.match(pat, f["fn"]):
+            if re.match(pat, f.filename):
                 return True
 
     # Search the contents of the file
@@ -469,16 +592,15 @@ def exclude_file(sp, f):
         # Compile regex patterns if we have any
         if "exclude_contents_re" in sp:
             sp["exclude_contents_re"] = [re.compile(pat) for pat in sp["exclude_contents_re"]]
-        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
-            for line in fh:
-                if "exclude_contents" in sp:
-                    for pat in sp["exclude_contents"]:
-                        if pat in line:
-                            return True
-                if "exclude_contents_re" in sp:
-                    for pat in sp["exclude_contents_re"]:
-                        if re.search(pat, line):
-                            return True
+        for num_lines, line_block in f.line_block_iterator():
+            if "exclude_contents" in sp:
+                for pat in sp["exclude_contents"]:
+                    if pat in line_block:
+                        return True
+            if "exclude_contents_re" in sp:
+                for pat in sp["exclude_contents_re"]:
+                    if re.search(pat, line_block):
+                        return True
     return False
 
 
@@ -486,9 +608,10 @@ def data_sources_tofile():
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
     with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
-            jsonstr = json.dumps(data_sources, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
+            # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
+            # them to normal dicts
             yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
@@ -509,11 +632,12 @@ def dois_tofile(modules_output):
             dois[mod.anchor] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
-    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+    with open(os.path.join(config.data_dir, fn), "w") as f:
         if config.data_format == "json":
-            jsonstr = json.dumps(dois, indent=4, ensure_ascii=False)
-            print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
+            json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
+            # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
+            # them to normal dicts
             yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
         else:
             body = ""
@@ -575,24 +699,14 @@ def save_htmlid(html_id, skiplint=False):
 
 
 def compress_json(data):
-    """Take a Python data object. Convert to JSON and compress using lzstring"""
-    json_string = json.dumps(data).encode("utf-8", "ignore").decode("utf-8")
-    json_string = sanitise_json(json_string)
-    x = lzstring.LZString()
-    return x.compressToBase64(json_string)
-
-
-def sanitise_json(json_string):
     """
-    The Python json module uses a bunch of values which are valid JavaScript
-    but invalid JSON. These crash the browser when parsing the JSON.
-    Nothing in the MultiQC front-end uses these values, so instead we just
-    do a find-and-replace for them and switch them with `null`, which works fine.
-
-    Side effect: Any string values that include the word "Infinity"
-    (case-sensitive) will have it switched for "null". Hopefully that doesn't happen
-    a lot, otherwise we'll have to do this in a more complicated manner.
+    Take a Python data object. Convert to JSON and compress using gzip.
+    Represent in base64 format.
     """
-    json_string = re.sub(r"\bNaN\b", "null", json_string)
-    json_string = re.sub(r"\b-?Infinity\b", "null", json_string)
-    return json_string
+    # Stream to an in-memory buffer rather than compressing the big string
+    # at once. This saves memory.
+    buffer = io.BytesIO()
+    with gzip.open(buffer, "wt", encoding="utf-8", compresslevel=9) as gzip_buffer:
+        dump_json(data, gzip_buffer)
+    base64_bytes = base64.b64encode(buffer.getvalue())
+    return base64_bytes.decode("ascii")

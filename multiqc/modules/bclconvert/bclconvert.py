@@ -182,22 +182,30 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add section with undetermined barcodes
         if create_undetermined_barplots:
-            self.add_section(
-                name="Undetermined barcodes by lane",
-                anchor="undetermine_by_lane",
-                description="Undetermined barcodes by lanes",
-                plot=bargraph.plot(
-                    self.get_bar_data_from_undetermined(bclconvert_by_lane),
-                    None,
-                    {
-                        "id": "bclconvert_undetermined",
-                        "title": "bclconvert: Undetermined barcodes by lane",
-                        "ylab": "Count",
-                        "use_legend": True,
-                        "tt_suffix": "reads",
-                    },
-                ),
-            )
+            undetermined_data = self.get_bar_data_from_undetermined(bclconvert_by_lane)
+            if undetermined_data:
+                self.add_section(
+                    name="Undetermined barcodes by lane",
+                    anchor="undetermine_by_lane",
+                    description="Undetermined barcodes by lanes",
+                    plot=bargraph.plot(
+                        undetermined_data,
+                        None,
+                        {
+                            "id": "bclconvert_undetermined",
+                            "title": "bclconvert: Undetermined barcodes by lane",
+                            "ylab": "Count",
+                            "use_legend": True,
+                            "tt_suffix": "reads",
+                        },
+                    ),
+                )
+            else:
+                self.add_section(
+                    name="Undetermined barcodes by lane",
+                    anchor="undetermine_by_lane",
+                    content="<div class='alert alert-info'>No undetermined barcodes found</div>",
+                )
 
     @staticmethod
     @functools.lru_cache
@@ -247,9 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def _get_r2_length(root):
         for element in root.findall("./Run/Reads/Read"):
-            if element.get("Number") == "3" and element.get("IsIndexedRead") == "N":
-                return element.get("NumCycles")  # single-index paired-end data
-            if element.get("Number") == "4" and element.get("IsIndexedRead") == "N":
+            if element.get("Number") != "1" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
 
         log.error("Could not figure out read 2 length from RunInfo.xml")
@@ -259,27 +265,27 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Get run id and cluster length from RunInfo.xml
         """
-        try:
-            root = ET.fromstring(runinfo_file["f"])
-            run_id = root.find("Run").get("Id")
-            read_length_r1 = root.find("./Run/Reads/Read[1]").get(
-                "NumCycles"
-            )  # ET indexes first element at 1, so here we're getting the first NumCycles
-        except:  # noqa: E722
-            log.error(f"Could not parse RunInfo.xml to get RunID and read length in '{runinfo_file['root']}'")
+        # Find all reads with IsIndexedRead = N
+        root = ET.fromstring(runinfo_file["f"])
+        run_id = root.find("Run").get("Id")
+        reads = root.findall("./Run/Reads/Read")
+
+        non_index_reads = [element for element in reads if element.get("IsIndexedRead") == "N"]
+        if len(non_index_reads) == 0:
+            log.error("No non-index reads found in RunInfo.xml")
             raise ModuleNoSamplesFound
+
+        read_length_r1 = int(non_index_reads[0].get("NumCycles"))
+        cluster_length = read_length_r1
+        if len(non_index_reads) > 1:
+            read_length_r2 = int(non_index_reads[1].get("NumCycles"))
+            cluster_length += read_length_r2
 
         self.add_data_source(
             runinfo_file,
             module="bclconvert",
             section="bclconvert-runinfo-xml",
         )
-
-        if self._is_single_end_reads(root):
-            cluster_length = int(read_length_r1)
-        else:
-            read_length_r2 = self._get_r2_length(root)
-            cluster_length = int(read_length_r1) + int(read_length_r2)
         return {"run_id": run_id, "cluster_length": cluster_length}
 
     def _collate_log_files(self):

@@ -332,12 +332,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Mean Cov.",
                     "description": "Mean coverage",
                     "min": 0,
+                    "suffix": "X",
                     "scale": "BuPu",
                 },
                 "min_coverage": {
                     "title": "Min Cov.",
                     "description": "Minimum coverage",
                     "min": 0,
+                    "suffix": "X",
                     "scale": "BuPu",
                     "hidden": True,
                 },
@@ -345,6 +347,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "title": "Max Cov.",
                     "description": "Maximum coverage",
                     "min": 0,
+                    "suffix": "X",
                     "scale": "BuPu",
                     "hidden": True,
                 },
@@ -533,7 +536,7 @@ class MultiqcModule(BaseMultiqcModule):
     def genstats_mediancov(self, genstats, genstats_headers, cumcov_dist_data):
         for s_name, d in cumcov_dist_data.items():
             median_cov = None
-            for this_cov, cum_pct in d.items():
+            for this_cov, cum_pct in sorted(d.items(), reverse=True):
                 if cum_pct >= 50:
                     median_cov = this_cov
                     break
