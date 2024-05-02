@@ -1,4 +1,6 @@
-"""MultiQC modules base class, contains helper functions"""
+"""
+MultiQC modules base class, contains helper functions
+"""
 
 import dataclasses
 from typing import List, Union, Optional, Dict, Any

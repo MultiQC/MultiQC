@@ -7,12 +7,12 @@ from typing import Dict, Union, List, Optional
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.init_config import update_config
+from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
+from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
 from multiqc.core.exceptions import RunError
-from multiqc.core.copy_function_signature import copy_callable_signature
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
@@ -26,27 +26,14 @@ start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
 
 
-def load_config(config_file: str):
-    """
-    Load config on top of the current config from a MultiQC config file.
-    """
-    update_config()
-
-    path = Path(config_file)
-    if not path.exists():
-        raise ValueError(f"Config file '{config_file}' not found")
-
-    config.session_user_config_files.append(path.absolute())
-    config.load_config_file(config_file)
-
-
-@copy_callable_signature(update_config)
-def parse_logs(analysis_dir: Union[str, List[str]], **kwargs):
+def parse_logs(*analysis_dir, cfg: Optional[ClConfig] = None):
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
-    update_config(analysis_dir, **kwargs)
+    update_config(*analysis_dir, cfg=cfg)
+
+    check_version(parse_logs.__name__)
 
     report.reset_file_search()
     try:
@@ -57,24 +44,25 @@ def parse_logs(analysis_dir: Union[str, List[str]], **kwargs):
             logger.critical(e.message)
 
 
-def parse_data_json(analysis_dir: Union[str, List[str]]):
+def parse_data_json(path: Union[str, Path]):
     """
     Try find multiqc_data.json in the given directory and load it into the report.
     """
+    check_version(parse_data_json.__name__)
 
     json_path_found = False
-    json_path = None
-    if not isinstance(analysis_dir, list):
-        json_path = Path("multiqc_data.json")
+    json_path: Path
+    if path.endswith(".json"):
+        json_path = path
+        json_path_found = True
+    else:
+        json_path = Path(path) / "multiqc_data.json"
         if json_path.exists():
             json_path_found = True
-        else:
-            json_path = Path(analysis_dir) / "multiqc_data.json"
-            if json_path.exists():
-                json_path_found = True
 
     if not json_path_found:
-        logger.error("multiqc_data.json not found in the given directory")
+        logger.error(f"multiqc_data.json not found in {path}")
+        return
 
     # Loading from previous JSON
     logger.info(f"Loading data from {json_path}")
@@ -166,8 +154,6 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
     """
     Show a plot in the notebook.
     """
-    # if module not in list_modules():
-    #     raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
     mod = next((m for m in report.modules_output if m.name == module or m.anchor == module), None)
     if not mod:
@@ -323,12 +309,13 @@ def add_custom_content_section(
     report.modules_output.append(module)
 
 
-@copy_callable_signature(update_config)
-def write_report(**kwargs):
+def write_report(cfg: Optional[ClConfig] = None):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
-    update_config(**kwargs)
+    update_config(cfg=cfg)
+
+    check_version(write_report.__name__)
 
     if len(report.modules_output) == 0:
         logger.error("No analysis results found to make a report")
@@ -340,3 +327,17 @@ def write_report(**kwargs):
     except RunError as e:
         if e.message:
             logger.critical(e.message)
+
+
+def load_config(config_file: Union[str, Path]):
+    """
+    Load config on top of the current config from a MultiQC config file.
+    """
+    update_config()
+
+    path = Path(config_file)
+    if not path.exists():
+        raise ValueError(f"Config file '{config_file}' not found")
+
+    config.session_user_config_files.append(path.absolute())
+    config.load_config_file(config_file)

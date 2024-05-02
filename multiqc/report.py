@@ -1,6 +1,7 @@
-"""MultiQC report module. Holds the output from each
-module. Is available to subsequent modules. Contains
-helper functions to generate markup for report."""
+"""
+MultiQC report module. Holds the output from each module. Available to subsequent
+modules. Contains helper functions to generate markup for report.
+"""
 
 import base64
 import fnmatch

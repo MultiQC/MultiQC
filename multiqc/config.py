@@ -36,6 +36,7 @@ script_path = str(MODULE_DIR)  # dynamically used by report.multiqc_dump_json()
 REPO_DIR = MODULE_DIR.parent.absolute()
 
 git_root = None
+# noinspection PyBroadException
 try:
     git_root = subprocess.check_output(
         ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
@@ -44,7 +45,7 @@ try:
     # .git
     # multiqc/
     #   utils/
-    #       config.py  <- __file__
+    #     config.py  <- __file__
     expected_git_root = Path(script_path).parent.parent
     if git_root == expected_git_root:
         git_hash = subprocess.check_output(
@@ -52,11 +53,10 @@ try:
         ).strip()
         git_hash_short = git_hash[:7]
         version = f"{version} ({git_hash_short})"
-except Exception:
+except:  # noqa: E722
     pass
 
-# MultiQC Defaults
-# Declaring variables for static typing
+
 title: str
 subtitle: str
 intro_text: str
@@ -167,7 +167,6 @@ fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Dict[str, Dict]]
 module_order: List[Union[str, Dict]]
-session_user_config_files: List[Path] = []
 
 
 def load_defaults():
@@ -183,11 +182,17 @@ def load_defaults():
 
 load_defaults()
 
+session_user_config_files: List[Path] = []
+
 
 def reset():
-    """Reset the interactive session"""
+    """
+    Reset the interactive session
+    """
+
     global session_user_config_files
     session_user_config_files = []
+
     load_defaults()
 
 
@@ -239,6 +244,7 @@ working_dir = os.getcwd()
 analysis_dir = [os.getcwd()]
 output_dir = os.path.realpath(os.getcwd())
 megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+kwargs: Dict = {}
 
 # Other variables that set only through the CLI
 run_modules: List[str] = []
@@ -309,7 +315,7 @@ def load_config_file(yaml_config_path: Union[str, Path]):
             raise
 
 
-def load_cl_config(cl_config):
+def load_cl_config(cl_config: List[str]):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.safe_load(clc_str)
@@ -369,7 +375,9 @@ def _env_vars_config() -> Dict:
 
 
 def _add_config(conf: Dict, conf_path=None):
-    """Add to the global config with given MultiQC config dict"""
+    """
+    Add to the global config with given MultiQC config dict
+    """
     global custom_css_files, fn_clean_exts, fn_clean_trim
     log_new_config = {}
     log_filename_patterns = []
@@ -426,15 +434,20 @@ def _add_config(conf: Dict, conf_path=None):
         logger.debug(f"Added to filename clean trimmings: {log_filename_clean_trimmings}")
 
 
-#### Function to load file containing a list of alternative sample-name swaps
-# Essentially a fancy way of loading stuff into the sample_names_rename config var
-# As such, can also be done directly using a config file
-def load_sample_names(snames_file):
+def load_sample_names(sample_names_file: Path):
+    """
+    Function to load file containing a list of alternative sample-name swaps.
+
+    Essentially a fancy way of loading stuff into the config.sample_names_rename.
+
+    As such, can also be done directly using a config file.
+    """
+
     global sample_names_rename_buttons, sample_names_rename
     num_cols = None
     try:
-        with open(snames_file) as f:
-            logger.debug(f"Loading sample renaming config settings from: {snames_file}")
+        with open(sample_names_file) as f:
+            logger.debug(f"Loading sample renaming config settings from: {sample_names_file}")
             for line in f:
                 s = line.strip().split("\t")
                 if len(s) > 1:
@@ -459,11 +472,11 @@ def load_sample_names(snames_file):
     logger.debug(f"Found {len(sample_names_rename_buttons)} sample renaming patterns")
 
 
-def load_replace_names(rnames_file):
+def load_replace_names(replace_names_file: Path):
     global sample_names_replace
     try:
-        with open(rnames_file) as f:
-            logger.debug(f"Loading sample replace config settings from: {rnames_file}")
+        with open(replace_names_file) as f:
+            logger.debug(f"Loading sample replace config settings from: {replace_names_file}")
             for line in f:
                 s = line.strip().split("\t")
                 if len(s) == 2:
@@ -473,19 +486,19 @@ def load_replace_names(rnames_file):
     logger.debug(f"Found {len(sample_names_replace)} sample replacing patterns")
 
 
-def load_show_hide(sh_file):
+def load_show_hide(show_hide_file: Optional[Path] = None):
     global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex
-    if sh_file:
+    if show_hide_file:
         try:
-            with open(sh_file, "r") as f:
-                logger.debug(f"Loading sample renaming config settings from: {sh_file}")
+            with open(show_hide_file, "r") as f:
+                logger.debug(f"Loading sample renaming config settings from: {show_hide_file}")
                 for line in f:
                     s = line.strip().split("\t")
                     if len(s) >= 3 and s[1] in ["show", "hide", "show_re", "hide_re"]:
                         show_hide_buttons.append(s[0])
                         show_hide_mode.append(s[1])
                         show_hide_patterns.append(s[2:])
-                        show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether or not regex is turned on
+                        show_hide_regex.append(s[1] not in ["show", "hide"])  # flag whether regex is turned on
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
 

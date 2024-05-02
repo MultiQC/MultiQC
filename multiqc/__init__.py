@@ -1,6 +1,4 @@
 """
-__init__.py
-~~~~~~~~~~~~~~~~~~~~
 Initialises when multiqc module is loaded.
 
 Makes the following available under the main multiqc namespace:

@@ -1,7 +1,5 @@
 """
-multiqc.multiqc
-~~~~~~~~~~~~~~~~~~~~~
-The main function to run MultiQC. Sorry about the messy namespace.
+The main function to run MultiQC.
 Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
@@ -10,6 +8,7 @@ import logging
 import os
 import sys
 import time
+from typing import Tuple, Optional
 
 import rich_click as click
 
@@ -17,16 +16,15 @@ from multiqc import config, report
 from multiqc.core import plugin_hooks, init_log
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.file_search import file_search
-from multiqc.core.init_config import update_config
+from multiqc.core.update_config import update_config, ClConfig
+from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
 from multiqc.core.exceptions import RunResult, RunError
-from multiqc.core.copy_function_signature import copy_callable_signature
 from multiqc.utils import util_functions
 
-# Set up logging
-start_execution_time = time.time()
 logger = logging.getLogger(__name__)
 
+start_execution_time = time.time()
 
 # Configuration for rich-click CLI help
 click.rich_click.USE_RICH_MARKUP = True
@@ -406,15 +404,22 @@ click.rich_click.OPTION_GROUPS = {
     default=True,
     help="Remove the temporary directory and log file after finishing",
 )
+@click.option(
+    "--no-version-check",
+    "no_version_check",
+    is_flag=True,
+    default=None,
+    help="Disable checking the latest MultiQC version on the server",
+)
 @click.version_option(config.version, prog_name="multiqc")
-def run_cli(**kwargs):
+def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
 
     """MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
-    It searches a given directory for analysis logs and compiles a HTML report.
+    It searches a given directory for analysis logs and compiles an HTML report.
     It's a general use tool, perfect for summarising the output from numerous
     bioinformatics tools.
 
@@ -422,19 +427,20 @@ def run_cli(**kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
+    cfg = ClConfig(**kwargs)
+
     # Pass on to a regular function that can be used easily without click
-    multiqc_run = run(**kwargs)
+    multiqc_run = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
 
     # End execution using the exit code returned from MultiQC
     sys.exit(multiqc_run.sys_exit_code)
 
 
-@copy_callable_signature(update_config)
-def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
+def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
-    It searches a given directory for analysis logs and compiles a HTML report.
+    It searches a given directory for analysis logs and compiles an HTML report.
     It's a general use tool, perfect for summarising the output from numerous
     bioinformatics tools.
 
@@ -442,11 +448,11 @@ def run(analysis_dir, clean_up=True, **kwargs) -> RunResult:
     To run here, use 'multiqc .'
 
     See http://multiqc.info for more details.
-
-    Author: Phil Ewels (http://phil.ewels.co.uk)
     """
 
-    update_config(analysis_dir=analysis_dir, **kwargs)
+    update_config(*analysis_dir, cfg=cfg)
+
+    check_version()
 
     logger.debug(f"Working dir : {os.getcwd()}")
     if config.make_pdf:
