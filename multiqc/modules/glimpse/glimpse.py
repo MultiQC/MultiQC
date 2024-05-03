@@ -17,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
     This MultiQC module supports some but not all."""
 
     def __init__(self):
-        log.info("Test log message")
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Glimpse",
@@ -37,7 +36,6 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin):
 
         # Call submodule functions
         n_reports_found += self.parse_glimpse_err_spl()
-        log.info("Test log message")
 
         # Exit if we didn't find anything
         if n_reports_found == 0:

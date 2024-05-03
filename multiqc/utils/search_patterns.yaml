@@ -373,7 +373,7 @@ gffcompare:
   contents: "# gffcompare"
   num_lines: 2
 glimpse/err_spl:
-  fn: "*.error.spl.txt.gz"
+  fn: "*.error.spl.txt"
   contents: "#Genotype concordance by sample (SNPs)"
   num_lines: 1
 goleft_indexcov/roc:

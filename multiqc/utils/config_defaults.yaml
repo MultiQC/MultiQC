@@ -305,6 +305,7 @@ fn_clean_exts:
   - ".bammetrics.metrics"
   - ".filter_summary"
   - ".cluster_report"
+  - ".error.spl"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.

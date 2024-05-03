@@ -2,9 +2,8 @@
 
 import logging
 from typing import Dict, Union
-from copy import deepcopy
 
-from multiqc.plots import scatter, table
+from multiqc.plots import table
 
 # Initialise the loggerq
 log = logging.getLogger(__name__)
@@ -40,22 +39,26 @@ class ErrSplReportMixin:
         """Find Glimpse concordance errors by samples logs and parse their data"""
 
         self.glimpse_err_spl = dict()
+        self.allfiles = dict()
         for f in self.find_log_files("glimpse/err_spl", filehandles=True):
-            parsed_data = parse_err_spl_report(f["f"])
+            parsed_data = parse_err_spl_report([line.rstrip() for line in f["f"]])
             if len(parsed_data) > 1:
-                if f["s_name"] in self.glimpse_err_spl:
+                if f["s_name"] in self.allfiles:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f, section="err_spl")
-                self.glimpse_err_spl[f["s_name"]] = parsed_data
+                # Filter to strip out ignored sample names
+                self.allfiles[f["s_name"]] = f
 
-        # Filter to strip out ignored sample names
-        self.glimpse_err_spl = self.ignore_samples(self.glimpse_err_spl)
+                shared_keys = set(self.glimpse_err_spl.keys()) & set(parsed_data.keys())
+                if len(shared_keys) > 0:
+                    log.debug(f"Duplicate sample name found! Overwriting: {shared_keys}")
+                self.glimpse_err_spl.update(self.ignore_samples(parsed_data))
 
-        n_reports_found = len(self.gatk_varianteval)
+        n_reports_found = len(self.glimpse_err_spl)
         if n_reports_found == 0:
             return 0
 
-        log.info(f"Found {n_reports_found} errors by samples reports")
+        log.info(f"Found {n_reports_found} report(s) by samples")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -64,25 +67,7 @@ class ErrSplReportMixin:
         # Write parsed report data to a file (restructure first)
         self.write_data_file(self.glimpse_err_spl, "multiqc_glimpse_err_spl")
 
-        # Make a table summarising the stats across all samples
-        self.summary_table(self.glimpse_err_spl)
-
-        # Make a line plot showing accuracy stats by sample, with a tab switch between stats
-        self.accuracy_by_sample(self.glimpse_err_spl)
-
-        # Return the number of logs that were found
-        return n_reports_found
-
-    def summary_table(self, data_by_sample):
         headers = {
-            "variants": {
-                "title": "Variants types",
-                "description": "Types of variants (SNPs, indels, both)",
-            },
-            "bins": {
-                "title": "Bins group",
-                "description": "Bins group number",
-            },
             "val_gt_RR": {
                 "title": "Genotype Reference-Reference",
                 "description": "Number of genotypes classified as Reference-Reference",
@@ -112,36 +97,42 @@ class ErrSplReportMixin:
                 "description": "Number of Reference-Reference hom matches",
                 "min": 0,
                 "scale": "YlGn",
+                "hidden": True,
             },
             "RA_het_matches": {
                 "title": "Reference-Alternate heterozygous matches",
                 "description": "Number of Reference-Alternate het matches",
                 "min": 0,
                 "scale": "YlGn",
+                "hidden": True,
             },
             "AA_hom_matches": {
                 "title": "Alternate-Alternate homozygous matches",
                 "description": "Number of Alternate-Alternate hom matches",
                 "min": 0,
                 "scale": "YlGn",
+                "hidden": True,
             },
             "RR_hom_mismatches": {
                 "title": "Reference-Reference homozygous mismatches",
                 "description": "Number of Reference-Reference hom mismatches",
                 "min": 0,
                 "scale": "YlRd",
+                "hidden": True,
             },
             "RA_het_mismatches": {
                 "title": "Reference-Alternate heterozygous mismatches",
                 "description": "Number of Reference-Alternate het mismatches",
                 "min": 0,
                 "scale": "YlRd",
+                "hidden": True,
             },
             "AA_hom_mismatches": {
                 "title": "Alternate-Alternate homozygous mismatches",
                 "description": "Number of Alternate-Alternate hom mismatches",
                 "min": 0,
                 "scale": "YlRd",
+                "hidden": True,
             },
             "RR_hom_mismatches_rate_percent": {
                 "title": "Reference-Reference homozygous mismatches rate",
@@ -149,7 +140,7 @@ class ErrSplReportMixin:
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
-                "scale": "YlRd",
+                "scale": "OrRd",
             },
             "RA_het_mismatches_rate_percent": {
                 "title": "Reference-Alternate heterozygous mismatches rate",
@@ -157,7 +148,7 @@ class ErrSplReportMixin:
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
-                "scale": "YlRd",
+                "scale": "OrRd",
             },
             "AA_hom_mimatches": {
                 "title": "Alternate-Alternate homozygous mismatches rate",
@@ -165,7 +156,7 @@ class ErrSplReportMixin:
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
-                "scale": "YlRd",
+                "scale": "OrRd",
             },
             "non_reference_discordanc_rate_percent": {
                 "title": "Non-reference discordance rate",
@@ -173,7 +164,7 @@ class ErrSplReportMixin:
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
-                "scale": "YlRd",
+                "scale": "OrRd",
             },
             "best_gt_rsquared": {
                 "title": "Best genotype r-squared",
@@ -190,6 +181,17 @@ class ErrSplReportMixin:
                 "scale": "YlGn",
             },
         }
+        data = {
+            sample: val for sample, vtype in self.glimpse_err_spl.items() for key, val in vtype.items() if key == "GCsV"
+        }
+
+        # Make a table summarising the stats across all samples
+        self.summary_table(data, headers)
+
+        # Return the number of logs that were found
+        return n_reports_found
+
+    def summary_table(self, data, headers):
         self.add_section(
             name="Genotype concordance by samples",
             anchor="glimpse-err-spl-table-section",
@@ -197,8 +199,8 @@ class ErrSplReportMixin:
                 "Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across all samples."
             ),
             plot=table.plot(
-                data_by_sample,
-                deepcopy(headers),
+                data,
+                headers,
                 pconfig={
                     "id": "glimpse-err-spl-table",
                     "title": "Glimpse concordance: errors by sample summary",
@@ -206,34 +208,8 @@ class ErrSplReportMixin:
             ),
         )
 
-    def accuracy_by_sample(self, data_by_sample):
-        """Make a plot showing the accuracy of the genotypes by sample"""
-        pconfig = {
-            "id": "glimpse-err-spl-accuracy",
-            "title": "Glimpse concordance: accuracy by sample",
-            "ylab": "Accuracy",
-            "xlab": "Minor allele frequency",
-            "xmin": 0,
-            "xmax": 1,
-            "tt_label": "Sample",
-            "data_labels": [
-                {"name": "RR_hom_mismatches_rate_percent", "ylab": "RR hom mismatches rate"},
-                {"name": "RA_het_mismatches_rate_percent", "ylab": "RA het mismatches rate"},
-                {"name": "AA_hom_mismatches_rate_percent", "ylab": "AA hom mismatches rate"},
-                {"name": "non_reference_discordanc_rate_percent", "ylab": "Non-ref discordance rate"},
-                {"name": "best_gt_rsquared", "ylab": "Best GT r-squared"},
-                {"name": "imputed_ds_rsquared", "ylab": "Imputed DS r-squared"},
-            ],
-        }
-        self.add_section(
-            name="Glimpse concordance: accuracy by sample",
-            anchor="glimpse-err-spl-accuracy",
-            description="Accuracy plot by sample and minor allele frequency.",
-            plot=scatter.plot(data_by_sample, pconfig),
-        )
 
-
-def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
+def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
     """
     Example:
     #Genotype concordance by sample (SNPs)
@@ -249,10 +225,9 @@ def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
     parsed_data = {}
-    lines = f["f"].splitlines()
     expected_header = "#Genotype concordance by sample (SNPs)"
     if lines[0] != expected_header:
-        logging.warning(f"Expected header for samtools coverage: {expected_header}, got: {lines[0]}")
+        logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
         return {}
 
     for line in lines[1:]:
@@ -263,7 +238,7 @@ def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
             logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
         (
             variants,
-            bins,
+            idn,
             sample_name,
             val_gt_RR,
             val_gt_RA,
@@ -282,9 +257,10 @@ def parse_err_spl_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
             best_gt_rsquared,
             imputed_ds_rsquared,
         ) = fields
-        parsed_data[sample_name] = dict(
-            variants=str(variants),
-            bins=int(bins),
+        if sample_name not in parsed_data:
+            parsed_data[sample_name] = {}
+        parsed_data[sample_name][variants] = dict(
+            idn=int(idn),
             val_gt_RR=int(val_gt_RR),
             val_gt_RA=int(val_gt_RA),
             val_gt_AA=int(val_gt_AA),
