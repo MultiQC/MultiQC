@@ -5,6 +5,8 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional
 
+import plotly.graph_objects as go
+
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.core.update_config import update_config, ClConfig
@@ -27,7 +29,7 @@ logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir,
+    *analysis_dir: str,
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -53,6 +55,10 @@ def parse_logs(
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
+    assert isinstance(analysis_dir, tuple)
+    if not all(isinstance(d, str) for d in analysis_dir):
+        raise ValueError("Path arguments should be strings, got:", analysis_dir)
+
     update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 
     check_version(parse_logs.__name__)
@@ -159,22 +165,20 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
             if len(plot.datasets) > 1:
                 result[module.name].append({section_id: [d.label for d in plot.datasets]})
 
-    print(
-        'List of available plots sections, by module. Use multiqc.show_plot("<module">, "<section>") to show plot. '
-        + (
-            "\nIf plot has several datasets, pass the dataset name: "
-            'multiqc.show_plot("<module>", "<section>", "<dataset>")'
-            if any(len(plot.datasets) > 1 for plot in report.plot_by_id.values())
-            else ""
-        )
-    )
     return result
 
 
-def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs):
+def show_plot(
+    module: str,
+    section: str,
+    dataset: Optional[str] = None,
+    flat=False,
+    **kwargs,
+):
     """
     Show a plot in the notebook.
     """
+    from IPython.core.display import HTML
 
     mod = next((m for m in report.modules_output if m.name == module or m.anchor == module), None)
     if not mod:
@@ -184,6 +188,7 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
+    result: Union[go.Figure, "HTML"]
     if sec.plot_id:
         plot = report.plot_by_id[sec.plot_id]
         ds_id = 0
@@ -192,16 +197,15 @@ def show_plot(module: str, section: str, dataset: Optional[str] = None, **kwargs
                 if d.label == dataset:
                     ds_id = i
                     break
-        return plot.show(dataset_id=ds_id, **kwargs)
+        result = plot.show(dataset_id=ds_id, flat=flat, **kwargs)
     elif sec.content:
-        from IPython.core.display import HTML
-
-        return HTML(sec.content)
-
-    if dataset:
-        raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
+        result = HTML(sec.content)
     else:
-        raise ValueError(f'Plot section "{section}" in module "{module}" not found')
+        if dataset:
+            raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
+        else:
+            raise ValueError(f'Plot section "{section}" in module "{module}" not found')
+    return result
 
 
 def _load_plot(dump: Dict) -> Plot:

@@ -87,9 +87,10 @@ class Plot(BaseModel):
     square: bool = False
     flat: bool = False
 
-    class Config:
-        arbitrary_types_allowed = True
-        use_enum_values = True
+    model_config = dict(
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
 
     @field_serializer("layout")
     def serialize_dt(self, layout: go.Layout, _info):
@@ -274,11 +275,25 @@ class Plot(BaseModel):
             flat=flat,
         )
 
-    def show(self, *args, **kwargs):
+    def show(self, dataset_id: int, flat=False, **kwargs):
         """
         Public method: show the plot in a Jupyter notebook.
         """
-        return self.get_figure(*args, flat=False, **kwargs)
+        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
+        if flat:
+            from IPython.core.display import HTML
+
+            return HTML(
+                fig_to_static_html(
+                    fig,
+                    active=True,
+                    embed=True,
+                    export_plots=False,
+                    file_name=self.id,
+                )
+            )
+        else:
+            return fig
 
     def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
@@ -374,28 +389,28 @@ class Plot(BaseModel):
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            html += _fig_to_static_html(
+            html += fig_to_static_html(
                 self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
-                uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
             if self.add_pct_tab:
-                html += _fig_to_static_html(
+                html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
-                    uid=f"{dataset.uid}-pct",
+                    file_name=f"{dataset.uid}-pct",
                 )
             if self.add_log_tab:
-                html += _fig_to_static_html(
+                html += fig_to_static_html(
                     self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
-                    uid=f"{dataset.uid}-log",
+                    file_name=f"{dataset.uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
-                html += _fig_to_static_html(
+                html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
-                    uid=f"{dataset.uid}-pct-log",
+                    file_name=f"{dataset.uid}-pct-log",
                 )
 
         html += "</div>"
@@ -462,10 +477,12 @@ class Plot(BaseModel):
         return html
 
 
-def _fig_to_static_html(
+def fig_to_static_html(
     fig: go.Figure,
-    active: bool,
-    uid: str,
+    active: bool = True,
+    export_plots: bool = config.export_plots,
+    embed: bool = not config.development,
+    file_name: Optional[str] = None,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
@@ -479,11 +496,13 @@ def _fig_to_static_html(
     )
 
     # Save the plot to the data directory if export is requested
-    if config.export_plots:
+    if export_plots:
+        if file_name is None:
+            raise ValueError("file_name is required for export_plots")
         for file_ext in config.export_plot_formats:
-            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{uid}.{file_ext}"
+            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
-            short_path = Path(config.plots_dir_name) / file_ext / f"{uid}.{file_ext}"
+            short_path = Path(config.plots_dir_name) / file_ext / f"{file_name}.{file_ext}"
             logger.debug(f"Writing plot to {short_path}")
             if file_ext == "svg":
                 # Cannot add logo to SVGs
@@ -497,9 +516,11 @@ def _fig_to_static_html(
                 img_buffer.close()
 
     # Now writing the PNGs for the HTML
-    if config.development:
+    if not embed:
+        if file_name is None:
+            raise ValueError("file_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = Path(config.plots_dir_name) / "png" / f"{uid}.png"
+        img_src = Path(config.plots_dir_name) / "png" / f"{file_name}.png"
     else:
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
@@ -511,9 +532,10 @@ def _fig_to_static_html(
 
     # Should this plot be hidden on report load?
     hiding = "" if active else ' style="display:none;"'
+    id = file_name or f"plot-{random.randint(1000000, 9999999)}"
     return "".join(
         [
-            f'<div class="mqc_mplplot" id="{uid}"{hiding}>',
+            f'<div class="mqc_mplplot" id="{id}"{hiding}>',
             f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
             "</div>",
         ]

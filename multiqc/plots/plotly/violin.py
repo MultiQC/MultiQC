@@ -509,8 +509,7 @@ class ViolinPlot(Plot):
             return df  # Jupyter knows how to display dataframes
 
         else:
-            dataset_id = dataset_id or 0
-            return self.get_figure(dataset_id=dataset_id, **kwargs)
+            return super().show(dataset_id=dataset_id or 0, **kwargs)
 
     def add_to_report(self, clean_html_id=True) -> str:
         warning = ""
