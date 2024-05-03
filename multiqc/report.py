@@ -57,7 +57,7 @@ files: Dict
 # Fields below is kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
-plot_data: Dict[str, None] = dict()  # plot dumps to embed in html
+plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict]
 general_stats_headers: List[Dict]
