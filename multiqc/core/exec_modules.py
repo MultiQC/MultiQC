@@ -118,7 +118,7 @@ def exec_modules(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            from multiqc.utils.log import rich_console
+            from multiqc.core.init_log import rich_console
 
             rich_console.print(
                 rich.panel.Panel(
