@@ -169,8 +169,8 @@ class DataTable(BaseModel):
                     empties.append(k)
             for k in empties:
                 keys = [j for j in keys if j != k]
-                logger.warning(
-                    f"Table key '{k}' not found in data, skipping. Check for possible typos between data keys and header keys"
+                logger.debug(
+                    f"Table key '{k}' not found in data for '{id}'. Skipping. Check for possible typos between data keys and header keys"
                 )
                 del headers[d_idx][k]
 
