@@ -376,6 +376,10 @@ glimpse/err_spl:
   fn: "*.error.spl.txt"
   contents: "#Genotype concordance by sample (SNPs)"
   num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt"
+  contents: "#Genotype concordance by allele frequency bin (SNPs)"
+  num_lines: 1
 goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
