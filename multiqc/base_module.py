@@ -588,6 +588,8 @@ class BaseMultiqcModule:
         report.general_stats_headers.append(headers)
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
+        if s_name is not None and self.is_ignore_sample(s_name):
+            return
         try:
             if module is None:
                 module = self.name
