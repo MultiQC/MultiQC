@@ -1,4 +1,4 @@
-function decompress_mqc_plotdata(base64Str, callback) {
+function decompressPlotData(base64Str, callback) {
   // Decode the Base64 string to bytes.
   const binaryString = atob(base64Str);
   const bytes = Uint8Array.from(binaryString, (m) => m.codePointAt(0));

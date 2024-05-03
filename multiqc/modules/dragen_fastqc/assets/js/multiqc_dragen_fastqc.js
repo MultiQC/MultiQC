@@ -25,7 +25,7 @@ function load_fastqc_seq_content() {
 }
 
 // Set up listeners etc on page load
-$(function () {
+callAfterDecompressed.push(function (mqc_plotdata) {
   load_fastqc_passfails();
   load_fastqc_seq_content();
 
