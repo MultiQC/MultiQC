@@ -769,16 +769,16 @@ pconfig = {
     "xlab": None,                  # X-axis title
     "ylab": None,                  # Y-axis title
     "zlab": None,                  # Z-axis title, shown in the hover tooltip
-    "min": None,                   # Minimum value (default: auto)
-    "max": None,                   # Maximum value (default: auto)
-    "square": True,                # Force the plot to stay square? (Maintain aspect ratio)
+    "min": None,                   # Minimum value (when unset, derived automatically)
+    "max": None,                   # Maximum value (when unset, derived automatically)
+    "square": True,                # Force the plot to stay square? (maintain aspect ratio)
     "xcats_samples": True,         # Is the x-axis sample names? Set to "False" to prevent report toolbox from affecting.
     "ycats_samples": True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
     "colstops": [],                # Scale colour stops. See below.
-    "reverseColors": False,        # Reverse the order of the colour axis
+    "reverse_colors": False,        # Reverse the order of the colour axis
     "tt_decimals": 2,              # Number of decimal places for tooltip
     "legend": True,                # Colour axis key enabled or not
-    "datalabels": True,            # Show values in each cell. Defaults True when less than 20 samples.
+    "display_values": True,        # Show values in each cell. Defaults True when less than 20 samples.
     "height": 500                  # The default height of the interactive plot, in pixels
 }
 ```

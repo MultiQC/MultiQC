@@ -5,14 +5,17 @@ import json
 import logging
 import os
 import re
+import sys
 from collections import defaultdict
 from typing import List, Dict
 
 import yaml
+from pydantic import ValidationError
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
+from multiqc.plots.plotly.plot import PConfig, pconfig_validation_errors
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -324,6 +327,37 @@ class MultiqcModule(BaseMultiqcModule):
         if self.info or self.extra:
             self.intro = f"<p>{self.info}</p>{self.extra}"
 
+    @staticmethod
+    def validate_pconfig(pconfig: Dict, plot_type, c_id) -> PConfig:
+        # if plot_type == "table":
+        #     pconfig = TableConfig()
+
+        # elif plot_type == "bargraph":
+        #     mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
+        #     plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
+        #
+        # # Line plot
+        # elif plot_type == "linegraph":
+        #     plot = linegraph.plot(mod["data"], pconfig)
+        #
+        # # Scatter plot
+        # elif plot_type == "scatter":
+        #     plot = scatter.plot(mod["data"], pconfig)
+
+        if plot_type == "heatmap":
+            try:
+                return heatmap.HeatmapConfig(**pconfig)
+            except ValidationError as e:
+                print(e)
+                pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
+
+        if pconfig_validation_errors:
+            msg = f'Error parsing configuration for heatmap plot "{c_id}":'
+            for error in pconfig_validation_errors:
+                msg += f"\n{error}"
+            log.error(msg)
+            sys.exit(1)
+
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
@@ -336,6 +370,10 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig["id"] = f"{c_id}-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
+
+        plot_type = mod["config"].get("plot_type")
+        if plot_type == "heatmap":
+            pconfig = self.validate_pconfig(pconfig, plot_type=plot_type, c_id=c_id)
 
         plot = None
         content = None
@@ -353,53 +391,53 @@ class MultiqcModule(BaseMultiqcModule):
                 pconfig["save_data_file"] = False
 
         # Try to coerce x-axis to numeric
-        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+        if plot_type in ["linegraph", "scatter"]:
             try:
                 mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
             except ValueError:
                 pass
 
         # Table
-        if mod["config"].get("plot_type") == "table":
+        if plot_type == "table":
             pconfig["sort_rows"] = pconfig.get("sort_rows", pconfig.get("sortRows", False))
             headers = mod["config"].get("headers")
             plot = table.plot(mod["data"], headers, pconfig)
 
         # Bar plot
-        elif mod["config"].get("plot_type") == "bargraph":
+        elif plot_type == "bargraph":
             mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
             plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
 
         # Line plot
-        elif mod["config"].get("plot_type") == "linegraph":
+        elif plot_type == "linegraph":
             plot = linegraph.plot(mod["data"], pconfig)
 
         # Scatter plot
-        elif mod["config"].get("plot_type") == "scatter":
+        elif plot_type == "scatter":
             plot = scatter.plot(mod["data"], pconfig)
 
         # Heatmap
-        elif mod["config"].get("plot_type") == "heatmap":
+        elif plot_type == "heatmap":
             plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
 
         # Violin plot
-        elif mod["config"].get("plot_type") in ["violin", "beeswarm"]:
+        elif plot_type in ["violin", "beeswarm"]:
             plot = violin.plot(mod["data"], pconfig)
 
         # Raw HTML
-        elif mod["config"].get("plot_type") == "html":
+        elif plot_type == "html":
             if len(mod["data"]) > 1:
                 log.warning(f"HTML plot type found with more than one dataset in {c_id}")
             content = mod["data"][0]
 
         # Raw image file as html
-        elif mod["config"].get("plot_type") == "image":
+        elif plot_type == "image":
             if len(mod["data"]) > 1:
                 log.warning(f"Image plot type found with more than one dataset in {c_id}")
             content = mod["data"][0]
 
         # Not supplied
-        elif mod["config"].get("plot_type") is None:
+        elif plot_type is None:
             log.warning(f"Plot type not found for content ID '{c_id}'")
 
         # Not recognised

@@ -1,14 +1,13 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Union
+from typing import Union, Dict
 
 from multiqc import config
 from multiqc.plots.plotly import heatmap
+from multiqc.plots.plotly.heatmap import HeatmapConfig
 
 logger = logging.getLogger(__name__)
-
-letters = "abcdefghijklmnopqrstuvwxyz"
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -22,7 +21,12 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, xcats=None, ycats=None, pconfig=None) -> Union[heatmap.HeatmapPlot, str]:
+def plot(
+    data,
+    xcats=None,
+    ycats=None,
+    pconfig: Union[Dict, HeatmapConfig, None] = None,
+) -> Union[heatmap.HeatmapPlot, str]:
     """Plot a 2D heatmap.
     :param data: List of lists, each a representing a row of values; or a dict of dicts
     :param xcats: Labels for x-axis
@@ -31,12 +35,14 @@ def plot(data, xcats=None, ycats=None, pconfig=None) -> Union[heatmap.HeatmapPlo
     :return: HTML and JS, ready to be inserted into the page
     """
     if pconfig is None:
-        pconfig = {}
+        pconfig = HeatmapConfig()
+    if isinstance(pconfig, dict):
+        pconfig = HeatmapConfig(**pconfig)
 
     # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
+    if pconfig.id and pconfig.id in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig.id].items():
+            setattr(pconfig, k, v)
 
     if ycats is None:
         ycats = xcats
@@ -44,6 +50,7 @@ def plot(data, xcats=None, ycats=None, pconfig=None) -> Union[heatmap.HeatmapPlo
     # Make a plot
     mod = get_template_mod()
     if "heatmap" in mod.__dict__ and callable(mod.heatmap):
+        # noinspection PyBroadException
         try:
             return mod.heatmap(data, xcats, ycats, pconfig)
         except:  # noqa: E722

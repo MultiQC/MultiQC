@@ -163,6 +163,8 @@ def init_log():
                     self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.warning]%(message)s[/]")
                 elif record.levelno == logging.ERROR:
                     self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.error]%(message)s[/]")
+                elif record.levelno == logging.CRITICAL:
+                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.critical]%(message)s[/]")
                 else:
                     self._style = logging.PercentStyle("[blue]%(name)-50s[/]  %(message)s")
                 return logging.Formatter.format(self, record)
