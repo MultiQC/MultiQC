@@ -275,6 +275,7 @@ fn_clean_exts:
   - "ccs"
   - "_NanoStats"
   - ".cutadapt"
+  - ".qcML"
   - ".mosdepth"
   - "_gopeaks"
   - ".readCounts"
@@ -403,6 +404,7 @@ module_order:
   - happy
   - mirtop
   - sambamba
+  - ngsbits
   # Post-alignment processing
   - gopeaks
   - homer
