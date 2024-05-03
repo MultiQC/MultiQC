@@ -26,12 +26,34 @@ start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
 
 
-def parse_logs(*analysis_dir, cfg: Optional[ClConfig] = None):
+def parse_logs(
+    *analysis_dir,
+    verbose: Optional[bool] = None,
+    file_list: Optional[bool] = None,
+    prepend_dirs: Optional[bool] = None,
+    dirs_depth: Optional[int] = None,
+    fn_clean_sample_names: Optional[bool] = None,
+    require_logs: Optional[bool] = None,
+    use_filename_as_sample_name: Optional[bool] = None,
+    strict: Optional[bool] = None,
+    quiet: Optional[bool] = None,
+    no_ansi: Optional[bool] = None,
+    profile_runtime: Optional[bool] = None,
+    no_version_check: Optional[bool] = None,
+    ignore: List[str] = (),
+    ignore_samples: List[str] = (),
+    run_modules: List[str] = (),
+    exclude_modules: List[str] = (),
+    config_files: List[str] = (),
+    module_order: List[Union[str, Dict]] = (),
+    extra_fn_clean_exts: List = (),
+    extra_fn_clean_trim: List = (),
+):
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
     with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
-    update_config(*analysis_dir, cfg=cfg)
+    update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 
     check_version(parse_logs.__name__)
 
@@ -308,11 +330,39 @@ def add_custom_content_section(
     report.modules_output.append(module)
 
 
-def write_report(cfg: Optional[ClConfig] = None):
+def write_report(
+    title: Optional[str] = None,
+    report_comment: Optional[str] = None,
+    template: Optional[str] = None,
+    output_dir: Optional[str] = None,
+    filename: Optional[str] = None,
+    make_data_dir: Optional[bool] = None,
+    data_format: Optional[str] = None,
+    zip_data_dir: Optional[bool] = None,
+    force: Optional[bool] = None,
+    make_report: Optional[bool] = None,
+    export_plots: Optional[bool] = None,
+    plots_force_flat: Optional[bool] = None,
+    plots_force_interactive: Optional[bool] = None,
+    strict: Optional[bool] = None,
+    development: Optional[bool] = None,
+    make_pdf: Optional[bool] = None,
+    no_megaqc_upload: Optional[bool] = None,
+    quiet: Optional[bool] = None,
+    verbose: Optional[bool] = None,
+    no_ansi: Optional[bool] = None,
+    profile_runtime: Optional[bool] = None,
+    no_version_check: Optional[bool] = None,
+    run_modules: List[str] = (),
+    exclude_modules: List[str] = (),
+    config_files: List[str] = (),
+    custom_css_files: List[str] = (),
+    module_order: List[Union[str, Dict]] = (),
+):
     """
     Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
     """
-    update_config(cfg=cfg)
+    update_config(cfg=ClConfig(**locals()))
 
     check_version(write_report.__name__)
 
