@@ -88,10 +88,14 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     plugin_hooks.mqc_trigger("before_config")
 
-    # Set up user configs (they are kept for the whole interactive session)
+    config.load_user_files()
+
+    # Set up session config files passed with -c or interactive.load_config().
+    # They are kept for the entire interactive session.
     for path in cfg.config_files:
         if path not in config.session_user_config_files:
             config.session_user_config_files.append(Path(path).absolute())
+            config.load_config_file(str(path))
 
     # Command-line config YAML
     if len(cfg.cl_config) > 0:

@@ -227,10 +227,6 @@ def load_user_files():
     # Load and parse a config file in this working directory if we find it
     load_config_file("multiqc_config.yaml")
 
-    # Custom config files passed with -c or interactive.load_config()
-    for path in session_user_config_files:
-        load_config_file(str(path))
-
 
 # Module filename search patterns
 searchp_fn = os.path.join(MODULE_DIR, "search_patterns.yaml")
