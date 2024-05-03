@@ -199,11 +199,23 @@ def dump_json(data, filehandle=None, **kwargs):
             if math.isnan(obj) or math.isinf(obj):
                 return None
             return obj
-        elif isinstance(obj, (list, tuple, set)):
+        if isinstance(obj, (tuple, set)):
             # JSON only knows list so convert tuples and sets to list.
-            return [replace_nan(v) for v in obj]
-        elif isinstance(obj, dict):
-            return {k: replace_nan(v) for k, v in obj.items()}
+            obj = list(obj)
+        if isinstance(obj, list):
+            for i, item in enumerate(obj):
+                if isinstance(item, float) and (math.isnan(item) or math.isinf(item)):
+                    obj[i] = None
+                elif isinstance(item, (dict, list, tuple, set)):
+                    obj[i] = replace_nan(item)
+            return obj
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                    obj[key] = None
+                elif isinstance(value, (dict, list, tuple, set)):
+                    obj[key] = replace_nan(value)
+            return obj
         return obj
 
     class JsonEncoderWithArraySupport(json.JSONEncoder):
