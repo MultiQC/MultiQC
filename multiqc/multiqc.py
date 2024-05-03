@@ -427,7 +427,9 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
-    cfg = ClConfig(**kwargs)
+    cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
+    other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
+    cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
 
     # Pass on to a regular function that can be used easily without click
     multiqc_run = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
