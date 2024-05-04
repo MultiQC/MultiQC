@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from QualiMap """
-
+"""MultiQC module to parse output from QualiMap"""
 
 import logging
 import os
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)

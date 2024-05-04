@@ -1,12 +1,10 @@
-""" Super Special-Case MultiQC module to produce report section on software versions """
+"""Super Special-Case MultiQC module to produce report section on software versions"""
 
 import logging
 from textwrap import dedent
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.utils import config as mqc_config
-from multiqc.utils import report as mqc_report
-from multiqc.utils import util_functions
+from multiqc.base_module import BaseMultiqcModule
+from multiqc import config as mqc_config, report as mqc_report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -89,4 +87,4 @@ class MultiqcModule(BaseMultiqcModule):
                 for group, versions in flat_software_versions.items()
             }
         # Write to a file for downstream use
-        util_functions.write_data_file(flat_software_versions, "multiqc_software_versions")
+        mqc_report.write_data_file(flat_software_versions, "multiqc_software_versions")

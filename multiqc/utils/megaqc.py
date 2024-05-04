@@ -1,15 +1,16 @@
-""" MultiQC code to export data to MegaQC / flat JSON files """
+"""MultiQC code to export data to MegaQC / flat JSON files"""
 
 import gzip
 import io
 import json
+import logging
 
 import requests
 
-from . import config
-from .util_functions import dump_json
+from multiqc import config
+from multiqc.utils.util_functions import dump_json
 
-log = config.logger
+log = logging.getLogger(__name__)
 
 
 def multiqc_api_post(exported_data):

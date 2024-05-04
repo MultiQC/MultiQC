@@ -1,12 +1,11 @@
-""" MultiQC module to parse output from Preseq """
-
+"""MultiQC module to parse output from Preseq"""
 
 import logging
 
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 from multiqc.utils import mqc_colour
 

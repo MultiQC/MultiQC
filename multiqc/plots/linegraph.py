@@ -5,7 +5,8 @@ import logging
 import re
 from typing import List, Dict, Union, Tuple
 
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,10 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: Union[List[Dict[str, List]], Dict[str, Dict]], pconfig=None) -> Union[line.LinePlot, str]:
+PointT = Dict[Union[float, int, str, None], Union[float, int, str, None]]
+
+
+def plot(data: Union[List[Dict[str, PointT]], Dict[str, PointT]], pconfig=None) -> Union[line.LinePlot, str]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs

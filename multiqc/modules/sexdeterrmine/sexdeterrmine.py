@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from SexdetErrmine """
-
+"""MultiQC module to parse output from SexdetErrmine"""
 
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
 # Initialise the logger

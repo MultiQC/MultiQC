@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -696,12 +696,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": MultiqcModule._drop_time,
                 "hidden": True,
             },
-            "k_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
+            "k_mode": {
+                "title": "Run Mode",
+                "description": "Analysis mode used",
+                "hidden": True,
+            },
             "k_kmer_size": {
                 "title": "k",
                 "description": "Library k-mer size",
                 "min": 0,
-                "format": "{:d}",
+                "format": "{:,d}",
                 "scale": False,
                 "hidden": True,
             },

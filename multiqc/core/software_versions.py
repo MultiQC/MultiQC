@@ -1,4 +1,4 @@
-""" Utility functions to handle software version reporting """
+"""Utility functions to handle software version reporting"""
 
 import logging
 import os
@@ -8,7 +8,7 @@ from typing import List, Dict
 import packaging.version
 import yaml
 
-from multiqc.utils import report as mqc_report
+from multiqc import report as mqc_report
 
 # Initialise the logger
 log = logging.getLogger(__name__)

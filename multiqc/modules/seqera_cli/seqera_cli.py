@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from the Seqera Platform CLI """
+"""MultiQC module to parse output from the Seqera Platform CLI"""
 
 import datetime as dt
 import json
@@ -10,7 +10,7 @@ from collections import defaultdict
 
 import humanize
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 

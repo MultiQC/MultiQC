@@ -1,8 +1,8 @@
-""" MultiQC module to parse output from Lima """
+"""MultiQC module to parse output from Lima"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import HUMID submodules
 from . import stats, neighbours, counts, clusters

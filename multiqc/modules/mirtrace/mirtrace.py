@@ -1,10 +1,9 @@
-""" MultiQC module to parse output files from miRTrace """
-
+"""MultiQC module to parse output files from miRTrace"""
 
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger

@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from BISCUITqc """
-
+"""MultiQC module to parse output from BISCUITqc"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, violin
 
 # Initialize the logger
@@ -644,8 +643,8 @@ class MultiqcModule(BaseMultiqcModule):
             if len(data) > 0:
                 pd[s_name] = data
 
-        shared_mean = {"min": 0, "format": "{:,3f}", "minrange": 10}
-        shared_cofv = {"min": 0, "format": "{:,3f}", "minrange": 50}
+        shared_mean = {"min": 0, "format": "{:,.3f}", "minrange": 10}
+        shared_cofv = {"min": 0, "format": "{:,.3f}", "minrange": 50}
 
         pheader = {
             "mu_a_b": dict(

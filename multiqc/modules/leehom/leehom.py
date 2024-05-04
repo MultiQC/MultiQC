@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from leeHom """
-
+"""MultiQC module to parse output from leeHom"""
 
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)

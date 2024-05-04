@@ -1,14 +1,13 @@
 ## Nicolas Servant
 ## April 2018
 
-""" MultiQC module to parse output from HiC-Pro """
-
+"""MultiQC module to parse output from HiC-Pro"""
 
 import logging
 import os.path
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

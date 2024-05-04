@@ -8,7 +8,8 @@ from typing import Union
 import math
 import re
 
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import bar
 
 logger = logging.getLogger(__name__)

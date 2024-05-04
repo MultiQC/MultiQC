@@ -1,9 +1,10 @@
-""" MultiQC module to parse QC output from PURPLE """
+"""MultiQC module to parse QC output from PURPLE"""
+
 # Initialise the logger
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)

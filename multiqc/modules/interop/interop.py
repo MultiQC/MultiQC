@@ -2,7 +2,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -310,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Prephased": {
                 "title": "Prephased (%)",
                 "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
-                "format": "{:.,2f}",
+                "format": "{:,.2f}",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -327,7 +327,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Cycles Error": {
                 "title": "Cycles Error",
                 "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
-                "format": "{:.,0f}",
                 "scale": "OrRd",
             },
             "Yield": {
@@ -439,7 +438,7 @@ class MultiqcModule(BaseMultiqcModule):
             "CV": {
                 "title": "CV",
                 "description": "The coefficient of variation for the number of counts across all indexes.",
-                "format": "{:.,2f}",
+                "format": "{:,.2f}",
             },
             "Min": {"title": "Min", "description": "The lowest representation for any index."},
             "Max": {"title": "Max", "description": "The highest representation for any index."},

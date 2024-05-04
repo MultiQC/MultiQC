@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers

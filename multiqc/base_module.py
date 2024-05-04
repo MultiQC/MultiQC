@@ -1,6 +1,9 @@
-"""MultiQC modules base class, contains helper functions"""
+"""
+MultiQC modules base class, contains helper functions
+"""
 
-from typing import List, Union, Optional, Dict
+import dataclasses
+from typing import List, Union, Optional, Dict, Any
 
 import fnmatch
 import io
@@ -15,13 +18,28 @@ from collections import defaultdict
 import markdown
 
 from multiqc.plots.plotly.plot import Plot
-from multiqc.utils import config, report, software_versions, util_functions
+from multiqc import config, report
+from multiqc.core import software_versions
 
 logger = logging.getLogger(__name__)
 
 
 class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
+
+
+@dataclasses.dataclass
+class Section:
+    name: str
+    anchor: str
+    description: str
+    comment: str = ""
+    helptext: str = ""
+    content_before_plot: str = ""
+    content: str = ""
+    plot: str = ""
+    print_section: bool = True
+    plot_id: Optional[str] = None
 
 
 class BaseMultiqcModule:
@@ -39,7 +57,7 @@ class BaseMultiqcModule:
         extra=None,
         autoformat=True,
         autoformat_type="markdown",
-        doi: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
@@ -102,7 +120,23 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     self.comment = markdown.markdown(self.comment)
 
-        self.sections = list()
+        self.sections: List[Section] = []
+
+        self.hidden = False
+
+        self.__saved_raw_data: Dict[str, Dict[str, Any]] = dict()  # Saved raw data. Identical to report.saved_raw_data
+
+        self.css: Dict[str, str] = dict()
+        self.js: Dict[str, str] = dict()
+
+    @property
+    def saved_raw_data(self):
+        """
+        Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
+        underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
+        their child modules, and we would lose that data.
+        """
+        return self.__saved_raw_data
 
     def find_log_files(self, sp_key, filecontents=True, filehandles=False):
         """
@@ -154,7 +188,7 @@ class BaseMultiqcModule:
                             fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
                             for pfe in path_filters_exclude
                         )
-                        for analysis_dir in config.analysis_dir
+                        for analysis_dir in report.analysis_files
                     ),
                 )
                 if any(exclusion_hits):
@@ -170,7 +204,7 @@ class BaseMultiqcModule:
                     (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
                     *(
                         (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
-                        for analysis_dir in config.analysis_dir
+                        for analysis_dir in report.analysis_files
                     ),
                 )
                 if not any(inclusion_hits):
@@ -284,26 +318,28 @@ class BaseMultiqcModule:
         description = description.strip()
         comment = comment.strip()
         helptext = helptext.strip()
-        plot_html = plot.add_to_report(report) if isinstance(plot, Plot) else (plot or "")
 
-        self.sections.append(
-            {
-                "name": name,
-                "anchor": anchor,
-                "description": description,
-                "comment": comment,
-                "helptext": helptext,
-                "content_before_plot": content_before_plot,
-                "plot": plot_html,
-                "content": content,
-                "print_section": any(
-                    [
-                        n is not None and len(n) > 0
-                        for n in [description, comment, helptext, content_before_plot, plot_html, content]
-                    ]
-                ),
-            }
+        section = Section(
+            name=name,
+            anchor=anchor,
+            description=description,
+            comment=comment,
+            helptext=helptext,
+            content_before_plot=content_before_plot,
+            content=content,
+            print_section=any([description, comment, helptext, content_before_plot, plot, content]),
         )
+
+        if plot is not None:
+            if isinstance(plot, Plot):
+                section.plot_id = plot.id
+                # separately keeping track of Plot objects to be rendered further
+                report.plot_by_id[plot.id] = plot
+            elif isinstance(plot, str):
+                section.plot = plot
+
+        # self.sections is passed into Jinja template:
+        self.sections.append(section)
 
     @staticmethod
     def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
@@ -552,6 +588,8 @@ class BaseMultiqcModule:
         report.general_stats_headers.append(headers)
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
+        if s_name is not None and self.is_ignore_sample(s_name):
+            return
         try:
             if module is None:
                 module = self.name
@@ -619,7 +657,10 @@ class BaseMultiqcModule:
 
         # Save the file
         report.saved_raw_data[fn] = data
-        util_functions.write_data_file(data, fn, sort_cols, data_format)
+        # Keep also in the module instance, so it's possible to map back data to specific module
+        self.__saved_raw_data[fn] = data
+
+        report.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################
     #### DEPRECATED FORWARDERS

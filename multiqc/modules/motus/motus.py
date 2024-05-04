@@ -1,10 +1,10 @@
-""" Module to parse output from mOTUs """
+"""Module to parse output from mOTUs"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 log = logging.getLogger(__name__)
 

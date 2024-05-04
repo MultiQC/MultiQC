@@ -1,8 +1,8 @@
-""" MultiQC module to parse output from Space Ranger """
+"""MultiQC module to parse output from Space Ranger"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 # Import the Samtools submodules
 from .count import SpaceRangerCountMixin

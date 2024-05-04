@@ -8,9 +8,9 @@ import math
 import os
 import fnmatch
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

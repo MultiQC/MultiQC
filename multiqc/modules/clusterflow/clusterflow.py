@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Cluster Flow """
-
+"""MultiQC module to parse output from Cluster Flow"""
 
 import datetime
 import logging
@@ -7,7 +6,7 @@ import os
 import re
 import time
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger

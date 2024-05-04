@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from Picard """
-
+"""MultiQC module to parse output from Picard"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Picard submodules
 from . import (

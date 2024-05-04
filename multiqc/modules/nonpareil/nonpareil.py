@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from nonpareil """
-
+"""MultiQC module to parse output from nonpareil"""
 
 import logging
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import mqc_colour
 
 

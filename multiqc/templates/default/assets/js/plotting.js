@@ -23,7 +23,6 @@ class Plot {
     this.pctAxisUpdate = dump["pct_axis_update"];
     this.axisControlledBySwitches = dump["axis_controlled_by_switches"];
     this.square = dump["square"];
-    this.static = dump["static"] ?? false;
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles

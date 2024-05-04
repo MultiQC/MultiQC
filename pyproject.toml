@@ -7,7 +7,6 @@ name = "multiqc"
 version = "1.22dev"
 dependencies = [
     "click",
-    "coloredlogs",
     "humanize",
     "importlib-metadata",
     "jinja2>=3.0.0",
@@ -22,7 +21,10 @@ dependencies = [
     "pyaml-env",
     "rich>=10",
     "rich-click",
+    "coloredlogs",  # logging in notebooks
+    "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
+    "pydantic",
 ]
 requires-python = ">=3.8"
 authors = [

@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from phantompeakqualtools """
-
+"""MultiQC module to parse output from phantompeakqualtools"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)
