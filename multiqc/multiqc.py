@@ -17,7 +17,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import json
 import traceback
 from importlib.metadata import EntryPoint
 from typing import Dict, Union, Callable, List, Optional, Tuple
@@ -1177,7 +1176,7 @@ def _write_json_dump() -> None:
 
     if config.development:
         with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
-            json.dump(report.plot_data, f)
+            util_functions.dump_json(report.plot_data, f)
 
 
 def _write_html_and_data(

@@ -142,144 +142,139 @@ function initPlot(dump) {
   return null;
 }
 
-// Execute when page load has finished loading
+let loadingWarning;
+
 $(function () {
   // Show loading warning
-  let loading_warning = $(".mqc_loading_warning").show();
+  loadingWarning = $(".mqc_loading_warning").show();
+});
 
-  // Decompress the JSON plot data and init plot objects
-  decompress_mqc_plotdata(mqc_compressed_plotdata, (mqc_plotdata, err) => {
-    if (err) {
-      console.error(err);
-      return;
+callAfterDecompressed.push(function (mqc_plotdata) {
+  mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
+
+  let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
+
+  // Render plots on page load
+  shouldRender.each(function () {
+    let target = $(this).attr("id");
+    // Deferring each plot call prevents browser from locking up
+    setTimeout(function () {
+      renderPlot(target);
+      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
+        // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+        $(".mqc_loading_warning").hide();
+    }, 50);
+  });
+
+  // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+  if (shouldRender.length === 0) loadingWarning.hide();
+
+  // Render a plot when clicked (heavy plots are not automatically rendered by default)
+  $("body").on("click", ".render_plot", function (e) {
+    renderPlot($(this).parent().attr("id"));
+  });
+
+  // Render all plots from header, even those that are hidden
+  $("#mqc-render-all-plots").click(function () {
+    $(".hc-plot.not_rendered").each(function () {
+      renderPlot($(this).attr("id"));
+    });
+  });
+
+  // Replot graphs when something changed in filters
+  $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
+    // Replot graphs
+    $(".hc-plot:not(.not_rendered)").each(function () {
+      renderPlot($(this).attr("id"));
+    });
+  });
+
+  // A "Percentages" button above a plot is clicked
+  $("button.interactive-switch-group.percent-switch").click(function (e) {
+    e.preventDefault();
+    let target = $(this).data("pid");
+
+    // Toggling flags
+    mqc_plots[target].pActive = !$(this).hasClass("active");
+    $(this).toggleClass("active");
+
+    renderPlot(target);
+  });
+
+  // A "Log" button above a plot is clicked
+  $("button.interactive-switch-group.log10-switch").click(function (e) {
+    e.preventDefault();
+    let target = $(this).data("pid");
+
+    // Toggling flags
+    mqc_plots[target].lActive = !$(this).hasClass("active");
+    $(this).toggleClass("active");
+
+    renderPlot(target);
+  });
+
+  // Switch data source
+  $(".interactive-switch-group.dataset-switch-group button").click(function (e) {
+    e.preventDefault();
+    if ($(this).hasClass("active")) return;
+    $(this).siblings("button.active").removeClass("active");
+    $(this).addClass("active");
+    let target = $(this).data("pid");
+    let activeDatasetIdx = mqc_plots[target].activeDatasetIdx;
+    let newDatasetIdx = $(this).data("datasetIndex");
+    mqc_plots[target].activeDatasetIdx = newDatasetIdx;
+    if (activeDatasetIdx === newDatasetIdx) return;
+
+    renderPlot(target);
+  });
+
+  // Make divs height-draggable
+  // http://jsfiddle.net/Lkwb86c8/
+  $(".hc-plot:not(.no-handle)").each(function () {
+    if (!$(this).parent().hasClass("hc-plot-wrapper")) {
+      $(this).wrap('<div class="hc-plot-wrapper"></div>');
     }
+    if (!$(this).siblings().hasClass("hc-plot-handle")) {
+      $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
+    }
+    $(this).css({ height: "auto", top: 0, bottom: "6px", position: "absolute" });
+  });
 
-    mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
+  $(".hc-plot-handle").on("mousedown", function (e) {
+    let wrapper = $(this).parent();
+    let target = wrapper.children(".hc-plot")[0].id;
+    let startHeight = wrapper.height();
+    let pY = e.pageY;
 
-    let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
-
-    // Render plots on page load
-    shouldRender.each(function () {
-      let target = $(this).attr("id");
-      // Deferring each plot call prevents browser from locking up
-      setTimeout(function () {
-        renderPlot(target);
-        if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
-          // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-          $(".mqc_loading_warning").hide();
-      }, 50);
+    $(document).on("mouseup", function () {
+      // Clear listeners now that we've let go
+      $(document).off("mousemove");
+      $(document).off("mouseup");
+      // Fire off a custom jQuery event for other javascript chunks to tie into
+      // Bind to the plot div, which should have a custom ID
+      $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
     });
 
-    // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-    if (shouldRender.length === 0) loading_warning.hide();
-
-    // Render a plot when clicked (heavy plots are not automatically rendered by default)
-    $("body").on("click", ".render_plot", function (e) {
-      renderPlot($(this).parent().attr("id"));
+    $(document).on("mousemove", function (me) {
+      let newHeight = startHeight + (me.pageY - pY) + 2; // 2 px for the border or something
+      wrapper.css("height", newHeight);
+      if (mqc_plots[target] !== undefined) mqc_plots[target].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
     });
+  });
 
-    // Render all plots from header, even those that are hidden
-    $("#mqc-render-all-plots").click(function () {
-      $(".hc-plot.not_rendered").each(function () {
-        renderPlot($(this).attr("id"));
-      });
-    });
-
-    // Replot graphs when something changed in filters
-    $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
-      // Replot graphs
-      $(".hc-plot:not(.not_rendered)").each(function () {
-        renderPlot($(this).attr("id"));
-      });
-    });
-
-    // A "Percentages" button above a plot is clicked
-    $("button.interactive-switch-group.percent-switch").click(function (e) {
-      e.preventDefault();
-      let target = $(this).data("pid");
-
-      // Toggling flags
-      mqc_plots[target].pActive = !$(this).hasClass("active");
-      $(this).toggleClass("active");
-
-      renderPlot(target);
-    });
-
-    // A "Log" button above a plot is clicked
-    $("button.interactive-switch-group.log10-switch").click(function (e) {
-      e.preventDefault();
-      let target = $(this).data("pid");
-
-      // Toggling flags
-      mqc_plots[target].lActive = !$(this).hasClass("active");
-      $(this).toggleClass("active");
-
-      renderPlot(target);
-    });
-
-    // Switch data source
-    $(".interactive-switch-group.dataset-switch-group button").click(function (e) {
-      e.preventDefault();
-      if ($(this).hasClass("active")) return;
-      $(this).siblings("button.active").removeClass("active");
+  // Sort a heatmap by highlighted names  // TODO: fix for Plotly
+  $(".mqc_heatmap_sortHighlight").click(function (e) {
+    e.preventDefault();
+    let target = $(this).data("target").substr(1);
+    if (mqc_plots[target].sort_highlights === true) {
+      mqc_plots[target].sort_highlights = false;
+      $(this).removeClass("active");
+    } else {
+      mqc_plots[target].sort_highlights = true;
       $(this).addClass("active");
-      let target = $(this).data("pid");
-      let activeDatasetIdx = mqc_plots[target].activeDatasetIdx;
-      let newDatasetIdx = $(this).data("datasetIndex");
-      mqc_plots[target].activeDatasetIdx = newDatasetIdx;
-      if (activeDatasetIdx === newDatasetIdx) return;
-
-      renderPlot(target);
-    });
-
-    // Make divs height-draggable
-    // http://jsfiddle.net/Lkwb86c8/
-    $(".hc-plot:not(.no-handle)").each(function () {
-      if (!$(this).parent().hasClass("hc-plot-wrapper")) {
-        $(this).wrap('<div class="hc-plot-wrapper"></div>');
-      }
-      if (!$(this).siblings().hasClass("hc-plot-handle")) {
-        $(this).after('<div class="hc-plot-handle"><span></span><span></span><span></span></div>');
-      }
-      $(this).css({ height: "auto", top: 0, bottom: "6px", position: "absolute" });
-    });
-
-    $(".hc-plot-handle").on("mousedown", function (e) {
-      let wrapper = $(this).parent();
-      let target = wrapper.children(".hc-plot")[0].id;
-      let startHeight = wrapper.height();
-      let pY = e.pageY;
-
-      $(document).on("mouseup", function () {
-        // Clear listeners now that we've let go
-        $(document).off("mousemove");
-        $(document).off("mouseup");
-        // Fire off a custom jQuery event for other javascript chunks to tie into
-        // Bind to the plot div, which should have a custom ID
-        $(wrapper.parent().find(".hc-plot, .beeswarm-plot")).trigger("mqc_plotresize");
-      });
-
-      $(document).on("mousemove", function (me) {
-        let newHeight = startHeight + (me.pageY - pY) + 2; // 2 px for the border or something
-        wrapper.css("height", newHeight);
-        if (mqc_plots[target] !== undefined) mqc_plots[target].resize(newHeight - 7); // 7 is the height of the handle overlapping the plot wrapper
-      });
-    });
-
-    // Sort a heatmap by highlighted names  // TODO: fix for Plotly
-    $(".mqc_heatmap_sortHighlight").click(function (e) {
-      e.preventDefault();
-      let target = $(this).data("target").substr(1);
-      if (mqc_plots[target].sort_highlights === true) {
-        mqc_plots[target].sort_highlights = false;
-        $(this).removeClass("active");
-      } else {
-        mqc_plots[target].sort_highlights = true;
-        $(this).addClass("active");
-      }
-      $(this).blur();
-      renderPlot(target);
-    });
+    }
+    $(this).blur();
+    renderPlot(target);
   });
 });
 
