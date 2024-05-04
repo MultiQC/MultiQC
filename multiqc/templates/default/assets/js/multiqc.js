@@ -2,6 +2,10 @@
 // Base JS for MultiQC Reports
 ////////////////////////////////////////////////
 
+// Collect functions to be called after plot data is decompressed.
+// Includes functions in plotting.js, and any module-specific JS like multiqc_fastqc.js
+let callAfterDecompressed = [];
+
 // Helper config - is defined and object length > 0?
 function notEmptyObj(obj) {
   try {

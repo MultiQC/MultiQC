@@ -1,7 +1,6 @@
 import base64
 import errno
 import io
-import json
 import logging
 import os
 import re
@@ -21,7 +20,7 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
 from multiqc.core import plugin_hooks
-from multiqc.utils import megaqc
+from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -395,7 +394,7 @@ def _write_data_files() -> None:
 
     if config.development:
         with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:
-            f.write(json.dumps(report.plot_data))
+            util_functions.dump_json(report.plot_data, f)
 
 
 def _write_report():
