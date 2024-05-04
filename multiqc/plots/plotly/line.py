@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Tuple
 import math
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
 
@@ -34,16 +34,16 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
     return LinePlot.create(pconfig, lists_of_lines)
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     lines: List[Dict]
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         lines: List[Dict],
         pconfig: Dict,
-    ) -> "DatasetModel":
-        dataset: DatasetModel = DatasetModel(
+    ) -> "Dataset":
+        dataset: Dataset = Dataset(
             **dataset.model_dump(),
             lines=lines,
         )
@@ -169,7 +169,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class LinePlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
 
     @staticmethod
     def create(
@@ -184,7 +184,7 @@ class LinePlot(Plot):
             default_tt_label="<br>%{x}: %{y}",
         )
 
-        model.datasets = [DatasetModel.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
         # Make a tooltip always show on hover over any point on plot
         model.layout.hoverdistance = -1

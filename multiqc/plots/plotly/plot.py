@@ -34,7 +34,7 @@ class PlotType(Enum):
     BOX = "box"
 
 
-class BaseDatasetModel(BaseModel):
+class BaseDataset(BaseModel):
     """
     Plot dataset: data and metadata for a single plot. Does not necessarily contain all underlying data,
     as something might be down-sampled for the sake of efficiency of interactive plots. Use intermediate
@@ -76,7 +76,7 @@ class Plot(BaseModel):
     id: str
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[BaseDatasetModel]
+    datasets: List[BaseDataset]
     pconfig: Dict
     add_log_tab: bool
     add_pct_tab: bool
@@ -228,7 +228,7 @@ class Plot(BaseModel):
         dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
         datasets = []
         for idx in range(n_datasets):
-            dataset = BaseDatasetModel(
+            dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
                 uid=id,

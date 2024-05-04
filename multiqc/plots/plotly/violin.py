@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from multiqc import config, report
 from multiqc.plots.table_object import DataTable
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc.plots.plotly.table import make_table
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class XAxis(BaseModel):
     range: Optional[List[Union[float, int]]] = None
 
 
-class ColumnHeader(BaseModel):
+class ViolinColumn(BaseModel):
     description: str
     suffix: str
     title: str
@@ -47,9 +47,9 @@ VIOLIN_HEIGHT = 70  # single violin height
 EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     metrics: List[str]
-    header_by_metric: Dict[str, ColumnHeader]
+    header_by_metric: Dict[str, ViolinColumn]
     violin_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
     scatter_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
     all_samples: List[str]  # unique list of all samples in this dataset
@@ -117,10 +117,10 @@ class DatasetModel(BaseDatasetModel):
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         dt: DataTable,
-    ) -> "DatasetModel":
-        value_by_sample_by_metric, header_by_metric = DatasetModel.values_and_headers_from_dt(dt)
+    ) -> "Dataset":
+        value_by_sample_by_metric, header_by_metric = Dataset.values_and_headers_from_dt(dt)
 
         all_samples = set()
         scatter_value_by_sample_by_metric = {}
@@ -211,7 +211,7 @@ class DatasetModel(BaseDatasetModel):
             all_samples.update(set(list(violin_value_by_sample.keys())))
             metrics.append(metric)
 
-        ds = DatasetModel(
+        ds = Dataset(
             **dataset.model_dump(),
             metrics=metrics,
             header_by_metric=header_by_metric,
@@ -373,7 +373,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class ViolinPlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
     violin_height: int = VIOLIN_HEIGHT  # single violin height
     extra_height: int = EXTRA_HEIGHT  # extra space for the title and footer
     no_violin: bool
@@ -403,7 +403,7 @@ class ViolinPlot(Plot):
         show_table_by_default = show_table_by_default or no_violin
 
         model.datasets = [
-            DatasetModel.create(ds, dt)
+            Dataset.create(ds, dt)
             for ds, dt in zip(
                 model.datasets,
                 dts,

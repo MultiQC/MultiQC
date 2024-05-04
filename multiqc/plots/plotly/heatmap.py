@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, split_long_string, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, split_long_string, Plot
 from multiqc import report
 
 logger = logging.getLogger(__name__)
@@ -28,18 +28,18 @@ def plot(
     return HeatmapPlot.create(rows, pconfig, xcats, ycats)
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     rows: List[List[ElemT]]
     xcats: List[str]
     ycats: List[str]
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         xcats: Optional[List[str]] = None,
         ycats: Optional[List[str]] = None,
-    ) -> "DatasetModel":
+    ) -> "Dataset":
         if isinstance(rows, dict):
             # Convert dict to a list of lists
             if not ycats:
@@ -52,7 +52,7 @@ class DatasetModel(BaseDatasetModel):
                             xcats.append(x)
             rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
 
-        dataset = DatasetModel(
+        dataset = Dataset(
             **dataset.__dict__,
             rows=rows,
             xcats=xcats,
@@ -91,7 +91,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class HeatmapPlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
     xcats_samples: bool
     ycats_samples: bool
     min: Optional[float] = None
@@ -136,7 +136,7 @@ class HeatmapPlot(Plot):
 
         # Extend each dataset object with a list of samples
         model.datasets = [
-            DatasetModel.create(
+            Dataset.create(
                 model.datasets[0],
                 rows=rows,
                 xcats=xcats,

@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc import report
 
 logger = logging.getLogger(__name__)
@@ -31,16 +31,16 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     )
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     data: List[BoxT]
     samples: List[str]
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         data_by_sample: Dict[str, BoxT],
-    ) -> "DatasetModel":
-        dataset = DatasetModel(
+    ) -> "Dataset":
+        dataset = Dataset(
             **dataset.__dict__,
             data=list(data_by_sample.values()),
             samples=list(data_by_sample.keys()),
@@ -93,7 +93,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class BoxPlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
 
     @staticmethod
     def create(
@@ -108,8 +108,7 @@ class BoxPlot(Plot):
         )
 
         model.datasets = [
-            DatasetModel.create(ds, data_by_sample)
-            for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
+            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
         height = determine_barplot_height(max_n_samples)

@@ -16,7 +16,7 @@ from multiqc import config, report
 logger = logging.getLogger(__name__)
 
 
-class ColumnModel(BaseModel):
+class TableColumn(BaseModel):
     """
     Column model class. Holds configuration for a single column in a table.
     """
@@ -58,7 +58,7 @@ class DataTable(BaseModel):
     raw_data: List[Dict[str, Dict[str, ValueT]]] = []
     formatted_data: List[Dict[str, Dict[str, str]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
-    headers: List[Dict[str, ColumnModel]] = []
+    headers: List[Dict[str, TableColumn]] = []
     pconfig: Dict
 
     @staticmethod
@@ -436,7 +436,7 @@ class DataTable(BaseModel):
             pconfig=pconfig,
         )
 
-    def get_headers_in_order(self) -> List[Tuple[int, str, ColumnModel]]:
+    def get_headers_in_order(self) -> List[Tuple[int, str, TableColumn]]:
         """
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)

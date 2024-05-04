@@ -6,7 +6,7 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDatasetModel, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc import report
 
 logger = logging.getLogger(__name__)
@@ -26,16 +26,16 @@ def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
     return ScatterPlot.create(pconfig, points_lists)
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     points: List[PointT]
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         points: List[Dict],
         pconfig: Dict,
-    ) -> "DatasetModel":
-        dataset = DatasetModel(
+    ) -> "Dataset":
+        dataset = Dataset(
             **dataset.__dict__,
             points=points,
         )
@@ -179,7 +179,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class ScatterPlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
 
     @staticmethod
     def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlot":
@@ -190,7 +190,7 @@ class ScatterPlot(Plot):
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )
 
-        model.datasets = [DatasetModel.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+        model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
 
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1

@@ -12,7 +12,7 @@ import spectra
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import (
     PlotType,
-    BaseDatasetModel,
+    BaseDataset,
     Plot,
     split_long_string,
 )
@@ -45,16 +45,16 @@ def plot(
     )
 
 
-class DatasetModel(BaseDatasetModel):
+class Dataset(BaseDataset):
     cats: List[Dict]
     samples: List[str]
 
     @staticmethod
     def create(
-        dataset: BaseDatasetModel,
+        dataset: BaseDataset,
         cats: List[Dict],
         samples: List[str],
-    ) -> "DatasetModel":
+    ) -> "Dataset":
         # Need to reverse samples as the bar plot will show them reversed
         samples = list(reversed(samples))
         for cat in cats:
@@ -77,7 +77,7 @@ class DatasetModel(BaseDatasetModel):
             # Check that the number of samples is the same for all categories
             assert len(samples) == len(cat["data"])
 
-        dataset = DatasetModel(
+        dataset = Dataset(
             **dataset.model_dump(),
             cats=cats,
             samples=samples,
@@ -122,7 +122,7 @@ class DatasetModel(BaseDatasetModel):
 
 
 class BarPlot(Plot):
-    datasets: List[DatasetModel]
+    datasets: List[Dataset]
 
     @staticmethod
     def create(
@@ -143,7 +143,7 @@ class BarPlot(Plot):
         )
 
         model.datasets = [
-            DatasetModel.create(d, cats=cats, samples=samples)
+            Dataset.create(d, cats=cats, samples=samples)
             for d, cats, samples in zip(model.datasets, cats_lists, samples_lists)
         ]
 
