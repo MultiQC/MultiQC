@@ -166,17 +166,12 @@ class DatasetModel(BaseDatasetModel):
             elif not header["show_only_outliers"]:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
+                # Sample number is > header['show_only_outliers']
                 if not values_are_numeric:
-                    logger.debug(
-                        f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header['show_only_outliers']}. "
-                        f"As values are not numeric, will not add any interactive points."
-                    )
+                    # As values are not numeric, will not add any interactive points
                     scatter_value_by_sample = {}
                 else:
-                    logger.debug(
-                        f"Violin for '{header['title']}': sample number is {len(value_by_sample)} > {header['show_only_outliers']}. "
-                        f"Will add interactive points only for the outlier values."
-                    )
+                    # For numbers, finding outliers and adding only them as interactive points
                     samples = list(value_by_sample.keys())
                     values = list(value_by_sample.values())
                     outlier_statuses = find_outliers(
@@ -185,7 +180,6 @@ class DatasetModel(BaseDatasetModel):
                         maxval=header.get("dmax"),
                         metric=header["title"],
                     )
-                    logger.debug(f"Violin for '{header['title']}': found {np.count_nonzero(outlier_statuses)} outliers")
                     scatter_value_by_sample = {
                         samples[idx]: values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
                     }
@@ -606,12 +600,8 @@ def find_outliers(
     else:
         indices = np.where(z_scores > z_cutoff)[0]
         while len(indices) <= len(added_values) and z_cutoff > 1.0:
-            new_z_cutoff = z_cutoff - 0.2
-            logger.debug(
-                f"No outliers found with Z-score cutoff {z_cutoff:.1f}, trying a lower cutoff: {new_z_cutoff:.1f}"
-                + (f", metric: '{metric}'" if metric else "")
-            )
-            z_cutoff = new_z_cutoff
+            # No outliers found with this Z-score cutoff, trying a lower cutoff
+            z_cutoff -= 0.2
             indices = np.where(z_scores > z_cutoff)[0]
         outlier_status[indices] = True
 
