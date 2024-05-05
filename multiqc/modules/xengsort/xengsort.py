@@ -1,11 +1,11 @@
-""" MultiQC module to parse log output from xengsort classify """
+"""MultiQC module to parse log output from xengsort classify"""
 
 from collections import defaultdict
 
 import logging
 from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -48,24 +48,25 @@ class MultiqcModule(BaseMultiqcModule):
         self._build_plot()
 
     def _parse_log(self, f):
-        lines = iter(f["contents_lines"])
-        for line in iter(lines):
-            if "\t" in line:
-                fields = line.strip().split("\t")
-                if set(fields) == {"prefix", "host", "graft", "ambiguous", "both", "neither"}:
-                    values = next(lines).strip().split("\t")
-                    data = dict(zip(fields, values))
-                    s_name = data.pop("prefix")
-                    f["s_name"] = s_name
-                    data = {k: int(v) for k, v in data.items()}
-                    percents = {k: v / sum(data.values()) * 100 for k, v in data.items()}
+        lines = iter(f["f"].splitlines())
+        for line in lines:
+            if "\t" not in line:
+                continue
+            fields = line.strip().split("\t")
+            if set(fields) == {"prefix", "host", "graft", "ambiguous", "both", "neither"}:
+                values = next(lines).strip().split("\t")
+                data = dict(zip(fields, values))
+                s_name = data.pop("prefix")
+                f["s_name"] = s_name
+                data = {k: int(v) for k, v in data.items()}
+                percents = {k: v / sum(data.values()) * 100 for k, v in data.items()}
 
-                    if s_name in self.counts:
-                        log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                    self.add_data_source(f, s_name)
-                    self.counts[s_name] = data
-                    self.percents[s_name] = percents
-                    break
+                if s_name in self.counts:
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+                self.add_data_source(f, s_name)
+                self.counts[s_name] = data
+                self.percents[s_name] = percents
+                break
 
     def _build_table(self):
         """

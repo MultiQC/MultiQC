@@ -1,9 +1,9 @@
-""" MultiQC module to parse output from Librarian """
+"""MultiQC module to parse output from Librarian"""
 
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 from multiqc.utils import mqc_colour
 

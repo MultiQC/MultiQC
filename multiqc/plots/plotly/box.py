@@ -1,13 +1,12 @@
 import copy
-import dataclasses
 import logging
 from typing import Dict, List, Union
 
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import util_functions
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc import report
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 BoxT = List[Union[int, float]]
 
 
-def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
+def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:
@@ -25,18 +24,13 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> str:
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = BoxPlot(
-        pconfig,
-        list_of_data_by_sample,
+    return BoxPlot.create(
+        pconfig=pconfig,
+        list_of_data_by_sample=list_of_data_by_sample,
         max_n_samples=max(len(d) for d in list_of_data_by_sample),
     )
 
-    from multiqc.utils import report
 
-    return p.add_to_report(report)
-
-
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     data: List[BoxT]
     samples: List[str]
@@ -73,6 +67,7 @@ class Dataset(BaseDataset):
         layout: go.Layout,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -90,23 +85,35 @@ class Dataset(BaseDataset):
             )
         return fig
 
+    def save_data_file(self) -> None:
+        vals_by_sample = {}
+        for sample, values in zip(self.samples, self.data):
+            vals_by_sample[sample] = values
+        report.write_data_file(vals_by_sample, self.uid)
+
 
 class BoxPlot(Plot):
-    def __init__(
-        self,
+    datasets: List[Dataset]
+
+    @staticmethod
+    def create(
         pconfig: Dict,
         list_of_data_by_sample: List[Dict[str, BoxT]],
         max_n_samples: int,
-    ):
-        super().__init__(PlotType.BOX, pconfig, n_datasets=len(list_of_data_by_sample))
+    ) -> "BoxPlot":
+        model = Plot.initialize(
+            plot_type=PlotType.BOX,
+            pconfig=pconfig,
+            n_datasets=len(list_of_data_by_sample),
+        )
 
-        self.datasets: List[Dataset] = [
-            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(self.datasets, list_of_data_by_sample)
+        model.datasets = [
+            Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
         height = determine_barplot_height(max_n_samples)
 
-        self.layout.update(
+        model.layout.update(
             height=height,
             showlegend=False,
             boxgroupgap=0.1,
@@ -115,15 +122,15 @@ class BoxPlot(Plot):
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
-                hoverformat=self.layout.xaxis.hoverformat,
-                ticksuffix=self.layout.xaxis.ticksuffix,
+                hoverformat=model.layout.xaxis.hoverformat,
+                ticksuffix=model.layout.xaxis.ticksuffix,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=self.layout.yaxis.title.text),
-                hoverformat=self.layout.yaxis.hoverformat,
-                ticksuffix=self.layout.yaxis.ticksuffix,
+                title=dict(text=model.layout.yaxis.title.text),
+                hoverformat=model.layout.yaxis.hoverformat,
+                ticksuffix=model.layout.yaxis.ticksuffix,
             ),
             hovermode="y",
             hoverlabel=dict(
@@ -131,9 +138,4 @@ class BoxPlot(Plot):
                 font=dict(color="black"),
             ),
         )
-
-    def save_data_file(self, dataset: Dataset) -> None:
-        vals_by_sample = {}
-        for sample, values in zip(dataset.samples, dataset.data):
-            vals_by_sample[sample] = values
-        util_functions.write_data_file(vals_by_sample, dataset.uid)
+        return BoxPlot(**model.__dict__)

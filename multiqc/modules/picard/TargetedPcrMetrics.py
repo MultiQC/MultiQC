@@ -1,10 +1,10 @@
-""" MultiQC submodule to parse output from Picard TargetedPcrMetrics """
+"""MultiQC submodule to parse output from Picard TargetedPcrMetrics"""
 
 import logging
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

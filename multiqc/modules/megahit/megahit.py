@@ -1,12 +1,11 @@
-""" MultiQC module to parse output from MEGAHIT """
-
+"""MultiQC module to parse output from MEGAHIT"""
 
 import logging
 import re
 
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger

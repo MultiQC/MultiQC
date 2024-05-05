@@ -1,10 +1,11 @@
 """MultiQC module to parse the output from SNPsplit"""
+
 import logging
 import re
 
 import yaml
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

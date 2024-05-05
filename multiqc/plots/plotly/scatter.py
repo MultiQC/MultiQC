@@ -1,5 +1,4 @@
 import copy
-import dataclasses
 import logging
 from collections import defaultdict
 from typing import Dict, List, Union, Optional
@@ -7,8 +6,8 @@ from typing import Dict, List, Union, Optional
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import util_functions
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc import report
 
 logger = logging.getLogger(__name__)
 
@@ -17,21 +16,16 @@ logger = logging.getLogger(__name__)
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> str:
+def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = ScatterPlot(pconfig, points_lists)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return ScatterPlot.create(pconfig, points_lists)
 
 
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     points: List[PointT]
 
@@ -70,6 +64,7 @@ class Dataset(BaseDataset):
         layout: Optional[go.Layout] = None,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -98,7 +93,7 @@ class Dataset(BaseDataset):
                 threshold = 1.0
                 while threshold <= 6.0:
                     n_outliers = np.count_nonzero((x_z_scores > threshold) | (y_z_scores > threshold))
-                    logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
+                    # logger.debug(f"Scatter plot outlier threshold: {threshold:.2f}, outliers: {n_outliers}")
                     if n_annotated + n_outliers <= MAX_ANNOTATIONS:
                         break
                     # If there are too many outliers, we increase the threshold until we have less than 10
@@ -171,29 +166,33 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-
-class ScatterPlot(Plot):
-    def __init__(self, pconfig: Dict, points_lists: List[List[PointT]]):
-        super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
-
-        self.datasets: List[Dataset] = [
-            Dataset.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
-        ]
-
-        # Make a tooltip always show on hover over nearest point on plot
-        self.layout.hoverdistance = -1
-
-    def tt_label(self) -> Optional[str]:
-        """Default tooltip label"""
-        return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
-
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self) -> None:
         data = [
             {
                 "Name": point["name"],
                 "X": point["x"],
                 "Y": point["y"],
             }
-            for point in dataset.points
+            for point in self.points
         ]
-        util_functions.write_data_file(data, dataset.uid)
+        report.write_data_file(data, self.uid)
+
+
+class ScatterPlot(Plot):
+    datasets: List[Dataset]
+
+    @staticmethod
+    def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlot":
+        model = Plot.initialize(
+            plot_type=PlotType.SCATTER,
+            pconfig=pconfig,
+            n_datasets=len(points_lists),
+            default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
+        )
+
+        model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+
+        # Make a tooltip always show on hover over nearest point on plot
+        model.layout.hoverdistance = -1
+
+        return ScatterPlot(**model.__dict__)

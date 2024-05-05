@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 """
-__main__.py
-~~~~~~~~~~~~~~~~~~~~
 Called when multiqc namespace is used, primarily by the cli:
 
 $ multiqc .

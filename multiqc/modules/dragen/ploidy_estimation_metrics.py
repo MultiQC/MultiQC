@@ -1,6 +1,7 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots import table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -41,6 +42,57 @@ class DragenPloidyEstimationMetrics(BaseMultiqcModule):
             }
         }
         self.general_stats_addcols(data_by_sample, headers, namespace=NAMESPACE)
+
+        table_headers = dict(
+            **headers,
+            **{
+                "Autosomal median coverage": {
+                    "title": "Autosomal med. cov.",
+                    "description": "Median coverage of autosomal chromosomes",
+                    "scale": "Blues",
+                    "format": "{:.2f}x",
+                },
+                "X median coverage": {
+                    "title": "X med. cov.",
+                    "description": "Median coverage of X chromosome",
+                    "scale": "Blues",
+                    "format": "{:.2f}x",
+                },
+                "Y median coverage": {
+                    "title": "Y med. cov.",
+                    "description": "Median coverage of Y chromosome",
+                    "scale": "Blues",
+                    "format": "{:.2f}x",
+                },
+                "X median / Autosomal median": {
+                    "title": "X med. / autosomal med. cov.",
+                    "description": "Ratio of median coverage of X chromosome to median coverage of autosomal chromosomes",
+                    "scale": "Blues",
+                    "format": "{:.2f}",
+                },
+                "Y median / Autosomal median": {
+                    "title": "Y med. / autosomal med. cov.",
+                    "description": "Ratio of median coverage of Y chromosome to median coverage of autosomal chromosomes",
+                    "scale": "Blues",
+                    "format": "{:.2f}",
+                },
+            },
+        )
+
+        self.add_section(
+            name="Ploidy estimation metrics",
+            anchor="dragen_ploidy",
+            plot=table.plot(
+                data_by_sample,
+                headers=table_headers,
+                pconfig={
+                    "id": "dragen_ploidy_table",
+                    "title": "Ploidy estimation metrics",
+                    "namespace": NAMESPACE,
+                },
+            ),
+        )
+
         return data_by_sample.keys()
 
 

@@ -1,6 +1,6 @@
-""" MultiQC module to parse output from Cutadapt """
+"""MultiQC module to parse output from Cutadapt"""
 
-
+import functools
 import logging
 import os
 import re
@@ -9,7 +9,7 @@ import json
 
 from packaging import version
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -73,6 +73,12 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             self.parse_log(f)
 
+        # Since all reports are most likely the same version, cache the result.
+        # version.parse is **very** expensive
+        @functools.lru_cache()
+        def version_parse(v):
+            return version.parse(v)
+
         # Calculate a few extra numbers of our own
         for s_name, d in self.cutadapt_data.items():
             # Percent trimmed
@@ -86,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                         (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                     ) * 100
             # Add missing filtering categories for pre-1.7 logs
-            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
+            if version_parse(d["cutadapt_version"]) > version_parse("1.6"):
                 if d.get("r_processed") is not None:
                     r_filtered_unexplained = (
                         d["r_processed"]

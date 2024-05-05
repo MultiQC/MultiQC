@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from Bakta """
-
+"""MultiQC module to parse output from Bakta"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -116,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         data = {}
-        for line in f["contents_lines"]:
+        for line in f["f"].splitlines():
             s = line.strip().split(": ")
             if s[0] in metrics:
                 data[s[0].replace(" ", "_")] = int(s[1])

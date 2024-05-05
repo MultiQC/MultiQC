@@ -1,15 +1,14 @@
-import dataclasses
 import io
 import logging
 import os
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Union, Tuple
 
 import math
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import util_functions, config
-from multiqc.utils.config import update_dict
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc import config, report
+from multiqc.utils.util_functions import update_dict
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
+def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -32,14 +31,9 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> str:
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    p = LinePlot(pconfig, lists_of_lines)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return LinePlot.create(pconfig, lists_of_lines)
 
 
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     lines: List[Dict]
 
@@ -50,7 +44,7 @@ class Dataset(BaseDataset):
         pconfig: Dict,
     ) -> "Dataset":
         dataset: Dataset = Dataset(
-            **dataset.__dict__,
+            **dataset.model_dump(),
             lines=lines,
         )
 
@@ -104,6 +98,7 @@ class Dataset(BaseDataset):
         layout: go.Layout,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -134,17 +129,65 @@ class Dataset(BaseDataset):
             )
         return fig
 
+    def save_data_file(self) -> None:
+        y_by_x_by_sample = dict()
+        last_cats = None
+        shared_cats = True
+        for line in self.lines:
+            y_by_x_by_sample[line["name"]] = dict()
+
+            # Check to see if all categories are the same
+            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+                if last_cats is None:
+                    last_cats = [x[0] for x in line["data"]]
+                elif last_cats != [x[0] for x in line["data"]]:
+                    shared_cats = False
+
+            for i, x in enumerate(line["data"]):
+                if isinstance(x, list):
+                    y_by_x_by_sample[line["name"]][x[0]] = x[1]
+                else:
+                    try:
+                        y_by_x_by_sample[line["name"]][self.dconfig["categories"][i]] = x
+                    except (ValueError, KeyError, IndexError):
+                        y_by_x_by_sample[line["name"]][str(i)] = x
+
+        # Custom tsv output if the x-axis varies
+        if not shared_cats and config.data_format in ["tsv", "csv"]:
+            sep = "\t" if config.data_format == "tsv" else ","
+            fout = ""
+            for line in self.lines:
+                fout += line["name"] + sep + "X" + sep + sep.join([str(x[0]) for x in line["data"]]) + "\n"
+                fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
+
+            fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
+            fpath = os.path.join(report.data_tmp_dir(), fn)
+            with io.open(fpath, "w", encoding="utf-8") as f:
+                f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
+        else:
+            report.write_data_file(y_by_x_by_sample, self.uid)
+
 
 class LinePlot(Plot):
-    def __init__(self, pconfig: Dict, lists_of_lines: List[List[LineT]]):
-        super().__init__(PlotType.LINE, pconfig, len(lists_of_lines))
+    datasets: List[Dataset]
 
-        self.datasets: List[Dataset] = [
-            Dataset.create(d, lines, pconfig) for d, lines in zip(self.datasets, lists_of_lines)
-        ]
+    @staticmethod
+    def create(
+        pconfig: Dict,
+        lists_of_lines: List[List[LineT]],
+    ) -> "LinePlot":
+        model = Plot.initialize(
+            plot_type=PlotType.LINE,
+            pconfig=pconfig,
+            n_datasets=len(lists_of_lines),
+            axis_controlled_by_switches=["yaxis"],
+            default_tt_label="<br>%{x}: %{y}",
+        )
+
+        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
         # Make a tooltip always show on hover over any point on plot
-        self.layout.hoverdistance = -1
+        model.layout.hoverdistance = -1
 
         y_minrange = pconfig.get("y_minrange", pconfig.get("yMinRange"))
         x_minrange = pconfig.get("x_minrange", pconfig.get("xMinRange"))
@@ -155,9 +198,9 @@ class LinePlot(Plot):
         if y_minrange or y_bands or y_lines:
             # We don't want the bands to affect the calculated axis range, so we
             # find the min and the max from data points, and manually set the range.
-            for dataset in self.datasets:
-                minval = None
-                maxval = None
+            for dataset in model.datasets:
+                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 for line in dataset.lines:
                     ys = [x[1] for x in line["data"]]
                     if len(ys) > 0:
@@ -165,10 +208,6 @@ class LinePlot(Plot):
                         maxval = max(ys) if maxval is None else max(maxval, max(ys))
                 if maxval is not None and minval is not None:
                     maxval += (maxval - minval) * 0.05
-                if minval is None:
-                    minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                if maxval is None:
-                    maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:
@@ -177,25 +216,21 @@ class LinePlot(Plot):
                     maxval = clipmax
                 if y_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + y_minrange)
-                if self.layout.yaxis.type == "log":
+                if model.layout.yaxis.type == "log":
                     minval = math.log10(minval) if minval is not None and minval > 0 else None
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
         if not pconfig.get("categories", False) and x_minrange or x_bands or x_lines:
             # same as above but for x-axis
-            for dataset in self.datasets:
-                minval = None
-                maxval = None
+            for dataset in model.datasets:
+                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 for line in dataset.lines:
                     xs = [x[0] for x in line["data"]]
                     if len(xs) > 0:
                         minval = min(xs) if minval is None else min(minval, min(xs))
                         maxval = max(xs) if maxval is None else max(maxval, max(xs))
-                if minval is None:
-                    minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                if maxval is None:
-                    maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
                 clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
                 if clipmin is not None and minval is not None and clipmin > minval:
@@ -204,12 +239,12 @@ class LinePlot(Plot):
                     maxval = clipmax
                 if x_minrange is not None and maxval is not None and minval is not None:
                     maxval = max(maxval, minval + x_minrange)
-                if self.layout.xaxis.type == "log":
+                if model.layout.xaxis.type == "log":
                     minval = math.log10(minval) if minval is not None and minval > 0 else None
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["xaxis"]["range"] = [minval, maxval]
 
-        self.layout.shapes = (
+        model.layout.shapes = (
             [
                 dict(
                     type="rect",
@@ -278,55 +313,7 @@ class LinePlot(Plot):
             ]
         )
 
-    @staticmethod
-    def tt_label() -> Optional[str]:
-        """Default tooltip label"""
-        return "<br>%{x}: %{y}"
-
-    def axis_controlled_by_switches(self) -> List[str]:
-        """
-        Return a list of axis names that are controlled by the log10 scale and percentage
-        switch buttons
-        """
-        return ["yaxis"]
-
-    def save_data_file(self, dataset: Dataset) -> None:
-        y_by_x_by_sample = dict()
-        last_cats = None
-        shared_cats = True
-        for line in dataset.lines:
-            y_by_x_by_sample[line["name"]] = dict()
-
-            # Check to see if all categories are the same
-            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
-                if last_cats is None:
-                    last_cats = [x[0] for x in line["data"]]
-                elif last_cats != [x[0] for x in line["data"]]:
-                    shared_cats = False
-
-            for i, x in enumerate(line["data"]):
-                if isinstance(x, list):
-                    y_by_x_by_sample[line["name"]][x[0]] = x[1]
-                else:
-                    try:
-                        y_by_x_by_sample[line["name"]][dataset.dconfig["categories"][i]] = x
-                    except (ValueError, KeyError, IndexError):
-                        y_by_x_by_sample[line["name"]][str(i)] = x
-
-        # Custom tsv output if the x-axis varies
-        if not shared_cats and config.data_format in ["tsv", "csv"]:
-            sep = "\t" if config.data_format == "tsv" else ","
-            fout = ""
-            for line in dataset.lines:
-                fout += line["name"] + sep + "X" + sep + sep.join([str(x[0]) for x in line["data"]]) + "\n"
-                fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
-
-            fn = f"{dataset.uid}.{config.data_format_extensions[config.data_format]}"
-            fpath = os.path.join(config.data_dir, fn)
-            with io.open(fpath, "w", encoding="utf-8") as f:
-                f.write(fout.encode("utf-8", "ignore").decode("utf-8"))
-        else:
-            util_functions.write_data_file(y_by_x_by_sample, dataset.uid)
+        return LinePlot(**model.__dict__)
 
 
 def convert_dash_style(dash_style: str) -> str:

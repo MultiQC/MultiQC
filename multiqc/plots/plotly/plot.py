@@ -1,22 +1,24 @@
 import base64
-import dataclasses
 import io
 import logging
 import random
 import re
 import string
-from abc import abstractmethod, ABC
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple
 
 import math
 import plotly.graph_objects as go
+from pydantic import BaseModel, field_validator, field_serializer
 
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.utils import mqc_colour, config, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
+
+check_plotly_version()
 
 
 class PlotType(Enum):
@@ -32,10 +34,11 @@ class PlotType(Enum):
     BOX = "box"
 
 
-@dataclasses.dataclass
-class BaseDataset(ABC):
+class BaseDataset(BaseModel):
     """
-    Structured version of dataset config dictionary
+    Plot dataset: data and metadata for a single plot. Does not necessarily contain all underlying data,
+    as something might be down-sampled for the sake of efficiency of interactive plots. Use intermediate
+    data files if you need full data.
     """
 
     plot_id: str
@@ -46,82 +49,110 @@ class BaseDataset(ABC):
     trace_params: Dict
     pct_range: Dict
 
-    def dump_for_javascript(self) -> Dict:
-        return {k: v for k, v in self.__dict__.items()}
-
-    def create_figure(self, layout: go.Layout, is_log=False, is_pct=False):
+    def create_figure(
+        self,
+        layout: go.Layout,
+        is_log=False,
+        is_pct=False,
+        **kwargs,
+    ) -> go.Figure:
         """
-        To be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
+        Abstract method to be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
+        """
+        raise NotImplementedError
+
+    def save_data_file(self) -> None:
+        """
+        Save dataset to disk.
         """
         raise NotImplementedError
 
 
-class Plot(ABC):
-    """Structured version of plot config dictionary"""
+class Plot(BaseModel):
+    """
+    Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
+    """
 
-    # Default width for flat plots
-    FLAT_PLOT_WIDTH = 1100
+    id: str
+    plot_type: PlotType
+    layout: go.Layout
+    datasets: List[BaseDataset]
+    pconfig: Dict
+    add_log_tab: bool
+    add_pct_tab: bool
+    l_active: bool
+    p_active: bool
+    pct_axis_update: Dict
+    axis_controlled_by_switches: List[str] = []
+    square: bool = False
+    flat: bool = False
 
-    def __init__(
-        self,
+    model_config = dict(
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+    )
+
+    @field_serializer("layout")
+    def serialize_dt(self, layout: go.Layout, _info):
+        return layout.to_plotly_json()
+
+    @field_validator("layout", mode="before")
+    @classmethod
+    def parse_layout(cls, d):
+        if isinstance(d, dict):
+            return go.Layout(**d)
+        return d
+
+    @staticmethod
+    def initialize(
         plot_type: PlotType,
         pconfig: Dict,
         n_datasets: int,
         id: Optional[str] = None,
+        axis_controlled_by_switches: Optional[List[str]] = None,
+        default_tt_label: Optional[str] = None,
     ):
-        check_plotly_version()
-
+        """
+        Initialize a plot model with the given configuration.
+        :param plot_type: plot type
+        :param pconfig: plot configuration dictionary
+        :param n_datasets: number of datasets to pre-initialize dataset models
+        :param id: plot ID
+        :param axis_controlled_by_switches: list of axis names that are controlled by the
+            log10 scale and percentage switch buttons, e.g. ["yaxis"]
+        :param default_tt_label: default tooltip label
+        """
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
 
-        self.id = id or pconfig.get("id")
-        if self.id is None:  # ID of the plot group
+        id = id or pconfig.get("id")
+        if id is None:  # id of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-            is_static_suf = "static_" if config.plots_force_flat else ""
-            self.id = f"mqc_{is_static_suf}plot_{uniq_suffix}"
-
-        self.plot_type = plot_type
-        self.flat = config.plots_force_flat or (
-            not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
-        )
-        self.pconfig = pconfig
+            id = f"mqc_plot_{uniq_suffix}"
 
         # Counts / Percentages / Log10 switch
-        self.add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
-        self.add_pct_tab = pconfig.get("cpswitch", True) is not False and plot_type == PlotType.BAR
-        self.l_active = self.add_log_tab and pconfig.get("logswitch_active") is True
-        self.p_active = self.add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
+        add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_pct_tab = pconfig.get("cpswitch", True) is not False and plot_type == PlotType.BAR
+        l_active = add_log_tab and pconfig.get("logswitch_active") is True
+        p_active = add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
 
-        # Per-dataset configurations
-        self.datasets: List[BaseDataset] = [
-            BaseDataset(
-                plot_id=self.id,
-                label=str(i + 1),
-                uid=self.id,
-                dconfig=dict(),
-                layout=dict(),
-                trace_params=dict(),
-                pct_range=dict(  # range for the percentage view for each axis
-                    xaxis=dict(min=0, max=100),
-                    yaxis=dict(min=0, max=100),
-                ),
-            )
-            for i in range(n_datasets)
-        ]
-
-        height = self.pconfig.get("height", 500)
-        width = self.pconfig.get("width")
-        if self.pconfig.get("square"):
+        height = pconfig.get("height", 500)
+        width = pconfig.get("width")
+        if pconfig.get("square"):
             width = height
 
-        title = self.pconfig.get("table_title", self.pconfig.get("title"))
+        title = pconfig.get("table_title", pconfig.get("title"))
         if not title:
             if config.strict:
-                errmsg = f"LINT: 'title' is missing from plot config for plot '{self.id}'"
+                errmsg = f"LINT: 'title' is missing from plot config for plot '{id}'"
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
 
-        self.layout = go.Layout(
+        flat = config.plots_force_flat or (
+            not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
+        )
+
+        layout = go.Layout(
             title=go.layout.Title(
                 text=title,
                 xanchor="center",
@@ -164,7 +195,7 @@ class Plot(ABC):
                 color="rgba(0, 0, 0, 0.5)",
                 activecolor="rgba(0, 0, 0, 1)",
             ),
-            showlegend=self.flat,
+            showlegend=flat,
             legend=go.layout.Legend(
                 orientation="h",
                 yanchor="top",
@@ -172,30 +203,43 @@ class Plot(ABC):
                 xanchor="center",
                 x=0.5,
             )
-            if self.flat
+            if flat
             else None,
         )
         # Layout update for the counts/percentage switch
-        self.pct_axis_update = dict(
+        pct_axis_update = dict(
             ticksuffix="%",
             hoverformat=".1f",
         )
 
-        self._axis_controlled_by_switches = self.axis_controlled_by_switches()
-        if self.pconfig.get("xlog", self.pconfig.get("xLog")):
-            self._set_axis_log_scale(self.layout.xaxis)
-            if "xaxis" in self._axis_controlled_by_switches:
-                self._axis_controlled_by_switches.remove("xaxis")
-        if self.pconfig.get("ylog", self.pconfig.get("yLog")):
-            self._set_axis_log_scale(self.layout.yaxis)
-            if "yaxis" in self._axis_controlled_by_switches:
-                self._axis_controlled_by_switches.remove("yaxis")
-        if self.add_log_tab and self.l_active:
-            for axis in self._axis_controlled_by_switches:
-                self.layout[axis].type = "log"
+        axis_controlled_by_switches = axis_controlled_by_switches or []
+        if pconfig.get("xlog", pconfig.get("xLog")):
+            _set_axis_log_scale(layout.xaxis)
+            if "xaxis" in axis_controlled_by_switches:
+                axis_controlled_by_switches.remove("xaxis")
+        if pconfig.get("ylog", pconfig.get("yLog")):
+            _set_axis_log_scale(layout.yaxis)
+            if "yaxis" in axis_controlled_by_switches:
+                axis_controlled_by_switches.remove("yaxis")
+        if add_log_tab and l_active:
+            for axis in axis_controlled_by_switches:
+                layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels", [])
-        for idx, dataset in enumerate(self.datasets):
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
+        datasets = []
+        for idx in range(n_datasets):
+            dataset = BaseDataset(
+                plot_id=id,
+                label=str(idx + 1),
+                uid=id,
+                dconfig=dict(),
+                layout=dict(),
+                trace_params=dict(),
+                pct_range=dict(  # range for the percentage view for each axis
+                    xaxis=dict(min=0, max=100),
+                    yaxis=dict(min=0, max=100),
+                ),
+            )
             if n_datasets > 1:
                 dataset.uid += f"_{idx + 1}"
 
@@ -207,46 +251,86 @@ class Plot(ABC):
             if not isinstance(dconfig, (str, dict)):
                 logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
-            dataset.label = dconfig.get("name", dconfig.get("label", idx + 1))
-            if "ylab" not in dconfig and "ylab" not in self.pconfig:
+            dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+            if "ylab" not in dconfig and "ylab" not in pconfig:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
 
-            dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, self.tt_label())
+            dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
+            datasets.append(dataset)
 
-    @staticmethod
-    def _set_axis_log_scale(axis):
-        axis.type = "log"
-        minval = axis.autorangeoptions["minallowed"]
-        maxval = axis.autorangeoptions["maxallowed"]
-        minval = math.log10(minval) if minval is not None and minval > 0 else None
-        maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-        axis.autorangeoptions["minallowed"] = minval
-        axis.autorangeoptions["maxallowed"] = maxval
+        return Plot(
+            plot_type=plot_type,
+            pconfig=pconfig,
+            id=id,
+            datasets=datasets,
+            layout=layout,
+            add_log_tab=add_log_tab,
+            add_pct_tab=add_pct_tab,
+            l_active=l_active,
+            p_active=p_active,
+            pct_axis_update=pct_axis_update,
+            axis_controlled_by_switches=axis_controlled_by_switches,
+            square=pconfig.get("square", False),
+            flat=flat,
+        )
 
-    @staticmethod
-    def axis_controlled_by_switches() -> List[str]:
+    def show(self, dataset_id: int, flat=False, **kwargs):
         """
-        Return a list of axis names that are controlled by the log10 scale and percentage
-        switch buttons, e.g. ["yaxis"]
+        Public method: show the plot in a Jupyter notebook.
         """
-        return []
+        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
+        if flat:
+            from IPython.core.display import HTML
 
-    @staticmethod
-    def tt_label() -> Optional[str]:
-        """Default tooltip label"""
-        return None
+            return HTML(
+                fig_to_static_html(
+                    fig,
+                    active=True,
+                    embed=True,
+                    export_plots=False,
+                    file_name=self.id,
+                )
+            )
+        else:
+            return fig
+
+    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+        """
+        Public method: create a Plotly Figure object.
+        """
+        dataset = self.datasets[dataset_id]
+        layout = go.Layout(self.layout.to_plotly_json())  # make a copy
+        layout.update(**dataset.layout)
+        if flat:
+            layout.width = FLAT_PLOT_WIDTH
+        for axis in self.axis_controlled_by_switches:
+            layout[axis].type = "linear"
+            minval = layout[axis].autorangeoptions["minallowed"]
+            maxval = layout[axis].autorangeoptions["maxallowed"]
+            if is_pct:
+                layout[axis].update(self.pct_axis_update)
+                minval = dataset.pct_range.get(axis, {}).get("min", 0)
+                maxval = dataset.pct_range.get(axis, {}).get("max", 100)
+            if is_log:
+                layout[axis].type = "log"
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            layout[axis].autorangeoptions["minallowed"] = minval
+            layout[axis].autorangeoptions["maxallowed"] = maxval
+        return dataset.create_figure(layout, is_log, is_pct, **kwargs)
 
     def __repr__(self):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self, report) -> str:
+    def add_to_report(self, clean_html_id=True) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
         # Setting IDs again now that we have "report" object to guarantee uniqueness
-        self.id = report.save_htmlid(self.id)
+        if clean_html_id:
+            self.id = report.save_htmlid(self.id)
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
@@ -255,15 +339,20 @@ class Plot(ABC):
         if self.flat:
             html = self.flat_plot()
         else:
-            html = self.interactive_plot(report)
+            html = self.interactive_plot()
             if config.export_plots:
                 self.flat_plot()
+
+        for dataset in self.datasets:
+            if self.id != "general_stats_table":
+                dataset.save_data_file()
+
         return html
 
-    def interactive_plot(self, report) -> str:
+    def interactive_plot(self) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
 
-        html += self.__control_panel()
+        html += self.__control_panel(flat=False)
 
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
@@ -271,16 +360,15 @@ class Plot(ABC):
         height = self.layout.height
         height_style = f'style="height:{height + 7}px"' if height else ""
         html += f"""
-        <div class="hc-plot-wrapper hc-{self.plot_type.value}-wrapper" id="{self.id}-wrapper" {height_style}>
-            <div id="{self.id}" class="hc-plot hc-{self.plot_type.value}-plot not_rendered"></div>
+        <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.id}-wrapper" {height_style}>
+            <div id="{self.id}" class="hc-plot hc-{self.plot_type}-plot not_rendered"></div>
             <div class="created-with-multiqc">Created with MultiQC</div>
         </div>"""
 
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        dump = self.dump_for_javascript()
-        report.plot_data[self.id] = dump
+        report.plot_data[self.id] = self.model_dump(warnings=False)
         return html
 
     def flat_plot(self) -> str:
@@ -297,35 +385,32 @@ class Plot(ABC):
         html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
 
         if not config.simple_output:
-            html += self.__control_panel()
+            html += self.__control_panel(flat=True)
 
         # Go through datasets creating plots
         for ds_idx, dataset in enumerate(self.datasets):
-            if self.pconfig.get("save_data_file", True) and self.id != "general_stats_table":
-                self.save_data_file(dataset)
-
-            html += self._fig_to_static_html(
-                self._make_flat_fig(dataset),
+            html += fig_to_static_html(
+                self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
-                uid=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
             )
             if self.add_pct_tab:
-                html += self._fig_to_static_html(
-                    self._make_flat_fig(dataset, is_pct=True),
+                html += fig_to_static_html(
+                    self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
-                    uid=f"{dataset.uid}-pct",
+                    file_name=f"{dataset.uid}-pct",
                 )
             if self.add_log_tab:
-                html += self._fig_to_static_html(
-                    self._make_flat_fig(dataset, is_log=True),
+                html += fig_to_static_html(
+                    self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
-                    uid=f"{dataset.uid}-log",
+                    file_name=f"{dataset.uid}-log",
                 )
             if self.add_pct_tab and self.add_log_tab:
-                html += self._fig_to_static_html(
-                    self._make_flat_fig(dataset, is_pct=True, is_log=True),
+                html += fig_to_static_html(
+                    self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
-                    uid=f"{dataset.uid}-pct-log",
+                    file_name=f"{dataset.uid}-pct-log",
                 )
 
         html += "</div>"
@@ -339,12 +424,12 @@ class Plot(ABC):
         data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
 
-    def buttons(self) -> List[str]:
+    def buttons(self, flat: bool) -> List[str]:
         """
         Build buttons for control panel
         """
         switch_buttons = ""
-        cls = "mpl_switch_group" if self.flat else "interactive-switch-group"
+        cls = "mpl_switch_group" if flat else "interactive-switch-group"
         # Counts / percentages / log10 switches
         if self.add_pct_tab or self.add_log_tab:
             if self.add_pct_tab:
@@ -379,164 +464,132 @@ class Plot(ABC):
             switch_buttons += "</div>\n\n"
 
         export_btn = ""
-        if not self.flat:
+        if not flat:
             export_btn = self._btn(cls="export-plot", label="Export Plot")
         return [switch_buttons, export_btn]
 
-    def __control_panel(self) -> str:
+    def __control_panel(self, flat: bool) -> str:
         """
         Add buttons: percentage on/off, log scale on/off, datasets switch panel
         """
-        buttons = "\n".join(self.buttons())
+        buttons = "\n".join(self.buttons(flat=flat))
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
 
-    def dump_for_javascript(self) -> Dict:
-        """Serialise the plot data to pick up in plotly-js"""
-        return {
-            "id": self.id,
-            "layout": self.layout.to_plotly_json(),
-            "datasets": [d.dump_for_javascript() for d in self.datasets],
-            "plot_type": self.plot_type.value,
-            "pct_axis_update": self.pct_axis_update,
-            "axis_controlled_by_switches": self._axis_controlled_by_switches,
-            "p_active": self.p_active,
-            "l_active": self.l_active,
-            "square": self.pconfig.get("square"),
-            "config": self.pconfig,  # for megaqc
-        }
 
-    @abstractmethod
-    def save_data_file(self, data: BaseDataset) -> None:
-        """
-        Save dataset to disk.
-        """
+def fig_to_static_html(
+    fig: go.Figure,
+    active: bool = True,
+    export_plots: bool = config.export_plots,
+    embed: bool = not config.development,
+    file_name: Optional[str] = None,
+) -> str:
+    """
+    Build one static image, return an HTML wrapper.
+    """
+    assert fig.layout.width
+    write_kwargs = dict(
+        width=fig.layout.width,  # While interactive plots take full width of screen,
+        # for the flat plots we explicitly set width
+        height=fig.layout.height,
+        scale=2,  # higher detail (retina display)
+    )
 
-    def _make_flat_fig(self, dataset: BaseDataset, is_log=False, is_pct=False) -> go.Figure:
-        """
-        Create a Plotly Figure object.
-        """
-        layout = go.Layout(self.layout.to_plotly_json())  # make a copy
-        layout.update(**dataset.layout)
-        layout.width = layout.width or Plot.FLAT_PLOT_WIDTH
-        for axis in self.axis_controlled_by_switches():
-            layout[axis].type = "linear"
-            minval = layout[axis].autorangeoptions["minallowed"]
-            maxval = layout[axis].autorangeoptions["maxallowed"]
-            if is_pct:
-                layout[axis].update(self.pct_axis_update)
-                minval = dataset.pct_range.get(axis, {}).get("min", 0)
-                maxval = dataset.pct_range.get(axis, {}).get("max", 100)
-            if is_log:
-                layout[axis].type = "log"
-                minval = math.log10(minval) if minval is not None and minval > 0 else None
-                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-            layout[axis].autorangeoptions["minallowed"] = minval
-            layout[axis].autorangeoptions["maxallowed"] = maxval
-        return dataset.create_figure(layout, is_log, is_pct)
+    # Save the plot to the data directory if export is requested
+    if export_plots:
+        if file_name is None:
+            raise ValueError("file_name is required for export_plots")
+        for file_ext in config.export_plot_formats:
+            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
+            plot_path.parent.mkdir(parents=True, exist_ok=True)
+            short_path = Path(config.plots_dir_name) / file_ext / f"{file_name}.{file_ext}"
+            logger.debug(f"Writing plot to {short_path}")
+            if file_ext == "svg":
+                # Cannot add logo to SVGs
+                fig.write_image(plot_path, **write_kwargs)
+            else:
+                img_buffer = io.BytesIO()
+                fig.write_image(img_buffer, **write_kwargs)
+                img_buffer = add_logo(img_buffer, format=file_ext)
+                with open(plot_path, "wb") as f:
+                    f.write(img_buffer.getvalue())
+                img_buffer.close()
 
-    @staticmethod
-    def _fig_to_static_html(
-        fig: go.Figure,
-        active: bool,
-        uid: str,
-    ) -> str:
-        """
-        Build one static image, return an HTML wrapper.
-        """
-        assert fig.layout.width
-        write_kwargs = dict(
-            width=fig.layout.width,  # While interactive plots take full width of screen,
-            # for the flat plots we explicitly set width
-            height=fig.layout.height,
-            scale=2,  # higher detail (retina display)
-        )
+    # Now writing the PNGs for the HTML
+    if not embed:
+        if file_name is None:
+            raise ValueError("file_name is required for non-embedded plots")
+        # Using file written in the config.export_plots block above
+        img_src = Path(config.plots_dir_name) / "png" / f"{file_name}.png"
+    else:
+        img_buffer = io.BytesIO()
+        fig.write_image(img_buffer, **write_kwargs)
+        img_buffer = add_logo(img_buffer, format="PNG")
+        # Convert to a base64 encoded string
+        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+        img_src = f"data:image/png;base64,{b64_img}"
+        img_buffer.close()
 
-        # Save the plot to the data directory if export is requested
-        if config.export_plots:
-            for file_ext in config.export_plot_formats:
-                plot_fn = Path(config.plots_dir) / file_ext / f"{uid}.{file_ext}"
-                plot_fn.parent.mkdir(parents=True, exist_ok=True)
-                if file_ext == "svg":
-                    # Cannot add logo to SVGs
-                    fig.write_image(plot_fn, **write_kwargs)
-                else:
-                    img_buffer = io.BytesIO()
-                    fig.write_image(img_buffer, **write_kwargs)
-                    img_buffer = Plot.add_logo(img_buffer, format=file_ext)
-                    with open(plot_fn, "wb") as f:
-                        f.write(img_buffer.getvalue())
-                    img_buffer.close()
+    # Should this plot be hidden on report load?
+    hiding = "" if active else ' style="display:none;"'
+    id = file_name or f"plot-{random.randint(1000000, 9999999)}"
+    return "".join(
+        [
+            f'<div class="mqc_mplplot" id="{id}"{hiding}>',
+            f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
+            "</div>",
+        ]
+    )
 
-        # Now writing the PNGs for the HTML
-        if config.development:
-            # Using file written in the config.export_plots block above
-            img_src = Path(config.plots_dir_name) / "png" / f"{uid}.png"
-        else:
-            img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **write_kwargs)
-            img_buffer = Plot.add_logo(img_buffer, format="PNG")
-            # Convert to a base64 encoded string
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_src = f"data:image/png;base64,{b64_img}"
-            img_buffer.close()
 
-        # Should this plot be hidden on report load?
-        hiding = "" if active else ' style="display:none;"'
-        return "".join(
-            [
-                f'<div class="mqc_mplplot" id="{uid}"{hiding}>',
-                f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
-                "</div>",
-            ]
-        )
+def add_logo(
+    img_buffer: io.BytesIO,
+    format: str = "png",
+    text: str = "Created with MultiQC",
+    font_size: int = 16,
+) -> io.BytesIO:
+    try:
+        from PIL import Image, ImageDraw
 
-    @staticmethod
-    def add_logo(
-        img_buffer: io.BytesIO,
-        format: str = "png",
-        text: str = "Created with MultiQC",
-        font_size: int = 16,
-    ) -> io.BytesIO:
-        try:
-            from PIL import Image, ImageDraw
+        # Load the image from the BytesIO object
+        image = Image.open(img_buffer)
 
-            # Load the image from the BytesIO object
-            image = Image.open(img_buffer)
+        # Create a drawing context
+        draw = ImageDraw.Draw(image)
 
-            # Create a drawing context
-            draw = ImageDraw.Draw(image)
+        # Define the text position. In order to do that, first calculate the expected
+        # text block width, given the font size.
+        # noinspection PyArgumentList
+        text_width: float = draw.textlength(text, font_size=font_size)
+        position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
 
-            # Define the text position. In order to do that, first calculate the expected
-            # text block width, given the font size.
-            # noinspection PyArgumentList
-            text_width: float = draw.textlength(text, font_size=font_size)
-            position: Tuple[int, int] = (image.width - int(text_width) - 3, image.height - 30)
+        # Draw the text
+        draw.text(position, text, fill="#9f9f9f", font_size=font_size)
 
-            # Draw the text
-            draw.text(position, text, fill="#9f9f9f", font_size=font_size)
+        # Save the image to a BytesIO object
+        output_buffer = io.BytesIO()
+        image.save(output_buffer, format=format)
+        output_buffer.seek(0)
 
-            # Save the image to a BytesIO object
-            output_buffer = io.BytesIO()
-            image.save(output_buffer, format=format)
-            output_buffer.seek(0)
+    except Exception as e:
+        logger.warning(f"Failure adding logo to the plot: {e}")
+        output_buffer = img_buffer
 
-        except Exception as e:
-            logger.warning(f"Failure adding logo to the plot: {e}")
-            output_buffer = img_buffer
+    return output_buffer
 
-        return output_buffer
 
-    @staticmethod
-    def _get_logo() -> str:
-        """
-        Return the MultiQC logo as a base64 encoded string.
-        """
-        # logo_path = Path(__file__).parent.parent / "assets" / "img" / "MultiQC_logo.png"
-        logo_path = Path(__file__).parent.parent / "assets" / "img" / "MultiQC_logo_dark.svg"
-        with open(logo_path, "rb") as f:
-            data = f.read()
-        return "data:image/svg+xml;base64," + base64.b64encode(data).decode()
+# Default width for flat plots
+FLAT_PLOT_WIDTH = 1100
+
+
+def _set_axis_log_scale(axis):
+    axis.type = "log"
+    minval = axis.autorangeoptions["minallowed"]
+    maxval = axis.autorangeoptions["maxallowed"]
+    minval = math.log10(minval) if minval is not None and minval > 0 else None
+    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+    axis.autorangeoptions["minallowed"] = minval
+    axis.autorangeoptions["maxallowed"] = maxval
 
 
 def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
@@ -629,10 +682,16 @@ def _dataset_layout(
                                 break
 
         # As the suffix will be added automatically for the simple format ({y}), remove it from the label
-        if ysuffix is not None and "{y}" + ysuffix in tt_label:
-            tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
-        if xsuffix is not None and "{x}" + xsuffix in tt_label:
-            tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+        if ysuffix is not None:
+            if "{y}" + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y}" + ysuffix, "{y}")
+            if "{y} " + ysuffix in tt_label:
+                tt_label = tt_label.replace("{y} " + ysuffix, "{y}")
+        if xsuffix is not None:
+            if "{x}" + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x}" + xsuffix, "{x}")
+            if "{x} " + xsuffix in tt_label:
+                tt_label = tt_label.replace("{x} " + xsuffix, "{x}")
 
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):

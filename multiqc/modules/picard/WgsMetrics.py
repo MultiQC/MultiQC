@@ -165,7 +165,11 @@ def parse_reports(module):
                     cumulative += v
                     data[s_name][k] = v
                     maxval = max(maxval, v)
-                    data_percent[s_name][k] = 100 - (cumulative / total) * 100
+                    pct_bases_cumulative = (cumulative / total) * 100
+                    pct_bases_with_greater_cov = 100 - pct_bases_cumulative
+                    pct_bases_current = (v / total) * 100
+                    pct_bases_with_greater_or_equal_cov = pct_bases_with_greater_cov + pct_bases_current
+                    data_percent[s_name][k] = pct_bases_with_greater_or_equal_cov
                 else:
                     break
 

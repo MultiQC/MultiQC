@@ -1,4 +1,4 @@
-from multiqc.utils import config
+from multiqc import config
 
 from .plot_aqhist import plot_aqhist
 from .plot_basic_hist import plot_basic_hist

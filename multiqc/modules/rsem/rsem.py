@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from RSEM/rsem-calculate-expression """
-
+"""MultiQC module to parse output from RSEM/rsem-calculate-expression"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

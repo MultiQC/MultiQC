@@ -109,6 +109,7 @@ MultiQC and put into `config.kwargs`. The above plugin later reads
 the value given by the user with the `--project` flag in a hook:
 
 ```python
+from multiqc import config
 if config.kwargs['project'] is not None:
     # do some stuff
 ```

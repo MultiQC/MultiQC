@@ -1,15 +1,14 @@
-import dataclasses
 import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
-from multiqc.utils import util_functions
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, split_long_string, Plot
+from multiqc import report
 
 logger = logging.getLogger(__name__)
 
 
-ElemT = Union[str, float, int]
+ElemT = Union[str, float, int, None]
 
 
 def plot(
@@ -17,7 +16,7 @@ def plot(
     pconfig: Dict,
     xcats: Optional[List[str]] = None,
     ycats: Optional[List[str]] = None,
-) -> str:
+) -> Plot:
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -26,14 +25,9 @@ def plot(
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    p = HeatmapPlot(rows, pconfig, xcats, ycats)
-
-    from multiqc.utils import report
-
-    return p.add_to_report(report)
+    return HeatmapPlot.create(rows, pconfig, xcats, ycats)
 
 
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     rows: List[List[ElemT]]
     xcats: List[str]
@@ -71,6 +65,7 @@ class Dataset(BaseDataset):
         layout: Optional[go.Layout] = None,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -85,30 +80,45 @@ class Dataset(BaseDataset):
             layout=layout or self.layout,
         )
 
+    def save_data_file(self) -> None:
+        data = [
+            ["."] + self.xcats,
+        ]
+        for ycat, row in zip(self.ycats, self.rows):
+            data.append([ycat] + row)
+
+        report.write_data_file(data, self.uid)
+
 
 class HeatmapPlot(Plot):
-    def __init__(
-        self,
+    datasets: List[Dataset]
+    xcats_samples: bool
+    ycats_samples: bool
+    min: Optional[float] = None
+    max: Optional[float] = None
+
+    @staticmethod
+    def create(
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         pconfig: Dict,
         xcats: Optional[List[str]],
         ycats: Optional[List[str]],
-    ):
-        super().__init__(PlotType.HEATMAP, pconfig, n_datasets=1)
+    ) -> "HeatmapPlot":
+        model = Plot.initialize(plot_type=PlotType.HEATMAP, pconfig=pconfig, n_datasets=1)
 
         if isinstance(rows, list):
             if ycats and not isinstance(ycats, list):
                 raise ValueError(
-                    f"Heatmap plot {self.id}: ycats must be passed as a list when the input data is a 2d list. "
+                    f"Heatmap plot {model.id}: ycats must be passed as a list when the input data is a 2d list. "
                     f"The order of that list should match the order of the rows in the input data."
                 )
             if xcats and not isinstance(xcats, list):
                 raise ValueError(
-                    f"Heatmap plot {self.id}: xcats must be passed as a list when the input data is a 2d list. "
+                    f"Heatmap plot {model.id}: xcats must be passed as a list when the input data is a 2d list. "
                     f"The order of that list should match the order of the columns in the input data."
                 )
 
-        self.layout.update(
+        model.layout.update(
             yaxis=dict(
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
@@ -120,39 +130,41 @@ class HeatmapPlot(Plot):
             showlegend=pconfig.get("legend", True),
         )
 
-        self.square = pconfig.get("square", True)  # Keep heatmap cells square
+        model.square = pconfig.get("square", True)  # Keep heatmap cells square
+        xcats_samples = pconfig.get("xcats_samples", False)
+        ycats_samples = pconfig.get("ycats_samples", False)
 
         # Extend each dataset object with a list of samples
-        self.datasets: List[Dataset] = [
+        model.datasets = [
             Dataset.create(
-                self.datasets[0],
+                model.datasets[0],
                 rows=rows,
                 xcats=xcats,
                 ycats=ycats,
             )
         ]
 
-        self.min = self.pconfig.get("min", None)
-        if self.min is None:
-            for dataset in self.datasets:
+        minval = model.pconfig.get("min", None)
+        if minval is None:
+            for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            self.min = val if self.min is None else min(self.min, val)
-        self.max = self.pconfig.get("max", None)
-        if self.max is None:
-            for dataset in self.datasets:
+                            minval = val if minval is None else min(minval, val)
+        maxval = model.pconfig.get("max", None)
+        if maxval is None:
+            for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            self.max = val if self.max is None else max(self.max, val)
+                            maxval = val if maxval is None else max(maxval, val)
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
-        num_rows = len(self.datasets[0].ycats)
-        num_cols = len(self.datasets[0].xcats)
-        MAX_HEIGHT = 900 if self.flat else 500  # smaller number for interactive, as it's resizable
+        num_rows = len(model.datasets[0].ycats)
+        num_cols = len(model.datasets[0].xcats)
+        MAX_HEIGHT = 900 if model.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 
         # Number of samples to the desired size in pixel one sample will take on a screen
@@ -178,20 +190,20 @@ class HeatmapPlot(Plot):
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
         min_px_per_elem = min(x_px_per_elem, y_px_per_elem)
-        if self.square:
+        if model.square:
             x_px_per_elem = y_px_per_elem = min_px_per_elem
 
         width = pconfig.get("width") or int(num_cols * x_px_per_elem)
         height = pconfig.get("height") or int(num_rows * y_px_per_elem)
 
-        if not self.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
-            logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
+        if not model.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
+            # logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
             width = MAX_WIDTH
             x_px_per_elem = width / num_cols
 
         if height > MAX_HEIGHT or width > MAX_WIDTH:
-            logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
-            if self.square:
+            # logger.debug(f"Resizing from {width}x{height} to fit the maximum size {MAX_WIDTH}x{MAX_HEIGHT}")
+            if model.square:
                 px_per_elem = min(MAX_WIDTH / num_cols, MAX_HEIGHT / num_rows)
                 width = height = int(num_rows * px_per_elem)
             else:
@@ -200,33 +212,33 @@ class HeatmapPlot(Plot):
                 width = int(num_cols * x_px_per_elem)
                 height = int(num_rows * y_px_per_elem)
 
-        logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
+        # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
-            self.layout.yaxis.tickmode = "array"
-            self.layout.yaxis.tickvals = list(range(num_rows))
-            self.layout.yaxis.ticktext = ycats
+            model.layout.yaxis.tickmode = "array"
+            model.layout.yaxis.tickvals = list(range(num_rows))
+            model.layout.yaxis.ticktext = ycats
         if x_px_per_elem > 18:
-            self.layout.xaxis.tickmode = "array"
-            self.layout.xaxis.tickvals = list(range(num_cols))
-            self.layout.xaxis.ticktext = xcats
+            model.layout.xaxis.tickmode = "array"
+            model.layout.xaxis.tickvals = list(range(num_cols))
+            model.layout.xaxis.ticktext = xcats
         if pconfig.get("angled_xticks", True) is False and x_px_per_elem >= 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
-            self.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
             # And leave x ticks horizontal:
-            self.layout.xaxis.tickangle = 0
+            model.layout.xaxis.tickangle = 0
         else:
             # Rotate x-ticks to fit more of them on screen
-            self.layout.xaxis.tickangle = 45
+            model.layout.xaxis.tickangle = 45
 
-        self.layout.height = 200 + height
-        self.layout.width = (250 + width) if self.square else None
+        model.layout.height = 200 + height
+        model.layout.width = (250 + width) if model.square else None
 
-        self.layout.xaxis.showgrid = False
-        self.layout.yaxis.showgrid = False
-        self.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
-        self.layout.yaxis.ticklabelposition = "outside right"
+        model.layout.xaxis.showgrid = False
+        model.layout.yaxis.showgrid = False
+        model.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
+        model.layout.yaxis.ticklabelposition = "outside right"
 
         colstops = pconfig.get("colstops", None)
         if colstops:
@@ -266,7 +278,7 @@ class HeatmapPlot(Plot):
         zlab = pconfig.get("zlab", "z")
         hovertemplate = f"{xlab}: %{{x}}<br>{ylab}: %{{y}}<br>{zlab}: %{{z}}<extra></extra>"
 
-        for ds in self.datasets:
+        for ds in model.datasets:
             ds.trace_params = {
                 "colorscale": colorscale,
                 "reversescale": pconfig.get("reverseColors", False),
@@ -279,21 +291,21 @@ class HeatmapPlot(Plot):
             if pconfig.get("datalabels") is None and num_rows * num_cols < 400:
                 ds.trace_params["texttemplate"] = "%{z:." + str(decimal_places) + "f}"
 
-    def dump_for_javascript(self) -> Dict:
-        """Serialise the plot data to pick up in JavaScript"""
-        d = super().dump_for_javascript()
-        d["xcats_samples"] = self.pconfig.get("xcats_samples", True)
-        d["ycats_samples"] = self.pconfig.get("ycats_samples", True)
-        d["square"] = self.square
-        return d
+        return HeatmapPlot(
+            **model.__dict__,
+            xcats_samples=xcats_samples,
+            ycats_samples=ycats_samples,
+            min=minval,
+            max=maxval,
+        )
 
-    def buttons(self) -> List[str]:
+    def buttons(self, flat: bool) -> List[str]:
         """
         Heatmap-specific controls, only for the interactive version.
         """
-        buttons = super().buttons()
+        buttons = super().buttons(flat=flat)
 
-        if not self.flat:
+        if not flat:
             # find min val across all datasets across all cols and rows
             buttons.append(
                 f"""
@@ -316,12 +328,3 @@ class HeatmapPlot(Plot):
             """
             )
         return buttons
-
-    def save_data_file(self, dataset: Dataset) -> None:
-        data = [
-            ["."] + dataset.xcats,
-        ]
-        for ycat, row in zip(dataset.ycats, dataset.rows):
-            data.append([ycat] + row)
-
-        util_functions.write_data_file(data, dataset.uid)

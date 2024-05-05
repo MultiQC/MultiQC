@@ -1,10 +1,9 @@
 """MultiQC module to parse output from OUS variant calling pipeline"""
 
-
 import csv
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -137,43 +136,43 @@ class MultiqcModule(BaseMultiqcModule):
             "TRUTH.TOTAL": {
                 "title": "Truth: Total",
                 "description": "Total number of truth variants",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "TRUTH.TP": {
                 "title": "Truth: True Positive",
                 "description": "Number of true-positive calls in truth representation (counted via the truth sample column)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "TRUTH.FN": {
                 "title": "Truth: False Negative",
                 "description": "Number of false-negative calls = calls in truth without matching query call",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.TOTAL": {
                 "title": "Query: Total",
                 "description": "Total number of query calls",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.TP": {
                 "title": "Query: True Positive",
                 "description": "Number of true positive calls in query representation (counted via the query sample column)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.FP": {
                 "title": "Query: False Positive",
                 "description": "Number of false-positive calls in the query file (mismatched query calls within the confident regions)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.UNK": {
                 "title": "Query: Unknown",
                 "description": "Number of query calls outside the confident regions",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "FP.gt": {
@@ -273,13 +272,13 @@ class MultiqcModule(BaseMultiqcModule):
             "Subset.Size": {
                 "title": "Subset Size",
                 "description": "the number of nucleotides contained in the current subset",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "Subset.IS_CONF.Size": {
                 "title": "Subset Confident Size",
                 "description": "This gives the number of confident bases (-f regions) in the current subset",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
         }

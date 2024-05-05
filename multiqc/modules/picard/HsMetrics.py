@@ -262,7 +262,7 @@ def _general_stats_table(module, data):
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: util.multiply_hundred(x),
+                "modify": util.multiply_hundred,
             }
     module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
@@ -352,18 +352,16 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
             }
             if h.find("PCT") > -1:
                 headers[h]["title"] = headers[h]["title"]
-                headers[h]["modify"] = lambda x: x * 100.0
+                headers[h]["modify"] = util.multiply_hundred
                 headers[h]["max"] = 100
                 headers[h]["suffix"] = "%"
 
             elif h.find("READS") > -1:
                 headers[h]["title"] = f"{config.read_count_prefix} {headers[h]['title']}"
-                headers[h]["modify"] = lambda x: x * config.read_count_multiplier
                 headers[h]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
                 headers[h]["title"] = f"{config.base_count_prefix} {headers[h]['title']}"
-                headers[h]["modify"] = lambda x: x * config.base_count_multiplier
                 headers[h]["shared_key"] = "base_count"
 
             # Manual capitilisation for some strings

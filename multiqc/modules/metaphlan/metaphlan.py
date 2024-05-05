@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from MetaPhlAn """
-
+"""MultiQC module to parse output from MetaPhlAn"""
 
 import logging
 import re
 
-from multiqc.utils import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)

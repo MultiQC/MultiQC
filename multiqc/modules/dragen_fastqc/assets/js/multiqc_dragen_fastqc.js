@@ -25,7 +25,7 @@ function load_fastqc_seq_content() {
 }
 
 // Set up listeners etc on page load
-$(function () {
+callAfterDecompressed.push(function (mqc_plotdata) {
   load_fastqc_passfails();
   load_fastqc_seq_content();
 
@@ -70,7 +70,6 @@ function fastqc_module(module_element, module_key) {
     $.each(fastqc_seq_content[module_key], function (s_name, data) {
       // rename sample names
       var orig_s_name = s_name;
-      var t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           var re = new RegExp(f_text, "g");
@@ -80,7 +79,10 @@ function fastqc_module(module_element, module_key) {
         }
       });
       orig_s_names[s_name] = orig_s_name;
-      sample_statuses[s_name] = t_status;
+      if (fastqc_passfails.length !== 0) {
+        let t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
+        sample_statuses[s_name] = t_status;
+      }
       p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
 
       var hide_sample = false;
@@ -96,7 +98,7 @@ function fastqc_module(module_element, module_key) {
           }
         }
       }
-      if (window.mqc_hide_mode == "show") {
+      if (window.mqc_hide_mode === "show") {
         hide_sample = !hide_sample;
       }
       if (!hide_sample) {
@@ -110,7 +112,7 @@ function fastqc_module(module_element, module_key) {
       .find("#fastqc_seq_heatmap_div .samples-hidden-warning, #fastqc_seq_heatmap_div .fastqc-heatmap-no-samples")
       .remove();
     module_element.find("#fastqc_seq_heatmap_div .hc-plot-wrapper").show();
-    if (num_samples == 0) {
+    if (num_samples === 0) {
       module_element.find("#fastqc_seq_heatmap_div .hc-plot-wrapper").hide();
       module_element
         .find("#fastqc_seq_heatmap_div")
@@ -127,7 +129,7 @@ function fastqc_module(module_element, module_key) {
             </div>',
       );
     }
-    if (num_samples == 0) {
+    if (num_samples === 0) {
       return;
     }
 

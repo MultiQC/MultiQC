@@ -2,59 +2,66 @@ import logging
 from collections import defaultdict
 from typing import Tuple, Optional, List
 
+from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
-from multiqc.utils import config, mqc_colour, util_functions, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable]) -> str:
+def plot(dt: List[DataTable]) -> Plot:
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
 
 
-def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str]:
+def make_table(
+    dt: DataTable,
+    violin_id: Optional[str] = None,
+    add_control_panel: bool = True,
+) -> Tuple[str, str]:
     """
     Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
     :param violin_id: optional, will add a button to switch to a violin plot with this ID
+    :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
     t_headers = dict()
     t_modal_headers = dict()
     t_rows = dict()
     t_rows_empty = dict()
-    dt.raw_vals = defaultdict(lambda: dict())
+    raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
     table_title = dt.pconfig.get("table_title")
     if table_title is None:
         table_title = dt.id.replace("_", " ").title()
 
-    for idx, k, header in dt.get_headers_in_order():
-        rid = header["rid"]
+    for idx, metric, header in dt.get_headers_in_order():
+        rid = header.rid
 
         # Build the table header cell
         shared_key = ""
-        if header.get("shared_key", None) is not None:
-            shared_key = f" data-shared-key={header['shared_key']}"
+        if header.shared_key is not None:
+            shared_key = f" data-shared-key={header.shared_key}"
 
         hide = ""
         muted = ""
         checked = ' checked="checked"'
-        if header.get("hidden", False) is True:
+        if header.hidden:
             hide = "hidden"
             muted = " text-muted"
             checked = ""
             hidden_cols += 1
 
         data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}'.format(
-            header["dmax"], header["dmin"], header["namespace"], shared_key
+            header.dmax, header.dmin, header.namespace, shared_key
         )
 
-        ns = f'{header["namespace"]}: ' if header["namespace"] else ""
-        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header["description"]}">{header["title"]}</span>'
+        ns = f"{header.namespace}: " if header.namespace else ""
+        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header.description}">{header.title}</span>'
 
         t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>'.format(
             rid=rid, h=hide, da=data_attr, c=cell_contents
@@ -67,59 +74,57 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
         if violin_id:
             data += f" data-violin-id='{violin_id}'"
         t_modal_headers[rid] = f"""
-        <tr class="{rid}{muted}" style="background-color: rgba({header["colour"]}, 0.15);">
+        <tr class="{rid}{muted}" style="background-color: rgba({header.colour}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" {data}>
           </td>
-          <td>{header["namespace"]}</td>
-          <td>{header["title"]}</td>
-          <td>{header["description"]}</td>
-          <td><code>{k}</code></td>
-          <td>{header.get("shared_key", "")}</td>
+          <td>{header.namespace}</td>
+          <td>{header.title}</td>
+          <td>{header.description}</td>
+          <td><code>{metric}</code></td>
+          <td>{header.shared_key or ""}</td>
         </tr>"""
 
         # Make a colour scale
-        if header["scale"] is False:
+        if header.scale is False:
             c_scale = None
         else:
             c_scale = mqc_colour.mqc_colour_scale(
-                name=header["scale"],
-                minval=header["dmin"],
-                maxval=header["dmax"],
+                name=header.scale,
+                minval=header.dmin,
+                maxval=header.dmax,
                 id=dt.id,
             )
 
         # Collect conditional formatting config
         cond_formatting_rules = {}
-        if header.get("cond_formatting_rules"):
-            cond_formatting_rules[rid] = header["cond_formatting_rules"]
+        if header.cond_formatting_rules:
+            cond_formatting_rules[rid] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
 
-        cond_formatting_colours = header.get("cond_formatting_colours", [])
+        cond_formatting_colours = header.cond_formatting_colours
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for s_name, samp in dt.data[idx].items():
-            if k in samp:
-                val = samp[k]
-                kname = f"{header['namespace']}_{rid}"
-                dt.raw_vals[s_name][kname] = val
+        for s_name in dt.raw_data[idx].keys():
+            if metric in dt.raw_data[idx][s_name]:
+                val = dt.raw_data[idx][s_name][metric]
+                valstring = dt.formatted_data[idx][s_name][metric]
+                if val is None:
+                    continue
 
-                if "modify" in header and callable(header["modify"]):
-                    try:
-                        val = header["modify"](val)
-                    except TypeError as e:
-                        logger.debug(f"Error modifying table value {kname} : {val} - {e}")
+                kname = f"{header.namespace}_{rid}"
+                raw_vals[s_name][kname] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     try:
-                        dmin = header["dmin"]
-                        dmax = header["dmax"]
+                        dmin = header.dmin
+                        dmax = header.dmax
                         percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
                         # Treat 0 as 0-width and make bars width of absolute value
-                        if header.get("bars_zero_centrepoint"):
-                            dmax = max(abs(header["dmin"]), abs(header["dmax"]))
+                        if header.bars_zero_centrepoint:
+                            dmax = max(abs(header.dmin), abs(header.dmax))
                             dmin = 0
                             percentage = ((abs(float(val)) - dmin) / (dmax - dmin)) * 100
                         percentage = min(percentage, 100)
@@ -129,31 +134,17 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 else:
                     percentage = 100
 
-                if "format" in header and callable(header["format"]):
-                    valstring = header["format"](val)
-                else:
-                    try:
-                        # "format" is a format string?
-                        valstring = str(header["format"].format(val))
-                    except ValueError:
-                        try:
-                            valstring = str(header["format"].format(float(val)))
-                        except ValueError:
-                            valstring = str(val)
-                    except Exception:
-                        valstring = str(val)
+                # This is horrible, but Python locale settings are worse
+                if config.thousandsSep_format is None:
+                    config.thousandsSep_format = '<span class="mqc_small_space"></span>'
+                if config.decimalPoint_format is None:
+                    config.decimalPoint_format = "."
+                valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
+                valstring = valstring.replace("DECIMAL", config.decimalPoint_format).replace(
+                    "THOUSAND", config.thousandsSep_format
+                )
 
-                    # This is horrible, but Python locale settings are worse
-                    if config.thousandsSep_format is None:
-                        config.thousandsSep_format = '<span class="mqc_small_space"></span>'
-                    if config.decimalPoint_format is None:
-                        config.decimalPoint_format = "."
-                    valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
-                    valstring = valstring.replace("DECIMAL", config.decimalPoint_format).replace(
-                        "THOUSAND", config.thousandsSep_format
-                    )
-
-                suffix = header.get("suffix")
+                suffix = header.suffix
                 if suffix:
                     # Add a space before the suffix, but not as an actual character, so ClipboardJS would copy
                     # the whole value without the space. Also, remove &nbsp; that we don't want ClipboardJS to copy.
@@ -181,13 +172,17 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                                         cmatches[ftype] = True
                                     if "s_ne" in cmp and str(cmp["s_ne"]).lower() != str(val).lower():
                                         cmatches[ftype] = True
-                                    if "eq" in cmp and float(cmp["eq"]) == float(val):
+                                    if "eq" in cmp and float(val) == float(cmp["eq"]):
                                         cmatches[ftype] = True
-                                    if "ne" in cmp and float(cmp["ne"]) != float(val):
+                                    if "ne" in cmp and float(val) != float(cmp["ne"]):
                                         cmatches[ftype] = True
-                                    if "gt" in cmp and float(cmp["gt"]) < float(val):
+                                    if "gt" in cmp and float(val) > float(cmp["gt"]):
                                         cmatches[ftype] = True
-                                    if "lt" in cmp and float(cmp["lt"]) > float(val):
+                                    if "lt" in cmp and float(val) < float(cmp["lt"]):
+                                        cmatches[ftype] = True
+                                    if "ge" in cmp and float(val) >= float(cmp["ge"]):
+                                        cmatches[ftype] = True
+                                    if "le" in cmp and float(val) <= float(cmp["le"]):
                                         cmatches[ftype] = True
                                 except Exception:
                                     logger.warning(f"Not able to apply table conditional formatting to '{val}' ({cmp})")
@@ -207,20 +202,20 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.id}, column {k}, sample {s_name}")
+                    print(f"Value {val} is not hashable for table {dt.id}, column {metric}, sample {s_name}")
 
                 # Categorical background colours supplied
-                if hashable and val in header.get("bgcols", {}).keys():
-                    col = f"style=\"background-color:{header['bgcols'][val]} !important;\""
+                if hashable and val in header.bgcols.keys():
+                    col = f'style="background-color:{header.bgcols[val]} !important;"'
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
                     t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstring}</td>'
 
                 # Build table cell background colour bar
-                elif hashable and header["scale"]:
+                elif hashable and header.scale:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
-                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{k}"')
+                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{metric}"')
                         )
                     else:
                         col = ""
@@ -241,7 +236,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 # Is this cell hidden or empty?
                 if s_name not in t_rows_empty:
                     t_rows_empty[s_name] = dict()
-                t_rows_empty[s_name][rid] = header.get("hidden", False) or str(val).strip() == ""
+                t_rows_empty[s_name][rid] = header.hidden or str(val).strip() == ""
 
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
@@ -249,7 +244,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug(f"Removing header {k} from table, as no data")
+            logger.debug(f"Removing header {metric} from table, as no data")
 
     #
     # Put everything together
@@ -257,7 +252,7 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
 
     # Buttons above the table
     html = ""
-    if not config.simple_output:
+    if not config.simple_output and add_control_panel:
         # Copy Table Button
         buttons = []
 
@@ -367,8 +362,8 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
         html += f"<tr{row_hidden}>"
         # Sample name row header
         html += f'<th class="rowheader" data-original-sn="{s_name}">{s_name}</th>'
-        for k in t_headers:
-            html += t_rows[s_name].get(k, empty_cells[k])
+        for metric in t_headers:
+            html += t_rows[s_name].get(metric, empty_cells[metric])
         html += "</tr>"
     html += "</tbody></table></div>"
     if len(t_rows) > 10 and config.collapse_tables:
@@ -378,12 +373,12 @@ def make_table(dt: DataTable, violin_id: Optional[str] = None) -> Tuple[str, str
     # Save the raw values to a file if requested
     if dt.pconfig.get("save_file") is True:
         fn = dt.pconfig.get("raw_data_fn", f"multiqc_{dt.id}")
-        util_functions.write_data_file(dt.raw_vals, fn)
-        report.saved_raw_data[fn] = dt.raw_vals
+        report.write_data_file(raw_vals, fn)
+        report.saved_raw_data[fn] = raw_vals
 
     # Build the bootstrap modal to customise columns and order
     modal = ""
-    if not config.simple_output:
+    if not config.simple_output and add_control_panel:
         modal = _configuration_modal(
             tid=dt.id,
             title=table_title,

@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Bamdst """
-
+"""MultiQC module to parse output from Bamdst"""
 
 import logging
 from collections import defaultdict
@@ -9,9 +8,9 @@ import math
 import os
 import fnmatch
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -97,7 +96,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_chromosome_by_sample, "multiqc_bamdst_chromosomes")
 
         self.build_tables(data_by_sample)
-        self._build_per_chrom_plot(data_by_chromosome_by_sample)
+        if data_by_chromosome_by_sample:
+            self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
     def _parse_coverage_report(self, f: Dict) -> Dict:
         """
@@ -352,8 +352,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter contigs
         filt_data_by_chrom_by_sample = self._filter_contigs(data_by_chrom_by_sample)
-        contigs = set.union(*[set(d.keys()) for d in data_by_chrom_by_sample.values()])
-        filt_contigs = set.union(*[set(d.keys()) for d in filt_data_by_chrom_by_sample.values()])
+        contigs = set()
+        for s_name, data_by_chrom in data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                contigs.add(chrom)
+        filt_contigs = set()
+        for s_name, data_by_chrom in filt_data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                filt_contigs.add(chrom)
+
         if contigs == filt_contigs or len(filt_contigs) == 0:
             datasets = [data_by_chrom_by_sample]
             data_labels = None
@@ -372,42 +379,47 @@ class MultiqcModule(BaseMultiqcModule):
                     depth_datasets[-1][s_name][chrom] = d["Avg depth"]
                     cov_datasets[-1][s_name][chrom] = d["Coverage%"]
 
-        num_chroms = max([len(by_chrom.keys()) for by_chrom in depth_datasets[0].values()])
-        if num_chroms > 1:
+        if len(filt_contigs) > 1:
+            pconfig = {
+                "id": "bamdst-depth-per-contig-plot",
+                "title": "Bamdst: average depth per contig",
+                "xlab": "Region",
+                "ylab": "Average depth",
+                "categories": True,
+                "tt_decimals": 1,
+                "tt_suffix": "x",
+                "smooth_points": 500,
+                "logswitch": True,
+                "hide_zero_cats": False,
+                "ymin": 0,
+            }
+            if data_labels:
+                pconfig["data_labels"] = data_labels
+
             perchrom_depth_plot = linegraph.plot(
                 depth_datasets,
-                pconfig={
-                    "id": "bamdst-depth-per-contig-plot",
-                    "title": "Bamdst: average depth per contig",
-                    "xlab": "Region",
-                    "ylab": "Average depth",
-                    "categories": True,
-                    "tt_decimals": 1,
-                    "tt_suffix": "x",
-                    "smooth_points": 500,
-                    "logswitch": True,
-                    "hide_zero_cats": False,
-                    "ymin": 0,
-                    "data_labels": data_labels,
-                },
+                pconfig,
             )
+            pconfig = {
+                "id": "bamdst-cov-per-contig-plot",
+                "title": "Bamdst: coverage percentage of each contig",
+                "xlab": "Region",
+                "ylab": "Coverage %",
+                "categories": True,
+                "tt_decimals": 1,
+                "tt_suffix": "%",
+                "smooth_points": 500,
+                "logswitch": True,
+                "hide_zero_cats": False,
+                "ymax": 100,
+                "ymin": 0,
+            }
+            if data_labels:
+                pconfig["data_labels"] = data_labels
+
             perchrom_cov_plot = linegraph.plot(
                 cov_datasets,
-                pconfig={
-                    "id": "bamdst-cov-per-contig-plot",
-                    "title": "Bamdst: coverage percentage of each contig",
-                    "xlab": "Region",
-                    "ylab": "Coverage %",
-                    "categories": True,
-                    "tt_decimals": 1,
-                    "tt_suffix": "%",
-                    "smooth_points": 500,
-                    "logswitch": True,
-                    "hide_zero_cats": False,
-                    "ymax": 100,
-                    "ymin": 0,
-                    "data_labels": data_labels,
-                },
+                pconfig=pconfig,
             )
         else:
             perchrom_depth_plot = bargraph.plot(

@@ -1,10 +1,10 @@
-""" MultiQC module to parse output from CCS """
+"""MultiQC module to parse output from CCS"""
 
 import json
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs PF",
                 "description": "ZMWs pass filters",
                 "scale": "BuGn",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
                 "hidden": True,
             },
@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs input",
                 "description": "ZMWs input",
                 "scale": "Purples",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
             },
         }

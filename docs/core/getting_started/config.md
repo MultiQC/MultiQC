@@ -259,7 +259,7 @@ they can be overwritten in `<installation_dir>/multiqc_config.yaml` or
 
 To see the default search patterns, check a given module in the MultiQC documentation.
 Each module has its search patterns listed beneath any free-text docs.
-Alternatively, see the [`search_patterns.yaml`](https://github.com/MultiQC/MultiQC/blob/main/multiqc/utils/search_patterns.yaml)
+Alternatively, see the [`search_patterns.yaml`](https://github.com/MultiQC/MultiQC/blob/main/multiqc/search_patterns.yaml)
 file in the MultiQC source code. Copy the section for the program that you want to modify and paste this
 into your config file. Make sure you make it part of a dictionary called `sp`
 as follows:

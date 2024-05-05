@@ -1,4 +1,4 @@
-""" MultiQC module to parse log output from Xenome Classify """
+"""MultiQC module to parse log output from Xenome Classify"""
 
 from collections import defaultdict
 
@@ -6,7 +6,7 @@ import logging
 import spectra
 from typing import Dict, Union
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -74,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         s_name = f["s_name"]
 
-        lines = iter(f["contents_lines"])
+        lines = iter(f["f"].splitlines())
         try:
             detail_percents, detail_counts = self._parse_xenome_section(lines, "Statistics")
             summary_percents, summary_counts = self._parse_xenome_section(lines, "Summary")

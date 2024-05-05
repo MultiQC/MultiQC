@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from GATK """
-
+"""MultiQC module to parse output from GATK"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the GATK submodules
 # import varianteval

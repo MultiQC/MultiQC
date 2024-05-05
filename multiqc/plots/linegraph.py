@@ -1,11 +1,12 @@
-""" MultiQC functions to plot a linegraph """
+"""MultiQC functions to plot a linegraph"""
 
 import inspect
 import logging
 import re
 from typing import List, Dict, Union, Tuple
 
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config, report
+from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,10 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
+PointT = Dict[Union[float, int, str, None], Union[float, int, str, None]]
+
+
+def plot(data: Union[List[Dict[str, PointT]], Dict[str, PointT]], pconfig=None) -> Union[line.LinePlot, str]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -44,7 +48,7 @@ def plot(data: Union[List[Dict[str, List]], Dict[str, List]], pconfig=None):
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
         data = [data]
-    if "data_labels" in pconfig:
+    if pconfig.get("data_labels"):
         if len(pconfig["data_labels"]) != len(data):
             raise ValueError(
                 f"Length of data_labels does not match the number of datasets. "
@@ -218,7 +222,7 @@ def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[in
             continue
 
         binsize = (len(d) - 1) / (numpoints - 1)
-        first_element_indices = [round(binsize * i) for i in range(numpoints)]
+        first_element_indices = {round(binsize * i) for i in range(numpoints)}
         smoothed_d = {x: y for i, (x, y) in enumerate(d.items()) if i in first_element_indices}
         smoothed_data[s_name] = smoothed_d
 

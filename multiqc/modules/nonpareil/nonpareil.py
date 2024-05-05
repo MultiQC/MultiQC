@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from nonpareil """
-
+"""MultiQC module to parse output from nonpareil"""
 
 import logging
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import mqc_colour
 
 
@@ -49,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.data_by_sample) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.data_by_sample)} reports")
-        self.write_data_file(self.data_by_sample, "nonpareil")
+        self.write_data_file(self.data_by_sample, "multiqc_nonpareil")
 
         # Add versions
         for s_name, data in self.data_by_sample.items():

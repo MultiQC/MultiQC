@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from qc3C """
-
+"""MultiQC module to parse output from qc3C"""
 
 import itertools
 import json
@@ -10,7 +9,7 @@ from collections import defaultdict
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
 log = logging.getLogger(__name__)
@@ -697,12 +696,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": MultiqcModule._drop_time,
                 "hidden": True,
             },
-            "k_mode": {"title": "Run Mode", "description": "Analysis mode used", "hidden": True},
+            "k_mode": {
+                "title": "Run Mode",
+                "description": "Analysis mode used",
+                "hidden": True,
+            },
             "k_kmer_size": {
                 "title": "k",
                 "description": "Library k-mer size",
                 "min": 0,
-                "format": "{:d}",
+                "format": "{:,d}",
                 "scale": False,
                 "hidden": True,
             },
@@ -844,7 +847,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Could not parse qc3C JSON: '{f['fn']}'")
             return
 
-        s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
+        s_name = self.clean_s_name(os.path.basename(os.path.abspath(f["root"])), f, root=os.path.dirname(f["root"]))
         if s_name in self.qc3c_data:
             log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 

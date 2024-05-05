@@ -2,18 +2,26 @@
 Helper functions to manipulate colours and colour scales
 """
 
+import functools
 import hashlib
 
 # Default logger will be replaced by caller
 import logging
 import re
+from typing import Tuple
 
 import numpy as np
 import spectra
 
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(128)  # 34 unique colourmaps found using multiqc-test-data
+def cached_spectra_colour_scale(colours: Tuple[str]):
+    """Caches spectra color scale calls as these are expensive"""
+    return spectra.scale(list(colours))
 
 
 class mqc_colour_scale(object):
@@ -401,7 +409,8 @@ class mqc_colour_scale(object):
                     val_float = min(val_float, self.maxval)
 
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
-                my_scale = spectra.scale(self.colours).domain(domain_nums)
+                my_spectra_scale = cached_spectra_colour_scale(tuple(self.colours))
+                my_scale = my_spectra_scale.domain(domain_nums)
 
                 # Lighten colours
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val_float).rgb])
