@@ -26,6 +26,7 @@ class SuperDeduper:
             "title": "HTStream: Duplicates",
             "xlab": "Percentage of Reads",
             "ylab": "Percent Duplicates",
+            "tt_label": "{point.x:.2f}: {point.y:.2f}",
             "data_labels": [
                 {"name": "Percent Duplicates", "xlab": "Percentage of Reads", "ylab": "Percent Duplicates"},
                 {"name": "Duplicate Saturation", "xlab": "Total Reads", "ylab": "Unique Reads"},
@@ -43,7 +44,7 @@ class SuperDeduper:
 
             # exit to avoid division by zero
             if json[key]["Sd_Total_Reads"] == 0:
-                return html
+                return None, html
 
             for item in json[key]["Sd_Saturation"]:
                 perc = (item[0] / json[key]["Sd_Total_Reads"]) * 100
@@ -52,7 +53,9 @@ class SuperDeduper:
                 data[0][key][perc] = perc_dup
                 data[1][key][item[0]] = item[0] - item[1]
 
-        return linegraph.plot(data, config)
+        figure = linegraph.plot(data, config)
+
+        return figure, html
 
     ########################
     # Main Function
@@ -90,6 +93,7 @@ class SuperDeduper:
             }
 
         # output dictionary, keys are section, value is function called for figure generation
-        section = {"Duplicate Saturation": self.linegraph(stats_json, index), "Overview": overview_dict}
+        figure, html = self.linegraph(stats_json, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

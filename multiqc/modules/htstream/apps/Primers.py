@@ -45,10 +45,7 @@ class Primers:
 
         cats = list(set(labels))
 
-        # Create bargraph
-        html += bargraph.plot(data, cats, config)
-
-        return html
+        return bargraph.plot(data, cats, config), html
 
     ########################
     # Main Function
@@ -80,6 +77,7 @@ class Primers:
             stats_json[key] = {"Pr_Primer_Counts": json[key]["Fragment"]["primers_counts"]}
 
         # dictionary for sections and figure function calls
-        section = {"Primer Counts": self.bargraph(stats_json, index), "Overview": overview_dict}
+        figure, html = self.bargraph(stats_json, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

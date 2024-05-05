@@ -40,39 +40,39 @@ class PolyATTrim:
             html += (
                 '<div class="alert alert-info"> <strong>Notice:</strong> No basepairs were trimmed from samples. </div>'
             )
-            return html
+            figure = None
 
-        perc_data = {}
-        read_data = {}
+        else:
+            perc_data = {}
+            read_data = {}
 
-        # Construct data for multidataset bargraph
-        for key in json:
-            perc_data[key] = {
-                "Perc_R1_lost": json[key]["Pt_Perc_R1_lost"],
-                "Perc_R2_lost": json[key]["Pt_Perc_R2_lost"],
-                "Perc_SE_lost": json[key]["Pt_Perc_SE_lost"],
-            }
-            read_data[key] = {
-                "R1_lost": json[key]["Pt_R1_lost"],
-                "R2_lost": json[key]["Pt_R2_lost"],
-                "SE_lost": json[key]["Pt_SE_lost"],
-            }
+            # Construct data for multidataset bargraph
+            for key in json:
+                perc_data[key] = {
+                    "Perc_R1_lost": json[key]["Pt_Perc_R1_lost"],
+                    "Perc_R2_lost": json[key]["Pt_Perc_R2_lost"],
+                    "Perc_SE_lost": json[key]["Pt_Perc_SE_lost"],
+                }
+                read_data[key] = {
+                    "R1_lost": json[key]["Pt_R1_lost"],
+                    "R2_lost": json[key]["Pt_R2_lost"],
+                    "SE_lost": json[key]["Pt_SE_lost"],
+                }
 
-        # bargraph dictionary. Exact use of example in MultiQC docs.
-        categories = [OrderedDict(), OrderedDict()]
+            # bargraph dictionary. Exact use of example in MultiQC docs.
+            categories = [OrderedDict(), OrderedDict()]
 
-        # Colors for sections
-        categories[0]["Perc_R1_lost"] = {"name": "Read 1", "color": "#779BCC"}
-        categories[0]["Perc_R2_lost"] = {"name": "Read 2", "color": "#C3C3C3"}
-        categories[0]["Perc_SE_lost"] = {"name": "Single End", "color": "#D1ADC3"}
-        categories[1]["R1_lost"] = {"name": "Read 1", "color": "#779BCC"}
-        categories[1]["R2_lost"] = {"name": "Read 2", "color": "#C3C3C3"}
-        categories[1]["SE_lost"] = {"name": "Single End", "color": "#D1ADC3"}
+            # Colors for sections
+            categories[0]["Perc_R1_lost"] = {"name": "Read 1", "color": "#779BCC"}
+            categories[0]["Perc_R2_lost"] = {"name": "Read 2", "color": "#C3C3C3"}
+            categories[0]["Perc_SE_lost"] = {"name": "Single End", "color": "#D1ADC3"}
+            categories[1]["R1_lost"] = {"name": "Read 1", "color": "#779BCC"}
+            categories[1]["R2_lost"] = {"name": "Read 2", "color": "#C3C3C3"}
+            categories[1]["SE_lost"] = {"name": "Single End", "color": "#D1ADC3"}
 
-        # Create bargrpah
-        html += bargraph.plot([perc_data, read_data], categories, config)
+            figure = bargraph.plot([perc_data, read_data], categories, config)
 
-        return html
+        return figure, html
 
     ########################
     # Main Function
@@ -135,9 +135,7 @@ class PolyATTrim:
             overall += total_bp_lost
 
         # section and figure function calls
-        section = {
-            "Trimmed Bp Composition Bargraph": self.bargraph(stats_json, overall, index),
-            "Overview": overview_dict,
-        }
+        figure, html = self.bargraph(stats_json, overall, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

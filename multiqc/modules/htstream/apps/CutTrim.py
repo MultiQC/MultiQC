@@ -31,8 +31,6 @@ class CutTrim:
             ],
         }
 
-        html = ""
-
         perc_data = {}
         read_data = {}
 
@@ -51,10 +49,7 @@ class CutTrim:
         cats[1]["Left_Trim"] = {"name": "Left Trimmed"}
         cats[1]["Right_Trim"] = {"name": "Right Trimmed"}
 
-        # Create bargraph
-        html += bargraph.plot([perc_data, read_data], cats, config)
-
-        return html
+        return bargraph.plot([perc_data, read_data], cats, config), ""
 
     ########################
     # MainFunction
@@ -106,6 +101,7 @@ class CutTrim:
             }
 
         # sections and figure function calls
-        section = {"Bargraph": self.bargraph(stats_json, index), "Overview": overview_dict}
+        figure, html = self.bargraph(stats_json, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section
