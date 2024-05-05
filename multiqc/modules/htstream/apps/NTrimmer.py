@@ -39,33 +39,33 @@ class NTrimmer:
         # returns nothing if no reads were trimmed.
         if bps == 0:
             html = '<div class="alert alert-info"> <strong>Notice:</strong> No basepairs were trimmed from any sample. </div>'
-            return html
+            figure = None
 
-        r1_data = {}
-        r2_data = {}
-        se_data = {}
+        else:
+            r1_data = {}
+            r2_data = {}
+            se_data = {}
 
-        # Create dictionaries for multidataset bargraphs
-        for key in json:
-            r1_data[key] = {"LT_R1": json[key]["Nt_Left_Trimmed_R1"], "RT_R1": json[key]["Nt_Right_Trimmed_R1"]}
+            # Create dictionaries for multidataset bargraphs
+            for key in json:
+                r1_data[key] = {"LT_R1": json[key]["Nt_Left_Trimmed_R1"], "RT_R1": json[key]["Nt_Right_Trimmed_R1"]}
 
-            r2_data[key] = {"LT_R2": json[key]["Nt_Left_Trimmed_R2"], "RT_R2": json[key]["Nt_Right_Trimmed_R2"]}
+                r2_data[key] = {"LT_R2": json[key]["Nt_Left_Trimmed_R2"], "RT_R2": json[key]["Nt_Right_Trimmed_R2"]}
 
-            se_data[key] = {"LT_SE": json[key]["Nt_Left_Trimmed_SE"], "RT_SE": json[key]["Nt_Right_Trimmed_SE"]}
+                se_data[key] = {"LT_SE": json[key]["Nt_Left_Trimmed_SE"], "RT_SE": json[key]["Nt_Right_Trimmed_SE"]}
 
-        # Create categores for multidatatset bragraphs
-        cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-        cats[0]["LT_R1"] = {"name": "Left Trimmmed"}
-        cats[0]["RT_R1"] = {"name": "Right Trimmmed"}
-        cats[1]["LT_R2"] = {"name": "Left Trimmmed"}
-        cats[1]["RT_R2"] = {"name": "Right Trimmmed"}
-        cats[2]["LT_SE"] = {"name": "Left Trimmmed"}
-        cats[2]["RT_SE"] = {"name": "Right Trimmmed"}
+            # Create categores for multidatatset bragraphs
+            cats = [OrderedDict(), OrderedDict(), OrderedDict()]
+            cats[0]["LT_R1"] = {"name": "Left Trimmmed"}
+            cats[0]["RT_R1"] = {"name": "Right Trimmmed"}
+            cats[1]["LT_R2"] = {"name": "Left Trimmmed"}
+            cats[1]["RT_R2"] = {"name": "Right Trimmmed"}
+            cats[2]["LT_SE"] = {"name": "Left Trimmmed"}
+            cats[2]["RT_SE"] = {"name": "Right Trimmmed"}
 
-        # create bargraphs
-        html += bargraph.plot([r1_data, r2_data, se_data], cats, config)
+            figure = bargraph.plot([r1_data, r2_data, se_data], cats, config)
 
-        return html
+        return figure, html
 
     ########################
     # Main Function
@@ -121,6 +121,7 @@ class NTrimmer:
             overall += total_r1 + total_r2 + total_se
 
         # section and figure function calls
-        section = {"Trimmed Bps": self.bargraph(stats_json, overall, index), "Overview": overview_dict}
+        figure, html = self.bargraph(stats_json, overall, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

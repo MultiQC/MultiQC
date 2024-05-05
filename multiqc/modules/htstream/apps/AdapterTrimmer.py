@@ -41,30 +41,28 @@ class AdapterTrimmer:
         # returns nothing if no reads were trimmed.
         if bps == 0:
             html = '<div class="alert alert-info"> <strong>Notice:</strong> No basepairs were trimmed from any sample. </div>'
-            return html
+            figure = None
 
-        perc_data = {}
-        read_data = {}
-        bp_data = {}
+        else:
+            perc_data = {}
+            read_data = {}
+            bp_data = {}
 
-        # Create dictionaries for multidataset bargraphs
-        for key in json:
-            perc_data[key] = {"Perc_bp_lost": json[key]["At_%_BP_Lost" + index]}
+            # Create dictionaries for multidataset bargraphs
+            for key in json:
+                perc_data[key] = {"Perc_bp_lost": json[key]["At_%_BP_Lost" + index]}
+                read_data[key] = {"Perc_adapters": json[key]["At_%_Adapters" + index]}
+                bp_data[key] = {"Avg_adapter": json[key]["At_Avg_BP_Trimmed" + index]}
 
-            read_data[key] = {"Perc_adapters": json[key]["At_%_Adapters" + index]}
+            # Create categories for multidataset bargraph
+            cats = [OrderedDict(), OrderedDict(), OrderedDict()]
+            cats[0]["Perc_bp_lost"] = {"name": "Percentage"}
+            cats[1]["Perc_adapters"] = {"name": "Percentage"}
+            cats[2]["Avg_adapter"] = {"name": "Basepairs"}
 
-            bp_data[key] = {"Avg_adapter": json[key]["At_Avg_BP_Trimmed" + index]}
+            figure = bargraph.plot([perc_data, read_data, bp_data], cats, config)
 
-        # Create categories for multidataset bargraph
-        cats = [OrderedDict(), OrderedDict(), OrderedDict()]
-        cats[0]["Perc_bp_lost"] = {"name": "Percentage"}
-        cats[1]["Perc_adapters"] = {"name": "Percentage"}
-        cats[2]["Avg_adapter"] = {"name": "Basepairs"}
-
-        # create bargraphs
-        html += bargraph.plot([perc_data, read_data, bp_data], cats, config)
-
-        return html
+        return figure, html
 
     ########################
     # Main Function
@@ -72,7 +70,6 @@ class AdapterTrimmer:
         stats_json = OrderedDict()
         overview_dict = {}
         total = 0
-        zeroes = False
 
         for key in json.keys():
             frag_in = (2 * json[key]["Paired_end"]["in"]) + json[key]["Single_end"]["in"]
@@ -133,10 +130,6 @@ class AdapterTrimmer:
             # Accumulate avg bp trimmed
             total += avg_bp_trimmed
 
-            # If percentages are small, use raw counts
-            if perc_bp_lost < 0.001 and not zeroes:
-                zeroes = True
-
             # Overview stats
             overview_dict[key] = {
                 "Output_Reads": json[key]["Fragment"]["out"],
@@ -156,6 +149,7 @@ class AdapterTrimmer:
             }
 
         # sections and figure function calls
-        section = {"Bargraph": self.bargraph(stats_json, total, index), "Overview": overview_dict}
+        figure, html = self.bargraph(stats_json, total, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

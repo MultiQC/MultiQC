@@ -38,6 +38,7 @@ def resolve(pairs):
 def parse_json(name, f):
     app_dict = {}
     apps = json.loads(f)
+    repeated_apps = []
 
     # Will fail if old format is usef
     try:
@@ -50,6 +51,7 @@ def parse_json(name, f):
                 while app_name in app_dict.keys():
                     i += 1
                     app_name = a["Program_details"]["program"] + "_" + str(i)
+                    repeated_apps.append(a["Program_details"]["program"])
 
             app_dict[app_name] = a
 
@@ -59,7 +61,7 @@ def parse_json(name, f):
         log.warning("Sample " + name + " uses old json format. Please update to a newer version of HTStream.")
         raise
 
-    return app_dict
+    return app_dict, repeated_apps
 
 
 ###################################
@@ -95,62 +97,3 @@ def uniform(json, read):
             break
 
     return midpoint
-
-
-###################################
-# Multiplot html formatter
-def multi_plot_html(header, samples, btn_1, btn_2, id_1, id_2, graph_1, graph_2, exempt=True):
-    # section header
-    wrapper_html = header
-
-    # Buttons
-    wrapper_html += '<div class="btn-group hc_switch_group {}">\n'.format("htstream_exempt")
-    wrapper_html += '<button class="btn btn-default btn-sm active" onclick="htstream_plot_switch(this, \'{t}\')" id="{i}_btn">{b}</button>\n'.format(
-        i=id_1, t=id_2, b=btn_1
-    )
-    wrapper_html += '<button class="btn btn-default btn-sm " onclick="htstream_plot_switch(this, \'{t}\')" id="{i}_btn">{b}</button>\n'.format(
-        i=id_2, t=id_1, b=btn_2
-    )
-    wrapper_html += "</div>\n"
-
-    # this is where the previous html is added to the wrapper html (two separate divs that can be toggled for each graph)
-    # line graph div
-    wrapper_html += '<div id="{b}" class="htstream_fadein">'.format(b=id_1)
-    wrapper_html += graph_1 + "</div>"
-
-    # get unique id and create unique id for dropdown
-    id_suffix = id_1.split("_")[-1]
-    id_3 = "htstream_stats_dropdown_" + id_suffix
-
-    # split up graph html
-    graph_2 = graph_2.split("\n")
-    tmp = graph_2[0].split(">")
-
-    # # add dropdown html
-    tmp[0] += """><div class="btn-group">
-                <button type="button" class="btn btn-default dropdown-toggle" id="{i}" data-toggle="dropdown">{s} <span class="caret"></span></button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">""".format(i=id_3, s=samples[0])
-
-    # populate dropdown buttons for each sample
-    for s in samples:
-        tmp[0] += """<li style="border-bottom: 1px solid #bdbcbc; margin-botton:8px;">
-                        <a><button class="hts-btn" id="{i}" onclick="hts_btn_click(this)">{s}</button></a>
-                     </li>""".format(i=s + "_" + id_suffix, s=s)
-
-    # close all elements and rejoin
-    tmp[0] += """</ul>
-            </div"""
-
-    # hide buttons
-    tmp[1] += ' style="display:none;"'
-
-    # rejoin all html
-    graph_2[0] = ">".join(tmp)
-    graph_2 = "\n".join(graph_2)
-
-    # this is where the previous html is added to the wrapper html (two separate divs that can be toggled for each graph)
-    # line graph div
-    wrapper_html += '<div id="{b}" class="htstream_fadein" style="display:none;"><br>'.format(b=id_2)
-    wrapper_html += graph_2 + "</div>"
-
-    return wrapper_html

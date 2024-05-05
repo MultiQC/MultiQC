@@ -7,8 +7,8 @@ class OverviewStats:
             "id": "htstream_overview_reduction",
             "smooth_points_sumcounts": False,
             "categories": True,
-            # "tt_decimals": "{point.y:.0f}'",
             "title": "HTStream: Read and Basepair Reduction",
+            "tt_label": "{point.y:.2}",
             "ylab": "Counts",
             "data_labels": [
                 {"name": "Reads", "ylab": "Counts", "xlab": "Tool"},
@@ -44,15 +44,7 @@ class OverviewStats:
                 total_bps = json[app][samp][io + "_Bps"]
                 data[1][samp][app] = total_bps
 
-        # if no apps found in section, create alert div, otherwise, create plots
-        if len(app_list) < 2:
-            return ""
-
-        html = linegraph.plot(data, line_config)
-
-        return html
+        return linegraph.plot(data, line_config)
 
     def execute(self, json, app_list):
-        reduction_html = self.read_and_basepair_reduction(json, app_list)
-
-        return reduction_html
+        return self.read_and_basepair_reduction(json, app_list)

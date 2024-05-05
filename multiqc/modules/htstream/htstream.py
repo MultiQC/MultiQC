@@ -46,6 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.overview_stats = {}
         self.report_sections = {}
         self.app_order = []
+        self.repeated_apps = []
         self.add_software_version(None)
 
         # Import js and css functions.
@@ -66,13 +67,14 @@ class MultiqcModule(BaseMultiqcModule):
                 log.debug("Duplicate sample name found! Overwriting: {}".format(file["s_name"]))
 
             # parse json file
-            file_data = htstream_utils.parse_json(
+            file_data, repeated_apps = htstream_utils.parse_json(
                 file["s_name"], file["f"]
             )  # parse stats file. Should return json directory of apps and their stats
 
             # Add data to MultiQC and data structures
             self.add_data_source(file)
             self.htstream_data[s_name] = file_data
+            self.repeated_apps = repeated_apps
 
         self.htstream_data = self.ignore_samples(self.htstream_data)
 
@@ -136,19 +138,14 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 log.error("Inconsistent order of HTStream applications.")
 
-        # scold people that don't read the documentation
-        if "hts_Stats_1" not in self.app_order:
-            log.warning("hts_Stats not found. It is recommended you run this app before and after pipeline.")
-
         # sort list of samples
         sample_keys = list(sorted(json.keys()))
 
         # initialize some more useful variables
         self.overview_stats = {"Pipeline Input": {}, "details": {"read_reducer": [], "bp_reducer": []}}
+        supported_apps_keys = list(supported_apps.keys())
 
         pipeline_input = True
-
-        supported_apps_keys = list(supported_apps.keys())
 
         # process data
         for i in range(len(self.app_order)):
@@ -169,14 +166,13 @@ class MultiqcModule(BaseMultiqcModule):
             # creat app specific dictionary, each entry will be a sample
             stats_dict = OrderedDict()
 
-            # iterate through samples
+            # get input reads
             for key in sample_keys:
                 # get app
                 stats_dict[key] = json[key][app]
 
                 # populate info for first app in pipeline
                 if pipeline_input and len(self.app_order) > 1:
-                    # add info
                     self.overview_stats["Pipeline Input"][key] = {
                         "Input_Reads": stats_dict[key]["Fragment"]["in"],
                         "Input_Bps": stats_dict[key]["Fragment"]["basepairs_in"],
@@ -192,44 +188,82 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # add app to list of read or bp reducers
                 if app.type == "both":
-                    self.overview_stats["details"]["read_reducer"].append(program)
-                    self.overview_stats["details"]["bp_reducer"].append(program)
+                    self.overview_stats["details"]["read_reducer"].append(app_name)
+                    self.overview_stats["details"]["bp_reducer"].append(app_name)
 
                 else:
-                    self.overview_stats["details"][app.type].append(program)
+                    self.overview_stats["details"][app.type].append(app_name)
 
                 # dictionary of subsections
+                description = app.info
                 section_dict = app.execute(stats_dict, index)
+                self.overview_stats[app_name] = section_dict["Overview"]
 
-                # if dictionary is not empty
-                if len(section_dict.keys()) != 0:
-                    # get overview sectino data
-                    self.overview_stats[app_name] = section_dict["Overview"]
+                try:
+                    notes = stats_dict[list(stats_dict.keys())[1]]["Program_details"]["options"]["notes"]
+                except:
+                    notes = ""
+                    raise
 
-                    try:
-                        notes = stats_dict[list(stats_dict.keys())[1]]["Program_details"]["options"]["notes"]
-                    except:
-                        notes = ""
-                        raise
+                if program != "Stats":
+                    # if dictionary is not empty
+                    if len(section_dict.keys()) != 0:
+                        figure = section_dict["Figure"]
+                        html = section_dict["Content"]
 
-                    # construct html for section
-                    html = ""
+                        # add report section to dictionary, to be added later
+                        self.report_sections[app_name] = {
+                            "name": app_name,
+                            "description": description,
+                            "figure": figure,
+                            "html": html,
+                            "comment": notes,
+                        }
 
-                    if notes != "":
-                        html += '\n<div class="alert alert-info"> <strong>Notes: </strong>' + notes + "</div>"
+                else:
+                    self.report_sections[app_name + " (Summary Table)"] = {
+                        "name": app_name + " (Table)",
+                        "description": "Basic statistics about the reads in a dataset.",
+                        "figure": section_dict["Table"],
+                        "html": "",
+                        "comment": notes,
+                    }
 
-                    for title, section in section_dict.items():
-                        if section != "" and title != "Overview":
-                            html += section + "<br>\n"
+                    read_types = []
+                    if "PE" in section_dict.keys():
+                        read_types.append("PE")
 
-                    # remove trailing space
-                    html = html[:-5]
+                    if "SE" in section_dict.keys():
+                        read_types.append("SE")
 
-                    # add description for app
-                    description = app.info
+                    for rtype in read_types:
+                        self.report_sections[app_name + " (" + rtype + " Read Length)"] = {
+                            "name": app_name + " (" + rtype + " Read Length)",
+                            "description": "Distribution of read lengths for each sample.",
+                            "figure": section_dict[rtype]["Read_Length"],
+                            "html": "",
+                            "comment": "",
+                        }
 
-                    # add report section to dictionary, to be added later
-                    self.report_sections[app_name] = {"description": description, "html": html}
+                        self.report_sections[app_name + " (" + rtype + " PE Base by Cycle)"] = {
+                            "name": app_name + " (" + rtype + " Base by Cycle)",
+                            "description": """Provides a measure of the uniformity of a distribution. 
+                                                                                                    The higher the average deviation from 25% is, 
+                                                                                                    the more unequal the base pair composition. N's are excluded from this calculation.""",
+                            "figure": section_dict[rtype]["Base_by_Cycle"],
+                            "html": "",
+                            "comment": "",
+                        }
+
+                        self.report_sections[app_name + " (" + rtype + " PE Quality by Cycle)"] = {
+                            "name": app_name + " (" + rtype + " Quality by Cycle)",
+                            "description": """Mean quality score for each position along the read. 
+                                                                                                    Sample is colored red if less than 60% of bps have mean score of at least Q30, 
+                                                                                                    orange if between 60% and 80%, and green otherwise.""",
+                            "figure": section_dict[rtype]["Quality_by_Cycle"],
+                            "html": "",
+                            "comment": "",
+                        }
 
     ############################
     # add sections
@@ -241,9 +275,9 @@ class MultiqcModule(BaseMultiqcModule):
                 app = supported_apps["OverviewStats"]()
 
                 description = "Plots reduction of reads and basepairs across the preprocessing pipeline."
-                html = app.execute(self.overview_stats, self.app_order)
+                plot = app.execute(self.overview_stats, self.app_order)
 
-                self.add_section(name="Processing Overview", description=description, content=html)
+                self.add_section(name="Processing Overview", description=description, plot=plot)
 
             except:
                 log.warning("Report Section for Processing Overview Failed.")
@@ -284,11 +318,17 @@ class MultiqcModule(BaseMultiqcModule):
 
         # add app sections
         for section, content in self.report_sections.items():
-            temp_list = section.split("_")
-            name = (temp_list[1]) if temp_list[-1] == "1" else (temp_list[1] + " " + temp_list[-1])
+            if "hts_" + section.split("_")[1] not in self.repeated_apps:
+                content["name"] = section[:-2]
 
             try:
-                self.add_section(name=name, description=content["description"], content=content["html"])
+                self.add_section(
+                    name=content["name"],
+                    description=content["description"],
+                    plot=content["figure"],
+                    comment=content["comment"],
+                    content=content["html"],
+                )
 
             except:
                 msg = "Report Section for " + section + " Failed."

@@ -37,21 +37,22 @@ class Overlapper:
 
         # if no overlaps at all are present, return nothing
         if inserts == 0:
-            html += '<div class="alert alert-info"> <strong>Notice:</strong> No overlaps present in samples. </div>'
-            return html
+            html = '<div class="alert alert-info"> <strong>Notice:</strong> No overlaps present in samples. </div>'
+            figure = None
 
-        # bargraph dictionary. Exact use of example in MultiQC docs.
-        categories = OrderedDict()
+        else:
+            # bargraph dictionary. Exact use of example in MultiQC docs.
+            categories = OrderedDict()
 
-        # Create blocks for bargrapph
-        categories["Ov_Sins"] = {"name": "Short Inserts", "color": "#779BCC"}
-        categories["Ov_Mins"] = {"name": "Medium Inserts", "color": "#C3C3C3"}
-        categories["Ov_Lins"] = {"name": "Long Inserts", "color": "#D1ADC3"}
+            # Create blocks for bargrapph
+            categories["Ov_Sins"] = {"name": "Short Inserts", "color": "#779BCC"}
+            categories["Ov_Mins"] = {"name": "Medium Inserts", "color": "#C3C3C3"}
+            categories["Ov_Lins"] = {"name": "Long Inserts", "color": "#D1ADC3"}
 
-        # create plot
-        html += bargraph.plot(json, categories, config)
+            # create plot
+            figure = bargraph.plot(json, categories, config)
 
-        return html
+        return figure, html
 
     # ########################
     # # Linegraph Function
@@ -120,24 +121,6 @@ class Overlapper:
             # Total overlap types
             overlapped_sum = sins + mins + lins
 
-            # the INFAMOUS percent overlapped
-            # perc_overlapped = ((sins + mins) / json[key]["Paired_end"]["in"]) * 100
-            # perc_pe_loss = (
-            #     (json[key]["Paired_end"]["in"] - json[key]["Paired_end"]["out"]) / json[key]["Paired_end"]["in"]
-            # ) * 100
-
-            # # if no single end, prevent zero division
-            # if json[key]["Single_end"]["in"] == 0:
-            #     perc_se_gain = 0
-
-            # else:
-            #     perc_se_gain = (
-            #         (json[key]["Single_end"]["out"] - json[key]["Single_end"]["in"]) / json[key]["Single_end"]["in"]
-            #     ) * 100
-
-            # total SE gain
-            # se_total_gain += perc_se_gain
-
             # try to parse overlap hist
             try:
                 parsed_hist_stats = self.parse_histogram_stats(json[key]["Fragment"]["overlap_histogram"])
@@ -191,10 +174,7 @@ class Overlapper:
             inserts += overlapped_sum
 
         # sections and function calls
-        section = {
-            "Overlap Composition": self.bargraph(stats_json, inserts),
-            # "Overlapped Lengths Density Plots": self.linegraph(stats_json, index),
-            "Overview": overview_dict,
-        }
+        figure, html = self.bargraph(stats_json, inserts)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

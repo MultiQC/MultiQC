@@ -36,27 +36,27 @@ class SeqScreener:
         # returns nothing if no reads were trimmed.
         if reads_screened == 0:
             html += '<div class="alert alert-info"> <strong>Notice:</strong> No sequences were identified in any sample. </div>'
-            return html
+            figure = None
 
-        perc_data = {}
-        read_data = {}
+        else:
+            perc_data = {}
+            read_data = {}
 
-        # Construct data for multidataset bargraph
-        for key in json:
-            perc_data[key] = {"Perc_PE": json[key]["Ss_PE_%_hits"], "Perc_SE": json[key]["Ss_SE_%_hits"]}
-            read_data[key] = {"Reads_PE": json[key]["Ss_PE_hits"], "Reads_SE": json[key]["Ss_SE_hits"]}
+            # Construct data for multidataset bargraph
+            for key in json:
+                perc_data[key] = {"Perc_PE": json[key]["Ss_PE_%_hits"], "Perc_SE": json[key]["Ss_SE_%_hits"]}
+                read_data[key] = {"Reads_PE": json[key]["Ss_PE_hits"], "Reads_SE": json[key]["Ss_SE_hits"]}
 
-        # Create categories for multidataset bargraph
-        cats = [OrderedDict(), OrderedDict()]
-        cats[0]["Perc_PE"] = {"name": "Paired End"}
-        cats[0]["Perc_SE"] = {"name": "Single End"}
-        cats[1]["Reads_PE"] = {"name": "Paired End"}
-        cats[1]["Reads_SE"] = {"name": "Single End"}
+            # Create categories for multidataset bargraph
+            cats = [OrderedDict(), OrderedDict()]
+            cats[0]["Perc_PE"] = {"name": "Paired End"}
+            cats[0]["Perc_SE"] = {"name": "Single End"}
+            cats[1]["Reads_PE"] = {"name": "Paired End"}
+            cats[1]["Reads_SE"] = {"name": "Single End"}
 
-        # Create bargraph
-        html += bargraph.plot([perc_data, read_data], cats, config)
+            figure = bargraph.plot([perc_data, read_data], cats, config)
 
-        return html
+        return figure, html
 
     ########################
     # Main Function
@@ -118,6 +118,7 @@ class SeqScreener:
             }
 
         # sections and figure function calls
-        section = {"Bargraph": self.bargraph(stats_json, reads_screened, index), "Overview": overview_dict}
+        figure, html = self.bargraph(stats_json, reads_screened, index)
+        section = {"Figure": figure, "Overview": overview_dict, "Content": html}
 
         return section

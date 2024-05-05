@@ -32,7 +32,7 @@ class Stats:
     ########################
     # Table Function
     def table(self, json, index):
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # pconfig
         config = {"id": "htstream_stats_table_line_" + unique_id, "title": "HTStream: Stats"}
@@ -89,7 +89,7 @@ class Stats:
     def base_by_cycle(self, json, read):
         # Read Code and Unique ID
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # Multi Sample Line Config, it's called entropy (even though its not)
         config = {
@@ -99,37 +99,11 @@ class Stats:
             "ylab": "Avg. Distance from 25%",
             "xlab": "Cycle",
             "categories": True,
-            "tt_decimals": "{x}: {y:.2f}",
+            "tt_label": "{point.x}: {point.y:.2f}%",
             "yPlotBands": [
                 {"from": 0, "to": 8, "color": "#c3e6c3"},
                 {"from": 8, "to": 35, "color": "#e6dcc3"},
                 {"from": 35, "to": 100, "color": "#e6c3c3"},
-            ],
-        }
-
-        # Single Sample Base by Cycle Config
-        samp_config = {
-            "id": "htstream_stats_base_line_" + read + "_" + unique_id,
-            "title": "HTStream: Base by Cycle (" + read_code + ")",
-            "data_labels": [],
-            "smooth_points_sumcounts": False,
-            "ylab": "Percentage",
-            "xlab": "Cycle",
-            "yCeiling": 100,
-            "categories": True,
-            "tt_decimals": "{x}: {y:.2f}",
-            "tt_suffix": "%",
-            "colors": {
-                "Base: A": "#B62612",
-                "Base: C": "#82A7E0",
-                "Base: G": "#0B8E0B",
-                "Base: T": "#DE7D00",
-                "Base: N": "black",
-            },
-            "yPlotBands": [
-                {"from": 0, "to": 40, "color": "#c3e6c3"},
-                {"from": 40, "to": 60, "color": "#e6dcc3"},
-                {"from": 60, "to": 100, "color": "#e6c3c3"},
             ],
         }
 
@@ -150,16 +124,14 @@ class Stats:
                 ]
 
                 config["xPlotLines"] = line_list
-                samp_config["xPlotLines"] = line_list
+                # samp_config["xPlotLines"] = line_list
 
         # Data list and dictionaries for line graphs
         line_data = {}
-        data_list = []
 
         # For each sample, add their line to multi-sample graph and construct their own line graph
         for samp in json.keys():
             line_data[samp] = {}
-            samp_data = {"Base: A": {}, "Base: C": {}, "Base: G": {}, "Base: T": {}, "Base: N": {}}
 
             # If PE< we need to concat base by cycle lists
             if read_code == "PE":
@@ -175,69 +147,26 @@ class Stats:
                 # Total count at position
                 total = sum([base[i] for base in data])
 
-                # Base by Cycle fraction
-                samp_data["Base: A"][i + 1] = (data[0][i] / total) * 100
-                samp_data["Base: C"][i + 1] = (data[1][i] / total) * 100
-                samp_data["Base: G"][i + 1] = (data[2][i] / total) * 100
-                samp_data["Base: T"][i + 1] = (data[3][i] / total) * 100
-                samp_data["Base: N"][i + 1] = (data[4][i] / total) * 100
-
                 # Avg difference from 25%, N not included
                 avg = sum([abs(((data[x][i] / total) * 100) - 25) for x in range(4)]) / 4
 
                 line_data[samp][i + 1] = avg
 
-            # this config file is for the individual line of the multiline graph
-            samp_config["data_labels"].append(
-                {
-                    "name": samp,
-                    "ylab": "Percentage",
-                    "xlab": "Cycle",
-                    "yCeiling": 100,
-                    "smooth_points_sumcounts": False,
-                }
-            )
-
-            # append base by cycle to data for this to data list
-            data_list.append(samp_data)
-
-        # HTML for plots
-        header_html = "<h4> Base by Cycle: " + self.read_keys[read_code] + "</h4>"
-        header_html += """<p> Provides a measure of the uniformity of a distribution. The higher the average deviation from 25% is,
-							the more unequal the base pair composition. N's are excluded from this calculation. </p>"""
-
-        # Button labels
-        btn_label_1 = "Avg. Distance from 25%"
-        btn_label_2 = "Base by Cycle"
-
-        # Line IDs
-        line_1_id = "htstream_stats_distance_{r}_{b}".format(r=read_code, b=unique_id)
-        line_2_id = "htstream_stats_base_line_{r}_{b}".format(r=read_code, b=unique_id)
-
-        # Actual graphs
-        line_1 = linegraph.plot(line_data, config)
-        line_2 = linegraph.plot(data_list, samp_config)
-
-        # Construct multiplot div
-        html = htstream_utils.multi_plot_html(
-            header_html, list(line_data.keys()), btn_label_1, btn_label_2, line_1_id, line_2_id, line_1, line_2
-        )
-
-        return html
+        return linegraph.plot(line_data, config)
 
     ########################
     # Quality By cycle sections Functions
     def quality_by_cycle(self, json, read):
         # Read Code and Unique ID
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # config dictionary for mean Q score line graph
         line_config = {
             "id": "htstream_stats_qbc_line_" + read_code + "_" + unique_id,
             "smooth_points_sumcounts": False,
             "categories": True,
-            "tt_decimals": "{:,.2f}",
+            "tt_label": "{point.x}: {point.y:.2f}%",
             "title": "HTStream: Mean Quality by Cycle (" + read_code + ")",
             "xlab": "Cycle",
             "ylab": "Mean Q Score",
@@ -325,23 +254,14 @@ class Stats:
             else:
                 line_config["colors"][key] = "#78D578"
 
-        # section head
-        header_html = "<h4> Quality by Cycle: " + self.read_keys[read_code] + "</h4>"
-        header_html += """<p> Mean quality score for each position along the read. 
-							  Sample is colored red if less than 60% of bps have mean score of at least Q30, 
-							  orange if between 60% and 80%, and green otherwise.</p>"""
-
-        # HTML of plots
-        html = header_html + linegraph.plot(line_data, line_config)
-
-        return html
+        return linegraph.plot(line_data, line_config)
 
     ########################
     # Read Length Heatmaps
     def read_length(self, json, read):
         # Read cor and unique IDs
         read_code = self.read_keys[read]
-        unique_id = str(random() % 1000)[5:]
+        unique_id = str(random())[2:6]
 
         # config dictionary for linegraph
         line_config = {
@@ -394,11 +314,6 @@ class Stats:
                     for length in json[samp][read][i]:
                         readlength_data[i][samp][length[0]] = length[1]
 
-        # Title
-        html = "<h4> Read Lengths: " + self.read_keys[read_code] + " </h4>"
-        # Descriptions
-        html += """<p> Distribution of read lengths for each sample. </p>"""
-
         if len(uniform_dict.keys()) == len(json.keys()):
             config = {"id": "htstream_stats_read_length_" + unique_id, "title": "HTStream: Stats"}
 
@@ -426,16 +341,12 @@ class Stats:
                 "scale": "Greens",
             }
 
-            html += '\n<div class="alert alert-info"> <strong>Notice:</strong> Each sample has a uniform read length distribution. </div>'
-            html += table.plot(uniform_dict, headers, config)
-
-            return html
+            figure = table.plot(uniform_dict, headers, config)
 
         else:
-            # Construct heatmap
-            html += linegraph.plot(readlength_data, line_config)
+            figure = linegraph.plot(readlength_data, line_config)
 
-            return html
+        return figure
 
     ########################
     # Main Function
@@ -547,14 +458,18 @@ class Stats:
         section = {"Table": self.table(stats_json, index), "Overview": overview_stats}
 
         if len(PE_json.keys()) != 0:
-            section["Read Length Histogram (Paried End)"] = self.read_length(PE_json, "St_PE_Read_Lengths")
-            section["Base by Cycle (Paired End)"] = self.base_by_cycle(PE_json, "St_PE_Base_by_Cycle")
-            section["Quality by Cycle (Paired End)"] = self.quality_by_cycle(PE_json, "St_PE_Quality_by_Cycle")
+            section["PE"] = {
+                "Read_Length": self.read_length(PE_json, "St_PE_Read_Lengths"),
+                "Base_by_Cycle": self.base_by_cycle(PE_json, "St_PE_Base_by_Cycle"),
+                "Quality_by_Cycle": self.quality_by_cycle(PE_json, "St_PE_Quality_by_Cycle"),
+            }
 
         # only executres if single read data is detected
         if len(SE_json.keys()) != 0:
-            section["Read Length Histogram (Single End)"] = self.read_length(SE_json, "St_SE_Read_Lengths")
-            section["Base by Cycle (Single End)"] = self.base_by_cycle(SE_json, "St_SE_Base_by_Cycle")
-            section["Quality by Cycle (Single End)"] = self.quality_by_cycle(SE_json, "St_SE_Quality_by_Cycle")
+            section["SE"] = {
+                "Read_Length": self.read_length(SE_json, "St_SE_Read_Lengths"),
+                "Base_by_Cycle": self.base_by_cycle(SE_json, "St_SE_Base_by_Cycle"),
+                "Quality_by_Cycle": self.quality_by_cycle(SE_json, "St_SE_Quality_by_Cycle"),
+            }
 
         return section
