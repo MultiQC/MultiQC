@@ -64,13 +64,13 @@ def exec_modules(
                 this_modules = [this_modules]
 
             # Override duplicated outputs
-            for prev_mod in report.modules_output:
+            for prev_mod in report.modules:
                 if prev_mod.name in set(m.name for m in this_modules):
                     logger.info(
                         f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new samples to a module with multiqc.parse_logs()'
                     )
-                    report.modules_output.remove(prev_mod)
-            report.modules_output.extend(this_modules)
+                    report.modules.remove(prev_mod)
+            report.modules.extend(this_modules)
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
@@ -148,14 +148,14 @@ def exec_modules(
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
-    if not required_logs_found([m.anchor for m in report.modules_output]):
+    if not required_logs_found([m.anchor for m in report.modules]):
         raise RunError()
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
 
     # Did we find anything?
-    if len(report.modules_output) == 0:
+    if len(report.modules) == 0:
         logger.warning("No analysis results found. Cleaning up…")
         if clean_up:
             shutil.rmtree(report.tmp_dir)
