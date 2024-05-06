@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from eigenstrat_snp_coverage """
-
+"""MultiQC module to parse output from eigenstrat_snp_coverage"""
 
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 log = logging.getLogger(__name__)

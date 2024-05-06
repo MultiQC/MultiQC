@@ -1,5 +1,5 @@
 # coding: utf-8
-""" MultiQC submodule to parse output from Samtools flagstat """
+"""MultiQC submodule to parse output from Samtools flagstat"""
 
 import logging
 import re
@@ -121,7 +121,7 @@ class FlagstatReportMixin:
                 headers=[keys_counts, keys_pct],
                 pconfig={
                     "id": "samtools-flagstat-dp",
-                    "title": "Samtools flagstat: read count",
+                    "title": "Samtools: flagstat: read count",
                     "data_labels": [
                         {"name": "Read counts", "title": "Samtools flagstat: read count"},
                         {"name": "Percentage of total", "title": "Samtools flagstat: percentage of total"},

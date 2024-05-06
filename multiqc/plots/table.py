@@ -3,8 +3,9 @@ from typing import List, Dict, Union, Optional
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot
-from multiqc.utils import config
+from multiqc import config
 from multiqc.plots.plotly import table
+from multiqc.plots.table_object import TableConfig
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,9 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[Dict], Dict], headers: Optional[Union[List[Dict], Dict]] = None, pconfig=None
+    data: Union[List[Dict], Dict],
+    headers: Optional[Union[List[Dict], Dict]] = None,
+    pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, Plot]:
     """Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -29,9 +32,17 @@ def plot(
     :param pconfig: plot config dict
     :return: HTML ready to be inserted into the page
     """
-    # Make a datatable object
-    dt = table_object.DataTable(data, headers, pconfig)
+    assert pconfig is not None, "pconfig must be provided"
+    if isinstance(pconfig, dict):
+        pconfig = TableConfig(**pconfig)
 
+    # Make a datatable object
+    dt = table_object.DataTable.create(data, pconfig, headers)
+
+    return plot_dt(dt)
+
+
+def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
     mod = get_template_mod()
     if "table" in mod.__dict__ and callable(mod.table):
         # Collect unique sample names
@@ -42,7 +53,7 @@ def plot(
 
         # noinspection PyBroadException
         try:
-            return mod.table(dt, s_names, pconfig)
+            return mod.table(dt, s_names, dt.pconfig)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive

@@ -1,10 +1,9 @@
-""" MultiQC module to parse base misincorporation output from mapdamage2 """
-
+"""MultiQC module to parse base misincorporation output from mapdamage2"""
 
 import logging
 import os
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

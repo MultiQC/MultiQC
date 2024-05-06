@@ -1,9 +1,8 @@
-""" MultiQC module to parse results from jellyfish  """
-
+"""MultiQC module to parse results from jellyfish"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
 # Initialise the logger

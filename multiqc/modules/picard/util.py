@@ -3,7 +3,7 @@ import os
 import re
 from typing import Dict, List, Optional, Union
 
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

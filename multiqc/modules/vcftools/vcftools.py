@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from vcftools """
-
+"""MultiQC module to parse output from vcftools"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .relatedness2 import Relatedness2Mixin
 from .tstv_by_count import TsTvByCountMixin

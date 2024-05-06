@@ -4,7 +4,7 @@ import re
 
 import numpy as np
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
@@ -45,17 +45,14 @@ class MultiqcModule(BaseMultiqcModule):
             "genes": {
                 "title": "Number of genes",
                 "description": "Number of genes",
-                "format": "{:i}",
             },
             "transcripts": {
                 "title": "Number of transcripts",
                 "description": "Number of transcripts",
-                "format": "{:i}",
             },
             "mean_gene_size": {
                 "title": "Mean gene length (bp)",
                 "description": "Mean gene length",
-                "format": "{:i}",
             },
         }
         self.general_stats_addcols(self.jcvi, headers)
@@ -222,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_barplot_feature_counts(self):
         plot_config = {
             "id": "jcvi_plot_feature_counts_plot",
-            "title": "JCVI: Number of features",
+            "title": "JCVI Genome Annotation: Number of features",
             "ylab": "Number of Genes",
             "data_labels": [
                 {"name": "Genes", "ylab": "Number of Genes"},
@@ -243,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_barplot_feature_lengths(self):
         plot_config = {
             "id": "jcvi_plot_features_len",
-            "title": "JCVI: Mean sizes of features",
+            "title": "JCVI Genome Annotation: Mean sizes of features",
             "ylab": "Base pairs",
             "cpswitch": False,
             "tt_decimals": 1,
@@ -270,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         plot_config = {
             "id": "jcvi_plot_features_per_genes",
-            "title": "JCVI: Features per gene",
+            "title": "JCVI Genome Annotation: Features per gene",
             "ylab": "# Transcripts per gene",
             "cpswitch": False,
             "tt_decimals": 1,
@@ -287,7 +284,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_config = {
             "id": "jcvi_plot_isoforms",
-            "title": "JCVI: Genes with multiple isoforms",
+            "title": "JCVI Genome Annotation: Genes with multiple isoforms",
             "ylab": "# genes with multiple isoforms",
             "cpswitch": False,
         }
@@ -297,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_linegraph_feature_length(self):
         plot_config = {
             "id": "jcvi_feature_length_plot",
-            "title": "JCVI: Feature length repartition",
+            "title": "JCVI Genome Annotation: Feature length repartition",
             "ylab": "# Genes",
             "xlab": "Gene length",
             "xsuffix": "bp",
@@ -328,7 +325,7 @@ class MultiqcModule(BaseMultiqcModule):
     def jcvi_linegraph_exon_count(self):
         plot_config = {
             "id": "jcvi_exon_count_plot",
-            "title": "JCVI: Exon count repartition",
+            "title": "JCVI Genome Annotation: Exon count repartition",
             "ylab": "# genes",
             "xlab": "Exon count",
             "xDecimals": False,

@@ -3,7 +3,7 @@ from typing import Dict
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)

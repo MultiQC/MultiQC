@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from nonpareil """
-
+"""MultiQC module to parse output from nonpareil"""
 
 import logging
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.utils import mqc_colour
 
 
@@ -24,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="nonpareil",
+            name="Nonpareil",
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
             info="Estimate metagenomic coverage and sequence diversity ",

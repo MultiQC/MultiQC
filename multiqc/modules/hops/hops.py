@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from HOPS postprocessing script """
-
+"""MultiQC module to parse output from HOPS postprocessing script"""
 
 import json
 import logging
 from json import JSONDecodeError
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 
 log = logging.getLogger(__name__)

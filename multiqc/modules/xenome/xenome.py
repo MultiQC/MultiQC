@@ -6,7 +6,7 @@ import logging
 import spectra
 from typing import Dict, Union
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -236,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
                 detail_headers,
                 pconfig={
                     "id": "xenome-table",
-                    "table_title": "Xenome",
+                    "table_title": "Xenome Summary",
                 },
             ),
         )

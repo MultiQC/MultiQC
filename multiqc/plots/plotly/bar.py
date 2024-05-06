@@ -1,26 +1,38 @@
 """Plotly bargraph functionality."""
 
 import copy
-import dataclasses
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import math
 import plotly.graph_objects as go
 import spectra
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset, split_long_string
-from multiqc.utils import util_functions, config
+from multiqc.plots.plotly.plot import (
+    PlotType,
+    BaseDataset,
+    Plot,
+    split_long_string,
+    PConfig,
+)
+from multiqc import report, config
 
 logger = logging.getLogger(__name__)
+
+
+class BarPlotConfig(PConfig):
+    stacking: Union[str, None] = "relative"
+    hide_zero_cats: bool = False
+    sort_samples: bool = True
+    use_legend: bool = True
 
 
 def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
-    pconfig: Dict,
+    pconfig: BarPlotConfig,
 ) -> "BarPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -33,15 +45,14 @@ def plot(
     :param pconfig: Plot configuration dictionary
     :return: HTML with JS, ready to be inserted into the page
     """
-    return BarPlot(
-        pconfig,
-        cats_lists,
-        samples_lists,
+    return BarPlot.create(
+        pconfig=pconfig,
+        cats_lists=cats_lists,
+        samples_lists=samples_lists,
         max_n_samples=max([len(samples) for samples in samples_lists]),
     )
 
 
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     cats: List[Dict]
     samples: List[str]
@@ -75,7 +86,7 @@ class Dataset(BaseDataset):
             assert len(samples) == len(cat["data"])
 
         dataset = Dataset(
-            **dataset.__dict__,
+            **dataset.model_dump(),
             cats=cats,
             samples=samples,
         )
@@ -87,6 +98,7 @@ class Dataset(BaseDataset):
         layout: go.Layout,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -108,24 +120,47 @@ class Dataset(BaseDataset):
             )
         return fig
 
+    def save_data_file(self) -> None:
+        val_by_cat_by_sample = defaultdict(dict)
+        for cat in self.cats:
+            for d_idx, d_val in enumerate(cat["data"]):
+                s_name = self.samples[d_idx]
+                val_by_cat_by_sample[s_name][cat["name"]] = d_val
+        report.write_data_file(val_by_cat_by_sample, self.uid)
+
 
 class BarPlot(Plot):
-    def __init__(self, pconfig: Dict, cats_lists: List, samples_lists: List, max_n_samples: int):
-        super().__init__(PlotType.BAR, pconfig, len(cats_lists))
+    datasets: List[Dataset]
+
+    @staticmethod
+    def create(
+        pconfig: BarPlotConfig,
+        cats_lists: List,
+        samples_lists: List,
+        max_n_samples: int,
+    ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        self.datasets: List[Dataset] = [
+        model = Plot.initialize(
+            plot_type=PlotType.BAR,
+            pconfig=pconfig,
+            n_datasets=len(cats_lists),
+            axis_controlled_by_switches=["xaxis"],
+            default_tt_label="%{meta}: <b>%{x}</b>",
+        )
+
+        model.datasets = [
             Dataset.create(d, cats=cats, samples=samples)
-            for d, cats, samples in zip(self.datasets, cats_lists, samples_lists)
+            for d, cats, samples in zip(model.datasets, cats_lists, samples_lists)
         ]
 
         # Set the barmode
         barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", None]):
+        if pconfig.stacking in ["group", None]:
             barmode = "group"  # side by side
 
-        max_n_cats = max([len(dataset.cats) for dataset in self.datasets])
+        max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
 
         # Set height to also be proportional to the number of cats to fit a legend
         HEIGHT_PER_LEGEND_ITEM = 19
@@ -138,9 +173,8 @@ class BarPlot(Plot):
             legend_height=legend_height,
         )
 
-        self.layout.update(
+        model.layout.update(
             height=height,
-            showlegend=True,
             barmode=barmode,
             bargroupgap=0,
             bargap=0.2,
@@ -149,15 +183,15 @@ class BarPlot(Plot):
                 categoryorder="trace",  # keep sample order
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
-                hoverformat=self.layout.xaxis.hoverformat,
-                ticksuffix=self.layout.xaxis.ticksuffix,
+                hoverformat=model.layout.xaxis.hoverformat,
+                ticksuffix=model.layout.xaxis.ticksuffix,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=self.layout.yaxis.title.text),
-                hoverformat=self.layout.yaxis.hoverformat,
-                ticksuffix=self.layout.yaxis.ticksuffix,
+                title=dict(text=model.layout.yaxis.title.text),
+                hoverformat=model.layout.yaxis.hoverformat,
+                ticksuffix=model.layout.yaxis.ticksuffix,
             ),
             # Re-initiate legend to reset to default legend location on the top right
             legend=go.layout.Legend(
@@ -174,10 +208,11 @@ class BarPlot(Plot):
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
             ),
+            showlegend=pconfig.use_legend,
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):
-            self.layout.update(
+            model.layout.update(
                 legend=go.layout.Legend(
                     orientation="h",
                     x=0.5,
@@ -187,7 +222,7 @@ class BarPlot(Plot):
                 ),
             )
 
-        for dataset in self.datasets:
+        for dataset in model.datasets:
             if barmode == "group":
                 # max category
                 xmax_cnt = max(max(cat["data"][i] for cat in dataset.cats) for i in range(len(dataset.samples)))
@@ -242,14 +277,14 @@ class BarPlot(Plot):
                     dataset.layout["xaxis"]["hoverformat"] = ",.0f"
 
         # Expand data with zeroes if there are fewer values than samples
-        for dataset in self.datasets:
+        for dataset in model.datasets:
             for cat in dataset.cats:
                 if len(cat["data"]) < len(dataset.samples):
                     cat["data"].extend([0] * (len(dataset.samples) - len(cat["data"])))
 
         # Calculate and save percentages
-        if self.add_pct_tab:
-            for pidx, dataset in enumerate(self.datasets):
+        if model.add_pct_tab:
+            for pidx, dataset in enumerate(model.datasets):
                 # Count totals for each category
                 sums = [0 for _ in dataset.cats[0]["data"]]
                 for cat in dataset.cats:
@@ -279,30 +314,11 @@ class BarPlot(Plot):
                         for i in range(len(dataset.samples))
                     )
 
-        if self.add_log_tab:
+        if model.add_log_tab:
             # Sorting from small to large so the log switch makes sense
-            for dataset in self.datasets:
+            for dataset in model.datasets:
                 dataset.cats.sort(key=lambda x: sum(x["data"]))
                 # But reversing the legend so the largest bars are still on the top
-                self.layout.legend.traceorder = "reversed"
+                model.layout.legend.traceorder = "reversed"
 
-    @staticmethod
-    def axis_controlled_by_switches() -> List[str]:
-        """
-        Return a list of axis names that are controlled by the log10 scale and percentage
-        switch buttons
-        """
-        return ["xaxis"]
-
-    def save_data_file(self, dataset: Dataset) -> None:
-        val_by_cat_by_sample = defaultdict(dict)
-        for cat in dataset.cats:
-            for d_idx, d_val in enumerate(cat["data"]):
-                s_name = dataset.samples[d_idx]
-                val_by_cat_by_sample[s_name][cat["name"]] = d_val
-        util_functions.write_data_file(val_by_cat_by_sample, dataset.uid)
-
-    @staticmethod
-    def tt_label() -> str:
-        """Default tooltip label"""
-        return "%{meta}: <b>%{x}</b>"
+        return BarPlot(**model.__dict__)

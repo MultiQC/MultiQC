@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 
-""" MultiQC module to parse output from Pangolin """
-
+"""MultiQC module to parse output from Pangolin"""
 
 import csv
 import logging
 from typing import Optional
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from multiqc.utils import mqc_colour
 
@@ -33,7 +32,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.lineage_colours = dict()
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
-            self.add_data_source(f)
+            for s_name in self.pangolin_data:
+                self.add_data_source(f, s_name=s_name)
 
         # Filter out parsed samples based on sample name
         self.pangolin_data = self.ignore_samples(self.pangolin_data)
@@ -89,7 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
             if version is not None:
                 self.add_software_version(version, sample, name)
 
-        for row in csv.DictReader(f["f"]):
+        reader: csv.DictReader = csv.DictReader(f["f"])
+        for row in reader:
             try:
                 taxon_name = row["taxon"]
                 row.pop("taxon")

@@ -3,7 +3,7 @@
 import json
 import logging
 import os
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -89,7 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Hostile: Reads Filtered",
             "id": "he_reads_plots",
             "ylab": "# Reads",
-            "plot_type": "bargraph",
         }
 
         self.add_section(

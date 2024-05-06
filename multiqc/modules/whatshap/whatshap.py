@@ -1,9 +1,9 @@
-""" MultiQC module to parse output from WhatsHap """
+"""MultiQC module to parse output from WhatsHap"""
 
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -265,7 +265,6 @@ class MultiqcModule(BaseMultiqcModule):
         configuration = {
             "id": "multiqc_whatshap_phased_bp_plot",
             "title": "WhatsHap: Phased Basepairs per Sample",
-            "anchor": "multiqc_whatshap_phased_bp",
             "ylab": "Base Pairs",
             "cpswitch": False,
         }

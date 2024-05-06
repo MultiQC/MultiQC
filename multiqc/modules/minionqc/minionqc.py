@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from MinIONQC summary stats """
+"""MultiQC submodule to parse output from MinIONQC summary stats"""
 
 import copy
 import logging
@@ -7,7 +7,7 @@ import re
 
 import yaml
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
 # Initialise the logger
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "MinIONQC",
                     "id": "minionqc-stats-qAll-table",
-                    "table_title": "MinIONQC Stats: All reads",
+                    "table_title": "MinIONQC: All reads",
                 },
             ),
         )
@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "MinIONQC",
                     "id": "minionqc-stats-qFilt-table",
-                    "table_title": "MinIONQC Stats: Quality filtered reads",
+                    "table_title": "MinIONQC: Quality filtered reads",
                 },
             ),
         )

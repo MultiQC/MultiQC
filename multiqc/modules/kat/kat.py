@@ -1,8 +1,9 @@
-""" MultiQC module to parse output from KAT """
+"""MultiQC module to parse output from KAT"""
+
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -74,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         kat_config = {
             "namespace": "KAT",
             "id": "kat-table",
-            "title": "KAT Distribution Analysis",
+            "title": "K-mer Analysis Toolkit: KAT Distribution Analysis",
         }
 
         # Basic Stats Table

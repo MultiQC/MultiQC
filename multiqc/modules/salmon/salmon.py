@@ -1,12 +1,12 @@
-""" MultiQC module to parse output from Salmon """
+"""MultiQC module to parse output from Salmon"""
 
 import json
 import logging
 import os
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -30,7 +30,9 @@ class MultiqcModule(BaseMultiqcModule):
             if os.path.basename(f["root"]) in ["aux_info", "aux"]:
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
-                self.salmon_meta[s_name] = json.loads(f["f"])
+                self.salmon_meta[s_name] = {
+                    metric: val for metric, val in json.loads(f["f"]).items() if isinstance(val, (int, float, str))
+                }
                 self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs

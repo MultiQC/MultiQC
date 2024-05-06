@@ -1,8 +1,8 @@
-""" MultiQC module to parse output from Freyja """
+"""MultiQC module to parse output from Freyja"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 

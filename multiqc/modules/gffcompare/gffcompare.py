@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from gffcompare """
-
+"""MultiQC module to parse output from gffcompare"""
 
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
 # Initialise the logger

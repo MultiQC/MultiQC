@@ -1,10 +1,10 @@
-""" MultiQC module to parse output from gopeaks """
+"""MultiQC module to parse output from gopeaks"""
 
 import json
 import logging
 from pathlib import Path
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

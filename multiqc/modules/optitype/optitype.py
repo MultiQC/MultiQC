@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from optitype """
-
+"""MultiQC module to parse output from optitype"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -128,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "optitype_summary_plot",
-            "title": "Optitype: Summary of alleles",
+            "title": "OptiType: Summary of alleles",
             "cpswitch": False,
             "ylab": "# Samples",
             "yDecimals": False,

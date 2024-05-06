@@ -6,7 +6,7 @@ import json
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, box, table
 
 log = logging.getLogger(__name__)
@@ -113,7 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
             "n_cluster": {
                 "title": "Clusters",
                 "description": "Number of clusters created during the clustering. (1 cluster = 1 transcript)",
-                "format": "{:,.d}",
                 "scale": "Spectral",
             },
             "mean_cluster_size": {
@@ -176,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "isoseq-cluster-size-distribution-barplot",
-                    "title": "Iso-Seq cluster: Histogram of cluster size",
+                    "title": "Iso-Seq: cluster: Histogram of cluster size",
                     "ylab": "Count",  # Y axis label
                 },
             ),
@@ -188,13 +187,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Full-length",
                 "description": "Number of CCS where both primers have been detected",
                 "scale": "GnBu",
-                "format": "{:,.d}",
             },
             "num_reads_flnc": {
                 "title": "Non-chimeric full-length",
                 "description": "Number of non-chimeric CCS where both primers have been detected",
                 "scale": "RdYlGn",
-                "format": "{:,.d}",
             },
             "num_reads_flnc_polya": {
                 "title": "Poly(A) free non-chimeric full-length",
@@ -203,7 +200,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "tail has been removed"
                 ),
                 "scale": "GnBu",
-                "format": "{:,.d}",
             },
         }
         return self.add_section(
@@ -220,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "isoseq_refine_bargraph",
-                    "title": "Iso-Seq refine: filter summary",
+                    "title": "Iso-Seq: refine: filter summary",
                 },
             ),
         )
@@ -246,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                     list_of_data_by_sample=data_by_sample,
                     pconfig={
                         "id": f"isoseq_refine_boxplot_{metric}",
-                        "title": f"Iso-Seq refine: {REFINE_CATEGORIES[metric]}",
+                        "title": f"Iso-Seq: refine: {REFINE_CATEGORIES[metric]}",
                     },
                 ),
             )

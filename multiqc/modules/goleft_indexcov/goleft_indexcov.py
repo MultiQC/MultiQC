@@ -3,12 +3,12 @@
 https://github.com/brentp/goleft/tree/master/indexcov
 """
 
-
-import collections
+from collections import defaultdict
 import logging
+from typing import Optional, Dict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse ROC data
-        self.roc_plot_data = collections.defaultdict(lambda: collections.defaultdict(dict))
+        self.roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             self.parse_roc_plot_data(f)
             self.add_data_source(f)
@@ -68,14 +68,15 @@ class MultiqcModule(BaseMultiqcModule):
         self.roc_plot()
         self.bin_plot()
 
-    def _short_chrom(self, chrom):
+    @staticmethod
+    def _short_chrom(chrom: str) -> Optional[str]:
         """Plot standard chromosomes + X, sorted numerically.
 
         Allows specification from a list of chromosomes via config
         for non-standard genomes.
         """
         default_allowed = {"X"}
-        allowed_chroms = set(getattr(config, "goleft_indexcov_config", {}).get("chromosomes", []))
+        allowed_chroms = [str(c) for c in set(getattr(config, "goleft_indexcov_config", {}).get("chromosomes", []))]
 
         chrom_clean = chrom.replace("chr", "")
         try:
@@ -83,12 +84,17 @@ class MultiqcModule(BaseMultiqcModule):
         except ValueError:
             if chrom_clean not in default_allowed and chrom_clean not in allowed_chroms:
                 chrom_clean = None
+        else:
+            chrom_clean = str(chrom_clean)
 
-        if allowed_chroms:
-            if chrom in allowed_chroms or chrom_clean in allowed_chroms:
-                return chrom_clean
-        elif isinstance(chrom_clean, int) or chrom_clean in default_allowed:
+        if (
+            allowed_chroms
+            and chrom in allowed_chroms
+            or chrom_clean in allowed_chroms
+            or chrom_clean in default_allowed
+        ):
             return chrom_clean
+        return None
 
     def parse_roc_plot_data(self, f):
         header = f["f"].readline()

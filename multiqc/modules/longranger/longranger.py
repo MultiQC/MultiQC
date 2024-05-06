@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from Longranger """
-
+"""MultiQC module to parse output from Longranger"""
 
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -280,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         config_table = {
             "id": "longranger_table",
             "namespace": "longranger",
-            "title": "Long Ranger",
+            "title": "Long Ranger: Summary Statistics",
         }
         self.add_section(
             name="Run stats",

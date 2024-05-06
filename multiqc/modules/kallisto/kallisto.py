@@ -1,12 +1,11 @@
-""" MultiQC module to parse output from Kallisto """
-
+"""MultiQC module to parse output from Kallisto"""
 
 import logging
 import os
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

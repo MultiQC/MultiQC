@@ -1910,7 +1910,7 @@ fastqc/zip:
 
 See the [documentation](http://multiqc.info/docs/#step-1-find-log-files) for instructions on how to write the new file search syntax.
 
-See [`search_patterns.yaml`](multiqc/utils/search_patterns.yaml) for the new module search keys
+See [`search_patterns.yaml`](multiqc/config/search_patterns.yaml) for the new module search keys
 and more examples.
 
 #### 2. You have custom plugins / modules / external code

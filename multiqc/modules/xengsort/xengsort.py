@@ -5,7 +5,7 @@ from collections import defaultdict
 import logging
 from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 # Initialise the logger
@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="xengsort",
+            name="Xengsort",
             anchor="xengsort",
             href="https://gitlab.com/genomeinformatics/xengsort",
             info="is a fast xenograft read sorter based on space-efficient k-mer hashing",

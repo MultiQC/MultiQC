@@ -1,33 +1,41 @@
 import copy
-import dataclasses
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Any
 
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import Plot, PlotType, BaseDataset
-from multiqc.utils import util_functions
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
+from multiqc import report
 
 logger = logging.getLogger(__name__)
+
+
+class ScatterConfig(PConfig):
+    ylab: str
+    categories: List[str] = None
+    extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
+    marker_size: Optional[int] = None
+    marker_line_width: Optional[int] = None
+    color: Optional[str] = None
+    opacity: Optional[float] = None
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
+def plot(points_lists: List[List[PointT]], pconfig: ScatterConfig) -> "ScatterPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML with JS, ready to be inserted into the page
     """
-    return ScatterPlot(pconfig, points_lists)
+    return ScatterPlot.create(pconfig, points_lists)
 
 
-@dataclasses.dataclass
 class Dataset(BaseDataset):
     points: List[PointT]
 
@@ -35,7 +43,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         points: List[Dict],
-        pconfig: Dict,
+        pconfig: ScatterConfig,
     ) -> "Dataset":
         dataset = Dataset(
             **dataset.__dict__,
@@ -53,11 +61,10 @@ class Dataset(BaseDataset):
         )
 
         # if categories is provided, set them as x-axis ticks
-        categories = pconfig.get("categories")
-        if categories:
+        if pconfig.categories:
             dataset.layout["xaxis"]["tickmode"] = "array"
-            dataset.layout["xaxis"]["tickvals"] = list(range(len(categories)))
-            dataset.layout["xaxis"]["ticktext"] = categories
+            dataset.layout["xaxis"]["tickvals"] = list(range(len(pconfig.categories)))
+            dataset.layout["xaxis"]["ticktext"] = pconfig.categories
 
         return dataset
 
@@ -66,6 +73,7 @@ class Dataset(BaseDataset):
         layout: Optional[go.Layout] = None,
         is_log=False,
         is_pct=False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -115,16 +123,16 @@ class Dataset(BaseDataset):
         layout.showlegend = True
 
         in_legend = set()
-        for element in self.points:
-            x = element["x"]
-            name = element["name"]
-            group = element.get("group")
-            color = element.get("color")
-            annotation = element.get("annotation")
+        for el in self.points:
+            x = el["x"]
+            name = el["name"]
+            group = el.get("group")
+            color = el.get("color")
+            annotation = el.get("annotation")
 
             show_in_legend = False
-            if layout.showlegend and not element.get("hide_in_legend"):
-                key = (color, element.get("marker_size"), element.get("marker_line_width"), group)
+            if layout.showlegend and not el.get("hide_in_legend"):
+                key = (color, el.get("marker_size"), el.get("marker_line_width"), group)
                 if key not in in_legend:
                     in_legend.add(key)
                     names = sorted(names_by_legend_key.get(key))
@@ -141,12 +149,13 @@ class Dataset(BaseDataset):
             marker = params.pop("marker")
             if color:
                 marker["color"] = color
-            if "marker_line_width" in element:
-                marker["line"]["width"] = element["marker_line_width"]
-            if "marker_size" in element:
-                marker["size"] = element["marker_size"]
-            if "opacity" in element:
-                marker["opacity"] = element["opacity"]
+
+            if "marker_line_width" in el:
+                marker["line"]["width"] = el["marker_line_width"]
+            if "marker_size" in el:
+                marker["size"] = el["marker_size"]
+            if "opacity" in el:
+                marker["opacity"] = el["opacity"]
 
             if annotation:
                 params["mode"] = "markers+text"
@@ -156,7 +165,7 @@ class Dataset(BaseDataset):
             fig.add_trace(
                 go.Scatter(
                     x=[x],
-                    y=[element["y"]],
+                    y=[el["y"]],
                     name=name,
                     text=[annotation or name],
                     showlegend=show_in_legend,
@@ -167,29 +176,33 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-
-class ScatterPlot(Plot):
-    def __init__(self, pconfig: Dict, points_lists: List[List[PointT]]):
-        super().__init__(PlotType.SCATTER, pconfig, len(points_lists))
-
-        self.datasets: List[Dataset] = [
-            Dataset.create(d, points, pconfig) for d, points in zip(self.datasets, points_lists)
-        ]
-
-        # Make a tooltip always show on hover over nearest point on plot
-        self.layout.hoverdistance = -1
-
-    def tt_label(self) -> Optional[str]:
-        """Default tooltip label"""
-        return "<br><b>X</b>: %{x}<br><b>Y</b>: %{y}"
-
-    def save_data_file(self, dataset: Dataset) -> None:
+    def save_data_file(self) -> None:
         data = [
             {
                 "Name": point["name"],
                 "X": point["x"],
                 "Y": point["y"],
             }
-            for point in dataset.points
+            for point in self.points
         ]
-        util_functions.write_data_file(data, dataset.uid)
+        report.write_data_file(data, self.uid)
+
+
+class ScatterPlot(Plot):
+    datasets: List[Dataset]
+
+    @staticmethod
+    def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
+        model = Plot.initialize(
+            plot_type=PlotType.SCATTER,
+            pconfig=pconfig,
+            n_datasets=len(points_lists),
+            default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
+        )
+
+        model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+
+        # Make a tooltip always show on hover over nearest point on plot
+        model.layout.hoverdistance = -1
+
+        return ScatterPlot(**model.__dict__)

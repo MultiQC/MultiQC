@@ -17,7 +17,6 @@ report_comment: null
 report_header_info: null
 show_analysis_paths: True
 show_analysis_time: True
-config_file: null
 custom_logo: null
 custom_logo_url: null
 custom_logo_title: null
@@ -40,6 +39,7 @@ data_dir_name: "multiqc_data"
 plots_dir_name: "multiqc_plots"
 data_format: "tsv"
 force: false
+verbose: false
 no_ansi: false
 quiet: false
 prepend_dirs: false

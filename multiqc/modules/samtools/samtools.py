@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from Samtools """
-
+"""MultiQC module to parse output from Samtools"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .stats import StatsReportMixin
 from .flagstat import FlagstatReportMixin

@@ -1,10 +1,10 @@
-""" Module to parse output from mOTUs """
+"""Module to parse output from mOTUs"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="motus",
+            name="Motus",
             anchor="motus",
             href="https://motu-tool.org/",
             info="is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-filtering-reads",
-                    "title": "mOTUs: Read filtering information",
+                    "title": "Motus: Read filtering information",
                     "ylab": "Reads",
                 },
             ),
@@ -201,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="mOTUs: Insert mapping information",
+            name="Motus: Insert mapping information",
             anchor="motus-mapping",
             description="How inserts was classified after alignment to MGCs.",
             plot=bargraph.plot(
@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-mapping-inserts",
-                    "title": "mOTUs: Insert mapping information",
+                    "title": "Motus: Insert mapping information",
                     "ylab": "Inserts",
                 },
             ),
@@ -228,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="mOTUs: mOTU identification information",
+            name="Motus: mOTU identification information",
             anchor="motus-identification",
             description="Distribution of the types of mOTUs found.",
             plot=bargraph.plot(
@@ -236,8 +236,8 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-identification-types",
-                    "title": "mOTUs: mOTU identification information",
-                    "ylab": "mOTUs",
+                    "title": "Motus: mOTU identification information",
+                    "ylab": "Motus",
                 },
             ),
         )

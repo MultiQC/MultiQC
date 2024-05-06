@@ -17,9 +17,9 @@ import zipfile
 from collections import Counter
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
-from multiqc.utils import report
+from multiqc import report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -960,7 +960,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "y_clipmax": 100,
-            "y_minrange": 20,
             "tt_decimals": 2,
             "tt_suffix": "%",
             "cpswitch": False,

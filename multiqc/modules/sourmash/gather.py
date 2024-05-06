@@ -1,10 +1,10 @@
-""" MultiQC module to parse similarity matrix output by sourmash gather """
+"""MultiQC module to parse similarity matrix output by sourmash gather"""
 
 import csv
 import logging
 
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -158,7 +158,7 @@ class GatherMixin:
         cats = list()
         pconfig = {
             "id": "sourmash-gather-top-plot",
-            "title": "Sourmash gather: top genomes",
+            "title": "Sourmash: gather: top genomes",
             "ylab": f"% of sample covered by top {self.top_n} genomes",
             # do not show the 'Counts / Percentages' switch, since gather only reports
             # percentages

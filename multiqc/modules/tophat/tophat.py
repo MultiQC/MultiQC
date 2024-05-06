@@ -1,12 +1,11 @@
-""" MultiQC module to parse output from Tophat """
-
+"""MultiQC module to parse output from Tophat"""
 
 import logging
 import os
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

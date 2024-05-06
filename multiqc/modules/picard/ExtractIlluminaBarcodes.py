@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes """
+"""MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes"""
 
 import logging
 from collections import defaultdict
@@ -59,7 +59,7 @@ def parse_reports(module):
 
     per_lane_plot_config = {
         "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperlane",
-        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per lane",
+        "title": f"{module.name}: ExtractIlluminaBarcodes: Reads per lane",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -69,7 +69,7 @@ def parse_reports(module):
     }
     per_barcode_plot_config = {
         "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperbarcode",
-        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per barcode",
+        "title": f"{module.name}: ExtractIlluminaBarcodes: Reads per barcode",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},

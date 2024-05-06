@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from QoRTs """
-
+"""MultiQC module to parse output from QoRTs"""
 
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

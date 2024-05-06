@@ -1,5 +1,4 @@
-""" MultiQC module to parse output from Cluster Flow """
-
+"""MultiQC module to parse output from Cluster Flow"""
 
 import datetime
 import logging
@@ -7,7 +6,7 @@ import os
 import re
 import time
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -149,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-commands-table",
-            "table_title": "Cluster Flow Commands",
+            "table_title": "Cluster Flow: Commands",
             "col1_header": "Tool",
             "sort_rows": False,
             "no_violin": True,

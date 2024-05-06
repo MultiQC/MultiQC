@@ -1,9 +1,8 @@
-""" MultiQC module to parse output from HOMER """
-
+"""MultiQC module to parse output from HOMER"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the HOMER submodules
 from .findpeaks import FindPeaksReportMixin

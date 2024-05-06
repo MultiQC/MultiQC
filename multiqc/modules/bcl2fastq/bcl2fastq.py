@@ -5,7 +5,7 @@ from collections import defaultdict
 from itertools import islice
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
@@ -129,7 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bcl2fastq_undetermined",
                     "title": "bcl2fastq: Undetermined barcodes by lane",
                     "ylab": "Reads",
-                    "use_legend": True,
                     "sort_samples": False,  # keep top barcode on top
                 },
             ),

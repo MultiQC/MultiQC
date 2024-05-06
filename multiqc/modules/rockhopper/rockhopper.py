@@ -1,12 +1,11 @@
-""" MultiQC submodule to parse output from Rockhopper summary files
-https://cs.wellesley.edu/~btjaden/Rockhopper/ """
-
+"""MultiQC submodule to parse output from Rockhopper summary files
+https://cs.wellesley.edu/~btjaden/Rockhopper/"""
 
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger
@@ -185,7 +184,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "rockhopper_reads_counts_plot",
             "title": "Rockhopper: Alignment types",
             "ylab": "Number of reads",
-            "tt_percentage": False,
         }
 
         # Plot bar graph of groups

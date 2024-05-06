@@ -8,9 +8,9 @@ import math
 import os
 import fnmatch
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -390,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
+                "hide_empty": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -410,7 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
+                "hide_empty": False,
                 "ymax": 100,
                 "ymin": 0,
             }

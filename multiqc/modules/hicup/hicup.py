@@ -1,10 +1,9 @@
-""" MultiQC module to parse output from HiCUP """
-
+"""MultiQC module to parse output from HiCUP"""
 
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 # Initialise the logger

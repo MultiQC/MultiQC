@@ -1,11 +1,11 @@
-""" MultiQC submodule to parse output from Bamtools bam_stat.py
-http://bamtools.sourceforge.net/#bam-stat-py """
+"""MultiQC submodule to parse output from Bamtools bam_stat.py
+http://bamtools.sourceforge.net/#bam-stat-py"""
 
 import logging
 import re
 
 from multiqc.plots import violin
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)

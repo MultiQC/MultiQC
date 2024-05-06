@@ -1,12 +1,11 @@
-""" MultiQC module to parse output from MEGAHIT """
-
+"""MultiQC module to parse output from MEGAHIT"""
 
 import logging
 import re
 
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 # Initialise the logger
@@ -142,6 +141,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data,
                 headers,
-                pconfig={"id": "megahit-stats-table", "title": "Run statistics"},
+                pconfig={"id": "megahit-stats-table", "title": "MEGAHIT: Run statistics"},
             ),
         )

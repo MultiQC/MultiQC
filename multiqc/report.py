@@ -1,6 +1,7 @@
-"""MultiQC report module. Holds the output from each
-module. Is available to subsequent modules. Contains
-helper functions to generate markup for report."""
+"""
+MultiQC report module. Holds the output from each module. Available to subsequent
+modules. Contains helper functions to generate markup for report.
+"""
 
 import base64
 import fnmatch
@@ -8,79 +9,94 @@ import gzip
 import inspect
 import io
 import json
+import logging
 import mimetypes
 import os
 import re
+import sys
+import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
 
 import rich
 import rich.progress
 import yaml
+from tqdm import tqdm
 
+from multiqc import config
+from multiqc.core import init_log
+from multiqc.utils.util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
+from multiqc.plots.plotly.plot import Plot
 
-from . import config
-from .util_functions import replace_defaultdicts, dump_json
+# This does not cause circular imports because BaseMultiqcModule is used only in
+# quoted type hints, and quoted type hints are lazily evaluated:
+from multiqc.base_module import BaseMultiqcModule
 
-logger = config.logger
+logger = logging.getLogger(__name__)
 
+initialized = False
+
+tmp_dir: Optional[str] = None
 
 # Uninitialised global variables for static typing
 multiqc_command: str
-modules_output: List  # List of BaseMultiqcModule objects
-general_stats_data: List[Dict]
-general_stats_headers: List[Dict]
+analysis_files: List[str]  # Input files to search
+modules_output: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
 general_stats_html: str
-data_sources: Dict[str, Dict[str, Dict]]
-plot_data: Dict
-html_ids: List[str]
 lint_errors: List[str]
-num_hc_plots: int
-num_mpl_plots: int
-saved_raw_data: Dict
+num_flat_plots: int
+saved_raw_data: Dict[str, Dict[str, Any]]  # Indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Dict[str, Union[float, Dict]]
 file_search_stats: Dict[str, int]
 searchfiles: List
 files: Dict
+
+# Fields below is kept between interactive runs
+data_sources: Dict[str, Dict[str, Dict]]
+html_ids: List[str]
+plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
+general_stats_data: List[Dict]
+general_stats_headers: List[Dict]
+# Map of Software tools to a set of unique version strings
 software_versions: Dict[str, Dict[str, List]]
 
 
-def init():
+def __initialise():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
+    global initialized
+    global tmp_dir
     global multiqc_command
+    global analysis_files
     global modules_output
-    global general_stats_data
-    global general_stats_headers
     global general_stats_html
-    global data_sources
-    global plot_data
-    global html_ids
     global lint_errors
-    global num_hc_plots
-    global num_mpl_plots
+    global num_flat_plots
     global saved_raw_data
     global last_found_file
     global runtimes
-    global file_search_stats
-    global searchfiles
-    global files
+    global data_sources
+    global html_ids
+    global plot_data
+    global plot_by_id
+    global general_stats_data
+    global general_stats_headers
     global software_versions
 
+    # Create new temporary directory for module data exports
+    initialized = True
+    tmp_dir = tempfile.mkdtemp()
+    logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
-    modules_output = list()
-    general_stats_data = list()
-    general_stats_headers = list()
+    analysis_files = []
+    modules_output = []
     general_stats_html = ""
-    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-    plot_data = dict()
-    html_ids = list()
-    lint_errors = list()
-    num_hc_plots = 0
-    num_mpl_plots = 0
+    lint_errors = []
+    num_flat_plots = 0
     saved_raw_data = dict()
     last_found_file = None
     runtimes = {
@@ -91,6 +107,29 @@ def init():
         "sp": defaultdict(),
         "mods": defaultdict(),
     }
+    data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
+    html_ids = []
+    plot_data = dict()
+    plot_by_id = dict()
+    general_stats_data = []
+    general_stats_headers = []
+    software_versions = defaultdict(lambda: defaultdict(list))
+
+    reset_file_search()
+
+
+def reset_file_search():
+    """
+    Reset the file search session. Useful in interactive session to call in the end
+    of parse_logs(), so the next run is not affected by the previous one.
+    """
+    global analysis_files
+    global searchfiles
+    global files
+    global file_search_stats
+    analysis_files = []
+    searchfiles = []
+    files = dict()  # Discovered files for each search key
     file_search_stats = {
         "skipped_symlinks": 0,
         "skipped_not_a_file": 0,
@@ -101,11 +140,16 @@ def init():
         "skipped_directory_fn_ignore_dirs": 0,
         "skipped_file_contents_search_errors": 0,
     }
-    searchfiles = list()
-    # Discovered files for each search key
-    files = dict()
-    # Map of Software tools to a set of unique version strings
-    software_versions = defaultdict(lambda: defaultdict(list))
+
+
+def reset():
+    """
+    Reset interactive session.
+    """
+    __initialise()
+
+
+__initialise()
 
 
 def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
@@ -313,7 +357,7 @@ def handle_analysis_path(item: Path):
             handle_analysis_path(item)
 
 
-def get_filelist(run_module_names):
+def search_files(run_module_names):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -458,34 +502,70 @@ def get_filelist(run_module_names):
 
     # Go through the analysis directories and get file list
     total_sp_starttime = time.time()
-    for path in config.analysis_dir:
+    for path in analysis_files:
         handle_analysis_path(Path(path))
 
-    # Search through collected files
-    console = rich.console.Console(
-        stderr=True,
-        highlight=False,
-        force_interactive=False if config.no_ansi else None,
-        color_system=None if config.no_ansi else "auto",
-    )
-    progress_obj = rich.progress.Progress(
-        "[blue]|[/]      ",
-        rich.progress.SpinnerColumn(),
-        "[blue]{task.description}[/] |",
-        rich.progress.BarColumn(),
-        "[progress.percentage]{task.percentage:>3.0f}%",
-        "[green]{task.completed}/{task.total}",
-        "[dim]{task.fields[s_fn]}",
-        console=console,
-        disable=config.no_ansi or config.quiet,
-    )
-    with progress_obj as progress:
-        mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
-        for sf in searchfiles:
-            progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
-            if not add_file(sf[0], sf[1]):
-                file_search_stats["skipped_no_match"] += 1
-        progress.update(mqc_task, s_fn="")
+    # GitHub actions doesn't understand ansi control codes to move the cursor,
+    # so it prints each update ona a new line. Better disable it for CI.
+    disable_progress = config.no_ansi or config.quiet or os.getenv("CI")
+
+    if is_running_in_notebook() or no_unicode():
+        PRINT_FNAME = False
+        # ANSI escape code for dim text
+        if not config.no_ansi:
+            DIM = "\033[2m"
+            BLUE = "\033[34m"
+            RESET = "\033[0m"
+        else:
+            DIM = ""
+            BLUE = ""
+            RESET = ""
+
+        bar_format = f"{BLUE}{'searching':>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt}"
+        if PRINT_FNAME:
+            bar_format += " {desc}"
+
+        # Set up the tqdm progress bar
+        with tqdm(
+            total=len(searchfiles),
+            desc="Searching",
+            unit="file",
+            file=sys.stdout,
+            disable=disable_progress,
+            bar_format=bar_format,
+        ) as pbar:
+            for i, sf in enumerate(searchfiles):
+                # Update the progress bar description with the file being searched
+                if PRINT_FNAME and i % 100 == 0:
+                    pbar.set_description_str(f"{DIM}{os.path.join(sf[1], sf[0])[-50:]}{RESET}")
+                pbar.update(1)
+
+                # Your file processing logic
+                if not add_file(sf[0], sf[1]):
+                    file_search_stats["skipped_no_match"] += 1
+
+            # Clear the description after the loop is complete
+            pbar.set_description("")
+            pbar.refresh()
+    else:
+        progress_obj = rich.progress.Progress(
+            "[blue][/]      ",
+            rich.progress.SpinnerColumn(),
+            "[blue]{task.description}[/] |",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[green]{task.completed}/{task.total}",
+            "[dim]{task.fields[s_fn]}[/]",
+            console=init_log.rich_console,
+            disable=disable_progress,
+        )
+        with progress_obj as progress:
+            mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
+            for sf in searchfiles:
+                progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
+                if not add_file(sf[0], sf[1]):
+                    file_search_stats["skipped_no_match"] += 1
+            progress.update(mqc_task, s_fn="")
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
     if config.profile_runtime:
@@ -496,7 +576,7 @@ def get_filelist(run_module_names):
     for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
         if "skipped_" in key and file_search_stats[key] > 0:
             summaries.append(f"{key}: {file_search_stats[key]}")
-    logger.debug(f"Summary of files that were skipped by the search: [{'] // ['.join(summaries)}]")
+    logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
 def search_file(pattern, f: SearchFile, module_key):
@@ -686,6 +766,8 @@ def save_htmlid(html_id, skiplint=False):
     i = 1
     html_id_base = html_id_clean
     while html_id_clean in html_ids:
+        if html_id_clean == "general_stats_table":
+            raise ValueError("HTML ID 'general_stats_table' is reserved and cannot be used")
         html_id_clean = f"{html_id_base}-{i}"
         i += 1
         if config.strict and not skiplint:
@@ -710,3 +792,168 @@ def compress_json(data):
         dump_json(data, gzip_buffer)
     base64_bytes = base64.b64encode(buffer.getvalue())
     return base64_bytes.decode("ascii")
+
+
+def data_tmp_dir() -> str:
+    """
+    Temporary directory to collect data files from running modules before copying to the final
+    destination in multiqc.core.write_results
+    """
+    path = os.path.join(tmp_dir, "multiqc_data")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def plots_tmp_dir() -> str:
+    """
+    Temporary directory to collect plot exports from running modules before copying to the final
+    destination in multiqc.core.write_results
+    """
+    path = os.path.join(tmp_dir, "multiqc_plots")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def write_data_file(
+    data: Union[Dict[str, Union[Dict, List]], List[Dict]],
+    fn: str,
+    sort_cols=False,
+    data_format=None,
+):
+    """
+    Write a data file to the report directory. Will do nothing
+    if config.data_dir is not set (i.e. when config.make_data_dir == False or config.filename == "stdout")
+    :param: data - either: a 2D dict, first key sample name (row header),
+        second key field (column header); a list of dicts; or a list of lists
+    :param: fn - Desired filename. Directory will be prepended automatically.
+    :param: sort_cols - Sort columns alphabetically
+    :param: data_format - Output format. Defaults to config.data_format (usually tsv)
+    :return: None
+    """
+
+    if config.data_dir is None:
+        return
+
+    # Get data format from config
+    if data_format is None:
+        data_format = config.data_format
+
+    body = None
+    # Some metrics can't be coerced to tab-separated output, test and handle exceptions
+    if data_format in ["tsv", "csv"]:
+        sep = "\t" if data_format == "tsv" else ","
+        # Attempt to reshape data to tsv
+        # noinspection PyBroadException
+        try:
+            # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+            headers = []
+            rows = []
+
+            for d in data.values() if isinstance(data, dict) else data:
+                if not d or (isinstance(d, list) and isinstance(d[0], dict)):
+                    continue
+                if isinstance(d, dict):
+                    for h in d.keys():
+                        if h not in headers:
+                            headers.append(h)
+            if headers:
+                if sort_cols:
+                    headers = sorted(headers)
+                headers_str = [str(item) for item in headers]
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    headers_str.insert(0, "Sample")
+                rows.append(sep.join(headers_str))
+
+            # The rest of the rows
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+                # Make a list starting with the sample name, then each field in order of the header cols
+                if headers:
+                    line = [str(d.get(h, "")) for h in headers]
+                else:
+                    line = [
+                        str(item)
+                        for item in (d.values() if isinstance(d, dict) else (d if isinstance(d, list) else [d]))
+                    ]
+                if isinstance(data, dict):
+                    # Add Sample header as a first element
+                    line.insert(0, str(key))
+                rows.append(sep.join(line))
+            body = "\n".join(rows)
+
+        except Exception as e:
+            if config.development:
+                raise
+            data_format = "yaml"
+            logger.debug(f"{fn} could not be saved as tsv/csv, falling back to YAML. {e}")
+
+    # Add relevant file extension to filename, save file.
+    fn = f"{fn}.{config.data_format_extensions[data_format]}"
+    fpath = os.path.join(data_tmp_dir(), fn)
+    assert data_tmp_dir() and os.path.exists(data_tmp_dir())
+    with open(fpath, "w", encoding="utf-8", errors="ignore") as f:
+        if data_format == "json":
+            dump_json(data, f, indent=4, ensure_ascii=False)
+        elif data_format == "yaml":
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
+        elif body:
+            # Default - tab separated output
+            print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
+    logger.debug(f"Wrote data file {fn}")
+
+
+def multiqc_dump_json():
+    """
+    Export the parsed data in memory to a JSON file.
+    Used for MegaQC and other data export.
+    WARNING: May be depreciated and removed in future versions.
+    """
+    exported_data = dict()
+    export_vars = {
+        "report": [
+            "data_sources",
+            "general_stats_data",
+            "general_stats_headers",
+            "multiqc_command",
+            "plot_data",
+            "saved_raw_data",
+        ],
+        "config": [
+            "analysis_dir",
+            "creation_date",
+            "git_hash",
+            "intro_text",
+            "report_comment",
+            "report_header_info",
+            "script_path",
+            "short_version",
+            "subtitle",
+            "title",
+            "version",
+            "output_dir",
+        ],
+    }
+    for s in export_vars:
+        for k in export_vars[s]:
+            try:
+                d = None
+                if s == "config":
+                    d = {f"{s}_{k}": getattr(config, k)}
+                elif s == "report":
+                    d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
+                if d:
+                    with open(os.devnull, "wt") as f:
+                        # Test that exporting to JSON works. Write to
+                        # /dev/null so no memory is required.
+                        dump_json(d, f, ensure_ascii=False)
+                    exported_data.update(d)
+            except (TypeError, KeyError, AttributeError) as e:
+                logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
+        # Get the absolute paths of analysis directories
+        exported_data["config_analysis_dir_abs"] = list()
+        for d in exported_data.get("config_analysis_dir", []):
+            try:
+                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+            except Exception:
+                pass
+    return exported_data

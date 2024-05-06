@@ -1,8 +1,8 @@
-""" MultiQC module to parse output from truvari """
+"""MultiQC module to parse output from truvari"""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the truvari submodules
 from .bench import BenchSummary

@@ -1,11 +1,10 @@
-""" MultiQC module to parse Stacks 2 denovo output"""
-
+"""MultiQC module to parse Stacks 2 denovo output"""
 
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
 # Initialise the logger
@@ -26,7 +25,6 @@ class MultiqcModule(BaseMultiqcModule):
             "n_loci": {
                 "title": "# loci",
                 "description": "Number of loci built",
-                "format": "{:,.i}",
                 "scale": "RdYlGn",
             },
             "n_used_fw_reads": {
@@ -54,7 +52,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "PopID",
                 "description": "Population ID as defined in the Population Map file.",
                 "scale": False,
-                "format": "{:,.s}",
             },
             "Private": {
                 "title": "Private",
@@ -213,7 +210,6 @@ class MultiqcModule(BaseMultiqcModule):
         config_distribs = {
             "id": "distribs_plot",
             "title": "Stacks: Population plots",
-            "namespace": "stacks",
             "tt_label": "{point.y} loci, {point.x} samples/SNPs",
             "ylab": "# loci",
             "data_labels": [

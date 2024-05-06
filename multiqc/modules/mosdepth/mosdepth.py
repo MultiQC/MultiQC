@@ -5,7 +5,7 @@ import logging
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
@@ -112,7 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="mosdepth",
+            name="Mosdepth",
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
             info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
-                            "hide_zero_cats": False,
+                            "hide_empty": False,
                         },
                     )
                 else:

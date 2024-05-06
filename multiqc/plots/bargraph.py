@@ -1,19 +1,17 @@
 """MultiQC functions to plot a bargraph"""
 
-import inspect
 import logging
 from collections import OrderedDict
-from typing import Union
+from typing import Union, Dict
 
 import math
-import re
 
-from multiqc.utils import config, mqc_colour, report
+from multiqc import config
 from multiqc.plots.plotly import bar
+from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
-
-letters = "abcdefghijklmnopqrstuvwxyz"
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
@@ -27,7 +25,11 @@ def get_template_mod():
     return _template_mod
 
 
-def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
+def plot(
+    data,
+    cats=None,
+    pconfig: Union[Dict, BarPlotConfig, None] = None,
+) -> Union[bar.BarPlot, str]:
     """Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also, can take info about categories. There are quite a
     few variants of how to use this function, see the docs for details.
@@ -37,39 +39,11 @@ def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
-
-    if pconfig is None:
-        pconfig = {}
-
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
+    assert pconfig is not None, "pconfig must be provided"
+    if isinstance(pconfig, dict):
+        pconfig = BarPlotConfig(**pconfig)
 
     # Validate config if linting
-    if config.strict:
-        # Get module name
-        modname = ""
-        callstack = inspect.stack()
-        for n in callstack:
-            if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                callpath = n[1].split("multiqc/modules/", 1)[-1]
-                modname = f">{callpath}< "
-                break
-        # Look for essential missing pconfig keys
-        for k in ["id", "title", "ylab"]:
-            if k not in pconfig:
-                errmsg = f"LINT: {modname}Bargraph pconfig was missing key '{k}'"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-        # Check plot title format
-        if not re.match(r"^[^:]*\S: \S[^:]*$", pconfig.get("title", "")):
-            errmsg = "LINT: {} Bargraph title did not match format 'Module: Plot Name' (found '{}')".format(
-                modname, pconfig.get("title", "")
-            )
-            logger.error(errmsg)
-            report.lint_errors.append(errmsg)
-
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
         data = [data]
@@ -105,8 +79,8 @@ def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
                     cats[idx][c]["name"] = c
 
     # Allow user to overwrite a given category config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
+    if pconfig.id and pconfig.id in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconfig.id].items():
             for idx in range(len(cats)):
                 if k in cats[idx].keys():
                     for kk, vv in v.items():
@@ -121,7 +95,7 @@ def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif pconfig.get("sort_samples", True):
+        elif pconfig.sort_samples:
             hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
@@ -156,7 +130,7 @@ def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
                 catcount += 1
                 sample_dcount[s] += 1
             if catcount > 0:
-                if pconfig.get("hide_zero_cats", True) is False or max(x for x in thisdata if not math.isnan(x)) > 0:
+                if pconfig.hide_zero_cats is False or max(x for x in thisdata if not math.isnan(x)) > 0:
                     thisdict = {"name": cats[idx][c]["name"], "data": thisdata}
                     if "color" in cats[idx][c]:
                         thisdict["color"] = cats[idx][c]["color"]
@@ -174,7 +148,7 @@ def plot(data, cats=None, pconfig=None) -> Union[bar.BarPlot, str]:
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.get('id')}")
+        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is

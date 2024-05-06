@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from Adapter Removal """
-
+"""MultiQC module to parse output from Adapter Removal"""
 
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger

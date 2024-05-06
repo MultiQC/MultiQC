@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from Peddy """
-
+"""MultiQC module to parse output from Peddy"""
 
 import json
 import logging
 import random
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
 
 # Initialise the logger

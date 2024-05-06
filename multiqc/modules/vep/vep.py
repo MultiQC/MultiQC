@@ -1,11 +1,10 @@
-""" MultiQC module to parse output from VEP """
-
+"""MultiQC module to parse output from VEP"""
 
 import ast
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
