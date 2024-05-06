@@ -123,7 +123,7 @@ def list_modules() -> List[str]:
     """
     Return a list of the modules that have been loaded in order.
     """
-    return [m.name for m in report.modules_output]
+    return [m.name for m in report.modules]
 
 
 def list_samples() -> List[str]:
@@ -147,7 +147,7 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     """
 
     result = dict()
-    for module in report.modules_output:
+    for module in report.modules:
         result[module.name]: List[Union[str, Dict[str, str]]] = list()
         for section in module.sections:
             if not section.plot_id:
@@ -177,7 +177,7 @@ def show_plot(
     """
     from IPython.core.display import HTML
 
-    mod = next((m for m in report.modules_output if m.name == module or m.anchor == module), None)
+    mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
@@ -267,7 +267,7 @@ def get_module_data(
         raise ValueError(f"Module '{module}' is not found. Use multiqc.list_modules() to list available modules")
 
     data_by_module = {}
-    for m in report.modules_output:
+    for m in report.modules:
         if module and (m.name != module and m.anchor != module):
             continue
 
@@ -328,7 +328,7 @@ def add_custom_content_section(
         content=content,
         comment=comment,
     )
-    report.modules_output.append(module)
+    report.modules.append(module)
 
 
 def write_report(
@@ -367,7 +367,7 @@ def write_report(
 
     check_version(write_report.__name__)
 
-    if len(report.modules_output) == 0:
+    if len(report.modules) == 0:
         logger.error("No analysis results found to make a report")
         return
 

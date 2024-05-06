@@ -26,7 +26,7 @@ def update_versions_from_config(config, report):
     for group, softwares in versions_from_config.items():
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
-        module = find_matching_module(group, report.modules_output)
+        module = find_matching_module(group, report.modules)
 
         # Map normalized module software names to the nicely formatted names.
         module_softwares = {}
