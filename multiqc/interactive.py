@@ -1,3 +1,8 @@
+"""
+This module provides functions useful to interact with MultiQC in an interactive
+Python environment, such as Jupyter notebooks.
+"""
+
 import json
 import logging
 from collections import defaultdict
@@ -49,8 +54,8 @@ def parse_logs(
     extra_fn_clean_trim: List = (),
 ):
     """
-    Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed
-    with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
+    Find files that MultiQC recognizes in `analysis_dir` and parse them, without generating a report.
+    Data can be accessed with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
     """
     assert isinstance(analysis_dir, tuple)
     if not all(isinstance(d, str) for d in analysis_dir):
@@ -71,7 +76,7 @@ def parse_logs(
 
 def parse_data_json(path: Union[str, Path]):
     """
-    Try find multiqc_data.json in the given directory and load it into the report.
+    Try find multiqc_data.json in the given directory, and load it into the report.
     """
     check_version(parse_data_json.__name__)
 
@@ -89,7 +94,6 @@ def parse_data_json(path: Union[str, Path]):
         logger.error(f"multiqc_data.json not found in {path}")
         return
 
-    # Loading from previous JSON
     logger.info(f"Loading data from {json_path}")
     try:
         with json_path.open("r") as f:
@@ -121,7 +125,7 @@ def list_data_sources() -> List[str]:
 
 def list_modules() -> List[str]:
     """
-    Return a list of the modules that have been loaded in order.
+    Return a list of the modules that have been loaded, in order according to config.
     """
     return [m.name for m in report.modules]
 
@@ -142,8 +146,7 @@ def list_samples() -> List[str]:
 
 def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     """
-    Return a list of the plots that have been loaded for a given module,
-    along with the number of datasets in each plot.
+    Return plot names that have been loaded, indexed by module and section.
     """
 
     result = dict()
@@ -175,6 +178,7 @@ def show_plot(
     """
     Show a plot in the notebook.
     """
+
     from IPython.core.display import HTML
 
     mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
@@ -209,6 +213,7 @@ def _load_plot(dump: Dict) -> Plot:
     """
     Load a plot and datasets from a JSON dump.
     """
+
     plot_type = PlotType(dump["plot_type"])
     if plot_type == PlotType.LINE:
         return LinePlot(**dump)
@@ -228,9 +233,10 @@ def _load_plot(dump: Dict) -> Plot:
 
 def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
-    Return parsed general stats data indexed by sample, then by data key. If sample is specified, return only data
-    for that sample.
+    Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
+    return only data for that sample.
     """
+
     data = defaultdict(dict)
     for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
         for s, val_by_key in data_by_sample.items():
@@ -254,13 +260,14 @@ def get_module_data(
     key: Optional[str] = None,
 ) -> Dict:
     """
-    Return parsed module data, indexed (optionally) by data key, then by sample. Module is either the module
-    name, or the anchor.
+    Return parsed module data, indexed (if available) by data key, then by sample. Module is either
+    the module name, or the anchor.
 
     Takes data from report.saved_raw_data, which populated by self.write_data_file() calls in modules.
     This data is not necessarily normalized, e.g. numbers can be strings or numbers, depends on
     individual module behaviour.
     """
+
     if sample and sample not in list_samples():
         raise ValueError(f"Sample '{sample}' is not found. Use multiqc.list_samples() to list available samples")
     if module and module not in list_modules():
@@ -295,6 +302,7 @@ def reset():
     """
     Reset the report to start fresh. Drops all previously parsed data.
     """
+
     config.reset()
     report.reset()
 
@@ -312,6 +320,7 @@ def add_custom_content_section(
     """
     Add a custom content section to the report. This can be used to add a custom table or other content.
     """
+
     module = BaseMultiqcModule(
         name=name,
         anchor=anchor,
@@ -361,8 +370,9 @@ def write_report(
     module_order: List[Union[str, Dict]] = (),
 ):
     """
-    Write HTML and data files to disk. Useful to work with MultiQC interactively, after loading data with `load`.
+    Render HTML from parsed module data, and write a report and data files to disk.
     """
+
     update_config(cfg=ClConfig(**locals()))
 
     check_version(write_report.__name__)
@@ -383,6 +393,7 @@ def load_config(config_file: Union[str, Path]):
     """
     Load config on top of the current config from a MultiQC config file.
     """
+
     update_config()
 
     path = Path(config_file)
