@@ -33,13 +33,20 @@ report. You can add this to the module introduction or sections as described
 above. For example:
 
 ```python
-self.add_section(
-    name="Module Section",
-    anchor="mymod_section",
-    description="This plot shows some really nice data.",
-    helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
-    plot=bargraph.plot(data, cats=..., pconfig=...)
-)
+from multiqc.plots import bargraph
+from multiqc import BaseMultiqcModule
+
+class MultiqcModule(BaseMultiqcModule):
+    def __init__(self):
+        super().__init__(...)
+        data = ...
+        self.add_section(
+            name="Module Section",
+            anchor="mymod_section",
+            description="This plot shows some really nice data.",
+            helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
+            plot=bargraph.plot(data, cats=..., pconfig=...)
+        )
 ```
 
 ## Common options
@@ -77,8 +84,9 @@ To specify the order of categories in the plot, you can supply a list of
 dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
+from multiqc.plots import bargraph
 cats = ['aligned', 'not_aligned']
-html = bargraph.plot(data, cats, pconfig=...)
+html = bargraph.plot(..., cats, pconfig=...)
 ```
 
 If `cats` is given as a dict instead of a list, you can specify a nice name
@@ -143,9 +151,12 @@ datasets. To do this, give a list of data objects to the `plot` function
 and specify the `data_labels` config option with the text to be used for the buttons:
 
 ```python
+from multiqc.plots import bargraph
 pconfig = {
     'data_labels': ['Reads', 'Bases']
 }
+data1 = ...
+data2 = ...
 html = bargraph.plot([data1, data2], pconfig=pconfig)
 ```
 
@@ -188,6 +199,7 @@ cats = [
 Or with additional customisation such as name and colour:
 
 ```python
+from multiqc.plots import bargraph
 cats = [
     {
         "aligned_reads": {"name": "Aligned Reads", "color": "#8bbc21"},
@@ -198,6 +210,7 @@ cats = [
         "unaligned_base_pairs": {"name": "Unaligned Base Pairs", "color": "#f7a35c"},
     },
 ]
+data = ...
 html = bargraph.plot([data, data], cats, pconfig=...)
 ```
 
@@ -228,6 +241,7 @@ html = linegraph.plot(data)
 Additionally, a configuration dict can be supplied. The defaults are as follows:
 
 ```python
+from multiqc.plots import linegraph
 pconfig = {
     # Building the plot
     "id": "<random string>",     # HTML ID used for plot
@@ -342,6 +356,8 @@ For example, to add a dotted `x = y` reference line:
 
 ```python
 from multiqc.plots import linegraph
+max_x_val = ...
+max_y_val = ...
 pconfig = {
     "extra_series": {
         "name": "x = y",
@@ -353,7 +369,7 @@ pconfig = {
         "showlegend": False,
     }
 }
-html = linegraph.plot(data, pconfig)
+html = linegraph.plot(..., pconfig)
 ```
 
 ## Box plots
@@ -522,6 +538,8 @@ A more complicated version with ordered columns, defaults and column-specific
 settings (e.g. no decimal places):
 
 ```python
+from multiqc.plots import table
+from multiqc import config
 data = {
     "sample 1": {
         "aligned": 23542,
@@ -582,12 +600,14 @@ header config. This takes precedence over `scale`.
 For example, a header config for a column could look like this:
 
 ```python
-headers[tablecol] = {
-    "title": "My table column",
-    "bgcols": {
-        "bad data": "#f8d7da",
-        "ok data": "#fff3cd",
-        "good data": "#d1e7dd"
+headers = {
+    "col": {
+        "title": "My table column",
+        "bgcols": {
+            "bad data": "#f8d7da",
+            "ok data": "#fff3cd",
+            "good data": "#d1e7dd"
+        }
     }
 }
 ```
@@ -605,10 +625,12 @@ and negative values.
 For example:
 
 ```python
-headers[tablecol] = {
-    "title": "My table column",
-    "scale": "RdYlGn",
-    "bars_zero_centrepoint": True,
+headers = {
+    "col": {
+        "title": "My table column",
+        "scale": "RdYlGn",
+        "bars_zero_centrepoint": True,
+    }
 }
 ```
 
@@ -629,12 +651,14 @@ with the exception that no column ID is needed for `table_cond_formatting_rules`
 For example, a simple header config could look as follows:
 
 ```python
-headers[instrument] = {
-    "title": "My table column",
-    "cond_formatting_rules": {
-        "pass": [{"s_eq": "good data"}],
-        "warn": [{"s_eq": "ok data"}],
-        "fail": [{"s_eq": "bad data"}],
+headers = {
+    "col": {
+        "title": "My table column",
+        "cond_formatting_rules": {
+            "pass": [{"s_eq": "good data"}],
+            "warn": [{"s_eq": "ok data"}],
+            "fail": [{"s_eq": "bad data"}],
+        }
     }
 }
 ```
@@ -642,24 +666,26 @@ headers[instrument] = {
 A more complex version with multiple rules could be:
 
 ```python
-headers[tablecol] = {
-    "title": "My table column",
-    "cond_formatting_rules": {
-        "brightgreen": [
-            {"s_contains": "amazing"},
-            {"s_contains": "incredible"},
-        ],
-        "brown": [{"s_ne": "rubbish-data"}],
-        "turquoise": [
-            {"gt": 4},
-            {"lt": 12},
-        ],
-    },
-    "cond_formatting_colours": [
-        {"brightgreen": "#39FF14"},
-        {"brown": "#A52A2A"},
-        {"turquoise": "#30D5C8"},
-    ]
+headers = {
+    "col": {
+        "title": "My table column",
+        "cond_formatting_rules": {
+            "brightgreen": [
+                {"s_contains": "amazing"},
+                {"s_contains": "incredible"},
+            ],
+            "brown": [{"s_ne": "rubbish-data"}],
+            "turquoise": [
+                {"gt": 4},
+                {"lt": 12},
+            ],
+        },
+        "cond_formatting_colours": [
+            {"brightgreen": "#39FF14"},
+            {"brown": "#A52A2A"},
+            {"turquoise": "#30D5C8"},
+        ]
+    }
 }
 ```
 
@@ -715,7 +741,8 @@ of sample names for the x-axis, and optionally for the y-axis (defaults
 to the same as the x-axis).
 
 ```python
-heatmap.plot(data, xcats, ycats, pconfig)
+from multiqc.plots import heatmap
+heatmap.plot(data=..., xcats=..., ycats=..., pconfig=...)
 ```
 
 A simple example:
@@ -753,6 +780,7 @@ data = {
         "six": 0.3,
     },
 }
+from multiqc.plots import heatmap
 html = heatmap.plot(data, pconfig=...)
 ```
 
