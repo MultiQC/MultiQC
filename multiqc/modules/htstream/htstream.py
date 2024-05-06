@@ -1,16 +1,15 @@
-#!/usr/bin/env python
-
 """MultiQC module to parse output from HTStream"""
 
 from __future__ import print_function
 from collections import OrderedDict
 import logging
 import json
-import os
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.modules.base_module import ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+
+# from multiqc.modules.base_module import BaseMultiqcModule
+# from multiqc.modules.base_module import ModuleNoSamplesFound
 
 # Import modules
 from .apps import __hts_import
@@ -48,10 +47,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.app_order = []
         self.repeated_apps = []
         self.add_software_version(None)
-
-        # Import js and css functions.
-        self.js = {"assets/js/htstream.js": os.path.join(os.path.dirname(__file__), "assets", "js", "htstream.js")}
-        self.css = {"assets/css/htstream.css": os.path.join(os.path.dirname(__file__), "assets", "css", "htstream.css")}
 
         # iterates through files found by "find_log_files" (located in base_module.py, re patterns found in search_patterns.yml)
         for file in self.find_log_files("htstream"):
@@ -209,23 +204,23 @@ class MultiqcModule(BaseMultiqcModule):
                     # if dictionary is not empty
                     if len(section_dict.keys()) != 0:
                         figure = section_dict["Figure"]
-                        html = section_dict["Content"]
+                        content = section_dict["Content"]
 
                         # add report section to dictionary, to be added later
                         self.report_sections[app_name] = {
                             "name": app_name,
                             "description": description,
                             "figure": figure,
-                            "html": html,
+                            "content": content,
                             "comment": notes,
                         }
 
                 else:
                     self.report_sections[app_name + " (Summary Table)"] = {
-                        "name": app_name + " (Table)",
+                        "name": app_name + " Table",
                         "description": "Basic statistics about the reads in a dataset.",
                         "figure": section_dict["Table"],
-                        "html": "",
+                        "content": "",
                         "comment": notes,
                     }
 
@@ -238,30 +233,30 @@ class MultiqcModule(BaseMultiqcModule):
 
                     for rtype in read_types:
                         self.report_sections[app_name + " (" + rtype + " Read Length)"] = {
-                            "name": app_name + " (" + rtype + " Read Length)",
+                            "name": app_name + " " + rtype + " Read Length",
                             "description": "Distribution of read lengths for each sample.",
                             "figure": section_dict[rtype]["Read_Length"],
-                            "html": "",
+                            "content": "",
                             "comment": "",
                         }
 
                         self.report_sections[app_name + " (" + rtype + " PE Base by Cycle)"] = {
-                            "name": app_name + " (" + rtype + " Base by Cycle)",
+                            "name": app_name + " " + rtype + " Base by Cycle",
                             "description": """Provides a measure of the uniformity of a distribution. 
                                                                                                     The higher the average deviation from 25% is, 
                                                                                                     the more unequal the base pair composition. N's are excluded from this calculation.""",
                             "figure": section_dict[rtype]["Base_by_Cycle"],
-                            "html": "",
+                            "content": "",
                             "comment": "",
                         }
 
                         self.report_sections[app_name + " (" + rtype + " PE Quality by Cycle)"] = {
-                            "name": app_name + " (" + rtype + " Quality by Cycle)",
+                            "name": app_name + " " + rtype + " Quality by Cycle",
                             "description": """Mean quality score for each position along the read. 
                                                                                                     Sample is colored red if less than 60% of bps have mean score of at least Q30, 
                                                                                                     orange if between 60% and 80%, and green otherwise.""",
                             "figure": section_dict[rtype]["Quality_by_Cycle"],
-                            "html": "",
+                            "content": "",
                             "comment": "",
                         }
 
@@ -327,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
                     description=content["description"],
                     plot=content["figure"],
                     comment=content["comment"],
-                    content=content["html"],
+                    content=content["content"],
                 )
 
             except:
