@@ -14,7 +14,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="sargasso",
+            name="Sargasso",
             anchor="sargasso",
             href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="is a tool to separate mixed-species RNA-seq reads" "according to their species of origin.",

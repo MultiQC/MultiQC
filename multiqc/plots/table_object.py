@@ -26,6 +26,8 @@ class TableConfig(PConfig):
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
     no_violin: bool = Field(False, alias="no_beeswarm")
+    scale: Union[str, bool] = "GnBu"
+    min: Optional[Union[int, float]] = None
 
 
 class TableColumn(BaseModel):
@@ -206,12 +208,12 @@ class DataTable(BaseModel):
                 headers[d_idx][k]["namespace"] = headers[d_idx][k].get("namespace", pconfig.namespace)
                 headers[d_idx][k]["title"] = headers[d_idx][k].get("title", k)
                 headers[d_idx][k]["description"] = headers[d_idx][k].get("description", headers[d_idx][k]["title"])
-                headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", "GnBu")
+                headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", pconfig.scale)
                 headers[d_idx][k]["format"] = headers[d_idx][k].get("format")
                 headers[d_idx][k]["colour"] = headers[d_idx][k].get("colour", headers[d_idx][k].get("color"))
                 headers[d_idx][k]["hidden"] = headers[d_idx][k].get("hidden", False)
                 headers[d_idx][k]["max"] = headers[d_idx][k].get("max")
-                headers[d_idx][k]["min"] = headers[d_idx][k].get("min")
+                headers[d_idx][k]["min"] = headers[d_idx][k].get("min", pconfig.min)
                 headers[d_idx][k]["ceiling"] = headers[d_idx][k].get("ceiling")
                 headers[d_idx][k]["floor"] = headers[d_idx][k].get("floor")
                 headers[d_idx][k]["minrange"] = headers[d_idx][k].get("minrange", headers[d_idx][k].get("minRange"))

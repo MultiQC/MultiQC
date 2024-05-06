@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class LinePlotConfig(PConfig):
-    ylab: str
+    xlab: Optional[str] = None
+    ylab: Optional[str] = None
     categories: bool = False
     smooth_points: Optional[int] = None
     smooth_points_sumcounts: Optional[int] = None
@@ -33,6 +34,7 @@ class LinePlotConfig(PConfig):
     x_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
     y_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
     style: Literal["lines", "lines+markers"] = "lines"
+    hide_zero_cats: Optional[bool] = Field(False, deprecated="use 'hide_empty' instead")
     hide_empty: bool = False
     colors: Dict[str, str] = {}
 

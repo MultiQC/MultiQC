@@ -164,7 +164,7 @@ class MarkdupReportMixin:
         # Bar plot
         pconfig = {
             "id": "samtools-markdup-fraction",
-            "title": "Markdup: duplicate categories",
+            "title": "Samtools: markdup: duplicate categories",
             "ylab": "SAM Records",
         }
 

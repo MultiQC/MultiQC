@@ -5,16 +5,14 @@ import logging
 import random
 import re
 import string
-import sys
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, get_origin, get_args
+from typing import Dict, Union, List, Optional, Tuple, Any
 from typeguard import check_type, TypeCheckError
 
 import math
 import plotly.graph_objects as go
 from pydantic import BaseModel, field_validator, field_serializer, Field, ValidationError, model_validator
-from pydantic_core.core_schema import ValidationInfo
 
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
@@ -24,21 +22,12 @@ logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
+
+class PConfigValidationError(Exception):
+    pass
+
+
 pconfig_validation_errors = []
-
-
-def isinstance_generic(val, typ):
-    origin = get_origin(typ)
-    if origin is None:
-        # Not a generic type, use normal isinstance
-        return isinstance(val, typ)
-    else:
-        # It's a generic type
-        args = get_args(typ)
-        if origin is list and all(isinstance(v, args[0]) for v in val):
-            return True
-        # Add more generic types as needed (like dict, set, etc.)
-    return False
 
 
 class PConfig(BaseModel):
@@ -59,7 +48,7 @@ class PConfig(BaseModel):
     yLog: Optional[bool] = Field(None, deprecated="use 'ylog' instead")
     xlog: bool = False
     ylog: bool = False
-    data_labels: List[Union[str, Dict[str, str]]] = []
+    data_labels: List[Union[str, Dict[str, Any]]] = []
     xTitle: Optional[str] = Field(None, deprecated="use 'xlab' instead")
     yTitle: Optional[str] = Field(None, deprecated="use 'ylab' instead")
     xlab: Optional[str] = None
@@ -69,6 +58,7 @@ class PConfig(BaseModel):
     tt_suffix: Optional[str] = None
     xLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
     yLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
     xlab_format: Optional[str] = None
     ylab_format: Optional[str] = None
     tt_label: Optional[str] = None
@@ -96,15 +86,27 @@ class PConfig(BaseModel):
         try:
             super().__init__(**data)
         except ValidationError as e:
-            logger.debug(e)
-            pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
+            if not pconfig_validation_errors:
+                raise
+            else:
+                # errors are already added into plot.pconfig_validation_errors by a custom validator
+                logger.debug(e)
 
         if pconfig_validation_errors:
+            # Get module name
+            modname = ""
+            callstack = inspect.stack()
+            for n in callstack:
+                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
+                    callpath = n[1].split("multiqc/modules/", 1)[-1]
+                    modname = f"{callpath}: "
+                    break
+
             plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"Error parsing {plot_type} plot configuration: {data}:")
+            logger.error(f"{modname}Invalid {plot_type} plot configuration: {data}:")
             for error in pconfig_validation_errors:
                 logger.error(f"- {error}")
-            sys.exit("Invalid plot configuration, see errors above.")
+            raise PConfigValidationError()
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
@@ -130,7 +132,9 @@ class PConfig(BaseModel):
         values_without_deprecateds = {}
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
-                m = re.search(r"use '(.+)' instead", cls.model_fields[name].deprecated)
+                msg = cls.model_fields[name].deprecated
+                logger.debug(f"Deprecated field: {name}. {msg}")
+                m = re.search(r"use '(.+)' instead", msg)
                 if m:
                     new_name = m.group(1)
                     if new_name not in values:
@@ -161,25 +165,6 @@ class PConfig(BaseModel):
                 logger.debug(f"{msg}: {e}")
 
         return values
-
-    # noinspection PyNestedDecorators
-    @field_validator("title")
-    @classmethod
-    def validate_title(cls, v: str, info: ValidationInfo):
-        if v != "General Statistics" and not re.match(r"^[^:]*\S: \S[^:]*$", v):
-            # Get module name
-            modname = ""
-            callstack = inspect.stack()
-            for n in callstack:
-                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                    callpath = n[1].split("multiqc/modules/", 1)[-1]
-                    modname = f">{callpath}< "
-                    break
-
-            pconfig_validation_errors.append(
-                f'{modname}"{info.field_name}": title does not match format "Module: Plot Name" (found "{v}")'
-            )
-        return v
 
 
 class PlotType(Enum):

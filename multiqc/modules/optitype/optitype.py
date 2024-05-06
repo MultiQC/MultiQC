@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "optitype_summary_plot",
-            "title": "Optitype: Summary of alleles",
+            "title": "OptiType: Summary of alleles",
             "cpswitch": False,
             "ylab": "# Samples",
             "yDecimals": False,

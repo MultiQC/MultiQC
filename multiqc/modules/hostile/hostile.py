@@ -89,7 +89,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Hostile: Reads Filtered",
             "id": "he_reads_plots",
             "ylab": "# Reads",
-            "plot_type": "bargraph",
         }
 
         self.add_section(

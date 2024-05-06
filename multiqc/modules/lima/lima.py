@@ -194,7 +194,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "multiqc_lima_counts",
             "namespace": "Lima",
             "title": "Lima: Number of Reads",
-            "anchor": "multiqc_lima_counts",
             "ylab": "# Reads",
         }
 

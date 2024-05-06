@@ -44,10 +44,11 @@ def plot(
         for s_name in ds:
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config: ScatterConfig = pconfig.copy()
-            if pconfig.data_labels and isinstance(
-                pconfig.data_labels[data_index], dict
-            ):  # if not a dict: only dataset name is provided
-                series_config.update(pconfig.data_labels[data_index])
+            if pconfig.data_labels and isinstance(pconfig.data_labels[data_index], dict):
+                # if not a dict: only dataset name is provided
+                for k, v in pconfig.data_labels[data_index].items():
+                    if k in series_config.model_fields:
+                        setattr(series_config, k, v)
 
             if not isinstance(ds[s_name], list):
                 ds[s_name] = [ds[s_name]]
@@ -68,12 +69,13 @@ def plot(
                     point["name"] = s_name
 
                 for k in ["color", "opacity", "marker_size", "marker_line_width"]:
-                    if k not in point and k in series_config.model_fields:
+                    if k not in point:
                         v = getattr(series_config, k)
-                        if isinstance(v, dict) and s_name in v:
-                            point[k] = v[s_name]
-                        else:
-                            point[k] = v
+                        if v is not None:
+                            if isinstance(v, dict) and s_name in v:
+                                point[k] = v[s_name]
+                            else:
+                                point[k] = v
                 d.append(point)
         plotdata.append(d)
 

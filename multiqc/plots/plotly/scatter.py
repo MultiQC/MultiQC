@@ -16,6 +16,10 @@ class ScatterConfig(PConfig):
     ylab: str
     categories: List[str] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
+    marker_size: Optional[int] = None
+    marker_line_width: Optional[int] = None
+    color: Optional[str] = None
+    opacity: Optional[float] = None
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
@@ -119,16 +123,16 @@ class Dataset(BaseDataset):
         layout.showlegend = True
 
         in_legend = set()
-        for element in self.points:
-            x = element["x"]
-            name = element["name"]
-            group = element.get("group")
-            color = element.get("color")
-            annotation = element.get("annotation")
+        for el in self.points:
+            x = el["x"]
+            name = el["name"]
+            group = el.get("group")
+            color = el.get("color")
+            annotation = el.get("annotation")
 
             show_in_legend = False
-            if layout.showlegend and not element.get("hide_in_legend"):
-                key = (color, element.get("marker_size"), element.get("marker_line_width"), group)
+            if layout.showlegend and not el.get("hide_in_legend"):
+                key = (color, el.get("marker_size"), el.get("marker_line_width"), group)
                 if key not in in_legend:
                     in_legend.add(key)
                     names = sorted(names_by_legend_key.get(key))
@@ -145,12 +149,13 @@ class Dataset(BaseDataset):
             marker = params.pop("marker")
             if color:
                 marker["color"] = color
-            if "marker_line_width" in element:
-                marker["line"]["width"] = element["marker_line_width"]
-            if "marker_size" in element:
-                marker["size"] = element["marker_size"]
-            if "opacity" in element:
-                marker["opacity"] = element["opacity"]
+
+            if "marker_line_width" in el:
+                marker["line"]["width"] = el["marker_line_width"]
+            if "marker_size" in el:
+                marker["size"] = el["marker_size"]
+            if "opacity" in el:
+                marker["opacity"] = el["opacity"]
 
             if annotation:
                 params["mode"] = "markers+text"
@@ -160,7 +165,7 @@ class Dataset(BaseDataset):
             fig.add_trace(
                 go.Scatter(
                     x=[x],
-                    y=[element["y"]],
+                    y=[el["y"]],
                     name=name,
                     text=[annotation or name],
                     showlegend=show_in_legend,

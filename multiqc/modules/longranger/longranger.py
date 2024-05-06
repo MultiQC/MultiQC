@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         config_table = {
             "id": "longranger_table",
             "namespace": "longranger",
-            "title": "Long Ranger",
+            "title": "Long Ranger: Summary Statistics",
         }
         self.add_section(
             name="Run stats",

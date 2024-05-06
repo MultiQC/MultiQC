@@ -1,5 +1,4 @@
-""" MultiQC Submodule to parse output from Qualimap BamQC """
-
+"""MultiQC Submodule to parse output from Qualimap BamQC"""
 
 import logging
 import os
@@ -392,7 +391,7 @@ def report_sections(self):
                 self.qualimap_bamqc_coverage_hist,
                 {
                     "id": "qualimap_coverage_histogram",
-                    "title": "Qualimap BamQC: Coverage histogram",
+                    "title": "QualiMap: BamQC: Coverage histogram",
                     "ylab": "Genome bin counts",
                     "xlab": "Coverage (X)",
                     "ymin": 0,
@@ -413,7 +412,7 @@ def report_sections(self):
                 rates_within_threshs,
                 {
                     "id": "qualimap_genome_fraction",
-                    "title": "Qualimap BamQC: Genome fraction covered by at least X reads",
+                    "title": "QualiMap: BamQC: Genome fraction covered by at least X reads",
                     "ylab": "Fraction of reference (%)",
                     "xlab": "Coverage (X)",
                     "ymax": 100,
@@ -478,7 +477,7 @@ def report_sections(self):
                 self.qualimap_bamqc_insert_size_hist,
                 {
                     "id": "qualimap_insert_size",
-                    "title": "Qualimap BamQC: Insert size histogram",
+                    "title": "QualiMap: BamQC: Insert size histogram",
                     "ylab": "Fraction of reads",
                     "xlab": "Insert Size (bp)",
                     "ymin": 0,
@@ -525,7 +524,7 @@ def report_sections(self):
             desc = "Each solid line represents the distribution of GC content of mapped reads for a given sample."
         lg_config = {
             "id": "qualimap_gc_content",
-            "title": "Qualimap BamQC: GC content distribution",
+            "title": "QualiMap: BamQC: GC content distribution",
             "ylab": "Fraction of reads",
             "xlab": "GC content (%)",
             "ymin": 0,

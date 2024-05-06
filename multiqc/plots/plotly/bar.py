@@ -3,7 +3,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import math
 import plotly.graph_objects as go
@@ -23,9 +23,10 @@ logger = logging.getLogger(__name__)
 
 
 class BarPlotConfig(PConfig):
-    stacking: str = "relative"
+    stacking: Union[str, None] = "relative"
     hide_zero_cats: bool = False
     sort_samples: bool = True
+    use_legend: bool = True
 
 
 def plot(
@@ -174,7 +175,6 @@ class BarPlot(Plot):
 
         model.layout.update(
             height=height,
-            showlegend=True,
             barmode=barmode,
             bargroupgap=0,
             bargap=0.2,
@@ -208,6 +208,7 @@ class BarPlot(Plot):
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
             ),
+            showlegend=pconfig.use_legend,
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):
