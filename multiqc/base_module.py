@@ -338,19 +338,6 @@ class BaseMultiqcModule:
             elif isinstance(plot, str):
                 section.plot = plot
 
-            # Validate plot title
-            name_in_title = (
-                plot.pconfig.title.split(":")[0] if ":" in plot.pconfig.title else plot.pconfig.title.split()[0]
-            )
-            module_names = [m.strip() for m in self.name.split("/")]  # handle "Bowtie 2 / HiSAT2"
-            if name_in_title not in module_names:
-                msg = f'{self.name}: "title" does not match format "Module: Plot Name" (found "{plot.pconfig.title}")'
-                if config.strict:
-                    logger.error(msg)
-                    report.lint_errors.append(msg)
-                else:
-                    logger.debug(msg)
-
         # self.sections is passed into Jinja template:
         self.sections.append(section)
 
