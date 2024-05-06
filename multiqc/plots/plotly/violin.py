@@ -15,7 +15,7 @@ from multiqc.plots.plotly.table import make_table
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False) -> Plot:
+def plot(dts: List[DataTable], show_table_by_default=False) -> "ViolinPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
@@ -399,7 +399,7 @@ class ViolinPlot(Plot):
         )
 
         main_table_dt.id = "table-" + main_table_dt.id  # make it different from the violin id
-        no_violin = model.pconfig.get("no_violin", model.pconfig.get("no_beeswarm", False))
+        no_violin = model.pconfig.no_violin
         show_table_by_default = show_table_by_default or no_violin
 
         model.datasets = [

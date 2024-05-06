@@ -29,11 +29,14 @@ class HeatmapConfig(PConfig):
     xcats_samples: bool = False
     ycats_samples: bool = False
     square: bool = True
-    colstops: List[str] = []
-    reverse_colors: bool = Field(False, validation_alias="reverseColors")
-    tt_decimals: int = Field(2, validation_alias="decimalPlaces")
+    colstops: List[List] = []
+    reverseColors: bool = Field(False, deprecated="use 'reverse_colors' instead")
+    reverse_colors: bool = False
+    decimalPlaces: int = Field(2, deprecated="use 'tt_decimals' instead")
+    tt_decimals: int = 2
     legend: bool = True
-    display_values: Optional[bool] = Field(None, validation_alias="datalabels")
+    datalabels: Optional[bool] = Field(None, deprecated="use 'display_values' instead")
+    display_values: Optional[bool] = None
     angled_xticks: bool = True
 
 

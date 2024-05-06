@@ -1,22 +1,28 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union, Optional
+from typing import Dict, List, Union, Optional, Any
 
 import numpy as np
 from plotly import graph_objects as go
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
 
 logger = logging.getLogger(__name__)
+
+
+class ScatterConfig(PConfig):
+    ylab: str
+    categories: List[str] = None
+    extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
 PointT = Dict[str, Union[str, float, int]]
 
 
-def plot(points_lists: List[List[PointT]], pconfig: Dict) -> Plot:
+def plot(points_lists: List[List[PointT]], pconfig: ScatterConfig) -> "ScatterPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param points_lists: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -33,7 +39,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         points: List[Dict],
-        pconfig: Dict,
+        pconfig: ScatterConfig,
     ) -> "Dataset":
         dataset = Dataset(
             **dataset.__dict__,
@@ -51,11 +57,10 @@ class Dataset(BaseDataset):
         )
 
         # if categories is provided, set them as x-axis ticks
-        categories = pconfig.get("categories")
-        if categories:
+        if pconfig.categories:
             dataset.layout["xaxis"]["tickmode"] = "array"
-            dataset.layout["xaxis"]["tickvals"] = list(range(len(categories)))
-            dataset.layout["xaxis"]["ticktext"] = categories
+            dataset.layout["xaxis"]["tickvals"] = list(range(len(pconfig.categories)))
+            dataset.layout["xaxis"]["ticktext"] = pconfig.categories
 
         return dataset
 
@@ -182,7 +187,7 @@ class ScatterPlot(Plot):
     datasets: List[Dataset]
 
     @staticmethod
-    def create(pconfig: Dict, points_lists: List[List[PointT]]) -> "ScatterPlot":
+    def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
         model = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,

@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
+from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
 from multiqc.plots.plotly.plot import PConfig, pconfig_validation_errors
 
 # Initialise the logger
@@ -245,7 +245,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = mod["config"].get("parent_id", c_id)
+            mod_id = mod["config"].get("parent_id", mod["config"].get("anchor", c_id + "-module"))
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
@@ -329,27 +329,27 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def validate_pconfig(pconfig: Dict, plot_type, c_id) -> PConfig:
-        # if plot_type == "table":
-        #     pconfig = TableConfig()
-
-        # elif plot_type == "bargraph":
-        #     mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-        #     plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
-        #
-        # # Line plot
-        # elif plot_type == "linegraph":
-        #     plot = linegraph.plot(mod["data"], pconfig)
-        #
-        # # Scatter plot
-        # elif plot_type == "scatter":
-        #     plot = scatter.plot(mod["data"], pconfig)
-
-        if plot_type == "heatmap":
-            try:
+        try:
+            if plot_type == "bargraph":
+                return bargraph.BarPlotConfig(**pconfig)
+            if plot_type == "linegraph":
+                return linegraph.LinePlotConfig(**pconfig)
+            if plot_type == "box":
+                return box.BoxPlotConfig(**pconfig)
+            if plot_type == "scatter":
+                return scatter.ScatterConfig(**pconfig)
+            if plot_type == "heatmap":
                 return heatmap.HeatmapConfig(**pconfig)
-            except ValidationError as e:
-                print(e)
-                pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
+            if plot_type in ["violin", "beeswarm"]:
+                return violin.TableConfig(**pconfig)
+            if plot_type == "table":
+                return table.TableConfig(**pconfig)
+            else:
+                raise ValueError(f"Plot type '{plot_type}' not recognised")
+
+        except ValidationError as e:
+            print(e)
+            pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
 
         if pconfig_validation_errors:
             msg = f'Error parsing configuration for heatmap plot "{c_id}":'
@@ -371,24 +371,13 @@ class MultiqcModule(BaseMultiqcModule):
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
-        plot_type = mod["config"].get("plot_type")
-        if plot_type == "heatmap":
-            pconfig = self.validate_pconfig(pconfig, plot_type=plot_type, c_id=c_id)
-
         plot = None
         content = None
 
         if not isinstance(mod["data"], list):
             mod["data"] = [mod["data"]]
 
-        for i, ds in enumerate(mod["data"]):
-            # Save the data if it's not a html string
-            if not isinstance(ds, str):
-                did = pconfig["id"]
-                if i > 0:
-                    did = f"{did}_{i}"
-                self.write_data_file(ds, f"multiqc_{did}")
-                pconfig["save_data_file"] = False
+        plot_type = mod["config"].get("plot_type")
 
         # Try to coerce x-axis to numeric
         if plot_type in ["linegraph", "scatter"]:
@@ -399,30 +388,29 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Table
         if plot_type == "table":
-            pconfig["sort_rows"] = pconfig.get("sort_rows", pconfig.get("sortRows", False))
             headers = mod["config"].get("headers")
-            plot = table.plot(mod["data"], headers, pconfig)
+            plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
 
         # Bar plot
         elif plot_type == "bargraph":
             mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
+            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=pconfig)
 
         # Line plot
         elif plot_type == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig)
+            plot = linegraph.plot(mod["data"], pconfig=pconfig)
 
         # Scatter plot
         elif plot_type == "scatter":
-            plot = scatter.plot(mod["data"], pconfig)
+            plot = scatter.plot(mod["data"], pconfig=pconfig)
 
         # Heatmap
         elif plot_type == "heatmap":
-            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
+            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=pconfig)
 
         # Violin plot
         elif plot_type in ["violin", "beeswarm"]:
-            plot = violin.plot(mod["data"], pconfig)
+            plot = violin.plot(mod["data"], pconfig=pconfig)
 
         # Raw HTML
         elif plot_type == "html":
@@ -447,6 +435,16 @@ class MultiqcModule(BaseMultiqcModule):
                     mod["config"].get("plot_type"), c_id
                 )
             )
+
+        if plot is not None:
+            for i, ds in enumerate(mod["data"]):
+                # Save the data if it's not a html string
+                if not isinstance(ds, str):
+                    did = plot.pconfig.id
+                    if i > 0:
+                        did = f"{did}_{i}"
+                    self.write_data_file(ds, f"multiqc_{did}")
+                    plot.pconfig.save_data_file = False
 
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:

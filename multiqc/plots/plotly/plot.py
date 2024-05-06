@@ -1,16 +1,19 @@
 import base64
+import inspect
 import io
 import logging
 import random
 import re
 import string
+import sys
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any
+from typing import Dict, Union, List, Optional, Tuple, get_origin, get_args
+from typeguard import check_type, TypeCheckError
 
 import math
 import plotly.graph_objects as go
-from pydantic import BaseModel, field_validator, field_serializer, Field
+from pydantic import BaseModel, field_validator, field_serializer, Field, ValidationError, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from multiqc.plots.plotly import check_plotly_version
@@ -24,47 +27,157 @@ check_plotly_version()
 pconfig_validation_errors = []
 
 
+def isinstance_generic(val, typ):
+    origin = get_origin(typ)
+    if origin is None:
+        # Not a generic type, use normal isinstance
+        return isinstance(val, typ)
+    else:
+        # It's a generic type
+        args = get_args(typ)
+        if origin is list and all(isinstance(v, args[0]) for v in val):
+            return True
+        # Add more generic types as needed (like dict, set, etc.)
+    return False
+
+
 class PConfig(BaseModel):
     id: str
+    table_title: Optional[str] = Field(None, deprecated="use 'title' instead")
     title: str
-    logswitch: Optional[bool] = False
-    cpswitch: Optional[bool] = False
     height: int = 500
     width: Optional[int] = None
     square: bool = False
-    cpswitch_c_active: bool = True  # percentage scale is _not_ active
+    logswitch: Optional[bool] = False
     logswitch_active: bool = False  # log scale is active
-    table_title: Optional[str] = None
-    xlog: bool = Field(False, validation_alias="xLog")
-    ylog: bool = Field(False, validation_alias="yLog")
+    logswitch_label: str = "Log10"
+    cpswitch: Optional[bool] = False
+    cpswitch_c_active: bool = True  # percentage scale is _not_ active
+    cpswitch_counts_label: str = "Counts"
+    cpswitch_percent_label: str = "Percentage"
+    xLog: Optional[bool] = Field(None, deprecated="use 'xlog' instead")
+    yLog: Optional[bool] = Field(None, deprecated="use 'ylog' instead")
+    xlog: bool = False
+    ylog: bool = False
     data_labels: List[Union[str, Dict[str, str]]] = []
+    xTitle: Optional[str] = Field(None, deprecated="use 'xlab' instead")
+    yTitle: Optional[str] = Field(None, deprecated="use 'ylab' instead")
     xlab: Optional[str] = None
     ylab: Optional[str] = None
     xsuffix: Optional[str] = None
-    ysuffix: Optional[str] = Field(None, validation_alias="tt_suffix")
-    xlab_format: Optional[str] = Field(None, validation_alias="xLabFormat")
-    ylab_format: Optional[str] = Field(None, validation_alias="yLabFormat")
+    ysuffix: Optional[str] = None
+    tt_suffix: Optional[str] = None
+    xLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
+    yLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
+    xlab_format: Optional[str] = None
+    ylab_format: Optional[str] = None
     tt_label: Optional[str] = None
+    xDecimals: Optional[int] = Field(None, deprecated="use 'x_decimals' instead")
+    yDecimals: Optional[int] = Field(None, deprecated="use 'y_decimals' instead")
+    decimalPlaces: Optional[bool] = Field(None, deprecated="use 'tt_decimals' instead")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
-    tt_decimals: Optional[int] = Field(None, validation_alias="decimalPlaces")
+    tt_decimals: Optional[int] = None
     xmin: Optional[Union[float, int]] = None
     xmax: Optional[Union[float, int]] = None
     ymin: Optional[Union[float, int]] = None
     ymax: Optional[Union[float, int]] = None
-    x_clipmin: Optional[Union[float, int]] = Field(None, validation_alias="xFloor")
-    x_clipmax: Optional[Union[float, int]] = Field(None, validation_alias="xCeiling")
-    y_clipmin: Optional[Union[float, int]] = Field(None, validation_alias="yFloor")
-    y_clipmax: Optional[Union[float, int]] = Field(None, validation_alias="yCeiling")
+    xFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmin' instead")
+    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmax' instead")
+    yFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmin' instead")
+    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmax' instead")
+    x_clipmin: Optional[Union[float, int]] = None
+    x_clipmax: Optional[Union[float, int]] = None
+    y_clipmin: Optional[Union[float, int]] = None
+    y_clipmax: Optional[Union[float, int]] = None
+    save_data_file: bool = True
+
+    def __init__(self, **data):
+        try:
+            super().__init__(**data)
+        except ValidationError as e:
+            logger.debug(e)
+            pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
+
+        if pconfig_validation_errors:
+            plot_type = self.__class__.__name__.replace("Config", "")
+            logger.error(f"Error parsing {plot_type} plot configuration: {data}:")
+            for error in pconfig_validation_errors:
+                logger.error(f"- {error}")
+            sys.exit("Invalid plot configuration, see errors above.")
+
+        # Allow user to overwrite any given config for this plot
+        if self.id in config.custom_plot_config:
+            for k, v in config.custom_plot_config[self.id].items():
+                setattr(self, k, v)
 
     # noinspection PyNestedDecorators
-    @field_validator("*", mode="before")
+    @model_validator(mode="before")
     @classmethod
-    def validate_type(cls, v: Any, info: ValidationInfo):
-        expected_type = cls.model_fields[info.field_name].annotation
-        if not isinstance(v, expected_type):
+    def validate_fields(cls, values):
+        # Check unrecognized fields
+        filtered_values = {}
+        for name, val in values.items():
+            if name not in cls.model_fields:
+                pconfig_validation_errors.append(
+                    f'unrecognized field: "{name}". Available fields: {", ".join(cls.model_fields.keys())}'
+                )
+            else:
+                filtered_values[name] = val
+        values = filtered_values
+
+        # Convert deprecated fields
+        values_without_deprecateds = {}
+        for name, val in values.items():
+            if cls.model_fields[name].deprecated:
+                m = re.search(r"use '(.+)' instead", cls.model_fields[name].deprecated)
+                if m:
+                    new_name = m.group(1)
+                    if new_name not in values:
+                        values_without_deprecateds[new_name] = val
+            else:
+                values_without_deprecateds[name] = val
+        values = values_without_deprecateds
+
+        # Check missing fields
+        for name, field in cls.model_fields.items():
+            if field.is_required():
+                if name not in values:
+                    pconfig_validation_errors.append(f'required field is missing: "{name}"')
+
+        # Check types
+        for name, val in values.items():
+            field = cls.model_fields[name]
+            expected_type = field.annotation
+            try:
+                check_type(val, expected_type)
+            except TypeCheckError as e:
+                v_str = repr(val)
+                if len(v_str) > 20:
+                    v_str = v_str[:20] + "..."
+                expected_type_str = str(expected_type).replace("typing.", "")
+                msg = f'"{name}": expected type "{expected_type_str}", got "{type(val).__name__}" {v_str}'
+                pconfig_validation_errors.append(msg)
+                logger.debug(f"{msg}: {e}")
+
+        return values
+
+    # noinspection PyNestedDecorators
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, v: str, info: ValidationInfo):
+        if v != "General Statistics" and not re.match(r"^[^:]*\S: \S[^:]*$", v):
+            # Get module name
+            modname = ""
+            callstack = inspect.stack()
+            for n in callstack:
+                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
+                    callpath = n[1].split("multiqc/modules/", 1)[-1]
+                    modname = f">{callpath}< "
+                    break
+
             pconfig_validation_errors.append(
-                f'"{info.field_name}": expected type "{expected_type.__name__}", got "{type(v).__name__}" value "{v}"'
+                f'{modname}"{info.field_name}": title does not match format "Module: Plot Name" (found "{v}")'
             )
         return v
 
@@ -190,20 +303,13 @@ class Plot(BaseModel):
         if pconfig.square:
             width = height
 
-        title = pconfig.table_title or pconfig.title
-        if not title:
-            if config.strict:
-                errmsg = f"LINT: 'title' is missing from plot config for plot '{id}'"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-
         flat = config.plots_force_flat or (
             not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
         )
 
         layout = go.Layout(
             title=go.layout.Title(
-                text=title,
+                text=pconfig.title,
                 xanchor="center",
                 x=0.5,
                 font=dict(size=20),
@@ -320,7 +426,7 @@ class Plot(BaseModel):
             p_active=p_active,
             pct_axis_update=pct_axis_update,
             axis_controlled_by_switches=axis_controlled_by_switches,
-            square=pconfig.get("square", False),
+            square=pconfig.square,
             flat=flat,
         )
 
@@ -393,7 +499,7 @@ class Plot(BaseModel):
                 self.flat_plot()
 
         for dataset in self.datasets:
-            if self.id != "general_stats_table":
+            if self.id != "general_stats_table" and self.pconfig.save_data_file:
                 dataset.save_data_file()
 
         return html
@@ -484,13 +590,13 @@ class Plot(BaseModel):
             if self.add_pct_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} percent-switch",
-                    label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
+                    label=self.pconfig.cpswitch_percent_label,
                     pressed=self.p_active,
                 )
             if self.add_log_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} log10-switch",
-                    label=self.pconfig.get("logswitch_label", "Log10"),
+                    label=self.pconfig.logswitch_label,
                     pressed=self.l_active,
                 )
 
@@ -665,9 +771,10 @@ def _dataset_layout(
     """
     pconfig = pconfig.copy()
     for k, v in dconfig.items():
-        pconfig[k] = v
+        if k in pconfig.model_fields:
+            setattr(pconfig, k, v)
 
-    ysuffix = pconfig.ysuffix
+    ysuffix = pconfig.ysuffix if pconfig.ysuffix is not None else pconfig.tt_suffix
     xsuffix = pconfig.xsuffix
 
     # Handle hover tooltip options deprecated in 1.21:

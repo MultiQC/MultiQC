@@ -116,9 +116,8 @@ config = {
     "title": None,                            # Plot title - should be in format "Module Name: Plot Title"
     "ylab": None,                             # Y axis label
     "ymax": None,                             # Max bar size limit (default is calculated from data)
-    "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label
-    "xsuffix": "%",                           # Suffix for the x-axis values and labels. Parsed from tt_label by default
-    "ysuffix": "%",                           # Suffix for the y-axis values and labels. Parsed from tt_label by default
+    "xsuffix": "%",                           # Suffix for the X-axis values and labels. Parsed from tt_label by default
+    "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label, e.g. '{point.x} base pairs'
     "stacking": "relative",                   # Set to "group" to have category bars side by side
     "tt_decimals": 0,                         # Number of decimal places to use in the tooltip number
     "tt_suffix": "",                          # Suffix to add after tooltip number
@@ -260,9 +259,10 @@ pconfig = {
     "x_bands": None,             # Vertical colored background bands
     "y_lines": None,             # Extra horizontal lines
     "x_lines": None,             # Extra vertical lines
-    "tt_label": "{x}: {y:.2f}",  # Use to customise tooltip label, e.g. '{point.x} base pairs'
+    "xsuffix": "%",              # Suffix for the X-axis values and labels. Parsed from tt_label by default
+    "ysuffix": "%",              # Suffix for the Y-axis values and labels. Parsed from tt_label by default
+    "tt_label": "{x}: {y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
-    "tt_suffix": None,           # Tooltip suffix when categories = True (when false use tt_label)
     "height": 500,               # The default height of the plot, in pixels
     "style": "line",             # The style of the line. Can be "line" or "lines+markers"
 }
@@ -425,10 +425,6 @@ has a handful of unique ones in addition:
 
 ```python
 pconfig = {
-    "marker_colour": "rgba(124, 181, 236, .5)",  # string, base colour of points (recommend rgba / semi-transparent)
-    "marker_size": 5,  # int, size of points
-    "marker_line_colour": "#999",  # string, colour of point border
-    "marker_line_width": 1,  # int, width of point border
     "square": False,  # Force the plot to stay square? (Maintain aspect ratio)
     "xmin": None,  # Hard min x limit
     "xmax": None,  # Hard max x limit
@@ -490,11 +486,11 @@ A third parameter can be specified with settings for the whole table:
 ```python
 table_config = {
     "namespace": "",                           # Name for grouping. Prepends desc and is in Config Columns modal
-    "id": "<random string>",                   # ID used for the table
-    "table_title": "<table id>",               # Title of the table. Used in the column config modal
+    "id": "<string>",                          # ID used for the table
+    "title": "<table title>",                  # Title of the table. Used in the column config modal
     "save_file": False,                        # Whether to save the table data to a file
     "raw_data_fn": "multiqc_<table_id>_table", # File basename to use for raw data file
-    "sort_rows": True,                          # Whether to sort rows alphabetically
+    "sort_rows": True,                         # Whether to sort rows alphabetically
     "only_defined_headers": True,              # Only show columns that are defined in the headers config
     "col1_header": "Sample Name",              # The header used for the first column
     "no_violin": False,                        # Force a table to always be plotted (beeswarm by default if many rows)

@@ -34,15 +34,9 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    if pconfig is None:
-        pconfig = HeatmapConfig()
+    assert pconfig is not None, "pconfig must be provided"
     if isinstance(pconfig, dict):
         pconfig = HeatmapConfig(**pconfig)
-
-    # Allow user to overwrite any given config for this plot
-    if pconfig.id and pconfig.id in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig.id].items():
-            setattr(pconfig, k, v)
 
     if ycats is None:
         ycats = xcats
