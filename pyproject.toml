@@ -57,6 +57,7 @@ classifiers = [
 dev = [
     "pre-commit",
     "ruff",
+    "pdoc3",
 ]
 
 [project.urls]
