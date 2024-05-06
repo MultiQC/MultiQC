@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard InsertSizeMetrics """
+"""MultiQC submodule to parse output from Picard InsertSizeMetrics"""
 
 import logging
 
@@ -174,7 +174,7 @@ def parse_reports(module):
         # Plot the data and add section
         pconfig = {
             "smooth_points": insertsize_smooth_points,
-            "smooth_points_sumcounts": [True, False],
+            "smooth_points_sumcounts": True,
             "id": f"{module.anchor}_insert_size",
             "title": f"{module.name}: Insert Size",
             "ylab": "Count",

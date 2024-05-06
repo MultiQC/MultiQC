@@ -2,7 +2,6 @@ import logging
 from collections import defaultdict
 from typing import Tuple, Optional, List
 
-from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
 from multiqc import config, report
 from multiqc.utils import mqc_colour
@@ -10,7 +9,7 @@ from multiqc.utils import mqc_colour
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable]) -> Plot:
+def plot(dt: List[DataTable]):
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
@@ -35,7 +34,7 @@ def make_table(
     raw_vals = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
-    table_title = dt.pconfig.get("table_title")
+    table_title = dt.pconfig.title
     if table_title is None:
         table_title = dt.id.replace("_", " ").title()
 
@@ -348,13 +347,13 @@ def make_table(
         """
 
     # Build the header row
-    col1_header = dt.pconfig.get("col1_header", "Sample Name")
+    col1_header = dt.pconfig.col1_header
     html += f"<thead><tr><th class=\"rowheader\">{col1_header}</th>{''.join(t_headers.values())}</tr></thead>"
 
     # Build the table body
     html += "<tbody>"
     t_row_keys = t_rows.keys()
-    if dt.pconfig.get("sort_rows", dt.pconfig.get("sortRows")) is not False:
+    if dt.pconfig.sort_rows:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
         # Hide the row if all cells are empty or hidden
@@ -371,8 +370,8 @@ def make_table(
     html += "</div>"
 
     # Save the raw values to a file if requested
-    if dt.pconfig.get("save_file") is True:
-        fn = dt.pconfig.get("raw_data_fn", f"multiqc_{dt.id}")
+    if dt.pconfig.save_file:
+        fn = dt.pconfig.raw_data_fn or f"multiqc_{dt.id}"
         report.write_data_file(raw_vals, fn)
         report.saved_raw_data[fn] = raw_vals
 
@@ -447,7 +446,7 @@ def _get_sortlist(dt: DataTable) -> str:
 
     It is returned in a form os a list literal, as expected by the jQuery tablesorter plugin.
     """
-    defaultsort = dt.pconfig.get("defaultsort")
+    defaultsort = dt.pconfig.defaultsort
     if defaultsort is None:
         return ""
 

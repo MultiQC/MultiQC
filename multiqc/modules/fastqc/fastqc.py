@@ -960,7 +960,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "y_clipmax": 100,
-            "y_minrange": 20,
             "tt_decimals": 2,
             "tt_suffix": "%",
             "cpswitch": False,

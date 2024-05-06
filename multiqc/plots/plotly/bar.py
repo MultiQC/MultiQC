@@ -3,7 +3,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import math
 import plotly.graph_objects as go
@@ -15,16 +15,24 @@ from multiqc.plots.plotly.plot import (
     BaseDataset,
     Plot,
     split_long_string,
+    PConfig,
 )
 from multiqc import report, config
 
 logger = logging.getLogger(__name__)
 
 
+class BarPlotConfig(PConfig):
+    stacking: Union[str, None] = "relative"
+    hide_zero_cats: bool = False
+    sort_samples: bool = True
+    use_legend: bool = True
+
+
 def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
-    pconfig: Dict,
+    pconfig: BarPlotConfig,
 ) -> "BarPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -126,7 +134,7 @@ class BarPlot(Plot):
 
     @staticmethod
     def create(
-        pconfig: Dict,
+        pconfig: BarPlotConfig,
         cats_lists: List,
         samples_lists: List,
         max_n_samples: int,
@@ -149,7 +157,7 @@ class BarPlot(Plot):
 
         # Set the barmode
         barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", None]):
+        if pconfig.stacking in ["group", None]:
             barmode = "group"  # side by side
 
         max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
@@ -167,7 +175,6 @@ class BarPlot(Plot):
 
         model.layout.update(
             height=height,
-            showlegend=True,
             barmode=barmode,
             bargroupgap=0,
             bargap=0.2,
@@ -201,6 +208,7 @@ class BarPlot(Plot):
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
             ),
+            showlegend=pconfig.use_legend,
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):

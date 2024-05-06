@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional
@@ -23,8 +22,6 @@ from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
 
-# Set up logging
-start_execution_time = time.time()
 logger = logging.getLogger("multiqc")
 
 

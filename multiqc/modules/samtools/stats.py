@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Samtools stats """
+"""MultiQC submodule to parse output from Samtools stats"""
 
 import logging
 import re
@@ -194,7 +194,7 @@ class StatsReportMixin:
                 keys,
                 {
                     "id": "samtools-stats-dp",
-                    "title": "Samtools stats: Alignment Stats",
+                    "title": "Samtools: stats: Alignment Stats",
                 },
             ),
         )
@@ -254,7 +254,7 @@ def alignment_chart(data):
     # Config for the plot
     plot_conf = {
         "id": "samtools_alignment_plot",
-        "title": "Samtools stats: Alignment Scores",
+        "title": "Samtools: stats: Alignment Scores",
         "ylab": "# Reads",
         "cpswitch_counts_label": "Number of Reads",
     }

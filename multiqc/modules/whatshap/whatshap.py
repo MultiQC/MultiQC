@@ -265,7 +265,6 @@ class MultiqcModule(BaseMultiqcModule):
         configuration = {
             "id": "multiqc_whatshap_phased_bp_plot",
             "title": "WhatsHap: Phased Basepairs per Sample",
-            "anchor": "multiqc_whatshap_phased_bp",
             "ylab": "Base Pairs",
             "cpswitch": False,
         }

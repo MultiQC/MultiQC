@@ -13,6 +13,7 @@ from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core.exceptions import RunError
 from multiqc.core import plugin_hooks, software_versions
+from multiqc.plots.plotly.plot import PConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +90,8 @@ def exec_modules(
                 + "User Cancelled Execution!\nExiting MultiQC..."
             )
             sys.exit(1)
+        except PConfigValidationError:
+            sys.exit(f"{this_module}: invalid plot configuration, see errors above.")
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.

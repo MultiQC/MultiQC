@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="Rsem",
+            name="RSEM",
             anchor="rsem",
             href="https://deweylab.github.io/RSEM/",
             info="RSEM (RNA-Seq by Expectation-Maximization) is a software package for"

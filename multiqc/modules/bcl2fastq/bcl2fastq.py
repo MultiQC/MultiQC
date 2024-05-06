@@ -129,7 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bcl2fastq_undetermined",
                     "title": "bcl2fastq: Undetermined barcodes by lane",
                     "ylab": "Reads",
-                    "use_legend": True,
                     "sort_samples": False,  # keep top barcode on top
                 },
             ),

@@ -175,7 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "isoseq-cluster-size-distribution-barplot",
-                    "title": "Iso-Seq cluster: Histogram of cluster size",
+                    "title": "Iso-Seq: cluster: Histogram of cluster size",
                     "ylab": "Count",  # Y axis label
                 },
             ),
@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "isoseq_refine_bargraph",
-                    "title": "Iso-Seq refine: filter summary",
+                    "title": "Iso-Seq: refine: filter summary",
                 },
             ),
         )
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                     list_of_data_by_sample=data_by_sample,
                     pconfig={
                         "id": f"isoseq_refine_boxplot_{metric}",
-                        "title": f"Iso-Seq refine: {REFINE_CATEGORIES[metric]}",
+                        "title": f"Iso-Seq: refine: {REFINE_CATEGORIES[metric]}",
                     },
                 ),
             )

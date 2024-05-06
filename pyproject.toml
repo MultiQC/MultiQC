@@ -25,6 +25,7 @@ dependencies = [
     "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
     "pydantic",
+    "typeguard",
 ]
 requires-python = ">=3.8"
 authors = [

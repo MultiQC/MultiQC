@@ -1,8 +1,15 @@
 import logging
 from typing import Dict, List, Union, Optional
 import plotly.graph_objects as go
+from pydantic import Field
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, split_long_string, Plot
+from multiqc.plots.plotly.plot import (
+    PlotType,
+    BaseDataset,
+    split_long_string,
+    Plot,
+    PConfig,
+)
 from multiqc import report
 
 logger = logging.getLogger(__name__)
@@ -11,12 +18,34 @@ logger = logging.getLogger(__name__)
 ElemT = Union[str, float, int, None]
 
 
+class HeatmapConfig(PConfig):
+    """Configuration for a heatmap plot"""
+
+    xlab: str = "x"
+    ylab: str = "y"
+    zlab: str = "z"
+    min: Union[float, int, None] = None
+    max: Union[float, int, None] = None
+    xcats_samples: bool = False
+    ycats_samples: bool = False
+    square: bool = True
+    colstops: List[List] = []
+    reverseColors: bool = Field(False, deprecated="use 'reverse_colors' instead")
+    reverse_colors: bool = False
+    decimalPlaces: int = Field(2, deprecated="use 'tt_decimals' instead")
+    tt_decimals: int = 2
+    legend: bool = True
+    datalabels: Optional[bool] = Field(None, deprecated="use 'display_values' instead")
+    display_values: Optional[bool] = None
+    angled_xticks: bool = True
+
+
 def plot(
     rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-    pconfig: Dict,
+    pconfig: HeatmapConfig,
     xcats: Optional[List[str]] = None,
     ycats: Optional[List[str]] = None,
-) -> Plot:
+) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param rows: One dataset. A dataset is a list of rows of values
@@ -100,7 +129,7 @@ class HeatmapPlot(Plot):
     @staticmethod
     def create(
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-        pconfig: Dict,
+        pconfig: HeatmapConfig,
         xcats: Optional[List[str]],
         ycats: Optional[List[str]],
     ) -> "HeatmapPlot":
@@ -127,12 +156,12 @@ class HeatmapPlot(Plot):
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
-            showlegend=pconfig.get("legend", True),
+            showlegend=pconfig.legend,
         )
 
-        model.square = pconfig.get("square", True)  # Keep heatmap cells square
-        xcats_samples = pconfig.get("xcats_samples", False)
-        ycats_samples = pconfig.get("ycats_samples", False)
+        model.square = pconfig.square  # Keep heatmap cells square
+        xcats_samples = pconfig.xcats_samples
+        ycats_samples = pconfig.ycats_samples
 
         # Extend each dataset object with a list of samples
         model.datasets = [
@@ -144,14 +173,14 @@ class HeatmapPlot(Plot):
             )
         ]
 
-        minval = model.pconfig.get("min", None)
+        minval = model.pconfig.min
         if minval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
                             minval = val if minval is None else min(minval, val)
-        maxval = model.pconfig.get("max", None)
+        maxval = model.pconfig.max
         if maxval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
@@ -193,8 +222,8 @@ class HeatmapPlot(Plot):
         if model.square:
             x_px_per_elem = y_px_per_elem = min_px_per_elem
 
-        width = pconfig.get("width") or int(num_cols * x_px_per_elem)
-        height = pconfig.get("height") or int(num_rows * y_px_per_elem)
+        width = pconfig.width or int(num_cols * x_px_per_elem)
+        height = pconfig.height or int(num_rows * y_px_per_elem)
 
         if not model.square and width < MAX_WIDTH and x_px_per_elem < 40:  # can fit more columns on the screen
             # logger.debug(f"Resizing width from {width} to {MAX_WIDTH} to fit horizontal column text on the screen")
@@ -223,7 +252,7 @@ class HeatmapPlot(Plot):
             model.layout.xaxis.tickmode = "array"
             model.layout.xaxis.tickvals = list(range(num_cols))
             model.layout.xaxis.ticktext = xcats
-        if pconfig.get("angled_xticks", True) is False and x_px_per_elem >= 40:
+        if not pconfig.angled_xticks and x_px_per_elem >= 40:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
             model.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
             # And leave x ticks horizontal:
@@ -240,13 +269,12 @@ class HeatmapPlot(Plot):
         model.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
         model.layout.yaxis.ticklabelposition = "outside right"
 
-        colstops = pconfig.get("colstops", None)
-        if colstops:
+        if pconfig.colstops:
             # A list of 2-element lists where the first element is the
             # normalized color level value (starting at 0 and ending at 1),
             # and the second item is a valid color string.
             try:
-                colorscale = [[float(x), color] for x, color in colstops]
+                colorscale = [[float(x), color] for x, color in pconfig.colstops]
             except ValueError:
                 colorscale = None
             else:
@@ -271,25 +299,23 @@ class HeatmapPlot(Plot):
                 [1, "#a50026"],
             ]
 
-        decimal_places = pconfig.get("tt_decimals", 2)
-
-        xlab = pconfig.get("xlab", "x")
-        ylab = pconfig.get("ylab", "y")
-        zlab = pconfig.get("zlab", "z")
+        xlab = pconfig.xlab
+        ylab = pconfig.ylab
+        zlab = pconfig.zlab
         hovertemplate = f"{xlab}: %{{x}}<br>{ylab}: %{{y}}<br>{zlab}: %{{z}}<extra></extra>"
 
         for ds in model.datasets:
             ds.trace_params = {
                 "colorscale": colorscale,
-                "reversescale": pconfig.get("reverseColors", False),
-                "showscale": pconfig.get("legend", True),
-                "zmin": pconfig.get("min", None),
-                "zmax": pconfig.get("max", None),
+                "reversescale": pconfig.reverse_colors,
+                "showscale": pconfig.legend,
+                "zmin": pconfig.min,
+                "zmax": pconfig.max,
                 "hovertemplate": hovertemplate,
             }
-            # Enable datalabels if there are less than 20x20 cells, unless heatmap_config.datalabels is set explicitly
-            if pconfig.get("datalabels") is None and num_rows * num_cols < 400:
-                ds.trace_params["texttemplate"] = "%{z:." + str(decimal_places) + "f}"
+            # Enable labels if there are less than 20x20 cells, unless display_values is set explicitly
+            if pconfig.display_values is True or pconfig.display_values is None and num_rows * num_cols < 400:
+                ds.trace_params["texttemplate"] = "%{z:." + str(pconfig.tt_decimals) + "f}"
 
         return HeatmapPlot(
             **model.__dict__,

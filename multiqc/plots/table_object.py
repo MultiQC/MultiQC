@@ -1,19 +1,33 @@
-"""MultiQC datatable class, used by tables and violin plots"""
+"""
+MultiQC datatable class, used by tables and violin plots
+"""
 
 import math
 
 import logging
-import random
 import re
-import string
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional, Union, Mapping, Callable
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from multiqc import config, report
+from multiqc.plots.plotly.plot import PConfig
 
 logger = logging.getLogger(__name__)
+
+
+class TableConfig(PConfig):
+    namespace: str = ""
+    save_file: bool = False
+    raw_data_fn: Optional[str] = None
+    defaultsort: Optional[List[Dict[str, str]]] = None
+    sort_rows: bool = Field(True, alias="sortRows")
+    only_defined_headers: bool = True
+    col1_header: str = "Sample Name"
+    no_violin: bool = Field(False, alias="no_beeswarm")
+    scale: Union[str, bool] = "GnBu"
+    min: Optional[Union[int, float]] = None
 
 
 class TableColumn(BaseModel):
@@ -59,39 +73,23 @@ class DataTable(BaseModel):
     formatted_data: List[Dict[str, Dict[str, str]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
     headers: List[Dict[str, TableColumn]] = []
-    pconfig: Dict
+    pconfig: TableConfig
 
     @staticmethod
     def create(
         data: Union[List[Mapping[str, Mapping[str, ValueT]]], Mapping[str, Mapping[str, ValueT]]],
+        pconfig: TableConfig,
         headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
-        pconfig: Optional[Dict] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
-        if pconfig is None:
-            pconfig = {}
 
         # Given one dataset - turn it into a list
         if not isinstance(data, list):
             data = [data]
         if not isinstance(headers, list):
             headers = [headers]
-
-        if pconfig and "id" in pconfig:
-            id = pconfig.pop("id")
-        else:
-            if config.strict:
-                errmsg = f"LINT: 'id' is missing from plot pconfig: {pconfig}"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-            id = report.save_htmlid(f"table-{''.join(random.sample(string.ascii_lowercase, 4))}")
-
-        # Allow user to overwrite any given config for this plot
-        if id in config.custom_plot_config:
-            for k, v in config.custom_plot_config[id].items():
-                pconfig[k] = v
 
         SECTION_COLORS = [
             "55,126,184",  # Blue
@@ -115,11 +113,11 @@ class DataTable(BaseModel):
                 keys = headers[d_idx].keys()
                 assert len(keys) > 0
             except (IndexError, AttributeError, AssertionError):
-                pconfig["only_defined_headers"] = False
+                pconfig.only_defined_headers = False
                 keys = list()
 
             # Add header keys from the data
-            if pconfig.get("only_defined_headers", True) is False:
+            if not pconfig.only_defined_headers:
                 # Get the keys from the data
                 keys = list()
                 for v_by_metric in dataset.values():
@@ -170,7 +168,7 @@ class DataTable(BaseModel):
             for k in empties:
                 keys = [j for j in keys if j != k]
                 logger.debug(
-                    f"Table key '{k}' not found in data for '{id}'. Skipping. Check for possible typos between data keys and header keys"
+                    f"Table key '{k}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
                 )
                 del headers[d_idx][k]
 
@@ -207,23 +205,20 @@ class DataTable(BaseModel):
                     headers[d_idx][k]["suffix"] = " " + shared_key_suffix
 
                 # Use defaults / data keys if headers not given
-                headers[d_idx][k]["namespace"] = headers[d_idx][k].get("namespace", pconfig.get("namespace", ""))
+                headers[d_idx][k]["namespace"] = headers[d_idx][k].get("namespace", pconfig.namespace)
                 headers[d_idx][k]["title"] = headers[d_idx][k].get("title", k)
                 headers[d_idx][k]["description"] = headers[d_idx][k].get("description", headers[d_idx][k]["title"])
-                headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", pconfig.get("scale", "GnBu"))
-                headers[d_idx][k]["format"] = headers[d_idx][k].get("format", pconfig.get("format", None))
-                headers[d_idx][k]["colour"] = headers[d_idx][k].get("colour", pconfig.get("colour", None))
-                headers[d_idx][k]["hidden"] = headers[d_idx][k].get("hidden", pconfig.get("hidden", False))
-                headers[d_idx][k]["max"] = headers[d_idx][k].get("max", pconfig.get("max", None))
-                headers[d_idx][k]["min"] = headers[d_idx][k].get("min", pconfig.get("min", None))
-                headers[d_idx][k]["ceiling"] = headers[d_idx][k].get("ceiling", pconfig.get("ceiling", None))
-                headers[d_idx][k]["floor"] = headers[d_idx][k].get("floor", pconfig.get("floor", None))
-                headers[d_idx][k]["minrange"] = headers[d_idx][k].get(
-                    "minrange",
-                    pconfig.get("minrange", headers[d_idx][k].get("minRange", pconfig.get("minRange", None))),
-                )
-                headers[d_idx][k]["shared_key"] = headers[d_idx][k].get("shared_key", pconfig.get("shared_key", None))
-                headers[d_idx][k]["modify"] = headers[d_idx][k].get("modify", pconfig.get("modify", None))
+                headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", pconfig.scale)
+                headers[d_idx][k]["format"] = headers[d_idx][k].get("format")
+                headers[d_idx][k]["colour"] = headers[d_idx][k].get("colour", headers[d_idx][k].get("color"))
+                headers[d_idx][k]["hidden"] = headers[d_idx][k].get("hidden", False)
+                headers[d_idx][k]["max"] = headers[d_idx][k].get("max")
+                headers[d_idx][k]["min"] = headers[d_idx][k].get("min", pconfig.min)
+                headers[d_idx][k]["ceiling"] = headers[d_idx][k].get("ceiling")
+                headers[d_idx][k]["floor"] = headers[d_idx][k].get("floor")
+                headers[d_idx][k]["minrange"] = headers[d_idx][k].get("minrange", headers[d_idx][k].get("minRange"))
+                headers[d_idx][k]["shared_key"] = headers[d_idx][k].get("shared_key")
+                headers[d_idx][k]["modify"] = headers[d_idx][k].get("modify")
                 headers[d_idx][k]["placement"] = float(headers[d_idx][k].get("placement", 1000))
 
                 if headers[d_idx][k]["colour"] is None:
@@ -234,8 +229,8 @@ class DataTable(BaseModel):
 
                 # Overwrite (2nd time) any given config with table-level user config
                 # This is to override column-specific values set by modules
-                if id in config.custom_plot_config:
-                    for cpc_k, cpc_v in config.custom_plot_config[id].items():
+                if pconfig.id in config.custom_plot_config:
+                    for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
                         headers[d_idx][k][cpc_k] = cpc_v
 
                 # Overwrite "name" if set in user config
@@ -243,7 +238,7 @@ class DataTable(BaseModel):
                 for key, val in config.table_columns_name.items():
                     key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key in [id.lower(), headers[d_idx][k]["namespace"].lower()] and isinstance(val, dict):
+                    if key in [pconfig.id.lower(), headers[d_idx][k]["namespace"].lower()] and isinstance(val, dict):
                         # Assume a dict of specific column IDs
                         for key2, new_title in val.items():
                             key2 = key2.lower()
@@ -259,7 +254,7 @@ class DataTable(BaseModel):
                 for key, val in config.table_columns_visible.items():
                     key = key.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if key in [id.lower(), headers[d_idx][k]["namespace"].lower()]:
+                    if key in [pconfig.id.lower(), headers[d_idx][k]["namespace"].lower()]:
                         # First - if config value is a bool, set all module columns to that value
                         if isinstance(val, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
@@ -287,12 +282,12 @@ class DataTable(BaseModel):
                     )
                 except (KeyError, ValueError):
                     try:
-                        headers[d_idx][k]["placement"] = float(config.table_columns_placement[id][k])
+                        headers[d_idx][k]["placement"] = float(config.table_columns_placement[pconfig.id][k])
                     except (KeyError, ValueError):
                         pass
 
                 # Overwrite any header config if set in config
-                for custom_k, custom_v in config.custom_table_header_config.get(id, {}).get(k, {}).items():
+                for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(k, {}).items():
                     headers[d_idx][k][custom_k] = custom_v
 
                 # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
@@ -428,7 +423,7 @@ class DataTable(BaseModel):
 
         # Assign to class
         return DataTable(
-            id=id,
+            id=pconfig.id,
             raw_data=raw_data,
             formatted_data=formatted_data,
             headers_in_order=dict(headers_in_order),

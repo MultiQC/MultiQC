@@ -113,7 +113,7 @@ class CoverageReportMixin:
                 copy.deepcopy(headers),
                 pconfig={
                     "id": "samtools-coverage-table",
-                    "title": "Samtools Coverage: Summary",
+                    "title": "Samtools: coverage: Summary",
                 },
             ),
         )
@@ -173,7 +173,7 @@ class CoverageReportMixin:
         ]
         data_labels = list(tabs.values())
         for dconfig in data_labels:
-            dconfig["title"] = "Samtools coverage: " + dconfig["title"]
+            dconfig["title"] = "Samtools: coverage: " + dconfig["title"]
 
         self.add_section(
             name="Coverage: stats per region",

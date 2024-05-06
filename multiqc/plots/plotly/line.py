@@ -1,23 +1,49 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Optional, Literal, Any
 
 import math
 import plotly.graph_objects as go
+from pydantic import Field
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
 
 logger = logging.getLogger(__name__)
 
 
+class LinePlotConfig(PConfig):
+    xlab: Optional[str] = None
+    ylab: Optional[str] = None
+    categories: bool = False
+    smooth_points: Optional[int] = None
+    smooth_points_sumcounts: Optional[int] = None
+    extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
+    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="use 'x_minrange' instead")
+    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="use 'y_minrange' instead")
+    x_minrange: Optional[Union[float, int]] = None
+    y_minrange: Optional[Union[float, int]] = None
+    xPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'x_bands' instead")
+    yPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'y_bands' instead")
+    xPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'x_lines' instead")
+    yPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'y_lines' instead")
+    x_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    y_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    x_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    y_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    style: Literal["lines", "lines+markers"] = "lines"
+    hide_zero_cats: Optional[bool] = Field(False, deprecated="use 'hide_empty' instead")
+    hide_empty: bool = False
+    colors: Dict[str, str] = {}
+
+
 # {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
 LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: Dict) -> Plot:
+def plot(lists_of_lines: List[List[LineT]], pconfig: LinePlotConfig) -> "LinePlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -41,7 +67,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         lines: List[Dict],
-        pconfig: Dict,
+        pconfig: LinePlotConfig,
     ) -> "Dataset":
         dataset: Dataset = Dataset(
             **dataset.model_dump(),
@@ -49,7 +75,7 @@ class Dataset(BaseDataset):
         )
 
         # Prevent Plotly from parsing strings as numbers
-        if pconfig.get("categories") or dataset.dconfig.get("categories"):
+        if pconfig.categories or dataset.dconfig.get("categories"):
             dataset.layout["xaxis"]["type"] = "category"
 
         # convert HighCharts-style hardcoded trace parameters to Plotly style
@@ -78,7 +104,7 @@ class Dataset(BaseDataset):
 
         dataset.lines = lines
 
-        mode = pconfig.get("style", "lines")
+        mode = pconfig.style
         if config.lineplot_style == "lines+markers":
             mode = "lines+markers"
 
@@ -173,7 +199,7 @@ class LinePlot(Plot):
 
     @staticmethod
     def create(
-        pconfig: Dict,
+        pconfig: LinePlotConfig,
         lists_of_lines: List[List[LineT]],
     ) -> "LinePlot":
         model = Plot.initialize(
@@ -189,12 +215,12 @@ class LinePlot(Plot):
         # Make a tooltip always show on hover over any point on plot
         model.layout.hoverdistance = -1
 
-        y_minrange = pconfig.get("y_minrange", pconfig.get("yMinRange"))
-        x_minrange = pconfig.get("x_minrange", pconfig.get("xMinRange"))
-        y_bands = pconfig.get("y_bands", pconfig.get("yPlotBands"))
-        x_bands = pconfig.get("x_bands", pconfig.get("xPlotBands"))
-        x_lines = pconfig.get("x_lines", pconfig.get("xPlotLines"))
-        y_lines = pconfig.get("y_lines", pconfig.get("yPlotLines"))
+        y_minrange = pconfig.y_minrange
+        x_minrange = pconfig.x_minrange
+        y_bands = pconfig.y_bands
+        x_bands = pconfig.x_bands
+        x_lines = pconfig.x_lines
+        y_lines = pconfig.y_lines
         if y_minrange or y_bands or y_lines:
             # We don't want the bands to affect the calculated axis range, so we
             # find the min and the max from data points, and manually set the range.
@@ -221,7 +247,7 @@ class LinePlot(Plot):
                     maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
                 dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        if not pconfig.get("categories", False) and x_minrange or x_bands or x_lines:
+        if not pconfig.categories and x_minrange or x_bands or x_lines:
             # same as above but for x-axis
             for dataset in model.datasets:
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]

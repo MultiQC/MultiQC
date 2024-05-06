@@ -87,6 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
             hm_data.append(sample_data)
 
         pconfig = {
+            "id": "librarian-library-type-plot",
             "title": "Librarian: Library Predictions",
             "xTitle": "Library type",
             "yTitle": "Sample name",
