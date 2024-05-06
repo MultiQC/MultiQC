@@ -29,7 +29,7 @@ def write_results(clean_up=True) -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
-    if len(report.modules_output) == 0:
+    if len(report.modules) == 0:
         logger.warning("No analysis results found to make a report")
         return
 
@@ -223,8 +223,8 @@ def _order_modules_and_sections():
     """
 
     # In case if user passed exclude_modules or include_modules again:
-    mod_anchors = include_or_exclude_modules([mod.anchor for mod in report.modules_output])
-    for mod in report.modules_output:
+    mod_anchors = include_or_exclude_modules([mod.anchor for mod in report.modules])
+    for mod in report.modules:
         if mod.anchor not in mod_anchors:
             mod.hidden = True
 
@@ -233,23 +233,23 @@ def _order_modules_and_sections():
         # Importing here to avoid circular imports
         from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
 
-        # if the software versions module is not in report.modules_output, add it:
-        if not any([isinstance(m, SoftwareVersionsModule) for m in report.modules_output]):
-            report.modules_output.append(SoftwareVersionsModule())
+        # if the software versions module is not in report.modules, add it:
+        if not any([isinstance(m, SoftwareVersionsModule) for m in report.modules]):
+            report.modules.append(SoftwareVersionsModule())
 
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
         from multiqc.modules.profile_runtime import MultiqcModule as ProfileRuntimeModule
 
-        # if the software versions module is not in report.modules_output, add it:
-        if not any([isinstance(m, ProfileRuntimeModule) for m in report.modules_output]):
-            report.modules_output.append(ProfileRuntimeModule())
+        # if the software versions module is not in report.modules, add it:
+        if not any([isinstance(m, ProfileRuntimeModule) for m in report.modules]):
+            report.modules.append(ProfileRuntimeModule())
 
     # Sort the report module output if we have a config
     if len(config.report_section_order) > 0:
         section_id_order = {}
         idx = 10
-        for mod in reversed(report.modules_output):
+        for mod in reversed(report.modules):
             section_id_order[mod.anchor] = idx
             idx += 10
         for anchor, ss in config.report_section_order.items():
@@ -263,13 +263,13 @@ def _order_modules_and_sections():
             if ss.get("before") in section_id_order.keys():
                 section_id_order[anchor] = section_id_order[ss["before"]] - 1
         sorted_ids = sorted(section_id_order, key=section_id_order.get)
-        report.modules_output = [mod for i in reversed(sorted_ids) for mod in report.modules_output if mod.anchor == i]
+        report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
     # Sort the report sections if we have a config
     # Basically the same as above, but sections within a module
     if len(config.report_section_order) > 0:
         # Go through each module
-        for midx, mod in enumerate(report.modules_output):
+        for midx, mod in enumerate(report.modules):
             section_id_order = dict()
             # Get a list of the section anchors
             idx = 10
@@ -295,14 +295,14 @@ def _order_modules_and_sections():
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
             sorted_ids = sorted(section_id_order, key=section_id_order.get)
-            report.modules_output[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
+            report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
 
 
 def render_and_export_plots():
     """
     Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
     """
-    for mod in report.modules_output:
+    for mod in report.modules:
         if mod.hidden:
             continue
         for s in mod.sections:
@@ -382,7 +382,7 @@ def _write_data_files() -> None:
     report.data_sources_tofile()
 
     # Create a file with the module DOIs
-    report.dois_tofile(report.modules_output)
+    report.dois_tofile(report.modules)
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
@@ -402,7 +402,7 @@ def _write_report():
     Render and write report HTML to disk
     """
     # Copy over css & js files if requested by the theme
-    for mod in report.modules_output:
+    for mod in report.modules:
         if mod.hidden:
             continue
         try:

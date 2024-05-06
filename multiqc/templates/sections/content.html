@@ -9,7 +9,7 @@ In this template, each section is hidden by default (unless it's the first modul
 
 #}
 
-{% for m in report.modules_output %}
+{% for m in report.modules %}
 <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section" style="display:none;">
   <h2 id="{{ m.anchor }}">{{ m.name }}</h2>
   {{ m.intro if m.intro }}
