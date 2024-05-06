@@ -55,19 +55,31 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
     Function to remove unused keys from the parsed data. This prevents loading
     them into memory long-term wich reduces memory usage.
     """
-    # This is a per sample data gathering of all the base qualities
-    # per position for a stacked bar plot to clearly see the distribution.
-    # Too hard to aggregate for MultiQC.
-    del sample_dict["per_position_quality_distribution"]
-    # Per tile quality is not analysed by multiqc and uses a lot of space
-    del sample_dict["per_tile_quality"]
-    # Nanopore metrics for pore data do not have modules yet
-    del sample_dict["nanopore_metrics"]
-    # Only the mean is used for the per position mean quality and spread data,
-    # so remove the rest of the data
-    percentiles_list = sample_dict["per_position_mean_quality_and_spread"]["percentiles"]
-    new_percentiles_list = [(percentile, values) for percentile, values in percentiles_list if percentile == "mean"]
-    sample_dict["per_position_mean_quality_and_spread"]["percentiles"] = new_percentiles_list
+    keys_to_delete = [
+        # This is a per sample data gathering of all the base qualities
+        # per position for a stacked bar plot to clearly see the distribution.
+        # Too hard to aggregate for MultiQC.
+        "per_position_quality_distribution",
+        "per_position_quality_distribution_read2",
+        "per_tile_quality",
+        # Per tile quality is not analysed by multiqc and uses a lot of space
+        "per_tile_quality_read2"
+        # Nanopore metrics for pore data do not have modules yet
+        "nanopore_metrics",
+    ]
+    for key in keys_to_delete:
+        if key in sample_dict:
+            del sample_dict[key]
+
+    for key in ("per_position_mean_quality_and_spread", "per_position_mean_quality_and_spread_read2"):
+        if key in sample_dict:
+            # Only the mean is used for the per position mean quality and spread data,
+            # so remove the rest of the data
+            percentiles_list = sample_dict[key]["percentiles"]
+            new_percentiles_list = [
+                (percentile, values) for percentile, values in percentiles_list if percentile == "mean"
+            ]
+            sample_dict[key]["percentiles"] = new_percentiles_list
 
 
 class MultiqcModule(BaseMultiqcModule):
