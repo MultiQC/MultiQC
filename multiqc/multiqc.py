@@ -21,7 +21,7 @@ from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError, RunResult
+from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import PConfigValidationError
 from multiqc.utils import util_functions
 
@@ -452,6 +452,19 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
 
     # End execution using the exit code returned from MultiQC
     sys.exit(result.sys_exit_code)
+
+
+class RunResult:
+    """
+    Returned by a MultiQC run for interactive use. Contains the following information:
+
+    * appropriate error code (e.g. 1 if a module broke, 0 on success)
+    * error message if a module broke
+    """
+
+    def __init__(self, sys_exit_code: int = 0, message: str = ""):
+        self.sys_exit_code = sys_exit_code
+        self.message = message
 
 
 def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
