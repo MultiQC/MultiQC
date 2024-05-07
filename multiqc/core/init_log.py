@@ -85,115 +85,114 @@ def init_log():
     )
 
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
-
-    if util_functions.is_running_in_notebook() or os.getenv("PYCHARM_HOSTED") or os.getenv("CI"):
-        # Use coloredlogs as Rich is breaking output formatting
-        info_template = "%(module)18s | %(message)s"
-
-        # Set up the console logging stream
-        console = logging.StreamHandler(sys.stdout)
-        console.setLevel(log_level)
-        level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
-        level_styles["debug"] = {"faint": True}
-        field_styles = coloredlogs.DEFAULT_FIELD_STYLES
-        field_styles["module"] = {"color": "blue"}
-        field_styles["name"] = {"color": "blue"}
-
-        if log_level == "DEBUG":
-            if config.no_ansi is True:
-                console.setFormatter(logging.Formatter(debug_template))
-            else:
-                console.setFormatter(
-                    coloredlogs.ColoredFormatter(
-                        fmt=debug_template, level_styles=level_styles, field_styles=field_styles
-                    )
-                )
-        else:
-            if config.no_ansi is True:
-                console.setFormatter(logging.Formatter(info_template))
-            else:
-                console.setFormatter(
-                    coloredlogs.ColoredFormatter(
-                        fmt=info_template, level_styles=level_styles, field_styles=field_styles
-                    )
-                )
-        logger.addHandler(console)
-
-        # Google Colab notebooks duplicate log messages without this, see
-        # https://stackoverflow.com/a/55877763/341474
-        logger.propagate = False
-
-        if not config.quiet:
-            # Print intro
-            if config.no_ansi is False:
-                BOLD = "\033[1m"
-                DIM = "\033[2m"
-                DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
-                RESET = "\033[0m"
-            else:
-                BOLD = ""
-                DIM = ""
-                DARK_ORANGE = ""
-                RESET = ""
-            emoji = util_functions.choose_emoji()
-            emoji = f" {emoji}" if emoji else ""
-            intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
-            if not util_functions.is_running_in_notebook():
-                intro = f"\n{intro}\n"
-            print(intro)
-
-    else:
-        # Set up the console logging stream
-        console_handler = RichHandler(
-            level=log_level,
-            console=rich_console,
-            show_level=log_level == "DEBUG",
-            show_time=log_level == "DEBUG",
-            log_time_format="[%Y-%m-%d %H:%M:%S]",
-            markup=True,
-            omit_repeated_times=False,
-            show_path=False,
-        )
-
-        class DebugFormatter(logging.Formatter):
-            def format(self, record):
-                if record.levelno == logging.DEBUG:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.debug]%(message)s[/]")
-                elif record.levelno == logging.WARNING:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.warning]%(message)s[/]")
-                elif record.levelno == logging.ERROR:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.error]%(message)s[/]")
-                elif record.levelno == logging.CRITICAL:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.critical]%(message)s[/]")
-                else:
-                    self._style = logging.PercentStyle("[blue]%(name)-50s[/]  %(message)s")
-                return logging.Formatter.format(self, record)
-
-        class InfoFormatter(logging.Formatter):
-            def format(self, record):
-                if record.levelno == logging.WARNING:
-                    self._style = logging.PercentStyle("[blue]%(module)18s[/] | [logging.level.warning]%(message)s[/]")
-                elif record.levelno == logging.ERROR:
-                    self._style = logging.PercentStyle("[blue]%(module)18s[/] | [logging.level.error]%(message)s[/]")
-                else:
-                    self._style = logging.PercentStyle("[blue]%(module)18s[/] | %(message)s")
-                return logging.Formatter.format(self, record)
-
-        console_handler.setLevel(log_level)
-        if log_level == "DEBUG":
-            console_handler.setFormatter(DebugFormatter())
-        else:
-            console_handler.setFormatter(InfoFormatter())
-        logger.addHandler(console_handler)
-
-        if not config.quiet:
-            rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
+    _setup_coloredlogs(log_level, logger, debug_template)
 
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)  # always DEBUG for the file
     file_handler.setFormatter(logging.Formatter(debug_template))
     logger.addHandler(file_handler)
+
+
+def _setup_coloredlogs(log_level, logger, debug_template):
+    # Use coloredlogs as Rich is breaking output formatting
+    info_template = "%(module)18s | %(message)s"
+
+    # Set up the console logging stream
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(log_level)
+    level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
+    level_styles["debug"] = {"faint": True}
+    field_styles = coloredlogs.DEFAULT_FIELD_STYLES
+    field_styles["module"] = {"color": "blue"}
+    field_styles["name"] = {"color": "blue"}
+
+    if log_level == "DEBUG":
+        if config.no_ansi is True:
+            console.setFormatter(logging.Formatter(debug_template))
+        else:
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles, field_styles=field_styles)
+            )
+    else:
+        if config.no_ansi is True:
+            console.setFormatter(logging.Formatter(info_template))
+        else:
+            console.setFormatter(
+                coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
+            )
+    logger.addHandler(console)
+
+    # Google Colab notebooks duplicate log messages without this, see
+    # https://stackoverflow.com/a/55877763/341474
+    logger.propagate = False
+
+    if not config.quiet:
+        # Print intro
+        if config.no_ansi is False:
+            BOLD = "\033[1m"
+            DIM = "\033[2m"
+            DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+            RESET = "\033[0m"
+        else:
+            BOLD = ""
+            DIM = ""
+            DARK_ORANGE = ""
+            RESET = ""
+        emoji = util_functions.choose_emoji()
+        emoji = f" {emoji}" if emoji else ""
+        intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+        if not util_functions.is_running_in_notebook():
+            intro = f"\n{intro}\n"
+        print(intro)
+
+
+def _setup_rich_handler(log_level, logger):
+    # Set up the console logging stream
+    console_handler = RichHandler(
+        level=log_level,
+        console=rich_console,
+        show_level=log_level == "DEBUG",
+        show_time=log_level == "DEBUG",
+        log_time_format="[%Y-%m-%d %H:%M:%S]",
+        markup=True,
+        omit_repeated_times=False,
+        show_path=False,
+    )
+
+    class DebugFormatter(logging.Formatter):
+        def format(self, record):
+            if record.levelno == logging.DEBUG:
+                self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.debug]%(message)s[/]")
+            elif record.levelno == logging.WARNING:
+                self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.warning]%(message)s[/]")
+            elif record.levelno == logging.ERROR:
+                self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.error]%(message)s[/]")
+            elif record.levelno == logging.CRITICAL:
+                self._style = logging.PercentStyle("[blue]%(name)-50s[/]  [logging.level.critical]%(message)s[/]")
+            else:
+                self._style = logging.PercentStyle("[blue]%(name)-50s[/]  %(message)s")
+            return logging.Formatter.format(self, record)
+
+    class InfoFormatter(logging.Formatter):
+        def format(self, record):
+            if record.levelno == logging.WARNING:
+                self._style = logging.PercentStyle("[blue]%(module)18s[/] | [logging.level.warning]%(message)s[/]")
+            elif record.levelno == logging.ERROR:
+                self._style = logging.PercentStyle("[blue]%(module)18s[/] | [logging.level.error]%(message)s[/]")
+            else:
+                self._style = logging.PercentStyle("[blue]%(module)18s[/] | %(message)s")
+            return logging.Formatter.format(self, record)
+
+    console_handler.setLevel(log_level)
+    if log_level == "DEBUG":
+        console_handler.setFormatter(DebugFormatter())
+    else:
+        console_handler.setFormatter(InfoFormatter())
+    logger.addHandler(console_handler)
+
+    if not config.quiet:
+        rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
 
 def move_tmp_log():

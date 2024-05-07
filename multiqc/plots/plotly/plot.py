@@ -24,7 +24,9 @@ check_plotly_version()
 
 
 class PConfigValidationError(Exception):
-    pass
+    def __init__(self, module_name: str):
+        self.module_name = module_name
+        super().__init__()
 
 
 pconfig_validation_errors = []
@@ -32,7 +34,7 @@ pconfig_validation_errors = []
 
 class PConfig(BaseModel):
     id: str
-    table_title: Optional[str] = Field(None, deprecated="use 'title' instead")
+    table_title: Optional[str] = Field(None, deprecated="title")
     title: str
     height: int = 500
     width: Optional[int] = None
@@ -44,27 +46,27 @@ class PConfig(BaseModel):
     cpswitch_c_active: bool = True  # percentage scale is _not_ active
     cpswitch_counts_label: str = "Counts"
     cpswitch_percent_label: str = "Percentage"
-    xLog: Optional[bool] = Field(None, deprecated="use 'xlog' instead")
-    yLog: Optional[bool] = Field(None, deprecated="use 'ylog' instead")
+    xLog: Optional[bool] = Field(None, deprecated="xlog")
+    yLog: Optional[bool] = Field(None, deprecated="ylog")
     xlog: bool = False
     ylog: bool = False
     data_labels: List[Union[str, Dict[str, Any]]] = []
-    xTitle: Optional[str] = Field(None, deprecated="use 'xlab' instead")
-    yTitle: Optional[str] = Field(None, deprecated="use 'ylab' instead")
+    xTitle: Optional[str] = Field(None, deprecated="xlab")
+    yTitle: Optional[str] = Field(None, deprecated="ylab")
     xlab: Optional[str] = None
     ylab: Optional[str] = None
     xsuffix: Optional[str] = None
     ysuffix: Optional[str] = None
     tt_suffix: Optional[str] = None
-    xLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
-    yLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
-    yLabelFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
+    xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
     xlab_format: Optional[str] = None
     ylab_format: Optional[str] = None
     tt_label: Optional[str] = None
-    xDecimals: Optional[int] = Field(None, deprecated="use 'x_decimals' instead")
-    yDecimals: Optional[int] = Field(None, deprecated="use 'y_decimals' instead")
-    decimalPlaces: Optional[bool] = Field(None, deprecated="use 'tt_decimals' instead")
+    xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
+    yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
+    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
     tt_decimals: Optional[int] = None
@@ -72,10 +74,10 @@ class PConfig(BaseModel):
     xmax: Optional[Union[float, int]] = None
     ymin: Optional[Union[float, int]] = None
     ymax: Optional[Union[float, int]] = None
-    xFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmin' instead")
-    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmax' instead")
-    yFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmin' instead")
-    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmax' instead")
+    xFloor: Optional[Union[float, int]] = Field(None, deprecated="x_clipmin")
+    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="x_clipmax")
+    yFloor: Optional[Union[float, int]] = Field(None, deprecated="y_clipmin")
+    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="y_clipmax")
     x_clipmin: Optional[Union[float, int]] = None
     x_clipmax: Optional[Union[float, int]] = None
     y_clipmin: Optional[Union[float, int]] = None
@@ -103,11 +105,11 @@ class PConfig(BaseModel):
                     break
 
             plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"{modname}Invalid {plot_type} plot configuration: {data}:")
+            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
             for error in pconfig_validation_errors:
-                logger.error(f"- {error}")
+                logger.error(f"• {error}")
             pconfig_validation_errors.clear()  # Reset for interactive usage
-            raise PConfigValidationError()
+            raise PConfigValidationError(module_name=modname)
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
@@ -123,7 +125,7 @@ class PConfig(BaseModel):
         for name, val in values.items():
             if name not in cls.model_fields:
                 pconfig_validation_errors.append(
-                    f'unrecognized field: "{name}". Available fields: {", ".join(cls.model_fields.keys())}'
+                    f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
                 )
             else:
                 filtered_values[name] = val
@@ -133,13 +135,10 @@ class PConfig(BaseModel):
         values_without_deprecateds = {}
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
-                msg = cls.model_fields[name].deprecated
-                logger.debug(f"Deprecated field: {name}. {msg}")
-                m = re.search(r"use '(.+)' instead", msg)
-                if m:
-                    new_name = m.group(1)
-                    if new_name not in values:
-                        values_without_deprecateds[new_name] = val
+                new_name = cls.model_fields[name].deprecated
+                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
+                if new_name not in values:
+                    values_without_deprecateds[new_name] = val
             else:
                 values_without_deprecateds[name] = val
         values = values_without_deprecateds
@@ -148,7 +147,7 @@ class PConfig(BaseModel):
         for name, field in cls.model_fields.items():
             if field.is_required():
                 if name not in values:
-                    pconfig_validation_errors.append(f'required field is missing: "{name}"')
+                    pconfig_validation_errors.append(f"missing required field '{name}'")
 
         # Check types
         for name, val in values.items():
@@ -161,7 +160,7 @@ class PConfig(BaseModel):
                 if len(v_str) > 20:
                     v_str = v_str[:20] + "..."
                 expected_type_str = str(expected_type).replace("typing.", "")
-                msg = f'"{name}": expected type "{expected_type_str}", got "{type(val).__name__}" {v_str}'
+                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                 pconfig_validation_errors.append(msg)
                 logger.debug(f"{msg}: {e}")
 
