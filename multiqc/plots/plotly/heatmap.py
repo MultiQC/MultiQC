@@ -30,12 +30,12 @@ class HeatmapConfig(PConfig):
     ycats_samples: bool = False
     square: bool = True
     colstops: List[List] = []
-    reverseColors: bool = Field(False, deprecated="use 'reverse_colors' instead")
+    reverseColors: bool = Field(False, deprecated="reverse_colors")
     reverse_colors: bool = False
-    decimalPlaces: int = Field(2, deprecated="use 'tt_decimals' instead")
+    decimalPlaces: int = Field(2, deprecated="tt_decimals")
     tt_decimals: int = 2
     legend: bool = True
-    datalabels: Optional[bool] = Field(None, deprecated="use 'display_values' instead")
+    datalabels: Optional[bool] = Field(None, deprecated="display_values")
     display_values: Optional[bool] = None
     angled_xticks: bool = True
 
