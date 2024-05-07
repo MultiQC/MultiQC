@@ -34,7 +34,7 @@ The side navigation for the report.
       <li>
         <a href="#detailed_stats" class="nav-l1">Detailed Stats</a>
 		<ul>
-      {% for m in report.modules_output %}
+      {% for m in report.modules %}
       {% if m.sections | length > 0 %}
 	  {% for s in m.sections -%}
 		{% if s['name'] is not none and s['name'] | length > 0 %}

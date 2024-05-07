@@ -192,7 +192,6 @@ class MultiqcModule(BaseMultiqcModule):
                     f"Falling back to extracting it from the file name: "
                     f"\"{f['fn']}\" -> \"{s_name}\""
                 )
-                return None, {}
 
         self.add_data_source(f, s_name)
         return s_name, parsed_json

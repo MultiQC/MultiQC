@@ -106,6 +106,7 @@ class PConfig(BaseModel):
             logger.error(f"{modname}Invalid {plot_type} plot configuration: {data}:")
             for error in pconfig_validation_errors:
                 logger.error(f"- {error}")
+            pconfig_validation_errors.clear()  # Reset for interactive usage
             raise PConfigValidationError()
 
         # Allow user to overwrite any given config for this plot

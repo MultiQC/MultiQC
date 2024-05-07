@@ -43,7 +43,7 @@ tmp_dir: Optional[str] = None
 # Uninitialised global variables for static typing
 multiqc_command: str
 analysis_files: List[str]  # Input files to search
-modules_output: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
+modules: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
@@ -72,7 +72,7 @@ def __initialise():
     global tmp_dir
     global multiqc_command
     global analysis_files
-    global modules_output
+    global modules
     global general_stats_html
     global lint_errors
     global num_flat_plots
@@ -93,7 +93,7 @@ def __initialise():
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
     analysis_files = []
-    modules_output = []
+    modules = []
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
@@ -703,11 +703,11 @@ def data_sources_tofile():
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile(modules_output):
+def dois_tofile(modules: List["BaseMultiqcModule"]):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
-    for mod in modules_output:
+    for mod in modules:
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
             dois[mod.anchor] = mod.doi
     # Write to a file

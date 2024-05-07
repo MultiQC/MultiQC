@@ -31,7 +31,7 @@ The side navigation for the report.
         <a href="#general_stats" class="nav-l1">General Stats</a>
       </li>
       {% endif -%}
-      {% for m in report.modules_output %}
+      {% for m in report.modules %}
         {% if not m.hidden %}
           {% if m.sections | length > 0 %}
           <li>
