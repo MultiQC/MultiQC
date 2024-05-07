@@ -6,8 +6,10 @@ Imported by __init__.py so available as multiqc.run()
 
 import logging
 import os
+import shutil
 import sys
 import time
+import traceback
 from typing import Tuple, Optional
 
 import rich_click as click
@@ -19,7 +21,8 @@ from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunResult, RunError
+from multiqc.core.exceptions import RunError, RunResult
+from multiqc.plots.plotly.plot import PConfigValidationError
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -427,15 +430,28 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
-    cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
-    other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
-    cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
+    try:
+        cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
+        other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
+        cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
 
-    # Pass on to a regular function that can be used easily without click
-    multiqc_run = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
+        # Pass on to a regular function that can be used easily without click
+        result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
+
+    except KeyboardInterrupt:
+        if clean_up:
+            shutil.rmtree(report.tmp_dir)
+        logger.critical(
+            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
+            + "User Cancelled Execution!\nExiting MultiQC..."
+        )
+        result = RunResult(sys_exit_code=1)
+
+    except PConfigValidationError:
+        result = RunResult(sys_exit_code=1)
 
     # End execution using the exit code returned from MultiQC
-    sys.exit(multiqc_run.sys_exit_code)
+    sys.exit(result.sys_exit_code)
 
 
 def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
