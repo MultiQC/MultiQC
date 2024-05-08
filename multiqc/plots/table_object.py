@@ -41,7 +41,7 @@ class TableColumn(BaseModel):
     namespace: str
     scale: Union[str, bool]
     hidden: bool
-    colour: str
+    color: str = Field(validation_alias="colour")
     placement: float = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -59,7 +59,7 @@ class TableColumn(BaseModel):
     bars_zero_centrepoint: bool = False
 
 
-ValueT = Union[int, float, str, bool, None]
+ValueT = Union[int, float, str, bool]
 
 
 class DataTable(BaseModel):
@@ -77,7 +77,7 @@ class DataTable(BaseModel):
 
     @staticmethod
     def create(
-        data: Union[List[Mapping[str, Mapping[str, ValueT]]], Mapping[str, Mapping[str, ValueT]]],
+        data: Union[List[Mapping[str, Mapping[str, Optional[ValueT]]]], Mapping[str, Mapping[str, Optional[ValueT]]]],
         pconfig: TableConfig,
         headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
     ) -> "DataTable":
@@ -294,7 +294,7 @@ class DataTable(BaseModel):
                 for s_name, v_by_metric in data[d_idx].items():
                     if k in v_by_metric:
                         val = v_by_metric[k]
-                        if val is None:
+                        if val is None or str(val).strip() == "":
                             continue
 
                         # Try parse as a number
@@ -326,6 +326,7 @@ class DataTable(BaseModel):
                         if fmt is not None:
                             if callable(fmt):
                                 try:
+                                    # noinspection PyCallingNonCallable
                                     valstr = fmt(val)
                                 except Exception as e:
                                     logger.error(f"Error applying format to table value '{k}': '{val}'. {e}")
