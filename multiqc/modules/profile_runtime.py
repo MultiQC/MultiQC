@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.search_pattern_times_section()
 
+        self.module_run_times_section()
+
     def file_search_stats_section(self):
         """Count of all files iterated through by MultiQC, by category"""
 
@@ -97,6 +99,47 @@ class MultiqcModule(BaseMultiqcModule):
                 Time spent running each search pattern to find files for MultiQC modules.
                 **Total file search time: {:.2f} seconds**.
             """.format(report.runtimes["total_sp"]),
+            helptext="""
+                **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.
+                Unless you are running MultiQC on many thousands of analysis files, optimising this process
+                will have limited practical benefit.**
+
+                MultiQC works by recursively looking through all files found in the analysis directories.
+                After skipping any that are too big / binary file types etc, it uses the search patterns
+                defined in `multiqc/search_patterns.yaml`.
+                These work by matching either file names or file contents. Generally speaking, matching
+                filenames is super fast and matching file contents is slower.
+
+                Please see the [MultiQC Documentation](https://multiqc.info/docs/#optimising-run-time)
+                for information on how to optimise MultiQC to speed this process up.
+                The plot below shows which search keys are running and how long each has taken to run in
+                total. This should help to guide you to where optimisation is most worthwhile.
+            """,
+            plot=bargraph.plot(pdata, None, pconfig),
+        )
+
+    def module_run_times_section(self):
+        """Section with a bar plot showing the time spent on each search pattern"""
+
+        pdata = dict()
+        for key in report.runtimes["mods"]:
+            pdata[key] = {"time": report.runtimes["mods"][key]}
+
+        pconfig = {
+            "id": "multiqc_runtime_modules_plot",
+            "title": "MultiQC: Time per module",
+            "ylab": "Time (seconds)",
+            "use_legend": False,
+            "cpswitch": False,
+        }
+
+        self.add_section(
+            name="Modules",
+            anchor="multiqc_runtime_modules",
+            description="""
+                Time spent running each module.
+                **Total modules run time: {:.2f} seconds**.
+            """.format(report.runtimes["total_mods"]),
             helptext="""
                 **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.
                 Unless you are running MultiQC on many thousands of analysis files, optimising this process
