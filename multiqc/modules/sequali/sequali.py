@@ -465,28 +465,41 @@ class MultiqcModule(BaseMultiqcModule):
                 description=f"All the sequences are the same length at {self.max_length} bp.",
             )
             return
-        plot_data = dict()
-        for sample_name, sample_dict in data.items():
-            seqlength_dict = sample_dict["sequence_length_distribution"]
-            x_labels = seqlength_dict["length_ranges"]
-            counts = seqlength_dict["counts"]
-            plot_data[sample_name] = {avg_x_label(x_label): count for x_label, count in zip(x_labels, counts)}
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "sequence_length_distribution"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "sequence_length_distribution_read2"
+            plot_data = dict()
+            for sample_name, sample_dict in data.items():
+                seqlength_dict = sample_dict.get(key)
+                if seqlength_dict is None:
+                    continue
+                x_labels = seqlength_dict["length_ranges"]
+                counts = seqlength_dict["counts"]
+                plot_data[sample_name] = {avg_x_label(x_label): count for x_label, count in zip(x_labels, counts)}
 
-        plot_config = {
-            "id": "sequali_sequence_length_distribution_plot",
-            "title": "Sequali: Sequence Length Distribution",
-            "ylab": "Read Count",
-            "ymin": 0,
-            "xlab": "Sequence Length (bp)",
-            "xlog": self.use_xlog,
-        }
+            plot_config = {
+                "id": "sequali_sequence_length_distribution_plot" + id_suffix,
+                "title": "Sequali: Sequence Length Distribution" + title_suffix,
+                "ylab": "Read Count",
+                "ymin": 0,
+                "xlab": "Sequence Length (bp)",
+                "xlog": self.use_xlog,
+            }
 
-        self.add_section(
-            name="Sequence Length Distribution",
-            anchor="sequali_sequence_length_distribution",
-            description="The distribution of read lengths found.",
-            plot=linegraph.plot(plot_data, plot_config),
-        )
+            self.add_section(
+                name="Sequence Length Distribution" + title_suffix,
+                anchor="sequali_sequence_length_distribution" + id_suffix,
+                description="The distribution of read lengths found.",
+                plot=linegraph.plot(plot_data, plot_config),
+            )
 
     def sequence_duplication_levels_plot(self, data):
         plot_data = {}
