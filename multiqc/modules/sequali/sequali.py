@@ -270,7 +270,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def per_position_quality_plot(self, data):
-        plot_data = {}
         all_x_labels = set()
 
         for read in (1, 2):
@@ -284,6 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "per_position_mean_quality_and_spread_read2"
+            plot_data = {}
             for sample_name, sample_dict in data.items():
                 per_pos_qual = sample_dict.get(key)
                 if not per_pos_qual:
@@ -325,7 +325,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def per_sequence_quality_plot(self, data):
-        plot_data = {}
         for read in (1, 2):
             if read == 2 and not self.paired_end:
                 continue
@@ -337,6 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "per_sequence_quality_scores_read2"
+            plot_data = {}
             for sample_name, sample_dict in data.items():
                 qual_dict = sample_dict.get(key)
                 if qual_dict is None:
@@ -372,7 +372,6 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def per_position_gc_content_plot(self, data):
-        plot_data = {}
         for read in (1, 2):
             if read == 2 and not self.paired_end:
                 continue
@@ -384,6 +383,7 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "per_position_base_content_read2"
+            plot_data = {}
             for sample_name, sample_dict in data.items():
                 per_position_base_content = sample_dict.get(key)
                 if per_position_base_content is None:
@@ -415,34 +415,47 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def per_sequence_gc_content_plot(self, data):
-        plot_data = {}
-        for sample_name, sample_dict in data.items():
-            gc_dict = sample_dict["per_sequence_gc_content"]
-            # Take the smoothened results here. Less resolution, but also less
-            # confusing at first glance.
-            x_labels = gc_dict["smoothened_x_labels"]
-            gc_content_counts = gc_dict["smoothened_gc_content_counts"]
-            total = max(sum(gc_content_counts), 1)
-            plot_data[sample_name] = {
-                avg_x_label(x_label): count * 100 / total for x_label, count in zip(x_labels, gc_content_counts)
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "per_sequence_gc_content"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "per_sequence_gc_content_read2"
+            plot_data = {}
+            for sample_name, sample_dict in data.items():
+                gc_dict = sample_dict.get(key)
+                if sample_dict is None:
+                    continue
+                # Take the smoothened results here. Less resolution, but also less
+                # confusing at first glance.
+                x_labels = gc_dict["smoothened_x_labels"]
+                gc_content_counts = gc_dict["smoothened_gc_content_counts"]
+                total = max(sum(gc_content_counts), 1)
+                plot_data[sample_name] = {
+                    avg_x_label(x_label): count * 100 / total for x_label, count in zip(x_labels, gc_content_counts)
+                }
+
+            plot_config = {
+                "id": "sequali_per_sequence_gc_content_plot" + id_suffix,
+                "title": "Sequali: Per Sequence GC Content" + title_suffix,
+                "xlab": "% GC",
+                "ylab": "Percentage",
+                "ymin": 0,
+                "xmin": 0,
+                "xmax": 100,
             }
 
-        plot_config = {
-            "id": "sequali_per_sequence_gc_content_plot",
-            "title": "Sequali: Per Sequence GC Content",
-            "xlab": "% GC",
-            "ylab": "Percentage",
-            "ymin": 0,
-            "xmin": 0,
-            "xmax": 100,
-        }
-
-        self.add_section(
-            name="Per Sequence GC Content",
-            anchor="sequali_per_sequence_gc_content",
-            description="The GC content distribution of the sequences for each sample.",
-            plot=linegraph.plot(plot_data, plot_config),
-        )
+            self.add_section(
+                name="Per Sequence GC Content" + title_suffix,
+                anchor="sequali_per_sequence_gc_content" + id_suffix,
+                description="The GC content distribution of the sequences for each sample.",
+                plot=linegraph.plot(plot_data, plot_config),
+            )
 
     def sequence_length_distribution_plot(self, data):
         if not self.lengths_differ:
