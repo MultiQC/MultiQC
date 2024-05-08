@@ -1,5 +1,4 @@
 """MultiQC module to parse output from Sequali"""
-
 import json
 import logging
 import textwrap
@@ -160,6 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.sequence_duplication_levels_plot(data)
         self.top_overrepresented_sequences_table(data)
         self.adapter_content_plot(data)
+        self.adapter_content_from_overlap(data)
 
     def sequali_general_stats(self, data):
         general_stats = dict()
@@ -549,4 +549,107 @@ class MultiqcModule(BaseMultiqcModule):
             rate increasing with longer read length.
             """,
             plot=linegraph.plot(plot_data, plot_config),
+        )
+
+    def adapter_content_from_overlap(self, data):
+        adapter_table_data = {}
+        common_adapters_read1 = defaultdict(lambda: 0)
+        common_adapters_read2 = defaultdict(lambda: 0)
+        total_samples = 0
+        for sample_name, sample_dict in data.items():
+            content = sample_dict.get("adapter_content_from_overlap")
+            if content is None:
+                continue
+            total_samples += 1
+            number_of_adapters_read1 = content["number_of_adapters_read1"]
+            number_of_adapters_read2 = content["number_of_adapters_read2"]
+            most_common_adapter_read1 = content["longest_adapter_read1"]
+            most_common_adapter_read2 = content["longest_adapter_read2"]
+            most_common_adapter_read1_match = content["longest_adapter_read1_match"]
+            most_common_adapter_read2_match = content["longest_adapter_read2_match"]
+            common_adapters_read1[(most_common_adapter_read1, most_common_adapter_read1_match)] += 1
+            common_adapters_read2[(most_common_adapter_read2, most_common_adapter_read2_match)] += 1
+            total_reads = max(content["total_reads"], 1)
+            adapter_table_data[sample_name] = {
+                "adapter_content_read1": number_of_adapters_read1 / total_reads,
+                "adapter_content_read2": number_of_adapters_read2 / total_reads,
+                "most_common_adapter_read1": most_common_adapter_read1,
+                "most_common_adapter_read2": most_common_adapter_read2,
+            }
+        if total_samples < 1:
+            return
+
+        def count_dict_to_table_data(count_dict):
+            table_data = {}
+            for (adapter_sequence, adapter_match), adapter_count in count_dict.items():
+                table_data[adapter_sequence] = {
+                    "Adapter best match": adapter_match,
+                    "Percentage of libraries with this adapter": adapter_count / total_samples,
+                }
+            return table_data
+
+        headers = {
+            "Adapter best match": {},
+            "Percentage of libraries with this adapter": {"min": 0, "max": 1, "format": "{:.2%}"},
+        }
+        plot_config = {
+            "id": "sequali_most_common_adapters_read_1",
+            "title": "Sequali: Most common adapters for read 1",
+        }
+
+        self.add_section(
+            name="Common Adapters: read 1",
+            anchor="sequali_common_adapters_read1",
+            plot=table.plot(count_dict_to_table_data(common_adapters_read1), pconfig=plot_config, headers=headers),
+        )
+        plot_config = {
+            "id": "sequali_most_common_adapters_read_2",
+            "title": "Sequali: Most common adapters for read 2",
+        }
+
+        self.add_section(
+            name="Common Adapters: read 2",
+            anchor="sequali_common_adapters_read2",
+            plot=table.plot(count_dict_to_table_data(common_adapters_read2), pconfig=plot_config, headers=headers),
+        )
+        plot_config = {
+            "id": "sequali_adapter_content_from_overlap_table",
+            "title": "Sequali: Adapter Content calculated from overlap",
+        }
+
+        headers = {
+            "adapter_content_read1": {
+                "title": "Read 1: adapter content",
+                "description": "The amount of reads that contain an adapter as based on "
+                "the overlap between read 1 and read 2.",
+                "scale": "Reds",
+                "format": "{:.2%}",
+                "max": 1,
+                "min": 0,
+            },
+            "most_common_adapter_read1": {
+                "title": "Most common adapter for read 1.",
+                "description": "The most common adapter for read 1 as based on the overlap "
+                "between read 1 and read 2.",
+            },
+            "adapter_content_read2": {
+                "title": "Read 2: adapter content",
+                "description": "The amount of reads that contain an adapter as based on "
+                "the overlap between read 1 and read 2.",
+                "scale": "Reds",
+                "format": "{:.2%}",
+                "max": 1,
+                "min": 0,
+            },
+            "most_common_adapter_read2": {
+                "title": "Most common adapter for read 2.",
+                "description": "The most common adapter for read 1 as based on the overlap "
+                "between read 1 and read 2.",
+            },
+        }
+        self.add_section(
+            name="Adapter Content",
+            anchor="sequali_adapter_content_from_overlap",
+            description="The cumulative percentage count of the found adapter sequences",
+            plot=table.plot(adapter_table_data, headers=headers, pconfig=plot_config),
         )
