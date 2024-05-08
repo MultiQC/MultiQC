@@ -461,7 +461,7 @@ def _get_sortlist(dt: DataTable) -> str:
             idx = next(
                 idx
                 for idx, (_, k, header) in enumerate(headers)
-                if d["column"].lower() in [k.lower(), header["title"].lower()]
+                if d["column"].lower() in [k.lower(), header.title.lower()]
             )
         except StopIteration:
             logger.warning(
