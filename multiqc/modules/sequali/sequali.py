@@ -507,7 +507,9 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data = {}
 
         for sample_name, sample_dict in data.items():
-            adapter_content = sample_dict["adapter_content"]
+            adapter_content = sample_dict.get("adapter_content")
+            if adapter_content is None:
+                continue
             x_labels = adapter_content["x_labels"]
             x_points = [avg_x_label(x_label) for x_label in x_labels]
             adapters_and_series = adapter_content["adapter_content"]
@@ -517,6 +519,9 @@ class MultiqcModule(BaseMultiqcModule):
                     continue
                 series_name = f"{sample_name}-{adapter}"
                 plot_data[series_name] = dict(zip(x_points, series))
+
+        if not plot_data:
+            return
 
         plot_config = {
             "id": "sequali_adapter_content_plot",
