@@ -584,6 +584,7 @@ class MultiqcModule(BaseMultiqcModule):
             table_config = {
                 "id": "sequali_top_overrepresented_sequences_table" + id_suffix,
                 "title": "Sequali: top overrepresented sequences" + title_suffix,
+                "defaultsort": [{"column": "libraries_affected", "order": "desc"}],
             }
             self.add_section(
                 name="Top overrepresented sequences" + title_suffix,
