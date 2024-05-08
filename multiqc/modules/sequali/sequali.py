@@ -373,32 +373,46 @@ class MultiqcModule(BaseMultiqcModule):
 
     def per_position_gc_content_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in data.items():
-            per_position_base_content = sample_dict["per_position_base_content"]
-            x_labels = per_position_base_content["x_labels"]
-            x_positions = [avg_x_label(x_label) for x_label in x_labels]
-            c_fractions = per_position_base_content["C"]
-            g_fractions = per_position_base_content["G"]
-            sample_gc_percentages = (
-                (c_fraction + g_fraction) * 100 for c_fraction, g_fraction in zip(c_fractions, g_fractions)
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "per_position_base_content"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "per_position_base_content_read2"
+            for sample_name, sample_dict in data.items():
+                per_position_base_content = sample_dict.get(key)
+                if per_position_base_content is None:
+                    continue
+                x_labels = per_position_base_content["x_labels"]
+                x_positions = [avg_x_label(x_label) for x_label in x_labels]
+                c_fractions = per_position_base_content["C"]
+                g_fractions = per_position_base_content["G"]
+                sample_gc_percentages = (
+                    (c_fraction + g_fraction) * 100 for c_fraction, g_fraction in zip(c_fractions, g_fractions)
+                )
+                plot_data[sample_name] = dict(zip(x_positions, sample_gc_percentages))
+
+            plot_config = {
+                "id": "sequali_per_position_gc_content_plot" + id_suffix,
+                "title": "Sequali: Per Position GC Content" + title_suffix,
+                "xlab": "Position (bp)",
+                "ylab": "% GC",
+                "ymin": 0,
+                "ymax": 100,
+                "xlog": self.use_xlog,
+            }
+
+            self.add_section(
+                name="Per Position GC Content" + title_suffix,
+                anchor="per_posistion_gc_content" + id_suffix,
+                description="The GC content percentage at each position for each sample.",
+                plot=linegraph.plot(plot_data, plot_config),
             )
-            plot_data[sample_name] = dict(zip(x_positions, sample_gc_percentages))
-
-        plot_config = {
-            "id": "sequali_per_position_gc_content_plot",
-            "title": "Sequali: Per Position GC Content",
-            "xlab": "Position (bp)",
-            "ylab": "% GC",
-            "ymin": 0,
-            "ymax": 100,
-            "xlog": self.use_xlog,
-        }
-
-        self.add_section(
-            name="Per Position GC Content",
-            description="The GC content percentage at each position for each sample.",
-            plot=linegraph.plot(plot_data, plot_config),
-        )
 
     def per_sequence_gc_content_plot(self, data):
         plot_data = {}
