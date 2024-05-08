@@ -680,6 +680,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": "sequali_most_common_adapters_read_1",
             "title": "Sequali: Most common adapters for read 1",
+            "defaultsort": [{"column": "Percentage of libraries with this adapter", "order": "desc"}],
         }
 
         self.add_section(
@@ -690,6 +691,7 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": "sequali_most_common_adapters_read_2",
             "title": "Sequali: Most common adapters for read 2",
+            "defaultsort": [{"column": "Percentage of libraries with this adapter", "order": "desc"}],
         }
 
         self.add_section(
@@ -700,6 +702,10 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": "sequali_adapter_content_from_overlap_table",
             "title": "Sequali: Adapter Content calculated from overlap",
+            "defaultsort": [
+                {"column": "adapter_content_read1", "order": "desc"},
+                {"column": "adapter_content_read2", "order": "desc"},
+            ],
         }
 
         headers = {
