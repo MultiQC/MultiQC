@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_section(
                 name="Sequence Quality Per Position" + title_suffix,
-                anchor="sequali_sequence_quality_per_position",
+                anchor="sequali_sequence_quality_per_position" + id_suffix,
                 description="The mean quality value across each base position.",
                 helptext=textwrap.dedent(
                     """
@@ -326,37 +326,50 @@ class MultiqcModule(BaseMultiqcModule):
 
     def per_sequence_quality_plot(self, data):
         plot_data = {}
-        for sample_name, sample_dict in data.items():
-            qual_dict = sample_dict["per_sequence_quality_scores"]
-            x_labels = qual_dict["x_labels"]
-            average_quality_counts = qual_dict["average_quality_counts"]
-            plot_data[sample_name] = {int(phred): count for phred, count in zip(x_labels, average_quality_counts)}
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "per_sequence_quality_scores"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "per_sequence_quality_scores_read2"
+            for sample_name, sample_dict in data.items():
+                qual_dict = sample_dict.get(key)
+                if qual_dict is None:
+                    continue
+                x_labels = qual_dict["x_labels"]
+                average_quality_counts = qual_dict["average_quality_counts"]
+                plot_data[sample_name] = {int(phred): count for phred, count in zip(x_labels, average_quality_counts)}
 
-        plot_config = {
-            "id": "sequali_per_sequence_quality_scores_plot",
-            "title": "Sequali: Per Sequence Average Quality Scores",
-            "ylab": "Number of Sequences",
-            "xlab": "Mean Sequence Quality (Phred Score)",
-            "ymin": 0,
-            "xmin": 0,
-        }
+            plot_config = {
+                "id": "sequali_per_sequence_quality_scores_plot" + id_suffix,
+                "title": "Sequali: Per Sequence Average Quality Scores" + title_suffix,
+                "ylab": "Number of Sequences",
+                "xlab": "Mean Sequence Quality (Phred Score)",
+                "ymin": 0,
+                "xmin": 0,
+            }
 
-        self.add_section(
-            name="Per Sequence Average Quality Scores",
-            anchor="sequali_per_sequence_quality_scores",
-            description="The number of reads with average quality scores.",
-            helptext=textwrap.dedent(
+            self.add_section(
+                name="Per Sequence Average Quality Scores" + title_suffix,
+                anchor="sequali_per_sequence_quality_scores" + id_suffix,
+                description="The number of reads with average quality scores.",
+                helptext=textwrap.dedent(
+                    """
+                    Shows the quality score profile on a read level. As Illumina
+                    FASTQ files only utilize four different phred scores, the plot
+                    may look a bit erratic at times. Due to the logarithmic nature
+                    of Phred scores, lower Phred scores have a more significant
+                    impact on the average quality as than higher phred scores.
                 """
-                Shows the quality score profile on a read level. As Illumina
-                FASTQ files only utilize four different phred scores, the plot
-                may look a bit erratic at times. Due to the logarithmic nature
-                of Phred scores, lower Phred scores have a more significant
-                impact on the average quality as than higher phred scores.
-            """
+                )
+                + PHRED_SCORE_EXPLANATION,
+                plot=linegraph.plot(plot_data, plot_config),
             )
-            + PHRED_SCORE_EXPLANATION,
-            plot=linegraph.plot(plot_data, plot_config),
-        )
 
     def per_position_gc_content_plot(self, data):
         plot_data = {}
