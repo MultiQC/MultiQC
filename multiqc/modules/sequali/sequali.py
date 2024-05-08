@@ -525,58 +525,72 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def top_overrepresented_sequences_table(self, data):
-        sequence_matches = {}
-        sequence_counts = defaultdict(lambda: 0)
-        sequence_fractions = defaultdict(lambda: 0.0)
-        for sample_data, sample_dict in data.items():
-            overrepresented_sequences = sample_dict["overrepresented_sequences"]["overrepresented_sequences"]
-            for entry in overrepresented_sequences:
-                sequence = entry["sequence"]
-                best_match = entry["best_match"]
-                fraction = entry["fraction"]
-                sequence_matches[sequence] = best_match
-                sequence_counts[sequence] += 1
-                sequence_fractions[sequence] += fraction
-        # When sequences occur in an equal number of samples, use the cumulative
-        # fraction dictionary to get the most present.
-        most_present = sorted(sequence_counts.items(), key=lambda x: (x[1], sequence_fractions[x[0]]), reverse=True)[
-            :20
-        ]
-        total = len(data)
-        table_data = {}
-        for sequence, count in most_present:
-            table_data[sequence] = {
-                "best_match": sequence_matches[sequence],
-                "libraries_affected": 100 * count / total,
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "overrepresented_sequences"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "overrepresented_sequences_read2"
+            sequence_matches = {}
+            sequence_counts = defaultdict(lambda: 0)
+            sequence_fractions = defaultdict(lambda: 0.0)
+            for sample_data, sample_dict in data.items():
+                overrepr_dict = sample_dict.get(key)
+                if overrepr_dict is None:
+                    continue
+                overrepresented_sequences = overrepr_dict["overrepresented_sequences"]
+                for entry in overrepresented_sequences:
+                    sequence = entry["sequence"]
+                    best_match = entry["best_match"]
+                    fraction = entry["fraction"]
+                    sequence_matches[sequence] = best_match
+                    sequence_counts[sequence] += 1
+                    sequence_fractions[sequence] += fraction
+            # When sequences occur in an equal number of samples, use the cumulative
+            # fraction dictionary to get the most present.
+            most_present = sorted(
+                sequence_counts.items(), key=lambda x: (x[1], sequence_fractions[x[0]]), reverse=True
+            )[:20]
+            total = len(data)
+            table_data = {}
+            for sequence, count in most_present:
+                table_data[sequence] = {
+                    "best_match": sequence_matches[sequence],
+                    "libraries_affected": 100 * count / total,
+                }
+
+            table_headers = {
+                "best_match": {
+                    "title": "Best Match",
+                    "description": "Best match as found by kmer analysis",
+                },
+                "libraries_affected": {
+                    "title": "Libraries Affected (%)",
+                    "description": "The percentage of libraries where this sequence is overrepresented.",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "format": "{:.2f}",
+                    # The more, the worse; use Red scaling.
+                    "scale": "Reds",
+                },
             }
 
-        table_headers = {
-            "best_match": {
-                "title": "Best Match",
-                "description": "Best match as found by kmer analysis",
-            },
-            "libraries_affected": {
-                "title": "Libraries Affected (%)",
-                "description": "The percentage of libraries where this sequence is overrepresented.",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "format": "{:.2f}",
-                # The more, the worse; use Red scaling.
-                "scale": "Reds",
-            },
-        }
-
-        table_config = {
-            "id": "sequali_top_overrepresented_sequences_table",
-            "title": "Sequali: top overrepresented sequences",
-        }
-        self.add_section(
-            name="Top overrepresented sequences",
-            anchor="sequali_top_overrepresented_sequences",
-            description="The top 20 overrepresented sequences in all libraries",
-            plot=table.plot(table_data, table_headers, table_config),
-        )
+            table_config = {
+                "id": "sequali_top_overrepresented_sequences_table" + id_suffix,
+                "title": "Sequali: top overrepresented sequences" + title_suffix,
+            }
+            self.add_section(
+                name="Top overrepresented sequences" + title_suffix,
+                anchor="sequali_top_overrepresented_sequences" + id_suffix,
+                description="The top 20 overrepresented sequences in all libraries",
+                plot=table.plot(table_data, table_headers, table_config),
+            )
 
     def adapter_content_plot(self, data):
         plot_data = {}
