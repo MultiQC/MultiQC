@@ -99,6 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         min_lengths = set()
         max_lengths = set()
+        self.paired_end = False
         for sample_file in self.find_log_files("sequali", filehandles=True):
             sample_name = sample_file["s_name"]
             if self.is_ignore_sample(sample_name):
@@ -118,6 +119,8 @@ class MultiqcModule(BaseMultiqcModule):
                 filename1 = meta["filename"]
                 filename2 = meta.get("filename_read2")
                 if filename2:
+                    if not self.paired_end:
+                        self.paired_end = True
                     sample_name = self.clean_s_name([filename1, filename2])
             except KeyError:
                 log.error("JSON file is not a proper Sequali report")
@@ -269,43 +272,57 @@ class MultiqcModule(BaseMultiqcModule):
     def per_position_quality_plot(self, data):
         plot_data = {}
         all_x_labels = set()
-        for sample_name, sample_dict in data.items():
-            per_pos_qual = sample_dict["per_position_mean_quality_and_spread"]
-            x_labels = per_pos_qual["x_labels"]
-            all_x_labels.update(set())
-            percentiles = dict(per_pos_qual["percentiles"])
-            mean_series = percentiles["mean"]
 
-            plot_data[sample_name] = {avg_x_label(x_label): m for x_label, m in zip(x_labels, mean_series)}
+        for read in (1, 2):
+            if read == 2 and not self.paired_end:
+                continue
+            if read == 1:
+                key = "per_position_mean_quality_and_spread"
+                id_suffix = "_read1" if self.paired_end else ""
+                title_suffix = ": Read 1" if self.paired_end else ""
+            else:
+                id_suffix = "_read2"
+                title_suffix = ": Read 2"
+                key = "per_position_mean_quality_and_spread_read2"
+            for sample_name, sample_dict in data.items():
+                per_pos_qual = sample_dict.get(key)
+                if not per_pos_qual:
+                    continue
+                x_labels = per_pos_qual["x_labels"]
+                all_x_labels.update(set())
+                percentiles = dict(per_pos_qual["percentiles"])
+                mean_series = percentiles["mean"]
 
-        plot_config = {
-            "id": "sequali_per_position_quality_plot",
-            "title": "Sequali: Per Position Mean Quality.",
-            "ylab": "Phred Score",
-            "xlab": "Position (bp)",
-            "xlog": self.use_xlog,
-            "ymin": 0,
-            "xmin": 0,
-        }
+                plot_data[sample_name] = {avg_x_label(x_label): m for x_label, m in zip(x_labels, mean_series)}
 
-        self.add_section(
-            name="Sequence Quality Per Position",
-            anchor="sequali_sequence_quality_per_position",
-            description="The mean quality value across each base position.",
-            helptext=textwrap.dedent(
+            plot_config = {
+                "id": "sequali_per_position_quality_plot" + id_suffix,
+                "title": "Sequali: Per Position Mean Quality" + title_suffix,
+                "ylab": "Phred Score",
+                "xlab": "Position (bp)",
+                "xlog": self.use_xlog,
+                "ymin": 0,
+                "xmin": 0,
+            }
+
+            self.add_section(
+                name="Sequence Quality Per Position" + title_suffix,
+                anchor="sequali_sequence_quality_per_position",
+                description="The mean quality value across each base position.",
+                helptext=textwrap.dedent(
+                    """
+                Only mean scores are plotted. The means are approximated as Sequali
+                stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and 
+                higher. It does not store all 94 discrete phred score counts for 
+                each position. For context, Illumina FASTQ files only 
+                utilize four different phred scores.
                 """
-            Only mean scores are plotted. The means are approximated as Sequali
-            stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and 
-            higher. It does not store all 94 discrete phred score counts for 
-            each position. For context, Illumina FASTQ files only 
-            utilize four different phred scores.
-            """
+                )
+                + PHRED_SCORE_EXPLANATION,
+                # Note: no need to publicly shame those other QC tools. Bug reports
+                # have been submitted.
+                plot=linegraph.plot(plot_data, plot_config),
             )
-            + PHRED_SCORE_EXPLANATION,
-            # Note: no need to publicly shame those other QC tools. Bug reports
-            # have been submitted.
-            plot=linegraph.plot(plot_data, plot_config),
-        )
 
     def per_sequence_quality_plot(self, data):
         plot_data = {}
