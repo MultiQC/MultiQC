@@ -114,20 +114,25 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             # Save memory by pruning the sample dict's unused keys.
             prune_sample_dict(sample_dict)
+            try:
+                meta = sample_dict["meta"]
+                filename1 = meta["filename"]
+                filename2 = meta.get("filename_read2")
+                if filename2:
+                    sample_name = self.clean_s_name([filename1, filename2])
+            except KeyError:
+                log.error("JSON file is not a proper Sequali report")
+                continue
             data[sample_name] = sample_dict
         if len(data) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(data)} reports")
 
         for sample_name, sample_dict in data.items():
-            try:
-                sequali_version = sample_dict["meta"]["sequali_version"]
-                versions.add(sequali_version)
-                min_lengths.add(sample_dict["summary"]["minimum_length"])
-                max_lengths.add(sample_dict["summary"]["maximum_length"])
-            except KeyError:
-                log.error("JSON file is not a proper Sequali report")
-                continue
+            sequali_version = sample_dict["meta"]["sequali_version"]
+            versions.add(sequali_version)
+            min_lengths.add(sample_dict["summary"]["minimum_length"])
+            max_lengths.add(sample_dict["summary"]["maximum_length"])
             self.add_software_version(sequali_version, sample_name)
 
         summary_data = {sample_name: sample_dict["summary"] for sample_name, sample_dict in data.items()}
