@@ -429,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_data = {}
             for sample_name, sample_dict in data.items():
                 gc_dict = sample_dict.get(key)
-                if sample_dict is None:
+                if gc_dict is None:
                     continue
                 # Take the smoothened results here. Less resolution, but also less
                 # confusing at first glance.
