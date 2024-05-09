@@ -3,11 +3,12 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional, Literal
 
 import math
 import plotly.graph_objects as go
 import spectra
+from pydantic import model_validator
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import (
@@ -23,10 +24,25 @@ logger = logging.getLogger(__name__)
 
 
 class BarPlotConfig(PConfig):
-    stacking: Union[str, None] = "relative"
+    stacking: Union[Literal["group", "overlay", "relative"], None] = "relative"
     hide_zero_cats: bool = False
     sort_samples: bool = True
     use_legend: bool = True
+    suffix: Optional[str] = None
+    lab_format: Optional[str] = None
+
+    # noinspection PyNestedDecorators
+    @model_validator(mode="before")
+    @classmethod
+    def validate_fields(cls, values):
+        print(values)
+        if "suffix" in values:
+            values["ysuffix"] = values["suffix"]
+            del values["suffix"]
+        if "lab_format" in values:
+            values["ylab_format"] = values["lab_format"]
+            del values["lab_format"]
+        return values
 
 
 def plot(
@@ -156,8 +172,8 @@ class BarPlot(Plot):
         ]
 
         # Set the barmode
-        barmode = "relative"  # stacking, but drawing negative values below zero
-        if pconfig.stacking in ["group", None]:
+        barmode = pconfig.stacking  # stacking, but drawing negative values below zero
+        if barmode is None:  # For legacy reasons, interpreting non-default None as "group"
             barmode = "group"  # side by side
 
         max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
