@@ -129,6 +129,19 @@ class BaseMultiqcModule:
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
 
+        # Get list of all base attributes, so we clean up any added by child modules
+        self._base_attributes = [k for k in dir(self)]
+
+    def clean_child_attributes(self):
+        """
+        Clean up non-base attribute to save memory. If the attribute is added in subclass,
+        but absent in the base class BaseMultiqcModule, delete it.
+        """
+        for key in list(self.__dict__.keys()):
+            if key not in self._base_attributes and not key.startswith("_"):
+                logger.debug(f"{self.name}: deleting attribute {key} from {self.name}")
+                delattr(self, key)
+
     @property
     def saved_raw_data(self):
         """

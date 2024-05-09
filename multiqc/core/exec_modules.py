@@ -69,6 +69,10 @@ def exec_modules(
             if not isinstance(these_modules, list):
                 these_modules = [these_modules]
 
+            # Clean up non-base attribute to save memory.
+            for m in these_modules:
+                m.clean_child_attributes()
+
             # Override duplicated outputs
             for prev_mod in report.modules:
                 if prev_mod.name in set(m.name for m in these_modules):
