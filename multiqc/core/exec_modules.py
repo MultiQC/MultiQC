@@ -48,7 +48,7 @@ def exec_modules(
 
     for mod_idx, mod_dict in enumerate(mod_dicts_in_order):
         mod_starttime = time.time()
-        if config.profile_runtime:
+        if config.profile_memory:
             tracemalloc.start()
 
         this_module: str = list(mod_dict.keys())[0]
@@ -144,7 +144,7 @@ def exec_modules(
             sys_exit_code = 1
 
         report.runtimes["mods"][mod_names[mod_idx]] = time.time() - mod_starttime
-        if config.profile_runtime:
+        if config.profile_memory:
             mem_current, mem_peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
             report.peak_memory_bytes_per_module[mod_names[mod_idx]] = mem_peak
@@ -152,6 +152,7 @@ def exec_modules(
             logger.warning(
                 f"{this_module}: memory change: {humanize.naturalsize(mem_current)}, peak during module execution: {humanize.naturalsize(mem_peak)}"
             )
+        if config.profile_runtime:
             logger.warning(
                 f"{this_module}: module run time: {humanize.precisedelta(report.runtimes['mods'][mod_names[mod_idx]])}"
             )

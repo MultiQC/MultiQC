@@ -1,11 +1,13 @@
-"""Super Special-Case MultiQC module to produce report section on MultiQC run time"""
+"""
+Super Special-Case MultiQC module to produce report section on MultiQC performance
+"""
 
 import logging
 
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from multiqc import report
+from multiqc import report, config
 from multiqc.plots.table_object import TableConfig
 
 # Initialise the logger
@@ -14,22 +16,29 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
+        info = """- this analysis is about the MultiQC run itself, profiling the time spent
+            on different parts of the MultiQC execution. It is designed to help
+            developers optimise how they run MultiQC, to get the most efficient
+            and fastest configuration possible. For more information, see the
+            <a href="https://multiqc.info/docs/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
         super(MultiqcModule, self).__init__(
-            name="Run time and memory profiling",
+            name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
             anchor="multiqc_runtime",
-            info="""
-                This analysis is about the MultiQC run itself, profiling the time spent
-                on different parts of the MultiQC execution. It is designed to help
-                developers optimise how they run MultiQC, to get the most efficient
-                and fastest configuration possible. For more information, see the
-                <a href="https://multiqc.info/docs/#optimising-run-time" target="_blank">MultiQC documentation</a>.
-            """,
+            info=info,
         )
+
+        self.alert = ""
+        if config.profile_memory:
+            self.alert = (
+                "<div class='alert alert-info'>Note that memory profiling can slow down run times of each module</div>"
+            )
+        else:
+            self.alert = "Note: to enable memory profiling, run MultiQC with <code>--profile-memory</code>. Note that it can skew the run time of each module."
 
         log.info("Running profiling module")
         self.module_table()
-        self.module_memory_section()
+        if config.profile_memory:
+            self.module_memory_section()
         self.module_times_section()
         self.search_pattern_times_section()
         self.file_search_counts_section()
@@ -66,19 +75,27 @@ class MultiqcModule(BaseMultiqcModule):
         for key in report.runtimes["mods"]:
             table_data[key] = {
                 "run_time": report.runtimes["mods"][key],
-                "peak_mem": report.peak_memory_bytes_per_module[key] / 1024 / 1024,
-                "mem_change": report.diff_memory_bytes_per_module[key] / 1024 / 1024,
             }
+
+        if config.profile_memory:
+            for key in report.peak_memory_bytes_per_module:
+                table_data[key].update(
+                    {
+                        "peak_mem": report.peak_memory_bytes_per_module[key] / 1024 / 1024,
+                        "mem_change": report.diff_memory_bytes_per_module[key] / 1024 / 1024,
+                    }
+                )
 
         self.add_section(
             name="Per module",
             anchor="per_module_benchmark",
+            description=self.alert,
             plot=table.plot(
                 table_data,
                 headers,
                 pconfig=TableConfig(
                     id="per_module_benchmark_table",
-                    title="Module run times and memory usage",
+                    title="Module run times" + " and memory usage" if config.profile_memory else "",
                     col1_header="Module",
                 ),
             ),
@@ -186,13 +203,16 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "s",
         }
 
+        description = f"""
+            Time spent running each module.
+            **Total modules run time: {report.runtimes["total_mods"]:.2f} seconds**.
+            <br><br>{self.alert}
+        """
+
         self.add_section(
             name="Per module run times",
             anchor="multiqc_runtime_modules",
-            description="""
-                Time spent running each module.
-                **Total modules run time: {:.2f} seconds**.
-            """.format(report.runtimes["total_mods"]),
+            description=description,
             plot=bargraph.plot(pdata, None, pconfig),
         )
 
@@ -220,7 +240,8 @@ class MultiqcModule(BaseMultiqcModule):
             "bar indicates how much more memory MultiQC occupies after finishing running the module, which roughly should"
             "correspond to the size of the parsed data, which is loaded into memory. "
             "The <span style='color: #888888'>grey</span> bar shows the peak memory usage during the module "
-            "execution - some memory could be cleaned after module is finished.",
+            "execution - some memory could be cleaned after module is finished."
+            f"<br><br>{self.alert}",
             plot=bargraph.plot(
                 pdata,
                 {
