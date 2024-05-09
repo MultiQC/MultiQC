@@ -108,7 +108,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--strict",
                 "--development",
                 "--require-logs",
-                "--profile-runtime",
+                "--profile",
                 "--no-megaqc-upload",
                 "--no-ansi",
                 "--version",
@@ -382,10 +382,12 @@ click.rich_click.OPTION_GROUPS = {
     help="Only show log warnings",
 )
 @click.option(
+    "--profile",
     "--profile-runtime",
+    "profile_runtime",
     is_flag=True,
     default=None,
-    help="Add analysis of how long MultiQC takes to run to the report",
+    help="Add analysis of how long MultiQC takes to run to the report along with memory usage",
 )
 @click.option(
     "--no-ansi",
