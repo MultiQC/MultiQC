@@ -109,6 +109,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--development",
                 "--require-logs",
                 "--profile-runtime",
+                "--profile-memory",
                 "--no-megaqc-upload",
                 "--no-ansi",
                 "--version",
@@ -383,9 +384,17 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--profile-runtime",
+    "profile_runtime",
     is_flag=True,
     default=None,
     help="Add analysis of how long MultiQC takes to run to the report",
+)
+@click.option(
+    "--profile-memory",
+    "profile_memory",
+    is_flag=True,
+    default=None,
+    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
 )
 @click.option(
     "--no-ansi",
