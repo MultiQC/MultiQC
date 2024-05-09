@@ -519,3 +519,7 @@ module_order:
   - xengsort
   - metaphlan
   - seqwho
+
+# default is "false" for standard command line use - to save memory -
+# but "true" for interactive use - so module.saved_raw_data is available
+preserve_module_raw_data: false

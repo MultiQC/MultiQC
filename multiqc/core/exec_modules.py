@@ -7,7 +7,6 @@ import tracemalloc
 from importlib.metadata import EntryPoint
 from typing import Dict, Union, Callable, List
 
-import humanize
 import rich
 from rich.syntax import Syntax
 
@@ -52,6 +51,7 @@ def exec_modules(
             tracemalloc.start()
 
         this_module: str = list(mod_dict.keys())[0]
+        logger.info(f"Running module: {this_module}")
         mod_cust_config: Dict = list(mod_dict.values())[0] or {}
         # noinspection PyBroadException
         try:
@@ -68,6 +68,14 @@ def exec_modules(
             # Single module initializer can create multiple module objects (see custom_content)
             if not isinstance(these_modules, list):
                 these_modules = [these_modules]
+
+            # Clean up non-base attribute to save memory.
+            mem_current, mem_peak = tracemalloc.get_traced_memory()
+            logger.warning(f"{this_module}: memory before clean up: {mem_current:,d}b")
+            for m in these_modules:
+                m.clean_child_attributes()
+            mem_current, mem_peak = tracemalloc.get_traced_memory()
+            logger.warning(f"{this_module}: memory after cleaning up attributes: {mem_current:,d}b")
 
             # Override duplicated outputs
             for prev_mod in report.modules:
@@ -150,12 +158,10 @@ def exec_modules(
             report.peak_memory_bytes_per_module[mod_names[mod_idx]] = mem_peak
             report.diff_memory_bytes_per_module[mod_names[mod_idx]] = mem_current
             logger.warning(
-                f"{this_module}: memory change: {humanize.naturalsize(mem_current)}, peak during module execution: {humanize.naturalsize(mem_peak)}"
+                f"{this_module}: memory change: {mem_current:,d}b, peak during module execution: {mem_peak:,d}b"
             )
         if config.profile_runtime:
-            logger.warning(
-                f"{this_module}: module run time: {humanize.precisedelta(report.runtimes['mods'][mod_names[mod_idx]])}"
-            )
+            logger.warning(f"{this_module}: module run time: {report.runtimes['mods'][mod_names[mod_idx]]:.2f}s")
 
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
