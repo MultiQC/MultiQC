@@ -47,6 +47,7 @@ def parse_logs(
     module_order: List[Union[str, Dict]] = (),
     extra_fn_clean_exts: List = (),
     extra_fn_clean_trim: List = (),
+    preserve_module_raw_data: bool = True,
 ):
     """
     Parse files without generating a report. Useful to work with MultiQC interactively. Data can be accessed

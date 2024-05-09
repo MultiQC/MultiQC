@@ -139,7 +139,7 @@ class BaseMultiqcModule:
         """
         for key in list(self.__dict__.keys()):
             if key not in self._base_attributes and not key.startswith("_"):
-                logger.debug(f"{self.name}: deleting attribute {key} from {self.name}")
+                logger.debug(f"{self.anchor}: deleting attribute self.{key}")
                 delattr(self, key)
 
     @property
@@ -668,11 +668,12 @@ class BaseMultiqcModule:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        # Save the file
-        report.saved_raw_data[fn] = data
-        # Keep also in the module instance, so it's possible to map back data to specific module
-        self.__saved_raw_data[fn] = data
+        if config.preserve_module_raw_data:
+            report.saved_raw_data[fn] = data
+            # Keep also in the module instance, so it's possible to map back data to specific module
+            self.__saved_raw_data[fn] = data
 
+        # Save the file
         report.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################

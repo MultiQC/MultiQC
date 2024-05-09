@@ -168,6 +168,7 @@ fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Dict[str, Dict]]
 module_order: List[Union[str, Dict]]
+preserve_module_raw_data: Optional[bool]
 
 
 def load_defaults():
