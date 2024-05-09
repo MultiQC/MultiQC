@@ -35,7 +35,6 @@ class BarPlotConfig(PConfig):
     @model_validator(mode="before")
     @classmethod
     def validate_fields(cls, values):
-        print(values)
         if "suffix" in values:
             values["ysuffix"] = values["suffix"]
             del values["suffix"]
