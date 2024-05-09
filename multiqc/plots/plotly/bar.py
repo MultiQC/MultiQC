@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class BarPlotConfig(PConfig):
-    stacking: Union[Literal["group", "overlay", "relative"], None] = "relative"
+    stacking: Union[Literal["group", "overlay", "relative", "normal"], None] = "relative"
     hide_zero_cats: bool = False
     sort_samples: bool = True
     use_legend: bool = True
@@ -174,6 +174,8 @@ class BarPlot(Plot):
         barmode = pconfig.stacking  # stacking, but drawing negative values below zero
         if barmode is None:  # For legacy reasons, interpreting non-default None as "group"
             barmode = "group"  # side by side
+        if barmode == "normal":  # Legacy
+            barmode = "relative"
 
         max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
 
