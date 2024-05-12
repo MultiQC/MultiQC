@@ -52,6 +52,7 @@ def parse_logs(
     module_order: List[Union[str, Dict]] = (),
     extra_fn_clean_exts: List = (),
     extra_fn_clean_trim: List = (),
+    preserve_module_raw_data: bool = True,
 ):
     """
     Find files that MultiQC recognizes in `analysis_dir` and parse them, without generating a report.

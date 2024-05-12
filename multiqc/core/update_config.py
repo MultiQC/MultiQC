@@ -49,6 +49,7 @@ class ClConfig(BaseModel):
     verbose: Optional[bool] = None
     no_ansi: Optional[bool] = None
     profile_runtime: Optional[bool] = None
+    profile_memory: Optional[bool] = None
     no_version_check: Optional[bool] = None
     ignore: List[str] = ()
     ignore_samples: List[str] = ()
@@ -58,6 +59,7 @@ class ClConfig(BaseModel):
     cl_config: List[str] = ()
     custom_css_files: List[str] = ()
     module_order: List[Union[str, Dict]] = ()
+    preserve_module_raw_data: Optional[bool] = None
     extra_fn_clean_exts: List = ()
     extra_fn_clean_trim: List = ()
     kwargs: Optional[Dict] = None
@@ -171,6 +173,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.require_logs = cfg.require_logs
     if cfg.profile_runtime is not None:
         config.profile_runtime = cfg.profile_runtime
+    if cfg.profile_memory is not None:
+        config.profile_runtime = config.profile_memory = cfg.profile_memory
     if cfg.no_version_check is not None:
         config.no_version_check = cfg.no_version_check
     if cfg.custom_css_files:
@@ -181,6 +185,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.fn_clean_exts = list(cfg.extra_fn_clean_exts) + config.fn_clean_exts
     if cfg.extra_fn_clean_trim:
         config.fn_clean_trim = list(cfg.extra_fn_clean_trim) + config.fn_clean_trim
+    if cfg.preserve_module_raw_data is not None:
+        config.preserve_module_raw_data = cfg.preserve_module_raw_data
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:

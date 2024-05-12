@@ -71,6 +71,7 @@ custom_css_files: List[str]
 simple_output: bool
 template: str
 profile_runtime: bool
+profile_memory: bool
 pandoc_template: str
 read_count_multiplier: float
 read_count_prefix: str
@@ -167,6 +168,7 @@ fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Dict[str, Dict]]
 module_order: List[Union[str, Dict]]
+preserve_module_raw_data: Optional[bool]
 
 
 def load_defaults():

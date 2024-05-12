@@ -50,6 +50,8 @@ num_flat_plots: int
 saved_raw_data: Dict[str, Dict[str, Any]]  # Indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Dict[str, Union[float, Dict]]
+peak_memory_bytes_per_module: Dict[str, int]
+diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, int]
 searchfiles: List
 files: Dict
@@ -79,6 +81,8 @@ def __initialise():
     global saved_raw_data
     global last_found_file
     global runtimes
+    global peak_memory_bytes_per_module
+    global diff_memory_bytes_per_module
     global data_sources
     global html_ids
     global plot_data
@@ -107,6 +111,8 @@ def __initialise():
         "sp": defaultdict(),
         "mods": defaultdict(),
     }
+    peak_memory_bytes_per_module = dict()
+    diff_memory_bytes_per_module = dict()
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids = []
     plot_data = dict()
@@ -576,7 +582,8 @@ def search_files(run_module_names):
     for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
         if "skipped_" in key and file_search_stats[key] > 0:
             summaries.append(f"{key}: {file_search_stats[key]}")
-    logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
+    if summaries:
+        logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
 def search_file(pattern, f: SearchFile, module_key):

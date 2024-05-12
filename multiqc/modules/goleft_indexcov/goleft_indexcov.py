@@ -26,35 +26,61 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse ROC data
-        self.roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
+        roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
-            self.parse_roc_plot_data(f)
-            self.add_data_source(f)
+            header = f["f"].readline()
+            sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
+            one_file_data = defaultdict(lambda: defaultdict(dict))
+            lines = f["f"].readlines()
+            for line in lines:
+                parts = line.rstrip().split()
+                if len(parts) > 2:
+                    chrom, cov = parts[:2]
+                    sample_vals = parts[2:]
+                    if self._short_chrom(chrom) is not None:
+                        for val, sample in zip(sample_vals, sample_names):
+                            if not self.is_ignore_sample(sample):
+                                one_file_data[chrom][sample][float(cov)] = float(val)
+            if not one_file_data:  # No chromosomes passed filter, attempt to parse all
+                for line in lines:
+                    parts = line.rstrip().split()
+                    if len(parts) > 2:
+                        chrom, cov = parts[:2]
+                        sample_vals = parts[2:]
+                        for val, sample in zip(sample_vals, sample_names):
+                            if not self.is_ignore_sample(sample):
+                                one_file_data[chrom][sample][cov] = val
+            if one_file_data:
+                self.add_data_source(f)
+                for chrom, chrom_data in one_file_data.items():
+                    for sn, sample_data in chrom_data.items():
+                        for k, v in sample_data.items():
+                            roc_plot_data[chrom][sn][k] = v
 
         # Filter to strip out ignored sample names
         num_roc_samples = 0
-        for chrom in self.roc_plot_data:
-            self.roc_plot_data[chrom] = self.ignore_samples(self.roc_plot_data[chrom])
-            num_roc_samples = max(len(self.roc_plot_data[chrom]), num_roc_samples)
+        for chrom in roc_plot_data:
+            roc_plot_data[chrom] = self.ignore_samples(roc_plot_data[chrom])
+            num_roc_samples = max(len(roc_plot_data[chrom]), num_roc_samples)
 
         # Write data to file
-        self.write_data_file(self.roc_plot_data, "goleft_roc")
+        self.write_data_file(roc_plot_data, "goleft_roc")
 
         # Parse BIN data
-        self.bin_plot_data = {}
-        self.bin_plot_data_empty_samples = []
+        bin_plot_data = {}
+        bin_plot_data_empty_samples = []
         for f in self.find_log_files("goleft_indexcov/ped", filehandles=True):
-            self.parse_bin_plot_data(f)
+            self.parse_bin_plot_data(f, bin_plot_data, bin_plot_data_empty_samples)
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
-        self.bin_plot_data = self.ignore_samples(self.bin_plot_data)
+        bin_plot_data = self.ignore_samples(bin_plot_data)
 
         # Write data to file
-        self.write_data_file(self.roc_plot_data, "goleft_bin")
+        self.write_data_file(roc_plot_data, "goleft_bin")
 
         # Stop execution if no samples
-        num_samples = max(len(self.bin_plot_data), num_roc_samples)
+        num_samples = max(len(bin_plot_data), num_roc_samples)
         if num_samples == 0:
             raise ModuleNoSamplesFound
 
@@ -65,8 +91,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Add sections to the report
-        self.roc_plot()
-        self.bin_plot()
+        if roc_plot_data:
+            self.roc_plot(roc_plot_data)
+        if bin_plot_data:
+            self.bin_plot(bin_plot_data, bin_plot_data_empty_samples)
 
     @staticmethod
     def _short_chrom(chrom: str) -> Optional[str]:
@@ -96,27 +124,15 @@ class MultiqcModule(BaseMultiqcModule):
             return chrom_clean
         return None
 
-    def parse_roc_plot_data(self, f):
-        header = f["f"].readline()
-        sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
-        for parts in (line.rstrip().split() for line in f["f"]):
-            if len(parts) > 2:
-                chrom, cov = parts[:2]
-                sample_vals = parts[2:]
-                if self._short_chrom(chrom) is not None:
-                    for val, sample in zip(sample_vals, sample_names):
-                        if not self.is_ignore_sample(sample):
-                            self.roc_plot_data[chrom][sample][float(cov)] = float(val)
-
-    def roc_plot(self):
+    def roc_plot(self, roc_plot_data):
         def to_padded_str(x):
-            x = self._short_chrom(x)
+            short_chrom = self._short_chrom(x)
             try:
-                return "%06d" % x
+                return "%06d" % short_chrom
             except TypeError:
                 return x
 
-        chroms = sorted(self.roc_plot_data.keys(), key=to_padded_str)
+        chroms = sorted(roc_plot_data.keys(), key=to_padded_str)
 
         max_chroms = getattr(config, "goleft_indexcov_config", {}).get("max_chroms", 50)
         if len(chroms) > max_chroms:
@@ -132,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 1.0,
             "xmin": 0,
             "xmax": 1.5,
-            "data_labels": [{"name": self._short_chrom(c)} for c in chroms],
+            "data_labels": [{"name": self._short_chrom(c) if self._short_chrom(c) else c} for c in chroms],
         }
         self.add_section(
             name="Scaled coverage ROC plot",
@@ -142,25 +158,24 @@ class MultiqcModule(BaseMultiqcModule):
                 Lower coverage samples have shorter curves where the proportion of regions covered
                 drops off more quickly. This indicates a higher fraction of low coverage regions.
             """,
-            plot=linegraph.plot([self.roc_plot_data[c] for c in chroms], pconfig),
+            plot=linegraph.plot([roc_plot_data[c] for c in chroms], pconfig),
         )
 
-    def parse_bin_plot_data(self, f):
+    def parse_bin_plot_data(self, f, bin_plot_data, bin_plot_data_empty_samples):
         header = f["f"].readline()[1:].strip().split("\t")
         for sample_parts in (line.split("\t") for line in f["f"]):
             cur = dict(zip(header, sample_parts))
             cur["sample_id"] = self.clean_s_name(cur["sample_id"], f)
             total = float(cur["bins.in"]) + float(cur["bins.out"])
             try:
-                self.bin_plot_data[cur["sample_id"]] = {
+                bin_plot_data[cur["sample_id"]] = {
                     "x": float(cur["bins.lo"]) / total,
                     "y": float(cur["bins.out"]) / total,
                 }
             except ZeroDivisionError:
-                self.bin_plot_data_empty_samples.append(cur["sample_id"])
-        return self.bin_plot_data_empty_samples
+                bin_plot_data_empty_samples.append(cur["sample_id"])
 
-    def bin_plot(self):
+    def bin_plot(self, bin_plot_data, bin_plot_data_empty_samples):
         pconfig = {
             "id": "goleft_indexcov-bin-plot",
             "title": "goleft indexcov: Problematic low and non-uniform coverage bins",
@@ -172,14 +187,14 @@ class MultiqcModule(BaseMultiqcModule):
             "x_clipmin": 0.0,
         }
         extra = ""
-        if len(self.bin_plot_data_empty_samples) > 0:
+        if len(bin_plot_data_empty_samples) > 0:
             # Bootstrap alert about missing samples
             extra = f"""<div class="alert alert-warning" style="margin:2rem 0;">
                 <strong>Warning:</strong>
-                {len(self.bin_plot_data_empty_samples)} sample{'s' if len(self.bin_plot_data_empty_samples) > 1 else ''} had zero bins and could not be plotted.
+                {len(bin_plot_data_empty_samples)} sample{'s' if len(bin_plot_data_empty_samples) > 1 else ''} had zero bins and could not be plotted.
                 <a href="#goleft_empty_samples" onclick="$('#goleft_empty_samples').slideToggle();">Click to show missing sample names.</a>
                 <div id="goleft_empty_samples" style="display:none;">
-                    <ul><li><code>{"</code></li>, <li><code>".join(self.bin_plot_data_empty_samples)}</code></li></ul>
+                    <ul><li><code>{"</code></li>, <li><code>".join(bin_plot_data_empty_samples)}</code></li></ul>
                 </div>
             </div>"""
         self.add_section(
@@ -195,6 +210,6 @@ class MultiqcModule(BaseMultiqcModule):
                 See the [goleft indexcov bin documentation](https://github.com/brentp/goleft/blob/master/docs/indexcov/help-bin.md)
                 for more details.
             """,
-            plot=scatter.plot(self.bin_plot_data, pconfig),
+            plot=scatter.plot(bin_plot_data, pconfig),
             content=extra,
         )
