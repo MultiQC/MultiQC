@@ -1,15 +1,112 @@
 # MultiQC Version History
 
-## MultiQC v1.22dev
+## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-13
 
 ### MultiQC updates
 
+- Remove the `highcharts` template and Highcharts and Matplotlib dependencies ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
 - Remove CSP.txt and the linting check, move the script that prints missing hashes under `scripts`. Admins of servers with Content Security Policy can use it to print missing hashes when they install a new MultiQC version with: `python scripts/print_missing_csp.py --report full_report.html` ([#2421](https://github.com/MultiQC/MultiQC/pull/2421))
-- Remove the `highcharts` template ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
 - Do not maintain change log between releases ([#2427](https://github.com/MultiQC/MultiQC/pull/2427))
 - Use native clipboard API ([#2419](https://github.com/MultiQC/MultiQC/pull/2419))
+- Profile runtime: visualize per-module memory and run time ([#2548](https://github.com/MultiQC/MultiQC/pull/2548), [#2547](https://github.com/MultiQC/MultiQC/pull/2547))
+- Refactoring for performance:
+  - Search file blocks rather than individual lines for faster results ([#2513](https://github.com/MultiQC/MultiQC/pull/2513))
+  - Refactor file content searching for a 40% speed increase ([#2505](https://github.com/MultiQC/MultiQC/pull/2505))
+  - Sort `filepatterns` for faster searching ([#2506](https://github.com/MultiQC/MultiQC/pull/2506))
+  - Use `array.array` for in-memory plot data, stream to render Jinja and dump JSON to reduce memory requirement ([#2515](https://github.com/MultiQC/MultiQC/pull/2515))
+  - Speed up all modules by caching `spectra.scale` and using sets instead of lists ([#2509](https://github.com/MultiQC/MultiQC/pull/2509))
+  - Stream json data to a file to save 30% of the memory ([#2510](https://github.com/MultiQC/MultiQC/pull/2510))
+  - Do `replace_nan` in place rather than creating a new object ([#2529](https://github.com/MultiQC/MultiQC/pull/2529))
+  - Use gzip rather than lzstring for compression and decompression of the plot data ([#2504](https://github.com/MultiQC/MultiQC/pull/2504))
+  - Use gzip level 6 for faster json compression ([#2553](https://github.com/MultiQC/MultiQC/pull/2553))
+  - Reduce Sequali and FastQC memory footprint ([#2516](https://github.com/MultiQC/MultiQC/pull/2516))
+- Classes for plots and configs:
+  - Use dataclasses for table and violin columns ([#2546](https://github.com/MultiQC/MultiQC/pull/2546))
+- Fixes:
+  - Fix error when using default sort ([#2544](https://github.com/MultiQC/MultiQC/pull/2544))
+- Refactoring for interactivity:
+  - Break up the main run function into submodules ([#2446](https://github.com/MultiQC/MultiQC/pull/2446))
+  - Interactive functions + Pydantic models for plots ([#2442](https://github.com/MultiQC/MultiQC/pull/2442))
+  - Validate plot configs with Pydantic ([#2534](https://github.com/MultiQC/MultiQC/pull/2534))
+  - Deprecate `multiqc.utils.config` and `multiqc.utils.report` in favour of `multiqc.config` and `multiqc.report` ([#2542](https://github.com/MultiQC/MultiQC/pull/2542))
+  - Add type hints to report module ([#2445](https://github.com/MultiQC/MultiQC/pull/2445))
+  - Move `Dataset` class outside of `Plot` function, remove `Plot` dependency ([#2447](https://github.com/MultiQC/MultiQC/pull/2447))
+  - Core module refactoring: declare `mod_cust_config`, add type hints ([#2434](https://github.com/MultiQC/MultiQC/pull/2434))
+- Add `ge` and `le` to `cond_formatting_rules` ([#2494](https://github.com/MultiQC/MultiQC/pull/2494))
+- CI: use uv pip ([#2352](https://github.com/MultiQC/MultiQC/pull/2352))
+- Fix: do not attempt to render flat plot when no data ([#2490](https://github.com/MultiQC/MultiQC/pull/2490))
+- Reduce report size: exclude plot data for sections in `remove_sections` ([#2460](https://github.com/MultiQC/MultiQC/pull/2460))
+- Fix export plots with `--export` and always export data ([#2489](https://github.com/MultiQC/MultiQC/pull/2489))
+- Lint check for use of `f["content_lines"]` ([#2485](https://github.com/MultiQC/MultiQC/pull/2485))
+- Fix: make sure `modify` lambda not present in JSON dump ([#2455](https://github.com/MultiQC/MultiQC/pull/2455))
+- Consistent config options: rename `decimalPlaces` to `tt_decimals` ([#2451](https://github.com/MultiQC/MultiQC/pull/2451))
+- Enable `--export` even when writing interactive plots ([#2444](https://github.com/MultiQC/MultiQC/pull/2444))
+- Allow to set style of line graph (`lines` or `lines+markers`) per plot ([#2413](https://github.com/MultiQC/MultiQC/pull/2413))
+- Fix: replace `NaN` with `null` in exported JSON ([#2432](https://github.com/MultiQC/MultiQC/pull/2432))
+- Add `CMD` to `Dockerfile` so a default run without any parameters displays the `--help` ([#2279](https://github.com/MultiQC/MultiQC/pull/2279))
+- Remove encoding and shebang headers from module files ([#2425](https://github.com/MultiQC/MultiQC/pull/2425))
+- Fix `y_minrange` option ([#2415](https://github.com/MultiQC/MultiQC/pull/2415))
+- Refactor line plot categories: keep boolean throughout the code, and data points as pairs for simplicity ([#2418](https://github.com/MultiQC/MultiQC/pull/2418))
 
 ### New modules
+
+- [**Hostile**](https://github.com/bede/hostile) ([#2501](https://github.com/MultiQC/MultiQC/pull/2501))
+  - New module: Hostile is a short and long host reads removal tool
+- [**Sequali**](https://github.com/rhpvorderman/sequali) ([#2441](https://github.com/MultiQC/MultiQC/pull/2441))
+  - New module: Sequali Universal sequencing QC
+
+### Module updates
+
+- **FastQC**
+  - Skip per tile sequence quality section in FastQC reports for better performance ([#2552](https://github.com/MultiQC/MultiQC/pull/2552))
+  - Fix a `ZeroDivisionError` error ([#2462](https://github.com/MultiQC/MultiQC/pull/2462))
+  - Make 7 times faster and use 10 times less memory ([#2516](https://github.com/MultiQC/MultiQC/pull/2516), )
+  - Add option to ignore FastQC quality thresholds ([#2486](https://github.com/MultiQC/MultiQC/pull/2486))
+- **Samtools**
+  - Add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
+  - Clean up module raw data after running each module ([#2551](https://github.com/MultiQC/MultiQC/pull/2551))
+  - Add violin multiple datasets & samtools flagstat percentage switch ([#2430](https://github.com/MultiQC/MultiQC/pull/2430))
+- **goleft indexcov**
+  - Work correctly even if no valid contigs in input ([#2540](https://github.com/MultiQC/MultiQC/pull/2540))
+- **fastp**
+  - When could not parse sample name from command (i.e. `stdin`), use filename and proceed ([#2536](https://github.com/MultiQC/MultiQC/pull/2536))
+- **Cutadapt**
+  - Speed up module by caching parsing versions ([#2528](https://github.com/MultiQC/MultiQC/pull/2528))
+- **Cell Ranger**
+  - Fix parsing antibody tab without `antibody_treemap_plot` ([#2525](https://github.com/MultiQC/MultiQC/pull/2525))
+- **BCL Convert**
+  - Show message when no undetermined reads instead of error ([#2526](https://github.com/MultiQC/MultiQC/pull/2526))
+  - Fix for absent index reads ([#2511](https://github.com/MultiQC/MultiQC/pull/2511))
+  - Add all file types to sources ([#2456](https://github.com/MultiQC/MultiQC/pull/2456))
+- **qc3C**
+  - Fix detecting sample name for relative path ([#2502](https://github.com/MultiQC/MultiQC/pull/2502))
+- **DRAGEN**
+  - Add ploidy estimation table ([#2496](https://github.com/MultiQC/MultiQC/pull/2496))
+- **mosdepth**
+  - Fix absolute coverage plot ([#2488](https://github.com/MultiQC/MultiQC/pull/2488))
+- **nonpareil**
+  - Change write_data_file label to be consistent with other modules ([#2472](https://github.com/MultiQC/MultiQC/pull/2472))
+- **Picard**
+  - WgsMetrics: coverage plot: show % based ≥x, not >x ([#2473](https://github.com/MultiQC/MultiQC/pull/2473))
+  - CrosscheckFingerprints: support multiple files, preserve sample order in heatmap ([#2454](https://github.com/MultiQC/MultiQC/pull/2454))
+- **xengsort**
+  - Fix parsing long files (do no use `content_lines`) ([#2484](https://github.com/MultiQC/MultiQC/pull/2484))
+- **Bamdst**
+  - Fix chromosome reports when contig data labels are missing ([#2479](https://github.com/MultiQC/MultiQC/pull/2479))
+  - Fix for the case when `chromosomes.report` is not provided ([#2477](https://github.com/MultiQC/MultiQC/pull/2477))
+  - Stress file name requirements for chromosomes report ([#2478](https://github.com/MultiQC/MultiQC/pull/2478))
+- **QualiMap**
+  - BamQC: when trimming long tails, keep at least 20x ([#2431](https://github.com/MultiQC/MultiQC/pull/2431))
+- **Adapter Removal**
+  - Standardize module names: use the came case ([#2433](https://github.com/MultiQC/MultiQC/pull/2433))
+- **Bcftools**
+  - Stats: add multialleic sites column ([#2414](https://github.com/MultiQC/MultiQC/pull/2414))
+- **Space Ranger**
+  - fix for missing `genomic_dna` section ([#2429](https://github.com/MultiQC/MultiQC/pull/2429))
+- **BBTools**
+  - Set missing values to `None` for `bbmap qahist` ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
+- **Busco**
+  - Fix barplot colors ([#2453](https://github.com/MultiQC/MultiQC/pull/2453))
 
 ### Module updates
 
