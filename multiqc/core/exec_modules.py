@@ -19,6 +19,12 @@ from multiqc.plots.plotly.plot import PConfigValidationError
 logger = logging.getLogger(__name__)
 
 
+def trace_memory(stage: str):
+    if config.profile_memory:
+        mem_current, mem_peak = tracemalloc.get_traced_memory()
+        logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
+
+
 def exec_modules(
     mod_dicts_in_order: List[Dict[str, Dict]],
     clean_up: bool = True,
@@ -70,12 +76,10 @@ def exec_modules(
                 these_modules = [these_modules]
 
             # Clean up non-base attribute to save memory.
-            mem_current, mem_peak = tracemalloc.get_traced_memory()
-            logger.warning(f"{this_module}: memory before clean up: {mem_current:,d}b")
+            trace_memory("before cleaning up attributes")
             for m in these_modules:
                 m.clean_child_attributes()
-            mem_current, mem_peak = tracemalloc.get_traced_memory()
-            logger.warning(f"{this_module}: memory after cleaning up attributes: {mem_current:,d}b")
+            trace_memory("after cleaning up attributes")
 
             # Override duplicated outputs
             for prev_mod in report.modules:
