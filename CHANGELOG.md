@@ -19,7 +19,7 @@
   - Do `replace_nan` in place rather than creating a new object ([#2529](https://github.com/MultiQC/MultiQC/pull/2529))
   - Use gzip rather than lzstring for compression and decompression of the plot data ([#2504](https://github.com/MultiQC/MultiQC/pull/2504))
   - Use gzip level 6 for faster json compression ([#2553](https://github.com/MultiQC/MultiQC/pull/2553))
-  - Reduce Sequali and FastQC memory footprint ([#2516](https://github.com/MultiQC/MultiQC/pull/2516))
+  - Clean up module raw data after running each module, significantly reduces the memory footprint ([#2551](https://github.com/MultiQC/MultiQC/pull/2551))
 - Classes for plots and configs:
   - Use dataclasses for table and violin columns ([#2546](https://github.com/MultiQC/MultiQC/pull/2546))
 - Fixes:
@@ -60,11 +60,11 @@
 - **FastQC**
   - Skip per tile sequence quality section in FastQC reports for better performance ([#2552](https://github.com/MultiQC/MultiQC/pull/2552))
   - Fix a `ZeroDivisionError` error ([#2462](https://github.com/MultiQC/MultiQC/pull/2462))
-  - Make 7 times faster and use 10 times less memory ([#2516](https://github.com/MultiQC/MultiQC/pull/2516), )
+  - Fix memory leak to make 7 times faster and use 10 times less memory ([#2552](https://github.com/MultiQC/MultiQC/pull/2552))
+  - Do not keep intermediate data in memory to reduce memory footprint further ([#2516](https://github.com/MultiQC/MultiQC/pull/2516) )
   - Add option to ignore FastQC quality thresholds ([#2486](https://github.com/MultiQC/MultiQC/pull/2486))
 - **Samtools**
   - Add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
-  - Clean up module raw data after running each module ([#2551](https://github.com/MultiQC/MultiQC/pull/2551))
   - Add violin multiple datasets & samtools flagstat percentage switch ([#2430](https://github.com/MultiQC/MultiQC/pull/2430))
 - **goleft indexcov**
   - Work correctly even if no valid contigs in input ([#2540](https://github.com/MultiQC/MultiQC/pull/2540))
