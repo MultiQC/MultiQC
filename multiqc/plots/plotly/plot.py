@@ -45,7 +45,7 @@ class PConfig(BaseModel):
     cpswitch: Optional[bool] = True
     cpswitch_c_active: bool = True  # percentage scale is _not_ active
     cpswitch_counts_label: str = "Counts"
-    cpswitch_percent_label: str = "Percentage"
+    cpswitch_percent_label: str = "Percentages"
     xLog: Optional[bool] = Field(None, deprecated="xlog")
     yLog: Optional[bool] = Field(None, deprecated="ylog")
     xlog: bool = False
