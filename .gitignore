@@ -5,6 +5,7 @@ multiqc_data/
 multiqc_plots/
 /examples/
 /result
+/benchmarks
 /tmp/
 
 # CI tooling
