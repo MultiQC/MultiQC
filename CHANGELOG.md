@@ -19,19 +19,11 @@ Let us know how you get on with this functionality - we'd love to see what you b
 
 #### Major performance improvements
 
-In MultiQC v1.22 we've had a number of high-impact pull requests from [@rhpvorderman](https://github.com/rhpvorderman).
-He did a deep-dive on the compression that MultiQC uses for embeddeing data within the HTML reports, switching the old lzstring compression for a more up to date gzip implementation.
-He also identified a number of optimisations in file search and key modules, including FastQC.
+In MultiQC v1.22 we've had a number of high-impact pull requests from [@rhpvorderman](https://github.com/rhpvorderman). He did a deep-dive on the compression that MultiQC uses for embedding data within the HTML reports, switching the old lzstring compression for a more up to date gzip implementation, which made it 4x times faster writing reports.
 
-Taken together, v1.22 should be approximately:
+He also identified a number of significant optimisations in file search, making it 54% faster on our benchmarks, and key modules: e.g. FastQC got 6x faster and uses 10x less memory.
 
-- 40% faster when searching for log files
-- 30% smaller memory footprint when saving report data
-- FastQC module is 5.7x faster and uses 9.8x less memory
-<!-- TODO: Add more high-level stats here / check what is added -->
-
-Overall, on a typical run MultiQC v1.22 is 3.5x faster and uses 10x less memory than v1.21.
-Well worth updating!
+Taken together, on a typical run MultiQC v1.22 is 53% faster and uses 6x smaller peak memory footprint overall than v1.21. Well worth updating!
 
 #### Attribute validation with Pydantic
 
@@ -63,33 +55,32 @@ As of v1.22 the HighCharts support (via `--template highcharts`) has been remove
   - Use gzip rather than lzstring for compression and decompression of the plot data ([#2504](https://github.com/MultiQC/MultiQC/pull/2504))
   - Use gzip level 6 for faster json compression ([#2553](https://github.com/MultiQC/MultiQC/pull/2553))
   - Clean up module raw data after running each module, significantly reduces the memory footprint ([#2551](https://github.com/MultiQC/MultiQC/pull/2551))
-- Classes for plots and configs:
+- Refactoring for interactivity and validation:
+  - Top-level functions for MultiQC use as a library ([#2442](https://github.com/MultiQC/MultiQC/pull/2442))
+  - Pydantic models for plots and datasets ([#2442](https://github.com/MultiQC/MultiQC/pull/2442))
+  - Validating plot configs with Pydantic ([#2534](https://github.com/MultiQC/MultiQC/pull/2534))
   - Use dataclasses for table and violin columns ([#2546](https://github.com/MultiQC/MultiQC/pull/2546))
+  - Break up the main run function into submodules ([#2446](https://github.com/MultiQC/MultiQC/pull/2446))
+  - Deprecate `multiqc.utils.config` and `multiqc.utils.report` in favour of `multiqc.config` and `multiqc.report` ([#2542](https://github.com/MultiQC/MultiQC/pull/2542))
+  - Static typing of the report and config modules ([#2445](https://github.com/MultiQC/MultiQC/pull/2445))
+  - Add type hints into core codebase ([#2434](https://github.com/MultiQC/MultiQC/pull/2434))
+  - Consistent config options: rename `decimalPlaces` to `tt_decimals` ([#2451](https://github.com/MultiQC/MultiQC/pull/2451))
+  - Remove encoding and shebang headers from module files ([#2425](https://github.com/MultiQC/MultiQC/pull/2425))
+  - Refactor line plot categories: keep boolean throughout the code, and data points as pairs for simplicity ([#2418](https://github.com/MultiQC/MultiQC/pull/2418))
 - Fixes:
   - Fix error when using default sort ([#2544](https://github.com/MultiQC/MultiQC/pull/2544))
-- Refactoring for interactivity:
-  - Break up the main run function into submodules ([#2446](https://github.com/MultiQC/MultiQC/pull/2446))
-  - Interactive functions + Pydantic models for plots ([#2442](https://github.com/MultiQC/MultiQC/pull/2442))
-  - Validate plot configs with Pydantic ([#2534](https://github.com/MultiQC/MultiQC/pull/2534))
-  - Deprecate `multiqc.utils.config` and `multiqc.utils.report` in favour of `multiqc.config` and `multiqc.report` ([#2542](https://github.com/MultiQC/MultiQC/pull/2542))
-  - Add type hints to report module ([#2445](https://github.com/MultiQC/MultiQC/pull/2445))
-  - Move `Dataset` class outside of `Plot` function, remove `Plot` dependency ([#2447](https://github.com/MultiQC/MultiQC/pull/2447))
-  - Core module refactoring: declare `mod_cust_config`, add type hints ([#2434](https://github.com/MultiQC/MultiQC/pull/2434))
-- Add `ge` and `le` to `cond_formatting_rules` ([#2494](https://github.com/MultiQC/MultiQC/pull/2494))
-- CI: use uv pip ([#2352](https://github.com/MultiQC/MultiQC/pull/2352))
-- Fix: do not attempt to render flat plot when no data ([#2490](https://github.com/MultiQC/MultiQC/pull/2490))
+  - Do not attempt to render flat plot when no data ([#2490](https://github.com/MultiQC/MultiQC/pull/2490))
+  - Fix export plots with `--export` and always export data ([#2489](https://github.com/MultiQC/MultiQC/pull/2489))
+  - Fix: make sure `modify` lambda not present in JSON dump ([#2455](https://github.com/MultiQC/MultiQC/pull/2455))
+  - Enable `--export` even when writing interactive plots ([#2444](https://github.com/MultiQC/MultiQC/pull/2444))
+  - Replace `NaN` with `null` in exported JSON ([#2432](https://github.com/MultiQC/MultiQC/pull/2432))
+  - Fix `y_minrange` option ([#2415](https://github.com/MultiQC/MultiQC/pull/2415))
 - Reduce report size: exclude plot data for sections in `remove_sections` ([#2460](https://github.com/MultiQC/MultiQC/pull/2460))
-- Fix export plots with `--export` and always export data ([#2489](https://github.com/MultiQC/MultiQC/pull/2489))
+- Add `ge` and `le` to `cond_formatting_rules` ([#2494](https://github.com/MultiQC/MultiQC/pull/2494))
+- CI: use `uv pip` ([#2352](https://github.com/MultiQC/MultiQC/pull/2352))
 - Lint check for use of `f["content_lines"]` ([#2485](https://github.com/MultiQC/MultiQC/pull/2485))
-- Fix: make sure `modify` lambda not present in JSON dump ([#2455](https://github.com/MultiQC/MultiQC/pull/2455))
-- Consistent config options: rename `decimalPlaces` to `tt_decimals` ([#2451](https://github.com/MultiQC/MultiQC/pull/2451))
-- Enable `--export` even when writing interactive plots ([#2444](https://github.com/MultiQC/MultiQC/pull/2444))
 - Allow to set style of line graph (`lines` or `lines+markers`) per plot ([#2413](https://github.com/MultiQC/MultiQC/pull/2413))
-- Fix: replace `NaN` with `null` in exported JSON ([#2432](https://github.com/MultiQC/MultiQC/pull/2432))
 - Add `CMD` to `Dockerfile` so a default run without any parameters displays the `--help` ([#2279](https://github.com/MultiQC/MultiQC/pull/2279))
-- Remove encoding and shebang headers from module files ([#2425](https://github.com/MultiQC/MultiQC/pull/2425))
-- Fix `y_minrange` option ([#2415](https://github.com/MultiQC/MultiQC/pull/2415))
-- Refactor line plot categories: keep boolean throughout the code, and data points as pairs for simplicity ([#2418](https://github.com/MultiQC/MultiQC/pull/2418))
 
 ### New modules
 
