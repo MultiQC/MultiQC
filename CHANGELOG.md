@@ -46,7 +46,7 @@ As of v1.22 the HighCharts support (via `--template highcharts`) has been remove
 - Profile runtime: visualize per-module memory and run time ([#2548](https://github.com/MultiQC/MultiQC/pull/2548), [#2547](https://github.com/MultiQC/MultiQC/pull/2547))
 - Refactoring for performance:
   - Search file blocks rather than individual lines for faster results ([#2513](https://github.com/MultiQC/MultiQC/pull/2513))
-  - Refactor file content searching for a 40% speed increase ([#2505](https://github.com/MultiQC/MultiQC/pull/2505))
+  - Refactor file content search for a 40% speed increase ([#2505](https://github.com/MultiQC/MultiQC/pull/2505))
   - Sort `filepatterns` for faster searching ([#2506](https://github.com/MultiQC/MultiQC/pull/2506))
   - Use `array.array` for in-memory plot data, stream to render Jinja and dump JSON to reduce memory requirement ([#2515](https://github.com/MultiQC/MultiQC/pull/2515))
   - Speed up all modules by caching `spectra.scale` and using sets instead of lists ([#2509](https://github.com/MultiQC/MultiQC/pull/2509))
