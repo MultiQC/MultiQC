@@ -2,6 +2,49 @@
 
 ## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-13
 
+### Highlights
+
+#### MultiQC as a library
+
+Version 1.22 brings some major behind-the-scenes refactoring to MultiQC.
+These changes enable MultiQC to be used as a library within scripts.
+We hope that this is a major improvement in the power and flexibilty of MultiQC.
+It provides another way to customise report content beyond "Custom Content" and MultiQC Plugins, as you can now dynamically inject data, filter and customise report content within a script. Ideal for use within analysis pipelines!
+MultiQC also becomes a first-class citizen for explorative analysis within notebooks and analysis apps.
+
+To learn more about the MultiQC Python functions that are now available to you, see the new documentation page: [Using MultiQC in interactive environments
+](https://multiqc.info/docs/usage/interactive/).
+
+Let us know how you get on with this functionality - we'd love to see what you build!
+
+#### Major performance improvements
+
+In MultiQC v1.22 we've had a number of high-impact pull requests from [@rhpvorderman](https://github.com/rhpvorderman).
+He did a deep-dive on the compression that MultiQC uses for embeddeing data within the HTML reports, switching the old lzstring compression for a more up to date gzip implementation.
+He also identified a number of optimisations in file search and key modules, including FastQC.
+
+Taken together, v1.22 should be approximately:
+
+- 40% faster when searching for log files
+- 30% smaller memory footprint when saving report data
+- FastQC module is 5.7x faster and uses 9.8x less memory
+<!-- TODO: Add more high-level stats here / check what is added -->
+
+Overall, on a typical run MultiQC v1.22 is 3.5x faster and uses 10x less memory than v1.21.
+Well worth updating!
+
+#### Attribute validation with Pydantic
+
+MultiQC v1.22 refactoring brings with it the first wave of Pydantic models in the back end.
+This unlocks run-time validation of plot config attributes - we found and fixed a lot of bugs with this already!
+More Pydantic usage will come in future versions as we continue to update the codebase.
+
+#### HighCharts removed
+
+In v1.20 we added support for using Plotly instead of HighCharts for graphs in MultiQC reports.
+We left the HighCharts code in place whilst we transitioned to the new library, in case people hit any major issues with Plotly.
+As of v1.22 the HighCharts support (via `--template highcharts`) has been removed completely.
+
 ### MultiQC updates
 
 - Remove the `highcharts` template and Highcharts and Matplotlib dependencies ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
@@ -245,7 +288,7 @@ MultiQC v1.20 comes with totally new plotting code for MultiQC reports. This is 
 
 This change comes with many improvements and new features, and paves the way for more in the future. To find out more, read the [associated blog post](https://seqera.io/blog/multiqc-plotly/).
 
-For now, you can revert to the previous plotting code by using the `highcharts` report template (`multiqc --template highcharts`). This will be removed in v1.21.
+For now, you can revert to the previous plotting code by using the `highcharts` report template (`multiqc --template highcharts`). This will be removed in v1.22.
 
 Note that there are several plotting configuration options which have been removed:
 
