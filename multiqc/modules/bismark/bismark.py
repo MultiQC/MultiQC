@@ -399,7 +399,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "bismark_strand_alignment",
             "title": "Bismark: Alignment to Individual Bisulfite Strands",
-            "ylab": "% Reads",
+            "ylab": "Reads",
             "cpswitch_c_active": False,
             "cpswitch_counts_label": "Number of Reads",
         }
@@ -424,7 +424,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "bismark_deduplication",
             "title": "Bismark: Deduplication",
-            "ylab": "% Reads",
+            "ylab": "Reads",
             "cpswitch_c_active": False,
             "cpswitch_counts_label": "Number of Reads",
         }

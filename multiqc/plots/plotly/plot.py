@@ -42,7 +42,7 @@ class PConfig(BaseModel):
     logswitch: Optional[bool] = False
     logswitch_active: bool = False  # log scale is active
     logswitch_label: str = "Log10"
-    cpswitch: Optional[bool] = False
+    cpswitch: Optional[bool] = True
     cpswitch_c_active: bool = True  # percentage scale is _not_ active
     cpswitch_counts_label: str = "Counts"
     cpswitch_percent_label: str = "Percentage"

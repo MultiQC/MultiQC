@@ -7,7 +7,8 @@ description: Interactive log parsing and plotting with MultiQC
 
 Even though the primary way to run MultiQC is as a command line, it can also be imported
 like a Python module in order to build the report interactively,
-e.g. in a [Jupyter notebook environment](https://deploy-preview-94--multiqc.netlify.app/example-reports/jupyter/).
+such as in a Jupyter notebook environment
+(See an [example notebook](https://deploy-preview-94--multiqc.netlify.app/example-reports/jupyter/)).
 
 MultiQC provides a set of commands to iteratively parse logs and add sections to a report.
 
