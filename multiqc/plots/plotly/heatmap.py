@@ -317,6 +317,10 @@ class HeatmapPlot(Plot):
             if pconfig.display_values is True or pconfig.display_values is None and num_rows * num_cols < 400:
                 ds.trace_params["texttemplate"] = "%{z:." + str(pconfig.tt_decimals) + "f}"
 
+            # We only want to use heatmap labels for tooltips, but not on the axis
+            ds.layout["xaxis"]["title"] = None
+            ds.layout["yaxis"]["title"] = None
+
         return HeatmapPlot(
             **model.__dict__,
             xcats_samples=xcats_samples,
