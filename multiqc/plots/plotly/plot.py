@@ -36,7 +36,7 @@ class PConfig(BaseModel):
     id: str
     table_title: Optional[str] = Field(None, deprecated="title")
     title: str
-    height: int = 500
+    height: Optional[int] = None
     width: Optional[int] = None
     square: bool = False
     logswitch: Optional[bool] = False
@@ -283,7 +283,7 @@ class Plot(BaseModel):
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
 
-        height = pconfig.height
+        height = pconfig.height or 500
         width = pconfig.width
         if pconfig.square:
             width = height
