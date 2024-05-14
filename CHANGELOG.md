@@ -169,12 +169,6 @@ As of v1.22 the HighCharts support (via `--template highcharts`) has been remove
 - **Busco**
   - Fix barplot colors ([#2453](https://github.com/MultiQC/MultiQC/pull/2453))
 
-### Module updates
-
-- **BBTools**: fix: skip missing values in bbmap qahist ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
-- **Samtools**: support new `markdup` command ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
-- **Space Ranger**: fix for missing `genomic_dna` section ([#2429](https://github.com/MultiQC/MultiQC/pull/2429))
-
 ## [MultiQC v1.21](https://github.com/MultiQC/MultiQC/releases/tag/v1.21) - 2024-02-28
 
 ### Highlights
