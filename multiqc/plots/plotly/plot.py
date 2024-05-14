@@ -458,11 +458,8 @@ class Plot(BaseModel):
         """
         # if path is pathlike, validate that the extension is .html, or .png for flat=True
         if isinstance(filename, (Path, str)):
-            filename = Path(filename)
-            if flat and filename.suffix.lower() != ".png":
-                logger.warning("For flat plots, the file extension must be .png")
-            if not flat and filename.suffix.lower() != ".html":
-                logger.warning("The file extension must be .html")
+            if not flat and Path(filename).suffix.lower() != "html":
+                logger.warning("The file extension must be .html, unless flat=True")
 
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
