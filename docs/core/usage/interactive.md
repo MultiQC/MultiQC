@@ -280,6 +280,47 @@ Save a plot to a file. For list of available modules, sections and dataset IDs, 
 def save_plot(filename, module: str, section: str, dataset: str = None, flat=False, **kwargs)
 ```
 
+Parameters:
+
+- **filename**: Path to save the plot
+- **module**: Module name or anchor
+- **section**: Section name or anchor
+- **dataset**: Dataset label, in case if plot has several tabs
+- **flat**: Save plot as static images without any interactivity
+- **kwargs**: Additional arguments passed to the plot
+
+**Examples**:
+
+Save the "Number of Contigs" plot for the QUAST module to a file.
+
+```python
+multiqc.save_plot("quast_contigs.html", module="QUAST", section='Number of Contigs')
+```
+
+Save the GC Content plot for the dataset labeled "Read 2: Before filtering" to a file, make it flat.
+
+```python
+multiqc.save_plot(
+    "fastp_gc_content.png",
+    module="fastp",
+    section="GC Content",
+    dataset="Read 2: Before filtering",
+    flat=True,
+)
+```
+
+Save Samtools alignment stats as a violin plot to a file.
+
+```python
+multiqc.save_plot(
+    "flagstat_alignment_stats.html",
+    module="Flagstat",
+    section="Alignment stats",
+    dataset="Read counts",
+    violin=True,
+)
+```
+
 ## Writing report
 
 Render HTML from parsed module data, and write a report along with auxiliary data files to disk.
