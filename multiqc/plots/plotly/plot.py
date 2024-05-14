@@ -446,19 +446,26 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def save(self, filename, dataset_id: int = 0, flat=False, **kwargs):
+    def save(self, filename, dataset_id: int = 0, flat=None, **kwargs):
         """
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
 
         @param filename: a string representing a local file path or a writeable object
-        (e.g. a pathlib.Path object or an open file descriptor)
+        (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
+        an interactive plot will be saved, otherwise a flat image.
         @param dataset_id: index of the dataset to plot
         @param flat: whether to save a static image instead of an interactive HTML.
         """
         if isinstance(filename, (Path, str)):
-            if not flat and Path(filename).suffix.lower() != "html":
-                logger.warning("The file extension must be .html, unless flat=True")
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
 
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:

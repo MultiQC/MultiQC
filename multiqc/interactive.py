@@ -274,24 +274,24 @@ def save_plot(
     module: str,
     section: str,
     dataset: Optional[str] = None,
-    flat=False,
     **kwargs,
 ):
     """
     Show a plot in the notebook.
 
-    @param filename: a string representing a local file path or a writeable object
+    @param filename: a string representing a local file path or a writeable object.
+        If the filename ends with ".html", an interactive plot will be saved, otherwise
+        a flat image.
     @param module: Module name or anchor
     @param section: Section name or anchor
     @param dataset: Dataset label, in case if plot has several tabs
-    @param flat: Show plot as static images without any interactivity
     """
 
     sec, ds_id = __find_plot(module, section, dataset)
 
     if sec.plot_id:
         plot = report.plot_by_id[sec.plot_id]
-        plot.save(filename, dataset_id=ds_id, flat=flat, **kwargs)
+        plot.save(filename, dataset_id=ds_id, **kwargs)
     elif sec.content:
         html = sec.content
         if isinstance(filename, (str, Path)):

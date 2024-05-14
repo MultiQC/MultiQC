@@ -305,7 +305,6 @@ multiqc.save_plot(
     module="fastp",
     section="GC Content",
     dataset="Read 2: Before filtering",
-    flat=True,
 )
 ```
 
