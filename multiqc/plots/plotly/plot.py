@@ -423,7 +423,13 @@ class Plot(BaseModel):
         """
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
-            from IPython.core.display import HTML
+            try:
+                from IPython.core.display import HTML
+            except ImportError:
+                raise ImportError(
+                    "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+                    "such as Jupyter notebook. To save plot to file, use Plot.save method"
+                )
 
             return HTML(
                 fig_to_static_html(

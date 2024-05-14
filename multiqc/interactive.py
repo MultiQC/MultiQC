@@ -219,7 +219,13 @@ def show_plot(
     @param flat: Show plot as static images without any interactivity
     """
 
-    from IPython.core.display import HTML
+    try:
+        from IPython.core.display import HTML
+    except ImportError:
+        raise ImportError(
+            "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+            "such as Jupyter notebook. To save plot to file, use multiqc.save_plot or Plot.save method"
+        )
 
     mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
     if not mod:
