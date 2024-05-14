@@ -397,6 +397,12 @@ click.rich_click.OPTION_GROUPS = {
     help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
 )
 @click.option(
+    "--profile-report-path",
+    "profile_report_path",
+    type=click.Path(),
+    help="Path to save the memory profile report",
+)
+@click.option(
     "--no-ansi",
     is_flag=True,
     default=None,

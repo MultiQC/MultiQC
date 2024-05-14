@@ -50,6 +50,7 @@ class ClConfig(BaseModel):
     no_ansi: Optional[bool] = None
     profile_runtime: Optional[bool] = None
     profile_memory: Optional[bool] = None
+    profile_report_path: Optional[str] = None
     no_version_check: Optional[bool] = None
     ignore: List[str] = ()
     ignore_samples: List[str] = ()
@@ -175,6 +176,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.profile_runtime = cfg.profile_runtime
     if cfg.profile_memory is not None:
         config.profile_runtime = config.profile_memory = cfg.profile_memory
+    if cfg.profile_report_path is not None:
+        config.profile_report_path = cfg.profile_report_path
     if cfg.no_version_check is not None:
         config.no_version_check = cfg.no_version_check
     if cfg.custom_css_files:
