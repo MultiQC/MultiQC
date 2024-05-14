@@ -446,39 +446,39 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def save(self, path, dataset_id: int = 0, flat=False, **kwargs):
+    def save(self, filename, dataset_id: int = 0, flat=False, **kwargs):
         """
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
 
-        @param path: a string representing a local file path or a writeable object
+        @param filename: a string representing a local file path or a writeable object
         (e.g. a pathlib.Path object or an open file descriptor)
         @param dataset_id: index of the dataset to plot
         @param flat: whether to save a PNG image instead of an interactive HTML.
         """
         # if path is pathlike, validate that the extension is .html, or .png for flat=True
-        if isinstance(path, (Path, str)):
-            path = Path(path)
-            if flat and path.suffix.lower() != ".png":
+        if isinstance(filename, (Path, str)):
+            filename = Path(filename)
+            if flat and filename.suffix.lower() != ".png":
                 logger.warning("For flat plots, the file extension must be .png")
-            if not flat and path.suffix.lower() != ".html":
+            if not flat and filename.suffix.lower() != ".html":
                 logger.warning("The file extension must be .html")
 
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
             fig.write_image(
-                path,
+                filename,
                 scale=2,
                 width=fig.layout.width,
                 height=fig.layout.height,
             )
         else:
             fig.write_html(
-                path,
+                filename,
                 include_plotlyjs="cdn",
                 full_html=False,
             )
-        logger.info(f"Plot saved to {path}")
+        logger.info(f"Plot saved to {filename}")
 
     def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """

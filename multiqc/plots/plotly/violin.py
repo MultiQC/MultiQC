@@ -482,7 +482,7 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons(flat=flat)
 
-    def show(self, table=None, violin=None, dataset_id=None, **kwargs):
+    def show(self, table=None, violin=None, **kwargs):
         """
         Show the table or violin plot based on the input parameters.
         """
@@ -502,7 +502,52 @@ class ViolinPlot(Plot):
             return df  # Jupyter knows how to display dataframes
 
         else:
-            return super().show(dataset_id=dataset_id or 0, **kwargs)
+            return super().show(**kwargs)
+
+    def save(self, filename: str, table=None, violin=None, flat=False, **kwargs):
+        """
+        Save the plot to a file
+        """
+        if self.show_table_by_default and violin is not True or table is True:
+            # Make Plotly go.Table object and save it
+            data = {}
+            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+                rid = header.rid
+                for s_name in self.main_table_dt.raw_data[idx].keys():
+                    if metric in self.main_table_dt.raw_data[idx][s_name]:
+                        val = self.main_table_dt.raw_data[idx][s_name][metric]
+                        if val is not None:
+                            data.setdefault(s_name, {})[rid] = val
+
+            values = [list(data.keys())]
+            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+                rid = header.rid
+                values.append([data[s].get(rid, "") for s in data.keys()])
+
+            fig = go.Figure(
+                data=[
+                    go.Table(
+                        header=dict(values=["Sample"] + list(data[list(data.keys())[0]].keys())),
+                        cells=dict(values=values),
+                    )
+                ],
+                layout=self.layout,
+            )
+            if flat:
+                fig.write_image(
+                    filename,
+                    scale=2,
+                    width=fig.layout.width,
+                    height=fig.layout.height,
+                )
+            else:
+                fig.write_html(
+                    filename,
+                    include_plotlyjs="cdn",
+                    full_html=False,
+                )
+        else:
+            super().save(filename, **kwargs)
 
     def add_to_report(self, clean_html_id=True) -> str:
         warning = ""
