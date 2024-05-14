@@ -233,6 +233,7 @@ module.add_section(
     anchor="my_metrics_section",
     description=...,
 )
+multiqc.report.modules.append(module)
 ```
 
 ## Show plots
