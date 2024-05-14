@@ -454,7 +454,7 @@ class Plot(BaseModel):
         @param filename: a string representing a local file path or a writeable object
         (e.g. a pathlib.Path object or an open file descriptor)
         @param dataset_id: index of the dataset to plot
-        @param flat: whether to save a PNG image instead of an interactive HTML.
+        @param flat: whether to save a static image instead of an interactive HTML.
         """
         # if path is pathlike, validate that the extension is .html, or .png for flat=True
         if isinstance(filename, (Path, str)):
