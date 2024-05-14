@@ -1,29 +1,56 @@
 # MultiQC Version History
 
-## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-13
+## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-14
 
 ### Highlights
 
 #### MultiQC as a library
 
-Version 1.22 brings some major behind-the-scenes refactoring to MultiQC.
-These changes enable MultiQC to be used as a library within scripts.
-We hope that this is a major improvement in the power and flexibilty of MultiQC.
-It provides another way to customise report content beyond "Custom Content" and MultiQC Plugins, as you can now dynamically inject data, filter and customise report content within a script. Ideal for use within analysis pipelines!
-MultiQC also becomes a first-class citizen for explorative analysis within notebooks and analysis apps.
+Version 1.22 brings some major behind-the-scenes refactoring to MultiQC. These changes enable MultiQC to be used as a library within scripts.
 
-To learn more about the MultiQC Python functions that are now available to you, see the new documentation page: [Using MultiQC in interactive environments
-](https://multiqc.info/docs/usage/interactive/).
+We hope that this is a major improvement in the power and flexibilty of MultiQC. It provides another way to customise report content beyond "Custom Content" and MultiQC Plugins, as you can now dynamically inject data, filter and customise report content within a script. Ideal for use within analysis pipelines! A very basic example:
+
+```python
+import multiqc
+from multiqc.plots import table
+
+# Parse logs from Fastp
+multiqc.parse_logs('./data/fastp')
+
+# Add a custom table
+module = multiqc.BaseMultiqcModule()
+module.add_section(
+    plot=table.plot(
+        data={
+            "sample 1": {"aligned": 23542, "not_aligned": 343},
+            "sample 2": {"aligned": 1275, "not_aligned": 7328},
+        },
+        pconfig={
+            "id": "my_metrics_table",
+            "title": "My metrics"
+        }
+    )
+)
+multiqc.report.modules.append(module)
+
+# Generate the report
+multiqc.write_report()
+```
+
+This will be hugely powerful for custom analysis and reporting. It also means that MultiQC becomes a first-class citizen for explorative analysis within notebooks and analysis apps.
+
+To learn more about the MultiQC Python functions that are now available to you, see the new documentation page: [Using MultiQC in interactive environments](https://multiqc.info/docs/usage/interactive/).
 
 Let us know how you get on with this functionality - we'd love to see what you build!
 
 #### Major performance improvements
 
-In MultiQC v1.22 we've had a number of high-impact pull requests from [@rhpvorderman](https://github.com/rhpvorderman). He did a deep-dive on the compression that MultiQC uses for embedding data within the HTML reports, switching the old lzstring compression for a more up to date gzip implementation, which made it 4x times faster writing reports.
+In MultiQC v1.22 we've had a number of high-impact pull requests from [@rhpvorderman](https://github.com/rhpvorderman). He did a deep-dive on the compression that MultiQC uses for embedding data within the HTML reports, switching the old `lzstring` compression for a more up to date `gzip` implementation, which made it **4x times faster** writing reports.
 
-He also identified a number of significant optimisations in file search, making it 54% faster on our benchmarks, and key modules: e.g. FastQC got 6x faster and uses 10x less memory.
+He also identified a number of significant optimisations in file search, making it **54% faster** on our benchmarks, and key modules: e.g. **FastQC got 6x faster and uses 10x less memory**.
 
-Taken together, on a typical run MultiQC v1.22 is 53% faster and uses 6x smaller peak memory footprint overall than v1.21. Well worth updating!
+> Taken together, comparing a typical v1.22 run against v1.21, MultiQC is **53% faster** and has a **6x smaller peak-memory footprint**.
+> Well worth updating!
 
 #### Attribute validation with Pydantic
 
