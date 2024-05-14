@@ -118,31 +118,38 @@ As of v1.22 the HighCharts support (via `--template highcharts`) has been remove
 
 ### Module updates
 
+- **Adapter Removal**
+  - Standardize module names: use the came case ([#2433](https://github.com/MultiQC/MultiQC/pull/2433))
+- **Bamdst**
+  - Fix chromosome reports when contig data labels are missing ([#2479](https://github.com/MultiQC/MultiQC/pull/2479))
+  - Fix for the case when `chromosomes.report` is not provided ([#2477](https://github.com/MultiQC/MultiQC/pull/2477))
+  - Stress file name requirements for chromosomes report ([#2478](https://github.com/MultiQC/MultiQC/pull/2478))
+- **BBTools**
+  - Set missing values to `None` for `bbmap qahist` ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
+- **Bcftools**
+  - Stats: add multialleic sites column ([#2414](https://github.com/MultiQC/MultiQC/pull/2414))
+- **BCL Convert**
+  - Show message when no undetermined reads instead of error ([#2526](https://github.com/MultiQC/MultiQC/pull/2526))
+  - Fix for absent index reads ([#2511](https://github.com/MultiQC/MultiQC/pull/2511))
+  - Add all file types to sources ([#2456](https://github.com/MultiQC/MultiQC/pull/2456))
+- **Busco**
+  - Fix barplot colors ([#2453](https://github.com/MultiQC/MultiQC/pull/2453))
+- **Cell Ranger**
+  - Fix parsing antibody tab without `antibody_treemap_plot` ([#2525](https://github.com/MultiQC/MultiQC/pull/2525))
+- **Cutadapt**
+  - Speed up module by caching parsing versions ([#2528](https://github.com/MultiQC/MultiQC/pull/2528))
+- **DRAGEN**
+  - Add ploidy estimation table ([#2496](https://github.com/MultiQC/MultiQC/pull/2496))
+- **fastp**
+  - When could not parse sample name from command (i.e. `stdin`), use filename and proceed ([#2536](https://github.com/MultiQC/MultiQC/pull/2536))
 - **FastQC**
   - Skip per tile sequence quality section in FastQC reports for better performance ([#2552](https://github.com/MultiQC/MultiQC/pull/2552))
   - Fix a `ZeroDivisionError` error ([#2462](https://github.com/MultiQC/MultiQC/pull/2462))
   - Fix memory leak to make 7 times faster and use 10 times less memory ([#2552](https://github.com/MultiQC/MultiQC/pull/2552))
   - Do not keep intermediate data in memory to reduce memory footprint further ([#2516](https://github.com/MultiQC/MultiQC/pull/2516) )
   - Add option to ignore FastQC quality thresholds ([#2486](https://github.com/MultiQC/MultiQC/pull/2486))
-- **Samtools**
-  - Add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
-  - Add violin multiple datasets & samtools flagstat percentage switch ([#2430](https://github.com/MultiQC/MultiQC/pull/2430))
 - **goleft indexcov**
   - Work correctly even if no valid contigs in input ([#2540](https://github.com/MultiQC/MultiQC/pull/2540))
-- **fastp**
-  - When could not parse sample name from command (i.e. `stdin`), use filename and proceed ([#2536](https://github.com/MultiQC/MultiQC/pull/2536))
-- **Cutadapt**
-  - Speed up module by caching parsing versions ([#2528](https://github.com/MultiQC/MultiQC/pull/2528))
-- **Cell Ranger**
-  - Fix parsing antibody tab without `antibody_treemap_plot` ([#2525](https://github.com/MultiQC/MultiQC/pull/2525))
-- **BCL Convert**
-  - Show message when no undetermined reads instead of error ([#2526](https://github.com/MultiQC/MultiQC/pull/2526))
-  - Fix for absent index reads ([#2511](https://github.com/MultiQC/MultiQC/pull/2511))
-  - Add all file types to sources ([#2456](https://github.com/MultiQC/MultiQC/pull/2456))
-- **qc3C**
-  - Fix detecting sample name for relative path ([#2502](https://github.com/MultiQC/MultiQC/pull/2502))
-- **DRAGEN**
-  - Add ploidy estimation table ([#2496](https://github.com/MultiQC/MultiQC/pull/2496))
 - **mosdepth**
   - Fix absolute coverage plot ([#2488](https://github.com/MultiQC/MultiQC/pull/2488))
 - **nonpareil**
@@ -150,24 +157,17 @@ As of v1.22 the HighCharts support (via `--template highcharts`) has been remove
 - **Picard**
   - WgsMetrics: coverage plot: show % based ≥x, not >x ([#2473](https://github.com/MultiQC/MultiQC/pull/2473))
   - CrosscheckFingerprints: support multiple files, preserve sample order in heatmap ([#2454](https://github.com/MultiQC/MultiQC/pull/2454))
-- **xengsort**
-  - Fix parsing long files (do no use `content_lines`) ([#2484](https://github.com/MultiQC/MultiQC/pull/2484))
-- **Bamdst**
-  - Fix chromosome reports when contig data labels are missing ([#2479](https://github.com/MultiQC/MultiQC/pull/2479))
-  - Fix for the case when `chromosomes.report` is not provided ([#2477](https://github.com/MultiQC/MultiQC/pull/2477))
-  - Stress file name requirements for chromosomes report ([#2478](https://github.com/MultiQC/MultiQC/pull/2478))
+- **qc3C**
+  - Fix detecting sample name for relative path ([#2502](https://github.com/MultiQC/MultiQC/pull/2502))
 - **QualiMap**
   - BamQC: when trimming long tails, keep at least 20x ([#2431](https://github.com/MultiQC/MultiQC/pull/2431))
-- **Adapter Removal**
-  - Standardize module names: use the came case ([#2433](https://github.com/MultiQC/MultiQC/pull/2433))
-- **Bcftools**
-  - Stats: add multialleic sites column ([#2414](https://github.com/MultiQC/MultiQC/pull/2414))
+- **Samtools**
+  - Add support for `markdup` ([#2254](https://github.com/MultiQC/MultiQC/pull/2254))
+  - Add violin multiple datasets & samtools flagstat percentage switch ([#2430](https://github.com/MultiQC/MultiQC/pull/2430))
 - **Space Ranger**
   - fix for missing `genomic_dna` section ([#2429](https://github.com/MultiQC/MultiQC/pull/2429))
-- **BBTools**
-  - Set missing values to `None` for `bbmap qahist` ([#2411](https://github.com/MultiQC/MultiQC/pull/2411))
-- **Busco**
-  - Fix barplot colors ([#2453](https://github.com/MultiQC/MultiQC/pull/2453))
+- **xengsort**
+  - Fix parsing long files (do no use `content_lines`) ([#2484](https://github.com/MultiQC/MultiQC/pull/2484))
 
 ## [MultiQC v1.21](https://github.com/MultiQC/MultiQC/releases/tag/v1.21) - 2024-02-28
 
