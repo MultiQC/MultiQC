@@ -272,6 +272,14 @@ Shows Samtools alignment stats as a violin plot.
 multiqc.show_plot("Flagstat", "Alignment stats", "Read counts", violin=True)
 ```
 
+## Save plot to file
+
+Save a plot to a file. For list of available modules, sections and dataset IDs, use `multiqc.list_plots`.
+
+```python
+def save_plot(filename, module: str, section: str, dataset: str = None, flat=False, **kwargs)
+```
+
 ## Writing report
 
 Render HTML from parsed module data, and write a report along with auxiliary data files to disk.
