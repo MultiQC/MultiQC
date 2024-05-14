@@ -417,7 +417,7 @@ class Plot(BaseModel):
             flat=flat,
         )
 
-    def show(self, dataset_id: int = 0, flat=False, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 
@@ -446,7 +446,7 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def save(self, filename, dataset_id: int = 0, flat=None, **kwargs):
+    def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
         """
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
@@ -483,11 +483,20 @@ class Plot(BaseModel):
             )
         logger.info(f"Plot saved to {filename}")
 
-    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
-        dataset = self.datasets[dataset_id]
+        if isinstance(dataset_id, str):
+            for i, d in enumerate(self.datasets):
+                if d.label == dataset_id:
+                    dataset = d
+                    break
+            else:
+                dataset = self.datasets[0]
+        else:
+            dataset = self.datasets[dataset_id]
+
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:

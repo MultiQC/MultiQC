@@ -11,7 +11,7 @@ from typing import Dict, Union, List, Optional
 
 
 from multiqc import report, config
-from multiqc.base_module import BaseMultiqcModule, Section
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
@@ -202,11 +202,16 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     return result
 
 
-def __find_plot(
+def get_plot(
     module: str,
     section: str,
-    dataset: Optional[str] = None,
-) -> tuple[Section, Optional[int]]:
+) -> Plot:
+    """
+    Get plot Object by module name and section ID.
+
+    @param module: Module name or anchor
+    @param section: Section name or anchor
+    """
     mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
@@ -215,90 +220,10 @@ def __find_plot(
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
-    if sec.plot_id:
-        plot = report.plot_by_id[sec.plot_id]
-        ds_id = 0
-        if dataset:
-            for i, d in enumerate(plot.datasets):
-                if d.label == dataset:
-                    ds_id = i
-                    break
-        return sec, ds_id
-    elif sec.content:
-        return sec, None
-    else:
-        if dataset:
-            raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
-        else:
-            raise ValueError(f'Plot section "{section}" in module "{module}" not found')
+    if sec.plot_id is None:
+        raise ValueError(f"Section {section} doesn't contain a Plot object")
 
-
-def show_plot(
-    module: str,
-    section: str,
-    dataset: Optional[str] = None,
-    flat=False,
-    **kwargs,
-):
-    """
-    Show a plot in the notebook.
-
-    @param module: Module name or anchor
-    @param section: Section name or anchor
-    @param dataset: Dataset label, in case if plot has several tabs
-    @param flat: Show plot as static images without any interactivity
-    @returns: go.Figure or IPython.core.display.HTML widget
-    """
-
-    try:
-        from IPython.core.display import HTML
-    except ImportError:
-        raise ImportError(
-            "IPython is required to show plot. The function is expected to be run in an interactive environment, "
-            "such as Jupyter notebook. To save plot to file, use multiqc.save_plot or Plot.save method"
-        )
-
-    sec, ds_id = __find_plot(module, section, dataset)
-
-    if sec.plot_id:
-        plot = report.plot_by_id[sec.plot_id]
-        return plot.show(dataset_id=ds_id, flat=flat, **kwargs)
-    elif sec.content:
-        return HTML(sec.content)
-    else:
-        return ""
-
-
-def save_plot(
-    filename,
-    module: str,
-    section: str,
-    dataset: Optional[str] = None,
-    **kwargs,
-):
-    """
-    Show a plot in the notebook.
-
-    @param filename: a string representing a local file path or a writeable object.
-        If the filename ends with ".html", an interactive plot will be saved, otherwise
-        a flat image.
-    @param module: Module name or anchor
-    @param section: Section name or anchor
-    @param dataset: Dataset label, in case if plot has several tabs
-    """
-
-    sec, ds_id = __find_plot(module, section, dataset)
-
-    if sec.plot_id:
-        plot = report.plot_by_id[sec.plot_id]
-        plot.save(filename, dataset_id=ds_id, **kwargs)
-    elif sec.content:
-        html = sec.content
-        if isinstance(filename, (str, Path)):
-            with Path(filename).open("w") as f:
-                f.write(html)
-        else:
-            filename.write(html)
+    return report.plot_by_id[sec.plot_id]
 
 
 def _load_plot(dump: Dict) -> Plot:

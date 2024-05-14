@@ -29,8 +29,6 @@ from multiqc.interactive import (  # noqa: E402
     list_modules,
     list_samples,
     list_plots,
-    show_plot,
-    save_plot,
     get_module_data,
     get_general_stats_data,
     reset,
@@ -38,6 +36,7 @@ from multiqc.interactive import (  # noqa: E402
     add_custom_content_section,
     load_config,
 )
+from multiqc.plots.plotly.plot import Plot, PConfig  # noqa: E402
 
 __version__ = config.version
 
@@ -52,8 +51,8 @@ __all__ = [
     "list_modules",
     "list_samples",
     "list_plots",
-    "show_plot",
-    "save_plot",
+    "Plot",
+    "PConfig",
     "get_module_data",
     "get_general_stats_data",
     "reset",
