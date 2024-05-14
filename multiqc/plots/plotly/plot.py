@@ -456,7 +456,6 @@ class Plot(BaseModel):
         @param dataset_id: index of the dataset to plot
         @param flat: whether to save a static image instead of an interactive HTML.
         """
-        # if path is pathlike, validate that the extension is .html, or .png for flat=True
         if isinstance(filename, (Path, str)):
             if not flat and Path(filename).suffix.lower() != "html":
                 logger.warning("The file extension must be .html, unless flat=True")
