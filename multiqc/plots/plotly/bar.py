@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 class BarPlotConfig(PConfig):
     stacking: Union[Literal["group", "overlay", "relative", "normal"], None] = "relative"
-    hide_zero_cats: bool = False
+    hide_zero_cats: bool = True
     sort_samples: bool = True
     use_legend: bool = True
     suffix: Optional[str] = None

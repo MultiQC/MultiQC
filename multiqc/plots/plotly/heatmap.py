@@ -209,12 +209,12 @@ class HeatmapPlot(Plot):
             if n >= 10:
                 return 45
             if n >= 5:
-                return 60
+                return 52
             if n >= 3:
-                return 80
+                return 60
             if n >= 2:
-                return 100
-            return 120
+                return 80
+            return 100
 
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
