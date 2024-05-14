@@ -417,13 +417,22 @@ class Plot(BaseModel):
             flat=flat,
         )
 
-    def show(self, dataset_id: int, flat=False, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
         """
-        Public method: show the plot in a Jupyter notebook.
+        Show the plot in an interactive environment such as Jupyter notebook.
+
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a flat image or an interactive plot
         """
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
-            from IPython.core.display import HTML
+            try:
+                from IPython.core.display import HTML
+            except ImportError:
+                raise ImportError(
+                    "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+                    "such as Jupyter notebook. To save plot to file, use Plot.save method"
+                )
 
             return HTML(
                 fig_to_static_html(
@@ -437,11 +446,57 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
+        """
+        Save the plot to a file. Will write an HTML with an interactive plot -
+        unless flat=True is specified, in which case will write a PNG file.
+
+        @param filename: a string representing a local file path or a writeable object
+        (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
+        an interactive plot will be saved, otherwise a flat image.
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a static image instead of an interactive HTML.
+        """
+        if isinstance(filename, (Path, str)):
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
+
+        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
+        if flat:
+            fig.write_image(
+                filename,
+                scale=2,
+                width=fig.layout.width,
+                height=fig.layout.height,
+            )
+        else:
+            fig.write_html(
+                filename,
+                include_plotlyjs="cdn",
+                full_html=False,
+            )
+        logger.info(f"Plot saved to {filename}")
+
+    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
-        dataset = self.datasets[dataset_id]
+        if isinstance(dataset_id, str):
+            for i, d in enumerate(self.datasets):
+                if d.label == dataset_id:
+                    dataset = d
+                    break
+            else:
+                dataset = self.datasets[0]
+        else:
+            dataset = self.datasets[dataset_id]
+
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:

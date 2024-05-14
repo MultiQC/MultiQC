@@ -9,7 +9,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Union, List, Optional
 
-import plotly.graph_objects as go
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
@@ -203,24 +202,16 @@ def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
     return result
 
 
-def show_plot(
+def get_plot(
     module: str,
     section: str,
-    dataset: Optional[str] = None,
-    flat=False,
-    **kwargs,
-):
+) -> Plot:
     """
-    Show a plot in the notebook.
+    Get plot Object by module name and section ID.
 
     @param module: Module name or anchor
     @param section: Section name or anchor
-    @param dataset: Dataset label, in case if plot has several tabs
-    @param flat: Show plot as static images without any interactivity
     """
-
-    from IPython.core.display import HTML
-
     mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
@@ -229,24 +220,10 @@ def show_plot(
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
-    result: Union[go.Figure, "HTML"]
-    if sec.plot_id:
-        plot = report.plot_by_id[sec.plot_id]
-        ds_id = 0
-        if dataset:
-            for i, d in enumerate(plot.datasets):
-                if d.label == dataset:
-                    ds_id = i
-                    break
-        result = plot.show(dataset_id=ds_id, flat=flat, **kwargs)
-    elif sec.content:
-        result = HTML(sec.content)
-    else:
-        if dataset:
-            raise ValueError(f'Plot section "{section}" with dataset "{dataset}" in module "{module}" not found')
-        else:
-            raise ValueError(f'Plot section "{section}" in module "{module}" not found')
-    return result
+    if sec.plot_id is None:
+        raise ValueError(f"Section {section} doesn't contain a Plot object")
+
+    return report.plot_by_id[sec.plot_id]
 
 
 def _load_plot(dump: Dict) -> Plot:
