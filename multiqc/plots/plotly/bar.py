@@ -130,6 +130,7 @@ class Dataset(BaseDataset):
                     y=self.samples,
                     x=data,
                     name=cat["name"],
+                    meta=cat["name"],
                     **params,
                 ),
             )

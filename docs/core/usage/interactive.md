@@ -159,10 +159,24 @@ Return `list` of clean sample names that have loaded data:
 def list_samples() ‑> list[str]
 ```
 
+Example:
+
+```python
+multiqc.list_samples()
+['SAMPLE1_PE', 'SAMPLE2_PE']
+```
+
 Return `list` of found log files corresponding to the loaded data:
 
 ```python
 def list_data_sources() ‑> list[str]
+```
+
+Example:
+
+```python
+multiqc.list_data_sources()
+['data/SAMPLE1_PE.fastp.json', 'data/SAMPLE2_PE.fastp.json']
 ```
 
 ## Access loaded data
@@ -236,40 +250,112 @@ module.add_section(
 multiqc.report.modules.append(module)
 ```
 
-## Show plots
+## Get plot object
 
-Show a plot in the notebook. For list of available modules, sections and dataset IDs, use `multiqc.list_plots`.
+Get a plot object for a specific module and section. For list of available plots, use `multiqc.list_plots`.
 
 ```python
-def show_plot(module: str, section: str, dataset: str = None, flat=False, **kwargs)
+def get_plot(module: str, section: str) -> Plot
+```
+
+**Examples**
+
+Get plot object for the "GC Content" plot in the "fastp" module.
+
+```python
+plot = multiqc.get_plot("fastp", "GC Content")
+```
+
+Get plot object for the "Number of Contigs" plot in the "QUAST" module.
+
+```python
+plot = multiqc.get_plot("QUAST", "Number of Contigs")
+```
+
+## Show plot
+
+Show plot in the notebook cell.
+
+```python
+class Plot:
+    def show(self, dataset_id: int | str = 0, flat=False, **kwargs)
 ```
 
 Parameters:
 
-- **module**: Module name or anchor
-- **section**: Section name or anchor
-- **dataset**: Dataset label, in case if plot has several tabs
+- **dataset_id**: Dataset label, in case if plot has several tabs
 - **flat**: Show plot as static images without any interactivity
+- **kwargs**: Additional arguments passed to the plot
+
+**Examples**
+
+Create a bar graph and show it in the notebook cell:
+
+```python
+from multiqc.plots import bargraph
+plot = bargraph.plot(...)
+plot.show(violin=True)
+```
+
+Get "fastp GC Content" plot and show it in the notebook cell. Since it has multiple
+tabs, we can select which tab to show with the `dataset_id` option (defaults to the first tab):
+
+```python
+plot = multiqc.get_plot("fastp", "GC Content")
+plot.show(dataset_id="Read 2: Before filtering")
+```
+
+Shows Samtools alignment stats as a violin plot. Use flat image without interactivity.
+
+```python
+plot = multiqc.get_plot("Flagstat", "Alignment stats")
+plot.show("Read counts", violin=True, flat=True)
+```
+
+## Save plot to file
+
+Similarly, you can save plot to a file instead of showing it in a notebook.
+
+```python
+class Plot:
+    def save(self, filename, dataset_id: int | str = 0, **kwargs)
+```
+
+Parameters:
+
+- **filename**: Path to save the plot
+- **dataset_id**: Dataset label, in case if plot has several tabs
 - **kwargs**: Additional arguments passed to the plot
 
 **Examples**:
 
-Shows the "Number of Contigs" plot for the QUAST module.
+Save the "Number of Contigs" plot for the QUAST module to a file.
 
 ```python
-multiqc.show_plot("QUAST", 'Number of Contigs')
+plot = multiqc.get_plot("QUAST", "Number of Contigs")
+plot.save("quast_contigs.html")
 ```
 
-Shows the GC Content plot for the dataset labeled "Read 2: Before filtering", make it flat.
+Save the GC Content plot for the dataset labeled "Read 2: Before filtering" to a file,
+make it flat.
 
 ```python
-multiqc.show_plot("fastp", "GC Content", dataset="Read 2: Before filtering", flat=True)
+plot = multiqc.get_plot("fastp", "GC Content")
+plot.save(
+    "fastp_gc_content.png",
+    dataset_id="Read 2: Before filtering",
+)
 ```
 
-Shows Samtools alignment stats as a violin plot.
+Save Samtools alignment stats as a violin plot to a file.
 
 ```python
-multiqc.show_plot("Flagstat", "Alignment stats", "Read counts", violin=True)
+plot = multiqc.get_plot("Flagstat", "Alignment stats")
+plot.save(
+    "flagstat_alignment_stats.html",
+    dataset="Read counts",
+    violin=True,
+)
 ```
 
 ## Writing report
