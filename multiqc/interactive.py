@@ -407,6 +407,7 @@ def write_report(
     data_format: Optional[str] = None,
     zip_data_dir: Optional[bool] = None,
     force: Optional[bool] = None,
+    overwrite: Optional[bool] = None,
     make_report: Optional[bool] = None,
     export_plots: Optional[bool] = None,
     plots_force_flat: Optional[bool] = None,
@@ -438,6 +439,7 @@ def write_report(
     @param data_format: Output parsed data in a different format
     @param zip_data_dir: Compress the data directory
     @param force: Overwrite existing report and data directory
+    @param overwrite: Same as force
     @param make_report: Generate the report HTML. Defaults to `True`, set to `False` to only export data and plots
     @param export_plots: Export plots as static images in addition to the report
     @param plots_force_flat: Use only flat plots (static images)
@@ -458,7 +460,11 @@ def write_report(
     @param module_order: Names of modules in order of precedence to show in report
     """
 
-    update_config(cfg=ClConfig(**locals()))
+    if force is None and overwrite is not None:
+        force = overwrite
+    params = locals()
+    del params["overwrite"]
+    update_config(cfg=ClConfig(**params))
 
     check_version(write_report.__name__)
 
