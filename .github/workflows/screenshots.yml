@@ -31,6 +31,5 @@ jobs:
           skip_git_checks: "true"
 
       - name: Move files with absolute paths
-        run: mv \
-          https:/github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/*.svg \
-          docs/images/screenshots/
+        run: |
+          mv https:/github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/*.svg docs/images/screenshots/
