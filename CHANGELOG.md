@@ -10,6 +10,8 @@ This release also introduces some huge performance improvements thanks to [@rhpv
 
 Finally, support for the depreciated HighCharts plotting library is fully removed in v1.22, bringing to a close a long standing project to migrate to Plotly.
 
+For more information, please see the MultiQC release blog article on the Seqera website: <https://seqera.io/blog/>
+
 ### MultiQC updates
 
 - Remove the `highcharts` template and Highcharts and Matplotlib dependencies ([#2409](https://github.com/MultiQC/MultiQC/pull/2409))
