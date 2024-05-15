@@ -28,28 +28,28 @@ def parse_logs(*analysis_dir, **kwargs)
 
 Parameters:
 
-- <code>analysis_dir</code>: Path(s) to search for files to parse
-- <code>verbose</code>: Print more information to the console
-- <code>file_list</code>: Supply a file containing a list of file paths to be searched, one per row
-- <code>prepend_dirs</code>: Prepend directory to sample names
-- <code>dirs_depth</code>: Prepend n directories to sample names. Negative number to take from start of path
-- <code>fn_clean_sample_names</code>: Do not clean the sample names (leave as full file name)
-- <code>require_logs</code>: Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error
-- <code>use_filename_as_sample_name</code>: Use the log filename as the sample name
-- <code>strict</code>: Don't catch exceptions, run additional code checks to help development
-- <code>quiet</code>: Only show log warnings
-- <code>no_ansi</code>: Disable coloured log output
-- <code>profile_runtime</code>: Add analysis of how long MultiQC takes to run to the report
-- <code>no_version_check</code>: Disable checking the latest MultiQC version on the server
-- <code>ignore</code>: Ignore analysis files
-- <code>ignore_samples</code>: Ignore sample names
-- <code>run_modules</code>: Use only this module. Can specify multiple times
-- <code>exclude_modules</code>: Do not use this module. Can specify multiple times
-- <code>config_files</code>: Specific config file to load, after those in MultiQC dir / home dir / working dir
-- <code>module_order</code>: Names of modules in order of precedence to show in report
-- <code>extra_fn_clean_exts</code>: Extra file extensions to clean from sample names
-- <code>extra_fn_clean_trim</code>: Extra strings to clean from sample names
-- <code>preserve_module_raw_data</code>: Preserve raw data from modules in the report - besides plots. Useful to use
+- `analysis_dir`: Path(s) to search for files to parse
+- `verbose`: Print more information to the console
+- `file_list`: Supply a file containing a list of file paths to be searched, one per row
+- `prepend_dirs`: Prepend directory to sample names
+- `dirs_depth`: Prepend n directories to sample names. Negative number to take from start of path
+- `fn_clean_sample_names`: Do not clean the sample names (leave as full file name)
+- `require_logs`: Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error
+- `use_filename_as_sample_name`: Use the log filename as the sample name
+- `strict`: Don't catch exceptions, run additional code checks to help development
+- `quiet`: Only show log warnings
+- `no_ansi`: Disable coloured log output
+- `profile_runtime`: Add analysis of how long MultiQC takes to run to the report
+- `no_version_check`: Disable checking the latest MultiQC version on the server
+- `ignore`: Ignore analysis files
+- `ignore_samples`: Ignore sample names
+- `run_modules`: Use only this module. Can specify multiple times
+- `exclude_modules`: Do not use this module. Can specify multiple times
+- `config_files`: Specific config file to load, after those in MultiQC dir / home dir / working dir
+- `module_order`: Names of modules in order of precedence to show in report
+- `extra_fn_clean_exts`: Extra file extensions to clean from sample names
+- `extra_fn_clean_trim`: Extra strings to clean from sample names
+- `preserve_module_raw_data`: Preserve raw data from modules in the report - besides plots. Useful to use
   later interactively. Defaults to `True`. Set to `False` to save memory.
 
 **Examples**
@@ -111,7 +111,7 @@ def parse_data_json(path: str | Path)
 
 Parameters:
 
-- **path**: Path to the directory containing multiqc_data.json or the path to the file itself.
+- `path`: Path to the directory containing multiqc_data.json or the path to the file itself.
 
 Example:
 
@@ -283,9 +283,9 @@ class Plot:
 
 Parameters:
 
-- **dataset_id**: Dataset label, in case if plot has several tabs
-- **flat**: Show plot as static images without any interactivity
-- **kwargs**: Additional arguments passed to the plot
+- `dataset_id`: Dataset label, in case if plot has several tabs
+- `flat`: Show plot as static images without any interactivity
+- `kwargs`: Additional arguments passed to the plot
 
 **Examples**
 
@@ -323,9 +323,9 @@ class Plot:
 
 Parameters:
 
-- **filename**: Path to save the plot
-- **dataset_id**: Dataset label, in case if plot has several tabs
-- **kwargs**: Additional arguments passed to the plot
+- `filename`: Path to save the plot
+- `dataset_id`: Dataset label, in case if plot has several tabs
+- `kwargs`: Additional arguments passed to the plot
 
 **Examples**:
 
@@ -368,33 +368,33 @@ def write_report(**kwargs)
 
 Parameters:
 
-- **title**: Report title. Printed as page header, used for filename if not otherwise specified
-- **report_comment**: Custom comment, will be printed at the top of the report
-- **template**: Report template to use
-- **output_dir**: Create report in the specified output directory
-- **filename**: Report filename. Use 'stdout' to print to standard out
-- **make_data_dir**: Force the parsed data directory to be created
-- **data_format**: Output parsed data in a different format
-- **zip_data_dir**: Compress the data directory
-- **force**: Overwrite existing report and data directory
-- **make_report**: Generate the report HTML. Defaults to `True`, set to `False` to only export data and plots
-- **export_plots**: Export plots as static images in addition to the report
-- **plots_force_flat**: Use only flat plots (static images)
-- **plots_force_interactive**: Use only interactive plots (in-browser Javascript)
-- **strict**: Don't catch exceptions, run additional code checks to help development
-- **development**: Development mode. Do not compress and minimise JS, export uncompressed plot data
-- **make_pdf**: Create PDF report. Requires Pandoc to be installed
-- **no_megaqc_upload**: Don't upload generated report to MegaQC, even if MegaQC options are found
-- **quiet**: Only show log warnings
-- **verbose**: Print more information to the console
-- **no_ansi**: Disable coloured log output
-- **profile_runtime**: Add analysis of how long MultiQC takes to run to the report
-- **no_version_check**: Disable checking the latest MultiQC version on the server
-- **run_modules**: Use only these modules
-- **exclude_modules**: Do not use these modules
-- **config_files**: Specific config file to load, after those in MultiQC dir / home dir / working dir
-- **custom_css_files**: Custom CSS files to include in the report
-- **module_order**: Names of modules in order of precedence to show in report
+- `title`: Report title. Printed as page header, used for filename if not otherwise specified
+- `report_comment`: Custom comment, will be printed at the top of the report
+- `template`: Report template to use
+- `output_dir`: Create report in the specified output directory
+- `filename`: Report filename. Use 'stdout' to print to standard out
+- `make_data_dir`: Force the parsed data directory to be created
+- `data_format`: Output parsed data in a different format
+- `zip_data_dir`: Compress the data directory
+- `force`: Overwrite existing report and data directory
+- `make_report`: Generate the report HTML. Defaults to `True`, set to `False` to only export data and plots
+- `export_plots`: Export plots as static images in addition to the report
+- `plots_force_flat`: Use only flat plots (static images)
+- `plots_force_interactive`: Use only interactive plots (in-browser Javascript)
+- `strict`: Don't catch exceptions, run additional code checks to help development
+- `development`: Development mode. Do not compress and minimise JS, export uncompressed plot data
+- `make_pdf`: Create PDF report. Requires Pandoc to be installed
+- `no_megaqc_upload`: Don't upload generated report to MegaQC, even if MegaQC options are found
+- `quiet`: Only show log warnings
+- `verbose`: Print more information to the console
+- `no_ansi`: Disable coloured log output
+- `profile_runtime`: Add analysis of how long MultiQC takes to run to the report
+- `no_version_check`: Disable checking the latest MultiQC version on the server
+- `run_modules`: Use only these modules
+- `exclude_modules`: Do not use these modules
+- `config_files`: Specific config file to load, after those in MultiQC dir / home dir / working dir
+- `custom_css_files`: Custom CSS files to include in the report
+- `module_order`: Names of modules in order of precedence to show in report
 
 Example:
 
