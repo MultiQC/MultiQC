@@ -46,9 +46,9 @@ def plot(
 
     # Make datatable objects
     if headers:
-        dts = [table_object.DataTable.create(d, pconfig.copy(), h) for d, h in zip(data, headers)]
+        dts = [table_object.DataTable.create(d, pconfig.model_copy(), h) for d, h in zip(data, headers)]
     else:
-        dts = [table_object.DataTable.create(d, pconfig.copy()) for d in data]
+        dts = [table_object.DataTable.create(d, pconfig.model_copy()) for d in data]
 
     mod = get_template_mod()
     if "violin" in mod.__dict__ and callable(mod.violin):

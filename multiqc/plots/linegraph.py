@@ -65,7 +65,7 @@ def plot(
         this_list_of_series: List[Dict] = []
         for s in sorted(data_by_sample.keys()):
             # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config: LinePlotConfig = pconfig.copy()
+            series_config: LinePlotConfig = pconfig.model_copy()
             pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
             maxval = 0
             x_are_categories = pconfig.categories
