@@ -82,7 +82,9 @@ jobs:
           path: test_data
 
       - name: Unit tests
-        run: pytest -v test_data/unit_tests
+        run: |
+          pip install pytest
+          pytest -v test_data/unit_tests
 
       # Run all of the tests!
       - name: All modules / Custom report filename
