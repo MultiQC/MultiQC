@@ -81,6 +81,9 @@ jobs:
           repository: MultiQC/test-data
           path: test_data
 
+      - name: Unit tests
+        run: pytest -v test_data/unit_tests
+
       # Run all of the tests!
       - name: All modules / Custom report filename
         run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --filename full_report.html
