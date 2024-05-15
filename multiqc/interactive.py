@@ -30,7 +30,7 @@ logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: str,
+    *analysis_dir: Union[str, Path],
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -82,8 +82,8 @@ def parse_logs(
      later interactively. Defaults to `True`. Set to `False` to save memory.
     """
     assert isinstance(analysis_dir, tuple)
-    if not all(isinstance(d, str) for d in analysis_dir):
-        raise ValueError("Path arguments should be strings, got:", analysis_dir)
+    if not all(isinstance(d, (str, Path)) for d in analysis_dir):
+        raise ValueError("Path arguments should be path-like or strings, got:", analysis_dir)
 
     update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 

@@ -46,7 +46,7 @@ def _make_analysis_file_list():
         report.analysis_files = paths
     else:
         for path in config.analysis_dir:
-            for p in glob.glob(path):  # Expand glob patterns
+            for p in glob.glob(str(path)):  # Expand glob patterns
                 report.analysis_files.append(os.path.abspath(p))
 
 
