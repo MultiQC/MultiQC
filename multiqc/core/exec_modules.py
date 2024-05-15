@@ -57,7 +57,7 @@ def exec_modules(
             tracemalloc.start()
 
         this_module: str = list(mod_dict.keys())[0]
-        logger.info(f"Running module: {this_module}")
+        logger.debug(f"Running module: {this_module}")
         mod_cust_config: Dict = list(mod_dict.values())[0] or {}
         # noinspection PyBroadException
         try:
