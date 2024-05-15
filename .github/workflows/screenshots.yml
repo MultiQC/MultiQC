@@ -29,3 +29,8 @@ jobs:
           clean_img_paths: docs/images/screenshots/*.svg
           commit_changes: "true"
           skip_git_checks: "true"
+
+      - name: Move files with absolute paths
+        run: mv \
+          https:/github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/*.svg \
+          docs/images/screenshots/
