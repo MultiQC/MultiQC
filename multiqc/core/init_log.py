@@ -87,6 +87,12 @@ def init_log():
     debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
     _setup_coloredlogs(log_level, logger, debug_template)
 
+    if not config.quiet:
+        if util_functions.is_running_in_notebook() or os.getenv("CI"):
+            _print_intro_with_coloredlogs()
+        else:
+            _print_intro_with_rich()
+
     # Now set up the file logging stream if we have a data directory
     file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
     file_handler.setLevel(logging.DEBUG)  # always DEBUG for the file
@@ -126,25 +132,6 @@ def _setup_coloredlogs(log_level, logger, debug_template):
     # Google Colab notebooks duplicate log messages without this, see
     # https://stackoverflow.com/a/55877763/341474
     logger.propagate = False
-
-    if not config.quiet:
-        # Print intro
-        if config.no_ansi is False:
-            BOLD = "\033[1m"
-            DIM = "\033[2m"
-            DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
-            RESET = "\033[0m"
-        else:
-            BOLD = ""
-            DIM = ""
-            DARK_ORANGE = ""
-            RESET = ""
-        emoji = util_functions.choose_emoji()
-        emoji = f" {emoji}" if emoji else ""
-        intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
-        if not util_functions.is_running_in_notebook():
-            intro = f"\n{intro}\n"
-        print(intro)
 
 
 def _setup_rich_handler(log_level, logger):
@@ -191,8 +178,29 @@ def _setup_rich_handler(log_level, logger):
         console_handler.setFormatter(InfoFormatter())
     logger.addHandler(console_handler)
 
-    if not config.quiet:
-        rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
+
+def _print_intro_with_coloredlogs():
+    # Print intro
+    if config.no_ansi is False:
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+        RESET = "\033[0m"
+    else:
+        BOLD = ""
+        DIM = ""
+        DARK_ORANGE = ""
+        RESET = ""
+    emoji = util_functions.choose_emoji()
+    emoji = f" {emoji}" if emoji else ""
+    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+    if not util_functions.is_running_in_notebook():
+        intro = f"\n{intro}\n"
+    print(intro)
+
+
+def _print_intro_with_rich():
+    rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
 
 def move_tmp_log():
