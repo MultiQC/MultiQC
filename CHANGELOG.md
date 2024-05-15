@@ -1,5 +1,13 @@
 # MultiQC Version History
 
+## MultiQC v1.23dev
+
+### MultiQC updates
+
+### New modules
+
+### Module updates
+
 ## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-14
 
 ### Highlights - notebooks and performance

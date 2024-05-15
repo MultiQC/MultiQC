@@ -256,7 +256,7 @@ filename: Optional[str] = None
 megaqc_upload: bool = False
 
 ##### Available modules
-# Modules must be listed in setup.py under entry_points['multiqc.modules.v1']
+# Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
 # Get all modules, including those from other extension packages
 avail_modules = dict()
 for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
@@ -264,7 +264,7 @@ for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
     avail_modules[nicename] = entry_point
 
 ##### Available templates
-# Templates must be listed in setup.py under entry_points['multiqc.templates.v1']
+# Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
 # Get all templates, including those from other extension packages
 avail_templates = {}
 for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
