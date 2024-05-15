@@ -88,7 +88,7 @@ def init_log():
     _setup_coloredlogs(log_level, logger, debug_template)
 
     if not config.quiet:
-        if util_functions.is_running_in_notebook() or os.getenv("CI"):
+        if util_functions.is_running_in_notebook():
             _print_intro_with_coloredlogs()
         else:
             _print_intro_with_rich()
