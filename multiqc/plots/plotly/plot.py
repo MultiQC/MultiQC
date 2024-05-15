@@ -811,7 +811,7 @@ def _dataset_layout(
     """
     Given plot config and dataset config, set layout and trace params.
     """
-    pconfig = pconfig.copy()
+    pconfig = pconfig.model_copy()
     for k, v in dconfig.items():
         if k in pconfig.model_fields:
             setattr(pconfig, k, v)
