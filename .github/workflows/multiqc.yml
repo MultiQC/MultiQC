@@ -120,7 +120,7 @@ jobs:
 
       - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test_data/config_example.yaml
 
       - name: Specific module / named output dir / JSON data / File list
         if: matrix.python-version == env.latest_python
