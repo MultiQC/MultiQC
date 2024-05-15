@@ -515,7 +515,10 @@ def search_files(run_module_names):
     # so it prints each update ona a new line. Better disable it for CI.
     disable_progress = config.no_ansi or config.quiet or os.getenv("CI")
 
-    if is_running_in_notebook() or no_unicode():
+    # Rich widgets do not look good in Jupyter, of it there is no unicode support.
+    # Additionally, falling back to tqdm if rich_console was not initialized. That
+    # happens when init_log.init_log() wasn't run, i.e in unit tests.
+    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console"):
         PRINT_FNAME = False
         # ANSI escape code for dim text
         if not config.no_ansi:

@@ -58,6 +58,7 @@ dev = [
     "pre-commit",
     "ruff",
     "pdoc3",
+    "pytest",
 ]
 
 [project.urls]
