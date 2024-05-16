@@ -14,9 +14,13 @@ from multiqc.utils.util_functions import update_dict
 logger = logging.getLogger(__name__)
 
 
+XT = Union[float, int, str]
+YT = Union[float, int]
+
+
 class Series(ModelWithNiceValidation):
     name: str
-    pairs: List[Tuple[Union[float, int, str], Union[float, int]]]
+    pairs: List[Tuple[XT, YT]]
     color: Optional[str] = None
     width: Optional[int] = None
     dash: Optional[str] = None
