@@ -1,12 +1,14 @@
 """MultiQC module to parse output from Preseq"""
 
 import logging
+from typing import List
 
 import numpy as np
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
+from multiqc.plots.plotly.line import Series
 from multiqc.utils import mqc_colour
 
 # Initialise the logger
@@ -158,14 +160,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plot perfect library as dashed line
         pconfig["extra_series"].append(
-            {
-                "name": "A perfect library where each read is unique",
-                "data": [[0, 0], [max_yx, max_y]],
-                "dash": "dash",
-                "line": {"width": 1},
-                "color": "#000000",
-                "showlegend": False,
-            }
+            Series(
+                name="A perfect library where each read is unique",
+                pairs=[(0, 0), (max_yx, max_y)],
+                dash="dash",
+                width=1,
+                color="#000000",
+                showlegend=False,
+            )
         )
 
         self.add_section(name=name, description=description, anchor=section_id, plot=linegraph.plot(data, pconfig))
@@ -358,25 +360,35 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_suffix, y_tt_lbl):
+def _real_counts_to_plot_series(
+    data,
+    yx_by_sample,
+    xs_by_sample,
+    x_suffix,
+    y_suffix,
+    y_tt_lbl,
+) -> List[Series]:
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-
     series = []
     for si, sn in enumerate(sorted(data.keys())):
+        series_config = dict(
+            color=scale.get_colour(si),
+            showlegend=False,
+            marker=Series.Marker(
+                symbol="diamond",
+                color="black",
+                width=1,
+            ),
+        )
         if sn in xs_by_sample:
             x = float(xs_by_sample[sn])
-            point = {
-                "color": scale.get_colour(si),
-                "showlegend": False,
-                "marker": {
-                    "symbol": "diamond",
-                    "line": {"color": "black", "width": 1},
-                },
-            }
             if sn in yx_by_sample:
                 y = float(yx_by_sample[sn])
-                point["data"] = [[x, y]]
-                point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
+                point = Series(
+                    pairs=[(x, y)],
+                    name=f"{sn}: actual read count vs. deduplicated read count (externally calculated)",
+                    **series_config,
+                )
                 series.append(point)
                 y = y_tt_lbl.replace("point.y", "y").format(y=y)
                 log.debug(f"Real counts for {sn}: {x}{x_suffix}, ({y}{y_suffix})")
@@ -390,8 +402,11 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_su
                     )
                 else:
                     interp_y = np.interp(x, xs, ys)
-                    point["data"] = [[x, interp_y]]
-                    point["name"] = sn + ": actual read count (externally calculated)"
+                    point = Series(
+                        pairs=[(x, interp_y)],
+                        name=f"{sn}: actual read count (externally calculated)",
+                        **series_config,
+                    )
                     series.append(point)
                     y = y_tt_lbl.replace("point.y", "y").format(y=interp_y)
                     log.debug(f"Real count for {sn}: {x}{{x_suffix}} ({y}{{y_suffix}})")

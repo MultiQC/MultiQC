@@ -1,10 +1,13 @@
 """MultiQC module to parse output from nonpareil"""
 
 import logging
+from typing import List
+
 import numpy as np
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots.plotly.line import Series
 from multiqc.utils import mqc_colour
 
 
@@ -313,11 +316,11 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
-        extra_series_config = {
-            "dash": "dash",
-            "line": {"width": 2},
-            "showlegend": False,
-        }
+        extra_series_config = dict(
+            dash="dash",
+            width=2,
+            showlegend=False,
+        )
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
@@ -331,10 +334,10 @@ class MultiqcModule(BaseMultiqcModule):
             {"name": "Model"},
         ]
         data_plot = list()
-        extra_series = list()
+        extra_series: List[List[Series]] = []
         for idx, dataset in enumerate(data_labels):
             data_plot.append(dict())
-            extra_series.append(list())
+            extra_series.append([])
             for s_name, data in self.data_by_sample.items():
                 if dataset["name"] == "Observed":
                     data_plot[idx][s_name] = data["nonpareil_observed"]
@@ -343,10 +346,14 @@ class MultiqcModule(BaseMultiqcModule):
                 elif dataset["name"] == "Combined":
                     data_plot[idx][s_name] = data["nonpareil_observed"]
                     if data["nonpareil_has.model"]:
-                        extra_series[idx].append(dict(extra_series_config))
-                        extra_series[idx][-1]["name"] = s_name
-                        extra_series[idx][-1]["data"] = [[x, y] for x, y in data["nonpareil_model"].items()]
-                        extra_series[idx][-1]["color"] = data_colors[s_name]
+                        extra_series[idx].append(
+                            Series(
+                                name=s_name,
+                                pairs=[(x, y) for x, y in data["nonpareil_model"].items()],
+                                color=data_colors[s_name],
+                                **extra_series_config,
+                            )
+                        )
 
         pconfig = {
             "id": "nonpareil-redundancy-plot",

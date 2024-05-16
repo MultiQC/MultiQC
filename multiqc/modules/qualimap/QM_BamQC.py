@@ -513,8 +513,8 @@ def report_sections(self):
                 {
                     "name": species_name,
                     "data": list(species_data.items()),
-                    "dashStyle": "Dash",
-                    "lineWidth": 1,
+                    "width": 1,
+                    "dash": "dash",
                     "color": ["#000000", "#E89191"][i % 2],
                 }
             )
