@@ -1,10 +1,13 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple
+from collections import defaultdict
+from typing import List, Dict, Union, Tuple, Set
+
+import numpy as np
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.plotly.line import LinePlotConfig, Series, YT, XT
 from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
@@ -35,6 +38,9 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    if not data:
+        return ""
+
     assert pconfig is not None, "pconfig must be provided"
     if isinstance(pconfig, dict):
         pconfig = LinePlotConfig(**pconfig)
@@ -62,13 +68,7 @@ def plot(
 
     datasets: List[List[Series]] = []
     for ds_idx, data_by_sample in enumerate(data):
-        list_of_series_dicts: List[Series] = []
-        for s in sorted(data_by_sample.keys()):
-            series: Series = _make_series_dict(pconfig, ds_idx, s, data_by_sample[s])
-            if pconfig.hide_empty and not series.pairs:
-                continue
-            list_of_series_dicts.append(series)
-        datasets.append(list_of_series_dicts)
+        datasets.append(_make_dataset(pconfig, ds_idx, data_by_sample))
 
     # Add on annotation data series
     # noinspection PyBroadException
@@ -108,11 +108,79 @@ def plot(
     return line.plot(datasets, pconfig)
 
 
-def _make_series_dict(
+def _make_dataset(
+    pconfig,
+    ds_idx: int,
+    data_by_sample: Dict[str, Dict[XT, YT]],
+) -> List[Series]:
+    list_of_series: List[Series] = []
+
+    n_samples = len(data_by_sample)
+    if n_samples > config.lineplot_max_samples:
+        _str_d_id = f"/{ds_idx}" if ds_idx > 0 else ""
+        logger.debug(
+            f"Line plot '{pconfig.id}/{_str_d_id}': sample number {n_samples} > {config.lineplot_max_samples}, "
+            "Will not render a line for each sample, but instead will render a median line with a confidence interval"
+        )
+
+        # outlier_samples = set()
+        std_down_d: Dict[XT, YT] = {}
+        std_up_d: Dict[XT, YT] = {}
+        mean_d: Dict[XT, YT] = {}
+
+        all_ys_by_x: Dict[XT, Set[Tuple[YT, str]]] = defaultdict(set)
+        for s in data_by_sample:
+            for x, y in data_by_sample[s].items():
+                all_ys_by_x[x].add((y, s))
+        for x, ys_and_samples in all_ys_by_x.items():
+            ys = [y_and_sample[0] for y_and_sample in ys_and_samples]
+            # samples = [y_and_sample[1] for y_and_sample in ys_and_samples]
+            ys = np.array(sorted(ys))
+            mean_y = np.mean(ys)
+            stddev = np.std(ys)
+            mean_d[x] = mean_y
+            std_down_d[x] = mean_y - stddev
+            std_up_d[x] = mean_y + stddev
+        #     # find outliers in y values, keep entire sample line for that value
+        #     if all(isinstance(y, (int, float)) for y in ys):
+        #         outlier_statuses = find_outliers(ys)
+        #         samples_to_keep = np.array(samples)[outlier_statuses]
+        #         outlier_samples |= set(samples_to_keep)
+        #
+        # logger.debug(f"Found {len(outlier_samples)}/{len(data_by_sample)} line plot outlier samples")
+        # for s in outlier_samples:
+        #     series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
+        #     if pconfig.hide_empty and not series.pairs:
+        #         continue
+        #     list_of_series.append(series)
+
+        std_down = _make_series(pconfig, ds_idx, "Mean - 1 std", std_down_d)
+        std_up = _make_series(pconfig, ds_idx, "Mean + 1 std", std_up_d)
+        mean = _make_series(pconfig, ds_idx, "Mean", mean_d)
+        std_down.dash = "dash"
+        std_up.dash = "dash"
+        std_down.width = 1
+        std_up.width = 1
+        mean.color = "#7cb5ec"
+        std_down.color = "#7cb5ec"
+        std_up.color = "#7cb5ec"
+        list_of_series.extend([std_down, std_up, mean])
+
+    else:
+        for s in sorted(data_by_sample.keys()):
+            series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
+            if pconfig.hide_empty and not series.pairs:
+                continue
+            list_of_series.append(series)
+
+    return list_of_series
+
+
+def _make_series(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: Dict[str, Union[float, int]],
+    y_by_x: Dict[Union[str, float, int], Union[float, int]],
 ) -> Series:
     pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
 
