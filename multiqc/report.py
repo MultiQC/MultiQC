@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
 
 import rich
@@ -949,7 +949,11 @@ def multiqc_dump_json():
             try:
                 d = None
                 if s == "config":
-                    d = {f"{s}_{k}": getattr(config, k)}
+                    v = getattr(config, k)
+                    v = str(v) if isinstance(v, PosixPath) else v
+                    if isinstance(v, list):
+                        v = [str(el) if isinstance(el, PosixPath) else el for el in v]
+                    d = {f"{s}_{k}": v}
                 elif s == "report":
                     d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
                 if d:
@@ -964,7 +968,7 @@ def multiqc_dump_json():
         exported_data["config_analysis_dir_abs"] = list()
         for d in exported_data.get("config_analysis_dir", []):
             try:
-                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(d)))
             except Exception:
                 pass
     return exported_data
