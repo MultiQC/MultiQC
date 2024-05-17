@@ -1,5 +1,6 @@
 import glob
 import logging
+import os.path
 from pathlib import Path
 from typing import Dict, List
 
@@ -115,6 +116,6 @@ def _module_list_to_search() -> List[Dict[str, Dict]]:
         mod_names.append("software_versions")
 
     for p in report.analysis_files:
-        logger.info(f"Search path: {p}")
+        logger.info(f"Search path: {os.path.abspath(p)}")
 
     return mod_dicts_in_order
