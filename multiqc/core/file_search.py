@@ -1,6 +1,5 @@
 import glob
 import logging
-import os
 from pathlib import Path
 from typing import Dict, List
 
@@ -47,7 +46,7 @@ def _make_analysis_file_list():
     else:
         for path in config.analysis_dir:
             for p in glob.glob(str(path)):  # Expand glob patterns
-                report.analysis_files.append(os.path.abspath(p))
+                report.analysis_files.append(p)
 
 
 def include_or_exclude_modules(module_names: List[str]) -> List[str]:
