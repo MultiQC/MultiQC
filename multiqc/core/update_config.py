@@ -190,7 +190,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:
-        config.analysis_dir = [Path(p).absolute() for p in analysis_dir]
+        config.analysis_dir = [Path(p) for p in analysis_dir]
     if cfg.file_list is not None:
         if len(config.analysis_dir) > 1:
             raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
