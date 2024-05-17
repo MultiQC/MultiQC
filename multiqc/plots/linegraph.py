@@ -124,7 +124,7 @@ def _make_dataset(
             "Will not render a line for each sample, but instead will render a median line with a confidence interval"
         )
 
-        outlier_samples = set()
+        outlier_samples = {s for s in data_by_sample if "SRR4030377" in s}
         std_down_d: Dict[XT, YT] = {}
         std_up_d: Dict[XT, YT] = {}
         mean_d: Dict[XT, YT] = {}
@@ -134,8 +134,8 @@ def _make_dataset(
             for x, y in data_by_sample[s].items():
                 all_ys_by_x[x].add((y, s))
         for x, ys_and_samples in all_ys_by_x.items():
-            ys = [y_and_sample[0] for y_and_sample in ys_and_samples]
-            samples = [y_and_sample[1] for y_and_sample in ys_and_samples]
+            ys = [y for (y, s) in ys_and_samples if s not in outlier_samples]
+            samples = [s for (y, s) in ys_and_samples if s not in outlier_samples]
             ys = np.array(sorted(ys))
             mean_y = np.mean(ys)
             stddev = np.std(ys)
@@ -146,14 +146,7 @@ def _make_dataset(
             if all(isinstance(y, (int, float)) for y in ys):
                 outlier_statuses = find_outliers(ys)
                 samples_to_keep = np.array(samples)[outlier_statuses]
-                outlier_samples |= set(samples_to_keep)
-
-        logger.debug(f"Found {len(outlier_samples)}/{len(data_by_sample)} line plot outlier samples")
-        for s in outlier_samples:
-            series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
-            if pconfig.hide_empty and not series.pairs:
-                continue
-            list_of_series.append(series)
+                # outlier_samples |= set(samples_to_keep)
 
         std_down = _make_series(pconfig, ds_idx, "Mean - 1 std", std_down_d)
         std_up = _make_series(pconfig, ds_idx, "Mean + 1 std", std_up_d)
@@ -166,6 +159,12 @@ def _make_dataset(
         std_down.color = "#7cb5ec"
         std_up.color = "#7cb5ec"
         list_of_series.extend([std_down, std_up, mean])
+
+        logger.debug(f"Found {len(outlier_samples)}/{len(data_by_sample)} line plot outlier samples")
+        for s in outlier_samples:
+            series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
+            series.color = "rgb(43, 144, 143)"
+            list_of_series.append(series)
 
     else:
         for s in sorted(data_by_sample.keys()):
