@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotProfile """
+"""MultiQC submodule to parse output from deepTools plotProfile"""
 
 import logging
 
@@ -61,7 +61,7 @@ class plotProfileMixin:
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TES")],
-                        "dashStyle": "Dash",
+                        "dash": "dash",
                         "color": "#000000",
                     }
                 )
@@ -69,7 +69,7 @@ class plotProfileMixin:
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TSS")],
-                        "dashStyle": "Dash",
+                        "dash": "dash",
                         "color": "#000000",
                     }
                 )

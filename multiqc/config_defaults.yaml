@@ -65,7 +65,7 @@ plots_flat_numseries: 100
 num_datasets_plot_limit: 50
 lineplot_style: lines # "lines+markers"
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
-lineplot_max_samples: 100 # turn into a violin plot if more than this number
+lineplot_max_samples: 10 # hide individual sample info to save memory if more than this number
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points

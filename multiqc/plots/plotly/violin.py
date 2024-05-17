@@ -11,6 +11,7 @@ from multiqc import config, report
 from multiqc.plots.table_object import DataTable, TableColumn
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc.plots.plotly.table import make_table
+from multiqc.utils.util_functions import find_outliers
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +175,7 @@ class Dataset(BaseDataset):
                     samples = list(value_by_sample.keys())
                     values = list(value_by_sample.values())
                     outlier_statuses = find_outliers(
-                        values,
+                        np.array(values),
                         minval=column.dmin,
                         maxval=column.dmax,
                         metric=column.title,
@@ -595,60 +596,3 @@ class ViolinPlot(Plot):
             html += configuration_modal
 
         return html
-
-
-def find_outliers(
-    values: Union[List[int], List[float]],
-    top_n: Optional[int] = None,
-    z_cutoff: float = 2.0,
-    minval: Optional[Union[float, int]] = None,
-    maxval: Optional[Union[float, int]] = None,
-    metric: Optional[str] = None,
-) -> np.array:
-    """
-    If `n` is defined, find `n` most outlying points in a list.
-    Otherwise, find outliers with a Z-score above `z_cutoff`.
-
-    Return a list of booleans, indicating if the value with this index is an outlier.
-
-    `minval` and/or `maxval` can be added to include them into the outlier detection array.
-    This is a trick to avoid the following problem: for example, percentage values are
-    clustered around 0, but differ in e.g. 3+rd decimal place. In this case, the outliers
-    will be nearly no different from the other values. If we add "100%" as an artificial
-    additional value, none of those near-zero clustered values won't be called outliers.
-    """
-    if len(values) == 0 or (top_n is not None and top_n <= 0):
-        return np.zeros(len(values), dtype=bool)
-
-    added_values = []
-    if minval is not None:
-        added_values.append(minval)
-    if maxval is not None:
-        added_values.append(maxval)
-    values = np.array(values + added_values)
-
-    # Calculate the mean and standard deviation
-    mean = np.mean(values)
-    std_dev = np.std(values)
-    if std_dev == 0:
-        logger.debug(f"All {len(values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
-        return np.zeros(len(values), dtype=bool)
-
-    # Calculate Z-scores (measures of "outlyingness")
-    z_scores = np.abs((values - mean) / std_dev)
-
-    # Get indices of the top N outliers
-    outlier_status = np.zeros(len(values), dtype=bool)
-    if top_n:
-        outlier_status[np.argsort(z_scores)[-top_n:]] = True
-    else:
-        indices = np.where(z_scores > z_cutoff)[0]
-        while len(indices) <= len(added_values) and z_cutoff > 1.0:
-            # No outliers found with this Z-score cutoff, trying a lower cutoff
-            z_cutoff -= 0.2
-            indices = np.where(z_scores > z_cutoff)[0]
-        outlier_status[indices] = True
-
-    if added_values:
-        outlier_status = outlier_status[: -len(added_values)]
-    return outlier_status

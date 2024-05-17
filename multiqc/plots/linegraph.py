@@ -1,12 +1,16 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple
+from collections import defaultdict
+from typing import List, Dict, Union, Tuple, Set
+
+import numpy as np
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.plotly.line import LinePlotConfig, Series, YT, XT
 from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
+from multiqc.utils.util_functions import find_outliers
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,9 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
+    if not data:
+        return ""
+
     assert pconfig is not None, "pconfig must be provided"
     if isinstance(pconfig, dict):
         pconfig = LinePlotConfig(**pconfig)
@@ -60,95 +67,32 @@ def plot(
         for i, data_by_sample in enumerate(data):
             data[i] = smooth_line_data(data_by_sample, pconfig.smooth_points)
 
-    datasets: List[List[Dict]] = []
+    datasets: List[List[Series]] = []
     for ds_idx, data_by_sample in enumerate(data):
-        this_list_of_series: List[Dict] = []
-        for s in sorted(data_by_sample.keys()):
-            # Ensure any overwritten conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config: LinePlotConfig = pconfig.model_copy()
-            pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
-            maxval = 0
-            x_are_categories = pconfig.categories
-            if pconfig.data_labels:
-                x_are_categories = pconfig.data_labels[ds_idx].get("categories", x_are_categories)
-            # Discard > ymax or just hide?
-            # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
-            discard_ymax = None
-            discard_ymin = None
-            xs = data_by_sample[s].keys()
-            if not x_are_categories:
-                xs = sorted(xs)
-
-            for k in xs:
-                if not x_are_categories:
-                    if series_config.xmax is not None and float(k) > float(series_config.xmax):
-                        continue
-                    if series_config.xmin is not None and float(k) < float(series_config.xmin):
-                        continue
-                if data_by_sample[s][k] is not None and series_config.ymax is not None:
-                    if float(data_by_sample[s][k]) > float(series_config.ymax):
-                        discard_ymax = True
-                    elif discard_ymax is True:
-                        discard_ymax = False
-                if data_by_sample[s][k] is not None and series_config.ymin is not None:
-                    if float(data_by_sample[s][k]) > float(series_config.ymin):
-                        discard_ymin = True
-                    elif discard_ymin is True:
-                        discard_ymin = False
-
-            # Build the plot data structure
-            for k in xs:
-                if not x_are_categories and k is not None:
-                    if series_config.xmax is not None and float(k) > float(series_config.xmax):
-                        continue
-                    if series_config.xmin is not None and float(k) < float(series_config.xmin):
-                        continue
-                if data_by_sample[s][k] is not None:
-                    if (
-                        series_config.ymax is not None
-                        and float(data_by_sample[s][k]) > float(series_config.ymax)
-                        and discard_ymax is not False
-                    ):
-                        continue
-                    if (
-                        series_config.ymin is not None
-                        and float(data_by_sample[s][k]) < float(series_config.ymin)
-                        and discard_ymin is not False
-                    ):
-                        continue
-                pairs.append((k, data_by_sample[s][k]))
-                try:
-                    maxval = max(maxval, data_by_sample[s][k])
-                except TypeError:
-                    pass
-            if maxval > 0 or not series_config.hide_empty:
-                this_series: Dict = {"name": s, "data": pairs}
-                try:
-                    this_series["color"] = series_config.colors[s]
-                except KeyError:
-                    pass
-                this_list_of_series.append(this_series)
-        datasets.append(this_list_of_series)
+        datasets.append(_make_dataset(pconfig, ds_idx, data_by_sample))
 
     # Add on annotation data series
     # noinspection PyBroadException
     try:
         if pconfig.extra_series:
             extra_series = pconfig.extra_series
-            if isinstance(pconfig.extra_series, dict):
-                extra_series = [[pconfig.extra_series]]
-            elif isinstance(pconfig.extra_series, list) and isinstance(pconfig.extra_series[0], dict):
-                extra_series = [pconfig.extra_series]
+            if not isinstance(extra_series, list):
+                extra_series = [extra_series]
+            if not isinstance(extra_series[0], list):
+                extra_series = [extra_series]
             for i, es in enumerate(extra_series):
                 for s in es:
+                    if isinstance(s, dict):
+                        s = Series(**s)
                     datasets[i].append(s)
     except Exception:
         pass
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, sd in enumerate(datasets):
-        for di, data_by_sample in enumerate(sd):
-            data_by_sample.setdefault("color", scale.get_colour(di, lighten=1))
+    for si, data_by_sample in enumerate(datasets):
+        for di, series in enumerate(data_by_sample):
+            if not series.color:
+                series.color = scale.get_colour(di, lighten=1)
 
     # Make a plot - template custom, or interactive or flat
     mod = get_template_mod()
@@ -163,6 +107,138 @@ def plot(
                 raise
 
     return line.plot(datasets, pconfig)
+
+
+def _make_dataset(
+    pconfig,
+    ds_idx: int,
+    data_by_sample: Dict[str, Dict[XT, YT]],
+) -> List[Series]:
+    list_of_series: List[Series] = []
+
+    n_samples = len(data_by_sample)
+    if n_samples > config.lineplot_max_samples:
+        _str_d_id = f"/{ds_idx}" if ds_idx > 0 else ""
+        logger.debug(
+            f"Line plot '{pconfig.id}/{_str_d_id}': sample number {n_samples} > {config.lineplot_max_samples}, "
+            "Will not render a line for each sample, but instead will render a median line with a confidence interval"
+        )
+
+        outlier_samples = {s for s in data_by_sample if "SRR4030377" in s}
+        std_down_d: Dict[XT, YT] = {}
+        std_up_d: Dict[XT, YT] = {}
+        mean_d: Dict[XT, YT] = {}
+
+        all_ys_by_x: Dict[XT, Set[Tuple[YT, str]]] = defaultdict(set)
+        for s in data_by_sample:
+            for x, y in data_by_sample[s].items():
+                all_ys_by_x[x].add((y, s))
+        for x, ys_and_samples in all_ys_by_x.items():
+            ys = [y for (y, s) in ys_and_samples if s not in outlier_samples]
+            samples = [s for (y, s) in ys_and_samples if s not in outlier_samples]
+            ys = np.array(sorted(ys))
+            mean_y = np.mean(ys)
+            stddev = np.std(ys)
+            mean_d[x] = mean_y
+            std_down_d[x] = mean_y - stddev
+            std_up_d[x] = mean_y + stddev
+            # find outliers in y values, keep entire sample line for that value
+            if all(isinstance(y, (int, float)) for y in ys):
+                outlier_statuses = find_outliers(ys)
+                samples_to_keep = np.array(samples)[outlier_statuses]
+                # outlier_samples |= set(samples_to_keep)
+
+        std_down = _make_series(pconfig, ds_idx, "Mean - 1 std", std_down_d)
+        std_up = _make_series(pconfig, ds_idx, "Mean + 1 std", std_up_d)
+        mean = _make_series(pconfig, ds_idx, "Mean", mean_d)
+        std_down.dash = "dash"
+        std_up.dash = "dash"
+        std_down.width = 1
+        std_up.width = 1
+        mean.color = "#7cb5ec"
+        std_down.color = "#7cb5ec"
+        std_up.color = "#7cb5ec"
+        list_of_series.extend([std_down, std_up, mean])
+
+        logger.debug(f"Found {len(outlier_samples)}/{len(data_by_sample)} line plot outlier samples")
+        for s in outlier_samples:
+            series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
+            series.color = "rgb(43, 144, 143)"
+            list_of_series.append(series)
+
+    else:
+        for s in sorted(data_by_sample.keys()):
+            series: Series = _make_series(pconfig, ds_idx, s, data_by_sample[s])
+            if pconfig.hide_empty and not series.pairs:
+                continue
+            list_of_series.append(series)
+
+    return list_of_series
+
+
+def _make_series(
+    pconfig: LinePlotConfig,
+    ds_idx: int,
+    s: str,
+    y_by_x: Dict[Union[str, float, int], Union[float, int]],
+) -> Series:
+    pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
+
+    x_are_categories = pconfig.categories
+    ymax = pconfig.ymax
+    ymin = pconfig.ymin
+    xmax = pconfig.xmax
+    xmin = pconfig.xmin
+    colors = pconfig.colors
+    if pconfig.data_labels:
+        x_are_categories = pconfig.data_labels[ds_idx].get("categories", x_are_categories)
+        ymax = pconfig.data_labels[ds_idx].get("ymax", ymax)
+        ymin = pconfig.data_labels[ds_idx].get("ymin", ymin)
+        xmax = pconfig.data_labels[ds_idx].get("xmax", xmax)
+        xmin = pconfig.data_labels[ds_idx].get("xmin", xmin)
+        colors = pconfig.data_labels[ds_idx].get("colors", colors)
+
+    # Discard > ymax or just hide?
+    # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
+    discard_ymax = None
+    discard_ymin = None
+    xs = y_by_x.keys()
+    if not x_are_categories:
+        xs = sorted(xs)
+
+    for x in xs:
+        if not x_are_categories:
+            if xmax is not None and float(x) > float(xmax):
+                continue
+            if xmin is not None and float(x) < float(xmin):
+                continue
+        if y_by_x[x] is not None and ymax is not None:
+            if float(y_by_x[x]) > float(ymax):
+                discard_ymax = True
+            elif discard_ymax is True:
+                discard_ymax = False
+        if y_by_x[x] is not None and ymin is not None:
+            if float(y_by_x[x]) > float(ymin):
+                discard_ymin = True
+            elif discard_ymin is True:
+                discard_ymin = False
+
+    # Build the plot data structure
+    for x in xs:
+        if not x_are_categories and x is not None:
+            if xmax is not None and float(x) > float(xmax):
+                continue
+            if xmin is not None and float(x) < float(xmin):
+                continue
+
+        if y_by_x[x] is not None:
+            if ymax is not None and float(y_by_x[x]) > float(ymax) and discard_ymax is not False:
+                continue
+            if ymin is not None and float(y_by_x[x]) < float(ymin) and discard_ymin is not False:
+                continue
+        pairs.append((x, y_by_x[x]))
+
+    return Series(name=s, pairs=pairs, color=colors.get(s))
 
 
 def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[int, int]]:
