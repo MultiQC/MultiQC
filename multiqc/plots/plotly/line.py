@@ -19,7 +19,7 @@ ValueT = Union[float, int, str, None]
 
 class Series(ModelWithNiceValidation):
     name: str
-    data: Optional[List[Tuple[Union[float, int, str], Union[float, int, str]]]] = Field(None, deprecated="pairs")
+    data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[ValueT, ValueT]]
     color: Optional[str] = None
     width: Optional[int] = None
