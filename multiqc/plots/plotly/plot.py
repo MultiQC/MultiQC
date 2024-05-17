@@ -255,19 +255,23 @@ class Plot(BaseModel):
         plot_type: PlotType,
         pconfig: PConfig,
         n_datasets: int,
+        n_samples: int,
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
+        flat_threshold: Optional[int] = config.plots_flat_numseries,
     ):
         """
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_datasets: number of datasets to pre-initialize dataset models
+        :param n_samples: maximum number of samples in a dataset
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
+        :param flat_threshold: threshold for the number of samples to switch to flat plots
         """
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
@@ -288,9 +292,11 @@ class Plot(BaseModel):
         if pconfig.square:
             width = height
 
-        flat = config.plots_force_flat or (
-            not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
-        )
+        flat = False
+        if config.plots_force_flat:
+            flat = True
+        elif flat_threshold is not None and not config.plots_force_interactive and n_samples > flat_threshold:
+            flat = True
 
         layout = go.Layout(
             title=go.layout.Title(
