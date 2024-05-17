@@ -1,6 +1,6 @@
 import glob
 import logging
-import os
+import os.path
 from pathlib import Path
 from typing import Dict, List
 
@@ -47,7 +47,7 @@ def _make_analysis_file_list():
     else:
         for path in config.analysis_dir:
             for p in glob.glob(str(path)):  # Expand glob patterns
-                report.analysis_files.append(os.path.abspath(p))
+                report.analysis_files.append(p)
 
 
 def include_or_exclude_modules(module_names: List[str]) -> List[str]:
@@ -116,6 +116,6 @@ def _module_list_to_search() -> List[Dict[str, Dict]]:
         mod_names.append("software_versions")
 
     for p in report.analysis_files:
-        logger.info(f"Search path: {p}")
+        logger.info(f"Search path: {os.path.abspath(p)}")
 
     return mod_dicts_in_order
