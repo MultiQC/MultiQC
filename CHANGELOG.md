@@ -8,6 +8,12 @@
 
 ### Module updates
 
+## [MultiQC v1.22.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-17
+
+### Fix run as a Nextflow job
+
+This bug fix release addresses the file search problem when MultiQC executed as a typical Nextflow job. See [#2575](https://github.com/MultiQC/MultiQC/pull/2575) for detail.
+
 ## [MultiQC v1.22](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-14
 
 ### Highlights - notebooks and performance
