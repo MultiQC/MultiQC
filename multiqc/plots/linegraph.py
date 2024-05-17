@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict, Union, Tuple
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT
 from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
@@ -22,11 +22,8 @@ def get_template_mod():
     return _template_mod
 
 
-PointT = Dict[Union[float, int, str, None], Union[float, int, str, None]]
-
-
 def plot(
-    data: Union[List[Dict[str, PointT]], Dict[str, PointT]],
+    data: Union[List[Dict[str, Dict[ValueT, ValueT]]], Dict[str, Dict[ValueT, ValueT]]],
     pconfig: Union[Dict, LinePlotConfig, None] = None,
 ) -> Union[line.LinePlot, str]:
     """
@@ -112,9 +109,9 @@ def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: Dict[str, Union[float, int]],
+    y_by_x: Dict[ValueT, ValueT],
 ) -> Series:
-    pairs: List[Tuple[Union[float, int, str], Union[float, int]]] = []
+    pairs: List[Tuple[ValueT, ValueT]] = []
 
     x_are_categories = pconfig.categories
     ymax = pconfig.ymax
@@ -173,7 +170,7 @@ def _make_series_dict(
     return Series(name=s, pairs=pairs, color=colors.get(s))
 
 
-def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[int, int]]:
+def smooth_line_data(data_by_sample: Dict[str, ValueT], numpoints: int) -> Dict[str, ValueT]:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
@@ -198,7 +195,7 @@ def smooth_line_data(data: Dict[str, Dict], numpoints: int) -> Dict[str, Dict[in
     picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
     """
     smoothed_data = dict()
-    for s_name, d in data.items():
+    for s_name, d in data_by_sample.items():
         # Check that we need to smooth this data
         if len(d) <= numpoints or len(d) == 0:
             smoothed_data[s_name] = d
