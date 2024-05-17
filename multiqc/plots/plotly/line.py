@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Series(ModelWithNiceValidation):
     name: str
+    data: Optional[List[Tuple[Union[float, int, str], Union[float, int]]]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[Union[float, int, str], Union[float, int]]]
     color: Optional[str] = None
     width: Optional[int] = None

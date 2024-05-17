@@ -397,7 +397,7 @@ def report_sections(self):
                     "ymin": 0,
                     "xmin": 0,
                     "xmax": max_x,
-                    "xDecimals": False,
+                    "x_decimals": False,
                     "tt_label": "<b>{point.x}X</b>: {point.y}",
                 },
             ),
@@ -419,7 +419,7 @@ def report_sections(self):
                     "ymin": 0,
                     "xmin": 0,
                     "xmax": max_x,
-                    "xDecimals": False,
+                    "x_decimals": False,
                     "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
                 },
             ),
@@ -512,7 +512,7 @@ def report_sections(self):
             extra_series.append(
                 {
                     "name": species_name,
-                    "data": list(species_data.items()),
+                    "pairs": list(species_data.items()),
                     "width": 1,
                     "dash": "dash",
                     "color": ["#000000", "#E89191"][i % 2],
