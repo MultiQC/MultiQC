@@ -299,12 +299,12 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
-            # No DOI here.. // doi=
+            doi=mod["config"].get("doi"),
         )
 
         # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+        if self.info or self.extra or self.doi_link:
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def update_init(self, c_id, mod):
         """
@@ -322,7 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
         if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
