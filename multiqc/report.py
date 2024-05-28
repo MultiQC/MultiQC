@@ -180,9 +180,13 @@ def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tup
             return
         number_of_newlines = block.count("\n")
         if number_of_newlines == 0:
-            remainder += block
-            continue
-        block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
+            # Use readline function so only one call is needed to complete the
+            # block.
+            block = fp.readline()
+            number_of_newlines = 1
+            block_end = len(block)
+        else:
+            block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
         yield number_of_newlines, remainder + block[:block_end]
         # Store the remainder for the next iteration.
         remainder = block[block_end:]
