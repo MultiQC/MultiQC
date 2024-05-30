@@ -91,11 +91,6 @@ class Dataset(BaseDataset):
             for v in dt_column_by_metric.values():
                 v.color = None
 
-        # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
-        if len(set([v.namespace for v in dt_column_by_metric.values()])) == 1:
-            for v in dt_column_by_metric.values():
-                v.namespace = None
-
         return value_by_sample_by_metric, dt_column_by_metric
 
     @staticmethod
