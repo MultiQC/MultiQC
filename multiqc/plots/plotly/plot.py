@@ -280,6 +280,7 @@ class Plot(BaseModel):
         if id is None:  # id of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
             id = f"mqc_plot_{uniq_suffix}"
+        id = report.save_htmlid(id)
 
         # Counts / Percentages / Log10 switch
         add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
@@ -527,13 +528,11 @@ class Plot(BaseModel):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self, clean_html_id=True) -> str:
+    def add_to_report(self) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
         # Setting IDs again now that we have "report" object to guarantee uniqueness
-        if clean_html_id:
-            self.id = report.save_htmlid(self.id)
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID

@@ -587,7 +587,7 @@ class ViolinPlot(Plot):
             assert self.main_table_dt is not None
             # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.main_table_dt, violin_id=self.id)
-            violin_html = super().add_to_report(clean_html_id=clean_html_id)
+            violin_html = super().add_to_report()
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
             html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
