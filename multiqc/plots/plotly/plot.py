@@ -24,7 +24,9 @@ check_plotly_version()
 
 
 class PConfigValidationError(Exception):
-    pass
+    def __init__(self, module_name: str):
+        self.module_name = module_name
+        super().__init__()
 
 
 pconfig_validation_errors = []
@@ -32,39 +34,39 @@ pconfig_validation_errors = []
 
 class PConfig(BaseModel):
     id: str
-    table_title: Optional[str] = Field(None, deprecated="use 'title' instead")
+    table_title: Optional[str] = Field(None, deprecated="title")
     title: str
-    height: int = 500
+    height: Optional[int] = None
     width: Optional[int] = None
     square: bool = False
     logswitch: Optional[bool] = False
     logswitch_active: bool = False  # log scale is active
     logswitch_label: str = "Log10"
-    cpswitch: Optional[bool] = False
+    cpswitch: Optional[bool] = True
     cpswitch_c_active: bool = True  # percentage scale is _not_ active
     cpswitch_counts_label: str = "Counts"
-    cpswitch_percent_label: str = "Percentage"
-    xLog: Optional[bool] = Field(None, deprecated="use 'xlog' instead")
-    yLog: Optional[bool] = Field(None, deprecated="use 'ylog' instead")
+    cpswitch_percent_label: str = "Percentages"
+    xLog: Optional[bool] = Field(None, deprecated="xlog")
+    yLog: Optional[bool] = Field(None, deprecated="ylog")
     xlog: bool = False
     ylog: bool = False
     data_labels: List[Union[str, Dict[str, Any]]] = []
-    xTitle: Optional[str] = Field(None, deprecated="use 'xlab' instead")
-    yTitle: Optional[str] = Field(None, deprecated="use 'ylab' instead")
+    xTitle: Optional[str] = Field(None, deprecated="xlab")
+    yTitle: Optional[str] = Field(None, deprecated="ylab")
     xlab: Optional[str] = None
     ylab: Optional[str] = None
     xsuffix: Optional[str] = None
     ysuffix: Optional[str] = None
     tt_suffix: Optional[str] = None
-    xLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
-    yLabFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
-    yLabelFormat: Optional[bool] = Field(None, deprecated="use 'xlab_format' instead")
+    xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabFormat: Optional[bool] = Field(None, deprecated="ylab_format")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
     xlab_format: Optional[str] = None
     ylab_format: Optional[str] = None
     tt_label: Optional[str] = None
-    xDecimals: Optional[int] = Field(None, deprecated="use 'x_decimals' instead")
-    yDecimals: Optional[int] = Field(None, deprecated="use 'y_decimals' instead")
-    decimalPlaces: Optional[bool] = Field(None, deprecated="use 'tt_decimals' instead")
+    xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
+    yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
+    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
     tt_decimals: Optional[int] = None
@@ -72,10 +74,10 @@ class PConfig(BaseModel):
     xmax: Optional[Union[float, int]] = None
     ymin: Optional[Union[float, int]] = None
     ymax: Optional[Union[float, int]] = None
-    xFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmin' instead")
-    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'x_clipmax' instead")
-    yFloor: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmin' instead")
-    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="use 'y_clipmax' instead")
+    xFloor: Optional[Union[float, int]] = Field(None, deprecated="x_clipmin")
+    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="x_clipmax")
+    yFloor: Optional[Union[float, int]] = Field(None, deprecated="y_clipmin")
+    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="y_clipmax")
     x_clipmin: Optional[Union[float, int]] = None
     x_clipmax: Optional[Union[float, int]] = None
     y_clipmin: Optional[Union[float, int]] = None
@@ -103,11 +105,11 @@ class PConfig(BaseModel):
                     break
 
             plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"{modname}Invalid {plot_type} plot configuration: {data}:")
+            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
             for error in pconfig_validation_errors:
-                logger.error(f"- {error}")
+                logger.error(f"• {error}")
             pconfig_validation_errors.clear()  # Reset for interactive usage
-            raise PConfigValidationError()
+            raise PConfigValidationError(module_name=modname)
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
@@ -123,7 +125,7 @@ class PConfig(BaseModel):
         for name, val in values.items():
             if name not in cls.model_fields:
                 pconfig_validation_errors.append(
-                    f'unrecognized field: "{name}". Available fields: {", ".join(cls.model_fields.keys())}'
+                    f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
                 )
             else:
                 filtered_values[name] = val
@@ -133,13 +135,10 @@ class PConfig(BaseModel):
         values_without_deprecateds = {}
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
-                msg = cls.model_fields[name].deprecated
-                logger.debug(f"Deprecated field: {name}. {msg}")
-                m = re.search(r"use '(.+)' instead", msg)
-                if m:
-                    new_name = m.group(1)
-                    if new_name not in values:
-                        values_without_deprecateds[new_name] = val
+                new_name = cls.model_fields[name].deprecated
+                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
+                if new_name not in values:
+                    values_without_deprecateds[new_name] = val
             else:
                 values_without_deprecateds[name] = val
         values = values_without_deprecateds
@@ -148,7 +147,7 @@ class PConfig(BaseModel):
         for name, field in cls.model_fields.items():
             if field.is_required():
                 if name not in values:
-                    pconfig_validation_errors.append(f'required field is missing: "{name}"')
+                    pconfig_validation_errors.append(f"missing required field '{name}'")
 
         # Check types
         for name, val in values.items():
@@ -161,7 +160,7 @@ class PConfig(BaseModel):
                 if len(v_str) > 20:
                     v_str = v_str[:20] + "..."
                 expected_type_str = str(expected_type).replace("typing.", "")
-                msg = f'"{name}": expected type "{expected_type_str}", got "{type(val).__name__}" {v_str}'
+                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                 pconfig_validation_errors.append(msg)
                 logger.debug(f"{msg}: {e}")
 
@@ -284,7 +283,7 @@ class Plot(BaseModel):
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
 
-        height = pconfig.height
+        height = pconfig.height or 500
         width = pconfig.width
         if pconfig.square:
             width = height
@@ -316,8 +315,8 @@ class Plot(BaseModel):
             ),
             height=height,
             width=width,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="white",
+            plot_bgcolor="white",
             font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
@@ -395,6 +394,8 @@ class Plot(BaseModel):
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
+            if n_datasets > 1 and "title" not in dconfig:
+                dconfig["title"] = f'{pconfig.title} ({dconfig["name"]})'
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -416,13 +417,22 @@ class Plot(BaseModel):
             flat=flat,
         )
 
-    def show(self, dataset_id: int, flat=False, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
         """
-        Public method: show the plot in a Jupyter notebook.
+        Show the plot in an interactive environment such as Jupyter notebook.
+
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a flat image or an interactive plot
         """
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
-            from IPython.core.display import HTML
+            try:
+                from IPython.core.display import HTML
+            except ImportError:
+                raise ImportError(
+                    "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+                    "such as Jupyter notebook. To save plot to file, use Plot.save method"
+                )
 
             return HTML(
                 fig_to_static_html(
@@ -436,11 +446,57 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
+        """
+        Save the plot to a file. Will write an HTML with an interactive plot -
+        unless flat=True is specified, in which case will write a PNG file.
+
+        @param filename: a string representing a local file path or a writeable object
+        (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
+        an interactive plot will be saved, otherwise a flat image.
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a static image instead of an interactive HTML.
+        """
+        if isinstance(filename, (Path, str)):
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
+
+        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
+        if flat:
+            fig.write_image(
+                filename,
+                scale=2,
+                width=fig.layout.width,
+                height=fig.layout.height,
+            )
+        else:
+            fig.write_html(
+                filename,
+                include_plotlyjs="cdn",
+                full_html=False,
+            )
+        logger.info(f"Plot saved to {filename}")
+
+    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
-        dataset = self.datasets[dataset_id]
+        if isinstance(dataset_id, str):
+            for i, d in enumerate(self.datasets):
+                if d.label == dataset_id:
+                    dataset = d
+                    break
+            else:
+                dataset = self.datasets[0]
+        else:
+            dataset = self.datasets[dataset_id]
+
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:
@@ -755,7 +811,7 @@ def _dataset_layout(
     """
     Given plot config and dataset config, set layout and trace params.
     """
-    pconfig = pconfig.copy()
+    pconfig = pconfig.model_copy()
     for k, v in dconfig.items():
         if k in pconfig.model_fields:
             setattr(pconfig, k, v)

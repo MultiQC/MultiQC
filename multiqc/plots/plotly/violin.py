@@ -1,14 +1,14 @@
 import logging
+from dataclasses import dataclass
 from typing import Dict, List, Union, Any, Optional, Tuple
 import copy
 
 import math
 import numpy as np
 import plotly.graph_objects as go
-from pydantic import BaseModel
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable
+from multiqc.plots.table_object import DataTable, TableColumn
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc.plots.plotly.table import make_table
 
@@ -22,25 +22,32 @@ def plot(dts: List[DataTable], show_table_by_default=False) -> "ViolinPlot":
     return ViolinPlot.create(dts, show_table_by_default)
 
 
-class XAxis(BaseModel):
+@dataclass
+class XAxis:
     ticksuffix: Optional[str] = None
     tickvals: Optional[List[int]] = None
     range: Optional[List[Union[float, int]]] = None
 
 
-class ViolinColumn(BaseModel):
+@dataclass
+class ViolinColumn:
+    title: str
     description: str
     suffix: str
-    title: str
-    xaxis: XAxis
-    dmax: Optional[Union[float, int]]
     dmin: Optional[Union[float, int]]
+    dmax: Optional[Union[float, int]]
     hidden: bool
+    xaxis: XAxis
     show_only_outliers: Optional[bool]
     show_points: Optional[bool]
-    hoverformat: Optional[str] = None
-    color: Optional[str] = None
     namespace: Optional[str] = None
+    color: Optional[str] = None
+    hoverformat: Optional[str] = None
+
+    def model_dump(self) -> Dict:
+        d = self.__dict__
+        d["xaxis"] = self.xaxis.__dict__
+        return d
 
 
 VIOLIN_HEIGHT = 70  # single violin height
@@ -56,81 +63,73 @@ class Dataset(BaseDataset):
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
-    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict, Dict]:
+    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, TableColumn]]:
         value_by_sample_by_metric = {}
-        header_by_metric: Dict[str, Any] = {}
+        dt_column_by_metric: Dict[str, TableColumn] = {}
 
-        for idx, metric_name, header in dt.get_headers_in_order():
-            full_metric_id = header.rid
+        for idx, metric_name, dt_column in dt.get_headers_in_order():
+            full_metric_id = dt_column.rid
 
             value_by_sample = dict()
             for s_name, val_by_metric in dt.raw_data[idx].items():
-                v = val_by_metric.get(metric_name)
-
-                # Take non-empty values for the violin
-                if v is None or str(v).strip() == "":
-                    continue
-
-                # Parse values to numbers if possible
-                if isinstance(v, str):
-                    try:
-                        value_by_sample[s_name] = int(v)
-                    except ValueError:
-                        try:
-                            value_by_sample[s_name] = float(v)
-                        except ValueError:
-                            pass
-
-                value_by_sample[s_name] = v
+                try:
+                    v = val_by_metric[metric_name]
+                except KeyError:
+                    pass
+                else:
+                    assert v is not None and str(v).strip != "", v
+                    value_by_sample[s_name] = v
 
             value_by_sample_by_metric[full_metric_id] = value_by_sample
 
-        for idx, metric_name, header in dt.get_headers_in_order():
-            full_metric_id = header.rid
-            header_by_metric[full_metric_id] = {
-                "namespace": header.namespace,
-                "title": header.title,
-                "description": header.description,
-                "dmax": header.dmax,
-                "dmin": header.dmin,
-                "suffix": header.suffix or "",
-                "color": header.colour,
-                "hidden": header.hidden,
-                "tt_decimals": header.tt_decimals if header.tt_decimals is not None else 2,
-                # Plotly-specific parameters
-                "xaxis": XAxis(ticksuffix=header.suffix),
-                "show_points": True,
-                "show_only_outliers": False,
-            }
+        for idx, metric_name, dt_column in dt.get_headers_in_order():
+            full_metric_id = dt_column.rid
+            dt_column_by_metric[full_metric_id] = dt_column
 
         # If all colors are the same, remove them
-        if len(set([v["color"] for v in header_by_metric.values()])) == 1:
-            for v in header_by_metric.values():
-                v.pop("color", None)
+        if len(set([v.color for v in dt_column_by_metric.values()])) == 1:
+            for v in dt_column_by_metric.values():
+                v.color = None
 
         # If all namespaces are the same as well, remove them too (usually they follow the colors pattern)
-        if len(set([v["namespace"] for v in header_by_metric.values()])) == 1:
-            for v in header_by_metric.values():
-                v.pop("namespace", None)
+        if len(set([v.namespace for v in dt_column_by_metric.values()])) == 1:
+            for v in dt_column_by_metric.values():
+                v.namespace = None
 
-        return value_by_sample_by_metric, header_by_metric
+        return value_by_sample_by_metric, dt_column_by_metric
 
     @staticmethod
     def create(
         dataset: BaseDataset,
         dt: DataTable,
     ) -> "Dataset":
-        value_by_sample_by_metric, header_by_metric = Dataset.values_and_headers_from_dt(dt)
+        value_by_sample_by_metric, dt_column_by_metric = Dataset.values_and_headers_from_dt(dt)
 
         all_samples = set()
         scatter_value_by_sample_by_metric = {}
         violin_value_by_sample_by_metric = {}
+        header_by_metric: Dict[str, ViolinColumn] = {}
         metrics = []
 
-        for metric, header in header_by_metric.items():
+        for metric, dt_column in dt_column_by_metric.items():
+            column = ViolinColumn(
+                namespace=dt_column.namespace,
+                title=dt_column.title,
+                description=dt_column.description,
+                suffix=dt_column.suffix or "",
+                dmax=dt_column.dmax,
+                dmin=dt_column.dmin,
+                hidden=dt_column.hidden,
+                color=dt_column.color,
+                xaxis=XAxis(ticksuffix=dt_column.suffix),
+                show_points=True,
+                show_only_outliers=False,
+            )
+            header_by_metric[metric] = column
+
             value_by_sample = value_by_sample_by_metric[metric]
             if not value_by_sample:
-                logger.debug(f"No non-empty values found for metric: {header['title']}")
+                logger.debug(f"No non-empty values found for metric: {column.title}")
                 continue
 
             values_are_numeric = all(isinstance(v, (int, float)) for v in value_by_sample.values())
@@ -139,31 +138,31 @@ class Dataset(BaseDataset):
                 # Remove NaN and Inf values
                 value_by_sample = {s: v for s, v in value_by_sample.items() if np.isfinite(v)}
                 if not value_by_sample:
-                    logger.warning(f"All values are NaN or Inf for metric: {header['title']}")
+                    logger.warning(f"All values are NaN or Inf for metric: {column.title}")
                     continue
 
-            header["show_points"] = len(value_by_sample) <= config.violin_min_threshold_no_points
-            header["show_only_outliers"] = len(value_by_sample) > config.violin_min_threshold_outliers
+            column.show_points = len(value_by_sample) <= config.violin_min_threshold_no_points
+            column.show_only_outliers = len(value_by_sample) > config.violin_min_threshold_outliers
 
             if values_are_numeric:
                 # Calculate range
-                xmin = header.get("dmin")
-                xmax = header.get("dmax")
+                xmin = column.dmin
+                xmax = column.dmax
                 tickvals = None
                 if xmin == xmax == 0:  # Plotly will modify the 0:0 range to -1:1, and we want to keep it 0-centered
                     xmax = 1
                     tickvals = [0]
-                header["xaxis"].tickvals = tickvals
+                column.xaxis.tickvals = tickvals
                 if xmin is not None and xmax is not None:
-                    if header["show_points"]:
+                    if column.show_points:
                         # add extra padding to avoid clipping the points at range limits
                         xmin -= (xmax - xmin) * 0.005
                         xmax += (xmax - xmin) * 0.005
-                    header["xaxis"].range = [xmin, xmax]
+                    column.xaxis.range = [xmin, xmax]
 
-            if not header["show_points"]:  # Do not add any interactive points
+            if not column.show_points:  # Do not add any interactive points
                 scatter_value_by_sample = {}
-            elif not header["show_only_outliers"]:
+            elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
                 # Sample number is > header['show_only_outliers']
@@ -176,9 +175,9 @@ class Dataset(BaseDataset):
                     values = list(value_by_sample.values())
                     outlier_statuses = find_outliers(
                         values,
-                        minval=header.get("dmin"),
-                        maxval=header.get("dmax"),
-                        metric=header["title"],
+                        minval=column.dmin,
+                        maxval=column.dmax,
+                        metric=column.title,
                     )
                     scatter_value_by_sample = {
                         samples[idx]: values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
@@ -191,7 +190,7 @@ class Dataset(BaseDataset):
             max_violin_points = config.violin_downsample_after
             if max_violin_points is not None and len(violin_value_by_sample) > max_violin_points:
                 logger.debug(
-                    f"Violin for '{header['title']}': sample number is {len(violin_value_by_sample)}. "
+                    f"Violin for '{column.title}': sample number is {len(violin_value_by_sample)}. "
                     f"Will downsample to max {max_violin_points} points."
                 )
                 samples = list(violin_value_by_sample.keys())
@@ -203,9 +202,9 @@ class Dataset(BaseDataset):
             violin_value_by_sample_by_metric[metric] = violin_value_by_sample
 
             # Clean up the header
-            if values_are_numeric and not values_are_integer and "tt_decimals" in header:
-                header["hoverformat"] = f".{header['tt_decimals']}f"
-                del header["tt_decimals"]
+            if values_are_numeric and not values_are_integer:
+                tt_decimals = dt_column.tt_decimals if dt_column.tt_decimals is not None else 2
+                column.hoverformat = f".{tt_decimals}f"
 
             all_samples.update(set(list(scatter_value_by_sample.keys())))
             all_samples.update(set(list(violin_value_by_sample.keys())))
@@ -281,7 +280,7 @@ class Dataset(BaseDataset):
                 "hoverformat": layout["xaxis"]["hoverformat"],
                 "tickfont": copy.deepcopy(layout["xaxis"]["tickfont"]),
             }
-            layout[f"xaxis{metric_idx + 1}"].update(header.xaxis.model_dump())
+            layout[f"xaxis{metric_idx + 1}"].update(header.xaxis.__dict__)
             layout[f"yaxis{metric_idx + 1}"] = {
                 "automargin": layout["yaxis"]["automargin"],
                 "color": layout["yaxis"]["color"],
@@ -483,7 +482,7 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons(flat=flat)
 
-    def show(self, table=None, violin=None, dataset_id=None, **kwargs):
+    def show(self, table=None, violin=None, **kwargs):
         """
         Show the table or violin plot based on the input parameters.
         """
@@ -503,7 +502,52 @@ class ViolinPlot(Plot):
             return df  # Jupyter knows how to display dataframes
 
         else:
-            return super().show(dataset_id=dataset_id or 0, **kwargs)
+            return super().show(**kwargs)
+
+    def save(self, filename: str, table=None, violin=None, flat=False, **kwargs):
+        """
+        Save the plot to a file
+        """
+        if self.show_table_by_default and violin is not True or table is True:
+            # Make Plotly go.Table object and save it
+            data = {}
+            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+                rid = header.rid
+                for s_name in self.main_table_dt.raw_data[idx].keys():
+                    if metric in self.main_table_dt.raw_data[idx][s_name]:
+                        val = self.main_table_dt.raw_data[idx][s_name][metric]
+                        if val is not None:
+                            data.setdefault(s_name, {})[rid] = val
+
+            values = [list(data.keys())]
+            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+                rid = header.rid
+                values.append([data[s].get(rid, "") for s in data.keys()])
+
+            fig = go.Figure(
+                data=[
+                    go.Table(
+                        header=dict(values=["Sample"] + list(data[list(data.keys())[0]].keys())),
+                        cells=dict(values=values),
+                    )
+                ],
+                layout=self.layout,
+            )
+            if flat:
+                fig.write_image(
+                    filename,
+                    scale=2,
+                    width=fig.layout.width,
+                    height=fig.layout.height,
+                )
+            else:
+                fig.write_html(
+                    filename,
+                    include_plotlyjs="cdn",
+                    full_html=False,
+                )
+        else:
+            super().save(filename, **kwargs)
 
     def add_to_report(self, clean_html_id=True) -> str:
         warning = ""

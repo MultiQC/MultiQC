@@ -3,6 +3,7 @@ import shutil
 import sys
 import time
 import traceback
+import tracemalloc
 from importlib.metadata import EntryPoint
 from typing import Dict, Union, Callable, List
 
@@ -16,6 +17,12 @@ from multiqc.core import plugin_hooks, software_versions
 from multiqc.plots.plotly.plot import PConfigValidationError
 
 logger = logging.getLogger(__name__)
+
+
+def trace_memory(stage: str):
+    if config.profile_memory:
+        mem_current, mem_peak = tracemalloc.get_traced_memory()
+        logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
 
 
 def exec_modules(
@@ -43,9 +50,14 @@ def exec_modules(
     plugin_hooks.mqc_trigger("before_modules")
     sys_exit_code = 0
     total_mods_starttime = time.time()
+
     for mod_idx, mod_dict in enumerate(mod_dicts_in_order):
         mod_starttime = time.time()
+        if config.profile_memory:
+            tracemalloc.start()
+
         this_module: str = list(mod_dict.keys())[0]
+        logger.debug(f"Running module: {this_module}")
         mod_cust_config: Dict = list(mod_dict.values())[0] or {}
         # noinspection PyBroadException
         try:
@@ -55,22 +67,28 @@ def exec_modules(
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
-            this_modules = module_initializer()
+            these_modules: Union[BaseMultiqcModule, List[BaseMultiqcModule]] = module_initializer()
             # END RUN MODULE
             # *********************************************
 
             # Single module initializer can create multiple module objects (see custom_content)
-            if not isinstance(this_modules, list):
-                this_modules = [this_modules]
+            if not isinstance(these_modules, list):
+                these_modules = [these_modules]
+
+            # Clean up non-base attribute to save memory.
+            trace_memory("before cleaning up attributes")
+            for m in these_modules:
+                m.clean_child_attributes()
+            trace_memory("after cleaning up attributes")
 
             # Override duplicated outputs
             for prev_mod in report.modules:
-                if prev_mod.name in set(m.name for m in this_modules):
+                if prev_mod.name in set(m.name for m in these_modules):
                     logger.info(
                         f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new samples to a module with multiqc.parse_logs()'
                     )
                     report.modules.remove(prev_mod)
-            report.modules.extend(this_modules)
+            report.modules.extend(these_modules)
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
@@ -83,15 +101,9 @@ def exec_modules(
                 logger.debug(msg)
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
-            if clean_up:
-                shutil.rmtree(report.tmp_dir)
-            logger.critical(
-                "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
-                + "User Cancelled Execution!\nExiting MultiQC..."
-            )
-            sys.exit(1)
+            raise
         except PConfigValidationError:
-            sys.exit(f"{this_module}: invalid plot configuration, see errors above.")
+            raise
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
@@ -144,6 +156,17 @@ def exec_modules(
             sys_exit_code = 1
 
         report.runtimes["mods"][mod_names[mod_idx]] = time.time() - mod_starttime
+        if config.profile_memory:
+            mem_current, mem_peak = tracemalloc.get_traced_memory()
+            tracemalloc.stop()
+            report.peak_memory_bytes_per_module[mod_names[mod_idx]] = mem_peak
+            report.diff_memory_bytes_per_module[mod_names[mod_idx]] = mem_current
+            logger.warning(
+                f"{this_module}: memory change: {mem_current:,d}b, peak during module execution: {mem_peak:,d}b"
+            )
+        if config.profile_runtime:
+            logger.warning(f"{this_module}: module run time: {report.runtimes['mods'][mod_names[mod_idx]]:.2f}s")
+
     report.runtimes["total_mods"] = time.time() - total_mods_starttime
 
     # Again, if config.require_logs is set, check if for all explicitly requested

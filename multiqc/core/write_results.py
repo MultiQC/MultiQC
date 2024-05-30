@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 import traceback
+from pathlib import Path
 from typing import Set
 
 from multiqc.core.file_search import include_or_exclude_modules
@@ -386,11 +387,12 @@ def _write_data_files() -> None:
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
-        multiqc_json_dump = report.multiqc_dump_json()
+        dump = report.multiqc_dump_json()
         if config.data_dump_file:
-            report.write_data_file(multiqc_json_dump, "multiqc_data", False, "json")
+            with (Path(config.data_dir) / "multiqc_data.json").open("w") as f:
+                util_functions.dump_json(dump, f, indent=4, ensure_ascii=False)
         if config.megaqc_url:
-            megaqc.multiqc_api_post(multiqc_json_dump)
+            megaqc.multiqc_api_post(dump)
 
     if config.development:
         with open(os.path.join(config.data_dir, "multiqc_plots.js"), "w") as f:

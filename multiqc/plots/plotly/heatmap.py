@@ -30,12 +30,12 @@ class HeatmapConfig(PConfig):
     ycats_samples: bool = False
     square: bool = True
     colstops: List[List] = []
-    reverseColors: bool = Field(False, deprecated="use 'reverse_colors' instead")
+    reverseColors: bool = Field(False, deprecated="reverse_colors")
     reverse_colors: bool = False
-    decimalPlaces: int = Field(2, deprecated="use 'tt_decimals' instead")
+    decimalPlaces: int = Field(2, deprecated="tt_decimals")
     tt_decimals: int = 2
     legend: bool = True
-    datalabels: Optional[bool] = Field(None, deprecated="use 'display_values' instead")
+    datalabels: Optional[bool] = Field(None, deprecated="display_values")
     display_values: Optional[bool] = None
     angled_xticks: bool = True
 
@@ -209,12 +209,12 @@ class HeatmapPlot(Plot):
             if n >= 10:
                 return 45
             if n >= 5:
-                return 60
+                return 52
             if n >= 3:
-                return 80
+                return 60
             if n >= 2:
-                return 100
-            return 120
+                return 80
+            return 100
 
         x_px_per_elem = n_elements_to_size(num_cols)
         y_px_per_elem = n_elements_to_size(num_rows)
@@ -316,6 +316,10 @@ class HeatmapPlot(Plot):
             # Enable labels if there are less than 20x20 cells, unless display_values is set explicitly
             if pconfig.display_values is True or pconfig.display_values is None and num_rows * num_cols < 400:
                 ds.trace_params["texttemplate"] = "%{z:." + str(pconfig.tt_decimals) + "f}"
+
+            # We only want to use heatmap labels for tooltips, but not on the axis
+            ds.layout["xaxis"]["title"] = None
+            ds.layout["yaxis"]["title"] = None
 
         return HeatmapPlot(
             **model.__dict__,

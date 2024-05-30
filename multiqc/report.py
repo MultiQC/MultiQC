@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 from collections import defaultdict
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
 
 import rich
@@ -50,6 +50,8 @@ num_flat_plots: int
 saved_raw_data: Dict[str, Dict[str, Any]]  # Indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Dict[str, Union[float, Dict]]
+peak_memory_bytes_per_module: Dict[str, int]
+diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, int]
 searchfiles: List
 files: Dict
@@ -79,6 +81,8 @@ def __initialise():
     global saved_raw_data
     global last_found_file
     global runtimes
+    global peak_memory_bytes_per_module
+    global diff_memory_bytes_per_module
     global data_sources
     global html_ids
     global plot_data
@@ -107,6 +111,8 @@ def __initialise():
         "sp": defaultdict(),
         "mods": defaultdict(),
     }
+    peak_memory_bytes_per_module = dict()
+    diff_memory_bytes_per_module = dict()
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
     html_ids = []
     plot_data = dict()
@@ -316,7 +322,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
         "MANIFEST.in",
         ".gitmodules",
         "README.md",
-        "setup.py",
+        "pyproject.toml",
         ".gitignore",
     ]
 
@@ -509,7 +515,10 @@ def search_files(run_module_names):
     # so it prints each update ona a new line. Better disable it for CI.
     disable_progress = config.no_ansi or config.quiet or os.getenv("CI")
 
-    if is_running_in_notebook() or no_unicode():
+    # Rich widgets do not look good in Jupyter, of it there is no unicode support.
+    # Additionally, falling back to tqdm if rich_console was not initialized. That
+    # happens when init_log.init_log() wasn't run, i.e in unit tests.
+    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console"):
         PRINT_FNAME = False
         # ANSI escape code for dim text
         if not config.no_ansi:
@@ -576,7 +585,8 @@ def search_files(run_module_names):
     for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
         if "skipped_" in key and file_search_stats[key] > 0:
             summaries.append(f"{key}: {file_search_stats[key]}")
-    logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
+    if summaries:
+        logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
 def search_file(pattern, f: SearchFile, module_key):
@@ -788,7 +798,8 @@ def compress_json(data):
     # Stream to an in-memory buffer rather than compressing the big string
     # at once. This saves memory.
     buffer = io.BytesIO()
-    with gzip.open(buffer, "wt", encoding="utf-8", compresslevel=9) as gzip_buffer:
+    with gzip.open(buffer, "wt", encoding="utf-8", compresslevel=6) as gzip_buffer:
+        # The compression level 6 gives 10% speed gain vs. 2% extra size, in contrast to default compresslevel=9
         dump_json(data, gzip_buffer)
     base64_bytes = base64.b64encode(buffer.getvalue())
     return base64_bytes.decode("ascii")
@@ -938,7 +949,11 @@ def multiqc_dump_json():
             try:
                 d = None
                 if s == "config":
-                    d = {f"{s}_{k}": getattr(config, k)}
+                    v = getattr(config, k)
+                    v = str(v) if isinstance(v, PosixPath) else v
+                    if isinstance(v, list):
+                        v = [str(el) if isinstance(el, PosixPath) else el for el in v]
+                    d = {f"{s}_{k}": v}
                 elif s == "report":
                     d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
                 if d:
@@ -953,7 +968,7 @@ def multiqc_dump_json():
         exported_data["config_analysis_dir_abs"] = list()
         for d in exported_data.get("config_analysis_dir", []):
             try:
-                exported_data["config_analysis_dir_abs"].append(os.path.abspath(d))
+                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(d)))
             except Exception:
                 pass
     return exported_data

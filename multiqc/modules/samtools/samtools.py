@@ -33,8 +33,8 @@ class MultiqcModule(
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Samtools",
-            anchor="Samtools",
-            target="Samtools",
+            anchor="samtools",
+            target="samtools",
             href="http://www.htslib.org",
             info=" is a suite of programs for interacting with high-throughput sequencing data.",
             doi="10.1093/bioinformatics/btp352",

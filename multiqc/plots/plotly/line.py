@@ -21,20 +21,20 @@ class LinePlotConfig(PConfig):
     smooth_points: Optional[int] = None
     smooth_points_sumcounts: Optional[int] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
-    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="use 'x_minrange' instead")
-    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="use 'y_minrange' instead")
+    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
+    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
     y_minrange: Optional[Union[float, int]] = None
-    xPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'x_bands' instead")
-    yPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'y_bands' instead")
-    xPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'x_lines' instead")
-    yPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="use 'y_lines' instead")
+    xPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_bands")
+    yPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_bands")
+    xPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_lines")
+    yPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_lines")
     x_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
     y_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
     x_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
     y_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
     style: Literal["lines", "lines+markers"] = "lines"
-    hide_zero_cats: Optional[bool] = Field(False, deprecated="use 'hide_empty' instead")
+    hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
     hide_empty: bool = False
     colors: Dict[str, str] = {}
 

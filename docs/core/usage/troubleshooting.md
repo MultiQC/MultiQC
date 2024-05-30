@@ -132,8 +132,8 @@ RuntimeError: Click will abort further execution because Python 3 was configured
 as encoding for the environment.  Consult http://click.pocoo.org/python3/for mitigation steps.
 ```
 
-You can fix this by setting your system locale to something that will be recognised. 
-One way to do this is by adding these lines to your `.bashrc` in your home directory 
+You can fix this by setting your system locale to something that will be recognised.
+One way to do this is by adding these lines to your `.bashrc` in your home directory
 (or `.zshrc`/`.bash_profile`/etc.):
 
 ```bash

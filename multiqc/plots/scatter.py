@@ -43,7 +43,7 @@ def plot(
         d = list()
         for s_name in ds:
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config: ScatterConfig = pconfig.copy()
+            series_config: ScatterConfig = pconfig.model_copy()
             if pconfig.data_labels and isinstance(pconfig.data_labels[data_index], dict):
                 # if not a dict: only dataset name is provided
                 for k, v in pconfig.data_labels[data_index].items():

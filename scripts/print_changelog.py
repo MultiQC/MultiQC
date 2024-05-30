@@ -132,6 +132,9 @@ def determine_change_type(message, commit_sha) -> tuple[str, dict]:
     """
     added_modules = modules_added_by_commit(commit_sha)
     modified_modules = modules_modified_by_commit(commit_sha)
+    modified_modules = {
+        m for m in modified_modules if m not in {"profile_runtime.py", "custom_content.py", "base_module.py"}
+    }
 
     # Sanity check PR name suggesting a newly added module
     if message.lower().capitalize().startswith("New module: "):

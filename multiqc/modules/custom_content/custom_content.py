@@ -5,17 +5,14 @@ import json
 import logging
 import os
 import re
-import sys
 from collections import defaultdict
 from typing import List, Dict
 
 import yaml
-from pydantic import ValidationError
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
-from multiqc.plots.plotly.plot import PConfig, pconfig_validation_errors
+from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -326,37 +323,6 @@ class MultiqcModule(BaseMultiqcModule):
         # This needs overwriting again as it has already run on init
         if self.info or self.extra:
             self.intro = f"<p>{self.info}</p>{self.extra}"
-
-    @staticmethod
-    def validate_pconfig(pconfig: Dict, plot_type, c_id) -> PConfig:
-        try:
-            if plot_type == "bargraph":
-                return bargraph.BarPlotConfig(**pconfig)
-            if plot_type == "linegraph":
-                return linegraph.LinePlotConfig(**pconfig)
-            if plot_type == "box":
-                return box.BoxPlotConfig(**pconfig)
-            if plot_type == "scatter":
-                return scatter.ScatterConfig(**pconfig)
-            if plot_type == "heatmap":
-                return heatmap.HeatmapConfig(**pconfig)
-            if plot_type in ["violin", "beeswarm"]:
-                return violin.TableConfig(**pconfig)
-            if plot_type == "table":
-                return table.TableConfig(**pconfig)
-            else:
-                raise ValueError(f"Plot type '{plot_type}' not recognised")
-
-        except ValidationError as e:
-            print(e)
-            pass  # errors are already added into plot.pconfig_validation_errors by a custom validator
-
-        if pconfig_validation_errors:
-            msg = f'Error parsing configuration for heatmap plot "{c_id}":'
-            for error in pconfig_validation_errors:
-                msg += f"\n{error}"
-            log.error(msg)
-            sys.exit(1)
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())

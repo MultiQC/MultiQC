@@ -73,7 +73,7 @@ def make_table(
         if violin_id:
             data += f" data-violin-id='{violin_id}'"
         t_modal_headers[rid] = f"""
-        <tr class="{rid}{muted}" style="background-color: rgba({header.colour}, 0.15);">
+        <tr class="{rid}{muted}" style="background-color: rgba({header.color}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{rid}" {data}>
@@ -461,7 +461,7 @@ def _get_sortlist(dt: DataTable) -> str:
             idx = next(
                 idx
                 for idx, (_, k, header) in enumerate(headers)
-                if d["column"].lower() in [k.lower(), header["title"].lower()]
+                if d["column"].lower() in [k.lower(), header.title.lower()]
             )
         except StopIteration:
             logger.warning(
