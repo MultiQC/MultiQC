@@ -133,7 +133,20 @@ class HeatmapPlot(Plot):
         xcats: Optional[List[str]],
         ycats: Optional[List[str]],
     ) -> "HeatmapPlot":
-        model = Plot.initialize(plot_type=PlotType.HEATMAP, pconfig=pconfig, n_datasets=1)
+        max_n_samples = 0
+        if rows:
+            max_n_samples = len(rows)
+            if isinstance(rows, list):
+                max_n_samples = max(max_n_samples, len(rows[0]))
+            else:
+                max_n_samples = max(max_n_samples, len(rows[next(iter(rows))]))
+
+        model = Plot.initialize(
+            plot_type=PlotType.HEATMAP,
+            pconfig=pconfig,
+            n_datasets=1,
+            n_samples=max_n_samples,
+        )
 
         if isinstance(rows, list):
             if ycats and not isinstance(ycats, list):

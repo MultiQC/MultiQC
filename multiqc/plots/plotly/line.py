@@ -206,6 +206,7 @@ class LinePlot(Plot):
             plot_type=PlotType.LINE,
             pconfig=pconfig,
             n_datasets=len(lists_of_lines),
+            n_samples=max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0,
             axis_controlled_by_switches=["yaxis"],
             default_tt_label="<br>%{x}: %{y}",
         )

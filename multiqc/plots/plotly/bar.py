@@ -64,7 +64,6 @@ def plot(
         pconfig=pconfig,
         cats_lists=cats_lists,
         samples_lists=samples_lists,
-        max_n_samples=max([len(samples) for samples in samples_lists]),
     )
 
 
@@ -153,15 +152,17 @@ class BarPlot(Plot):
         pconfig: BarPlotConfig,
         cats_lists: List,
         samples_lists: List,
-        max_n_samples: int,
     ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
+
+        max_n_samples = max(len(x) for x in samples_lists) if len(samples_lists) > 0 else 0
 
         model = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_datasets=len(cats_lists),
+            n_samples=max_n_samples,
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
         )

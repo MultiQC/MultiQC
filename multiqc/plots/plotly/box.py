@@ -34,7 +34,6 @@ def plot(
     return BoxPlot.create(
         pconfig=pconfig,
         list_of_data_by_sample=list_of_data_by_sample,
-        max_n_samples=max(len(d) for d in list_of_data_by_sample),
     )
 
 
@@ -106,12 +105,14 @@ class BoxPlot(Plot):
     def create(
         pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
-        max_n_samples: int,
     ) -> "BoxPlot":
+        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
+
         model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             n_datasets=len(list_of_data_by_sample),
+            n_samples=max_n_samples,
         )
 
         model.datasets = [
