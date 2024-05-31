@@ -503,6 +503,7 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
             "Strict mode specified. Will exit early if a module or a template crashed, and will "
             "give warnings if anything is not optimally configured in a module or a template."
         )
+    report.reset()
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 
