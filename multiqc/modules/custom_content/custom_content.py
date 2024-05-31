@@ -321,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
         if self.extra is None or self.info == "":
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
-        if self.info or self.extra:
+        if self.info or self.extra or self.doi_link:
             self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def add_cc_section(self, c_id, mod):
