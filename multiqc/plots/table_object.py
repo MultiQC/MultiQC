@@ -62,6 +62,9 @@ class TableColumn(BaseModel):
 ValueT = Union[int, float, str, bool]
 
 
+DatasetT = Mapping[str, Mapping[str, Optional[ValueT]]]
+
+
 class DataTable(BaseModel):
     """
     Data table class. Prepares and holds data and configuration
@@ -77,7 +80,7 @@ class DataTable(BaseModel):
 
     @staticmethod
     def create(
-        data: Union[List[Mapping[str, Mapping[str, Optional[ValueT]]]], Mapping[str, Mapping[str, Optional[ValueT]]]],
+        data: Union[DatasetT, List[DatasetT]],
         pconfig: TableConfig,
         headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
     ) -> "DataTable":
