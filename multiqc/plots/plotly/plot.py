@@ -532,7 +532,6 @@ class Plot(BaseModel):
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
-        # Setting IDs again now that we have "report" object to guarantee uniqueness
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
