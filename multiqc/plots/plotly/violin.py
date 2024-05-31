@@ -577,7 +577,7 @@ class ViolinPlot(Plot):
             # Show violin alone.
             # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
             # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-            html = warning + super().add_to_report(clean_html_id=clean_html_id)
+            html = warning + super().add_to_report()
         elif self.no_violin:
             assert self.main_table_dt is not None
             # Show table alone
