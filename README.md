@@ -1,10 +1,10 @@
-&nbsp;
+<h1>
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png">
   <source media="(prefers-color-scheme: light)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png">
   <img src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png" alt="MultiQC">
 </picture>
-&nbsp;
+</h1>
 
 ### Aggregate bioinformatics results across many samples into a single report
 
