@@ -239,7 +239,7 @@ def make_table(
 
         # Remove header if we don't have any filled cells for it
         if sum([len(rows) for rows in t_rows.values()]) == 0:
-            if header.hidden is True:
+            if header.hidden:
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
