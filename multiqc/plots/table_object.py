@@ -23,10 +23,12 @@ class TableConfig(PConfig):
     save_file: bool = False
     raw_data_fn: Optional[str] = None
     defaultsort: Optional[List[Dict[str, str]]] = None
-    sort_rows: bool = Field(True, deprecated="sortRows")
+    sortRows: bool = Field(True, deprecated="sortRows")
+    sort_rows: bool = True
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
-    no_violin: bool = Field(False, deprecated="no_beeswarm")
+    no_beeswarm: bool = Field(False, deprecated="no_violin")
+    no_violin: bool = False
     scale: Union[str, bool] = "GnBu"
     min: Optional[Union[int, float]] = None
 
