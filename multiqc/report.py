@@ -861,6 +861,7 @@ def write_data_file(
         # noinspection PyBroadException
         try:
             # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
+            header_set = set()
             headers = []
             rows = []
 
@@ -869,7 +870,8 @@ def write_data_file(
                     continue
                 if isinstance(d, dict):
                     for h in d.keys():
-                        if h not in headers:
+                        if h not in header_set:  # Use a set for fast membership checking.
+                            header_set.add(h)
                             headers.append(h)
             if headers:
                 if sort_cols:
