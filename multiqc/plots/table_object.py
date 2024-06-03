@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +23,15 @@ class TableConfig(PConfig):
     save_file: bool = False
     raw_data_fn: Optional[str] = None
     defaultsort: Optional[List[Dict[str, str]]] = None
-    sort_rows: bool = True
+    sort_rows: bool = Field(True, deprecated="sortRows")
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
-    no_violin: bool = False
+    no_violin: bool = Field(False, deprecated="no_beeswarm")
     scale: Union[str, bool] = "GnBu"
     min: Optional[Union[int, float]] = None
 
 
-class TableColumn(BaseModel):
+class TableColumn(ValidatedConfig):
     """
     Column model class. Holds configuration for a single column in a table.
     """
@@ -41,7 +42,8 @@ class TableColumn(BaseModel):
     namespace: str
     scale: Union[str, bool]
     hidden: bool
-    color: str = Field(validation_alias="colour")
+    colour: Optional[str] = Field(None, deprecated="color")
+    color: str
     placement: float = None
     max: Optional[float] = None
     dmax: Optional[float] = None
