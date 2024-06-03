@@ -23,7 +23,7 @@ class TableConfig(PConfig):
     save_file: bool = False
     raw_data_fn: Optional[str] = None
     defaultsort: Optional[List[Dict[str, str]]] = None
-    sortRows: bool = Field(True, deprecated="sortRows")
+    sortRows: bool = Field(True, deprecated="sort_rows")
     sort_rows: bool = True
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
