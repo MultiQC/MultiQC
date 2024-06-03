@@ -91,6 +91,7 @@ For more information, please see the MultiQC release blog article on the Seqera 
 - Lint check for use of `f["content_lines"]` ([#2485](https://github.com/MultiQC/MultiQC/pull/2485))
 - Allow to set style of line graph (`lines` or `lines+markers`) per plot ([#2413](https://github.com/MultiQC/MultiQC/pull/2413))
 - Add `CMD` to `Dockerfile` so a default run without any parameters displays the `--help` ([#2279](https://github.com/MultiQC/MultiQC/pull/2279))
+- Custom content tables are sorted by key by default (unless `sort_rows: false` is set in config), to harmonize with tables in modules.
 
 ### New modules
 
