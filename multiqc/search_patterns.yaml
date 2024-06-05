@@ -658,17 +658,17 @@ picard/oxogmetrics:
 picard/pcr_metrics:
   contents: "TargetedPcrMetrics"
 picard/quality_by_cycle:
-  - contents_re: "[Qq]uality[Bb]y[Cc]ycle"
+  - contents_re: ".*[Qq]uality[Bb]y[Cc]ycle"
     contents: "MEAN_QUALITY"
   - contents: "--algo MeanQualityByCycle"
 picard/quality_score_distribution:
-  - contents_re: "[Qq]uality[Ss]core[Dd]istribution"
+  - contents_re: ".*[Qq]uality[Ss]core[Dd]istribution"
     contents: "COUNT_OF_Q"
   - contents: "--algo QualDistribution"
 picard/quality_yield_metrics:
   contents: "QualityYieldMetrics"
 picard/rnaseqmetrics:
-  contents_re: "[Rr]na[Ss]eq[Mm]etrics"
+  contents_re: ".*[Rr]na[Ss]eq[Mm]etrics"
 picard/rrbs_metrics:
   contents: "RrbsSummaryMetrics"
 picard/sam_file_validation:
