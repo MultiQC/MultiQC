@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
         # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
         general_stats_headers = {
             "frac_het_phased": {
-                "id": "perc_het_phased",
+                "rid": "perc_het_phased",
                 "title": "% Phased Variants",
                 "description": """Fraction of heterozygous variants
                                           that could be phased.
@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "bp_per_block_avg": {
-                "id": "bp_per_block_avg",
+                "rid": "bp_per_block_avg",
                 "title": "Avg bp per Block",
                 "description": """Description of the distribution of non-singleton
                                         block lengths, where the length of a block is the
@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "block_n50": {
-                "id": "block_n50",
+                "rid": "block_n50",
                 "title": "NG50",
                 "description": """The NG50 value of the distribution of the block
                                         lengths. Interleaved blocks are cut in order to
@@ -301,7 +301,7 @@ class MultiqcModule(BaseMultiqcModule):
         # https://whatshap.readthedocs.io/en/latest/guide.html#the-tsv-statistics-format
         stats_headers = {
             "variants": {
-                "id": "variants",
+                "rid": "variants",
                 "title": "Input Variants",
                 "description": """Number of biallelic variants in the input VCF, but
                                         excluding any non-SNV variants if --only-snvs was
@@ -310,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "heterozygous_variants": {
-                "id": "heterozygous_variants",
+                "rid": "heterozygous_variants",
                 "title": "Heterozygous Variants",
                 "description": """The number of biallelic, heterozygous variants in
                                         the input VCF. This is a subset of Input Variants.""",
@@ -318,7 +318,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "heterozygous_snvs": {
-                "id": "heterozygous_snvs",
+                "rid": "heterozygous_snvs",
                 "title": "Heterozygous SNVs",
                 "description": """The number of biallelic, heterozygous SNVs in the
                                         input VCF. This is a subset of Heterozygous
@@ -327,7 +327,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "unphased": {
-                "id": "unphased",
+                "rid": "unphased",
                 "title": "Unphased Variants",
                 "description": """The number of biallelic, heterozygous variants that
                                         are not marked as phased in the input VCF. This
@@ -336,7 +336,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "phased": {
-                "id": "phased",
+                "rid": "phased",
                 "title": "Phased Variants",
                 "description": """The number of biallelic, heterozygous variants that
                                         are marked as phased in the input VCF. This is
@@ -346,7 +346,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "phased_snvs": {
-                "id": "phased_snvs",
+                "rid": "phased_snvs",
                 "title": "Phased SNVs",
                 "description": """The number of biallelic, heterozygous SNVs that are
                                         marked as phased in the input VCF. This is a subset
@@ -355,21 +355,21 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "blocks": {
-                "id": "blocks",
+                "rid": "blocks",
                 "title": "Blocks",
                 "description": "The total number of phase sets/blocks.",
                 "format": "{:,.0f}",
                 "hidden": False,
             },
             "singletons": {
-                "id": "singletons",
+                "rid": "singletons",
                 "title": "Singletons",
                 "description": "The number of blocks that contain exactly one variant.",
                 "format": "{:,.0f}",
                 "hidden": False,
             },
             "bp_per_block_sum": {
-                "id": "bp_per_block_sum",
+                "rid": "bp_per_block_sum",
                 "title": "Total Phased bp",
                 "description": """The sum of the lengths of all non-singleton
                                         blocks, where the length of a block is the
@@ -380,7 +380,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "variant_per_block_avg": {
-                "id": "variant_per_block_avg",
+                "rid": "variant_per_block_avg",
                 "title": "Avg Variants per Block",
                 "description": """Description of the distribution of non-singleton
                                         block sizes, where the size of a block is the number
@@ -390,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": False,
             },
             "frac_het_phased": {
-                "id": "perc_het_phased",
+                "rid": "perc_het_phased",
                 "title": "% Phased Variants",
                 "description": """Fraction of heterozygous variants
                                           that could be phased.
@@ -403,7 +403,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "bp_per_block_avg": {
-                "id": "bp_per_block_avg",
+                "rid": "bp_per_block_avg",
                 "title": "Avg bp per Block",
                 "description": """Description of the distribution of non-singleton
                                         block lengths, where the length of a block is the
@@ -414,7 +414,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "block_n50": {
-                "id": "block_n50",
+                "rid": "block_n50",
                 "title": "NG50",
                 "description": """The NG50 value of the distribution of the block
                                         lengths. Interleaved blocks are cut in order to
