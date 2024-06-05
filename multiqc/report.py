@@ -643,13 +643,17 @@ def search_file(pattern, f: SearchFile, module_key):
             for line_count, line_block in f.line_block_iterator():
                 if expected_contents and expected_contents in line_block:
                     contents_matched = True
+                elif repattern:
+                    for line in line_block.split("\n"):
+                        if repattern.match(line):
+                            contents_matched = True
+                            break
+                if contents_matched:
                     break
-                if repattern and repattern.match(line_block):
-                    contents_matched = True
-                    break
-                total_newlines += line_count
-                if total_newlines >= num_lines:
-                    break
+                else:
+                    total_newlines += line_count
+                    if total_newlines >= num_lines:
+                        break
         except Exception:
             file_search_stats["skipped_file_contents_search_errors"] += 1
             return False
