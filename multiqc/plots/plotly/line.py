@@ -19,7 +19,7 @@ class LinePlotConfig(PConfig):
     ylab: Optional[str] = None
     categories: bool = False
     smooth_points: Optional[int] = None
-    smooth_points_sumcounts: Optional[int] = None
+    smooth_points_sumcounts: Union[bool, List[bool], None] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
