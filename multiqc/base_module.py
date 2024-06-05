@@ -61,6 +61,7 @@ class BaseMultiqcModule:
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
+        self.id = anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         target = self.mod_cust_config.get("target", target)
         self.href = self.mod_cust_config.get("href", href)
@@ -128,6 +129,19 @@ class BaseMultiqcModule:
 
         self.css: Dict[str, str] = dict()
         self.js: Dict[str, str] = dict()
+
+        # Get list of all base attributes, so we clean up any added by child modules
+        self._base_attributes = [k for k in dir(self)]
+
+    def clean_child_attributes(self):
+        """
+        Clean up non-base attribute to save memory. If the attribute is added in subclass,
+        but absent in the base class BaseMultiqcModule, delete it.
+        """
+        for key in list(self.__dict__.keys()):
+            if key not in self._base_attributes and not key.startswith("_"):
+                logger.debug(f"{self.anchor}: deleting attribute self.{key}")
+                delattr(self, key)
 
     @property
     def saved_raw_data(self):
@@ -655,11 +669,12 @@ class BaseMultiqcModule:
             fn = f"{base_fn}_{i}"
             i += 1
 
-        # Save the file
-        report.saved_raw_data[fn] = data
-        # Keep also in the module instance, so it's possible to map back data to specific module
-        self.__saved_raw_data[fn] = data
+        if config.preserve_module_raw_data:
+            report.saved_raw_data[fn] = data
+            # Keep also in the module instance, so it's possible to map back data to specific module
+            self.__saved_raw_data[fn] = data
 
+        # Save the file
         report.write_data_file(data, fn, sort_cols, data_format)
 
     ##################################################

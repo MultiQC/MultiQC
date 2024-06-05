@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-commands-table",
-            "table_title": "Cluster Flow Commands",
+            "table_title": "Cluster Flow: Commands",
             "col1_header": "Tool",
             "sort_rows": False,
             "no_violin": True,

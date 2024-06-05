@@ -184,7 +184,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "rockhopper_reads_counts_plot",
             "title": "Rockhopper: Alignment types",
             "ylab": "Number of reads",
-            "tt_percentage": False,
         }
 
         # Plot bar graph of groups

@@ -17,28 +17,21 @@ the main MultiQC framework and submit a pull request.
 
 The plugin system works using setuptools
 [entry points](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
-In `setup.py` you will see a section of code that looks like this _(truncated)_:
 
-```python
-entry_points = {
-    'multiqc.modules.v1': [
-        'qualimap = multiqc.modules.qualimap:MultiqcModule',
-    ],
-    'multiqc.templates.v1': [
-        'default = multiqc.templates.default',
-    ],
-    # 'multiqc.cli_options.v1': [
-        # 'my-new-option = myplugin.cli:new_option'
-    # ],
-    # 'multiqc.hooks.v1': [
-        # 'before_config = myplugin.hooks:before_config',
-        # 'config_loaded = myplugin.hooks:config_loaded',
-        # 'execution_start = myplugin.hooks:execution_start',
-        # 'before_modules = myplugin.hooks:before_modules',
-        # 'after_modules = myplugin.hooks:after_modules',
-        # 'execution_finish = myplugin.hooks:execution_finish',
-    # ]
-},
+In `pyproject.toml` you will see a section of code that looks like this _(truncated)_:
+
+```toml
+[project.entry-points."multiqc.modules.v1"]
+qualimap = "multiqc.modules.qualimap:MultiqcModule"
+
+[project.entry-points."multiqc.templates.v1"]
+default = "multiqc.templates.default"
+
+# [project.entry-points."multiqc.cli_options.v1"]
+# my-new-option = "myplugin.cli:new_option"
+
+# [project.entry-points."multiqc.hooks.v1"]
+# before_config = "myplugin.hooks:before_config"
 ```
 
 These sets of entry points can each be extended to add functionality
@@ -54,9 +47,11 @@ to MultiQC:
   - Code hooks for plugins to add new functionality
 
 Any python program can create entry points with the same name, once installed
-MultiQC will find these and run them accordingly. For an example of this in
-action, see the [MultiQC_NGI](https://github.com/MultiQC/MultiQC_NGI/blob/master/setup.py)
-setup file:
+MultiQC will find these and run them accordingly.
+
+If your Python project uses `setup.py` instead you can still tie into the entry points.
+For an example of this in action, see the
+[MultiQC_NGI](https://github.com/MultiQC/MultiQC_NGI/blob/master/setup.py) setup file:
 
 ```python
 entry_points = {
@@ -80,8 +75,8 @@ Here, two new templates are added, a new command line option and a new code hook
 List items added to `multiqc.modules.v1` specify new modules. They should
 be described as follows:
 
-```python
-modname = python_mod.dirname.submodname:classname'
+```toml
+modname = "python_mod.dirname.submodname:classname"
 ```
 
 Once this is done, everything else should be the same as described in the
@@ -145,9 +140,10 @@ from multiqc.utils import report
 
 log = logging.getLogger('multiqc')
 
+
 def after_modules():
     """ Plugin code to run when MultiQC modules have completed  """
-    num_modules = len(report.modules_output)
+    num_modules = len(report.modules)
     status_string = f"MultiQC hook - {num_modules} modules reported!"
     log.critical(status_string)
 ```

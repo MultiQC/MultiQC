@@ -4,6 +4,7 @@ from typing import List, Dict, Optional, Union
 from multiqc import config
 from multiqc.plots import table_object
 from multiqc.plots.plotly import violin
+from multiqc.plots.table_object import TableConfig, DatasetT
 
 logger = logging.getLogger(__name__)
 
@@ -21,21 +22,23 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[Dict], Dict],
+    data: Union[List[DatasetT], DatasetT],
     headers: Optional[Union[List[Dict], Dict]] = None,
-    pconfig=None,
+    pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, violin.ViolinPlot]:
-    """Helper HTML for a violin plot.
+    """
+    Helper HTML for a violin plot.
     :param data: A list of data dicts
     :param headers: A list of dicts with information
                     for the series, such as colour scales, min and
                     max values etc.
     :param pconfig: plot config dict
-    :param clean_html_id: do not check html ID for uniqueness. Set for the general stats table
     :return: HTML string
     """
-    if pconfig is None:
-        pconfig = {}
+    assert pconfig is not None, "pconfig must be provided"
+    if isinstance(pconfig, dict):
+        pconfig = TableConfig(**pconfig)
+
     if not isinstance(data, list):
         data = [data]
     if headers is not None and not isinstance(headers, list):
@@ -43,9 +46,9 @@ def plot(
 
     # Make datatable objects
     if headers:
-        dts = [table_object.DataTable.create(d, h, pconfig.copy()) for d, h in zip(data, headers)]
+        dts = [table_object.DataTable.create(d, pconfig.model_copy(), h) for d, h in zip(data, headers)]
     else:
-        dts = [table_object.DataTable.create(d, pconfig=pconfig.copy()) for d in data]
+        dts = [table_object.DataTable.create(d, pconfig.model_copy()) for d in data]
 
     mod = get_template_mod()
     if "violin" in mod.__dict__ and callable(mod.violin):

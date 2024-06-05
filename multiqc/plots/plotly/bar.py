@@ -3,11 +3,12 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Union, Optional, Literal
 
 import math
 import plotly.graph_objects as go
 import spectra
+from pydantic import model_validator
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import (
@@ -15,16 +16,38 @@ from multiqc.plots.plotly.plot import (
     BaseDataset,
     Plot,
     split_long_string,
+    PConfig,
 )
 from multiqc import report, config
 
 logger = logging.getLogger(__name__)
 
 
+class BarPlotConfig(PConfig):
+    stacking: Union[Literal["group", "overlay", "relative", "normal"], None] = "relative"
+    hide_zero_cats: bool = True
+    sort_samples: bool = True
+    use_legend: bool = True
+    suffix: Optional[str] = None
+    lab_format: Optional[str] = None
+
+    # noinspection PyNestedDecorators
+    @model_validator(mode="before")
+    @classmethod
+    def validate_fields(cls, values):
+        if "suffix" in values:
+            values["ysuffix"] = values["suffix"]
+            del values["suffix"]
+        if "lab_format" in values:
+            values["ylab_format"] = values["lab_format"]
+            del values["lab_format"]
+        return values
+
+
 def plot(
     cats_lists: List[List[Dict]],
     samples_lists: List[List[str]],
-    pconfig: Dict,
+    pconfig: BarPlotConfig,
 ) -> "BarPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -41,7 +64,6 @@ def plot(
         pconfig=pconfig,
         cats_lists=cats_lists,
         samples_lists=samples_lists,
-        max_n_samples=max([len(samples) for samples in samples_lists]),
     )
 
 
@@ -107,6 +129,7 @@ class Dataset(BaseDataset):
                     y=self.samples,
                     x=data,
                     name=cat["name"],
+                    meta=cat["name"],
                     **params,
                 ),
             )
@@ -126,18 +149,20 @@ class BarPlot(Plot):
 
     @staticmethod
     def create(
-        pconfig: Dict,
+        pconfig: BarPlotConfig,
         cats_lists: List,
         samples_lists: List,
-        max_n_samples: int,
     ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
+
+        max_n_samples = max(len(x) for x in samples_lists) if len(samples_lists) > 0 else 0
 
         model = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_datasets=len(cats_lists),
+            n_samples=max_n_samples,
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
         )
@@ -148,9 +173,11 @@ class BarPlot(Plot):
         ]
 
         # Set the barmode
-        barmode = "relative"  # stacking, but drawing negative values below zero
-        if "stacking" in pconfig and (pconfig["stacking"] in ["group", None]):
+        barmode = pconfig.stacking  # stacking, but drawing negative values below zero
+        if barmode is None:  # For legacy reasons, interpreting non-default None as "group"
             barmode = "group"  # side by side
+        if barmode == "normal":  # Legacy
+            barmode = "relative"
 
         max_n_cats = max([len(dataset.cats) for dataset in model.datasets])
 
@@ -167,7 +194,6 @@ class BarPlot(Plot):
 
         model.layout.update(
             height=height,
-            showlegend=True,
             barmode=barmode,
             bargroupgap=0,
             bargap=0.2,
@@ -201,6 +227,7 @@ class BarPlot(Plot):
                 bgcolor="rgba(255, 255, 255, 0.8)",
                 font=dict(color="black"),
             ),
+            showlegend=pconfig.use_legend,
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):

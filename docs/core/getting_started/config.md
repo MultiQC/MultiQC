@@ -108,7 +108,7 @@ extra_fn_clean_exts:
 #### `remove`
 
 The `remove` type allows you to remove an exact match from the filename.
-This includes removing a subtring within the middle of a sample name.
+This includes removing a substring within the middle of a sample name.
 
 :::info{title=Example}
 

@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         kat_config = {
             "namespace": "KAT",
             "id": "kat-table",
-            "title": "KAT Distribution Analysis",
+            "title": "K-mer Analysis Toolkit: KAT Distribution Analysis",
         }
 
         # Basic Stats Table

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.22dev"
+version = "1.23dev"
 dependencies = [
     "click",
     "humanize",
@@ -24,7 +24,8 @@ dependencies = [
     "coloredlogs",  # logging in notebooks
     "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
-    "pydantic",
+    "pydantic>=2.7.1",
+    "typeguard",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -56,6 +57,8 @@ classifiers = [
 dev = [
     "pre-commit",
     "ruff",
+    "pdoc3",
+    "pytest",
 ]
 
 [project.urls]

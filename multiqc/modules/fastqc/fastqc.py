@@ -176,6 +176,9 @@ class MultiqcModule(BaseMultiqcModule):
                 (section, status) = line[2:].split("\t", 1)
                 section = section.lower().replace(" ", "_")
                 self.fastqc_data[s_name]["statuses"][section] = status
+            elif section == "per_tile_sequence_quality":
+                # Lots and lots of data. None of it used in MultiQC.
+                continue
             elif section is not None:
                 if line.startswith("#"):
                     s_headers = line[1:].split("\t")
@@ -960,7 +963,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Overrepresented sequences sample summary",
             "ymin": 0,
             "y_clipmax": 100,
-            "y_minrange": 20,
             "tt_decimals": 2,
             "tt_suffix": "%",
             "cpswitch": False,

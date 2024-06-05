@@ -141,6 +141,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data,
                 headers,
-                pconfig={"id": "megahit-stats-table", "title": "Run statistics"},
+                pconfig={"id": "megahit-stats-table", "title": "MEGAHIT: Run statistics"},
             ),
         )

@@ -1,4 +1,5 @@
 import base64
+import inspect
 import io
 import logging
 import random
@@ -6,11 +7,12 @@ import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple
+from typing import Dict, Union, List, Optional, Tuple, Any
+from typeguard import check_type, TypeCheckError
 
 import math
 import plotly.graph_objects as go
-from pydantic import BaseModel, field_validator, field_serializer
+from pydantic import BaseModel, field_validator, field_serializer, Field, ValidationError, model_validator
 
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
@@ -19,6 +21,150 @@ from multiqc.utils import mqc_colour
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
+
+
+class PConfigValidationError(Exception):
+    def __init__(self, module_name: str):
+        self.module_name = module_name
+        super().__init__()
+
+
+pconfig_validation_errors = []
+
+
+class PConfig(BaseModel):
+    id: str
+    table_title: Optional[str] = Field(None, deprecated="title")
+    title: str
+    height: Optional[int] = None
+    width: Optional[int] = None
+    square: bool = False
+    logswitch: Optional[bool] = False
+    logswitch_active: bool = False  # log scale is active
+    logswitch_label: str = "Log10"
+    cpswitch: Optional[bool] = True
+    cpswitch_c_active: bool = True  # percentage scale is _not_ active
+    cpswitch_counts_label: str = "Counts"
+    cpswitch_percent_label: str = "Percentages"
+    xLog: Optional[bool] = Field(None, deprecated="xlog")
+    yLog: Optional[bool] = Field(None, deprecated="ylog")
+    xlog: bool = False
+    ylog: bool = False
+    data_labels: List[Union[str, Dict[str, Any]]] = []
+    xTitle: Optional[str] = Field(None, deprecated="xlab")
+    yTitle: Optional[str] = Field(None, deprecated="ylab")
+    xlab: Optional[str] = None
+    ylab: Optional[str] = None
+    xsuffix: Optional[str] = None
+    ysuffix: Optional[str] = None
+    tt_suffix: Optional[str] = None
+    xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabFormat: Optional[bool] = Field(None, deprecated="ylab_format")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    xlab_format: Optional[str] = None
+    ylab_format: Optional[str] = None
+    tt_label: Optional[str] = None
+    xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
+    yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
+    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
+    x_decimals: Optional[int] = None
+    y_decimals: Optional[int] = None
+    tt_decimals: Optional[int] = None
+    xmin: Optional[Union[float, int]] = None
+    xmax: Optional[Union[float, int]] = None
+    ymin: Optional[Union[float, int]] = None
+    ymax: Optional[Union[float, int]] = None
+    xFloor: Optional[Union[float, int]] = Field(None, deprecated="x_clipmin")
+    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="x_clipmax")
+    yFloor: Optional[Union[float, int]] = Field(None, deprecated="y_clipmin")
+    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="y_clipmax")
+    x_clipmin: Optional[Union[float, int]] = None
+    x_clipmax: Optional[Union[float, int]] = None
+    y_clipmin: Optional[Union[float, int]] = None
+    y_clipmax: Optional[Union[float, int]] = None
+    save_data_file: bool = True
+
+    def __init__(self, **data):
+        try:
+            super().__init__(**data)
+        except ValidationError as e:
+            if not pconfig_validation_errors:
+                raise
+            else:
+                # errors are already added into plot.pconfig_validation_errors by a custom validator
+                logger.debug(e)
+
+        if pconfig_validation_errors:
+            # Get module name
+            modname = ""
+            callstack = inspect.stack()
+            for n in callstack:
+                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
+                    callpath = n[1].split("multiqc/modules/", 1)[-1]
+                    modname = f"{callpath}: "
+                    break
+
+            plot_type = self.__class__.__name__.replace("Config", "")
+            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
+            for error in pconfig_validation_errors:
+                logger.error(f"• {error}")
+            pconfig_validation_errors.clear()  # Reset for interactive usage
+            raise PConfigValidationError(module_name=modname)
+
+        # Allow user to overwrite any given config for this plot
+        if self.id in config.custom_plot_config:
+            for k, v in config.custom_plot_config[self.id].items():
+                setattr(self, k, v)
+
+    # noinspection PyNestedDecorators
+    @model_validator(mode="before")
+    @classmethod
+    def validate_fields(cls, values):
+        # Check unrecognized fields
+        filtered_values = {}
+        for name, val in values.items():
+            if name not in cls.model_fields:
+                pconfig_validation_errors.append(
+                    f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
+                )
+            else:
+                filtered_values[name] = val
+        values = filtered_values
+
+        # Convert deprecated fields
+        values_without_deprecateds = {}
+        for name, val in values.items():
+            if cls.model_fields[name].deprecated:
+                new_name = cls.model_fields[name].deprecated
+                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
+                if new_name not in values:
+                    values_without_deprecateds[new_name] = val
+            else:
+                values_without_deprecateds[name] = val
+        values = values_without_deprecateds
+
+        # Check missing fields
+        for name, field in cls.model_fields.items():
+            if field.is_required():
+                if name not in values:
+                    pconfig_validation_errors.append(f"missing required field '{name}'")
+
+        # Check types
+        for name, val in values.items():
+            field = cls.model_fields[name]
+            expected_type = field.annotation
+            try:
+                check_type(val, expected_type)
+            except TypeCheckError as e:
+                v_str = repr(val)
+                if len(v_str) > 20:
+                    v_str = v_str[:20] + "..."
+                expected_type_str = str(expected_type).replace("typing.", "")
+                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
+                pconfig_validation_errors.append(msg)
+                logger.debug(f"{msg}: {e}")
+
+        return values
 
 
 class PlotType(Enum):
@@ -77,7 +223,7 @@ class Plot(BaseModel):
     plot_type: PlotType
     layout: go.Layout
     datasets: List[BaseDataset]
-    pconfig: Dict
+    pconfig: PConfig
     add_log_tab: bool
     add_pct_tab: bool
     l_active: bool
@@ -96,6 +242,7 @@ class Plot(BaseModel):
     def serialize_dt(self, layout: go.Layout, _info):
         return layout.to_plotly_json()
 
+    # noinspection PyNestedDecorators
     @field_validator("layout", mode="before")
     @classmethod
     def parse_layout(cls, d):
@@ -106,55 +253,55 @@ class Plot(BaseModel):
     @staticmethod
     def initialize(
         plot_type: PlotType,
-        pconfig: Dict,
+        pconfig: PConfig,
         n_datasets: int,
+        n_samples: int,
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
+        flat_threshold: Optional[int] = config.plots_flat_numseries,
     ):
         """
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
-        :param pconfig: plot configuration dictionary
+        :param pconfig: plot configuration model
         :param n_datasets: number of datasets to pre-initialize dataset models
+        :param n_samples: maximum number of samples in a dataset
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
+        :param flat_threshold: threshold for the number of samples to switch to flat plots
         """
         if n_datasets == 0:
             raise ValueError("No datasets to plot")
 
-        id = id or pconfig.get("id")
+        id = id or pconfig.id
         if id is None:  # id of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
             id = f"mqc_plot_{uniq_suffix}"
+        id = report.save_htmlid(id)
 
         # Counts / Percentages / Log10 switch
-        add_log_tab = pconfig.get("logswitch", False) and plot_type in [PlotType.BAR, PlotType.LINE]
-        add_pct_tab = pconfig.get("cpswitch", True) is not False and plot_type == PlotType.BAR
-        l_active = add_log_tab and pconfig.get("logswitch_active") is True
-        p_active = add_pct_tab and pconfig.get("cpswitch_c_active", True) is not True
+        add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_pct_tab = pconfig.cpswitch is not False and plot_type == PlotType.BAR
+        l_active = add_log_tab and pconfig.logswitch_active
+        p_active = add_pct_tab and not pconfig.cpswitch_c_active
 
-        height = pconfig.get("height", 500)
-        width = pconfig.get("width")
-        if pconfig.get("square"):
+        height = pconfig.height or 500
+        width = pconfig.width
+        if pconfig.square:
             width = height
 
-        title = pconfig.get("table_title", pconfig.get("title"))
-        if not title:
-            if config.strict:
-                errmsg = f"LINT: 'title' is missing from plot config for plot '{id}'"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
-
-        flat = config.plots_force_flat or (
-            not config.plots_force_interactive and n_datasets > config.plots_flat_numseries
-        )
+        flat = False
+        if config.plots_force_flat:
+            flat = True
+        elif flat_threshold is not None and not config.plots_force_interactive and n_samples > flat_threshold:
+            flat = True
 
         layout = go.Layout(
             title=go.layout.Title(
-                text=title,
+                text=pconfig.title,
                 xanchor="center",
                 x=0.5,
                 font=dict(size=20),
@@ -175,8 +322,8 @@ class Plot(BaseModel):
             ),
             height=height,
             width=width,
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="white",
+            plot_bgcolor="white",
             font=dict(family="'Lucida Grande', 'Open Sans', verdana, arial, sans-serif"),
             colorway=mqc_colour.mqc_colour_scale.COLORBREWER_SCALES["plot_defaults"],
             autosize=True,
@@ -213,11 +360,11 @@ class Plot(BaseModel):
         )
 
         axis_controlled_by_switches = axis_controlled_by_switches or []
-        if pconfig.get("xlog", pconfig.get("xLog")):
+        if pconfig.xlog:
             _set_axis_log_scale(layout.xaxis)
             if "xaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("xaxis")
-        if pconfig.get("ylog", pconfig.get("yLog")):
+        if pconfig.ylog:
             _set_axis_log_scale(layout.yaxis)
             if "yaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("yaxis")
@@ -225,7 +372,7 @@ class Plot(BaseModel):
             for axis in axis_controlled_by_switches:
                 layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.get("data_labels") or []
+        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.data_labels
         datasets = []
         for idx in range(n_datasets):
             dataset = BaseDataset(
@@ -252,8 +399,10 @@ class Plot(BaseModel):
                 logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
-            if "ylab" not in dconfig and "ylab" not in pconfig:
+            if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
+            if n_datasets > 1 and "title" not in dconfig:
+                dconfig["title"] = f'{pconfig.title} ({dconfig["name"]})'
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -271,17 +420,26 @@ class Plot(BaseModel):
             p_active=p_active,
             pct_axis_update=pct_axis_update,
             axis_controlled_by_switches=axis_controlled_by_switches,
-            square=pconfig.get("square", False),
+            square=pconfig.square,
             flat=flat,
         )
 
-    def show(self, dataset_id: int, flat=False, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
         """
-        Public method: show the plot in a Jupyter notebook.
+        Show the plot in an interactive environment such as Jupyter notebook.
+
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a flat image or an interactive plot
         """
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
-            from IPython.core.display import HTML
+            try:
+                from IPython.core.display import HTML
+            except ImportError:
+                raise ImportError(
+                    "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+                    "such as Jupyter notebook. To save plot to file, use Plot.save method"
+                )
 
             return HTML(
                 fig_to_static_html(
@@ -295,11 +453,57 @@ class Plot(BaseModel):
         else:
             return fig
 
-    def get_figure(self, dataset_id: int, is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
+        """
+        Save the plot to a file. Will write an HTML with an interactive plot -
+        unless flat=True is specified, in which case will write a PNG file.
+
+        @param filename: a string representing a local file path or a writeable object
+        (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
+        an interactive plot will be saved, otherwise a flat image.
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to save a static image instead of an interactive HTML.
+        """
+        if isinstance(filename, (Path, str)):
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
+
+        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
+        if flat:
+            fig.write_image(
+                filename,
+                scale=2,
+                width=fig.layout.width,
+                height=fig.layout.height,
+            )
+        else:
+            fig.write_html(
+                filename,
+                include_plotlyjs="cdn",
+                full_html=False,
+            )
+        logger.info(f"Plot saved to {filename}")
+
+    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
-        dataset = self.datasets[dataset_id]
+        if isinstance(dataset_id, str):
+            for i, d in enumerate(self.datasets):
+                if d.label == dataset_id:
+                    dataset = d
+                    break
+            else:
+                dataset = self.datasets[0]
+        else:
+            dataset = self.datasets[dataset_id]
+
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:
@@ -324,13 +528,10 @@ class Plot(BaseModel):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self, clean_html_id=True) -> str:
+    def add_to_report(self) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
-        # Setting IDs again now that we have "report" object to guarantee uniqueness
-        if clean_html_id:
-            self.id = report.save_htmlid(self.id)
         for ds in self.datasets:
             ds.uid = self.id
             if len(self.datasets) > 1:  # for flat plots, each dataset will have its own unique ID
@@ -344,7 +545,7 @@ class Plot(BaseModel):
                 self.flat_plot()
 
         for dataset in self.datasets:
-            if self.id != "general_stats_table":
+            if self.id != "general_stats_table" and self.pconfig.save_data_file:
                 dataset.save_data_file()
 
         return html
@@ -435,13 +636,13 @@ class Plot(BaseModel):
             if self.add_pct_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} percent-switch",
-                    label=self.pconfig.get("cpswitch_percent_label", "Percentages"),
+                    label=self.pconfig.cpswitch_percent_label,
                     pressed=self.p_active,
                 )
             if self.add_log_tab:
                 switch_buttons += self._btn(
                     cls=f"{cls} log10-switch",
-                    label=self.pconfig.get("logswitch_label", "Log10"),
+                    label=self.pconfig.logswitch_label,
                     pressed=self.l_active,
                 )
 
@@ -607,29 +808,28 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
 
 
 def _dataset_layout(
-    pconfig: Dict,
+    pconfig: PConfig,
     dconfig: Dict,
     default_tt_label: Optional[str],
 ) -> Tuple[Dict, Dict]:
     """
     Given plot config and dataset config, set layout and trace params.
     """
-    pconfig = pconfig.copy()
-    pconfig.update(dconfig)
+    pconfig = pconfig.model_copy()
+    for k, v in dconfig.items():
+        if k in pconfig.model_fields:
+            setattr(pconfig, k, v)
 
-    # Format on-hover tooltips
-    ysuffix = pconfig.get("ysuffix", pconfig.get("tt_suffix"))
-    xsuffix = pconfig.get("xsuffix")
+    ysuffix = pconfig.ysuffix if pconfig.ysuffix is not None else pconfig.tt_suffix
+    xsuffix = pconfig.xsuffix
 
-    # Options deprecated in 1.21
-    ylabformat = pconfig.get("ylab_format", pconfig.get("yLabFormat"))
-    if ysuffix is None and ylabformat:
-        if "}" in ylabformat:
-            ysuffix = ylabformat.split("}")[1]
-    xlabformat = pconfig.get("xlab_format", pconfig.get("xLabFormat"))
-    if xsuffix is None and xlabformat:
-        if "}" in xlabformat:
-            xsuffix = xlabformat.split("}")[1]
+    # Handle hover tooltip options deprecated in 1.21:
+    if ysuffix is None and pconfig.ylab_format:
+        if "}" in pconfig.ylab_format:
+            ysuffix = pconfig.ylab_format.split("}")[1]
+    if xsuffix is None and pconfig.xlab_format:
+        if "}" in pconfig.xlab_format:
+            xsuffix = pconfig.xlab_format.split("}")[1]
 
     # Set or remove space in known suffixes
     KNOWN_SUFFIXES = ["%", "x", "X", "k", "M", " bp", " kbp", " Mbp"]
@@ -640,24 +840,22 @@ def _dataset_layout(
             xsuffix = suf
 
     # Set % suffix from ylab if it's in form like "% reads"
-    ylab = pconfig.get("ylab")
-    xlab = pconfig.get("xlab")
-    if ysuffix is None and ylab:
-        if "%" in ylab or "percentage" in ylab.lower():
+    if ysuffix is None and pconfig.ylab:
+        if "%" in pconfig.ylab or "percentage" in pconfig.ylab.lower():
             ysuffix = "%"
         for suf in KNOWN_SUFFIXES:
-            if ylab.endswith(f" ({suf.strip()})"):
+            if pconfig.ylab.endswith(f" ({suf.strip()})"):
                 ysuffix = suf
-    if xsuffix is None and xlab:
-        if "%" in xlab or "percentage" in xlab.lower():
+    if xsuffix is None and pconfig.xlab:
+        if "%" in pconfig.xlab or "percentage" in pconfig.xlab.lower():
             xsuffix = "%"
         for suf in KNOWN_SUFFIXES:
-            if xlab.endswith(f" ({suf.strip()})"):
+            if pconfig.xlab.endswith(f" ({suf.strip()})"):
                 xsuffix = suf
 
-    if "tt_label" in pconfig:
+    if pconfig.tt_label is not None:
         # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
-        tt_label = pconfig["tt_label"]
+        tt_label = pconfig.tt_label
         tt_label = _clean_config_tt_label(tt_label)
 
         if ysuffix is None or xsuffix is None:
@@ -705,36 +903,36 @@ def _dataset_layout(
         hovertemplate = None
 
     # `hoverformat` describes how plain "{y}" or "{x}" are formatted in `hovertemplate`
-    y_decimals = pconfig.get("tt_decimals", pconfig.get("y_decimals", pconfig.get("decimalPlaces")))
+    y_decimals = pconfig.tt_decimals if pconfig.tt_decimals is not None else pconfig.y_decimals
     y_hoverformat = f",.{y_decimals}f" if y_decimals is not None else None
 
-    x_decimals = pconfig.get("x_decimals")
+    x_decimals = pconfig.x_decimals
     x_hoverformat = f",.{x_decimals}f" if x_decimals is not None else None
 
     layout = dict(
-        title=dict(text=pconfig.get("title")),
+        title=dict(text=pconfig.title),
         xaxis=dict(
             hoverformat=x_hoverformat,
             ticksuffix=xsuffix or "",
-            title=dict(text=pconfig.get("xlab")),
-            rangemode="tozero" if pconfig.get("xmin") == 0 else "normal",
+            title=dict(text=pconfig.xlab),
+            rangemode="tozero" if pconfig.xmin == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("x_clipmin", pconfig.get("xFloor")),
-                clipmax=pconfig.get("x_clipmax", pconfig.get("xCeiling")),
-                minallowed=pconfig.get("xmin"),
-                maxallowed=pconfig.get("xmax"),
+                clipmin=pconfig.x_clipmin,
+                clipmax=pconfig.x_clipmax,
+                minallowed=pconfig.xmin,
+                maxallowed=pconfig.xmax,
             ),
         ),
         yaxis=dict(
             hoverformat=y_hoverformat,
             ticksuffix=ysuffix or "",
-            title=dict(text=pconfig.get("ylab")),
-            rangemode="tozero" if pconfig.get("ymin") == 0 == 0 else "normal",
+            title=dict(text=pconfig.ylab),
+            rangemode="tozero" if pconfig.ymin == 0 else "normal",
             autorangeoptions=dict(
-                clipmin=pconfig.get("y_clipmin", pconfig.get("yFloor")),
-                clipmax=pconfig.get("y_clipmax", pconfig.get("yCeiling")),
-                minallowed=pconfig.get("ymin"),
-                maxallowed=pconfig.get("ymax"),
+                clipmin=pconfig.y_clipmin,
+                clipmax=pconfig.y_clipmax,
+                minallowed=pconfig.ymin,
+                maxallowed=pconfig.ymax,
             ),
         ),
     )

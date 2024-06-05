@@ -9,7 +9,6 @@ VERSION_REGEX = r"sambamba ([\d\.]+)"
 
 
 class SambambaMarkdupMixin:
-
     """Find and parse Sambamba Markdup output log files and calculate duplication rate"""
 
     def parse_sambamba_markdup(self):
@@ -143,7 +142,7 @@ class SambambaMarkdupMixin:
         }
         config = {
             "id": "SambambaMarkdupBargraph",
-            "title": "Sambamba Markdup: Duplicate Counts",
+            "title": "Sambamba: markdup: Duplicate Counts",
             "ylab": "# Reads",
             "cpswitch_c_active": False,
         }

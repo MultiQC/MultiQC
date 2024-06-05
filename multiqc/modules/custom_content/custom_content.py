@@ -242,7 +242,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = mod["config"].get("parent_id", c_id)
+            mod_id = mod["config"].get("parent_id", mod["config"].get("anchor", c_id + "-module"))
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
@@ -299,12 +299,12 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
-            # No DOI here.. // doi=
+            doi=mod["config"].get("doi"),
         )
 
         # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+        if self.info or self.extra or self.doi_link:
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def update_init(self, c_id, mod):
         """
@@ -321,8 +321,8 @@ class MultiqcModule(BaseMultiqcModule):
         if self.extra is None or self.info == "":
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
-        if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+        if self.info or self.extra or self.doi_link:
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
@@ -343,63 +343,55 @@ class MultiqcModule(BaseMultiqcModule):
         if not isinstance(mod["data"], list):
             mod["data"] = [mod["data"]]
 
-        for i, ds in enumerate(mod["data"]):
-            # Save the data if it's not a html string
-            if not isinstance(ds, str):
-                did = pconfig["id"]
-                if i > 0:
-                    did = f"{did}_{i}"
-                self.write_data_file(ds, f"multiqc_{did}")
-                pconfig["save_data_file"] = False
+        plot_type = mod["config"].get("plot_type")
 
         # Try to coerce x-axis to numeric
-        if mod["config"].get("plot_type") in ["linegraph", "scatter"]:
+        if plot_type in ["linegraph", "scatter"]:
             try:
                 mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
             except ValueError:
                 pass
 
         # Table
-        if mod["config"].get("plot_type") == "table":
-            pconfig["sort_rows"] = pconfig.get("sort_rows", pconfig.get("sortRows", False))
+        if plot_type == "table":
             headers = mod["config"].get("headers")
-            plot = table.plot(mod["data"], headers, pconfig)
+            plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
 
         # Bar plot
-        elif mod["config"].get("plot_type") == "bargraph":
+        elif plot_type == "bargraph":
             mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig)
+            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=pconfig)
 
         # Line plot
-        elif mod["config"].get("plot_type") == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig)
+        elif plot_type == "linegraph":
+            plot = linegraph.plot(mod["data"], pconfig=pconfig)
 
         # Scatter plot
-        elif mod["config"].get("plot_type") == "scatter":
-            plot = scatter.plot(mod["data"], pconfig)
+        elif plot_type == "scatter":
+            plot = scatter.plot(mod["data"], pconfig=pconfig)
 
         # Heatmap
-        elif mod["config"].get("plot_type") == "heatmap":
-            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig)
+        elif plot_type == "heatmap":
+            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=pconfig)
 
         # Violin plot
-        elif mod["config"].get("plot_type") in ["violin", "beeswarm"]:
-            plot = violin.plot(mod["data"], pconfig)
+        elif plot_type in ["violin", "beeswarm"]:
+            plot = violin.plot(mod["data"], pconfig=pconfig)
 
         # Raw HTML
-        elif mod["config"].get("plot_type") == "html":
+        elif plot_type == "html":
             if len(mod["data"]) > 1:
                 log.warning(f"HTML plot type found with more than one dataset in {c_id}")
             content = mod["data"][0]
 
         # Raw image file as html
-        elif mod["config"].get("plot_type") == "image":
+        elif plot_type == "image":
             if len(mod["data"]) > 1:
                 log.warning(f"Image plot type found with more than one dataset in {c_id}")
             content = mod["data"][0]
 
         # Not supplied
-        elif mod["config"].get("plot_type") is None:
+        elif plot_type is None:
             log.warning(f"Plot type not found for content ID '{c_id}'")
 
         # Not recognised
@@ -409,6 +401,16 @@ class MultiqcModule(BaseMultiqcModule):
                     mod["config"].get("plot_type"), c_id
                 )
             )
+
+        if plot is not None:
+            for i, ds in enumerate(mod["data"]):
+                # Save the data if it's not a html string
+                if not isinstance(ds, str):
+                    did = plot.pconfig.id
+                    if i > 0:
+                        did = f"{did}_{i}"
+                    self.write_data_file(ds, f"multiqc_{did}")
+                    plot.pconfig.save_data_file = False
 
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:

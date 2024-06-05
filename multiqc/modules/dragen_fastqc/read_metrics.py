@@ -126,7 +126,6 @@ class DragenReadMetrics(BaseMultiqcModule):
                 "ylab": "Read Count",
                 "xlab": "Sequence Length (bp)",
                 "ymin": 0,
-                "yMinTickInterval": 0.1,
                 "xDecimals": False,
                 # 'colors': self.get_status_cols('sequence_length_distribution'),
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",

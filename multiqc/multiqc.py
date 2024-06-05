@@ -6,8 +6,10 @@ Imported by __init__.py so available as multiqc.run()
 
 import logging
 import os
+import shutil
 import sys
 import time
+import traceback
 from typing import Tuple, Optional
 
 import rich_click as click
@@ -19,7 +21,8 @@ from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunResult, RunError
+from multiqc.core.exceptions import RunError
+from multiqc.plots.plotly.plot import PConfigValidationError
 from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
@@ -106,6 +109,7 @@ click.rich_click.OPTION_GROUPS = {
                 "--development",
                 "--require-logs",
                 "--profile-runtime",
+                "--profile-memory",
                 "--no-megaqc-upload",
                 "--no-ansi",
                 "--version",
@@ -380,9 +384,17 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     "--profile-runtime",
+    "profile_runtime",
     is_flag=True,
     default=None,
     help="Add analysis of how long MultiQC takes to run to the report",
+)
+@click.option(
+    "--profile-memory",
+    "profile_memory",
+    is_flag=True,
+    default=None,
+    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
 )
 @click.option(
     "--no-ansi",
@@ -427,15 +439,41 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
-    cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
-    other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
-    cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
+    try:
+        cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
+        other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
+        cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
 
-    # Pass on to a regular function that can be used easily without click
-    multiqc_run = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
+        # Pass on to a regular function that can be used easily without click
+        result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
+
+    except KeyboardInterrupt:
+        if clean_up:
+            shutil.rmtree(report.tmp_dir)
+        logger.critical(
+            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
+            + "User Cancelled Execution!\nExiting MultiQC..."
+        )
+        result = RunResult(sys_exit_code=1)
+
+    except PConfigValidationError:
+        result = RunResult(sys_exit_code=1)
 
     # End execution using the exit code returned from MultiQC
-    sys.exit(multiqc_run.sys_exit_code)
+    sys.exit(result.sys_exit_code)
+
+
+class RunResult:
+    """
+    Returned by a MultiQC run for interactive use. Contains the following information:
+
+    * appropriate error code (e.g. 1 if a module broke, 0 on success)
+    * error message if a module broke
+    """
+
+    def __init__(self, sys_exit_code: int = 0, message: str = ""):
+        self.sys_exit_code = sys_exit_code
+        self.message = message
 
 
 def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
@@ -465,6 +503,10 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
             "Strict mode specified. Will exit early if a module or a template crashed, and will "
             "give warnings if anything is not optimally configured in a module or a template."
         )
+
+    # In case if run() is called multiple times in the same session:
+    report.reset()
+
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 

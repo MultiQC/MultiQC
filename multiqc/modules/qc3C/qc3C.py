@@ -504,7 +504,6 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_longrange_plot(self):
         config = {
             "id": "qc3C_bam_longrange_plot",
-            "namespace": "qc3C",
             "title": "qc3C: BAM mode long-range pairs",
             "ylab": "Number of Reads",
             "cpswitch_counts_label": "Number of Reads",
@@ -523,7 +522,6 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_acceptance_plot(self):
         config = {
             "id": "qc3C_bam_acceptance_plot",
-            "namespace": "qc3C",
             "title": "qc3C: BAM mode read parsing results",
             "ylab": "Number of Reads",
             "hide_zero_cats": False,
@@ -612,7 +610,6 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_valid_plot(self):
         config = {
             "id": "qc3C_bam_valid_plot",
-            "namespace": "qc3C",
             "title": "qc3C: BAM mode valid vs invalid HiC-Pro categories",
             "ylab": "Number of Reads",
             "hide_zero_cats": False,
@@ -633,7 +630,6 @@ class MultiqcModule(BaseMultiqcModule):
     def bam_junction_plot(self):
         config = {
             "id": "qc3C_bam_junction_plot",
-            "namespace": "qc3C",
             "title": "qc3C: BAM mode read-thru ligation product frequency",
             "ylab": "Number of reads",
             "hide_zero_cats": False,
@@ -662,7 +658,6 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             "id": "qc3C_bam_fragment_histogram",
             "title": "qc3C: BAM mode distribution of pair separation",
-            "namespace": "qc3C",
             "cpswitch_counts_label": "Density",
             "logswitch": True,
             "logswitch_active": True,
@@ -775,7 +770,6 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_acceptance_plot(self):
         config = {
             "id": "qc3C_kmer_acceptance_plot",
-            "namespace": "qc3C",
             "title": "qc3C: K-mer mode read parsing results",
             "ylab": "Number of Reads",
             "hide_zero_cats": False,
@@ -797,7 +791,6 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_signal_plot(self):
         config = {
             "id": "qc3C_kmer_signal_plot",
-            "namespace": "qc3C",
             "title": "qc3C: K-mer mode signal content",
             "ylab": "Number of Reads",
             "hide_zero_cats": False,
@@ -816,7 +809,6 @@ class MultiqcModule(BaseMultiqcModule):
     def kmer_junction_plot(self):
         config = {
             "id": "qc3C_kmer_frequency_plot",
-            "namespace": "qc3C",
             "title": "qc3C: K-mer mode putative ligation product frequency",
             "ylab": "Number of Reads",
             "hide_zero_cats": False,

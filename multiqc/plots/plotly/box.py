@@ -5,17 +5,24 @@ from typing import Dict, List, Union
 import plotly.graph_objects as go
 
 from multiqc.plots.plotly import determine_barplot_height
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
 
 logger = logging.getLogger(__name__)
+
+
+class BoxPlotConfig(PConfig):
+    sort_samples: bool = True
 
 
 # Type of single box (matching one sample)
 BoxT = List[Union[int, float]]
 
 
-def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
+def plot(
+    list_of_data_by_sample: List[Dict[str, BoxT]],
+    pconfig: BoxPlotConfig,
+) -> "BoxPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param list_of_data_by_sample: each dataset is a dict mapping samples to either:
@@ -27,7 +34,6 @@ def plot(list_of_data_by_sample: List[Dict[str, BoxT]], pconfig: Dict) -> Plot:
     return BoxPlot.create(
         pconfig=pconfig,
         list_of_data_by_sample=list_of_data_by_sample,
-        max_n_samples=max(len(d) for d in list_of_data_by_sample),
     )
 
 
@@ -97,14 +103,16 @@ class BoxPlot(Plot):
 
     @staticmethod
     def create(
-        pconfig: Dict,
+        pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
-        max_n_samples: int,
     ) -> "BoxPlot":
+        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
+
         model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             n_datasets=len(list_of_data_by_sample),
+            n_samples=max_n_samples,
         )
 
         model.datasets = [

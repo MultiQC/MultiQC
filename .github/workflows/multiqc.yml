@@ -67,19 +67,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: yezz123/setup-uv@v4
-
-      - name: Set the VIRTUAL_ENV variable for uv to work
-        run: echo "VIRTUAL_ENV=${Python_ROOT_DIR}" >> $GITHUB_ENV
-
       - name: Install MultiQC
-        run: uv pip install .
+        run: pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
           path: test_data
+
+      - name: Unit tests
+        run: |
+          pip install pytest
+          pytest -v test_data/unit_tests
 
       # Run all of the tests!
       - name: All modules / Custom report filename
@@ -115,7 +115,7 @@ jobs:
 
       - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test_data/config_example.yaml
 
       - name: Specific module / named output dir / JSON data / File list
         if: matrix.python-version == env.latest_python

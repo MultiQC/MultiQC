@@ -326,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 pconfig={
                     "id": "seqera_cli_process_statuses_plot",
-                    "title": "Seqera platform CLI: Workflow status",
+                    "title": "Seqera Platform CLI: Workflow status",
                     "ylab": "Number of tasks",
                 },
             ),
@@ -350,7 +350,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"wallTime": {"name": "Wall time"}},
                 {
                     "id": "seqera_cli_wall_time_plot",
-                    "title": "Seqera platform CLI: Wall time",
+                    "title": "Seqera Platform CLI: Wall time",
                     "ylab": "hours",
                     "tt_decimals": 1,
                     "tt_suffix": " h",
@@ -367,7 +367,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"cpuTime": {"name": "CPU time"}},
                 {
                     "id": "seqera_cli_cpu_time_plot",
-                    "title": "Seqera platform CLI: CPU time",
+                    "title": "Seqera Platform CLI: CPU time",
                     "ylab": "CPU hours",
                     "tt_decimals": 1,
                     "tt_suffix": " h",
@@ -384,7 +384,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"cost": {"name": "Estimated cost"}},
                 {
                     "id": "seqera_cli_cost_plot",
-                    "title": "Seqera platform CLI: Estimated cost",
+                    "title": "Seqera Platform CLI: Estimated cost",
                     "ylab": "$",
                     "tt_decimals": 1,
                     "tt_suffix": " $",

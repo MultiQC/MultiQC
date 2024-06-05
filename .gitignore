@@ -3,9 +3,10 @@ multiqc_config.yaml
 multiqc_report.html
 multiqc_data/
 multiqc_plots/
-examples/
-result/
-tmp/
+/examples/
+/result
+/benchmarks
+/tmp/
 
 # CI tooling
 .ruff_cache
@@ -50,11 +51,10 @@ runTest.sh
 venv/
 
 # Related repos
-test_data/
-website/
-usage/
+/test_data/
+/website/
+/usage/
 
-notebooks/
 node_modules/
 package-lock.json
 package.json
