@@ -8,9 +8,6 @@ import json
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# from multiqc.modules.base_module import BaseMultiqcModule
-# from multiqc.modules.base_module import ModuleNoSamplesFound
-
 # Import modules
 from .apps import __hts_import
 from .apps import htstream_utils
@@ -150,12 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Check if app is supported
             if program not in supported_apps_keys:
-                log.warning(
-                    "hts_"
-                    + program
-                    + " is currently not supported by MultiQC: HTStrean. Apps currently supported: "
-                    + htstream_utils.key_print(self.programs)
-                )
+                log.warning("hts_" + program + " is currently not supported by MultiQC: HTStrean.")
                 continue
 
             # creat app specific dictionary, each entry will be a sample

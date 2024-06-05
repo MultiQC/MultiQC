@@ -65,19 +65,6 @@ def parse_json(name, f):
 
 
 ###################################
-# prints keys in a pretty way
-def key_print(dictionary):
-    string = ""
-
-    for key in dictionary.keys():
-        string += key + ", "
-
-    string = string[:-2] + "."
-
-    return string
-
-
-###################################
 # Checks if read lengths are uniform
 def uniform(json, read):
     midpoint = 0
