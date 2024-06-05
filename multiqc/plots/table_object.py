@@ -38,6 +38,7 @@ class TableColumn(ValidatedConfig):
     Column model class. Holds configuration for a single column in a table.
     """
 
+    id: str = Field(None, deprecated="rid")
     rid: str
     title: str
     description: str
