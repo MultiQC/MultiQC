@@ -42,6 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.overview_stats = {}
         self.report_sections = {}
         self.app_order = []
+        self.skip_index = []
         self.repeated_apps = []
         self.add_software_version(None)
 
@@ -148,6 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Check if app is supported
             if program not in supported_apps_keys:
                 log.warning("hts_" + program + " is currently not supported by MultiQC: HTStrean.")
+                self.skip_index.append(i)
                 continue
 
             # creat app specific dictionary, each entry will be a sample
@@ -255,6 +257,9 @@ class MultiqcModule(BaseMultiqcModule):
     ############################
     # add sections
     def generate_reports(self):
+        for i in self.skip_index:
+            del self.app_order[i]
+
         # add pipeline overview section if appropriate
         if self.overview_stats != {} and len(self.app_order) > 1:
             # try adding overview section
