@@ -186,7 +186,7 @@ class DataTable(BaseModel):
                 # Unique id to avoid overwriting by other datasets
                 unclean_rid = headers[d_idx][k].get("rid", k)
                 rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-                headers[d_idx][k]["rid"] = report.save_htmlid(rid)
+                headers[d_idx][k]["rid"] = report.save_htmlid(rid, skiplint=True)
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[d_idx][k].get("shared_key", None)
