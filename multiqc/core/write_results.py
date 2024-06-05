@@ -334,8 +334,10 @@ def _render_general_stats_table() -> None:
     # Add general-stats IDs to table row headers
     for idx, h in enumerate(report.general_stats_headers):
         for k in h.keys():
-            if "rid" not in h[k]:
-                h[k]["rid"] = re.sub(r"\W+", "_", k).strip().strip("_")
+            unclean_rid = h[k].get("rid", k)
+            rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
+            h[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+
             ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
             report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
                 f"mqc-generalstats-{ns_html}-{h[k]['rid']}"

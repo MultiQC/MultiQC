@@ -741,12 +741,10 @@ def dois_tofile(modules: List["BaseMultiqcModule"]):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def save_htmlid(html_id, skiplint=False):
-    """Take a HTML ID, sanitise for HTML, check for duplicates and save.
-    Returns sanitised, unique ID"""
-    global html_ids
-    global lint_errors
-
+def clean_htmlid(html_id):
+    """
+    Clean up an HTML ID to remove illegal characters.
+    """
     # Trailing whitespace
     html_id_clean = html_id.strip()
 
@@ -759,6 +757,18 @@ def save_htmlid(html_id, skiplint=False):
 
     # Replace illegal characters
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
+
+    return html_id_clean
+
+
+def save_htmlid(html_id, skiplint=False):
+    """Take a HTML ID, sanitise for HTML, check for duplicates and save.
+    Returns sanitised, unique ID"""
+    global html_ids
+    global lint_errors
+
+    # Clean up the HTML ID
+    html_id_clean = clean_htmlid(html_id)
 
     # Validate if linting
     modname = ""

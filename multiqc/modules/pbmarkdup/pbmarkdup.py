@@ -110,7 +110,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         general_stats_headers = {
             "unique_molecules": {
-                "id": "unique_molecules",
                 "title": "% Unique Molecules",
                 "description": "Percentage of unique molecules",
                 "suffix": "%",
@@ -120,7 +119,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "duplicate_reads": {
-                "id": "duplicate_erads",
                 "title": "% Duplicate Reads",
                 "description": "Percentage of duplicate reads",
                 "suffix": "%",
