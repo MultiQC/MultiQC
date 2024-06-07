@@ -73,6 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         if extract_data_by_sample:
             self.extract_general_stats_table(extract_data_by_sample)
             self.umitools_extract_barplot(extract_data_by_sample)
+            self.umitools_extract_barplot_regex(extract_data_by_sample)
 
     def _parse_s_name(self, f) -> Optional[str]:
         # Get the s_name from the input file if possible
@@ -141,6 +142,18 @@ class MultiqcModule(BaseMultiqcModule):
                     data[key] = re_matches.group(1)
                 else:
                     data[key] = type_(re_matches.group(1))
+            
+            # Calculate a few simple supplementary stats
+            try:
+                data["extract_percent_passing"] = round(
+                    ((data["extract_output_reads"] / data["extract_input_reads"]) * 100.0), 2
+                )
+            except (KeyError, ZeroDivisionError):
+                pass
+            try:
+                data["extract_removed_reads"] = data["extract_input_reads"] - data["extract_output_reads"]
+            except KeyError:
+                pass
 
         return data
 
@@ -179,6 +192,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "scale": "PuRd",
             },
+            "extract_percent_passing": {
+                "title": "% Pass Extract",
+                "description": "% reads from which a UMI extraction succeeded.",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            },
         }
         self.general_stats_addcols(data_by_sample, headers)
 
@@ -205,8 +226,31 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             ),
         )
-
+    
     def umitools_extract_barplot(self, data_by_sample):
+        keys = {
+            "extract_output_reads": {"color": "#7fc9c7", "name": "Read1 Match"},
+            "extract_removed_reads": {"color": "#fd9286", "name": "Read1 Mismatch"},
+        }
+
+        # Add a section with a barplot plot of UMI stats to the report
+        self.add_section(
+            name="UMI extraction rate",
+            anchor="umitools_extract_overall",
+            description="Success rate of `umi_tools extract`",
+            plot=bargraph.plot(
+                data_by_sample,
+                keys,
+                {
+                    "id": "umitools_extract_barplot_success",
+                    "title": "UMI-tools: Extraction rate",
+                    "ylab": "# Reads",
+                    "cpswitch_counts_label": "Number of Reads",
+                },
+            ),
+        )
+
+    def umitools_extract_barplot_regex(self, data_by_sample):
         keys = {
             "read1_match": {"color": "#7fc9c7", "name": "Read1 Match"},
             "read1_mismatch": {"color": "#fd9286", "name": "Read1 Mismatch"},
@@ -216,8 +260,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add a section with a barplot plot of UMI stats to the report
         self.add_section(
-            name="Extract Stats",
-            anchor="umitools_extract",
+            name="Extraction Stats",
+            anchor="umitools_extract_regex",
             description="Read stats from `umi_tools extract`",
             plot=bargraph.plot(
                 data_by_sample,
