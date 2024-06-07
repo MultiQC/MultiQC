@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[key] = re_matches.group(1)
                 else:
                     data[key] = type_(re_matches.group(1))
-            
+
             # Calculate a few simple supplementary stats
             try:
                 data["extract_percent_passing"] = round(
@@ -226,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             ),
         )
-    
+
     def umitools_extract_barplot(self, data_by_sample):
         keys = {
             "extract_output_reads": {"color": "#7fc9c7", "name": "Read1 Match"},
@@ -251,24 +251,37 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def umitools_extract_barplot_regex(self, data_by_sample):
-        keys = {
-            "read1_match": {"color": "#7fc9c7", "name": "Read1 Match"},
-            "read1_mismatch": {"color": "#fd9286", "name": "Read1 Mismatch"},
-            "read2_match": {"color": "#7f89c9", "name": "Read2 Match"},
-            "read2_mismatch": {"color": "#fd86aa", "name": "Read2 Mismatch"},
-        }
+        keys = [
+            {
+                "read1_match": {"color": "#7fc9c7", "name": "Read1 Match"},
+                "read1_mismatch": {"color": "#fd9286", "name": "Read1 Mismatch"},
+            },
+            {
+                "read2_match": {"color": "#7f89c9", "name": "Read2 Match"},
+                "read2_mismatch": {"color": "#fd86aa", "name": "Read2 Mismatch"},
+            },
+        ]
 
         # Add a section with a barplot plot of UMI stats to the report
         self.add_section(
-            name="Extraction Stats",
+            name="UMI extraction regex match rate",
             anchor="umitools_extract_regex",
-            description="Read stats from `umi_tools extract`",
+            description="Regex match rate of `umi_tools extract`",
             plot=bargraph.plot(
-                data_by_sample,
+                [
+                    {
+                        sample: {key: metrics[key] for key in ("read1_match", "read1_mismatch") if key in metrics}
+                        for sample, metrics in data_by_sample.items()
+                    },
+                    {
+                        sample: {key: metrics[key] for key in ("read2_match", "read2_mismatch") if key in metrics}
+                        for sample, metrics in data_by_sample.items()
+                    },
+                ],
                 keys,
                 {
-                    "id": "umitools_extract_barplot",
-                    "title": "UMI-tools: Extract Stats",
+                    "id": "umitools_extract_regex_barplot",
+                    "title": "UMI-tools: Extract Regex match stats",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of Reads",
                 },
