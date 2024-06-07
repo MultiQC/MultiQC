@@ -73,7 +73,13 @@ class MultiqcModule(BaseMultiqcModule):
         if extract_data_by_sample:
             self.extract_general_stats_table(extract_data_by_sample)
             self.umitools_extract_barplot(extract_data_by_sample)
-            self.umitools_extract_barplot_regex(extract_data_by_sample)
+
+            # Only plot regex match rate if we have regex extraction logs:
+            if any(
+                any(key in v for key in ["read1_match", "read2_match", "read1_mismatch", "read2_mismatch"])
+                for v in extract_data_by_sample.values()
+            ):
+                self.umitools_extract_barplot_regex(extract_data_by_sample)
 
     def _parse_s_name(self, f) -> Optional[str]:
         # Get the s_name from the input file if possible
