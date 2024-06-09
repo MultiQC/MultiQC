@@ -111,7 +111,6 @@ plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
 lineplot_style: str
-lineplot_max_samples: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
