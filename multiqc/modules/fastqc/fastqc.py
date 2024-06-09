@@ -430,6 +430,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 0,
             "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
+            "showlegend": False if status_checks else True,
         }
         if status_checks:
             pconfig.update(
@@ -486,6 +487,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 0,
             "xDecimals": False,
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
+            "showlegend": False if status_checks else True,
         }
         if status_checks:
             pconfig.update(
@@ -648,6 +650,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
                 {"name": "Counts", "ylab": "Count", "tt_suffix": ""},
             ],
+            "showlegend": False if status_checks else True,
         }
         if status_checks:
             pconfig.update(
@@ -701,7 +704,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "dash": "dash",
                 "line": {"width": 2},
                 "color": "black",
-                "showlegend": False,
+                "showlegend": False if status_checks else True,
             }
             pconfig["extra_series"] = [[dict(extra_series_config)], [dict(extra_series_config)]]
             pconfig["extra_series"][0][0]["data"] = theoretical_gc
@@ -760,6 +763,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "xmin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
+            "showlegend": False if status_checks else True,
         }
         if status_checks:
             pconfig.update(
@@ -831,6 +835,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "xlab": "Sequence Length (bp)",
                 "ymin": 0,
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
+                "showlegend": False if status_checks else True,
             }
             if status_checks:
                 pconfig.update(
@@ -878,6 +883,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymin": 0,
             "tt_decimals": 2,
             "tt_suffix": "%",
+            "showlegend": False if status_checks else True,
         }
         if status_checks:
             pconfig.update(

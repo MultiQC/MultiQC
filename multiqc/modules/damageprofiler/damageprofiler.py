@@ -132,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             f"{readend}1": {
-                "id": f"misinc-stats-1st-{readend}-{substitution}",
+                "rid": f"misinc-stats-1st-{readend}-{substitution}",
                 "title": f"{readend} {substitution} 1st base",
                 "description": f"{readend} 1st base substitution frequency for {substitution}",
                 "max": 100,
@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * 100.0,
             },
             f"{readend}2": {
-                "id": f"misinc-stats-2nd-{readend}-{substitution}",
+                "rid": f"misinc-stats-2nd-{readend}-{substitution}",
                 "title": f"{readend} {substitution} 2nd base",
                 "description": f"{readend} 2nd base substitution frequency for {substitution}",
                 "max": 100,

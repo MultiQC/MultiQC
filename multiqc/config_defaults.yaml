@@ -61,11 +61,10 @@ make_report: true
 make_pdf: false
 plots_force_flat: false
 plots_force_interactive: false
-plots_flat_numseries: 100
+plots_flat_numseries: 1000
 num_datasets_plot_limit: 50
 lineplot_style: lines # "lines+markers"
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
-lineplot_max_samples: 100 # turn into a violin plot if more than this number
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
 violin_min_threshold_outliers: 100 # for more than this number of samples, show only outliers
 violin_min_threshold_no_points: 1000 # for more than this number of samples, show no points
@@ -523,6 +522,5 @@ module_order:
   - metaphlan
   - seqwho
 
-# default is "false" for standard command line use - to save memory -
-# but "true" for interactive use - so module.saved_raw_data is available
-preserve_module_raw_data: false
+# Set to "false" to trade the `saved_raw_data` section in multiqc_data.json for memory
+preserve_module_raw_data: true

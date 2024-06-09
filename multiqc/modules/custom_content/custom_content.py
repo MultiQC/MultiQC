@@ -299,12 +299,12 @@ class MultiqcModule(BaseMultiqcModule):
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
-            # No DOI here.. // doi=
+            doi=mod["config"].get("doi"),
         )
 
         # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+        if self.info or self.extra or self.doi_link:
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def update_init(self, c_id, mod):
         """
@@ -321,8 +321,8 @@ class MultiqcModule(BaseMultiqcModule):
         if self.extra is None or self.info == "":
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
-        if self.info or self.extra:
-            self.intro = f"<p>{self.info}</p>{self.extra}"
+        if self.info or self.extra or self.doi_link:
+            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
@@ -355,6 +355,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Table
         if plot_type == "table":
             headers = mod["config"].get("headers")
+
+            # handle some legacy fields for backwards compat
+            sort_rows = pconfig.pop("sortRows", None)
+            if sort_rows is not None:
+                pconfig["sort_rows"] = sort_rows
+            no_violin = pconfig.pop("no_beeswarm", None)
+            if no_violin is not None:
+                pconfig["no_violin"] = no_violin
+
             plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
 
         # Bar plot

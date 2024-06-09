@@ -386,7 +386,7 @@ to scale to these sample numbers, most plot types have two plotting methods in t
 interactive and flat. Flat plots take up the same disk space irrespective of sample number
 and do not consume excessive resources to display.
 
-By default, MultiQC generates flat plots when there are 100 or more samples. This cutoff
+By default, MultiQC generates flat plots when there are 1000 or more samples. This cutoff
 can be changed by changing the `plots_flat_numseries` config option. This behaviour can also
 be changed by running MultiQC with the `--flat` / `--interactive` command line options or by
 setting the `plots_force_flat` / `plots_force_interactive` config options to `True`.

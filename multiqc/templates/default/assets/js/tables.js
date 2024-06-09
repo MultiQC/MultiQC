@@ -27,7 +27,7 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val });
+    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val, cancelSelection: false });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {

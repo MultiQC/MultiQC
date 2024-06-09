@@ -608,8 +608,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "yield_q30_percent": yield_q30_percent,
                 # "perfect_index": samle['perfect_index_reads'], # don't need these
                 # "one_mismatch_index_reads": sample['one_mismatch_index_reads'],
-                "perfect_pecent": perfect_percent,
-                "one_mismatch_pecent": one_mismatch_percent,
+                "perfect_percent": perfect_percent,
+                "one_mismatch_percent": one_mismatch_percent,
                 "mean_quality": sample.get("mean_quality"),
                 "index": sample["index"],
             }
@@ -686,7 +686,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "suffix": "%",
         }
-        headers["perfect_pecent"] = {
+        headers["perfect_percent"] = {
             "title": "% Perfect Index",
             "description": "Percent of reads with perfect index (0 mismatches)",
             "max": 100,
@@ -694,7 +694,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "RdYlGn",
             "suffix": "%",
         }
-        headers["one_mismatch_pecent"] = {
+        headers["one_mismatch_percent"] = {
             "title": "% One Mismatch Index",
             "description": "Percent of reads with one mismatch index",
             "max": 100,

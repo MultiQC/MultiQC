@@ -224,9 +224,9 @@ def _order_modules_and_sections():
     """
 
     # In case if user passed exclude_modules or include_modules again:
-    mod_anchors = include_or_exclude_modules([mod.anchor for mod in report.modules])
+    mod_ids = include_or_exclude_modules([mod.id for mod in report.modules])
     for mod in report.modules:
-        if mod.anchor not in mod_anchors:
+        if mod.id not in mod_ids:
             mod.hidden = True
 
     # Add section for software versions if any are found
@@ -310,7 +310,7 @@ def render_and_export_plots():
             if s.plot_id:
                 plot = report.plot_by_id[s.plot_id]
                 if isinstance(plot, Plot):
-                    s.plot = plot.add_to_report(report)
+                    s.plot = plot.add_to_report()
                 elif isinstance(plot, str):
                     s.plot = plot
                 else:
@@ -334,8 +334,10 @@ def _render_general_stats_table() -> None:
     # Add general-stats IDs to table row headers
     for idx, h in enumerate(report.general_stats_headers):
         for k in h.keys():
-            if "rid" not in h[k]:
-                h[k]["rid"] = re.sub(r"\W+", "_", k).strip().strip("_")
+            unclean_rid = h[k].get("rid", k)
+            rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
+            h[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+
             ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
             report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
                 f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
@@ -357,7 +359,7 @@ def _render_general_stats_table() -> None:
             "raw_data_fn": "multiqc_general_stats",
         }
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
-        report.general_stats_html = p.add_to_report(clean_html_id=False)
+        report.general_stats_html = p.add_to_report()
     else:
         config.skip_generalstats = True
 

@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -22,26 +23,30 @@ class TableConfig(PConfig):
     save_file: bool = False
     raw_data_fn: Optional[str] = None
     defaultsort: Optional[List[Dict[str, str]]] = None
-    sort_rows: bool = Field(True, alias="sortRows")
+    sortRows: bool = Field(True, deprecated="sort_rows")
+    sort_rows: bool = True
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
-    no_violin: bool = Field(False, alias="no_beeswarm")
+    no_beeswarm: bool = Field(False, deprecated="no_violin")
+    no_violin: bool = False
     scale: Union[str, bool] = "GnBu"
     min: Optional[Union[int, float]] = None
 
 
-class TableColumn(BaseModel):
+class TableColumn(ValidatedConfig):
     """
     Column model class. Holds configuration for a single column in a table.
     """
 
+    id: str = Field(None, deprecated="rid")
     rid: str
     title: str
     description: str
     namespace: str
     scale: Union[str, bool]
     hidden: bool
-    color: str = Field(validation_alias="colour")
+    colour: Optional[str] = Field(None, deprecated="color")
+    color: str
     placement: float = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -62,6 +67,9 @@ class TableColumn(BaseModel):
 ValueT = Union[int, float, str, bool]
 
 
+DatasetT = Mapping[str, Mapping[str, Optional[ValueT]]]
+
+
 class DataTable(BaseModel):
     """
     Data table class. Prepares and holds data and configuration
@@ -77,7 +85,7 @@ class DataTable(BaseModel):
 
     @staticmethod
     def create(
-        data: Union[List[Mapping[str, Mapping[str, Optional[ValueT]]]], Mapping[str, Mapping[str, Optional[ValueT]]]],
+        data: Union[DatasetT, List[DatasetT]],
         pconfig: TableConfig,
         headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
     ) -> "DataTable":
@@ -176,8 +184,9 @@ class DataTable(BaseModel):
             formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
             for k in keys:
                 # Unique id to avoid overwriting by other datasets
-                if "rid" not in headers[d_idx][k]:
-                    headers[d_idx][k]["rid"] = report.save_htmlid(re.sub(r"\W+", "_", k).strip().strip("_"))
+                unclean_rid = headers[d_idx][k].get("rid", k)
+                rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
+                headers[d_idx][k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
                 shared_key = headers[d_idx][k].get("shared_key", None)
