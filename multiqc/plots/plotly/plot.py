@@ -73,6 +73,7 @@ class PConfig(ValidatedConfig):
     y_clipmin: Optional[Union[float, int]] = None
     y_clipmax: Optional[Union[float, int]] = None
     save_data_file: bool = True
+    showlegend: Optional[bool] = None
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -215,6 +216,10 @@ class Plot(BaseModel):
         elif flat_threshold is not None and not config.plots_force_interactive and n_samples > flat_threshold:
             flat = True
 
+        showlegend = pconfig.showlegend
+        if showlegend is None:
+            showlegend = True if flat else False
+
         layout = go.Layout(
             title=go.layout.Title(
                 text=pconfig.title,
@@ -258,7 +263,7 @@ class Plot(BaseModel):
                 color="rgba(0, 0, 0, 0.5)",
                 activecolor="rgba(0, 0, 0, 1)",
             ),
-            showlegend=flat,
+            showlegend=showlegend,
             legend=go.layout.Legend(
                 orientation="h",
                 yanchor="top",
