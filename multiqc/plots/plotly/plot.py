@@ -1,5 +1,4 @@
 import base64
-import inspect
 import io
 import logging
 import random
@@ -8,31 +7,22 @@ import string
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Union, List, Optional, Tuple, Any
-from typeguard import check_type, TypeCheckError
 
 import math
 import plotly.graph_objects as go
-from pydantic import BaseModel, field_validator, field_serializer, Field, ValidationError, model_validator
+from pydantic import BaseModel, field_validator, field_serializer, Field
 
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
 from multiqc.utils import mqc_colour
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
 
-class PConfigValidationError(Exception):
-    def __init__(self, module_name: str):
-        self.module_name = module_name
-        super().__init__()
-
-
-pconfig_validation_errors = []
-
-
-class PConfig(BaseModel):
+class PConfig(ValidatedConfig):
     id: str
     table_title: Optional[str] = Field(None, deprecated="title")
     title: str
@@ -85,86 +75,12 @@ class PConfig(BaseModel):
     save_data_file: bool = True
 
     def __init__(self, **data):
-        try:
-            super().__init__(**data)
-        except ValidationError as e:
-            if not pconfig_validation_errors:
-                raise
-            else:
-                # errors are already added into plot.pconfig_validation_errors by a custom validator
-                logger.debug(e)
-
-        if pconfig_validation_errors:
-            # Get module name
-            modname = ""
-            callstack = inspect.stack()
-            for n in callstack:
-                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                    callpath = n[1].split("multiqc/modules/", 1)[-1]
-                    modname = f"{callpath}: "
-                    break
-
-            plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
-            for error in pconfig_validation_errors:
-                logger.error(f"• {error}")
-            pconfig_validation_errors.clear()  # Reset for interactive usage
-            raise PConfigValidationError(module_name=modname)
+        super().__init__(**data)
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
-
-    # noinspection PyNestedDecorators
-    @model_validator(mode="before")
-    @classmethod
-    def validate_fields(cls, values):
-        # Check unrecognized fields
-        filtered_values = {}
-        for name, val in values.items():
-            if name not in cls.model_fields:
-                pconfig_validation_errors.append(
-                    f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
-                )
-            else:
-                filtered_values[name] = val
-        values = filtered_values
-
-        # Convert deprecated fields
-        values_without_deprecateds = {}
-        for name, val in values.items():
-            if cls.model_fields[name].deprecated:
-                new_name = cls.model_fields[name].deprecated
-                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
-                if new_name not in values:
-                    values_without_deprecateds[new_name] = val
-            else:
-                values_without_deprecateds[name] = val
-        values = values_without_deprecateds
-
-        # Check missing fields
-        for name, field in cls.model_fields.items():
-            if field.is_required():
-                if name not in values:
-                    pconfig_validation_errors.append(f"missing required field '{name}'")
-
-        # Check types
-        for name, val in values.items():
-            field = cls.model_fields[name]
-            expected_type = field.annotation
-            try:
-                check_type(val, expected_type)
-            except TypeCheckError as e:
-                v_str = repr(val)
-                if len(v_str) > 20:
-                    v_str = v_str[:20] + "..."
-                expected_type_str = str(expected_type).replace("typing.", "")
-                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
-                pconfig_validation_errors.append(msg)
-                logger.debug(f"{msg}: {e}")
-
-        return values
 
 
 class PlotType(Enum):

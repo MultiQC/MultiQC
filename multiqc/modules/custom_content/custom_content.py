@@ -355,6 +355,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Table
         if plot_type == "table":
             headers = mod["config"].get("headers")
+
+            # handle some legacy fields for backwards compat
+            sort_rows = pconfig.pop("sortRows", None)
+            if sort_rows is not None:
+                pconfig["sort_rows"] = sort_rows
+            no_violin = pconfig.pop("no_beeswarm", None)
+            if no_violin is not None:
+                pconfig["no_violin"] = no_violin
+
             plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
 
         # Bar plot

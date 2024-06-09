@@ -180,9 +180,13 @@ def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tup
             return
         number_of_newlines = block.count("\n")
         if number_of_newlines == 0:
-            remainder += block
-            continue
-        block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
+            # Use readline function so only one call is needed to complete the
+            # block.
+            block = fp.readline()
+            number_of_newlines = 1
+            block_end = len(block)
+        else:
+            block_end = block.rfind("\n") + 1  # + 1 to include the '\n'
         yield number_of_newlines, remainder + block[:block_end]
         # Store the remainder for the next iteration.
         remainder = block[block_end:]
@@ -639,13 +643,17 @@ def search_file(pattern, f: SearchFile, module_key):
             for line_count, line_block in f.line_block_iterator():
                 if expected_contents and expected_contents in line_block:
                     contents_matched = True
+                elif repattern:
+                    for line in line_block.split("\n"):
+                        if repattern.match(line):
+                            contents_matched = True
+                            break
+                if contents_matched:
                     break
-                if repattern and repattern.match(line_block):
-                    contents_matched = True
-                    break
-                total_newlines += line_count
-                if total_newlines >= num_lines:
-                    break
+                else:
+                    total_newlines += line_count
+                    if total_newlines >= num_lines:
+                        break
         except Exception:
             file_search_stats["skipped_file_contents_search_errors"] += 1
             return False
@@ -737,12 +745,10 @@ def dois_tofile(modules: List["BaseMultiqcModule"]):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def save_htmlid(html_id, skiplint=False):
-    """Take a HTML ID, sanitise for HTML, check for duplicates and save.
-    Returns sanitised, unique ID"""
-    global html_ids
-    global lint_errors
-
+def clean_htmlid(html_id):
+    """
+    Clean up an HTML ID to remove illegal characters.
+    """
     # Trailing whitespace
     html_id_clean = html_id.strip()
 
@@ -755,6 +761,18 @@ def save_htmlid(html_id, skiplint=False):
 
     # Replace illegal characters
     html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
+
+    return html_id_clean
+
+
+def save_htmlid(html_id, skiplint=False):
+    """Take a HTML ID, sanitise for HTML, check for duplicates and save.
+    Returns sanitised, unique ID"""
+    global html_ids
+    global lint_errors
+
+    # Clean up the HTML ID
+    html_id_clean = clean_htmlid(html_id)
 
     # Validate if linting
     modname = ""

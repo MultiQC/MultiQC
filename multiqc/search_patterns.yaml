@@ -384,6 +384,7 @@ happy:
 htseq:
   contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
+  shared: true
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
@@ -653,27 +654,33 @@ picard/markdups:
   - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
-  contents: "OxoGMetrics"
+  - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
 picard/pcr_metrics:
-  contents: "TargetedPcrMetrics"
+  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
+  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
 picard/quality_by_cycle:
-  - contents_re: "[Qq]uality[Bb]y[Cc]ycle"
-    contents: "MEAN_QUALITY"
+  - contents: "# MeanQualityByCycle"
   - contents: "--algo MeanQualityByCycle"
+  - contents_re: ".*CollectMultipleMetrics.*MeanQualityByCycle"
 picard/quality_score_distribution:
-  - contents_re: "[Qq]uality[Ss]core[Dd]istribution"
-    contents: "COUNT_OF_Q"
+  - contents: "# QualityScoreDistribution"
+  - contents_re: ".*CollectMultipleMetrics.*QualityScoreDistribution"
   - contents: "--algo QualDistribution"
 picard/quality_yield_metrics:
-  contents: "QualityYieldMetrics"
+  - contents: "# CollectQualityYieldMetrics"
+  - contents_re: ".*CollectMultipleMetrics.*QualityYieldMetrics"
 picard/rnaseqmetrics:
-  contents_re: "[Rr]na[Ss]eq[Mm]etrics"
+  - contents: "# picard.analysis.Collectrnaseqmetrics"
+  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
 picard/rrbs_metrics:
-  contents: "RrbsSummaryMetrics"
+  - contents: "# picard.analysis.CollectRrbsMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
 picard/sam_file_validation:
   fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-  contents: "VariantCallingDetailMetrics"
+  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
 picard/wgs_metrics:
   contents_re: "## METRICS CLASS.*WgsMetrics"
 picard/collectilluminabasecallingmetrics:
