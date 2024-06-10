@@ -61,27 +61,26 @@ class ErrGrpReportMixin:
         # Write parsed report data to a file (restructure first)
         self.write_data_file(self.glimpse_err_grp, "multiqc_glimpse_err_grp")
 
-        data_GCsVAF = {
-            sname: data
-            for sname, dataf in self.glimpse_err_grp.items()
-            for vtype, data in dataf.items()
-            if vtype == "GCsVAF"
-        }
-
-        data_best_gt_rsquared = {}
-        data_imputed_ds_rsquared = {}
-        for sname, dataf in data_GCsVAF.items():
-            data_best_gt_rsquared[sname] = {}
-            data_imputed_ds_rsquared[sname] = {}
-            for idn, data in dataf.items():
-                data_best_gt_rsquared[sname].update({data["mean_af"]: data["best_gt_rsquared"]})
-                data_imputed_ds_rsquared[sname].update({data["mean_af"]: data["imputed_ds_rsquared"]})
+        vtype = ["GCsSAF", "GCsIAF", "GCsVAF"]
+        data_best_gt_rsquared = {v: {} for v in vtype}
+        data_imputed_ds_rsquared = {v: {} for v in vtype}
+        for sname, dataf in self.glimpse_err_grp.items():
+            for vtype, data in dataf.items():
+                data_best_gt_rsquared[vtype][sname] = {}
+                data_imputed_ds_rsquared[vtype][sname] = {}
+                for idn, datav in data.items():
+                    data_best_gt_rsquared[vtype][sname].update({datav["mean_af"]: datav["best_gt_rsquared"]})
+                    data_imputed_ds_rsquared[vtype][sname].update({datav["mean_af"]: datav["imputed_ds_rsquared"]})
 
         # Make a table summarising the stats across all samples
         self.accuracy_plot(
             [
-                data_best_gt_rsquared,
-                data_imputed_ds_rsquared,
+                data_best_gt_rsquared["GCsSAF"],
+                data_imputed_ds_rsquared["GCsSAF"],
+                data_best_gt_rsquared["GCsIAF"],
+                data_imputed_ds_rsquared["GCsIAF"],
+                data_best_gt_rsquared["GCsVAF"],
+                data_imputed_ds_rsquared["GCsVAF"],
             ]
         )
 
@@ -100,29 +99,39 @@ class ErrGrpReportMixin:
                 pconfig={
                     "data_labels": [
                         {
-                            "name": "Best genotype r-squared",
-                            "ylab": "Best genotype r-squared",
-                            "xlab": "Minor allele frequency",
-                            "xlog": True,
-                            "xmin": 0,
-                            "xmax": 0.5,
-                            "ylog": True,
-                            "ymin": 0,
-                            "ymax": 1.1,
+                            "name": "Best genotype r-squared (SNPs)",
+                            "ylab": "Best genotype r-squared (SNPs)",
                         },
                         {
-                            "name": "Imputed dosage r-squared",
-                            "ylab": "Imputed dosage r-squared",
-                            "xlab": "Minor allele frequency",
-                            "xlog": True,
-                            "xmin": 0,
-                            "xmax": 0.5,
-                            "ylog": True,
-                            "ymin": 0,
-                            "ymax": 1.1,
+                            "name": "Imputed dosage r-squared (SNPs)",
+                            "ylab": "Imputed dosage r-squared (SNPs)",
+                        },
+                        {
+                            "name": "Best genotype r-squared (indels)",
+                            "ylab": "Best genotype r-squared (indels)",
+                        },
+                        {
+                            "name": "Imputed dosage r-squared (indels)",
+                            "ylab": "Imputed dosage r-squared (indels)",
+                        },
+                        {
+                            "name": "Best genotype r-squared (SNPs + indels)",
+                            "ylab": "Best genotype r-squared (SNPs + indels)",
+                        },
+                        {
+                            "name": "Imputed dosage r-squared (SNPs + indels)",
+                            "ylab": "Imputed dosage r-squared (SNPs + indels)",
                         },
                     ],
-                    "id": "glimpse-err-spl-table",
+                    "id": "glimpse-err-grp-plot",
+                    "xlab": "Minor allele frequency",
+                    "logswitch": True,  # Show the 'Log10' switch?
+                    "logswitch_active": True,  # Initial display with 'Log10' active?
+                    "logswitch_label": "Log10",  # Label for 'Log10' button
+                    "xmin": 0,
+                    "xmax": 0.5,
+                    "ymin": 0,
+                    "ymax": 1.1,
                     "title": "Glimpse concordance: accuracy by allele frequency bins",
                 },
             ),

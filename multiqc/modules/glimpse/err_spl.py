@@ -150,7 +150,7 @@ class ErrSplReportMixin:
                 "suffix": "%",
                 "scale": "OrRd",
             },
-            "AA_hom_mimatches": {
+            "AA_hom_mismatches_rate_percent": {
                 "title": "Alternate-Alternate homozygous mismatches rate",
                 "description": "Rate of Alternate-Alternate hom mismatches",
                 "min": 0,
@@ -158,7 +158,7 @@ class ErrSplReportMixin:
                 "suffix": "%",
                 "scale": "OrRd",
             },
-            "non_reference_discordanc_rate_percent": {
+            "non_reference_discordance_rate_percent": {
                 "title": "Non-reference discordance rate",
                 "description": "Rate of non-reference discordance",
                 "min": 0,
@@ -181,12 +181,18 @@ class ErrSplReportMixin:
                 "scale": "YlGn",
             },
         }
+
+        # Keep only items from all variants (SNPs + indels)
         data = {
             sample: val for sample, vtype in self.glimpse_err_spl.items() for key, val in vtype.items() if key == "GCsV"
         }
 
         # Make a table summarising the stats across all samples
         self.summary_table(data, headers)
+
+        # Add to the general stats table
+        general_headers = ["best_gt_rsquared", "imputed_ds_rsquared"]
+        self.general_stats_addcols(filter_err_spl_data(data, general_headers), headers)
 
         # Return the number of logs that were found
         return n_reports_found
@@ -207,6 +213,11 @@ class ErrSplReportMixin:
                 },
             ),
         )
+
+
+def filter_err_spl_data(data, keys):
+    """Filter out unwanted keys from the parsed data"""
+    return {sample: {k: v for k, v in datas.items() if k in keys} for sample, datas in data.items()}
 
 
 def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
@@ -253,7 +264,7 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
             RR_hom_mismatches_rate_percent,
             RA_het_mismatches_rate_percent,
             AA_hom_mismatches_rate_percent,
-            non_reference_discordanc_rate_percent,
+            non_reference_discordance_rate_percent,
             best_gt_rsquared,
             imputed_ds_rsquared,
         ) = fields
@@ -274,7 +285,7 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
             RR_hom_mismatches_rate_percent=float(RR_hom_mismatches_rate_percent),
             RA_het_mismatches_rate_percent=float(RA_het_mismatches_rate_percent),
             AA_hom_mismatches_rate_percent=float(AA_hom_mismatches_rate_percent),
-            non_reference_discordanc_rate_percent=float(non_reference_discordanc_rate_percent),
+            non_reference_discordance_rate_percent=float(non_reference_discordance_rate_percent),
             best_gt_rsquared=float(best_gt_rsquared),
             imputed_ds_rsquared=float(imputed_ds_rsquared),
         )

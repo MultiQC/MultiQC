@@ -3,7 +3,7 @@
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the GLIMPSE submodules
 from .err_spl import ErrSplReportMixin
