@@ -434,13 +434,13 @@ def parse_vc_metrics_file(f):
 
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
-    if exist_and_number(data, "Total") and exist_and_number(prefilter_data, "Total"):
+    if exist_and_number(data, "Total") and exist_and_number(prefilter_data, "Total") and prefilter_data["Total"] > 0:
         data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
 
-    if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs"):
+    if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs") and prefilter_data["SNPs"] > 0:
         data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
 
-    if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels"):
+    if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels") and prefilter_data["Indels"] > 0:
         data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
 
     if (
