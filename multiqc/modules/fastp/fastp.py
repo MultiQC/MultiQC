@@ -14,10 +14,6 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    fastp module class
-    """
-
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
@@ -462,10 +458,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return linegraph.plot(pdata, pconfig)
 
-    def filter_pconfig_pdata_subplots(self, data, label):
+    @staticmethod
+    def filter_pconfig_pdata_subplots(data, label):
         data_labels = []
         pdata = []
-        config = {
+        for k, dl in {
             "read1_before_filtering": {
                 "name": "Read 1: Before filtering",
                 "ylab": f"R1 Before filtering: {label}",
@@ -482,10 +479,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "name": "Read 2: After filtering",
                 "ylab": f"R2 After filtering: {label}",
             },
-        }
-        for k in config:
+        }.items():
             if sum([len(data[k][x]) for x in data[k]]) > 0:
-                data_labels.append(config[k])
+                data_labels.append(dl)
                 pdata.append(data[k])
 
         # Abort sample if no data
