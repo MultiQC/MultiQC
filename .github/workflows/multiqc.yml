@@ -74,30 +74,30 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
-          path: test_data
+          path: test-data
 
       - name: Unit tests
         run: |
           pip install pytest
-          pytest -v test_data/unit_tests
+          pytest -v tests
 
       # Run all of the tests!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ --filename full_report.html
 
       # More variations of command line flags and inputs. No need to run those across all Python versions.
       - name: Special case input data
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} test_data/data --ignore test_data/data/modules/
+        run: multiqc ${{ needs.changes.outputs.single_module }} test-data/data --ignore test-data/data/modules/
 
       - name: All modules / Log filename as s_name, no cleaning
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ --fullnames --fn_as_s_name
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
         if: matrix.python-version == env.latest_python
         run: |
-          multiqc ${{ needs.changes.outputs.single_module }} test_data/data/modules/ --filename all_ignored.html --ignore-samples '*'
+          multiqc ${{ needs.changes.outputs.single_module }} test-data/data/modules/ --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
             echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or ModuleNoSamplesFound when no matching files are found" >&2
             exit 1
@@ -106,27 +106,27 @@ jobs:
       - name: File-list input of dirs
         if: matrix.python-version == env.latest_python
         run: |
-          cd test_data
+          cd test-data
           multiqc ${{ needs.changes.outputs.single_module }} --file-list data/special_cases/dir_list.txt
 
       - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
         if: matrix.python-version == env.latest_python
-        run: multiqc --strict test_data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+        run: multiqc --strict test-data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
       - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
         if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test_data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test_data/config_example.yaml
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
 
       - name: Specific module / named output dir / JSON data / File list
         if: matrix.python-version == env.latest_python
         run: |
-          cd test_data
+          cd test-data
           multiqc -m star -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
 
       - name: No report
         if: matrix.python-version == env.latest_python
         run: |
-          cd test_data
+          cd test-data
           multiqc -m star data/modules/star --no-report -n no-report
           if [[ -f no-report.html ]]; then
             echo "Running with the --no-report flag should not produce an HTML" >&2
@@ -169,9 +169,9 @@ jobs:
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: Download test data
         run: |
-          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test_data.zip
-          7z x test_data.zip -y -o"test_data"
-          dir test_data\test-data-main
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
+          7z x test-data.zip -y -o"test-data"
+          dir test-data\test-data-main
 
       # Run all of the tests! Remember the BACKslash path separator!
       - name: All modules / Custom report filename
@@ -179,8 +179,8 @@ jobs:
           $single_module = "${{ needs.changes.outputs.single_module }}"
           # want to run on just one module to avoid the windows job to time out:
           if ($single_module) {
-              multiqc $single_module --strict test_data\test-data-main\data\modules\ --filename full_report.html
+              multiqc $single_module --strict test-data\test-data-main\data\modules\ --filename full_report.html
           }
           if (-not $single_module) {
-              multiqc -m samtools --strict test_data\test-data-main\data\modules\ --filename full_report.html
+              multiqc -m samtools --strict test-data\test-data-main\data\modules\ --filename full_report.html
           }
