@@ -70,7 +70,7 @@ and produce a report detailing whatever it finds.
 
 <!-- RICH-CODEX fake_command: "multiqc ." -->
 
-![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
+![`cd test-data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 
 The report is created in `multiqc_report.html` by default. Tab-delimited data
 files are also created in `multiqc_data/`, containing extra information.
