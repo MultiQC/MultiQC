@@ -1,12 +1,33 @@
 # MultiQC Version History
 
-## MultiQC v1.23dev
+## [MultiQC v1.22.2](https://github.com/MultiQC/MultiQC/releases/tag/v1.22.2) - 2024-05-31
 
-### MultiQC updates
+Bug fix release. Two major issues are fixed here:
 
-### New modules
+- Fixed running same module twice with `path_filters` (e.g. trimmed vs. raw FastQC),
+- The raw data `report_saved_raw_data` is re-added in multiqc_data.json by default.
 
-### Module updates
+### Fixes
+
+- Fix running same module multiple times in the report (e.g. trimmed vs. raw FastQC) ([#2592](https://github.com/MultiQC/MultiQC/pull/2592))
+- Preserve `report_saved_raw_data` in multiqc_data.json by keeping `preserve_module_raw_data: false` by default ([#2591](https://github.com/MultiQC/MultiQC/pull/2591))
+- Table headers: do not set namespace to `None` when there is single namespace ([#2590](https://github.com/MultiQC/MultiQC/pull/2590))
+- Re-enable falling back to flat plots for large datasets ([#2580](https://github.com/MultiQC/MultiQC/pull/2580))
+- Reset in `multiqc.run(*)` to allow running it twice interactively ([#2598](https://github.com/MultiQC/MultiQC/pull/2598))
+- Fix scatter plot in `--flat` mode when there are categorical axes ([#2600](https://github.com/MultiQC/MultiQC/pull/2600))
+- Fix hiding table column with all empty values in custom content ([#2599](https://github.com/MultiQC/MultiQC/pull/2599))
+- Table "Copy" button: include headers ([#2594](https://github.com/MultiQC/MultiQC/pull/2594))
+
+### Module fixes and updates
+
+- **QUAST**
+  - Underscore attributes captured by lambdas to avoid wiping them after module finished ([#2581](https://github.com/MultiQC/MultiQC/pull/2581))
+- **Cell Ranger**
+  - Handle missing `vdj_annotation` and `vdj_enrichment` sections ([#2579](https://github.com/MultiQC/MultiQC/pull/2579))
+- **fgbio**
+  - Fix links in fgbio.md ([#2586](https://github.com/MultiQC/MultiQC/pull/2586))
+- **Custom content**
+  - Support DOI for custom content ([#2582](https://github.com/MultiQC/MultiQC/pull/2582))
 
 ## [MultiQC v1.22.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.22) - 2024-05-17
 
@@ -70,6 +91,7 @@ For more information, please see the MultiQC release blog article on the Seqera 
 - Lint check for use of `f["content_lines"]` ([#2485](https://github.com/MultiQC/MultiQC/pull/2485))
 - Allow to set style of line graph (`lines` or `lines+markers`) per plot ([#2413](https://github.com/MultiQC/MultiQC/pull/2413))
 - Add `CMD` to `Dockerfile` so a default run without any parameters displays the `--help` ([#2279](https://github.com/MultiQC/MultiQC/pull/2279))
+- Custom content tables are sorted by key by default (unless `sort_rows: false` is set in config), to harmonize with tables in modules.
 
 ### New modules
 

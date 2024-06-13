@@ -61,6 +61,7 @@ class BaseMultiqcModule:
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
+        self.id = anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         target = self.mod_cust_config.get("target", target)
         self.href = self.mod_cust_config.get("href", href)

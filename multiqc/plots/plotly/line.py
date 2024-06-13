@@ -7,9 +7,10 @@ import math
 import plotly.graph_objects as go
 from pydantic import Field, BaseModel, field_validator
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig, ModelWithNiceValidation
+from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 ValueT = Union[float, int, str, None]
 
 
-class Series(ModelWithNiceValidation):
+class Series(ValidatedConfig):
     name: str
     data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[ValueT, ValueT]]
@@ -47,7 +48,7 @@ class LinePlotConfig(PConfig):
     ylab: Optional[str] = None
     categories: bool = False
     smooth_points: Optional[int] = None
-    smooth_points_sumcounts: Optional[int] = None
+    smooth_points_sumcounts: Union[bool, List[bool], None] = None
     extra_series: Optional[Union[Series, List[Series], List[List[Series]], Dict, List[Dict], List[List[Dict]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
@@ -164,7 +165,9 @@ class Dataset(BaseDataset):
         """
         Create a Plotly figure for a dataset
         """
-        layout.height += len(self.lines) * 5  # extra space for legend
+        if layout.showlegend is True:
+            # Extra space for legend
+            layout.height += len(self.lines) * 5
 
         fig = go.Figure(layout=layout)
         for line in self.lines:
@@ -237,13 +240,20 @@ class LinePlot(Plot):
         pconfig: LinePlotConfig,
         lists_of_lines: List[List[Series]],
     ) -> "LinePlot":
+        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
+
         model = Plot.initialize(
             plot_type=PlotType.LINE,
             pconfig=pconfig,
             n_datasets=len(lists_of_lines),
+            n_samples=max_n_samples,
             axis_controlled_by_switches=["yaxis"],
             default_tt_label="<br>%{x}: %{y}",
         )
+
+        # Very large legend for automatically enabled flat plot mode is not very helpful
+        if pconfig.showlegend is None and max_n_samples > 250:
+            model.layout.showlegend = False
 
         model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 

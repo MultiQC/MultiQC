@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
         color_list = ["Oranges", "Reds", "Blues", "Greens"]
         for order, header in enumerate(cat_names):
             table_cats[header] = {
-                "name": header,
+                "title": header,
                 "format": "{:,.0f}",
                 "scale": color_list[order % 4],
             }
@@ -217,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="General Statistics",
             anchor="vep-general-statistics",
-            helptext="Table showing general statistics of VEP annotaion run",
+            helptext="Table showing general statistics of VEP annotation run",
             plot=table.plot(table_data, table_cats, table_config),
         )
 

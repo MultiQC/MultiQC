@@ -14,7 +14,7 @@ from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core.exceptions import RunError
 from multiqc.core import plugin_hooks, software_versions
-from multiqc.plots.plotly.plot import PConfigValidationError
+from multiqc.validation import ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ def exec_modules(
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             raise
-        except PConfigValidationError:
+        except ConfigValidationError:
             raise
         except:  # noqa: E722
             if config.strict:

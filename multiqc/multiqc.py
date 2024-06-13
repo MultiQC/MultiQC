@@ -22,8 +22,8 @@ from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
 from multiqc.core.exceptions import RunError
-from multiqc.plots.plotly.plot import PConfigValidationError
 from multiqc.utils import util_functions
+from multiqc.validation import ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -456,7 +456,7 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
         )
         result = RunResult(sys_exit_code=1)
 
-    except PConfigValidationError:
+    except ConfigValidationError:
         result = RunResult(sys_exit_code=1)
 
     # End execution using the exit code returned from MultiQC
@@ -503,6 +503,10 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
             "Strict mode specified. Will exit early if a module or a template crashed, and will "
             "give warnings if anything is not optimally configured in a module or a template."
         )
+
+    # In case if run() is called multiple times in the same session:
+    report.reset()
+
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 

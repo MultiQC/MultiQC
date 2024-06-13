@@ -111,7 +111,6 @@ plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
 lineplot_style: str
-lineplot_max_samples: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
@@ -384,7 +383,7 @@ def _add_config(conf: Dict, conf_path=None):
     for c, v in conf.items():
         if c == "sp":
             # Merge filename patterns instead of replacing
-            sp.update(v)
+            update_dict(sp, v)
             log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
             # Prepend to filename cleaning patterns instead of replacing

@@ -153,6 +153,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
                 config.export_plot_formats.append("png")
     if cfg.make_pdf:
         config.template = "simple"
+    if config.template == "simple":
+        config.plots_force_flat = True
+        config.simple_output = True
     if cfg.filename:
         config.filename = cfg.filename
     if cfg.no_megaqc_upload is not None:
