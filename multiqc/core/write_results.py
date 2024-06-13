@@ -354,7 +354,7 @@ def _render_general_stats_table() -> None:
     if len(report.general_stats_data) > 0 and not all_hidden:
         pconfig = {
             "id": "general_stats_table",
-            "table_title": "General Statistics",
+            "title": "General Statistics",
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }

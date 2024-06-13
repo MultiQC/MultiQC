@@ -50,6 +50,10 @@ class ValidatedConfig(BaseModel):
     @classmethod
     def validate_fields(cls, values):
         # Check unrecognized fields
+        if not isinstance(values, dict):
+            return values
+
+        # Check unrecognized fields
         filtered_values = {}
         for name, val in values.items():
             if name not in cls.model_fields:

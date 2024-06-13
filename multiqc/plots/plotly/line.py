@@ -1,17 +1,46 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Tuple, Optional, Literal, Any
+from typing import Dict, List, Union, Tuple, Optional, Literal
 
 import math
 import plotly.graph_objects as go
-from pydantic import Field
+from pydantic import Field, BaseModel, field_validator
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
+
+
+ValueT = Union[float, int, str, None]
+
+
+class Series(ValidatedConfig):
+    name: str
+    data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
+    pairs: List[Tuple[ValueT, ValueT]]
+    color: Optional[str] = None
+    width: Optional[int] = None
+    dash: Optional[str] = None
+    showlegend: bool = True
+
+    class Marker(BaseModel):
+        symbol: Optional[str] = None
+        color: Optional[str] = None
+        width: int = 1
+
+    marker: Optional[Marker] = None
+
+    # noinspection PyNestedDecorators
+    @field_validator("marker", mode="before")
+    @classmethod
+    def parse_marker(cls, d):
+        if isinstance(d, dict):
+            return Series.Marker(**d)
+        return d
 
 
 class LinePlotConfig(PConfig):
@@ -20,7 +49,7 @@ class LinePlotConfig(PConfig):
     categories: bool = False
     smooth_points: Optional[int] = None
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
-    extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
+    extra_series: Optional[Union[Series, List[Series], List[List[Series]], Dict, List[Dict], List[List[Dict]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
@@ -38,12 +67,19 @@ class LinePlotConfig(PConfig):
     hide_empty: bool = False
     colors: Dict[str, str] = {}
 
+    # noinspection PyNestedDecorators
+    @field_validator("extra_series", mode="before")
+    @classmethod
+    def parse_extra_series(cls, data):
+        if not isinstance(data, list):
+            data = [data]
+        if not isinstance(data[0], list):
+            data = [data]
 
-# {"name": "SAMPLE1", "color": "#111111", "data": [[x, y], [x, y], ...]}
-LineT = Dict[str, Union[str, List[Tuple[Union[float, int, str], Union[float, int]]]]]
+        return [[Series(**s) if isinstance(s, dict) else s for s in ss] for ss in data]
 
 
-def plot(lists_of_lines: List[List[LineT]], pconfig: LinePlotConfig) -> "LinePlot":
+def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -61,12 +97,12 @@ def plot(lists_of_lines: List[List[LineT]], pconfig: LinePlotConfig) -> "LinePlo
 
 
 class Dataset(BaseDataset):
-    lines: List[Dict]
+    lines: List[Series]
 
     @staticmethod
     def create(
         dataset: BaseDataset,
-        lines: List[Dict],
+        lines: List[Series],
         pconfig: LinePlotConfig,
     ) -> "Dataset":
         dataset: Dataset = Dataset(
@@ -80,24 +116,24 @@ class Dataset(BaseDataset):
 
         # convert HighCharts-style hardcoded trace parameters to Plotly style
         lines = []
-        for src_line in dataset.lines:
+        for series in dataset.lines:
             new_line = {
-                "name": src_line["name"],
-                "data": src_line["data"],
-                "color": src_line.get("color"),
-                "showlegend": src_line.get("showlegend", src_line.get("showInLegend", True)),
+                "name": series.name,
+                "data": series.pairs,
+                "color": series.color,
+                "showlegend": series.showlegend,
                 "line": {
-                    "dash": convert_dash_style(src_line.get("dash", src_line.get("dashStyle"))),
-                    "width": src_line.get("line", {}).get("width", src_line.get("lineWidth")),
+                    "dash": convert_dash_style(series.dash),
+                    "width": series.width,
                 },
             }
-            if "marker" in src_line:
+            if series.marker:
                 new_line["mode"] = "lines+markers"
                 new_line["marker"] = {
-                    "symbol": src_line["marker"].get("symbol"),
+                    "symbol": series.marker.symbol,
                     "line": {
-                        "width": src_line["marker"].get("line", {}).get("width", src_line["marker"].get("lineWidth")),
-                        "color": src_line["marker"].get("line", {}).get("color", src_line["marker"].get("lineColor")),
+                        "width": series.marker.width,
+                        "color": series.marker.color,
                     },
                 }
             lines.append(remove_nones_and_empty_dicts(new_line))
@@ -202,7 +238,7 @@ class LinePlot(Plot):
     @staticmethod
     def create(
         pconfig: LinePlotConfig,
-        lists_of_lines: List[List[LineT]],
+        lists_of_lines: List[List[Series]],
     ) -> "LinePlot":
         max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
 
