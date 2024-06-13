@@ -5,7 +5,7 @@ import pytest
 
 @pytest.fixture
 def data_dir():
-    test_data_dir = Path(__file__).parent.parent.parent / "test-data"
+    test_data_dir = Path(__file__).parent.parent / "test-data"
     if not test_data_dir.exists():
         raise FileNotFoundError(
             f"The test data directory expected to be found at {test_data_dir}. Please, "
