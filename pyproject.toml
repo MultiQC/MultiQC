@@ -247,4 +247,4 @@ packages = ["multiqc"]
 line-length = 120
 target-version = "py312"
 ignore-init-module-imports = true
-ignore-unused-imports = true
+ignore = ["F401"]  # unused-import

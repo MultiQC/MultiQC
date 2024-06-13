@@ -4,8 +4,6 @@
 Tests for discovering and excluding files
 """
 
-from pathlib import Path
-
 import pytest
 
 from multiqc import config
@@ -23,11 +21,6 @@ def init_config():
 def search_files():
     report.reset_file_search()
     file_search()
-
-
-@pytest.fixture
-def data_dir():
-    yield Path(__file__).parent.parent / "data"
 
 
 @pytest.fixture
