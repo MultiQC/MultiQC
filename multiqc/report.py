@@ -372,6 +372,9 @@ def search_files(run_module_names):
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
     """
+    if not analysis_files:
+        return
+
     # Prep search patterns
     spatterns = [{}, {}, {}, {}, {}, {}, {}]
     runtimes["sp"] = defaultdict()
@@ -522,7 +525,7 @@ def search_files(run_module_names):
     # Rich widgets do not look good in Jupyter, of it there is no unicode support.
     # Additionally, falling back to tqdm if rich_console was not initialized. That
     # happens when init_log.init_log() wasn't run, i.e in unit tests.
-    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console"):
+    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console", None):
         PRINT_FNAME = False
         # ANSI escape code for dim text
         if not config.no_ansi:

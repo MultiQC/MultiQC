@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Tests for discovering and excluding files
 """
