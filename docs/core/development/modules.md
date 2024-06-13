@@ -101,7 +101,7 @@ is not optimally configured, and will also make MultiQC exit early if a module c
 For example:
 
 ```bash
-multiqc --strict test_data
+multiqc --strict test-data
 ```
 
 Note that the automated MultiQC continuous integration testing runs in this mode,
