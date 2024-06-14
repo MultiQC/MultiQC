@@ -86,16 +86,16 @@ class MultiqcModule(BaseMultiqcModule):
         # Set up class objects to hold parsed data
         self.general_stats_headers = dict()
         self.general_stats_data = dict()
-        n = dict()
+        self.samples_parsed_by_tool = dict()
 
         for tool in tools:
             mod = globals()[tool]
             func = getattr(mod, "parse_reports", None)
             if func is not None:
-                n[tool] = func(self)
-                if n[tool] > 0:
-                    log.info(f"Found {n[tool]} {tool} reports")
+                self.samples_parsed_by_tool[tool] = func(self)
+                if len(self.samples_parsed_by_tool[tool]) > 0:
+                    log.info(f"Found {len(self.samples_parsed_by_tool[tool])} {tool} reports")
 
         # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if all(len(v) == 0 for v in self.samples_parsed_by_tool.values()):
             raise ModuleNoSamplesFound
