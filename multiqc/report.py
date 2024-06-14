@@ -504,7 +504,7 @@ def search_files(run_module_names):
                                 files[key].append(f.to_dict())
                                 file_search_stats[key] = file_search_stats.get(key, 0) + 1
                                 file_matched = True
-                                logger.debug(f"File {f.path} matched {key}")
+                                # logger.debug(f"File {f.path} matched {key}")
                             # Don't keep searching this file for other modules
                             if not sp.get("shared", False) and key not in config.filesearch_file_shared:
                                 runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
