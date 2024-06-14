@@ -385,7 +385,6 @@ htseq:
   contents_re: '^(feature\tcount|\w+.*\t\d+)$'
   num_lines: 1
 htstream:
-  fn: "*.json"
   contents: "Program_details"
   num_lines: 2
 hicexplorer:

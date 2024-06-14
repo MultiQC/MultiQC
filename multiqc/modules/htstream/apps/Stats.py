@@ -166,7 +166,7 @@ class Stats:
             "id": "htstream_stats_qbc_line_" + read_code + "_" + unique_id,
             "smooth_points_sumcounts": False,
             "categories": True,
-            "tt_label": "{point.x}: {point.y:.2f}%",
+            "tt_label": "{point.x}: {point.y:.2f}",
             "title": "HTStream: Mean Quality by Cycle (" + read_code + ")",
             "xlab": "Cycle",
             "ylab": "Mean Q Score",

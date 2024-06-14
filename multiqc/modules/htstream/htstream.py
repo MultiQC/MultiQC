@@ -76,8 +76,6 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning("Found " + str(len(self.htstream_data)) + " reports.")
             raise ModuleNoSamplesFound
 
-        log.info("Found " + str(len(self.htstream_data)) + " reports.")
-
         # report number of files found
         log.info("Found " + str(len(self.htstream_data)) + " reports.")
 
