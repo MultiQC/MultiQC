@@ -94,12 +94,14 @@ def is_line_right_before_table(
         picard_classes = []
     else:
         picard_classes = [picard_class]
+
     return (
         (line.startswith("## METRICS CLASS") or line.startswith("## HISTOGRAM"))
-        and (not picard_classes or any(c.upper() in line.upper() for c in picard_classes))
+        and (not picard_classes or any(c.upper() in line.upper() for c in picard_classes))  # picard
         or sentieon_algo
         and line.startswith("#SentieonCommandLine:")
-        and f" --algo {sentieon_algo}" in line
+        and f" --algo {sentieon_algo}" in line  # sentieon
+        or line.startswith("##METRICS")  # biobambam2
     )
 
 
