@@ -26,30 +26,6 @@ NUM_SAMPLES_BY_FILE = {
 }
 
 
-# @pytest.mark.parametrize("tool", TOOLS)
-# def test_picard_data_parsed(tool, data_dir):
-#     tool_subdir = data_dir / "modules/picard" / tool
-#     print(tool_subdir)
-#     assert tool_subdir.exists()
-#
-#     report.reset()
-#     report.analysis_files = [tool_subdir]
-#     report.search_files(["picard"])
-#
-#     m = MultiqcModule(tools=[tool])
-#
-#     all_files = [
-#         p
-#         for p in tool_subdir.rglob("*")
-#         if p.parent.name != "multiqc_data" and p.name != "multiqc_report.html" and p.is_file()
-#     ]
-#     expected_num_samples = sum(NUM_SAMPLES_BY_FILE.get(p.name, 1) for p in all_files)
-#     samples_parsed = m.samples_parsed_by_tool.get(tool, [])
-#     print("Input files:\n" + "".join(f"{i + 1}: {p.name}\n" for i, p in enumerate(all_files)))
-#     print("Sample names:\n" + "".join(f"{i + 1}: {s}\n" for i, s in enumerate(samples_parsed)))
-#     assert len(samples_parsed) == expected_num_samples
-
-
 @pytest.mark.parametrize("tool", TOOLS)
 def test_picard_data_parsed(tool, data_dir):
     tool_subdir = data_dir / "modules/picard" / tool
