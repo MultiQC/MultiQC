@@ -29,11 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         n["bamsormadup"] = MarkDuplicates.parse_reports(self, "biobambam2/bamsormadup")
-        if n["bamsormadup"] > 0:
-            log.info(f"Found {n['bamsormadup']} bamsormadup reports")
-
-        # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if len(n["bamsormadup"]) > 0:
+            log.info(f"Found {len(n['bamsormadup'])} bamsormadup reports")
+        else:
             raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
