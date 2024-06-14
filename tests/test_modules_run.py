@@ -11,6 +11,7 @@ from typing import Callable, List, Union
 
 import pytest
 
+import multiqc
 from multiqc import BaseMultiqcModule, config, report
 
 
@@ -33,16 +34,3 @@ def test_all_modules(module_id, entry_point, data_dir):
     module = module_cls()
 
     assert len(report.general_stats_data) > 0 or len(module.sections) > 0
-
-
-# @pytest.mark.parametrize("module_id,entry_point", list(config.avail_modules.items()))
-# def test_all_modules_interactive(module_id, entry_point, data_dir):
-#     """
-#     All modules do something
-#     """
-#     mod_dir = data_dir / "modules" / module_id
-#     assert mod_dir.exists() and mod_dir.is_dir()
-#     multiqc.parse_logs(mod_dir, run_modules=[module_id])
-#     assert len(report.saved_raw_data) > 0
-#     key = list(report.saved_raw_data)[0]
-#     assert len(report.saved_raw_data[key]) > 0
