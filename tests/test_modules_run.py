@@ -11,7 +11,6 @@ from typing import Callable, List, Union
 
 import pytest
 
-import multiqc
 from multiqc import BaseMultiqcModule, config, report
 
 

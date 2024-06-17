@@ -1,4 +1,9 @@
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+
 import multiqc
+from multiqc import report
 
 
 def test_parse_logs_fn_clean_exts(data_dir):
@@ -21,3 +26,18 @@ def test_parse_logs_ignore_samples(data_dir):
 
     assert multiqc.list_samples() == ["meta_contigs_1"]
     assert multiqc.list_modules() == ["QUAST"]
+
+
+def test_write_report():
+    multiqc.reset()
+    module = multiqc.BaseMultiqcModule(
+        name="my-module",
+        anchor="custom_data",
+    )
+    module.add_section()
+    report.modules = [module]
+
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+        multiqc.write_report(force=True, output_dir=tmp_dir_name)
+        assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
+        assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
