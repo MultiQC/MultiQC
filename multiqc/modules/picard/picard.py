@@ -29,7 +29,7 @@ from . import (
     WgsMetrics,
 )
 
-TOOLS = (
+TOOLS = [
     m.__name__.split(".")[-1]
     for m in (
         AlignmentSummaryMetrics,
@@ -54,7 +54,7 @@ TOOLS = (
         VariantCallingMetrics,
         WgsMetrics,
     )
-)
+]
 
 log = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         href="http://broadinstitute.github.io/picard/",
         info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
         # No DOI to cite // doi=
-        tools=TOOLS,
+        tools=tuple(TOOLS),
     ):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
@@ -89,6 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.samples_parsed_by_tool = dict()
 
         for tool in tools:
+            log.debug(f"Running picard tool {tool}")
             mod = globals()[tool]
             func = getattr(mod, "parse_reports", None)
             if func is not None:

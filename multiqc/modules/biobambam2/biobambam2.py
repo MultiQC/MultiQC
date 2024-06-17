@@ -10,8 +10,10 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """This module is super weird. The output from this tools is essentially
-    identical to Picard MarkDuplicates, so we just hijack that module instead"""
+    """
+    This module is super weird. The output from these tools is essentially
+    identical to Picard MarkDuplicates, so we just hijack that module instead
+    """
 
     def __init__(self):
         # Initialise the parent object
