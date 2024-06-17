@@ -1,0 +1,73 @@
+name: "MultiQC"
+on:
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+
+env:
+  # No need to run test variations across all Python versions
+  latest_python: "3.12"
+
+jobs:
+  linux:
+    name: Linux - Python ${{ matrix.python-version }}
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install MultiQC
+        run: pip install '.[dev]'
+
+      - name: Download test data
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
+      - run: pytest -v tests
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    needs: changes
+    timeout-minutes: 10
+
+    steps:
+      # Check out MultiQC code
+      - uses: actions/checkout@v4
+
+      # Set up Windows with C++ for numpy
+      - name: Visual Studio Command Prompt tool
+        run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MultiQC
+        run: pip install .
+
+      # Fetch the MultiQC test data
+      # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
+      - name: Download test data
+        run: |
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
+          7z x test-data.zip -y -o"test-data"
+          dir test-data\test-data-main
+
+      - run: pytest -v tests
