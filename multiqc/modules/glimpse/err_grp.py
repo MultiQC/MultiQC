@@ -1,6 +1,8 @@
-""" MultiQC submodule to parse output from GLIMPSE_concordance """
+"""MultiQC submodule to parse output from GLIMPSE_concordance"""
 
+import gzip
 import logging
+import os
 from typing import Dict, Union
 
 from multiqc.plots import linegraph
@@ -33,14 +35,18 @@ EXPECTED_COLUMNS = [
 
 class ErrGrpReportMixin:
     """Mixin class, loaded by main Glimpse MultiqcModule class."""
+
     # parsing functions -------------------------------------------------------------
 
     def parse_glimpse_err_grp(self):
         """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
         self.glimpse_err_grp = dict()
-        for f in self.find_log_files("glimpse/err_grp", filehandles=True):
-            parsed_data = parse_err_grp_report([line.rstrip() for line in f["f"]])
+        for f in self.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
+            with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
+                lines = [line.decode() for line in f_gz.readlines()]
+
+            parsed_data = parse_err_grp_report([line.rstrip() for line in lines])
             if len(parsed_data) > 1:
                 if f["s_name"] in self.glimpse_err_grp:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
