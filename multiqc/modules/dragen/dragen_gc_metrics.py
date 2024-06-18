@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
+from multiqc.plots.plotly.line import LinePlotConfig
 
 log = logging.getLogger(__name__)
 
@@ -48,17 +49,16 @@ class DragenGcMetrics(BaseMultiqcModule):
                 """,
             plot=linegraph.plot(
                 hist_data,
-                {
-                    "id": "gc-bias-hist",
-                    "title": "Dragen: GC Bias Histogram",
-                    "ylab": "Normalized Coverage",
-                    "xlab": "% GC",
-                    "ymin": 0,
-                    "xmin": 0,
-                    "tt_label": "<b>{point.x} % GC</b>: {point.y} Normalized coverage",
-                    "smooth_points": smooth_points,
-                    "namespace": DragenGcMetrics.NAMESPACE,
-                },
+                LinePlotConfig(
+                    id="gc-bias-hist",
+                    title="Dragen: GC Bias Histogram",
+                    ylab="Normalized Coverage",
+                    xlab="% GC",
+                    ymin=0,
+                    xmin=0,
+                    tt_label="<b>{point.x} % GC</b>: {point.y} Normalized coverage",
+                    smooth_points=smooth_points,
+                ),
             ),
         )
 
