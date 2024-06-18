@@ -40,6 +40,11 @@ def init_config():
             "contents": "matching_content",
             "shared": True,
         },
+        "module_filelink": [
+            {"fn": "filelink"},
+            {"fn": "nested"},
+            {"fn": "file"},
+        ],
     }
     config.run_modules = list(config.sp.keys())
     config.avail_modules = dict.fromkeys(config.run_modules)
@@ -84,8 +89,7 @@ def test_symlinked_files_found(init_config, ignore_links, search_files, expected
     """
     Tests that symlinked files are discovered and ignored properly.
     """
-    filenames = report.files.keys()
-    assert filenames == expected
+    _assert_expected_files(expected)
 
 
 def _assert_expected_files(expected_files):
