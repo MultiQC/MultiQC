@@ -119,8 +119,8 @@ jobs:
       - name: Force overwrite / Prepend dirnames / Name and comment / No data dir
         run: multiqc ${{ env.test_modules }} --strict test-data/data/modules -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
-      - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
-        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
+      - name: Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
+        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
 
       - name: Specific module / named output dir / JSON data / File list
         run: |
