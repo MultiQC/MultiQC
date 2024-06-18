@@ -62,7 +62,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install MultiQC
-        run: pip install .
+        run: pip install '.[dev]'
 
       # Fetch the MultiQC test data
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
