@@ -76,8 +76,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Special case - qchist metric in General Stats
         if "qchist" in self.mod_data:
             data = {}
-            fraction_gt_q30 = []
             for s_name in self.mod_data["qchist"]:
+                fraction_gt_q30 = []
                 for qual, d in self.mod_data["qchist"][s_name]["data"].items():
                     if int(qual) >= 30:
                         fraction_gt_q30.append(d[1])
