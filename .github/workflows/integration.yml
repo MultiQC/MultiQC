@@ -1,4 +1,4 @@
-name: "MultiQC"
+name: "Integration tests"
 on:
   push:
     branches:
