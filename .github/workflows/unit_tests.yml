@@ -11,7 +11,7 @@ on:
 
 jobs:
   linux:
-    name: Linux - Python ${{ matrix.python-version }}
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -39,8 +39,6 @@ jobs:
   windows:
     name: Windows
     runs-on: windows-latest
-    needs: changes
-    timeout-minutes: 10
 
     steps:
       # Check out MultiQC code
