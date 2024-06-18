@@ -614,8 +614,6 @@ def search_file(pattern, f: SearchFile, module_key):
     fn_matched = False
     contents_matched = False
 
-    print(module_key, pattern, f.filename, f.filesize)
-
     # Search pattern specific filesize limit
     max_filesize = pattern.get("max_filesize")
     if max_filesize is not None and f.filesize:
