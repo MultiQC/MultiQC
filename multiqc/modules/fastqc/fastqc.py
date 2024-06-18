@@ -20,6 +20,7 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc import report
+from multiqc.plots.plotly.line import Series
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -690,7 +691,7 @@ class MultiqcModule(BaseMultiqcModule):
                 elif not line.startswith("#"):
                     s = line.split()
                     try:
-                        theoretical_gc.append([float(s[0]), float(s[1])])
+                        theoretical_gc.append((float(s[0]), float(s[1])))
                     except (TypeError, IndexError):
                         pass
 
@@ -702,13 +703,13 @@ class MultiqcModule(BaseMultiqcModule):
             extra_series_config = {
                 "name": "Theoretical GC Content",
                 "dash": "dash",
-                "line": {"width": 2},
+                "width": 2,
                 "color": "black",
                 "showlegend": False if status_checks else True,
             }
-            pconfig["extra_series"] = [[dict(extra_series_config)], [dict(extra_series_config)]]
-            pconfig["extra_series"][0][0]["data"] = theoretical_gc
-            pconfig["extra_series"][1][0]["data"] = [[d[0], (d[1] / 100.0) * max_total] for d in theoretical_gc]
+            s1 = Series(pairs=theoretical_gc, **extra_series_config)
+            s2 = Series(pairs=[(d[0], (d[1] / 100.0) * max_total) for d in theoretical_gc], **extra_series_config)
+            pconfig["extra_series"] = [[s1], [s2]]
             desc = f" **The dashed black line shows theoretical GC content:** `{theoretical_gc_name}`"
 
         self.add_section(

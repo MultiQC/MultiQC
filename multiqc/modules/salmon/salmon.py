@@ -31,7 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
                 self.salmon_meta[s_name] = {
-                    metric: val for metric, val in json.loads(f["f"]).items() if isinstance(val, (int, float, str))
+                    metric: val
+                    for metric, val in json.loads(f["f"]).items()
+                    if isinstance(val, (int, float, str, list))
                 }
                 self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
