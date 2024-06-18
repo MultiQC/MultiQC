@@ -11,10 +11,6 @@ on:
       - "docs/**"
       - "*.md"
 
-env:
-  # No need to run test variations across all Python versions
-  latest_python: "3.12"
-
 jobs:
   changes:
     name: Check for changes
@@ -87,6 +83,8 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Install MultiQC
         run: pip install .
