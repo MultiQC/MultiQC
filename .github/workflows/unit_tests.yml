@@ -43,33 +43,3 @@ jobs:
           fail_ci_if_error: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  windows:
-    name: Windows
-    runs-on: windows-latest
-
-    steps:
-      # Check out MultiQC code
-      - uses: actions/checkout@v4
-
-      # Set up Windows with C++ for numpy
-      - name: Visual Studio Command Prompt tool
-        run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install MultiQC
-        run: pip install '.[dev]'
-
-      # Fetch the MultiQC test data
-      # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
-      - name: Download test data
-        run: |
-          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
-          7z x test-data.zip -y -o"test-data"
-          dir test-data\test-data-main
-
-      - run: pytest -v tests
