@@ -59,6 +59,7 @@ dev = [
     "ruff",
     "pdoc3",
     "pytest",
+    "pytest-cov",
 ]
 
 [project.urls]

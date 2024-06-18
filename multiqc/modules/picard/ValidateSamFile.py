@@ -106,7 +106,7 @@ def parse_reports(module):
         # Write parsed data to a file
         module.write_data_file(data, "multiqc_picard_validatesamfile")
 
-    return len(data)
+    return data.keys()
 
 
 def _parse_reports_by_type(module):
