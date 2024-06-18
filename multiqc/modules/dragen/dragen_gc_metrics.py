@@ -4,6 +4,7 @@ from collections import defaultdict
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph, table
 from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
 
@@ -71,10 +72,11 @@ class DragenGcMetrics(BaseMultiqcModule):
             """,
             plot=table.plot(
                 table_data,
-                pconfig={
-                    "id": "dragen-gc-metrics-summary-table",
-                    "namespace": DragenGcMetrics.NAMESPACE,
-                },
+                pconfig=TableConfig(
+                    id="dragen-gc-metrics-summary-table",
+                    namespace=DragenGcMetrics.NAMESPACE,
+                    title="Dragen: GC Metrics Summary",
+                ),
             ),
         )
 
