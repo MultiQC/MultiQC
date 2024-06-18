@@ -44,7 +44,7 @@ jobs:
           if_false: ""
 
   all_modules_linux:
-    name: Linux - Python ${{ matrix.python-version }}
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
     needs: changes
     strategy:
@@ -73,7 +73,7 @@ jobs:
         run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules --filename full_report.html
 
   specific_cases_linux:
-    name: More variations of command line flags and inputs - Linux
+    name: More variations of flags and inputs
     runs-on: ubuntu-20.04
     timeout-minutes: 10
     env:
