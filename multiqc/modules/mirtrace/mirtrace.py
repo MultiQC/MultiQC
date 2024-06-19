@@ -243,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 0,
             "x_decimals": False,
             "tt_label": "<b>Read Length (bp) {point.x}</b>: {point.y} Read Count",
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 40, "to": 50, "color": "#ffebd1"},
                 {"from": 26, "to": 40, "color": "#e2f5ff"},
                 {"from": 18, "to": 26, "color": "#e5fce0"},

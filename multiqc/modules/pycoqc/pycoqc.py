@@ -283,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "pycoQC: Read Length",
             "ylab": "Read Density",
             "xlab": "Basecalled Length (bp)",
-            "xLog": True,
+            "xlog": True,
             "data_labels": [
                 {"name": "Passing Reads", "ylab": "Read Density", "xlab": "Basecalled Length (bp)"},
                 {"name": "All Reads", "ylab": "Read Density", "xlab": "Basecalled Length (bp)"},

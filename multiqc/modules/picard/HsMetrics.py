@@ -159,7 +159,7 @@ def parse_reports(module):
     module.add_software_version(None)
 
     # Write parsed data to a file
-    module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_HsMetrics")
+    module.write_data_file(data_by_sample, f"multiqc_{module.id}_HsMetrics")
 
     # Swap question marks with -1
     for s_name in data_by_sample:
@@ -172,12 +172,12 @@ def parse_reports(module):
     # Add report section
     module.add_section(
         name="HSMetrics",
-        anchor=f"{module.anchor}_hsmetrics",
+        anchor=f"{module.id}_hsmetrics",
         plot=table.plot(
             data_by_sample,
             _get_table_headers(),
             {
-                "id": f"{module.anchor}_hsmetrics_table",
+                "id": f"{module.id}_hsmetrics_table",
                 "namespace": "HsMetrics",
                 "scale": "RdYlGn",
                 "min": 0,
@@ -196,7 +196,7 @@ def parse_reports(module):
     if hs_pen_plot is not None:
         module.add_section(
             name="HS Penalty",
-            anchor=f"{module.anchor}_hsmetrics_hs_penalty",
+            anchor=f"{module.id}_hsmetrics_hs_penalty",
             description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
             helptext="""
                 Can be used with the following formula:
@@ -254,7 +254,7 @@ def _general_stats_table(module, data):
             covs = ["30"]
         for c in covs:
             headers[f"PCT_TARGET_BASES_{c}X"] = {
-                "id": f"{module.anchor}_target_bases_{c}X",
+                "rid": f"{module.id}_target_bases_{c}X",
                 "title": f"Target Bases ≥ {c}X",
                 "description": f"Percent of target bases with coverage ≥ {c}X",
                 "max": 100,

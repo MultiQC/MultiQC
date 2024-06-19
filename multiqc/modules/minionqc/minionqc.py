@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "MinIONQC",
                     "id": "minionqc-stats-qAll-table",
-                    "table_title": "MinIONQC: All reads",
+                    "title": "MinIONQC: All reads",
                 },
             ),
         )
@@ -211,7 +211,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": "MinIONQC",
                     "id": "minionqc-stats-qFilt-table",
-                    "table_title": "MinIONQC: Quality filtered reads",
+                    "title": "MinIONQC: Quality filtered reads",
                 },
             ),
         )

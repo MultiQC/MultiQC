@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Nextclade",
             "id": "nextclade_run_table",
-            "table_title": "Nextclade Run details",
+            "title": "Nextclade Run details",
         }
 
         return table.plot(self.nextclade_data, headers, table_config)

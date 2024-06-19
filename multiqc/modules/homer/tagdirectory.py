@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from HOMER tagdirectory """
+"""MultiQC module to parse output from HOMER tagdirectory"""
 
 import logging
 import math
@@ -426,7 +426,7 @@ class TagDirReportMixin:
             "ymin": 0,
             "xmax": 1,
             "xmin": 0,
-            "yDecimals": True,
+            "y_decimals": True,
             "tt_label": "<b>{point.x}% GC</b>: {point.y}",
         }
         return linegraph.plot(self.tagdir_data["GCcontent"], pconfig)
@@ -475,6 +475,6 @@ class TagDirReportMixin:
             "xlab": "Log10(Distance between regions)",
             "smooth_points": 500,
             "smooth_points_sumcounts": False,
-            "yLog": True,
+            "ylog": True,
         }
         return linegraph.plot(pdata, pconfig)

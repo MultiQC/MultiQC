@@ -291,7 +291,7 @@ class MultiqcModule(BaseMultiqcModule):
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
-                            "hide_zero_cats": False,
+                            "hide_empty": False,
                         },
                     )
 

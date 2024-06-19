@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-commands-table",
-            "table_title": "Cluster Flow: Commands",
+            "title": "Cluster Flow: Commands",
             "col1_header": "Tool",
             "sort_rows": False,
             "no_violin": True,
@@ -333,7 +333,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-pipelines-table",
-            "table_title": "Cluster Flow Pipelines",
+            "title": "Cluster Flow Pipelines",
             "col1_header": "Pipeline ID",
             "no_violin": True,
             "save_file": True,

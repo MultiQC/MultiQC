@@ -236,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
                 detail_headers,
                 pconfig={
                     "id": "xenome-table",
-                    "table_title": "Xenome Summary",
+                    "title": "Xenome Summary",
                 },
             ),
         )

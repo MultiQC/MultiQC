@@ -454,7 +454,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "data_labels": [
                 "Plus Strand +",
                 "Minus Strand -",
@@ -497,7 +497,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(

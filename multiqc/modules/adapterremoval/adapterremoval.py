@@ -311,7 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Adapter Removal: Discarded Reads",
             "id": "ar_retained_plot",
             "ylab": "# Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "cpswitch_counts_label": "Number of Reads",
         }
 

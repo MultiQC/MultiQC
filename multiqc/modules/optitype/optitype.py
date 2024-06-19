@@ -130,7 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "OptiType: Summary of alleles",
             "cpswitch": False,
             "ylab": "# Samples",
-            "yDecimals": False,
+            "y_decimals": False,
             "use_legend": False,
         }
 

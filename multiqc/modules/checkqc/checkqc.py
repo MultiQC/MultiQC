@@ -470,7 +470,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "checkqc_zero-yield-table",
-            "table_title": "CheckQC: Lanes with Yield 0",
+            "title": "CheckQC: Lanes with Yield 0",
             "scale": "Reds",
             "col1_header": "Run",
         }

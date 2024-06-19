@@ -124,7 +124,7 @@ def parse_reports(module):
         covs = ["30"]
     for c in covs:
         headers[f"PCT_{c}X"] = {
-            "id": f"picard_target_bases_{c}X",
+            "rid": f"picard_target_bases_{c}X",
             "title": f"Bases ≥ {c}X",
             "description": f"Percent of target bases with coverage ≥ {c}X",
             "max": 100,

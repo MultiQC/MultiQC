@@ -56,7 +56,7 @@ class RmdupReportMixin:
             "id": "samtools_rmdup_plot",
             "title": "Samtools: rmdup: Duplicate alignments",
             "ylab": "Number of reads",
-            "yDecimals": False,
+            "y_decimals": False,
         }
         self.add_section(
             name="Duplicates removed",

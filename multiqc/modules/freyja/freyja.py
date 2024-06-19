@@ -119,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "Freyja_plot",
             "title": "Freyja: Top lineages",
             "ylab": "relative abundance",
-            "yCeiling": 1,
+            "y_clipmax": 1,
             "cpswitch": False,
             "cpswitch_c_active": False,
         }

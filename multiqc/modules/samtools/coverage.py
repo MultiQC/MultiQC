@@ -190,7 +190,7 @@ class CoverageReportMixin:
                     "categories": True,
                     "smooth_points": 500,
                     "logswitch": True,
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                     "data_labels": data_labels,
                 },
             ),

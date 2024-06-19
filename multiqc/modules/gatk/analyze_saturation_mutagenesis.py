@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from GATK tool AnalyzeSaturationMutagenesis """
+"""MultiQC submodule to parse output from GATK tool AnalyzeSaturationMutagenesis"""
 
 import logging
 from collections import defaultdict
@@ -381,7 +381,7 @@ class AnalyzeSaturationMutagenesisMixin:
         asm_headers = {f"{prefix}{k}": v for k, v in asm_headers.items()}
         data = {sn: {f"{prefix}{k}": v for k, v in d.items()} for sn, d in data.items()}
 
-        pconfig = {"id": f"{prefix}stats", "namespace": "GATK", "table_title": "GATK ASM counts"}
+        pconfig = {"id": f"{prefix}stats", "namespace": "GATK", "title": "GATK ASM counts"}
 
         self.add_section(
             name="GATK ASM counts",

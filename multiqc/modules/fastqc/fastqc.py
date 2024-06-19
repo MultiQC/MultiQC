@@ -354,7 +354,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "FastQC: Sequence Counts",
             "ylab": "Number of reads",
             "cpswitch_counts_label": "Number of reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
         pdata = dict()
         has_dups = False
@@ -437,7 +437,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig.update(
                 {
                     "colors": self.get_status_cols("per_base_sequence_quality"),
-                    "yPlotBands": [
+                    "y_bands": [
                         {"from": 28, "to": 100, "color": "#c3e6c3"},
                         {"from": 20, "to": 28, "color": "#e6dcc3"},
                         {"from": 0, "to": 20, "color": "#e6c3c3"},
@@ -494,7 +494,7 @@ class MultiqcModule(BaseMultiqcModule):
             pconfig.update(
                 {
                     "colors": self.get_status_cols("per_sequence_quality_scores"),
-                    "xPlotBands": [
+                    "x_bands": [
                         {"from": 28, "to": 100, "color": "#c3e6c3"},
                         {"from": 20, "to": 28, "color": "#e6dcc3"},
                         {"from": 0, "to": 20, "color": "#e6c3c3"},
@@ -1079,7 +1079,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "namespace": self.name,
                     "id": "fastqc_top_overrepresented_sequences_table",
-                    "table_title": "FastQC: Top overrepresented sequences",
+                    "title": "FastQC: Top overrepresented sequences",
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
                 },
@@ -1191,8 +1191,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "fastqc-status-check-heatmap",
             "title": "FastQC: Status Checks",
-            "xTitle": "Section Name",
-            "yTitle": "Sample",
+            "xlab": "Section Name",
+            "ylab": "Sample",
             "min": 0,
             "max": 1,
             "square": False,
@@ -1204,7 +1204,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
             "tt_decimals": 1,
             "legend": False,
-            "datalabels": False,
+            "display_values": False,
             "xcats_samples": False,
             "angled_xticks": False,
         }

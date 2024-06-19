@@ -355,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " h",
                     "cpswitch": False,
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                 },
             ),
         )
@@ -372,7 +372,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " h",
                     "cpswitch": False,
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                 },
             ),
         )
@@ -389,7 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "tt_decimals": 1,
                     "tt_suffix": " $",
                     "cpswitch": False,
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                 },
             ),
         )

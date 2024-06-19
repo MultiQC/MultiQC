@@ -272,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "NanoStat",
             "id": f"nanostat_{stat_type.replace(' ', '_')}_stats_table",
-            "table_title": f"NanoStat {stat_type}",
+            "title": f"NanoStat {stat_type}",
         }
 
         # Add the report section
