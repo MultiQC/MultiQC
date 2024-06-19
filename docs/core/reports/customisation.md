@@ -904,7 +904,7 @@ table_cond_formatting_colours:
   - fail: "#d9534f"
 ```
 
-These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example <http://htmlcolorcodes.com/>
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example [htmlcolorcodes.com](http://htmlcolorcodes.com/)
 
 Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
 

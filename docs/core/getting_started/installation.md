@@ -18,36 +18,41 @@ If in doubt, a general rule is:
 
 Know what you're doing with this kind of thing? Here's a quick reference:
 
-<table><thead><tr><th>Method</th><th>Command</th></tr></thead><tbody>
-<tr><td>Pip</td><td>
+<table><thead>
+<tr><th>Method</th><th>Command</th></tr>
+</thead><tbody><tr>
+<td>Pip</td>
+<td>
 
 ```bash
 pip install multiqc
 ```
 
-</td></tr>
-<tr><td>Pip (dev version)</td><td>
+</td></tr><tr>
+<td>Pip (dev version)</td>
+<td>
 
 ```bash
 pip install --upgrade --force-reinstall git+https://github.com/MultiQC/MultiQC.git
 ```
 
-</td></tr>
-<tr><td>Conda</td><td>
+</td></tr><tr>
+<td>Conda</td>
+<td>
 
 ```bash
 conda install multiqc
 ```
 
-</td></tr>
-<tr><td>Docker</td><td>
+</td></tr><tr>
+<td>Docker</td>
+<td>
 
 ```bash
 docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 ```
 
-</td></tr>
-</tbody></table>
+</td></tr></tbody></table>
 
 :::
 
