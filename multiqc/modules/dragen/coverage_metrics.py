@@ -37,8 +37,8 @@ SINGLE_HEADER = {
     "namespace": NAMESPACE,  # Name for grouping. Prepends desc and is in Config Columns modal
     "title": None,  # Short title, table column title
     "description": None,  # Longer description, goes in mouse hover text
-    "max": None,  # Minimum value in range, for bar / color coding
-    "min": 0,  # Maximum value in range, for bar / color coding
+    "max": None,  # Minimum value in range, for bar / colour coding
+    "min": 0,  # Maximum value in range, for bar / colour coding
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
     "minrange": None,  # Minimum range for automatic bar
