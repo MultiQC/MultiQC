@@ -3,15 +3,13 @@ title: Introduction
 description: How to install MultiQC on your system
 ---
 
-import RemoteSvg from "@components/RemoteSvg.astro";
-
 # Introduction
 
 MultiQC is a reporting tool that parses results and statistics from bioinformatics tool outputs, such as log files and console outputs.
 It helps to summarise experiments containing multiple samples and multiple analysis steps.
 It's designed to be placed at the end of pipelines or to be run manually when you've finished running your tools.
 
-<RemoteSvg src="https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/multiqc_overview.excalidraw.svg" />
+<img src="https://raw.githubusercontent.com/MultiQC/MultiQC/main/docs/images/multiqc_overview.excalidraw.svg" />
 
 :::note
 MultiQC doesn't _do_ any analysis for you - it just finds results from other tools that you have already run and generates nice reports.
