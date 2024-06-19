@@ -270,7 +270,7 @@ def _get_general_stats_headers():
             "description": "ValidateSamFile (number of warnings)",
             "scale": "Oranges",
             "shared_key": "ValidateSamEntries",
-            "colour": "255,237,160",
+            "color": "255,237,160",
             "format": "{:.0f}",
             "hidden": True,
         },
@@ -279,7 +279,7 @@ def _get_general_stats_headers():
             "description": "ValidateSamFile (number of errors)",
             "scale": "Reds",
             "shared_key": "ValidateSamEntries",
-            "colour": "252,146,114",
+            "color": "252,146,114",
             "format": "{:.0f}",
             "hidden": True,
         },
@@ -340,7 +340,7 @@ def _generate_detailed_table(data) -> Plot:
                 }
 
     table_config = {
-        "table_title": "Picard: SAM/BAM File Validation",
+        "title": "Picard: SAM/BAM File Validation",
         "id": "picard_validatesamfile_table",
     }
 

@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Mapped reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(

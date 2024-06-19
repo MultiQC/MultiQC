@@ -50,7 +50,8 @@ class PConfig(ValidatedConfig):
     tt_suffix: Optional[str] = None
     xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
     yLabFormat: Optional[bool] = Field(None, deprecated="ylab_format")
-    yLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    xLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="ylab_format")
     xlab_format: Optional[str] = None
     ylab_format: Optional[str] = None
     tt_label: Optional[str] = None

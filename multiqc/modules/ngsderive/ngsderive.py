@@ -447,7 +447,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ngsderive_junctions_plot",
             "title": "ngsderive: Junction Annotation",
             "cpswitch_counts_label": "Number",
-            "yDecimals": False,
+            "y_decimals": False,
             "ylab": "Number of junctions",
             "data_labels": [
                 {"name": "Junctions", "ylab": "Number of junctions"},

@@ -1,4 +1,5 @@
 """MultiQC module to parse output from Sequali"""
+
 import json
 import logging
 import textwrap
@@ -251,7 +252,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Sequali: Sequence Counts",
                 "ylab": "Number of reads",
                 "cpswitch_counts_label": "Number of reads",
-                "hide_zero_cats": False,
+                "hide_empty": False,
             },
         )
 

@@ -354,7 +354,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers,
                 {
                     "id": "umitools_stats_violin",
-                    "table_title": "UMI-tools: UMI stats",
+                    "title": "UMI-tools: UMI stats",
                 },
             ),
         )

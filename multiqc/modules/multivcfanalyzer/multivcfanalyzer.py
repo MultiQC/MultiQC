@@ -254,7 +254,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "MultiVCFAnalyzer",  # Name for grouping. Prepends desc and is in Config Columns modal
             "id": "mvcf-table",  # ID used for the table
-            "table_title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
+            "title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
         }
         tab = table.plot(self.mvcf_data, headers, table_config)
         return tab
@@ -282,7 +282,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             # Building the plot
             "id": "mvcf_barplot",  # HTML ID used for plot
-            "hide_zero_cats": True,  # Hide categories where data for all samples is 0
+            "hide_empty": True,  # Hide categories where data for all samples is 0
             # Customising the plot
             "title": "MultiVCFAnalyzer: Call Categories",  # Plot title - should be in format "Module Name: Plot Title"
             "ylab": "Total # Positions",  # X axis label

@@ -41,7 +41,7 @@ def lane_metrics_table(module, data):
     table_config = {
         "id": f"{module.anchor}-illumina-lane-metrics-table",
         "namespace": module.name,
-        "table_title": f"{module.name} Illumina Lane Metrics",
+        "title": f"{module.name} Illumina Lane Metrics",
     }
     tdata = {}
     for run_name, run in data.items():

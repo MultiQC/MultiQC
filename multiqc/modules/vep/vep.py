@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "id": "vep-general-stats",
             "namespace": "VEP",
-            "table_title": "VEP General Statistics",
+            "title": "VEP General Statistics",
         }
         table_data = {s_name: self.vep_data[s_name]["General statistics"] for s_name in self.vep_data}
 

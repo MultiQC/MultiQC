@@ -234,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Pangolin",
             "id": "pangolin_run_table",
-            "table_title": "Pangolin Run details",
+            "title": "Pangolin Run details",
         }
 
         return table.plot(self.pangolin_data, headers, table_config)

@@ -32,32 +32,32 @@ class plotProfileMixin:
             self.write_data_file(self.deeptools_plotProfile, "deeptools_plot_profile")
 
             # Try to do plot bands but don't crash if the labels aren't as we expect
-            xPlotBands = []
-            xPlotLines = []
+            x_bands = []
+            x_lines = []
             plotBandHelp = ""
             try:
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[bin_labels.index("TES")],
                         "to": converted_bin_labels[-1],
                         "color": "#f7cfcf",
                     }
                 )
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[bin_labels.index("TSS")],
                         "to": converted_bin_labels[bin_labels.index("TES")],
                         "color": "#ffffe2",
                     }
                 )
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[0],
                         "to": converted_bin_labels[bin_labels.index("TSS")],
                         "color": "#e5fce0",
                     }
                 )
-                xPlotLines.append(
+                x_lines.append(
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TES")],
@@ -65,7 +65,7 @@ class plotProfileMixin:
                         "color": "#000000",
                     }
                 )
-                xPlotLines.append(
+                x_lines.append(
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TSS")],
@@ -94,8 +94,8 @@ class plotProfileMixin:
                 "ylab": "Occurrence",
                 "xlab": None,
                 "smooth_points": 100,
-                "xPlotBands": xPlotBands,
-                "xPlotLines": xPlotLines,
+                "x_bands": x_bands,
+                "x_lines": x_lines,
             }
 
             self.add_section(
