@@ -320,7 +320,7 @@ def render_and_export_plots():
 
     sections = [s for mod in report.modules for s in mod.sections if not mod.hidden]
 
-    # Show progress bar if writing any flat imagtes, i.e. export_plots requested, or at least one plot is flat
+    # Show progress bar if writing any flat images, i.e. export_plots requested, or at least one plot is flat
     show_progress = config.export_plots
     if not show_progress:
         for s in sections:
