@@ -33,6 +33,7 @@ class Section:
     name: str
     anchor: str
     description: str
+    module: str
     comment: str = ""
     helptext: str = ""
     content_before_plot: str = ""
@@ -45,6 +46,7 @@ class Section:
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
+    mod_id = None
 
     def __init__(
         self,
@@ -61,7 +63,7 @@ class BaseMultiqcModule:
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
-        self.id = anchor  # cannot be overwritten for repeated modules with path_filters
+        self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         target = self.mod_cust_config.get("target", target)
         self.href = self.mod_cust_config.get("href", href)
@@ -74,7 +76,7 @@ class BaseMultiqcModule:
         self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        config.update({anchor: self.mod_cust_config.get("custom_config", {})})
+        config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
         self.anchor = report.save_htmlid(self.anchor)
@@ -337,6 +339,7 @@ class BaseMultiqcModule:
             name=name,
             anchor=anchor,
             description=description,
+            module=self.name,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,

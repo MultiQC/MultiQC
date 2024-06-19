@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "id": "bclconvert_lane_counts",
                     "title": "bclconvert: Clusters by lane",
                     "ylab": "Number of clusters",
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                 },
             ),
         )
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {
                     "id": "bclconvert_sample_counts",
                     "title": "bclconvert: Clusters by sample",
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                     "ylab": "Number of clusters",
                     "data_labels": ["Index mismatches", "Counts per lane"],
                 },
@@ -726,7 +726,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "bclconvert",
             "id": "bclconvert-sample-stats-table",
-            "table_title": "bclconvert Sample Statistics",
+            "title": "bclconvert Sample Statistics",
         }
 
         return table.plot(sample_stats_data, headers, table_config)
@@ -830,7 +830,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "bclconvert-lane",
             "id": "bclconvert-lane-stats-table",
-            "table_title": "bclconvert Lane Statistics",
+            "title": "bclconvert Lane Statistics",
             "col1_header": "Run ID - Lane",
         }
 

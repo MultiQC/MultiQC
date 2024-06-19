@@ -289,6 +289,10 @@ if len(avail_modules) == 0 or len(avail_templates) == 0:
     sys.exit(1)
 
 
+# Keeping track to avoid loading twice
+_loaded_found_config_files = set()
+
+
 def load_config_file(yaml_config_path: Union[str, Path]):
     """
     Load and parse a config file if we find it
@@ -296,6 +300,10 @@ def load_config_file(yaml_config_path: Union[str, Path]):
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
+
+    if path.absolute() in _loaded_found_config_files:
+        return
+    _loaded_found_config_files.add(path.absolute())
 
     if path.is_file():
         try:

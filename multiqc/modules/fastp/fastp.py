@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Fastp: Duplication Rate",
                         "xlab": "Duplication level",
                         "ylab": "Read percent",
-                        "yCeiling": 100,
+                        "y_clipmax": 100,
                         "ymin": 0,
                         "tt_label": "{point.x}: {point.y:.2f}%",
                     },
@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Fastp: Insert Size Distribution",
                         "xlab": "Insert size",
                         "ylab": "Read percent",
-                        "yCeiling": 100,
+                        "y_clipmax": 100,
                         "ymin": 0,
                         "tt_label": "{point.x}: {point.y:.2f}%",
                         "smooth_points": 300,
@@ -410,7 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Fastp: Filtered Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
         return bargraph.plot(self.fastp_data, keys, pconfig)
 

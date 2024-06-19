@@ -786,7 +786,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         pconfig = {
             "id": "biscuit_seq_depth",
-            "table_title": "BISCUIT: Sequencing Depth",
+            "title": "BISCUIT: Sequencing Depth",
             "sort_rows": False,
         }
 
@@ -1215,7 +1215,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "Percent Retained",
             "ymin": 0,
             "ymax": 100,
-            "yCeiling": 110,
+            "y_clipmax": 110,
             "stacking": None,
             "tt_decimals": 1,
             "tt_suffix": "%",

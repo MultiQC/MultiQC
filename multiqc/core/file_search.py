@@ -57,7 +57,10 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     if len(config.run_modules) > 0:
         unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
         if unknown_modules:
-            logger.error(f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}")
+            logger.error(
+                f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}. "
+                f"Double check the case and dashes/underscores. Available modules IDs: {', '.join(config.avail_modules.keys())}"
+            )
         if len(unknown_modules) == len(config.run_modules):
             raise RunError("No available modules to run!")
         config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]

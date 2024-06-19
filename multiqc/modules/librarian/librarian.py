@@ -89,8 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "librarian-library-type-plot",
             "title": "Librarian: Library Predictions",
-            "xTitle": "Library type",
-            "yTitle": "Sample name",
+            "xlab": "Library type",
+            "ylab": "Sample name",
             "min": 0,
             "max": 100,
             "square": False,

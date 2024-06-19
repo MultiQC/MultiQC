@@ -20,19 +20,19 @@ from collections import defaultdict
 from pathlib import Path, PosixPath
 from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
 
-import rich
-import rich.progress
 import yaml
-from tqdm import tqdm
 
 from multiqc import config
-from multiqc.core import init_log
-from multiqc.utils.util_functions import replace_defaultdicts, is_running_in_notebook, no_unicode, dump_json
-from multiqc.plots.plotly.plot import Plot
 
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.plots.plotly.plot import Plot
+from multiqc.utils.util_functions import (
+    replace_defaultdicts,
+    dump_json,
+    iterate_using_progress_bar,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -514,70 +514,16 @@ def run_search_files(spatterns, searchfiles):
                     runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
         return file_matched
 
-    # GitHub actions doesn't understand ansi control codes to move the cursor,
-    # so it prints each update ona a new line. Better disable it for CI.
-    disable_progress = config.no_ansi or config.quiet or os.getenv("CI")
+    def update_fn(i, sf):
+        if not add_file(sf[0], sf[1]):
+            file_search_stats["skipped_no_match"] += 1
 
-    # Rich widgets do not look good in Jupyter, of it there is no unicode support.
-    # Additionally, falling back to tqdm if rich_console was not initialized. That
-    # happens when init_log.init_log() wasn't run, i.e in unit tests.
-    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console", None):
-        PRINT_FNAME = False
-        # ANSI escape code for dim text
-        if not config.no_ansi:
-            DIM = "\033[2m"
-            BLUE = "\033[34m"
-            RESET = "\033[0m"
-        else:
-            DIM = ""
-            BLUE = ""
-            RESET = ""
-
-        bar_format = f"{BLUE}{'searching':>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt}"
-        if PRINT_FNAME:
-            bar_format += " {desc}"
-
-        # Set up the tqdm progress bar
-        with tqdm(
-            total=len(searchfiles),
-            desc="Searching",
-            unit="file",
-            file=sys.stdout,
-            disable=disable_progress,
-            bar_format=bar_format,
-        ) as pbar:
-            for i, sf in enumerate(searchfiles):
-                # Update the progress bar description with the file being searched
-                if PRINT_FNAME and i % 100 == 0:
-                    pbar.set_description_str(f"{DIM}{os.path.join(sf[1], sf[0])[-50:]}{RESET}")
-                pbar.update(1)
-
-                # Your file processing logic
-                if not add_file(sf[0], sf[1]):
-                    file_search_stats["skipped_no_match"] += 1
-
-            # Clear the description after the loop is complete
-            pbar.set_description("")
-            pbar.refresh()
-    else:
-        progress_obj = rich.progress.Progress(
-            "[blue][/]      ",
-            rich.progress.SpinnerColumn(),
-            "[blue]{task.description}[/] |",
-            rich.progress.BarColumn(),
-            "[progress.percentage]{task.percentage:>3.0f}%",
-            "[green]{task.completed}/{task.total}",
-            "[dim]{task.fields[s_fn]}[/]",
-            console=init_log.rich_console,
-            disable=disable_progress,
-        )
-        with progress_obj as progress:
-            mqc_task = progress.add_task("searching", total=len(searchfiles), s_fn="")
-            for sf in searchfiles:
-                progress.update(mqc_task, advance=1, s_fn=os.path.join(sf[1], sf[0])[-50:])
-                if not add_file(sf[0], sf[1]):
-                    file_search_stats["skipped_no_match"] += 1
-            progress.update(mqc_task, s_fn="")
+    iterate_using_progress_bar(
+        items=searchfiles,
+        update_fn=update_fn,
+        item_to_str_fn=lambda sf: os.path.join(sf[1], sf[0]),
+        desc="searching",
+    )
 
     runtimes["total_sp"] = time.time() - total_sp_starttime
     if config.profile_runtime:
@@ -745,7 +691,7 @@ def dois_tofile(modules: List["BaseMultiqcModule"]):
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
     for mod in modules:
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
-            dois[mod.anchor] = mod.doi
+            dois[mod.id] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
     with open(os.path.join(config.data_dir, fn), "w") as f:

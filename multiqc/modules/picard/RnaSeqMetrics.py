@@ -172,7 +172,7 @@ def parse_reports(module):
             "id": "picard_rnaseqmetrics_strand_plot",
             "title": "Picard: RnaSeqMetrics Strand Mapping",
             "ylab": "Number of reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
         module.add_section(
             name="RnaSeqMetrics Strand Mapping",
@@ -191,7 +191,7 @@ def parse_reports(module):
             "title": "Picard: Normalized Gene Coverage",
             "ylab": "Coverage",
             "xlab": "Percent through gene",
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
             "ymin": 0,
         }

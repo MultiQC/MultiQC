@@ -83,7 +83,7 @@ def lane_metrics_table(self, data):
     table_config = {
         "id": f"{self.anchor}-illumina-basecalling-metrics-table",
         "namespace": self.name,
-        "table_title": f"{self.name} Illumina Base Calling Metrics",
+        "title": f"{self.name} Illumina Base Calling Metrics",
     }
     tdata = {}
     for lane_number, lane in data.items():

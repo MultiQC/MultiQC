@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "skewer_read_length_histogram",
             "title": "Skewer: Read Length Distribution after trimming",
-            "xDecimals": False,
+            "x_decimals": False,
             "ylab": "% of Reads",
             "xlab": "Read Length",
             "xmin": 0,

@@ -148,7 +148,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Mapped reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Multimapping Rates",
             "ylab": "Counts",
             "xlab": "Number of alignments",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>{point.x} alignments</b>: {point.y:.0f}",
         }

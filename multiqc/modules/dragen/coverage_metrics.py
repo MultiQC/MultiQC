@@ -42,13 +42,13 @@ SINGLE_HEADER = {
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
     "minrange": None,  # Minimum range for automatic bar
-    "scale": "GnBu",  # color scale for color coding. False to disable.
-    "bgcols": None,  # Dict with values: background colors for categorical data.
-    "color": "15, 150, 255",  # color for column grouping
+    "scale": "GnBu",  # Colour scale for colour coding. False to disable.
+    "bgcols": None,  # Dict with values: background colours for categorical data.
+    "color": "15, 150, 255",  # Colour for column grouping
     "suffix": None,  # Suffix for value (eg. "%")
     "format": "{:,.2f}",  # Value format string - MultiQC default 1 decimal places
     "cond_formatting_rules": None,  # Rules for conditional formatting table cell values.
-    "cond_formatting_colors": None,  # Styles for conditional formatting of table cell values
+    "cond_formatting_colours": None,  # Styles for conditional formatting of table cell values
     "shared_key": None,  # See the link for description
     "modify": None,  # Lambda function to modify values, special case, see below
     "hidden": True,  # Set to True to hide the column in the general table on page load.
@@ -168,27 +168,27 @@ Some rules:
   The column is actually in the html table, but the "display" attribute is set
   to none. "Configure Columns" button is not included in table's div block.
 
-- The "cond_formatting_colors" along with "cond_formatting_rules" can be
-  used to put extra color on values in html tables. The former must be a
+- The "cond_formatting_colours" along with "cond_formatting_rules" can be
+  used to put extra colour on values in html tables. The former must be a
   list of dictionaries, where each dictionary shall be a single definition
-  of some color. The latter is a dictionary with colors. Each color's
+  of some colour. The latter is a dictionary with colours. Each colour's
   value is a list, which holds dictionaries with ecomparison rules, which
   can be found in the little code block below. Please notice that an insertion
-  order of colors in the "cond_formatting_colors" plays an enormous role,
-  because the last chosen color will be used in html.
+  order of colours in the "cond_formatting_colours" plays an enormous role,
+  because the last chosen colour will be used in html.
 
   The code can be modified in the future, but probably not dramatically.
   So the following description could be useful. At least for some time.
 
   # This python code is a simplified part of the multiqc/plots/table.py
-  # It shows the logical process of defining a color on some value.
+  # It shows the logical process of defining a colour on some value.
   VAL # The actual single input value. Most likely int or float.
       # It's been modified by the "modify" lambda if it was defined.
-  APPLY # Applies color on the VAL. Abstract, non-existent function.
+  APPLY # Applies colour on the VAL. Abstract, non-existent function.
 
-  for color in cond_formatting_colors:      # User + MultiQC colors.
+  for colour in cond_formatting_colours:      # User + MultiQC colours.
     match = False
-    for cmp in cond_formatting_rules[color]: # User + MultiQC rules.
+    for cmp in cond_formatting_rules[colour]: # User + MultiQC rules.
       try:
         # Each comparison should be a dict with single key: val
         if "s_eq" in cmp and str(cmp["s_eq"]).lower() == str(VAL).lower():
@@ -204,7 +204,7 @@ Some rules:
       except:
         logger.warning("Not able to apply table conditional formatting")
     if match:
-        APPLY(color)
+        APPLY(colour)
 
 - Multiline strings are not used in "description" to guarantee that indents
   won't be included. Though browsers reduce such chains to just one space,
@@ -409,7 +409,7 @@ METRICS = {
                 #    "red_bad": [{"s_contains": ""}], # Each value is red by default.
                 #    "green_good": [{"eq": 100.0}],   # If equal to 100, then green.
                 # },
-                # "cond_formatting_colors": [
+                # "cond_formatting_colours": [
                 #    {"red_bad": "#FF0000"},
                 #    {"green_good": "#00FF00"},
                 # ],
@@ -1309,7 +1309,7 @@ def create_coverage_headers_handler():
 
     '''""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
     # This comment includes some code, which may be useful for defining
-    # complex "cond_formatting_rules" and "cond_formatting_colors"
+    # complex "cond_formatting_rules" and "cond_formatting_colours"
 
     def make_hex(red, green, blue):
         """RGB to hex str."""

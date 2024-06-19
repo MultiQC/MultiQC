@@ -40,7 +40,7 @@ def parse_reports(self):
         "title": f"{self.name}: Mean Base Quality by Cycle",
         "ylab": "Mean Base Quality",
         "xlab": "Cycle Number",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f}",
         "ymin": 0,
     }
