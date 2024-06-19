@@ -516,28 +516,24 @@ class Plot(BaseModel):
                 self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
-                export_plots=True,
             )
             if self.add_pct_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
                     file_name=f"{dataset.uid}-pct",
-                    export_plots=True,
                 )
             if self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
                     file_name=f"{dataset.uid}-log",
-                    export_plots=True,
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     file_name=f"{dataset.uid}-pct-log",
-                    export_plots=True,
                 )
 
         html += "</div>"
@@ -607,13 +603,15 @@ class Plot(BaseModel):
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
-    export_plots: bool = config.export_plots,
+    export_plots: Optional[bool] = None,
     embed: bool = not config.development,
     file_name: Optional[str] = None,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
     """
+    export_plots = export_plots if export_plots is not None else config.export_plots
+
     assert fig.layout.width
     write_kwargs = dict(
         width=fig.layout.width,  # While interactive plots take full width of screen,
