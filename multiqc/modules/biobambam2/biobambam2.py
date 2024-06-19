@@ -10,8 +10,10 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """This module is super weird. The output from this tools is essentially
-    identical to Picard MarkDuplicates, so we just hijack that module instead"""
+    """
+    This module is super weird. The output from these tools is essentially
+    identical to Picard MarkDuplicates, so we just hijack that module instead
+    """
 
     def __init__(self):
         # Initialise the parent object
@@ -29,11 +31,9 @@ class MultiqcModule(BaseMultiqcModule):
         n = dict()
 
         n["bamsormadup"] = MarkDuplicates.parse_reports(self, "biobambam2/bamsormadup")
-        if n["bamsormadup"] > 0:
-            log.info(f"Found {n['bamsormadup']} bamsormadup reports")
-
-        # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if len(n["bamsormadup"]) > 0:
+            log.info(f"Found {len(n['bamsormadup'])} bamsormadup reports")
+        else:
             raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)

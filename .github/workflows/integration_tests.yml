@@ -1,4 +1,4 @@
-name: "MultiQC"
+name: "Integration tests"
 on:
   push:
     branches:
@@ -10,10 +10,6 @@ on:
     paths-ignore:
       - "docs/**"
       - "*.md"
-
-env:
-  # No need to run test variations across all Python versions
-  latest_python: "3.12"
 
 jobs:
   changes:
@@ -47,20 +43,17 @@ jobs:
           if_true: "-m ${{ steps.filter.outputs.changes.modules[0] }}"
           if_false: ""
 
-  run_linux:
-    name: Linux - Python ${{ matrix.python-version }}
+  all_modules_linux:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
     needs: changes
     strategy:
       matrix:
-        # Just test the oldest and newest supported Python versions
-        python-version: ["3.8", "3.12"]
+        python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
     timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
-        env:
-          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -76,74 +69,83 @@ jobs:
           repository: MultiQC/test-data
           path: test-data
 
-      - name: Unit tests
-        run: |
-          pip install pytest
-          pytest -v tests
-
-      # Run all of the tests!
       - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ --filename full_report.html
+        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules --filename full_report.html
 
-      # More variations of command line flags and inputs. No need to run those across all Python versions.
+  specific_cases_linux:
+    name: More variations of flags and inputs
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    env:
+      # Typical modules to cover different plot types
+      test_modules: "-m samtools -m fastqc -m somalier -m bcl2fastq -m isoseq"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MultiQC
+        run: pip install .
+
+      - name: Download test data
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
       - name: Special case input data
-        if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} test-data/data --ignore test-data/data/modules/
+        run: multiqc ${{ env.test_modules }} test-data/data --ignore test-data/data/modules/
 
       - name: All modules / Log filename as s_name, no cleaning
-        if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ --fullnames --fn_as_s_name
+        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
-        if: matrix.python-version == env.latest_python
         run: |
-          multiqc ${{ needs.changes.outputs.single_module }} test-data/data/modules/ --filename all_ignored.html --ignore-samples '*'
+          multiqc ${{ env.test_modules }} test-data/data/modules --filename all_ignored.html --ignore-samples '*'
           if [[ -f all_ignored.html ]]; then
             echo "No report should have been generated! Likely due to a module missing self.ignore_samples() or ModuleNoSamplesFound when no matching files are found" >&2
             exit 1
           fi
 
       - name: File-list input of dirs
-        if: matrix.python-version == env.latest_python
         run: |
           cd test-data
-          multiqc ${{ needs.changes.outputs.single_module }} --file-list data/special_cases/dir_list.txt
+          multiqc ${{ env.test_modules }} --file-list data/special_cases/dir_list.txt
 
-      - name: Specific module / Force overwrite / Prepend dirnames / Name and comment / No data dir
-        if: matrix.python-version == env.latest_python
-        run: multiqc --strict test-data/data/modules/ -m fastqc -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
+      - name: Force overwrite / Prepend dirnames / Name and comment / No data dir
+        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
 
-      - name: For overwrite / Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
-        if: matrix.python-version == env.latest_python
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules/ -f --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
+      - name: Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
+        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
 
       - name: Specific module / named output dir / JSON data / File list
-        if: matrix.python-version == env.latest_python
         run: |
           cd test-data
-          multiqc -m star -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
+          multiqc ${{ env.test_modules }} -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
 
       - name: No report
-        if: matrix.python-version == env.latest_python
         run: |
           cd test-data
-          multiqc -m star data/modules/star --no-report -n no-report
+          multiqc ${{ env.test_modules }} data/modules --no-report -n no-report
           if [[ -f no-report.html ]]; then
             echo "Running with the --no-report flag should not produce an HTML" >&2
             exit 1
           fi
 
       - name: Empty directory (confirm no report)
-        if: matrix.python-version == env.latest_python
         run: |
           mkdir empty_dir
-          multiqc -n empty empty_dir ${{ needs.changes.outputs.single_module }}
+          multiqc ${{ env.test_modules }} empty_dir -n empty
           if [[ -f empty.html ]]; then
             echo "Empty directory should not produce a report" >&2
             exit 1
           fi
 
-  run_windows:
+  all_modules_windows:
     name: Windows
     runs-on: windows-latest
     needs: changes
@@ -161,6 +163,17 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      # Cache pip packages
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~\AppData\Local\pip\Cache
+            ~\AppData\Local\Programs\Python\Python312\Lib\site-packages
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install MultiQC
         run: pip install .

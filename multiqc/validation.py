@@ -15,6 +15,7 @@ class ConfigValidationError(Exception):
 
 
 _validation_errors = []
+_validation_warnings = []
 
 
 class ValidatedConfig(BaseModel):
@@ -28,8 +29,7 @@ class ValidatedConfig(BaseModel):
                 # errors are already added into plot.pconfig_validation_errors by a custom validator
                 logger.debug(e)
 
-        if _validation_errors:
-            # Get module name
+        if _validation_errors or _validation_warnings:
             modname = ""
             callstack = inspect.stack()
             for n in callstack:
@@ -37,13 +37,20 @@ class ValidatedConfig(BaseModel):
                     callpath = n[1].split("multiqc/modules/", 1)[-1]
                     modname = f"{callpath}: "
                     break
-
             plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
-            for error in _validation_errors:
-                logger.error(f"• {error}")
-            _validation_errors.clear()  # Reset for interactive usage
-            raise ConfigValidationError(module_name=modname)
+
+            if _validation_warnings:
+                logger.warning(f"{modname}Warnings in {plot_type} plot configuration {data}:")
+                for warning in _validation_warnings:
+                    logger.warning(f"• {warning}")
+                _validation_warnings.clear()
+
+            if _validation_errors:
+                logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
+                for error in _validation_errors:
+                    logger.error(f"• {error}")
+                _validation_errors.clear()  # Reset for interactive usage
+                raise ConfigValidationError(module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
@@ -69,7 +76,8 @@ class ValidatedConfig(BaseModel):
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
                 new_name = cls.model_fields[name].deprecated
-                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
+                msg = f"Deprecated field '{name}'. Use '{new_name}' instead"
+                _validation_warnings.append(msg)
                 if new_name not in values:
                     values_without_deprecateds[new_name] = val
             else:

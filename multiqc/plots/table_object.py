@@ -219,7 +219,7 @@ class DataTable(BaseModel):
                 headers[d_idx][k]["description"] = headers[d_idx][k].get("description", headers[d_idx][k]["title"])
                 headers[d_idx][k]["scale"] = headers[d_idx][k].get("scale", pconfig.scale)
                 headers[d_idx][k]["format"] = headers[d_idx][k].get("format")
-                headers[d_idx][k]["colour"] = headers[d_idx][k].get("colour", headers[d_idx][k].get("color"))
+                headers[d_idx][k]["color"] = headers[d_idx][k].get("colour", headers[d_idx][k].get("color"))
                 headers[d_idx][k]["hidden"] = headers[d_idx][k].get("hidden", False)
                 headers[d_idx][k]["max"] = headers[d_idx][k].get("max")
                 headers[d_idx][k]["min"] = headers[d_idx][k].get("min", pconfig.min)
@@ -230,11 +230,11 @@ class DataTable(BaseModel):
                 headers[d_idx][k]["modify"] = headers[d_idx][k].get("modify")
                 headers[d_idx][k]["placement"] = float(headers[d_idx][k].get("placement", 1000))
 
-                if headers[d_idx][k]["colour"] is None:
+                if headers[d_idx][k]["color"] is None:
                     cidx = d_idx
                     while cidx >= len(SECTION_COLORS):
                         cidx -= len(SECTION_COLORS)
-                    headers[d_idx][k]["colour"] = SECTION_COLORS[cidx]
+                    headers[d_idx][k]["color"] = SECTION_COLORS[cidx]
 
                 # Overwrite (2nd time) any given config with table-level user config
                 # This is to override column-specific values set by modules

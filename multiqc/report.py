@@ -53,7 +53,6 @@ runtimes: Dict[str, Union[float, Dict]]
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, int]
-searchfiles: List
 files: Dict
 
 # Fields below is kept between interactive runs
@@ -130,11 +129,9 @@ def reset_file_search():
     of parse_logs(), so the next run is not affected by the previous one.
     """
     global analysis_files
-    global searchfiles
     global files
     global file_search_stats
     analysis_files = []
-    searchfiles = []
     files = dict()  # Discovered files for each search key
     file_search_stats = {
         "skipped_symlinks": 0,
@@ -340,43 +337,44 @@ def is_searching_in_source_dir(path: Path) -> bool:
         return False
 
 
-def handle_analysis_path(item: Path):
+def prep_ordered_search_files_list(run_module_names) -> Tuple[List, List]:
     """
-    Branching logic to handle analysis paths (directories and files)
-    Walks directory trees recursively calling pathlib's `path.iterdir()`.
-    Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
+    Prepare the searchfiles list in desired order, from easy to difficult;
+    apply ignore_dirs and ignore_paths filters.
     """
-    if item.is_symlink() and config.ignore_symlinks:
-        file_search_stats["skipped_symlinks"] += 1
-        return
-    elif item.is_file():
-        searchfiles.append([item.name, os.fspath(item.parent)])
-    elif item.is_dir():
-        # Skip directory if it matches ignore patterns
-        d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
-        p_matches = any(p for p in config.fn_ignore_paths if item.match(p.rstrip(os.sep)))
-        if d_matches or p_matches:
-            file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
-            return
 
-        # Check not running in install directory
-        if is_searching_in_source_dir(item):
-            return
-
-        for item in item.iterdir():
-            handle_analysis_path(item)
-
-
-def search_files(run_module_names):
-    """
-    Go through all supplied search directories and assembly a master
-    list of files to search. Then fire search functions for each file.
-    """
-    # Prep search patterns
     spatterns = [{}, {}, {}, {}, {}, {}, {}]
-    runtimes["sp"] = defaultdict()
+    searchfiles = []
+
+    def _maybe_add_path_to_searchfiles(item: Path):
+        """
+        Branching logic to handle analysis paths (directories and files)
+        Walks directory trees recursively calling pathlib's `path.iterdir()`.
+        Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
+        """
+        if item.is_symlink() and config.ignore_symlinks:
+            file_search_stats["skipped_symlinks"] += 1
+            return
+        elif item.is_file():
+            searchfiles.append([item.name, os.fspath(item.parent)])
+        elif item.is_dir():
+            # Skip directory if it matches ignore patterns
+            d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
+            p_matches = any(p for p in config.fn_ignore_paths if item.match(p.rstrip(os.sep)))
+            if d_matches or p_matches:
+                file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+                return
+
+            # Check not running in install directory
+            if is_searching_in_source_dir(item):
+                return
+
+            for item in item.iterdir():
+                _maybe_add_path_to_searchfiles(item)
+
     ignored_patterns = []
     skipped_patterns = []
+
     for key, sps in config.sp.items():
         mod_name = key.split("/", 1)[0]
         if mod_name.lower() not in [m.lower() for m in run_module_names]:
@@ -456,6 +454,17 @@ def search_files(run_module_names):
         logger.info(f"Skipping {len(skipped_patterns)} file search patterns")
         logger.debug(f"Skipping search patterns: {', '.join(skipped_patterns)}")
 
+    # Go through the analysis directories and get file list in searchfiles
+    for path in analysis_files:
+        _maybe_add_path_to_searchfiles(Path(path))
+
+    return spatterns, searchfiles
+
+
+def run_search_files(spatterns, searchfiles):
+    runtimes["sp"] = defaultdict()
+    total_sp_starttime = time.time()
+
     def add_file(fn, root):
         """
         Function applied to each file found when walking the analysis
@@ -469,12 +478,6 @@ def search_files(run_module_names):
             file_search_stats["skipped_not_a_file"] += 1
             return False
 
-        # Check that we don't want to ignore this file
-        i_matches = [n for n in config.fn_ignore_files if fnmatch.fnmatch(fn, n)]
-        if len(i_matches) > 0:
-            file_search_stats["skipped_ignore_pattern"] += 1
-            return False
-
         if f.filesize is not None and f.filesize > config.log_filesize_limit:
             file_search_stats["skipped_filesize_limit"] += 1
             return False
@@ -482,7 +485,7 @@ def search_files(run_module_names):
         # Use mimetypes to exclude binary files where possible
         if not re.match(r".+_mqc\.(png|jpg|jpeg)", f.filename) and config.ignore_images:
             (ftype, encoding) = mimetypes.guess_type(f.path)
-            if encoding is not None:
+            if encoding is not None and encoding != "gzip":
                 return False
             if ftype is not None and ftype.startswith("image"):
                 return False
@@ -501,6 +504,7 @@ def search_files(run_module_names):
                                 files[key].append(f.to_dict())
                                 file_search_stats[key] = file_search_stats.get(key, 0) + 1
                                 file_matched = True
+                                # logger.debug(f"File {f.path} matched {key}")
                             # Don't keep searching this file for other modules
                             if not sp.get("shared", False) and key not in config.filesearch_file_shared:
                                 runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
@@ -509,11 +513,6 @@ def search_files(run_module_names):
                             break
                     runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
         return file_matched
-
-    # Go through the analysis directories and get file list
-    total_sp_starttime = time.time()
-    for path in analysis_files:
-        handle_analysis_path(Path(path))
 
     def update_fn(i, sf):
         if not add_file(sf[0], sf[1]):
@@ -537,6 +536,19 @@ def search_files(run_module_names):
             summaries.append(f"{key}: {file_search_stats[key]}")
     if summaries:
         logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
+
+
+def search_files(run_module_names):
+    """
+    Go through all supplied search directories and assembly a master
+    list of files to search. Then fire search functions for each file.
+    """
+    if not analysis_files:
+        return
+
+    spatterns, searchfiles = prep_ordered_search_files_list(run_module_names)
+
+    run_search_files(spatterns, searchfiles)
 
 
 def search_file(pattern, f: SearchFile, module_key):
@@ -575,6 +587,12 @@ def search_file(pattern, f: SearchFile, module_key):
     contents_regex_pattern = pattern.get("contents_re")
     if fn_matched and contents_pattern is None and contents_regex_pattern is None:
         return True
+
+    # Before parsing file content, check that we don't want to ignore this file to avoid parsing large files
+    ignore_matches = [ignore_pat for ignore_pat in config.fn_ignore_files if fnmatch.fnmatch(f.filename, ignore_pat)]
+    if len(ignore_matches) > 0:
+        file_search_stats["skipped_ignore_pattern"] += 1
+        return False
 
     # Search by file contents
     if contents_pattern is not None or contents_regex_pattern is not None:
