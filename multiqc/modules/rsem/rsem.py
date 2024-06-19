@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Multimapping Rates",
             "ylab": "Counts",
             "xlab": "Number of alignments",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>{point.x} alignments</b>: {point.y:.0f}",
         }

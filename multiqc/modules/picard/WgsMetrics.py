@@ -179,7 +179,7 @@ def parse_reports(module):
             "title": "Picard: WGS Coverage",
             "ylab": "Percentage of Bases",
             "xlab": "Fold Coverage",
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>{point.x} X</b>: {point.y:.1f}",
             "ymin": 0,
             "ymax": 100,

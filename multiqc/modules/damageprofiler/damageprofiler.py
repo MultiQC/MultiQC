@@ -225,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": f"DamageProfiler: Read length distribution - {orientation} ",
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "{point.y} reads of length {point.x} bp",
             "ysuffix": " reads",
             "ymin": 0,

@@ -328,7 +328,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "JCVI Genome Annotation: Exon count repartition",
             "ylab": "# genes",
             "xlab": "Exon count",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 

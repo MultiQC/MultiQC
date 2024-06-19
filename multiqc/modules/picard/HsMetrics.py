@@ -421,7 +421,7 @@ def hs_penalty_plot(self, data):
         "ylab": "Penalty",
         "ymin": 0,
         "xmin": 0,
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
 

@@ -429,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Position (bp)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             "showlegend": False if status_checks else True,
         }
@@ -486,7 +486,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Mean Sequence Quality (Phred Score)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
             "showlegend": False if status_checks else True,
         }

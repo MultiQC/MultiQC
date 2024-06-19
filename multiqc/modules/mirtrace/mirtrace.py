@@ -241,7 +241,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Read Lenth (bp)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Read Length (bp) {point.x}</b>: {point.y} Read Count",
             "xPlotBands": [
                 {"from": 40, "to": 50, "color": "#ffebd1"},
@@ -351,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Number of Sequencing Reads",
             "ymin": 0,
             "xmin": 1,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Number of Sequencing Reads {point.x}</b>: {point.y} Distinct miRNA Count",
         }
 

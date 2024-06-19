@@ -471,7 +471,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Bismark: M-Bias",
             "ylab": "% Methylation",
             "xlab": "Position (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymax": 100,
             "ymin": 0,
             "tt_label": "<b>{point.x} bp</b>: {point.y:.1f}%",
