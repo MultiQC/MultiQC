@@ -75,7 +75,7 @@ class BaseMultiqcModule:
         self.versions = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
-        config.update({anchor: self.mod_cust_config.get("custom_config", {})})
+        config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
         self.anchor = report.save_htmlid(self.anchor)

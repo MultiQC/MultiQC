@@ -172,7 +172,7 @@ def exec_modules(
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
-    if not required_logs_found([m.anchor for m in report.modules]):
+    if not required_logs_found([m.id for m in report.modules]):
         raise RunError()
 
     # Update report with software versions provided in configs
