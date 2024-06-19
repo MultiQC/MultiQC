@@ -6,6 +6,7 @@ import pytest
 
 from multiqc import config
 from multiqc import report
+from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config
 
@@ -42,7 +43,7 @@ def test_excluded_dirs(data_dir):
                 {"fn": "*ignored.txt"},
             ]
         },
-        analysis_dir=data_dir / "exclusions/ignore_dirs",
+        analysis_dir=data_dir / "file_search/ignore_dirs",
         extra_config={"fn_ignore_dirs": ["ignored", "*_ignored"]},
         expected_files={"included.txt"},
     )
@@ -59,7 +60,7 @@ def test_excluded_paths(data_dir):
                 {"fn": "*ignored.txt"},
             ]
         },
-        analysis_dir=data_dir / "exclusions/ignore_paths",
+        analysis_dir=data_dir / "file_search/ignore_paths",
         extra_config={"fn_ignore_paths": ["*/*_ignored"]},
         expected_files={"included.txt"},
     )
@@ -85,7 +86,7 @@ def test_fn_ignore_files(data_dir):
                 },
             ]
         },
-        analysis_dir=data_dir / "exclusions/ignore_files",
+        analysis_dir=data_dir / "file_search/ignore_files",
         extra_config={"ignored_paths": ["*.txt.gz"]},
         expected_files={
             "included.txt",
@@ -115,3 +116,46 @@ def test_symlinked_files_found(data_dir, ignore_links, expected_files):
         extra_config={"ignore_symlinks": ignore_links},
         expected_files=expected_files,
     )
+
+
+def test_filelist(data_dir, tmp_path):
+    """
+    Test that inputs can be passed and filtered with --file-list
+    """
+    file1 = tmp_path / "included.txt"
+    file2 = tmp_path / "excluded.txt"
+    file1.write_text("data1")
+    file2.write_text("data2")
+
+    filelist = tmp_path / "filelist.txt"
+    filelist.write_text(f"{file1}\n{file2}\nnon_existent.txt\n")
+
+    _test_search_files(
+        search_patterns={
+            "module": [
+                {"fn": "included.txt"},
+                {"fn": "non_existent.txt"},
+            ]
+        },
+        analysis_dir=filelist,
+        extra_config={"file_list": True},
+        expected_files={"included.txt"},
+    )
+
+
+def test_filelist_all_missing(data_dir, tmp_path):
+    """
+    Test that if no inputs --file-list found, correct exception is raised
+    """
+    filelist = tmp_path / "filelist.txt"
+    filelist.write_text("non_existent.txt")
+
+    with pytest.raises(RunError):
+        _test_search_files(
+            search_patterns={
+                "module": {"fn": "non_existent.txt"},
+            },
+            analysis_dir=filelist,
+            extra_config={"file_list": True},
+            expected_files=set(),
+        )
