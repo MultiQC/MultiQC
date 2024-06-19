@@ -64,6 +64,7 @@ def exec_modules(
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
             module_initializer.mod_cust_config = mod_cust_config
+            module_initializer.mod_id = this_module
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
@@ -171,7 +172,7 @@ def exec_modules(
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
-    if not required_logs_found([m.anchor for m in report.modules]):
+    if not required_logs_found([m.id for m in report.modules]):
         raise RunError()
 
     # Update report with software versions provided in configs

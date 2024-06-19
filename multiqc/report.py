@@ -745,7 +745,7 @@ def dois_tofile(modules: List["BaseMultiqcModule"]):
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
     for mod in modules:
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
-            dois[mod.anchor] = mod.doi
+            dois[mod.id] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
     with open(os.path.join(config.data_dir, fn), "w") as f:
