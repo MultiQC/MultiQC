@@ -57,7 +57,6 @@ class MultiqcModule(
         super(MultiqcModule, self).__init__(
             name="DRAGEN",
             anchor="DRAGEN",
-            target="DRAGEN",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
             info=""" is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data
                      using field-programmable gate array technology (FPGA).""",

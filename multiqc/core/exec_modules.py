@@ -64,6 +64,7 @@ def exec_modules(
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
             module_initializer.mod_cust_config = mod_cust_config
+            module_initializer.mod_id = this_module
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
