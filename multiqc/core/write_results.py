@@ -10,8 +10,9 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Set
+from typing import Set, List
 
+from multiqc.base_module import Section
 from multiqc.core.file_search import include_or_exclude_modules
 from multiqc.plots import table
 
@@ -22,6 +23,7 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
 from multiqc.core import plugin_hooks
 from multiqc.utils import megaqc, util_functions
+from multiqc.utils.util_functions import iterate_using_progress_bar
 
 logger = logging.getLogger(__name__)
 
@@ -303,20 +305,38 @@ def render_and_export_plots():
     """
     Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
     """
-    for mod in report.modules:
-        if mod.hidden:
-            continue
-        for s in mod.sections:
+
+    def update_fn(_, s: Section):
+        if s.plot_id:
+            plot = report.plot_by_id[s.plot_id]
+            if isinstance(plot, Plot):
+                s.plot = plot.add_to_report()
+            elif isinstance(plot, str):
+                s.plot = plot
+            else:
+                logger.error(f"Unknown plot type for {s.module}/{s.name}")
+        else:
+            s.plot = ""
+
+    sections = [s for mod in report.modules for s in mod.sections if not mod.hidden]
+
+    # Show progress bar if writing any flat images, i.e. export_plots requested, or at least one plot is flat
+    show_progress = config.export_plots
+    if not show_progress:
+        for s in sections:
             if s.plot_id:
                 plot = report.plot_by_id[s.plot_id]
-                if isinstance(plot, Plot):
-                    s.plot = plot.add_to_report()
-                elif isinstance(plot, str):
-                    s.plot = plot
-                else:
-                    logger.error(f"Unknown plot type for {mod.name} - {s.name}")
-            else:
-                s.plot = ""
+                if isinstance(plot, Plot) and plot.flat:
+                    show_progress = True
+                    break
+
+    iterate_using_progress_bar(
+        items=sections,
+        update_fn=update_fn,
+        item_to_str_fn=lambda s: f"{s.module}/{s.name}",
+        desc="rendering plots",
+        disable_progress=not show_progress,
+    )
 
 
 def _render_general_stats_table() -> None:

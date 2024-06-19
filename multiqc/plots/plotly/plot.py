@@ -622,13 +622,13 @@ def fig_to_static_html(
 
     # Save the plot to the data directory if export is requested
     if export_plots:
+        from multiqc.core.init_log import rich_console
+
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in config.export_plot_formats:
             plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
-            short_path = Path(config.plots_dir_name) / file_ext / f"{file_name}.{file_ext}"
-            logger.info(f"Writing plot to {short_path}")
             if file_ext == "svg":
                 # Cannot add logo to SVGs
                 fig.write_image(plot_path, **write_kwargs)
