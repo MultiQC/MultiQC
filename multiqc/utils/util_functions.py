@@ -286,7 +286,7 @@ def iterate_using_progress_bar(items: List, update_fn, item_to_str_fn, desc, dis
     # Rich widgets do not look good in Jupyter, of it there is no unicode support.
     # Additionally, falling back to tqdm if rich_console was not initialized. That
     # happens when init_log.init_log() wasn't run, i.e in unit tests.
-    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console"):
+    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console", None):
         # ANSI escape code for dim text
         if not config.no_ansi:
             DIM = "\033[2m"
