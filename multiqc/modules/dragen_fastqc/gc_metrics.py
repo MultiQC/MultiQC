@@ -122,7 +122,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "ylab": "Phred Quality Score",
             "xlab": "% GC",
             "ymin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
             "yPlotBands": [

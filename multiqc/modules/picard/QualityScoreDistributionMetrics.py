@@ -41,7 +41,7 @@ def parse_reports(self):
         "title": f"{self.name}: Base Quality Distribution",
         "ylab": "Number of Bases",
         "xlab": "Base Quality Score",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>base quality{point.x}</b>: {point.y}",
         "ymin": 0,
     }

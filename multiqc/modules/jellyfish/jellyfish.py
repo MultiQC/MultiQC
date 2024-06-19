@@ -91,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Jellyfish: K-mer plot",
             "ylab": "Counts",
             "xlab": "k-mer frequency",
-            "xDecimals": False,
+            "x_decimals": False,
             "xmin": xmin,
             "xmax": xmax,
         }

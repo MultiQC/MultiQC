@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ar_length_count_plot",
             "ylab": "Counts",
             "xlab": "read length",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
             "data_labels": None,

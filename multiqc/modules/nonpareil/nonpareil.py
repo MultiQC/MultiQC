@@ -364,7 +364,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 1e-3,
             "ymin": 0,
             "ymax": 100,
-            "xDecimals": True,
+            "x_decimals": True,
             "yDecimals": True,
             "xLog": True,
             "tt_label": "{point.x:.2f} Mbp: {point.y:.2f}",

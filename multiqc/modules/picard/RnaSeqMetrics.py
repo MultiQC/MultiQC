@@ -191,7 +191,7 @@ def parse_reports(module):
             "title": "Picard: Normalized Gene Coverage",
             "ylab": "Coverage",
             "xlab": "Percent through gene",
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
             "ymin": 0,
         }

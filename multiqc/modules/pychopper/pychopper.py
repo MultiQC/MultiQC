@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "pychopper_classification_plot",
             "title": "Pychopper: Read classification",
             "ylab": "",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 
@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Pychopper: Strand Orientation",
             "ylab": "",
             "cpswitch_c_active": False,
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 

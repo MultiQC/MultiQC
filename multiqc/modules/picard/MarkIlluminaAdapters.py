@@ -41,7 +41,7 @@ def parse_reports(self):
         "title": "Picard: Mark Illumina Adapters",
         "ylab": "Clipped Bases",
         "xlab": "Cycle Number",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>Cycle {point.x}</b>: {point.y:.2f}",
         "ymin": 0,
     }
