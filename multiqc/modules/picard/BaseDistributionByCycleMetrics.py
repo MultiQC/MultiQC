@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
+"""MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
 
 import logging
 from collections import defaultdict
@@ -114,7 +114,7 @@ def parse_reports(module):
     data_by_sample = module.ignore_samples(data_by_sample)
     samplestats_by_sample = module.ignore_samples(samplestats_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Calculate summed mean values for all read orientations
     for s_name, v in samplestats_by_sample.items():
@@ -163,4 +163,4 @@ def parse_reports(module):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

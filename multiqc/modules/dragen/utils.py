@@ -203,7 +203,7 @@ STD_TABLE_CONFIGS = [
     "minrange",
     "scale",
     "bgcols",
-    "colour",
+    "color",
     "suffix",
     "format",
     "cond_formatting_rules",
