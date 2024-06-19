@@ -603,13 +603,15 @@ class Plot(BaseModel):
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
-    export_plots: bool = config.export_plots,
+    export_plots: Optional[bool] = None,
     embed: bool = not config.development,
     file_name: Optional[str] = None,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
     """
+    export_plots = export_plots if export_plots is not None else config.export_plots
+
     assert fig.layout.width
     write_kwargs = dict(
         width=fig.layout.width,  # While interactive plots take full width of screen,
@@ -626,7 +628,7 @@ def fig_to_static_html(
             plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
             short_path = Path(config.plots_dir_name) / file_ext / f"{file_name}.{file_ext}"
-            logger.debug(f"Writing plot to {short_path}")
+            logger.info(f"Writing plot to {short_path}")
             if file_ext == "svg":
                 # Cannot add logo to SVGs
                 fig.write_image(plot_path, **write_kwargs)
