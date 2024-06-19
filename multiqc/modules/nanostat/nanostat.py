@@ -31,11 +31,11 @@ class MultiqcModule(BaseMultiqcModule):
     }
 
     _KEYS_READ_Q = [
-        ">Q5",
-        ">Q7",
         ">Q10",
-        ">Q12",
         ">Q15",
+        ">Q20",
+        ">Q25",
+        ">Q30",
     ]
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
@@ -293,14 +293,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         bar_data = {}
         stat_type = "unrecognized"
-        # Order of keys, from >Q5 to >Q15
+        # Order of keys, from >Q10 to >Q30
         _range_names = {
-            ">Q5": "<Q5",
-            ">Q7": "Q5-7",
-            ">Q10": "Q7-10",
-            ">Q12": "Q10-12",
-            ">Q15": "Q12-15",
-            "rest": ">Q15",
+            ">Q10": "<Q10",
+            ">Q15": "Q10-15",
+            ">Q20": "Q15-20",
+            ">Q25": "Q20-25",
+            ">Q30": "Q25-30",
+            "rest": ">Q30",
         }
         for s_name, data_dict in self.nanostat_data.items():
             reads_total, stat_type = _get_total_reads(data_dict)
@@ -326,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
                         log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = f">Q15_{stat_type}"
+                    data_key = f">Q30_{stat_type}"
                     bar_data[s_name][range_name] = data_dict[data_key]
 
         cats = {}
