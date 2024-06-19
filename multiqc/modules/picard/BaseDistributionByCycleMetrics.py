@@ -136,7 +136,7 @@ def parse_reports(module):
         "title": "Picard: Base Distribution",
         "ylab": "%",
         "xlab": "Cycle #",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f} %",
         "ymax": 100,
         "ymin": 0,

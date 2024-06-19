@@ -524,7 +524,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_bam_acceptance_plot",
             "title": "qc3C: BAM mode read parsing results",
             "ylab": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "cpswitch_counts_label": "Number of Reads",
         }
 
@@ -541,7 +541,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot(self.qc3c_data["bam"], categories, config)
 
     def bam_signal_table(self):
-        config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
+        config = {"id": "qc3C_bam_signal_table", "namespace": "qc3C", "hide_empty": False, "col1_header": "Sample"}
 
         headers = {
             "b_unobs_fraction": {
@@ -564,7 +564,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.qc3c_data["bam"], headers, config)
 
     def bam_hicpro_table(self):
-        config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_zero_cats": False, "col1_header": "Sample"}
+        config = {"id": "qc3C_bam_hicpro_table", "namespace": "qc3C", "hide_empty": False, "col1_header": "Sample"}
 
         headers = {
             "b_p_informative_fr": {"title": "Valid FR", "min": 0, "max": 100, "suffix": "%", "scale": "Greens"},
@@ -612,7 +612,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_bam_valid_plot",
             "title": "qc3C: BAM mode valid vs invalid HiC-Pro categories",
             "ylab": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "cpswitch_counts_label": "Number of Reads",
         }
 
@@ -632,7 +632,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_bam_junction_plot",
             "title": "qc3C: BAM mode read-thru ligation product frequency",
             "ylab": "Number of reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "use_legend": False,
         }
 
@@ -772,7 +772,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_kmer_acceptance_plot",
             "title": "qc3C: K-mer mode read parsing results",
             "ylab": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "cpswitch_counts_label": "Number of Reads",
         }
 
@@ -793,7 +793,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_kmer_signal_plot",
             "title": "qc3C: K-mer mode signal content",
             "ylab": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "stacking": None,
             "cpswitch": False,
             "cpswitch_c_active": False,
@@ -811,7 +811,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "qc3C_kmer_frequency_plot",
             "title": "qc3C: K-mer mode putative ligation product frequency",
             "ylab": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "use_legend": False,
         }
 

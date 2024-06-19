@@ -94,8 +94,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = {
             "id": "hops-heatmap",
             "title": "HOPS: Potential Candidates",
-            "xTitle": "Node",
-            "yTitle": "Sample",
+            "xlab": "Node",
+            "ylab": "Sample",
             "square": False,
             "colstops": [
                 [1, "#ededed"],
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
             "tt_decimals": 0,
             "legend": True,
-            "datalabels": False,
+            "display_values": False,
             "xcats_samples": False,
         }
 

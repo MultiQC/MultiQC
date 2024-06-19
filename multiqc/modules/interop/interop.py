@@ -268,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-runmetrics-summary-table",
-            "table_title": "Illumina InterOp Statistics: Read metrics summary",
+            "title": "Illumina InterOp Statistics: Read metrics summary",
             "col1_header": "Run - Read",
         }
 
@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-runmetrics-detail-table",
-            "table_title": "Illumina InterOp Statistics: Sequencing Lane Statistics",
+            "title": "Illumina InterOp Statistics: Sequencing Lane Statistics",
             "col1_header": "Run - Lane - Read",
         }
 
@@ -446,7 +446,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-indexmetrics-summary-table",
-            "table_title": "Illumina InterOp Statistics: Index Read Statistics Summary",
+            "title": "Illumina InterOp Statistics: Index Read Statistics Summary",
             "col1_header": "Run - Lane",
         }
 
@@ -472,7 +472,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-indexmetrics-details-table",
-            "table_title": "Illumina InterOp Statistics: Index Read Statistics Details",
+            "title": "Illumina InterOp Statistics: Index Read Statistics Details",
             "col1_header": "Run - Sample - Lane",
         }
 

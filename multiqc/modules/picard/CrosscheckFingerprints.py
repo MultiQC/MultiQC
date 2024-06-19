@@ -196,7 +196,7 @@ def parse_reports(module):
                 "ycats_samples": True,
                 "square": True,
                 "legend": False,
-                "reverseColors": True,
+                "reverse_colors": True,
             },
         ),
     )

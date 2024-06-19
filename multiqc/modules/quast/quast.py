@@ -288,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "quast_num_contigs",
             "title": "QUAST: Number of Contigs",
             "ylab": "# Contigs",
-            "yDecimals": False,
+            "y_decimals": False,
         }
 
         return bargraph.plot(data, categories, pconfig)

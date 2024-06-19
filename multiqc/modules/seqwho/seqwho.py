@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Per Sequence Quality Scores",
             "ylab": "Reads",
             "xlab": "Sequence Quality (Phred)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Phred {point.x}</b>: {point.y:.0f} reads",
         }
@@ -234,7 +234,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Quality Score",
             "ylab": "Sequence Quality (Phred)",
             "xlab": "Position (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Base {point.x} </b>: {point.y}",
         }
@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Read Distribution",
             "ylab": "Reads",
             "xlab": "Length (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Base {point.x} bp</b>: {point.y} reads",
         }

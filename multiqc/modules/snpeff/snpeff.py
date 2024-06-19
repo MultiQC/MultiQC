@@ -349,7 +349,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SnpEff: Qualities",
             "ylab": "Count",
             "xlab": "Values",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "xmin": 0,
         }

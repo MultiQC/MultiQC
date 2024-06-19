@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
     def bustools_section(self):
         """Add bargraphs showing the mean UMIs per barcode and percentages in whitelist"""
         # add the summary table
-        tconfig = {"namespace": "Bustools", "id": "bustools_summary", "table_title": "Bustools Summary Table"}
+        tconfig = {"namespace": "Bustools", "id": "bustools_summary", "title": "Bustools Summary Table"}
         self.add_section(
             name="Summary table",
             anchor="bustools-inspect",
