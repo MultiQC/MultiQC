@@ -207,7 +207,7 @@ STD_TABLE_CONFIGS = [
     "suffix",
     "format",
     "cond_formatting_rules",
-    "cond_formatting_colors",
+    "cond_formatting_colours",
     "shared_key",
     "modify",
     "hidden",
