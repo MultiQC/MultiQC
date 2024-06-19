@@ -39,7 +39,7 @@ class ErrSplReportMixin:
     # parsing functions -------------------------------------------------------------
 
     def parse_glimpse_err_spl(self):
-        """Find Glimpse concordance errors by samples logs and parse their data"""
+        """Find Glimpse concordance by samples logs and parse their data"""
 
         self.glimpse_err_spl = dict()
         self.allfiles = dict()
@@ -215,7 +215,7 @@ class ErrSplReportMixin:
                 headers,
                 pconfig={
                     "id": "glimpse-err-spl-table",
-                    "title": "Glimpse concordance: errors by sample summary",
+                    "title": "Glimpse concordance by sample",
                 },
             ),
         )
@@ -242,7 +242,7 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
     parsed_data = {}
-    expected_header = "#Genotype concordance by sample (SNPs)"
+    expected_header = "#Genotype concordance by sample (SNPs)\n"
     if lines[0] != expected_header:
         logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
         return {}

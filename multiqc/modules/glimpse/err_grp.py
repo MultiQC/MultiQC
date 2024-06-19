@@ -95,7 +95,7 @@ class ErrGrpReportMixin:
 
     def accuracy_plot(self, data):
         self.add_section(
-            name="Genotype concordance accuracy by allele frequency bins",
+            name="Genotype concordance by allele frequency bin",
             anchor="glimpse-err-grp-plot-section",
             description=(
                 "Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across allele frequency bins."
@@ -138,7 +138,7 @@ class ErrGrpReportMixin:
                     "xmax": 0.5,
                     "ymin": 0,
                     "ymax": 1.1,
-                    "title": "Glimpse concordance: accuracy by allele frequency bins",
+                    "title": "Glimpse concordance by allele frequency bins",
                 },
             ),
         )
