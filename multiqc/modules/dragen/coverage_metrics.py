@@ -42,9 +42,9 @@ SINGLE_HEADER = {
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
     "minrange": None,  # Minimum range for automatic bar
-    "scale": "GnBu",  # colour scale for colour coding. False to disable.
+    "scale": "GnBu",  # Colour scale for colour coding. False to disable.
     "bgcols": None,  # Dict with values: background colours for categorical data.
-    "color": "15, 150, 255",  # colour for column grouping
+    "color": "15, 150, 255",  # Colour for column grouping
     "suffix": None,  # Suffix for value (eg. "%")
     "format": "{:,.2f}",  # Value format string - MultiQC default 1 decimal places
     "cond_formatting_rules": None,  # Rules for conditional formatting table cell values.
@@ -171,7 +171,7 @@ Some rules:
 - The "cond_formatting_colours" along with "cond_formatting_rules" can be
   used to put extra colour on values in html tables. The former must be a
   list of dictionaries, where each dictionary shall be a single definition
-  of some colour. The latter is a dictionary with colours. Each color's
+  of some colour. The latter is a dictionary with colours. Each colour's
   value is a list, which holds dictionaries with ecomparison rules, which
   can be found in the little code block below. Please notice that an insertion
   order of colours in the "cond_formatting_colours" plays an enormous role,
