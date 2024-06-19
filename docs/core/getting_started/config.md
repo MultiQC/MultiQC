@@ -127,7 +127,7 @@ extra_fn_clean_exts:
 #### `regex`
 
 You can also remove a substring with a regular expression.
-A useful website to work with writing regexes is <https://regex101.com>.
+A useful website to work with writing regexes is [regex101.com](https://regex101.com).
 
 :::info{title=Example}
 

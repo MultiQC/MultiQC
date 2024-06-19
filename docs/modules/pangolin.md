@@ -9,4 +9,4 @@ the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature
 
 It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage) to SARS-CoV-2 query sequences.
 
-You can find the Panogolin documentation here: <https://cov-lineages.org/pangolin.html>
+For more information please see the [Panogolin documentation](https://cov-lineages.org/pangolin.html)
