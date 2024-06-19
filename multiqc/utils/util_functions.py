@@ -1,6 +1,6 @@
 """MultiQC Utility functions, used in a variety of places."""
 
-from typing import Dict
+from typing import Dict, List
 
 import array
 import json
@@ -13,6 +13,13 @@ import sys
 import time
 import datetime
 import math
+
+import rich
+import rich.progress
+from tqdm import tqdm
+
+from multiqc import config
+from multiqc.core import init_log
 
 logger = logging.getLogger(__name__)
 
@@ -269,3 +276,64 @@ def update_dict(target: Dict, source: Dict, none_only=False):
                 else:
                     target[key] = val
     return target
+
+
+def iterate_using_progress_bar(items: List, update_fn, item_to_str_fn, desc, disable_progress=False):
+    # GitHub actions doesn't understand ansi control codes to move the cursor,
+    # so it prints each update ona a new line. Better disable it for CI.
+    disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
+
+    # Rich widgets do not look good in Jupyter, of it there is no unicode support.
+    # Additionally, falling back to tqdm if rich_console was not initialized. That
+    # happens when init_log.init_log() wasn't run, i.e in unit tests.
+    if is_running_in_notebook() or no_unicode() or not getattr(init_log, "rich_console", None):
+        # ANSI escape code for dim text
+        if not config.no_ansi:
+            DIM = "\033[2m"
+            BLUE = "\033[34m"
+            RESET = "\033[0m"
+        else:
+            DIM = ""
+            BLUE = ""
+            RESET = ""
+
+        bar_format = f"{BLUE}{desc:>17} {RESET}| " + "{bar:40} {percentage:3.0f}% {n_fmt}/{total_fmt} {desc}"
+
+        # Set up the tqdm progress bar
+        with tqdm(
+            total=len(items),
+            desc=desc,
+            unit="file",
+            file=sys.stdout,
+            disable=disable_progress,
+            bar_format=bar_format,
+        ) as pbar:
+            for i, item in enumerate(items):
+                pbar.update(1)
+                # Update the progress bar description with the file being searched
+                pbar.set_description_str(f"{DIM}{item_to_str_fn(item)[-50:]}{RESET}")
+                update_fn(i, item)
+
+            # Clear the description after the loop is complete
+            pbar.set_description("")
+            pbar.refresh()
+    else:
+        N_SPACES_BEFORE_PIPE = 15  # to align bar desc with other log entries
+        need_to_add_spaces = max(0, N_SPACES_BEFORE_PIPE - len(desc))
+        progress_obj = rich.progress.Progress(
+            "[blue][/]" + " " * need_to_add_spaces,
+            rich.progress.SpinnerColumn(),
+            "[blue]{task.description}[/] |",
+            rich.progress.BarColumn(),
+            "[progress.percentage]{task.percentage:>3.0f}%",
+            "[green]{task.completed}/{task.total}",
+            "[dim]{task.fields[s_fn]}[/]",
+            console=init_log.rich_console,
+            disable=disable_progress,
+        )
+        with progress_obj as progress:
+            mqc_task = progress.add_task(desc, total=len(items), s_fn="")
+            for i, item in enumerate(items):
+                progress.update(mqc_task, advance=1, s_fn=item_to_str_fn(item)[-50:])
+                update_fn(i, item)
+            progress.update(mqc_task, s_fn="")

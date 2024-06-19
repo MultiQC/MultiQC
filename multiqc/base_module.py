@@ -33,6 +33,7 @@ class Section:
     name: str
     anchor: str
     description: str
+    module: str
     comment: str = ""
     helptext: str = ""
     content_before_plot: str = ""
@@ -338,6 +339,7 @@ class BaseMultiqcModule:
             name=name,
             anchor=anchor,
             description=description,
+            module=self.name,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,
