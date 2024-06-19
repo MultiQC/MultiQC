@@ -93,7 +93,7 @@ def test_parsable_lines(line, data):
 
 
 @pytest.mark.parametrize(["lines", "data"], CCS)
-def test_parse_PacBio_log_ccs(lines, data):
+def test_parse_pacbio_log_ccs(lines, data):
     from multiqc.modules.ccs.ccs import parse_PacBio_log
 
     result = parse_PacBio_log(lines)

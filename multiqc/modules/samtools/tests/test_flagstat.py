@@ -1,5 +1,28 @@
+import os
+from pathlib import Path
+
 import math
 import pytest
+
+from multiqc import report
+from multiqc.modules.samtools import MultiqcModule
+from multiqc.utils import testing
+
+
+@pytest.fixture
+def data_dir():
+    return testing.data_dir()
+
+
+def test_data_parsed(data_dir):
+    data_subdir = data_dir / "modules/samtools/flagstat"
+    for path in os.listdir(data_subdir):
+        path = data_subdir / path
+        report.analysis_files = [path]
+        report.search_files(["samtools"])
+        m = MultiqcModule()
+        assert len(m.saved_raw_data) > 0
+        assert m.clean_s_name(Path(path).name) in list(m.saved_raw_data.values())[0]
 
 
 def slurp_file(data_dir, fname):

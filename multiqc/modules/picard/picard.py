@@ -4,7 +4,7 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Import the Picard submodules
+# Import the Picard submodules, each one matching a picard tool
 from . import (
     AlignmentSummaryMetrics,
     BaseDistributionByCycleMetrics,
@@ -29,7 +29,33 @@ from . import (
     WgsMetrics,
 )
 
-# Initialise the logger
+TOOLS = [
+    m.__name__.split(".")[-1]
+    for m in (
+        AlignmentSummaryMetrics,
+        BaseDistributionByCycleMetrics,
+        IlluminaBasecallingMetrics,
+        IlluminaLaneMetrics,
+        CrosscheckFingerprints,
+        ExtractIlluminaBarcodes,
+        GcBiasMetrics,
+        HsMetrics,
+        InsertSizeMetrics,
+        MarkDuplicates,
+        MarkIlluminaAdapters,
+        OxoGMetrics,
+        QualityByCycleMetrics,
+        QualityScoreDistributionMetrics,
+        QualityYieldMetrics,
+        RnaSeqMetrics,
+        RrbsSummaryMetrics,
+        TargetedPcrMetrics,
+        ValidateSamFile,
+        VariantCallingMetrics,
+        WgsMetrics,
+    )
+]
+
 log = logging.getLogger(__name__)
 
 
@@ -47,6 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         href="http://broadinstitute.github.io/picard/",
         info="is a set of Java command line tools for manipulating high-throughput sequencing data.",
         # No DOI to cite // doi=
+        tools=tuple(TOOLS),
     ):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
@@ -59,37 +86,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Set up class objects to hold parsed data
         self.general_stats_headers = dict()
         self.general_stats_data = dict()
-        n = dict()
+        self.samples_parsed_by_tool = dict()
 
-        for tool, mod in {
-            "AlignmentSummaryMetrics": AlignmentSummaryMetrics,
-            "BaseDistributionByCycleMetrics": BaseDistributionByCycleMetrics,
-            "CrosscheckFingerprints": CrosscheckFingerprints,
-            "GcBiasMetrics": GcBiasMetrics,
-            "HsMetrics": HsMetrics,
-            "InsertSizeMetrics": InsertSizeMetrics,
-            "MarkDuplicates": MarkDuplicates,
-            "OxoGMetrics": OxoGMetrics,
-            "QualityByCycleMetrics": QualityByCycleMetrics,
-            "QualityScoreDistributionMetrics": QualityScoreDistributionMetrics,
-            "QualityYieldMetrics": QualityYieldMetrics,
-            "RnaSeqMetrics": RnaSeqMetrics,
-            "RrbsSummaryMetrics": RrbsSummaryMetrics,
-            "TargetedPcrMetrics": TargetedPcrMetrics,
-            "VariantCallingMetrics": VariantCallingMetrics,
-            "ValidateSamFile": ValidateSamFile,
-            "WgsMetrics": WgsMetrics,
-            "IlluminaBasecallingMetrics": IlluminaBasecallingMetrics,
-            "IlluminaLaneMetrics": IlluminaLaneMetrics,
-            "ExtractIlluminaBarcodes": ExtractIlluminaBarcodes,
-            "MarkIlluminaAdapters": MarkIlluminaAdapters,
-        }.items():
+        for tool in tools:
+            log.debug(f"Running picard tool {tool}")
+            mod = globals()[tool]
             func = getattr(mod, "parse_reports", None)
             if func is not None:
-                n[tool] = func(self)
-                if n[tool] > 0:
-                    log.info(f"Found {n[tool]} {tool} reports")
+                self.samples_parsed_by_tool[tool] = func(self)
+                if len(self.samples_parsed_by_tool[tool]) > 0:
+                    log.info(f"Found {len(self.samples_parsed_by_tool[tool])} {tool} reports")
 
         # Exit if we didn't find anything
-        if sum(n.values()) == 0:
+        if all(len(v) == 0 for v in self.samples_parsed_by_tool.values()):
             raise ModuleNoSamplesFound

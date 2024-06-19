@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard WgsMetrics """
+"""MultiQC submodule to parse output from Picard WgsMetrics"""
 
 import logging
 
@@ -79,7 +79,7 @@ def parse_reports(module):
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -234,4 +234,4 @@ def parse_reports(module):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

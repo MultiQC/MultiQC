@@ -1,17 +1,19 @@
-name: Lint Code Base
+name: Lint code
 on:
   push:
     branches: [main]
   pull_request:
 
 jobs:
-  pre-commit:
+  pre_commit:
+    name: "pre-commit"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
       - uses: pre-commit/action@v2.0.3
-  CodeChecks:
+  code_checks:
+    name: "code_checks.py"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
