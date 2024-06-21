@@ -2,7 +2,7 @@ import glob
 import logging
 import os.path
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from multiqc.core.exceptions import RunError
 from multiqc import config, report
@@ -16,11 +16,10 @@ def file_search():
     """
     _make_analysis_file_list()
 
-    modules_to_search = _module_list_to_search()
-    module_names = [list(m.keys())[0] for m in modules_to_search]
-    report.search_files(module_names)
+    mod_dicts_in_order, sp_keys = _module_list_to_search()
+    report.search_files(sp_keys)
 
-    return modules_to_search
+    return mod_dicts_in_order
 
 
 def _make_analysis_file_list():
@@ -49,6 +48,9 @@ def _make_analysis_file_list():
             for p in glob.glob(str(path)):  # Expand glob patterns
                 report.analysis_files.append(p)
 
+    for p in report.analysis_files:
+        logger.info(f"Search path: {os.path.abspath(p)}")
+
 
 def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     """
@@ -76,9 +78,11 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     return module_names
 
 
-def _module_list_to_search() -> List[Dict[str, Dict]]:
+def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     """
     Get the list of modules we want to run, in the order that we want them.
+
+    Return the list of search pattern keys, and the list of modules/entry points.
     """
 
     # Build initial list from config.module_order and config.top_modules
@@ -100,25 +104,24 @@ def _module_list_to_search() -> List[Dict[str, Dict]]:
 
     mod_names = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
     mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_names]
-
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
-
-    logger.debug(f"Analysing modules: {', '.join(mod_names)}")
-
-    # Add custom content section names
-    try:
-        if "custom_content" in mod_names:
-            mod_names.extend(config.custom_data.keys())
-    except AttributeError:
-        pass  # custom_data not in config
+    assert len(mod_dicts_in_order) == len(mod_names)
 
     # Always run software_versions module to collect version YAML files
     # Use config.skip_versions_section to exclude from report
     if "software_versions" not in mod_names:
-        mod_names.append("software_versions")
+        mod_dicts_in_order.append({"software_versions": {}})
 
-    for p in report.analysis_files:
-        logger.info(f"Search path: {os.path.abspath(p)}")
+    sp_keys = list(mod_names)  # make a copy
+    # Add custom content section names
+    try:
+        if "custom_content" in mod_names:
+            sp_keys.extend(config.custom_data.keys())
+    except AttributeError:
+        pass  # custom_data not in config
 
-    return mod_dicts_in_order
+    logger.debug(f"Analysing modules: {', '.join(mod_names)}")
+    if sp_keys != mod_names:
+        logger.debug(f"Search keys: {', '.join(sorted(sp_keys))}")
+    return mod_dicts_in_order, sp_keys

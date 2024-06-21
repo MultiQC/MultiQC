@@ -337,7 +337,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
         return False
 
 
-def prep_ordered_search_files_list(run_module_names) -> Tuple[List, List]:
+def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
@@ -376,8 +376,8 @@ def prep_ordered_search_files_list(run_module_names) -> Tuple[List, List]:
     skipped_patterns = []
 
     for key, sps in config.sp.items():
-        mod_name = key.split("/", 1)[0]
-        if mod_name.lower() not in [m.lower() for m in run_module_names]:
+        mod_key = key.split("/", 1)[0]
+        if mod_key.lower() not in [m.lower() for m in sp_keys]:
             ignored_patterns.append(key)
             continue
         files[key] = list()
@@ -538,7 +538,7 @@ def run_search_files(spatterns, searchfiles):
         logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
-def search_files(run_module_names):
+def search_files(sp_keys):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -546,7 +546,7 @@ def search_files(run_module_names):
     if not analysis_files:
         return
 
-    spatterns, searchfiles = prep_ordered_search_files_list(run_module_names)
+    spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
 
     run_search_files(spatterns, searchfiles)
 
