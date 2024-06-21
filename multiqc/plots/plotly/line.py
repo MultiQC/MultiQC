@@ -5,6 +5,7 @@ from typing import Dict, List, Union, Tuple, Optional, Literal
 
 import math
 import plotly.graph_objects as go
+from plotly.graph_objs.layout.shape import Label
 from pydantic import Field, BaseModel, field_validator, model_validator
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
@@ -434,6 +435,7 @@ class LinePlot(Plot):
                         "dash": line.dash,
                         "color": line.color,
                     },
+                    label=Label(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (x_lines or [])
             ]
