@@ -83,7 +83,7 @@ class ValidatedConfig(BaseModel):
         filtered_values = {}
         for name, val in values.items():
             if name not in cls.model_fields:
-                add_validation_error(
+                add_validation_warning(
                     cls, f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
                 )
             else:
@@ -95,8 +95,7 @@ class ValidatedConfig(BaseModel):
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
                 new_name = cls.model_fields[name].deprecated
-                msg = f"Deprecated field '{name}'. Use '{new_name}' instead"
-                add_validation_warning(cls, msg)
+                add_validation_warning(cls, f"Deprecated field '{name}'. Use '{new_name}' instead")
                 if new_name not in values:
                     values_without_deprecateds[new_name] = val
             else:
