@@ -69,10 +69,15 @@ class ValidatedConfig(BaseModel):
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
     @classmethod
-    def validate_fields_before(cls, values):
+    def validate_fields(cls, values):
         # Check unrecognized fields
         if not isinstance(values, dict):
             return values
+
+        # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
+        for k, v in cls.model_fields.items():
+            if k.endswith("_") and k[:-1] in values:
+                values[k] = values.pop(k[:-1])
 
         # Check unrecognized fields
         filtered_values = {}

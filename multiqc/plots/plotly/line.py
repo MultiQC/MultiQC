@@ -81,7 +81,7 @@ class LineBand(ValidatedConfig):
 
     from_: Union[float, int]
     to: Union[float, int]
-    color: str
+    color: Optional[str] = None
 
 
 class LinePlotConfig(PConfig):
