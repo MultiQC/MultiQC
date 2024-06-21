@@ -1,6 +1,7 @@
 """MultiQC module to parse output from NanoStat"""
 
 import logging
+from typing import List
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -30,13 +31,6 @@ class MultiqcModule(BaseMultiqcModule):
         "median_qual": "Median read quality",
     }
 
-    _KEYS_READ_Q = [
-        ">Q5",
-        ">Q7",
-        ">Q10",
-        ">Q12",
-        ">Q15",
-    ]
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
@@ -107,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 parts = line.strip().split(":")
                 key = parts[0].replace("Reads ", "")
-                if key in self._KEYS_READ_Q:
+                if key.startswith(">Q"):
                     # Number of reads above Q score cutoff
                     val = int(parts[1].strip().split()[0])
                     nano_stats[key] = val
@@ -130,7 +124,7 @@ class MultiqcModule(BaseMultiqcModule):
             if key in self._KEYS_MAPPING.values():
                 val = float(parts[1].replace(",", ""))
                 nano_stats[key] = val
-            elif key in self._KEYS_READ_Q:
+            elif key.startswith(">Q"):
                 # Number of reads above Q score cutoff
                 val = int(parts[1].strip().split()[0])
                 nano_stats[key] = val
@@ -142,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         Used for both legacy and new data formats.
         """
-        if ">Q5" in nano_stats:
+        if any(k.startswith(">Q") for k in nano_stats):
             self.has_qscores = True
 
         if "Total bases aligned" in nano_stats:
@@ -283,26 +277,40 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def reads_by_quality_plot(self):
-        def _get_total_reads(data_dict):
-            stat_type = self._stat_types[0]
-            for stat_type in self._stat_types:
-                total_key = f"Number of reads_{stat_type}"
-                if total_key in data_dict:
-                    return data_dict[total_key], stat_type
+        def _get_total_reads(_data_dict):
+            for _stat_type in self._stat_types:
+                total_key = f"Number of reads_{_stat_type}"
+                if total_key in _data_dict:
+                    return _data_dict[total_key], _stat_type
             return None, None
 
-        bar_data = {}
-        stat_type = "unrecognized"
-        # Order of keys, from >Q5 to >Q15
-        _range_names = {
-            ">Q5": "<Q5",
-            ">Q7": "Q5-7",
-            ">Q10": "Q7-10",
-            ">Q12": "Q10-12",
-            ">Q15": "Q12-15",
-            "rest": ">Q15",
-        }
+        q_values: List[int] = []
+        samples_with_same_q_values = []
+        samples_with_other_q_values = []  # will be skipped
         for s_name, data_dict in self.nanostat_data.items():
+            sample_q_vals = [
+                int(k.strip().replace(">Q", "").split("_")[0]) for k in data_dict.keys() if k.startswith(">Q")
+            ]
+            if q_values and set(sample_q_vals) != set(q_values):
+                samples_with_other_q_values.append(s_name)
+                continue
+            if not q_values:
+                q_values = sample_q_vals
+            samples_with_same_q_values.append(s_name)
+
+        bar_data = {}
+        q_ranges = {}
+        prev_q = 0
+        for q in q_values:
+            if prev_q == 0:
+                q_ranges[f">Q{q}"] = f"<Q{q}"
+            else:
+                q_ranges[f">Q{q}"] = f"Q{prev_q}-{q}"
+            prev_q = q
+        q_ranges["rest"] = f">Q{prev_q}"
+
+        for s_name in samples_with_same_q_values:
+            data_dict = self.nanostat_data[s_name]
             reads_total, stat_type = _get_total_reads(data_dict)
             if stat_type == "fasta":
                 log.debug(f"Sample '{s_name}' has no quality metrics - excluded from quality plot")
@@ -315,7 +323,7 @@ class MultiqcModule(BaseMultiqcModule):
             bar_data[s_name] = {}
 
             prev_reads = reads_total
-            for k, range_name in _range_names.items():
+            for k, range_name in q_ranges.items():
                 if k != "rest":
                     data_key = f"{k}_{stat_type}"
                     reads_gt = data_dict[data_key]
@@ -323,36 +331,49 @@ class MultiqcModule(BaseMultiqcModule):
                     bar_data[s_name][range_name] = prev_reads - reads_gt
 
                     if bar_data[s_name][range_name] < 0:
-                        log.error(f"Error on {s_name} {range_name} {data_key} . Negative number of reads")
+                        log.error(f"Error on {s_name} {range_name} {data_key}: negative number of reads")
                     prev_reads = reads_gt
                 else:
-                    data_key = f">Q15_{stat_type}"
-                    bar_data[s_name][range_name] = data_dict[data_key]
+                    data_key = f">Q{prev_q}_{stat_type}"
+                    bar_data[s_name][range_name] = data_dict.get(data_key, 0)  # Handle 'rest' data
 
         cats = {}
-        keys = reversed(list(_range_names.values()))
-        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(_range_names))
+        keys = reversed(list(q_ranges.values()))
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(q_ranges))
         for idx, k in enumerate(keys):
             cats[k] = {"name": "Reads " + k, "color": colours.get_colour(idx, lighten=1)}
 
         # Config for the plot
-        config = {
+        pconfig = {
             "id": "nanostat_quality_dist",
             "title": "NanoStat: Reads by quality",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
         }
 
+        content_before_plot = ""
+        if samples_with_other_q_values:
+            log.error(
+                f"Quality score cutoffs differ between samples {samples_with_same_q_values} and {samples_with_other_q_values}, "
+                f"will use values from the former: {q_values}"
+            )
+            content_before_plot = (
+                f'<div class="alert alert-warning">Different quality score cutoffs used across different logs. '
+                f'Using ones from the first met sample, and hiding samples '
+                f'{", ".join("<code>" + s + "</code>" for s in samples_with_other_q_values)}.</div>'
+            )
+
         # Add the report section
         self.add_section(
             name="Reads by quality",
             anchor="nanostat_read_qualities",
             description="Read counts categorised by read quality (Phred score).",
+            content_before_plot=content_before_plot,
             helptext="""
             Sequencing machines assign each generated read a quality score using the
             [Phred scale](https://en.wikipedia.org/wiki/Phred_quality_score).
             The phred score represents the liklelyhood that a given read contains errors.
             High quality reads have a high score.
             """,
-            plot=bargraph.plot(bar_data, cats, config),
+            plot=bargraph.plot(bar_data, cats, pconfig),
         )
