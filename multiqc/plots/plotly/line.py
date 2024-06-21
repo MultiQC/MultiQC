@@ -5,12 +5,13 @@ from typing import Dict, List, Union, Tuple, Optional, Literal
 
 import math
 import plotly.graph_objects as go
-from pydantic import Field, BaseModel, field_validator
+from plotly.graph_objs.layout.shape import Label
+from pydantic import Field, BaseModel, field_validator, model_validator
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class Series(ValidatedConfig):
     pairs: List[Tuple[ValueT, ValueT]]
     color: Optional[str] = None
     width: Optional[int] = None
+    dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
     showlegend: bool = True
 
@@ -34,13 +36,53 @@ class Series(ValidatedConfig):
 
     marker: Optional[Marker] = None
 
-    # noinspection PyNestedDecorators
-    @field_validator("marker", mode="before")
     @classmethod
     def parse_marker(cls, d):
         if isinstance(d, dict):
             return Series.Marker(**d)
         return d
+
+    @classmethod
+    def parse_dash(cls, value):
+        return convert_dash_style(value)
+
+
+class FlatLine(ValidatedConfig):
+    """
+    Extra X=const or Y=const line added to the plot
+    """
+
+    value: Union[float, int]
+    color: str
+    width: int = 2
+    dashStyle: Optional[str] = Field(None, deprecated="dash")
+    dash: Optional[str] = None
+    label: Optional[Union[str, Dict]] = None
+
+    @classmethod
+    def parse_label(cls, value):
+        if isinstance(value, dict):
+            add_validation_warning(
+                cls,
+                "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
+                "Other fields other than 'text' are deprecated and will be ignored",
+            )
+            return value["text"]
+        return value
+
+    @classmethod
+    def parse_dash(cls, value):
+        return convert_dash_style(value)
+
+
+class LineBand(ValidatedConfig):
+    """
+    Extra X1-X2 or Y1-Y2 band added to the plot
+    """
+
+    from_: Union[float, int]
+    to: Union[float, int]
+    color: Optional[str] = None
 
 
 class LinePlotConfig(PConfig):
@@ -54,21 +96,19 @@ class LinePlotConfig(PConfig):
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
     y_minrange: Optional[Union[float, int]] = None
-    xPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_bands")
-    yPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_bands")
-    xPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_lines")
-    yPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_lines")
-    x_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    y_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    x_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    y_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    xPlotBands: Optional[List[LineBand]] = Field(None, deprecated="x_bands")
+    yPlotBands: Optional[List[LineBand]] = Field(None, deprecated="y_bands")
+    xPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="x_lines")
+    yPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="y_lines")
+    x_bands: Optional[List[LineBand]] = None
+    y_bands: Optional[List[LineBand]] = None
+    x_lines: Optional[List[FlatLine]] = None
+    y_lines: Optional[List[FlatLine]] = None
     style: Literal["lines", "lines+markers"] = "lines"
     hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
     hide_empty: bool = False
     colors: Dict[str, str] = {}
 
-    # noinspection PyNestedDecorators
-    @field_validator("extra_series", mode="before")
     @classmethod
     def parse_extra_series(cls, data):
         if not isinstance(data, list):
@@ -77,6 +117,22 @@ class LinePlotConfig(PConfig):
             data = [data]
 
         return [[Series(**s) if isinstance(s, dict) else s for s in ss] for ss in data]
+
+    @classmethod
+    def parse_x_bands(cls, data):
+        return [LineBand(**d) for d in data]
+
+    @classmethod
+    def parse_y_bands(cls, data):
+        return [LineBand(**d) for d in data]
+
+    @classmethod
+    def parse_x_lines(cls, data):
+        return [FlatLine(**d) for d in data]
+
+    @classmethod
+    def parse_y_lines(cls, data):
+        return [FlatLine(**d) for d in data]
 
 
 def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":
@@ -319,12 +375,12 @@ class LinePlot(Plot):
             [
                 dict(
                     type="rect",
-                    y0=band["from"],
-                    y1=band["to"],
+                    y0=band.from_,
+                    y1=band.to,
                     x0=0,
                     x1=1,
                     xref="paper",  # make x coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
+                    fillcolor=band.color,
                     line={
                         "width": 0,
                     },
@@ -335,12 +391,12 @@ class LinePlot(Plot):
             + [
                 dict(
                     type="rect",
-                    x0=band["from"],
-                    x1=band["to"],
+                    x0=band.from_,
+                    x1=band.to,
                     y0=0,
                     y1=1,
                     yref="paper",  # make y coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
+                    fillcolor=band.color,
                     line={
                         "width": 0,
                     },
@@ -354,13 +410,13 @@ class LinePlot(Plot):
                     xref="paper",
                     yref="y",
                     x0=0,
-                    y0=line["value"],
+                    y0=line.value,
                     x1=1,
-                    y1=line["value"],
+                    y1=line.value,
                     line={
-                        "width": line.get("width", 2),
-                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
-                        "color": line["color"],
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
                     },
                 )
                 for line in (y_lines or [])
@@ -370,15 +426,16 @@ class LinePlot(Plot):
                     type="line",
                     yref="paper",
                     xref="x",
-                    x0=line["value"],
+                    x0=line.value,
                     y0=0,
-                    x1=line["value"],
+                    x1=line.value,
                     y1=1,
                     line={
-                        "width": line.get("width", 2),
-                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
-                        "color": line["color"],
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
                     },
+                    label=Label(text=line.label, font=dict(color=line.color)),
                 )
                 for line in (x_lines or [])
             ]
