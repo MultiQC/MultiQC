@@ -21,7 +21,7 @@ jobs:
         run: |
           wget https://github.com/MultiQC/test-data/archive/refs/heads/main.zip
           unzip main.zip
-          mv test-data-main/ test_data/
+          mv test-data-main/ test-data/
 
       - name: Generate terminal images with rich-codex
         uses: ewels/rich-codex@v1
