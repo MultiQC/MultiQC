@@ -450,6 +450,7 @@ def _find_file_header(f) -> (Optional[Dict], List[str]):
         sep
         and len(hlines) > 0
         and len(other_lines) > 0
+        and ":" not in hlines[-1]
         and len(hlines[-1].split(sep)) == len(other_lines[0].split(sep))
     ):
         other_lines = [hlines.pop()] + other_lines
