@@ -458,26 +458,20 @@ def _find_file_header(f) -> (Optional[Dict], List[str]):
     if len(hlines) == 0:
         return None, other_lines
 
-    hconfig = None
     try:
         hconfig = yaml.safe_load("\n".join(hlines))
     except yaml.YAMLError:
-        msg = (
+        raise ValueError(
             f"Could not parse comment file header for MultiQC custom content: {f['fn']}. "
             + "Note that everything behind a comment character '#' is expected to in YAML format. "
             + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'."
         )
-        if config.strict:
-            raise ValueError(msg)
-        else:
-            log.error(msg)
     else:
         if not isinstance(hconfig, dict):
-            msg = f"Custom Content comment file header looked wrong. It's expected to be parsed to a dict, got {type(hconfig)}: {hconfig}"
-            if config.strict:
-                raise ValueError(msg)
-            else:
-                log.error(msg)
+            raise ValueError(
+                "Custom Content comment file header looked wrong. It's expected to "
+                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}"
+            )
     return hconfig, other_lines
 
 
