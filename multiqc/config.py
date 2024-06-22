@@ -194,6 +194,9 @@ def reset():
     global session_user_config_files
     session_user_config_files = []
 
+    global _loaded_found_config_files
+    _loaded_found_config_files = set()
+
     load_defaults()
 
 

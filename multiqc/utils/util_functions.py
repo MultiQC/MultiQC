@@ -264,17 +264,24 @@ def compress_number_lists_for_json(obj):
 
 
 def update_dict(target: Dict, source: Dict, none_only=False):
-    """Recursively updates nested dict d from nested dict u"""
+    """
+    Recursively updates nested dict d from nested dict u
+
+    >>> update_dict({"cutadapt": {"fn": "old", "fn2": "old2"}}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new', 'fn2': 'old2'}}
+    >>> update_dict({"cutadapt": [{"fn": "old"}]}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new'}}
+    """
     assert target is not None, source is not None
-    for key, val in source.items():
-        if isinstance(val, dict):
-            target[key] = update_dict(target.get(key, {}), val)
+    for key, src_val in source.items():
+        if isinstance(src_val, dict) and key in target and isinstance(target[key], dict):
+            target[key] = update_dict(target[key], src_val, none_only=none_only)
         else:
             if not none_only or target.get(key) is None:
-                if isinstance(val, list):
-                    target[key] = val.copy()
+                if isinstance(src_val, list):
+                    target[key] = src_val.copy()
                 else:
-                    target[key] = val
+                    target[key] = src_val
     return target
 
 
