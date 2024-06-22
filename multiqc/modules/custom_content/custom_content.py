@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import yaml
 
@@ -133,7 +133,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # txt, csv, tsv etc
                 else:
                     # Look for configuration details in the header
-                    m_config = _find_file_header(f)
+                    m_config, non_header_lines = _find_file_header(f)
                     s_name = None
                     if m_config is not None:
                         c_id = m_config.get("id", k)
@@ -170,7 +170,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                         m_config["file_format"] = _guess_file_format(f)
                     # Parse data
                     try:
-                        parsed_data, conf = _parse_txt(f, m_config)
+                        parsed_data, conf = _parse_txt(f, m_config, non_header_lines)
                         if parsed_data is None or len(parsed_data) == 0:
                             log.warning(f"Not able to parse custom data in {f['fn']}")
                         else:
@@ -430,25 +430,54 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
 
 
-def _find_file_header(f):
+def _find_file_header(f) -> (Optional[Dict], List[str]):
     # Collect commented out header lines
     hlines = []
+    other_lines = []
     for line in f["f"].splitlines():
         if line.startswith("#"):
             hlines.append(line[1:])
+        else:
+            other_lines.append(line)
+
+    # Check if the last header line is the '#'-commented column names
+    sep = None
+    if f["fn"].endswith(".tsv"):
+        sep = "\t"
+    elif f["fn"].endswith(".csv"):
+        sep = ","
+    if (
+        sep
+        and len(hlines) > 0
+        and len(other_lines) > 0
+        and len(hlines[-1].split(sep)) == len(other_lines[0].split(sep))
+    ):
+        other_lines = [hlines.pop()] + other_lines
+
     if len(hlines) == 0:
-        return None
+        return None, other_lines
+
     hconfig = None
     try:
         hconfig = yaml.safe_load("\n".join(hlines))
-        assert isinstance(hconfig, dict)
-    except yaml.YAMLError as e:
-        log.warning(f"Could not parse comment file header for MultiQC custom content: {f['fn']}")
-        log.debug(e)
-    except AssertionError:
-        log.debug(f"Custom Content comment file header looked wrong: {hconfig}")
+    except yaml.YAMLError:
+        msg = (
+            f"Could not parse comment file header for MultiQC custom content: {f['fn']}. "
+            + "Note that everything behind a comment character '#' is expected to in YAML format. "
+            + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'."
+        )
+        if config.strict:
+            raise ValueError(msg)
+        else:
+            log.error(msg)
     else:
-        return hconfig
+        if not isinstance(hconfig, dict):
+            msg = f"Custom Content comment file header looked wrong. It's expected to be parsed to a dict, got {type(hconfig)}: {hconfig}"
+            if config.strict:
+                raise ValueError(msg)
+            else:
+                log.error(msg)
+    return hconfig, other_lines
 
 
 def _find_html_file_header(f):
@@ -514,27 +543,26 @@ def _guess_file_format(f):
     return "spaces"
 
 
-def _parse_txt(f, conf):
+def _parse_txt(f, conf, non_header_lines: List[str]):
     # Split the data into a list of lists by column
     sep = None
     if conf["file_format"] == "csv":
         sep = ","
     if conf["file_format"] == "tsv":
         sep = "\t"
-    lines = f["f"].splitlines()
     d = []
 
     # Check for special case - HTML
     if conf.get("plot_type") == "html":
-        for line in lines:
-            if line and not line.startswith("#"):
+        for line in non_header_lines:
+            if line:
                 d.append(line)
         return "\n".join(d), conf
 
     # Not HTML, need to parse data
     ncols = None
-    for line in lines:
-        if line and not line.startswith("#"):
+    for line in non_header_lines:
+        if line:
             sections = line.split(sep)
             d.append(sections)
             if ncols is None:
@@ -571,7 +599,7 @@ def _parse_txt(f, conf):
         return data, conf
 
     # Heatmap: Number of headers == number of lines
-    if conf.get("plot_type") is None and first_row_str == len(lines) and all_numeric:
+    if conf.get("plot_type") is None and first_row_str == len(non_header_lines) and all_numeric:
         conf["plot_type"] = "heatmap"
     if conf.get("plot_type") == "heatmap":
         conf["xcats"] = d[0][1:]
