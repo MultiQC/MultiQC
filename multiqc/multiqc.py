@@ -490,6 +490,10 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
     See http://multiqc.info for more details.
     """
 
+    # In case if run() is called multiple times in the same session:
+    report.reset()
+    config.reset()
+
     update_config(*analysis_dir, cfg=cfg)
 
     check_version()
@@ -503,9 +507,6 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
             "Strict mode specified. Will exit early if a module or a template crashed, and will "
             "give warnings if anything is not optimally configured in a module or a template."
         )
-
-    # In case if run() is called multiple times in the same session:
-    report.reset()
 
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
