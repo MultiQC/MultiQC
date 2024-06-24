@@ -292,10 +292,12 @@ class MultiqcModule(BaseMultiqcModule):
         if modname == "" or modname is None:
             modname = "Custom Content"
 
+        anchor = mod["config"].get("section_anchor", c_id)
+
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name=modname,
-            anchor=mod["config"].get("section_anchor", c_id),
+            anchor=anchor,
             href=mod["config"].get("section_href"),
             info=mod_info,
             extra=mod["config"].get("extra"),
@@ -305,6 +307,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't repeat the Custom Content name in the subtext
         if self.info or self.extra or self.doi_link:
             self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
+
+        if "custom_content" in config.run_modules:
+            # To allow file_search.include_or_exclude_modules() correctly filter these modules
+            config.custom_content_modules.append(anchor)
 
     def update_init(self, c_id, mod):
         """

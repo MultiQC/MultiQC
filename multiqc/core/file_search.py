@@ -65,9 +65,10 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
             )
         if len(unknown_modules) == len(config.run_modules):
             raise RunError("No available modules to run!")
-        config.run_modules = [m for m in config.run_modules if m in config.avail_modules.keys()]
-        module_names = [m for m in module_names if m in config.run_modules]
-        logger.info(f"Only using modules: {', '.join(config.run_modules)}")
+        module_names = [m for m in module_names if m in config.run_modules and m in config.avail_modules.keys()]
+        if "custom_content" in config.run_modules:
+            module_names.extend(config.custom_content_modules)
+        logger.info(f"Only using modules: {', '.join(module_names)}")
 
     if len(config.exclude_modules) > 0:
         logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
