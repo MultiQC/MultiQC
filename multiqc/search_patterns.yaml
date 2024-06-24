@@ -210,17 +210,17 @@ ccs/v5:
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
-    num_lines: 13
+    num_lines: 14
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "count"'
-    num_lines: 13
+    num_lines: 14
 cellranger/vdj_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    num_lines: 13
+    num_lines: 14
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    num_lines: 13
+    num_lines: 14
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
