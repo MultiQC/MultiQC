@@ -77,7 +77,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     config.load_defaults()
 
     cfg = cfg or ClConfig()
-    # Set up logger
+
+    # Reset logger
     if cfg.quiet is not None:
         config.quiet = cfg.quiet
     if cfg.no_ansi is not None:
@@ -85,6 +86,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     if cfg.verbose is not None:
         config.verbose = cfg.verbose > 0
     init_log.init_log()
+
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 

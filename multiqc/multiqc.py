@@ -493,7 +493,6 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-
     update_config(*analysis_dir, cfg=cfg)
 
     check_version()

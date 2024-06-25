@@ -1,10 +1,8 @@
-import json
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import multiqc
-from multiqc import report
+from multiqc import report, reset
 
 
 def test_parse_logs_fn_clean_exts(data_dir):

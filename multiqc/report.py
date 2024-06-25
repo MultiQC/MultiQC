@@ -93,7 +93,8 @@ def __initialise():
 
     # Create new temporary directory for module data exports
     initialized = True
-    tmp_dir = tempfile.mkdtemp()
+    if tmp_dir is None:
+        tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
     analysis_files = []

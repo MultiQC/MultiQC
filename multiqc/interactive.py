@@ -12,6 +12,7 @@ from typing import Dict, Union, List, Optional
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.init_log import init_log
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
