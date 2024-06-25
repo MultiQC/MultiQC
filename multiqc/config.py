@@ -176,7 +176,7 @@ sp: Dict = {}
 modules_dir: str
 creation_date: str
 working_dir: str
-analysis_dir: list[str]
+analysis_dir: List[str]
 output_dir: str
 megaqc_access_token: str
 kwargs: Dict = {}
