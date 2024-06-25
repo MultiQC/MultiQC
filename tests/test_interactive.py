@@ -58,8 +58,10 @@ def test_run_twice(data_dir):
                 output_dir=tmp_dir_name,
             ),
         )
-        assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
-        assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
+        path = Path(tmp_dir_name) / "multiqc_report.html"
+        assert path.is_file()
+        path = Path(tmp_dir_name) / "multiqc_data"
+        assert path.is_dir()
 
     with tempfile.TemporaryDirectory() as tmp_dir_name:
         multiqc.run(  # pylint: disable=no-member
@@ -71,5 +73,7 @@ def test_run_twice(data_dir):
                 output_dir=tmp_dir_name,
             ),
         )
-        assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
-        assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
+        path = Path(tmp_dir_name) / "multiqc_report.html"
+        assert path.is_file()
+        path = Path(tmp_dir_name) / "multiqc_data"
+        assert path.is_dir()

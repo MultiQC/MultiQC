@@ -207,7 +207,7 @@ class BaseMultiqcModule:
                     (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
                     *(
                         (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
-                        for [analysis_dir] in report.analysis_files
+                        for analysis_dir in report.analysis_files
                     ),
                 )
                 if not any(inclusion_hits):
