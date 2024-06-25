@@ -210,17 +210,17 @@ ccs/v5:
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "count"'
-    num_lines: 13
+    num_lines: 20
 cellranger/vdj_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    num_lines: 13
+    num_lines: 20
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -874,10 +874,10 @@ sortmerna:
 spaceranger/count_html:
   - fn: "*.html"
     contents: '"command":"Space Ranger","subcommand":"count"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Space Ranger", "subcommand": "count"'
-    num_lines: 13
+    num_lines: 20
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
