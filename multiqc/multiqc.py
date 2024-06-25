@@ -476,7 +476,7 @@ class RunResult:
         self.message = message
 
 
-def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
+def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -493,7 +493,6 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-
     update_config(*analysis_dir, cfg=cfg)
 
     check_version()

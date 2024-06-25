@@ -173,21 +173,8 @@ class BaseMultiqcModule:
         if isinstance(path_filters_exclude, str):
             path_filters_exclude: List[str] = [path_filters_exclude]
 
-        # Old, depreciated syntax support. Likely to be removed in a future version.
-        if isinstance(sp_key, dict):
-            report.files[self.name] = list()
-            for sf in report.searchfiles:
-                with report.SearchFile(sf[0], sf[1]) as f:
-                    if report.search_file(sp_key, f, module_key=None):
-                        report.files[self.name].append({"fn": sf[0], "root": sf[1]})
-            sp_key = self.name
-            logwarn = f"Depreciation Warning: {self.name} - Please use new style for find_log_files()"
-            if len(report.files[self.name]) > 0:
-                logger.warning(logwarn)
-            else:
-                logger.debug(logwarn)
-        elif not isinstance(sp_key, str):
-            logger.warning("Did not understand find_log_files() search key")
+        if not isinstance(sp_key, str):
+            logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
             return
 
         for f in report.files[sp_key]:
