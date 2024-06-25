@@ -55,7 +55,7 @@ class ClConfig(BaseModel):
     ignore_samples: List[str] = ()
     run_modules: List[str] = ()
     exclude_modules: List[str] = ()
-    config_files: List[str] = ()
+    config_files: List[Union[str, Path]] = ()
     cl_config: List[str] = ()
     custom_css_files: List[str] = ()
     module_order: List[Union[str, Dict]] = ()
@@ -95,9 +95,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     # Set up session config files passed with -c or interactive.load_config().
     # They are kept for the entire interactive session.
     for path in cfg.config_files:
-        if path not in config.session_user_config_files:
-            config.session_user_config_files.append(Path(path).absolute())
-            config.load_config_file(str(path))
+        config.load_config_file(str(path))
 
     # Command-line config YAML
     if len(cfg.cl_config) > 0:

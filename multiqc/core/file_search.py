@@ -45,9 +45,14 @@ def _make_analysis_file_list():
         report.analysis_files = paths
     else:
         for path in config.analysis_dir:
-            for p in glob.glob(str(path)):  # Expand glob patterns
+            expanded_paths = list(glob.glob(str(path)))
+            if not expanded_paths:
+                logger.warning(f"No files found by path or pattern: '{path}'")
+            for p in expanded_paths:  # Expand glob patterns
                 report.analysis_files.append(p)
 
+    if not report.analysis_files:
+        raise RunError("No files found to analyse. Check that input files and directories exist.")
     for p in report.analysis_files:
         logger.info(f"Search path: {os.path.abspath(p)}")
 
@@ -117,7 +122,7 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     sp_keys = list(mod_names)  # make a copy
     # Add custom content section names
     try:
-        if "custom_content" in mod_names:
+        if "custom_content" in sp_keys:
             sp_keys.extend(config.custom_data.keys())
     except AttributeError:
         pass  # custom_data not in config

@@ -476,7 +476,7 @@ class RunResult:
         self.message = message
 
 
-def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
+def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 

@@ -169,6 +169,33 @@ top_modules: List[Dict[str, Dict]]
 module_order: List[Union[str, Dict]]
 preserve_module_raw_data: Optional[bool]
 
+# Module filename search patterns
+sp: Dict = {}
+
+# Other defaults that can't be set in YAML
+modules_dir: str
+creation_date: str
+working_dir: str
+analysis_dir: list[str]
+output_dir: str
+megaqc_access_token: str
+kwargs: Dict = {}
+
+# Other variables that set only through the CLI
+run_modules: List[str]
+custom_content_modules: List[str]
+exclude_modules: List[str]
+data_dir: Optional[str]
+plots_dir: Optional[str]
+custom_data: Dict
+report_section_order: Dict
+output_fn: Optional[str]
+filename: Optional[str]
+megaqc_upload: bool
+
+avail_modules: Dict
+avail_templates: Dict
+
 
 def load_defaults():
     """
@@ -180,19 +207,91 @@ def load_defaults():
     for c, v in _default_config.items():
         globals()[c] = v
 
+    # Module filename search patterns
+    with (Path(MODULE_DIR) / "search_patterns.yaml").open() as f:
+        global sp
+        sp = yaml.safe_load(f)
+
+    # Other defaults that can't be set in defaults YAML
+    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    modules_dir = Path(MODULE_DIR) / "modules"
+    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
+    working_dir = os.getcwd()
+    analysis_dir = [os.getcwd()]
+    output_dir = os.path.realpath(os.getcwd())
+    megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+    kwargs = {}
+
+    # Other variables that set only through the CLI
+    global \
+        run_modules, \
+        custom_content_modules, \
+        exclude_modules, \
+        data_dir, \
+        plots_dir, \
+        custom_data, \
+        report_section_order, \
+        output_fn, \
+        filename, \
+        megaqc_upload
+    run_modules = []
+    custom_content_modules = []
+    exclude_modules = []
+    data_dir = None
+    plots_dir = None
+    custom_data = {}
+    report_section_order = {}
+    output_fn = None
+    filename = None
+    megaqc_upload = False
+
+    # Available modules.
+    global avail_modules
+    # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
+    # Get all modules, including those from other extension packages
+    avail_modules = dict()
+    for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+        nice_name = entry_point.name
+        avail_modules[nice_name] = entry_point
+
+    # Available templates.
+    global avail_templates
+    # Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
+    # Get all templates, including those from other extension packages
+    avail_templates = {}
+    for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+        nice_name = entry_point.name
+        avail_templates[nice_name] = entry_point
+
+    # Check we have modules & templates
+    # Check that we were able to find some modules and templates
+    # If not, package probably hasn't been installed properly.
+    # Need to do this before click, else will throw cryptic error
+    # Note: Can't use logger here, not yet initiated.
+    if len(avail_modules) == 0 or len(avail_templates) == 0:
+        if len(avail_modules) == 0:
+            print("Error - No MultiQC modules found.", file=sys.stderr)
+        if len(avail_templates) == 0:
+            print("Error - No MultiQC templates found.", file=sys.stderr)
+        print(
+            "Could not load MultiQC - has it been installed? \n\
+            Please either install with pip (pip install multiqc) or by using \n\
+            the local files (pip install .)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 
 load_defaults()
 
-session_user_config_files: List[Path] = []
+# Keeping track to avoid loading twice
+_loaded_found_config_files = set()
 
 
 def reset():
     """
     Reset the interactive session
     """
-
-    global session_user_config_files
-    session_user_config_files = []
 
     global _loaded_found_config_files
     _loaded_found_config_files = set()
@@ -230,71 +329,6 @@ def load_user_files():
 
     # Load and parse a config file in this working directory if we find it
     load_config_file("multiqc_config.yaml")
-
-
-# Module filename search patterns
-searchp_fn = os.path.join(MODULE_DIR, "search_patterns.yaml")
-with open(searchp_fn) as f:
-    sp = yaml.safe_load(f)
-
-# Other defaults that can't be set in YAML
-modules_dir = os.path.join(MODULE_DIR, "modules")
-creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
-working_dir = os.getcwd()
-analysis_dir = [os.getcwd()]
-output_dir = os.path.realpath(os.getcwd())
-megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
-kwargs: Dict = {}
-
-# Other variables that set only through the CLI
-run_modules: List[str] = []
-custom_content_modules: List[str] = []
-exclude_modules: List[str] = []
-data_dir: Optional[str] = None
-plots_dir: Optional[str] = None
-custom_data: Dict = {}
-report_section_order: Dict = {}
-output_fn: Optional[str] = None
-filename: Optional[str] = None
-megaqc_upload: bool = False
-
-##### Available modules
-# Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
-# Get all modules, including those from other extension packages
-avail_modules = dict()
-for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
-    nicename = entry_point.name
-    avail_modules[nicename] = entry_point
-
-##### Available templates
-# Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
-# Get all templates, including those from other extension packages
-avail_templates = {}
-for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
-    nicename = entry_point.name
-    avail_templates[nicename] = entry_point
-
-##### Check we have modules & templates
-# Check that we were able to find some modules and templates
-# If not, package probably hasn't been installed properly.
-# Need to do this before click, else will throw cryptic error
-# Note: Can't use logger here, not yet initiated.
-if len(avail_modules) == 0 or len(avail_templates) == 0:
-    if len(avail_modules) == 0:
-        print("Error - No MultiQC modules found.", file=sys.stderr)
-    if len(avail_templates) == 0:
-        print("Error - No MultiQC templates found.", file=sys.stderr)
-    print(
-        "Could not load MultiQC - has it been installed? \n\
-        Please either install with pip (pip install multiqc) or by using \n\
-        the local files (pip install .)",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
-
-# Keeping track to avoid loading twice
-_loaded_found_config_files = set()
 
 
 def load_config_file(yaml_config_path: Union[str, Path]):

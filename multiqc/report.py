@@ -27,6 +27,7 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
@@ -544,7 +545,7 @@ def search_files(sp_keys):
     list of files to search. Then fire search functions for each file.
     """
     if not analysis_files:
-        return
+        raise RunError("Error: no analysis files found to search")
 
     spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
 

@@ -1,3 +1,4 @@
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -39,5 +40,36 @@ def test_write_report():
 
     with tempfile.TemporaryDirectory() as tmp_dir_name:
         multiqc.write_report(force=True, output_dir=tmp_dir_name)
+        assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
+        assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
+
+
+def test_run_twice(data_dir):
+    from multiqc import multiqc
+    from multiqc.core.update_config import ClConfig
+
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+        multiqc.run(  # pylint: disable=no-member
+            data_dir / "custom_content/with_config/run_concordance/run_concordance.txt",
+            cfg=ClConfig(
+                strict=True,
+                force=True,
+                config_files=[data_dir / "custom_content/with_config/run_concordance/multiqc_config.yaml"],
+                output_dir=tmp_dir_name,
+            ),
+        )
+        assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
+        assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
+
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+        multiqc.run(  # pylint: disable=no-member
+            data_dir / "custom_content/with_config/run_concordance/run_concordance.txt",
+            cfg=ClConfig(
+                strict=True,
+                force=True,
+                config_files=[data_dir / "custom_content/with_config/run_concordance/multiqc_config.yaml"],
+                output_dir=tmp_dir_name,
+            ),
+        )
         assert (Path(tmp_dir_name) / "multiqc_report.html").is_file()
         assert (Path(tmp_dir_name) / "multiqc_data").is_dir()
