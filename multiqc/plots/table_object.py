@@ -240,7 +240,8 @@ class DataTable(BaseModel):
                 # This is to override column-specific values set by modules
                 if pconfig.id in config.custom_plot_config:
                     for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                        headers[d_idx][k][cpc_k] = cpc_v
+                        if cpc_k in TableColumn.model_fields.keys():
+                            headers[d_idx][k][cpc_k] = cpc_v
 
                 # Overwrite "name" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
