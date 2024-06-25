@@ -338,16 +338,10 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
             # Extract the coverage from the column name
             m = re.match(r".+_(\d+)X", h)
             if m:
-                try:
-                    cov = int(m.group(1))
-                except ValueError:
-                    log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
-                    h = ""
-                    cov = ""
+                h_tmpl = re.sub(r"_(\d+)X", "_{coverage}X", h)
+                descr = FIELD_DESCRIPTIONS.get(h_tmpl, "").replace("{coverage}", m.group(1))
             else:
-                cov = ""
-
-            descr = FIELD_DESCRIPTIONS.get(re.sub(r"_(\d+)X", "_{coverage}X", h), "").replace("{coverage}", str(cov))
+                descr = FIELD_DESCRIPTIONS.get(h, "")
             if not descr:
                 log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
                 descr = ""
