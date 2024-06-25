@@ -17,7 +17,7 @@ from multiqc.core.update_config import update_config
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multiqc_reset():
     reset()
     update_config()
@@ -28,6 +28,8 @@ def test_all_modules(module_id, entry_point, data_dir, multiqc_reset):
     """
     Verify that all modules do at least something
     """
+    report.reset()
+
     mod_dir = data_dir / "modules" / module_id
     assert mod_dir.exists() and mod_dir.is_dir()
     report.analysis_files = [mod_dir]
