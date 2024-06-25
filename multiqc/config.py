@@ -248,6 +248,7 @@ kwargs: Dict = {}
 
 # Other variables that set only through the CLI
 run_modules: List[str] = []
+custom_content_modules: List[str] = []
 exclude_modules: List[str] = []
 data_dir: Optional[str] = None
 plots_dir: Optional[str] = None
