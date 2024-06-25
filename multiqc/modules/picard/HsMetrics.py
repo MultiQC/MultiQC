@@ -335,6 +335,7 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
             for s, r in title_cleanup:
                 h_title = h_title.replace(s, r)
 
+            # Extract the coverage from the column name
             m = re.match(r".+_(\d+)X", h)
             if m:
                 try:
