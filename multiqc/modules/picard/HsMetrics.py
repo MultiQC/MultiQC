@@ -3,6 +3,7 @@
 import logging
 from collections import defaultdict
 
+import re
 from multiqc import config
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
@@ -22,12 +23,7 @@ FIELD_DESCRIPTIONS = {
     "HET_SNP_Q": "The Phred Scaled Q Score of the theoretical HET SNP sensitivity.",
     "HET_SNP_SENSITIVITY": "The theoretical HET SNP sensitivity.",
     "HS_LIBRARY_SIZE": "The estimated number of unique molecules in the selected part of the library.",
-    "HS_PENALTY_100X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 100X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.",
-    "HS_PENALTY_10X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 10X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.",
-    "HS_PENALTY_20X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 20X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.",
-    "HS_PENALTY_30X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 30X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.",
-    "HS_PENALTY_40X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 40X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.",
-    "HS_PENALTY_50X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 50X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.",
+    "HS_PENALTY_{coverage}X": "The 'hybrid selection penalty' incurred to get 80% of target bases to {coverage}X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get {coverage}X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_{coverage}X.",
     "MAX_TARGET_COVERAGE": "The maximum coverage of reads that mapped to target regions of an experiment.",
     "MEAN_BAIT_COVERAGE": "The mean coverage of all baits in the experiment.",
     "MEAN_TARGET_COVERAGE": "The mean coverage of targets.",
@@ -48,14 +44,7 @@ FIELD_DESCRIPTIONS = {
     "PCT_PF_UQ_READS_ALIGNED": "PF Reads Aligned / PF Reads.",
     "PCT_PF_UQ_READS": "PF Unique Reads / Total Reads.",
     "PCT_SELECTED_BASES": "On+Near Bait Bases / PF Bases Aligned.",
-    "PCT_TARGET_BASES_100X": "The fraction of all target bases achieving 100X or greater coverage.",
-    "PCT_TARGET_BASES_10X": "The fraction of all target bases achieving 10X or greater coverage.",
-    "PCT_TARGET_BASES_1X": "The fraction of all target bases achieving 1X or greater coverage.",
-    "PCT_TARGET_BASES_20X": "The fraction of all target bases achieving 20X or greater coverage.",
-    "PCT_TARGET_BASES_2X": "The fraction of all target bases achieving 2X or greater coverage.",
-    "PCT_TARGET_BASES_30X": "The fraction of all target bases achieving 30X or greater coverage.",
-    "PCT_TARGET_BASES_40X": "The fraction of all target bases achieving 40X or greater coverage.",
-    "PCT_TARGET_BASES_50X": "The fraction of all target bases achieving 50X or greater coverage.",
+    "PCT_TARGET_BASES_{coverage}X": "The fraction of all target bases achieving {coverage}X or greater coverage.",
     "PCT_USABLE_BASES_ON_BAIT": "The number of aligned, de-duped, on-bait bases out of the PF bases available.",
     "PCT_USABLE_BASES_ON_TARGET": "The number of aligned, de-duped, on-target bases out of the PF bases available.",
     "PF_BASES_ALIGNED": "The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.",
@@ -346,9 +335,25 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
             for s, r in title_cleanup:
                 h_title = h_title.replace(s, r)
 
+            m = re.match(r".+_(\d+)X", h)
+            if m:
+                try:
+                    cov = int(m.group(1))
+                except ValueError:
+                    log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
+                    h = ""
+                    cov = ""
+            else:
+                cov = ""
+
+            descr = FIELD_DESCRIPTIONS.get(re.sub(r"_(\d+)X", "_{coverage}X", h), "").replace("{coverage}", str(cov))
+            if not descr:
+                log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
+                descr = ""
+
             headers[h] = {
                 "title": h_title.strip().lower().capitalize(),
-                "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
+                "description": descr,
             }
             if h.find("PCT") > -1:
                 headers[h]["title"] = headers[h]["title"]
