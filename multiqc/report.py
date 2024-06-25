@@ -608,10 +608,12 @@ def search_file(pattern, f: SearchFile, module_key):
                 if expected_contents and expected_contents in line_block:
                     contents_matched = True
                 elif repattern:
-                    for line in line_block.split("\n"):
-                        if repattern.match(line):
-                            contents_matched = True
-                            break
+                    if repattern.match(line_block):
+                        contents_matched = True
+                    else:
+                        for line in line_block.split("\n"):
+                            if repattern.match(line):
+                                contents_matched = True
                 if contents_matched:
                     break
                 else:
