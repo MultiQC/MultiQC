@@ -13,7 +13,7 @@ it's just to get the majority up and running quickly so you can get a taste for 
 
 In order to install MultiQC, we first need Python.
 Arguably, the easiest way to do this is with Conda
-(see [full docs](../installation/#python-with-conda)).
+(see [full docs](installation/#python-with-conda)).
 
 1. [Download miniconda](https://conda.io/miniconda.html) for your operating system.
 2. Run the bash script and follow the prompts.
@@ -34,7 +34,7 @@ Arguably, the easiest way to do this is with Conda
 ## Install MultiQC
 
 Now that we have Python, we can install MultiQC.
-As we're already using Conda, we may as well install MultiQC with Conda too (see [full docs](../installation/#conda)).
+As we're already using Conda, we may as well install MultiQC with Conda too (see [full docs](installation/#conda)).
 
 ```bash
 conda install multiqc

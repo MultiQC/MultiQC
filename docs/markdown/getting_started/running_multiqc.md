@@ -196,7 +196,7 @@ Note that not all plot types are yet supported, so you may find some plots are
 missing.
 
 :::note
-You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports/reports#exporting-plots) in the side bar.
+You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports#exporting-plots) in the side bar.
 :::
 
 ## PDF Reports
