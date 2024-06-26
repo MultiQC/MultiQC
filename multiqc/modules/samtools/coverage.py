@@ -226,20 +226,27 @@ def parse_single_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
         logging.warning(f"Expected header for samtools coverage: {expected_header}, got: {lines[0]}")
         return {}
 
-    for line in lines[1:]:
+    for idx in range(1, len(lines)):
+        line = lines[idx]
         fields = line.strip().split("\t")
         if len(fields) != len(EXPECTED_COLUMNS):
             logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
         rname, startpos, endpos, numreads, covbases, coverage, meandepth, meanbaseq, meanmapq = fields
-        parsed_data[rname] = dict(
-            startpos=int(startpos),
-            endpos=int(endpos),
-            numreads=int(numreads),
-            covbases=int(covbases),
-            coverage=float(coverage),
-            meandepth=float(meandepth),
-            meanbaseq=float(meanbaseq),
-            meanmapq=float(meanmapq),
-        )
+        if rname in parsed_data:
+            logging.warning(f"Duplicate region found in '{f['s_name']}': {rname}")
+            continue
+        try:
+            parsed_data[rname] = dict(
+                startpos=int(startpos),
+                endpos=int(endpos),
+                numreads=int(numreads),
+                covbases=int(covbases),
+                coverage=float(coverage),
+                meandepth=float(meandepth),
+                meanbaseq=float(meanbaseq),
+                meanmapq=float(meanmapq),
+            )
+        except ValueError:
+            logging.warning(f"Ignoring invalid line:{idx} for '{f['s_name']}', starting '{line[:6]}'")
 
     return parsed_data
