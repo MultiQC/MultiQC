@@ -48,11 +48,11 @@ def write_results(clean_up=True) -> None:
 
     overwritten = _create_or_override_dirs() if config.filename != "stdout" else set()
 
-    if config.make_data_dir and config.filename != "stdout":
+    if config.make_data_dir and config.filename != "stdout" and config.data_dir:
         _write_data_files()
         logger.info(
             "Data        : {}{}".format(
-                os.path.relpath(config.data_dir),
+                Path(config.data_dir).relative_to(Path.cwd()),
                 "   (overwritten)" if "data_dir" in overwritten else "",
             )
         )
@@ -62,11 +62,11 @@ def write_results(clean_up=True) -> None:
     if config.make_report:
         # Render report HTML, write to file or stdout
         _write_report()
-        if config.filename != "stdout":
+        if config.filename != "stdout" and config.output_fn:
             if config.make_report:
                 logger.info(
                     "Report      : {}{}".format(
-                        os.path.relpath(config.output_fn),
+                        Path(config.output_fn).relative_to(Path.cwd()),
                         "   (overwritten)" if "report" in overwritten else "",
                     )
                 )

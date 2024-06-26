@@ -7,8 +7,7 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union
-
+from typing import List, Dict, Optional, Union, Set
 
 # Default logger will be replaced by caller
 import logging
@@ -19,7 +18,7 @@ from datetime import datetime
 
 import importlib_metadata
 import yaml
-import pyaml_env
+import pyaml_env  # type: ignore
 
 from multiqc.utils.util_functions import strtobool, update_dict
 
@@ -35,13 +34,13 @@ MODULE_DIR = Path(__file__).parent.absolute()
 script_path = str(MODULE_DIR)  # dynamically used by report.multiqc_dump_json()
 REPO_DIR = MODULE_DIR.parent.absolute()
 
-git_root = None
 # noinspection PyBroadException
 try:
-    git_root = subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
-    ).strip()
-    git_root = Path(git_root)
+    git_root = Path(
+        subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+        ).strip()
+    )
     # .git
     # multiqc/
     #   utils/
@@ -101,7 +100,7 @@ make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
 megaqc_url: str
-megaqc_access_token: str
+megaqc_access_token: Optional[str]
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
@@ -165,8 +164,8 @@ use_filename_as_sample_name: bool
 fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
-top_modules: List[Dict[str, Dict]]
-module_order: List[Union[str, Dict]]
+top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
+module_order: List[Union[str, Dict[str, Dict[str, str]]]]
 preserve_module_raw_data: Optional[bool]
 
 # Module filename search patterns
@@ -178,7 +177,6 @@ creation_date: str
 working_dir: str
 analysis_dir: List[str]
 output_dir: str
-megaqc_access_token: str
 kwargs: Dict = {}
 
 # Other variables that set only through the CLI
@@ -214,7 +212,7 @@ def load_defaults():
 
     # Other defaults that can't be set in defaults YAML
     global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
-    modules_dir = Path(MODULE_DIR) / "modules"
+    modules_dir = str(Path(MODULE_DIR) / "modules")
     creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
     working_dir = os.getcwd()
     analysis_dir = [os.getcwd()]
@@ -285,7 +283,7 @@ def load_defaults():
 load_defaults()
 
 # Keeping track to avoid loading twice
-_loaded_found_config_files = set()
+_loaded_found_config_files: Set[Path] = set()
 
 
 def reset():
@@ -331,10 +329,13 @@ def load_user_files():
     load_config_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path]):
+def load_config_file(yaml_config_path: Union[str, Path, None]):
     """
     Load and parse a config file if we find it
     """
+    if not yaml_config_path:
+        return
+
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
@@ -382,7 +383,7 @@ def _env_vars_config() -> Dict:
     """
     RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
     PREFIX = "MULTIQC_"  # Prefix for environment variables
-    env_config = {}
+    env_config: Dict[str, Union[str, int, float, bool]] = {}
     for k, v in os.environ.items():
         if k.startswith(PREFIX) and k not in RESERVED_NAMES:
             conf_key = k[len(PREFIX) :].lower()
@@ -390,19 +391,19 @@ def _env_vars_config() -> Dict:
                 continue
             if isinstance(globals()[conf_key], bool):
                 try:
-                    v = strtobool(v)
+                    env_config[conf_key] = strtobool(v)
                 except ValueError:
                     logger.warning(f"Could not parse a boolean value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], int):
                 try:
-                    v = int(v)
+                    env_config[conf_key] = int(v)
                 except ValueError:
                     logger.warning(f"Could not parse a int value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], float):
                 try:
-                    v = float(v)
+                    env_config[conf_key] = float(v)
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
@@ -412,7 +413,6 @@ def _env_vars_config() -> Dict:
                     f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
-            env_config[conf_key] = v
             logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
     return env_config
 
@@ -556,7 +556,7 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 
 
 # Keep track of all changes to the config
-nondefault_config = dict()
+nondefault_config: Dict = {}
 
 
 def update(u):

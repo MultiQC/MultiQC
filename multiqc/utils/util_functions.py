@@ -24,8 +24,9 @@ from multiqc.core import init_log
 logger = logging.getLogger(__name__)
 
 
-def robust_rmtree(path, logger=None, max_retries=10):
-    """Robustly tries to delete paths.
+def rmtree_with_retries(path, _logger=None, max_retries=10):
+    """
+    Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
     occurs.  If the final attempt fails, the Exception is propagated
     to the caller.
@@ -36,9 +37,9 @@ def robust_rmtree(path, logger=None, max_retries=10):
             shutil.rmtree(path)
             return
         except OSError:
-            if logger:
-                logger.info(f"Unable to remove path: {path}")
-                logger.info(f"Retrying after {i**2} seconds")
+            if _logger:
+                _logger.info(f"Unable to remove path: {path}")
+                _logger.info(f"Retrying after {i**2} seconds")
             else:
                 print(f"Unable to remove path: {path}", file=sys.stderr)
                 print(f"Retrying after {i**2} seconds", file=sys.stderr)

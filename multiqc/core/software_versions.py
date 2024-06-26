@@ -62,7 +62,7 @@ def load_versions_from_config(config):
     else:
         versions_config = validate_software_versions(versions_config)
 
-    versions_from_files = defaultdict(lambda: defaultdict(list))
+    versions_from_files: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
     for f in mqc_report.files.get("software_versions", []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as fh:
@@ -147,7 +147,7 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
                 fixed_lst.append(item)
         return fixed_lst
 
-    output = defaultdict(lambda: defaultdict(list))
+    output: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
 
     for level1_key, level1_values in versions_config.items():
         group = level1_key

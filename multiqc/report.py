@@ -43,6 +43,8 @@ tmp_dir: Optional[str] = None
 
 # Uninitialised global variables for static typing
 multiqc_command: str
+top_modules: List[Dict[str, Dict[str, str]]]
+module_order: List[Dict[str, Dict[str, str]]]
 analysis_files: List[str]  # Input files to search
 modules: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
 general_stats_html: str
@@ -73,6 +75,8 @@ def __initialise():
     global initialized
     global tmp_dir
     global multiqc_command
+    global top_modules
+    global module_order
     global analysis_files
     global modules
     global general_stats_html
@@ -97,6 +101,8 @@ def __initialise():
         tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
+    top_modules = []
+    module_order = []
     analysis_files = []
     modules = []
     general_stats_html = ""

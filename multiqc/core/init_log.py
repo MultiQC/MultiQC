@@ -7,8 +7,9 @@ import os
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 
-import coloredlogs
+import coloredlogs  # type: ignore
 import rich
 from rich.logging import RichHandler
 from rich.theme import Theme
@@ -204,16 +205,21 @@ def _print_intro_with_rich():
 
 
 def move_tmp_log():
-    """Move the temporary log file to the MultiQC data directory
-    if it exists."""
+    """
+    Move the temporary log file to the MultiQC data directory if it exists.
+    """
+
+    # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
+    logging.shutdown()
+
+    if config.data_dir is None or not Path(config.data_dir).is_dir() or not os.path.exists(log_tmp_fn):
+        return
 
     try:
-        # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
-        logging.shutdown()
         shutil.copy(log_tmp_fn, os.path.join(config.data_dir, "multiqc.log"))
         os.remove(log_tmp_fn)
-        util_functions.robust_rmtree(log_tmp_dir)
-    except (AttributeError, TypeError, IOError):
+        util_functions.rmtree_with_retries(log_tmp_dir)
+    except IOError:
         pass
 
 

@@ -51,17 +51,17 @@ class ClConfig(BaseModel):
     profile_runtime: Optional[bool] = None
     profile_memory: Optional[bool] = None
     no_version_check: Optional[bool] = None
-    ignore: List[str] = ()
-    ignore_samples: List[str] = ()
-    run_modules: List[str] = ()
-    exclude_modules: List[str] = ()
-    config_files: List[Union[str, Path]] = ()
-    cl_config: List[str] = ()
-    custom_css_files: List[str] = ()
-    module_order: List[Union[str, Dict]] = ()
+    ignore: List[str] = []
+    ignore_samples: List[str] = []
+    run_modules: List[str] = []
+    exclude_modules: List[str] = []
+    config_files: List[Union[str, Path]] = []
+    cl_config: List[str] = []
+    custom_css_files: List[str] = []
+    module_order: List[Union[str, Dict]] = []
     preserve_module_raw_data: Optional[bool] = None
-    extra_fn_clean_exts: List = ()
-    extra_fn_clean_trim: List = ()
+    extra_fn_clean_exts: List = []
+    extra_fn_clean_trim: List = []
     kwargs: Optional[Dict] = None
 
 
@@ -193,7 +193,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:
-        config.analysis_dir = [Path(p) for p in analysis_dir]
+        config.analysis_dir = [p for p in analysis_dir]
     if cfg.file_list is not None:
         if len(config.analysis_dir) > 1:
             raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")
@@ -209,10 +209,10 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.sample_names_ignore.extend(cfg.ignore_samples)
 
     # Prep module configs
-    config.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
-    config.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
+    report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
+    report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
     # Lint the module config
-    mod_keys = [list(m.keys())[0] for m in config.module_order]
+    mod_keys = [list(m.keys())[0] for m in report.module_order]
     if config.strict:
         for m in config.avail_modules.keys():
             if m not in mod_keys:

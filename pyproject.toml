@@ -8,7 +8,7 @@ version = "1.23dev"
 dependencies = [
     "click",
     "humanize",
-    "importlib-metadata",
+    "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
     "markdown",
@@ -26,6 +26,10 @@ dependencies = [
     "spectra>=0.0.10",
     "pydantic>=2.7.1",
     "typeguard",
+    "mypy",
+    "types-PyYAML",
+    "types-tqdm",
+    "types-requests",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -249,3 +253,7 @@ line-length = 120
 target-version = "py312"
 ignore-init-module-imports = true
 ignore = ["F401"]  # unused-import
+
+[tool.mypy]
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
