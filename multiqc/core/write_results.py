@@ -52,7 +52,7 @@ def write_results(clean_up=True) -> None:
         _write_data_files()
         logger.info(
             "Data        : {}{}".format(
-                Path(config.data_dir).relative_to(Path.cwd()),
+                os.path.relpath(config.data_dir),
                 "   (overwritten)" if "data_dir" in overwritten else "",
             )
         )
@@ -66,7 +66,7 @@ def write_results(clean_up=True) -> None:
             if config.make_report:
                 logger.info(
                     "Report      : {}{}".format(
-                        Path(config.output_fn).relative_to(Path.cwd()),
+                        os.path.relpath(config.output_fn),
                         "   (overwritten)" if "report" in overwritten else "",
                     )
                 )
