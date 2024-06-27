@@ -32,7 +32,7 @@ EXPECTED_SAMPLES_BY_TOOL = {
 def test_dragen_data_parsed(data_dir):
     report.reset()
     report.analysis_files = [data_dir / "modules/dragen"]
-    report.search_files(run_module_names=["dragen"])
+    report.search_files(["dragen"])
 
     m = MultiqcModule()
     for tool, samples in m.samples_parsed_by_tool.items():

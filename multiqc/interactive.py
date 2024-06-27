@@ -12,6 +12,7 @@ from typing import Dict, Union, List, Optional
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.init_log import init_log
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
@@ -470,5 +471,4 @@ def load_config(config_file: Union[str, Path]):
     if not path.exists():
         raise ValueError(f"Config file '{config_file}' not found")
 
-    config.session_user_config_files.append(path.absolute())
     config.load_config_file(config_file)

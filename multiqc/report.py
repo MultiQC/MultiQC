@@ -27,6 +27,7 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
@@ -92,7 +93,8 @@ def __initialise():
 
     # Create new temporary directory for module data exports
     initialized = True
-    tmp_dir = tempfile.mkdtemp()
+    if tmp_dir is None:
+        tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
     analysis_files = []
@@ -292,6 +294,13 @@ class SearchFile:
 
         if not self._blocks and config.report_readerrors:
             logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
+
+    def line_iterator(self) -> Iterator[Tuple[int, str]]:
+        total_line_count = 0
+        for _line_count, line_block in self.line_block_iterator():
+            for line in line_block.split("\n"):
+                total_line_count += 1
+                yield total_line_count, line
 
     def close(self):
         if self._filehandle:
@@ -544,7 +553,7 @@ def search_files(sp_keys):
     list of files to search. Then fire search functions for each file.
     """
     if not analysis_files:
-        return
+        raise RunError("Error: no analysis files found to search")
 
     spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
 
@@ -603,21 +612,15 @@ def search_file(pattern, f: SearchFile, module_key):
         num_lines = pattern.get("num_lines", config.filesearch_lines_limit)
         expected_contents = pattern.get("contents")
         try:
-            total_newlines = 0
-            for line_count, line_block in f.line_block_iterator():
-                if expected_contents and expected_contents in line_block:
+            for line_count, line in f.line_iterator():
+                if expected_contents and expected_contents in line:
                     contents_matched = True
-                elif repattern:
-                    for line in line_block.split("\n"):
-                        if repattern.match(line):
-                            contents_matched = True
-                            break
-                if contents_matched:
                     break
-                else:
-                    total_newlines += line_count
-                    if total_newlines >= num_lines:
-                        break
+                if repattern and repattern.match(line):
+                    contents_matched = True
+                    break
+                if line_count >= num_lines:
+                    break
         except Exception:
             file_search_stats["skipped_file_contents_search_errors"] += 1
             return False

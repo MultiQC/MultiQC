@@ -34,7 +34,7 @@ def check_version(interactive_function_name: Optional[str] = None):
         }
         wait_seconds = 2
         try:
-            r = requests.get(config.version_check_url, params=meta, timeout=wait_seconds)
+            r = requests.get(config.version_check_url, params=meta, timeout=(wait_seconds / 2, wait_seconds / 2))
         except requests.exceptions.Timeout as e:
             logger.debug(f"Timed out after waiting for {wait_seconds}s for multiqc.info to check latest version: {e}")
         except requests.exceptions.RequestException as e:
