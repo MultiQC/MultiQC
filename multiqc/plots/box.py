@@ -1,12 +1,10 @@
 """MultiQC functions to plot a box plot"""
 
-import random
 from typing import List, Dict, Union, OrderedDict
 
 import logging
 
 from multiqc import config
-from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly.box import BoxT, BoxPlotConfig
 from multiqc.plots.plotly import box
 

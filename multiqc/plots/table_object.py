@@ -67,7 +67,7 @@ class TableColumn(ValidatedConfig):
 ValueT = Union[int, float, str, bool]
 
 
-DatasetT = Mapping[str, Mapping[str, Optional[ValueT]]]
+DatasetT = Dict[str, Dict[str, Optional[ValueT]]]
 
 
 class DataTable(BaseModel):

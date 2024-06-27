@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 ValueT = Union[float, int, str, None]
 
+DatasetT = Dict[str, Dict[ValueT, ValueT]]
+
 
 class Series(ValidatedConfig):
     name: str

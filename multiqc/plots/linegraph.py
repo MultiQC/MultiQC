@@ -1,10 +1,10 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union, Tuple, Optional
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT
+from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT
 from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
@@ -23,7 +23,7 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[Dict[str, Dict[ValueT, ValueT]]], Dict[str, Dict[ValueT, ValueT]]],
+    data: Union[List[DatasetT], DatasetT],
     pconfig: Union[Dict, LinePlotConfig, None] = None,
 ) -> Union[line.LinePlot, str]:
     """
@@ -32,37 +32,39 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = LinePlotConfig(**pconfig)
+    pconf = LinePlotConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
-    if not isinstance(data, list):
-        data = [data]
+    ds_list: List[DatasetT]
+    if isinstance(data, list):
+        ds_list = data
+    else:
+        ds_list = [data]
+    del data
 
-    if pconfig.data_labels:
-        if len(pconfig.data_labels) != len(data):
+    if pconf.data_labels:
+        if len(pconf.data_labels) != len(ds_list):
             raise ValueError(
                 f"Length of data_labels does not match the number of datasets. "
                 f"Please check your module code and ensure that the data_labels "
-                f"list is the same length as the data list: {len(pconfig.data_labels)} != {len(data)}. "
-                f"pconfig={pconfig}"
+                f"list is the same length as the data list: "
+                f"{len(pconf.data_labels)} != {len(ds_list)}. pconfig={pconf}"
             )
-        pconfig.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconfig.data_labels]
+        pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
     else:
-        pconfig.data_labels = []
+        pconf.data_labels = []
 
     # Smooth dataset if requested in config
-    if pconfig.smooth_points is not None:
-        for i, data_by_sample in enumerate(data):
-            data[i] = smooth_line_data(data_by_sample, pconfig.smooth_points)
+    if pconf.smooth_points is not None:
+        for i, data_by_sample in enumerate(ds_list):
+            ds_list[i] = smooth_line_data(data_by_sample, pconf.smooth_points)
 
     datasets: List[List[Series]] = []
-    for ds_idx, data_by_sample in enumerate(data):
+    for ds_idx, data_by_sample in enumerate(ds_list):
         list_of_series_dicts: List[Series] = []
         for s in sorted(data_by_sample.keys()):
-            series: Series = _make_series_dict(pconfig, ds_idx, s, data_by_sample[s])
-            if pconfig.hide_empty and not series.pairs:
+            series: Series = _make_series_dict(pconf, ds_idx, s, data_by_sample[s])
+            if pconf.hide_empty and not series.pairs:
                 continue
             list_of_series_dicts.append(series)
         datasets.append(list_of_series_dicts)
@@ -70,17 +72,29 @@ def plot(
     # Add on annotation data series
     # noinspection PyBroadException
     try:
-        if pconfig.extra_series:
-            extra_series = pconfig.extra_series
-            if not isinstance(extra_series, list):
-                extra_series = [extra_series]
-            if not isinstance(extra_series[0], list):
-                extra_series = [extra_series]
-            for i, es in enumerate(extra_series):
+        if pconf.extra_series:
+            es: Union[
+                Series,
+                List[Series],
+                List[List[Series]],
+                Dict,
+                List[Dict],
+                List[List[Dict]],
+            ] = pconfig.extra_series
+
+            extra_series_list_of_lists: Union[List[List[Series]], List[List[Dict]]]
+            if isinstance(es, list):
+                if isinstance(es[0], list):
+                    extra_series_list_of_lists = es
+                else:
+                    extra_series_list_of_lists = [es]
+            else:
+                extra_series_list_of_lists = [[es]]
+
+            for i, es in enumerate(extra_series_list_of_lists):
                 for s in es:
-                    if isinstance(s, dict):
-                        s = Series(**s)
-                    datasets[i].append(s)
+                    series: Series = Series(**s) if isinstance(s, dict) else s
+                    datasets[i].append(series)
     except Exception:
         pass
 
@@ -95,14 +109,14 @@ def plot(
     if "linegraph" in mod.__dict__ and callable(mod.linegraph):
         # noinspection PyBroadException
         try:
-            return mod.linegraph(datasets, pconfig)
+            return mod.linegraph(datasets, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return line.plot(datasets, pconfig)
+    return line.plot(datasets, pconf)
 
 
 def _make_series_dict(
@@ -170,7 +184,7 @@ def _make_series_dict(
     return Series(name=s, pairs=pairs, color=colors.get(s))
 
 
-def smooth_line_data(data_by_sample: Dict[str, ValueT], numpoints: int) -> Dict[str, ValueT]:
+def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.

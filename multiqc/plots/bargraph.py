@@ -39,9 +39,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = BarPlotConfig(**pconfig)
+    pconf = BarPlotConfig.from_pconfig_dict(pconfig)
 
     # Validate config if linting
     # Given one dataset - turn it into a list
@@ -79,8 +77,8 @@ def plot(
                     cats[idx][c]["name"] = c
 
     # Allow user to overwrite a given category config for this plot
-    if pconfig.id and pconfig.id in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig.id].items():
+    if pconf.id and pconf.id in config.custom_plot_config:
+        for k, v in config.custom_plot_config[pconf.id].items():
             for idx in range(len(cats)):
                 if k in cats[idx].keys():
                     for kk, vv in v.items():
@@ -95,7 +93,7 @@ def plot(
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif pconfig.sort_samples:
+        elif pconf.sort_samples:
             hc_samples = sorted(list(d.keys()))
         hc_data = list()
         sample_dcount = dict()
@@ -130,7 +128,7 @@ def plot(
                 catcount += 1
                 sample_dcount[s] += 1
             if catcount > 0:
-                if pconfig.hide_zero_cats is False or max(x for x in thisdata if not math.isnan(x)) > 0:
+                if pconf.hide_zero_cats is False or max(x for x in thisdata if not math.isnan(x)) > 0:
                     thisdict = {"name": cats[idx][c]["name"], "data": thisdata}
                     if "color" in cats[idx][c]:
                         thisdict["color"] = cats[idx][c]["color"]
@@ -168,4 +166,4 @@ def plot(
                 # debugging of modules
                 raise
 
-    return bar.plot(plotdata, plotsamples, pconfig)
+    return bar.plot(plotdata, plotsamples, pconf)

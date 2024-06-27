@@ -7,7 +7,7 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union, Set
+from typing import List, Dict, Optional, Union, Set, TextIO
 
 # Default logger will be replaced by caller
 import logging
@@ -187,7 +187,7 @@ data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
 report_section_order: Dict
-output_fn: Optional[str]
+output_fn: Optional[Union[str, TextIO]]
 filename: Optional[str]
 megaqc_upload: bool
 

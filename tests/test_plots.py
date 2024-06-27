@@ -1,4 +1,4 @@
-from multiqc import report
+from multiqc import report, Plot
 from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, box
 
 
@@ -19,6 +19,7 @@ def test_barplot():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -44,23 +45,55 @@ def test_plot_no_matching_data():
 
 def test_linegraph():
     plot_id = "test_linegraph"
+    dataset = {
+        "Sample0": {},
+        "Sample1": {0: 1, 1: 1},
+        "Sample2": {0: 1, 1: 1, 2: 1},
+    }
 
     plot = linegraph.plot(
-        {
-            "Sample0": {},
-            "Sample1": {0: 1, 1: 1},
-            "Sample2": {0: 1, 1: 1, 2: 1},
-        },
+        dataset,
         {
             "id": plot_id,
             "title": "Test: Line Graph",
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
     assert plot_id in report.plot_data
+
+    for in_series, out_series in zip(dataset.values(), report.plot_data[plot_id]["datasets"][0]["lines"]):
+        assert len(in_series) == len(out_series["data"])
+
+
+def test_linegraph_smooth():
+    plot_id = "test_linegraph_smooth"
+    SMOOTH_TO = 2
+    dataset = {
+        "Smoothed": {0: 1, 1: 1, 2: 1},
+        "Unsmoothed": {0: 1, 1: 1},
+    }
+
+    plot = linegraph.plot(
+        dataset,
+        {
+            "id": plot_id,
+            "title": "Test: Line Graph",
+            "smooth_points": SMOOTH_TO,
+        },
+    )
+
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data) == 1
+    assert plot_id in report.plot_data
+
+    for in_series, out_series in zip(dataset.values(), report.plot_data[plot_id]["datasets"][0]["lines"]):
+        assert min(len(in_series), SMOOTH_TO) == len(out_series["data"])
 
 
 def test_multiple_datasets():
@@ -82,6 +115,7 @@ def test_multiple_datasets():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -106,6 +140,7 @@ def test_table():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -130,6 +165,7 @@ def test_violin():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -149,6 +185,7 @@ def test_heatmap():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -170,6 +207,7 @@ def test_scatter():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -190,6 +228,7 @@ def text_box():
         },
     )
 
+    assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
@@ -209,6 +248,7 @@ def test_flat_plot():
         },
     )
 
+    assert isinstance(plot, Plot)
     plot.flat = True
     report.reset()
     html = plot.add_to_report()

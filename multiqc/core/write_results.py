@@ -10,7 +10,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Set, List
+from typing import Set
 
 from multiqc.base_module import Section
 from multiqc.core.file_search import include_or_exclude_modules
@@ -63,21 +63,22 @@ def write_results(clean_up=True) -> None:
         # Render report HTML, write to file or stdout
         _write_report()
         if config.filename != "stdout" and config.output_fn:
-            if config.make_report:
+            assert isinstance(config.output_fn, str)
+            if config.make_report and config.output_fn:
                 logger.info(
                     "Report      : {}{}".format(
                         os.path.relpath(config.output_fn),
                         "   (overwritten)" if "report" in overwritten else "",
                     )
                 )
-                logger.debug(f"Full report path: {os.path.realpath(config.output_fn)}")
+                logger.debug(f"Full report path: {os.path.realpath(Path(config.output_fn))}")
             else:
                 logger.info("Report      : None")
         # Try to create a PDF if requested
         if config.make_pdf:
             _write_pdf()
 
-    if config.export_plots:
+    if config.export_plots and config.plots_dir:
         # Copy across the static plot images if requested
         _move_exported_plots()
         logger.info(
@@ -88,7 +89,7 @@ def write_results(clean_up=True) -> None:
         )
 
     # Clean up temporary directory
-    if clean_up:
+    if clean_up and report.tmp_dir and os.path.isdir(report.tmp_dir):
         shutil.rmtree(report.tmp_dir)
 
     # Zip the data directory if requested
@@ -176,45 +177,49 @@ def _create_or_override_dirs() -> Set[str]:
 
     # Check for existing reports and remove if -f was specified
     if (
-        (config.make_report and os.path.exists(config.output_fn))
-        or (config.make_data_dir and os.path.exists(config.data_dir))
-        or (config.export_plots and os.path.exists(config.plots_dir))
+        (config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn))
+        or (config.make_data_dir and config.data_dir and os.path.exists(config.data_dir))
+        or (config.export_plots and config.plots_dir and os.path.exists(config.plots_dir))
     ):
         if config.force:
-            if config.make_report and os.path.exists(config.output_fn):
+            if config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn):
                 overwritten.add("report")
                 os.remove(config.output_fn)
-            if config.make_data_dir and os.path.exists(config.data_dir):
+            if config.make_data_dir and config.data_dir and os.path.exists(config.data_dir):
                 overwritten.add("data_dir")
                 shutil.rmtree(config.data_dir)
-            if config.export_plots and os.path.exists(config.plots_dir):
+            if config.export_plots and config.plots_dir and os.path.exists(config.plots_dir):
                 overwritten.add("export_plots")
                 shutil.rmtree(config.plots_dir)
         else:
             # Set up the base names of the report and the data dir
             report_num = 1
-            dir_base = os.path.basename(config.data_dir)
-            plots_base = os.path.basename(config.plots_dir)
 
             # Iterate through appended numbers until we find one that's free
             while (
-                (config.make_report and os.path.exists(config.output_fn))
-                or (config.make_data_dir and os.path.exists(config.data_dir))
-                or (config.export_plots and os.path.exists(config.plots_dir))
+                (config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn))
+                or (config.make_data_dir and config.data_dir and os.path.exists(config.data_dir))
+                or (config.export_plots and config.plots_dir and os.path.exists(config.plots_dir))
             ):
                 if config.make_report:
                     report_base, report_ext = os.path.splitext(config.output_fn_name)
                     config.output_fn = os.path.join(config.output_dir, f"{report_base}_{report_num}{report_ext}")
-                config.data_dir = os.path.join(config.output_dir, f"{dir_base}_{report_num}")
-                config.plots_dir = os.path.join(config.output_dir, f"{plots_base}_{report_num}")
+                if config.data_dir:
+                    dir_base = os.path.basename(config.data_dir)
+                    config.data_dir = os.path.join(config.output_dir, f"{dir_base}_{report_num}")
+                if config.plots_dir:
+                    plots_base = os.path.basename(config.plots_dir)
+                    config.plots_dir = os.path.join(config.output_dir, f"{plots_base}_{report_num}")
                 report_num += 1
-            if config.make_report:
+            if config.make_report and isinstance(config.output_fn, str):
                 config.output_fn_name = os.path.basename(config.output_fn)
-            config.data_dir_name = os.path.basename(config.data_dir)
-            config.plots_dir_name = os.path.basename(config.plots_dir)
+            if config.data_dir:
+                config.data_dir_name = os.path.basename(config.data_dir)
+            if config.plots_dir:
+                config.plots_dir_name = os.path.basename(config.plots_dir)
             logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
-    if config.make_report:
+    if config.make_report and isinstance(config.output_fn, str):
         os.makedirs(os.path.dirname(config.output_fn), exist_ok=True)
 
     return overwritten
@@ -265,7 +270,7 @@ def _order_modules_and_sections():
                 section_id_order[anchor] = section_id_order[ss["after"]] + 1
             if ss.get("before") in section_id_order.keys():
                 section_id_order[anchor] = section_id_order[ss["before"]] - 1
-        sorted_ids = sorted(section_id_order, key=section_id_order.get)
+        sorted_ids = sorted(section_id_order, key=lambda kv: kv[1])
         report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
     # Sort the report sections if we have a config
@@ -297,7 +302,7 @@ def _order_modules_and_sections():
             # Remove module sections
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
-            sorted_ids = sorted(section_id_order, key=section_id_order.get)
+            sorted_ids = sorted(section_id_order, key=lambda kv: kv[1])
             report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
 
 
