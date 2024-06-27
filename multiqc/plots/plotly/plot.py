@@ -6,7 +6,7 @@ import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any
+from typing import Dict, Union, List, Optional, Tuple, Any, TypeVar, Generic
 
 import math
 import plotly.graph_objects as go  # type: ignore
@@ -58,7 +58,7 @@ class PConfig(ValidatedConfig):
     tt_label: Optional[str] = None
     xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
     yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
-    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
+    decimalPlaces: Optional[int] = Field(None, deprecated="tt_decimals")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
     tt_decimals: Optional[int] = None
@@ -146,7 +146,10 @@ class BaseDataset(BaseModel):
         raise NotImplementedError
 
 
-class Plot(BaseModel):
+T = TypeVar("T", bound="BaseDataset")
+
+
+class Plot(BaseModel, Generic[T]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
@@ -154,7 +157,7 @@ class Plot(BaseModel):
     id: str
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[BaseDataset]
+    datasets: List[T]
     pconfig: PConfig
     add_log_tab: bool
     add_pct_tab: bool

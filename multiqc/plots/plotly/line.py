@@ -1,12 +1,12 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Tuple, Optional, Literal
+from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping
 
 import math
-import plotly.graph_objects as go
-from plotly.graph_objs.layout.shape import Label
-from pydantic import Field, BaseModel, field_validator, model_validator
+import plotly.graph_objects as go  # type: ignore
+from plotly.graph_objs.layout.shape import Label  # type: ignore
+from pydantic import Field, BaseModel
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
@@ -21,32 +21,26 @@ ValueT = Union[float, int, str, None]
 DatasetT = Dict[str, Dict[ValueT, ValueT]]
 
 
+class Marker(BaseModel):
+    symbol: Optional[str] = None
+    width: int = 1
+
+
 class Series(ValidatedConfig):
     name: str
     data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[ValueT, ValueT]]
     color: Optional[str] = None
-    width: Optional[int] = None
+    width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
     showlegend: bool = True
-
-    class Marker(BaseModel):
-        symbol: Optional[str] = None
-        color: Optional[str] = None
-        width: int = 1
-
     marker: Optional[Marker] = None
 
-    @classmethod
-    def parse_marker(cls, d):
-        if isinstance(d, dict):
-            return Series.Marker(**d)
-        return d
-
-    @classmethod
-    def parse_dash(cls, value):
-        return convert_dash_style(value)
+    def __init__(self, **data):
+        if "dash" in data:
+            data["dash"] = convert_dash_style(data["dash"])
+        super().__init__(**data)
 
 
 class FlatLine(ValidatedConfig):
@@ -72,9 +66,10 @@ class FlatLine(ValidatedConfig):
             return value["text"]
         return value
 
-    @classmethod
-    def parse_dash(cls, value):
-        return convert_dash_style(value)
+    def __init__(self, **data):
+        if "dash" in data:
+            data["dash"] = convert_dash_style(data["dash"])
+        super().__init__(**data)
 
 
 class LineBand(ValidatedConfig):
@@ -166,40 +161,37 @@ class Dataset(BaseDataset):
         lines: List[Series],
         pconfig: LinePlotConfig,
     ) -> "Dataset":
-        dataset: Dataset = Dataset(
-            **dataset.model_dump(),
-            lines=lines,
-        )
+        dataset = Dataset(**dataset.model_dump(), lines=lines)
 
         # Prevent Plotly from parsing strings as numbers
         if pconfig.categories or dataset.dconfig.get("categories"):
             dataset.layout["xaxis"]["type"] = "category"
 
-        # convert HighCharts-style hardcoded trace parameters to Plotly style
-        lines = []
-        for series in dataset.lines:
-            new_line = {
-                "name": series.name,
-                "data": series.pairs,
-                "color": series.color,
-                "showlegend": series.showlegend,
-                "line": {
-                    "dash": convert_dash_style(series.dash),
-                    "width": series.width,
-                },
-            }
-            if series.marker:
-                new_line["mode"] = "lines+markers"
-                new_line["marker"] = {
-                    "symbol": series.marker.symbol,
-                    "line": {
-                        "width": series.marker.width,
-                        "color": series.marker.color,
-                    },
-                }
-            lines.append(remove_nones_and_empty_dicts(new_line))
-
-        dataset.lines = lines
+        # # convert HighCharts-style hardcoded trace parameters to Plotly style
+        # list_of_dicts: List[Dict[str, Any]] = []
+        # for series in dataset.lines:
+        #     new_dict: Dict[str, Any] = {
+        #         "name": series.name,
+        #         "data": series.pairs,
+        #         "color": series.color,
+        #         "showlegend": series.showlegend,
+        #         "line": {
+        #             "dash": convert_dash_style(series.dash),
+        #             "width": series.width,
+        #         },
+        #     }
+        #     if series.marker:
+        #         new_dict["mode"] = "lines+markers"
+        #         new_dict["marker"] = {
+        #             "symbol": series.marker.symbol,
+        #             "line": {
+        #                 "width": series.marker.width,
+        #                 "color": series.marker.color,
+        #             },
+        #         }
+        #     list_of_dicts.append(remove_nones_and_empty_dicts(new_dict))
+        #
+        # dataset.lines = list_of_dicts
 
         mode = pconfig.style
         if config.lineplot_style == "lines+markers":
@@ -231,59 +223,71 @@ class Dataset(BaseDataset):
             layout.height += len(self.lines) * 5
 
         fig = go.Figure(layout=layout)
-        for line in self.lines:
-            xs = [x[0] for x in line["data"]]
-            ys = [x[1] for x in line["data"]]
-            params = dict(
-                marker=line.get("marker", {}),
-                line=line.get("line", {}),
-                showlegend=line.get("showlegend", None),
-                mode=line.get("mode", None),
-            )
+        for series in self.lines:
+            xs = [x[0] for x in series.pairs]
+            ys = [x[1] for x in series.pairs]
+            if series.dash:
+                print(series)
+            params: Dict[str, Any] = {
+                "showlegend": series.showlegend,
+                "line": {
+                    "color": series.color,
+                    "dash": series.dash,
+                    "width": series.width,
+                },
+            }
+            if series.marker:
+                params["mode"] = "lines+markers"
+                params["marker"] = {
+                    "symbol": series.marker.symbol,
+                    "line": {
+                        "width": series.marker.width,
+                        "color": series.color,
+                    },
+                }
             params = update_dict(params, self.trace_params, none_only=True)
-            params["marker"]["color"] = line.get("color")
 
             fig.add_trace(
                 go.Scatter(
                     x=xs,
                     y=ys,
-                    name=line["name"],
-                    text=[line["name"]] * len(xs),
+                    name=series.name,
+                    text=[series.name] * len(xs),
                     **params,
                 )
             )
         return fig
 
     def save_data_file(self) -> None:
-        y_by_x_by_sample = dict()
+        y_by_x_by_sample: Dict[str, Dict] = dict()
         last_cats = None
         shared_cats = True
-        for line in self.lines:
-            y_by_x_by_sample[line["name"]] = dict()
+        for series in self.lines:
+            y_by_x_by_sample[series.name] = dict()
 
             # Check to see if all categories are the same
-            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+            if len(series.pairs) > 0 and isinstance(series.pairs[0], list):
                 if last_cats is None:
-                    last_cats = [x[0] for x in line["data"]]
-                elif last_cats != [x[0] for x in line["data"]]:
+                    last_cats = [x[0] for x in series.pairs]
+                elif last_cats != [x[0] for x in series.pairs]:
                     shared_cats = False
 
-            for i, x in enumerate(line["data"]):
+            for i, x in enumerate(series.pairs):
                 if isinstance(x, list):
-                    y_by_x_by_sample[line["name"]][x[0]] = x[1]
+                    y_by_x_by_sample[series.name][x[0]] = x[1]
                 else:
                     try:
-                        y_by_x_by_sample[line["name"]][self.dconfig["categories"][i]] = x
+                        y_by_x_by_sample[series.name][self.dconfig["categories"][i]] = x
                     except (ValueError, KeyError, IndexError):
-                        y_by_x_by_sample[line["name"]][str(i)] = x
+                        y_by_x_by_sample[series.name][str(i)] = x
 
         # Custom tsv output if the x-axis varies
         if not shared_cats and config.data_format in ["tsv", "csv"]:
             sep = "\t" if config.data_format == "tsv" else ","
             fout = ""
-            for line in self.lines:
-                fout += line["name"] + sep + "X" + sep + sep.join([str(x[0]) for x in line["data"]]) + "\n"
-                fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
+            for series in self.lines:
+                fout += series.name + sep + "X" + sep + sep.join([str(x[0]) for x in series.pairs]) + "\n"
+                fout += series.name + sep + "Y" + sep + sep.join([str(x[1]) for x in series.pairs]) + "\n"
 
             fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
             fpath = os.path.join(report.data_tmp_dir(), fn)
@@ -293,7 +297,7 @@ class Dataset(BaseDataset):
             report.write_data_file(y_by_x_by_sample, self.uid)
 
 
-class LinePlot(Plot):
+class LinePlot(Plot[Dataset]):
     datasets: List[Dataset]
 
     @staticmethod
@@ -449,8 +453,10 @@ class LinePlot(Plot):
         return LinePlot(**model.__dict__)
 
 
-def convert_dash_style(dash_style: str) -> str:
+def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
+    if dash_style is None:
+        return None
     mapping = {
         "Solid": "solid",
         "ShortDash": "dash",
@@ -471,8 +477,6 @@ def convert_dash_style(dash_style: str) -> str:
     return "solid"
 
 
-def remove_nones_and_empty_dicts(d: Dict) -> Dict:
+def remove_nones_and_empty_dicts(d: Mapping) -> Dict:
     """Remove None and empty dicts from a dict recursively."""
-    if not isinstance(d, Dict):
-        return d
     return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}

@@ -18,7 +18,7 @@ import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence
 
 import yaml
 
@@ -261,6 +261,7 @@ class SearchFile:
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+                raise
             self._iterator = file_line_block_iterator(self._filehandle)
         try:
             for count_and_block_tuple in self._iterator:
@@ -282,7 +283,7 @@ class SearchFile:
             # When no lines are parsed, self.content_lines should be empty
             if not self._blocks and config.report_readerrors:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
-            return  # No errors.
+            return  # No errors
         self._filehandle.close()
         self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
         self._iterator = file_line_block_iterator(self._filehandle)
@@ -801,6 +802,7 @@ def data_tmp_dir() -> str:
     Temporary directory to collect data files from running modules before copying to the final
     destination in multiqc.core.write_results
     """
+    assert tmp_dir is not None
     path = os.path.join(tmp_dir, "multiqc_data")
     os.makedirs(path, exist_ok=True)
     return path
@@ -811,13 +813,14 @@ def plots_tmp_dir() -> str:
     Temporary directory to collect plot exports from running modules before copying to the final
     destination in multiqc.core.write_results
     """
+    assert tmp_dir is not None
     path = os.path.join(tmp_dir, "multiqc_plots")
     os.makedirs(path, exist_ok=True)
     return path
 
 
 def write_data_file(
-    data: Union[Dict[str, Union[Dict, List]], List[Dict]],
+    data: Union[Mapping[str, Union[Mapping, Sequence]], Sequence[Mapping], Sequence[Sequence]],
     fn: str,
     sort_cols=False,
     data_format=None,
