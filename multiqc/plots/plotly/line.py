@@ -87,13 +87,16 @@ class LineBand(ValidatedConfig):
     color: Optional[str] = None
 
 
+SeriesConf = Union[Series, Dict]
+
+
 class LinePlotConfig(PConfig):
     xlab: Optional[str] = None
     ylab: Optional[str] = None
     categories: bool = False
     smooth_points: Optional[int] = None
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
-    extra_series: Optional[Union[Series, List[Series], List[List[Series]], Dict, List[Dict], List[List[Dict]]]] = None
+    extra_series: Optional[Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None

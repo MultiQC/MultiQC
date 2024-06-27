@@ -1,10 +1,10 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Optional
+from typing import List, Dict, Union, Tuple, Optional, cast
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT
+from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf
 from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
 
@@ -35,20 +35,20 @@ def plot(
     pconf = LinePlotConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
-    ds_list: List[DatasetT]
+    raw_dataset_list: List[DatasetT]
     if isinstance(data, list):
-        ds_list = data
+        raw_dataset_list = data
     else:
-        ds_list = [data]
+        raw_dataset_list = [data]
     del data
 
     if pconf.data_labels:
-        if len(pconf.data_labels) != len(ds_list):
+        if len(pconf.data_labels) != len(raw_dataset_list):
             raise ValueError(
                 f"Length of data_labels does not match the number of datasets. "
                 f"Please check your module code and ensure that the data_labels "
                 f"list is the same length as the data list: "
-                f"{len(pconf.data_labels)} != {len(ds_list)}. pconfig={pconf}"
+                f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
             )
         pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
     else:
@@ -56,53 +56,51 @@ def plot(
 
     # Smooth dataset if requested in config
     if pconf.smooth_points is not None:
-        for i, data_by_sample in enumerate(ds_list):
-            ds_list[i] = smooth_line_data(data_by_sample, pconf.smooth_points)
+        for i, raw_data_by_sample in enumerate(raw_dataset_list):
+            raw_dataset_list[i] = smooth_line_data(raw_data_by_sample, pconf.smooth_points)
 
     datasets: List[List[Series]] = []
-    for ds_idx, data_by_sample in enumerate(ds_list):
-        list_of_series_dicts: List[Series] = []
-        for s in sorted(data_by_sample.keys()):
-            series: Series = _make_series_dict(pconf, ds_idx, s, data_by_sample[s])
+    for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
+        list_of_series: List[Series] = []
+        for s in sorted(raw_data_by_sample.keys()):
+            series: Series = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
             if pconf.hide_empty and not series.pairs:
                 continue
-            list_of_series_dicts.append(series)
-        datasets.append(list_of_series_dicts)
+            list_of_series.append(series)
+        datasets.append(list_of_series)
 
     # Add on annotation data series
     # noinspection PyBroadException
     try:
         if pconf.extra_series:
-            es: Union[
-                Series,
-                List[Series],
-                List[List[Series]],
-                Dict,
-                List[Dict],
-                List[List[Dict]],
-            ] = pconfig.extra_series
+            pconf_es: Union[
+                SeriesConf,
+                List[SeriesConf],
+                List[List[SeriesConf]],
+            ] = pconf.extra_series
 
-            extra_series_list_of_lists: Union[List[List[Series]], List[List[Dict]]]
-            if isinstance(es, list):
-                if isinstance(es[0], list):
-                    extra_series_list_of_lists = es
+            list_of_lists_of_raw_series: List[List[SeriesConf]]
+            if isinstance(pconf_es, list):
+                if isinstance(pconf_es[0], list):
+                    list_of_lists_of_raw_series = pconf_es  # type: ignore
                 else:
-                    extra_series_list_of_lists = [es]
+                    list_of_lists_of_raw_series = [pconf_es]  # type: ignore
             else:
-                extra_series_list_of_lists = [[es]]
+                list_of_lists_of_raw_series = [[pconf_es]]
 
-            for i, es in enumerate(extra_series_list_of_lists):
-                for s in es:
-                    series: Series = Series(**s) if isinstance(s, dict) else s
+            for i, list_of_raw_series in enumerate(list_of_lists_of_raw_series):
+                assert isinstance(list_of_raw_series, list)
+                for s_dict in list_of_raw_series:
+                    series = Series(**s_dict) if isinstance(s_dict, dict) else s_dict
                     datasets[i].append(series)
     except Exception:
         pass
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, data_by_sample in enumerate(datasets):
-        for di, series in enumerate(data_by_sample):
+    for di, series_by_sample in enumerate(datasets):
+        for si, series in enumerate(series_by_sample):
             if not series.color:
-                series.color = scale.get_colour(di, lighten=1)
+                series.color = scale.get_colour(si, lighten=1)
 
     # Make a plot - template custom, or interactive or flat
     mod = get_template_mod()
@@ -134,18 +132,20 @@ def _make_series_dict(
     xmin = pconfig.xmin
     colors = pconfig.colors
     if pconfig.data_labels:
-        x_are_categories = pconfig.data_labels[ds_idx].get("categories", x_are_categories)
-        ymax = pconfig.data_labels[ds_idx].get("ymax", ymax)
-        ymin = pconfig.data_labels[ds_idx].get("ymin", ymin)
-        xmax = pconfig.data_labels[ds_idx].get("xmax", xmax)
-        xmin = pconfig.data_labels[ds_idx].get("xmin", xmin)
-        colors = pconfig.data_labels[ds_idx].get("colors", colors)
+        dl = pconfig.data_labels[ds_idx]
+        if isinstance(dl, dict):
+            x_are_categories = dl.get("categories", x_are_categories)
+            ymax = dl.get("ymax", ymax)
+            ymin = dl.get("ymin", ymin)
+            xmax = dl.get("xmax", xmax)
+            xmin = dl.get("xmin", xmin)
+            colors = dl.get("colors", colors)
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = y_by_x.keys()
+    xs = list(y_by_x.keys())
     if not x_are_categories:
         xs = sorted(xs)
 
