@@ -47,7 +47,7 @@ def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
     if "table" in mod.__dict__ and callable(mod.table):
         # Collect unique sample names
         s_names = set()
-        for d in dt.data:
+        for d in dt.raw_data:
             for s_name in d.keys():
                 s_names.add(s_name)
 

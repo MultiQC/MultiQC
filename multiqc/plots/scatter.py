@@ -80,11 +80,11 @@ def plot(
     if pconf.square:
         if pconf.ymax is None and pconf.xmax is None:
             # Find the max value
-            max_val = 0
+            max_val = 0.0
             for d in plotdata:
                 for s in d:
                     max_val = max(max_val, s["x"], s["y"])
-            max_val = 1.02 * max_val  # add 2% padding
+            max_val = 1.02 * float(max_val)  # add 2% padding
             pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
             pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
 

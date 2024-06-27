@@ -146,7 +146,7 @@ def plot(
             plotdata.append(hc_data)
 
     if len(plotdata) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.id}")
+        logger.warning(f"Tried to make bar plot, but had no data: {pconf.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is

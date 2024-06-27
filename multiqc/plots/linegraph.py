@@ -1,12 +1,12 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Optional, cast
+from typing import List, Dict, Union, Tuple
 
 from multiqc import config
+from multiqc.plots.plotly import line
 from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf
 from multiqc.utils import mqc_colour
-from multiqc.plots.plotly import line
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +145,7 @@ def _make_series_dict(
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = list(y_by_x.keys())
+    xs = [x for x in y_by_x.keys() if x is not None]
     if not x_are_categories:
         xs = sorted(xs)
 
@@ -155,16 +155,18 @@ def _make_series_dict(
                 continue
             if xmin is not None and float(x) < float(xmin):
                 continue
-        if y_by_x[x] is not None and ymax is not None:
-            if float(y_by_x[x]) > float(ymax):
-                discard_ymax = True
-            elif discard_ymax is True:
-                discard_ymax = False
-        if y_by_x[x] is not None and ymin is not None:
-            if float(y_by_x[x]) > float(ymin):
-                discard_ymin = True
-            elif discard_ymin is True:
-                discard_ymin = False
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None:
+                if float(y) > float(ymax):
+                    discard_ymax = True
+                elif discard_ymax is True:
+                    discard_ymax = False
+            if ymin is not None:
+                if float(y) > float(ymin):
+                    discard_ymin = True
+                elif discard_ymin is True:
+                    discard_ymin = False
 
     # Build the plot data structure
     for x in xs:
@@ -174,12 +176,13 @@ def _make_series_dict(
             if xmin is not None and float(x) < float(xmin):
                 continue
 
-        if y_by_x[x] is not None:
-            if ymax is not None and float(y_by_x[x]) > float(ymax) and discard_ymax is not False:
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None and float(y) > float(ymax) and discard_ymax is not False:
                 continue
-            if ymin is not None and float(y_by_x[x]) < float(ymin) and discard_ymin is not False:
+            if ymin is not None and float(y) < float(ymin) and discard_ymin is not False:
                 continue
-        pairs.append((x, y_by_x[x]))
+        pairs.append((x, y))
 
     return Series(name=s, pairs=pairs, color=colors.get(s))
 
