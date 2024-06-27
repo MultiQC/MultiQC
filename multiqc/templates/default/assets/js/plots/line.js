@@ -50,9 +50,10 @@ class LinePlot extends Plot {
         params.mode = "lines+markers";
         params.marker = {
           symbol: marker["symbol"],
+          color: marker["fill_color"] ?? marker["color"] ?? line.color,
           line: {
             width: marker["width"],
-            color: marker["color"],
+            color: marker["line_color"] ?? marker["color"] ?? line.color,
           },
         };
       }

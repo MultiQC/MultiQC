@@ -23,6 +23,9 @@ DatasetT = Dict[str, Dict[ValueT, ValueT]]
 
 class Marker(BaseModel):
     symbol: Optional[str] = None
+    color: Optional[str] = None
+    line_color: Optional[str] = None
+    fill_color: Optional[str] = None
     width: int = 1
 
 
@@ -240,9 +243,10 @@ class Dataset(BaseDataset):
                 params["mode"] = "lines+markers"
                 params["marker"] = {
                     "symbol": series.marker.symbol,
+                    "color": series.marker.fill_color or series.marker.color or series.color,
                     "line": {
                         "width": series.marker.width,
-                        "color": series.color,
+                        "color": series.marker.line_color or series.marker.color or "black",
                     },
                 }
             params = update_dict(params, self.trace_params, none_only=True)

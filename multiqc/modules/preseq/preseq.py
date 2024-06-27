@@ -376,7 +376,7 @@ def _real_counts_to_plot_series(
             showlegend=False,
             marker=Marker(
                 symbol="diamond",
-                color="black",
+                line_color="black",
                 width=1,
             ),
         )
