@@ -1,7 +1,7 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping
+from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, TypeVar, Generic
 
 import math
 import plotly.graph_objects as go  # type: ignore
@@ -16,9 +16,10 @@ from multiqc.validation import ValidatedConfig, add_validation_warning
 logger = logging.getLogger(__name__)
 
 
-ValueT = Union[float, int, str, None]
-
-DatasetT = Dict[str, Dict[ValueT, ValueT]]
+KeyT = TypeVar("KeyT", int, str, float)
+ValueT = TypeVar("ValueT", int, str, float, None)
+XToYDictT = Mapping[KeyT, ValueT]
+DatasetT = Mapping[str, XToYDictT]
 
 
 class Marker(BaseModel):
@@ -29,10 +30,10 @@ class Marker(BaseModel):
     width: int = 1
 
 
-class Series(ValidatedConfig):
+class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     name: str
-    data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
-    pairs: List[Tuple[ValueT, ValueT]]
+    data: Optional[List[Tuple[KeyT, ValueT]]] = Field(None, deprecated="pairs")
+    pairs: List[Tuple[KeyT, ValueT]]
     color: Optional[str] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
@@ -366,8 +367,8 @@ class LinePlot(Plot[Dataset]):
             for dataset in model.datasets:
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
-                for line in dataset.lines:
-                    xs = [x[0] for x in line["data"]]
+                for series in dataset.lines:
+                    xs = [x[0] for x in series.data]
                     if len(xs) > 0:
                         minval = min(xs) if minval is None else min(minval, min(xs))
                         maxval = max(xs) if maxval is None else max(maxval, max(xs))

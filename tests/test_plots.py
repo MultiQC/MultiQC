@@ -45,6 +45,7 @@ def test_plot_no_matching_data():
 
 def test_linegraph():
     plot_id = "test_linegraph"
+
     dataset = {
         "Sample0": {},
         "Sample1": {0: 1, 1: 1},

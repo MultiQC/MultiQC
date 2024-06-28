@@ -1,11 +1,11 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union, Tuple, Sequence
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf
+from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf, XToYDictT, KeyT
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[DatasetT], DatasetT],
+    data: Union[DatasetT, Sequence[DatasetT]],
     pconfig: Union[Dict, LinePlotConfig, None] = None,
 ) -> Union[line.LinePlot, str]:
     """
@@ -36,8 +36,8 @@ def plot(
 
     # Given one dataset - turn it into a list
     raw_dataset_list: List[DatasetT]
-    if isinstance(data, list):
-        raw_dataset_list = data
+    if isinstance(data, Sequence):
+        raw_dataset_list = list(data)
     else:
         raw_dataset_list = [data]
     del data
@@ -121,9 +121,9 @@ def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: Dict[ValueT, ValueT],
+    y_by_x: XToYDictT,
 ) -> Series:
-    pairs: List[Tuple[ValueT, ValueT]] = []
+    pairs: List[Tuple[KeyT, ValueT]] = []
 
     x_are_categories = pconfig.categories
     ymax = pconfig.ymax
@@ -145,7 +145,7 @@ def _make_series_dict(
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = [x for x in y_by_x.keys() if x is not None]
+    xs = [x for x in y_by_x.keys()]
     if not x_are_categories:
         xs = sorted(xs)
 
