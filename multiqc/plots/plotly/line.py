@@ -32,7 +32,6 @@ class Marker(BaseModel):
 
 class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     name: str
-    data: Optional[List[Tuple[KeyT, ValueT]]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[KeyT, ValueT]]
     color: Optional[str] = None
     width: int = 2
@@ -167,35 +166,9 @@ class Dataset(BaseDataset):
     ) -> "Dataset":
         dataset = Dataset(**dataset.model_dump(), lines=lines)
 
-        # Prevent Plotly from parsing strings as numbers
+        # Prevent Plotly-JS from parsing strings as numbers
         if pconfig.categories or dataset.dconfig.get("categories"):
             dataset.layout["xaxis"]["type"] = "category"
-
-        # # convert HighCharts-style hardcoded trace parameters to Plotly style
-        # list_of_dicts: List[Dict[str, Any]] = []
-        # for series in dataset.lines:
-        #     new_dict: Dict[str, Any] = {
-        #         "name": series.name,
-        #         "data": series.pairs,
-        #         "color": series.color,
-        #         "showlegend": series.showlegend,
-        #         "line": {
-        #             "dash": convert_dash_style(series.dash),
-        #             "width": series.width,
-        #         },
-        #     }
-        #     if series.marker:
-        #         new_dict["mode"] = "lines+markers"
-        #         new_dict["marker"] = {
-        #             "symbol": series.marker.symbol,
-        #             "line": {
-        #                 "width": series.marker.width,
-        #                 "color": series.marker.color,
-        #             },
-        #         }
-        #     list_of_dicts.append(remove_nones_and_empty_dicts(new_dict))
-        #
-        # dataset.lines = list_of_dicts
 
         mode = pconfig.style
         if config.lineplot_style == "lines+markers":
@@ -368,7 +341,7 @@ class LinePlot(Plot[Dataset]):
                 minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
                 for series in dataset.lines:
-                    xs = [x[0] for x in series.data]
+                    xs = [x[0] for x in series.pairs]
                     if len(xs) > 0:
                         minval = min(xs) if minval is None else min(minval, min(xs))
                         maxval = max(xs) if maxval is None else max(maxval, max(xs))

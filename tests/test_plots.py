@@ -67,7 +67,8 @@ def test_linegraph():
     assert plot_id in report.plot_data
 
     for in_series, out_series in zip(dataset.values(), report.plot_data[plot_id]["datasets"][0]["lines"]):
-        assert len(in_series) == len(out_series["data"])
+        print(out_series)
+        assert len(in_series) == len(out_series["pairs"])
 
 
 def test_linegraph_smooth():
@@ -94,7 +95,7 @@ def test_linegraph_smooth():
     assert plot_id in report.plot_data
 
     for in_series, out_series in zip(dataset.values(), report.plot_data[plot_id]["datasets"][0]["lines"]):
-        assert min(len(in_series), SMOOTH_TO) == len(out_series["data"])
+        assert min(len(in_series), SMOOTH_TO) == len(out_series["pairs"])
 
 
 def test_multiple_datasets():

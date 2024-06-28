@@ -637,20 +637,21 @@ def find_outliers(
         added_values.append(minval)
     if maxval is not None:
         added_values.append(maxval)
-    array = np.array(values + added_values)
+    np_values = np.array(values + added_values)
+    del values
 
     # Calculate the mean and standard deviation
-    mean = np.mean(values)
-    std_dev = np.std(values)
+    mean = np.mean(np_values)
+    std_dev = np.std(np_values)
     if std_dev == 0:
-        logger.debug(f"All {len(values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
-        return np.zeros(len(values), dtype=bool)
+        logger.debug(f"All {len(np_values)} points have the same values" + (f", metric: '{metric}'" if metric else ""))
+        return np.zeros(len(np_values), dtype=bool)
 
     # Calculate Z-scores (measures of "outlyingness")
-    z_scores = np.abs((array - mean) / std_dev)
+    z_scores = np.abs((np_values - mean) / std_dev)
 
     # Get indices of the top N outliers
-    outlier_status = np.zeros(len(values), dtype=bool)
+    outlier_status = np.zeros(len(np_values), dtype=bool)
     if top_n:
         outlier_status[np.argsort(z_scores)[-top_n:]] = True
     else:
