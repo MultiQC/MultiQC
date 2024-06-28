@@ -37,6 +37,6 @@ repos:
         args: [--fix, --exit-non-zero-on-fix]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: ""
+    rev: v1.10.1
     hooks:
       - id: mypy
