@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Sequence
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot
@@ -22,7 +22,7 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[DatasetT, List[DatasetT]],
+    data: Union[DatasetT, Sequence[DatasetT]],
     headers: Optional[Union[List[Dict], Dict]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, Plot]:

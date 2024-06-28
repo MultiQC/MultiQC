@@ -7,7 +7,7 @@ import math
 import logging
 import re
 from collections import defaultdict
-from typing import List, Tuple, Dict, Optional, Union, Callable
+from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
 
 from pydantic import BaseModel, Field
 
@@ -66,8 +66,7 @@ class TableColumn(ValidatedConfig):
 
 ValueT = Union[int, float, str, bool]
 
-
-DatasetT = Dict[str, Dict[str, Optional[ValueT]]]
+DatasetT = Mapping[str, Mapping[str, Optional[ValueT]]]
 
 
 class DataTable(BaseModel):
@@ -85,7 +84,7 @@ class DataTable(BaseModel):
 
     @staticmethod
     def create(
-        data: Union[DatasetT, List[DatasetT]],
+        data: Union[DatasetT, Sequence[DatasetT]],
         pconfig: TableConfig,
         headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
     ) -> "DataTable":

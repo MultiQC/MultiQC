@@ -1,7 +1,7 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence
+from typing import List, Dict, Union, Tuple, Sequence, Mapping
 
 from multiqc import config
 from multiqc.plots.plotly import line
@@ -121,7 +121,7 @@ def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: XToYDictT,
+    y_by_x: XToYDictT[KeyT, ValueT],
 ) -> Series:
     pairs: List[Tuple[KeyT, ValueT]] = []
 
