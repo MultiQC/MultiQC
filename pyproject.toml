@@ -26,11 +26,6 @@ dependencies = [
     "spectra>=0.0.10",
     "pydantic>=2.7.1",
     "typeguard",
-    "mypy",
-    "types-PyYAML",
-    "types-tqdm",
-    "types-requests",
-    "types-Markdown",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -65,6 +60,11 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
+    "mypy",
+    "types-PyYAML",
+    "types-tqdm",
+    "types-requests",
+    "types-Markdown",
 ]
 
 [project.urls]
