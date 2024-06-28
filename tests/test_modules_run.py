@@ -36,6 +36,6 @@ def test_all_modules(module_id, entry_point, data_dir, multiqc_reset):
     report.search_files([module_id])
 
     module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
-    module = module_cls()
-
-    assert len(report.general_stats_data) > 0 or len(module.sections) > 0
+    _module = module_cls()
+    for m in _module if isinstance(_module, List) else [_module]:
+        assert len(report.general_stats_data) > 0 or len(m.sections) > 0
