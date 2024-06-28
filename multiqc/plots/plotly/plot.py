@@ -373,7 +373,7 @@ class Plot(BaseModel, Generic[T]):
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
             try:
-                from IPython.core.display import HTML
+                from IPython.core.display import HTML  # type: ignore
             except ImportError:
                 raise ImportError(
                     "IPython is required to show plot. The function is expected to be run in an interactive environment, "

@@ -190,7 +190,7 @@ def dump_json(data, filehandle=None, **kwargs):
 
 def is_running_in_notebook() -> bool:
     try:
-        from IPython import get_ipython
+        from IPython import get_ipython  # type: ignore
 
         if "IPKernelApp" in get_ipython().config:
             return True
