@@ -30,6 +30,7 @@ dependencies = [
     "types-PyYAML",
     "types-tqdm",
     "types-requests",
+    "pandas-stubs",
 ]
 requires-python = ">=3.8"
 authors = [

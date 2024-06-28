@@ -46,7 +46,7 @@ class TableColumn(ValidatedConfig):
     scale: Union[str, bool]
     hidden: bool
     colour: Optional[str] = Field(None, deprecated="color")
-    color: str
+    color: Optional[str] = None
     placement: Optional[float] = None
     max: Optional[float] = None
     dmax: Optional[float] = None

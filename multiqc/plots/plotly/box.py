@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Dict, List, Union, TypeVar
+from typing import Dict, List, Union
 
 import plotly.graph_objects as go  # type: ignore
 

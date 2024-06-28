@@ -1,11 +1,11 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Union, Any, Optional, Tuple
+from typing import Dict, List, Union, Any, Optional, Tuple, Set
 import copy
 
 import math
 import numpy as np
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
 from multiqc.plots.table_object import DataTable, TableColumn
@@ -87,9 +87,9 @@ class Dataset(BaseDataset):
             dt_column_by_metric[full_metric_id] = dt_column
 
         # If all colors are the same, remove them
-        if len(set([v.color for v in dt_column_by_metric.values()])) == 1:
-            for v in dt_column_by_metric.values():
-                v.color = None
+        if len(set([t_col.color for t_col in dt_column_by_metric.values()])) == 1:
+            for t_col in dt_column_by_metric.values():
+                t_col.color = None
 
         return value_by_sample_by_metric, dt_column_by_metric
 
@@ -156,7 +156,7 @@ class Dataset(BaseDataset):
                     column.xaxis.range = [xmin, xmax]
 
             if not column.show_points:  # Do not add any interactive points
-                scatter_value_by_sample = {}
+                scatter_value_by_sample: Dict[str, Union[int, float, str, None]] = {}
             elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
@@ -251,6 +251,7 @@ class Dataset(BaseDataset):
         is_log=False,
         is_pct=False,
         add_scatter=True,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset
@@ -356,7 +357,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        data = {}
+        data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
         for metric in self.metrics:
             values_by_sample = self.violin_value_by_sample_by_metric[metric]
             title = self.header_by_metric[metric].title
@@ -381,7 +382,7 @@ class ViolinPlot(Plot):
         dts: List[DataTable],
         show_table_by_default: bool = False,
     ) -> "ViolinPlot":
-        all_samples = set()
+        all_samples: Set[str] = set()
         for dt in dts:
             for rd in dt.raw_data:
                 all_samples.update(rd.keys())
@@ -389,7 +390,7 @@ class ViolinPlot(Plot):
         max_n_samples = len(all_samples)
 
         assert len(dts) > 0
-        main_table_dt = dts[0]  # used for the table
+        main_table_dt: Optional[DataTable] = dts[0]  # used for the table
 
         model = Plot.initialize(
             plot_type=PlotType.VIOLIN,
@@ -463,7 +464,7 @@ class ViolinPlot(Plot):
             main_table_dt=main_table_dt,
         )
 
-    def buttons(self, flat) -> []:
+    def buttons(self, flat: bool) -> List[str]:
         """Add a control panel to the plot"""
         buttons = []
         if not flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.main_table_dt is not None:
@@ -474,7 +475,7 @@ class ViolinPlot(Plot):
                     data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.id}_configModal"},
                 )
             )
-        if self.show_table:
+        if self.show_table and self.main_table_dt is not None:
             buttons.append(
                 self._btn(
                     cls="mqc-violin-to-table",
@@ -489,8 +490,8 @@ class ViolinPlot(Plot):
         """
         Show the table or violin plot based on the input parameters.
         """
-        if self.show_table_by_default and violin is not True or table is True:
-            data = {}
+        if self.main_table_dt and (self.show_table_by_default and violin is not True or table is True):
+            data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
                 for s_name in self.main_table_dt.raw_data[idx].keys():
@@ -507,13 +508,21 @@ class ViolinPlot(Plot):
         else:
             return super().show(**kwargs)
 
-    def save(self, filename: str, table=None, violin=None, flat=False, **kwargs):
+    def save(
+        self,
+        filename: str,
+        dataset_id: Union[int, str] = 0,
+        flat=False,
+        table=None,
+        violin=None,
+        **kwargs,
+    ):
         """
         Save the plot to a file
         """
-        if self.show_table_by_default and violin is not True or table is True:
+        if self.main_table_dt and (self.show_table_by_default and violin is not True or table is True):
             # Make Plotly go.Table object and save it
-            data = {}
+            data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
                 for s_name in self.main_table_dt.raw_data[idx].keys():
@@ -607,7 +616,7 @@ def find_outliers(
     minval: Optional[Union[float, int]] = None,
     maxval: Optional[Union[float, int]] = None,
     metric: Optional[str] = None,
-) -> np.array:
+) -> np.ndarray:
     """
     If `n` is defined, find `n` most outlying points in a list.
     Otherwise, find outliers with a Z-score above `z_cutoff`.
@@ -628,7 +637,7 @@ def find_outliers(
         added_values.append(minval)
     if maxval is not None:
         added_values.append(maxval)
-    values = np.array(values + added_values)
+    array = np.array(values + added_values)
 
     # Calculate the mean and standard deviation
     mean = np.mean(values)
@@ -638,7 +647,7 @@ def find_outliers(
         return np.zeros(len(values), dtype=bool)
 
     # Calculate Z-scores (measures of "outlyingness")
-    z_scores = np.abs((values - mean) / std_dev)
+    z_scores = np.abs((array - mean) / std_dev)
 
     # Get indices of the top N outliers
     outlier_status = np.zeros(len(values), dtype=bool)
