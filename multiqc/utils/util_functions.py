@@ -132,7 +132,7 @@ def replace_defaultdicts(data):
     return _replace(data)
 
 
-def dump_json(data, filehandle, **kwargs):
+def dump_json(data, filehandle=None, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
     Note that a custom JSONEncoder would not work for NaNs:
