@@ -62,7 +62,7 @@ class ClConfig(BaseModel):
     preserve_module_raw_data: Optional[bool] = None
     extra_fn_clean_exts: List = []
     extra_fn_clean_trim: List = []
-    kwargs: Optional[Dict] = None
+    unknown_options: Optional[Dict] = None
 
 
 def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
@@ -220,8 +220,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
                 logger.error(errmsg)
                 report.lint_errors.append(errmsg)
 
-    if cfg.kwargs:
-        config.kwargs = cfg.kwargs  # Plugin command line options
+    if cfg.unknown_options:
+        config.kwargs = cfg.unknown_options  # plug in command line options
 
     plugin_hooks.mqc_trigger("config_loaded")
     plugin_hooks.mqc_trigger("execution_start")

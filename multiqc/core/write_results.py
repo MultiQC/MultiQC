@@ -270,7 +270,7 @@ def _order_modules_and_sections():
                 section_id_order[anchor] = section_id_order[ss["after"]] + 1
             if ss.get("before") in section_id_order.keys():
                 section_id_order[anchor] = section_id_order[ss["before"]] - 1
-        sorted_ids = sorted(section_id_order, key=lambda kv: kv[1])
+        sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
         report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
     # Sort the report sections if we have a config
@@ -302,7 +302,7 @@ def _order_modules_and_sections():
             # Remove module sections
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
-            sorted_ids = sorted(section_id_order, key=lambda kv: kv[1])
+            sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
             report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
 
 
@@ -384,7 +384,7 @@ def _render_general_stats_table() -> None:
             "raw_data_fn": "multiqc_general_stats",
         }
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
-        report.general_stats_html = p.add_to_report()
+        report.general_stats_html = p.add_to_report() if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
 
@@ -395,6 +395,8 @@ def _write_data_files() -> None:
     """
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{config.data_dir}'")
+    assert config.data_dir is not None
+
     shutil.copytree(
         report.data_tmp_dir(),
         config.data_dir,
@@ -407,10 +409,10 @@ def _write_data_files() -> None:
     shutil.rmtree(report.data_tmp_dir())
 
     # Write the report sources to disk
-    report.data_sources_tofile()
+    report.data_sources_tofile(config.data_dir)
 
     # Create a file with the module DOIs
-    report.dois_tofile(report.modules)
+    report.dois_tofile(config.data_dir, report.modules)
 
     # Data Export / MegaQC integration - save report data to file or send report data to an API endpoint
     if config.data_dump_file or (config.megaqc_url and config.megaqc_upload):
@@ -430,6 +432,8 @@ def _write_report():
     """
     Render and write report HTML to disk
     """
+    assert report.tmp_dir
+
     # Copy over css & js files if requested by the theme
     for mod in report.modules:
         if mod.hidden:
@@ -522,7 +526,7 @@ def _write_report():
     runtime_compression_start = time.time()
     logger.debug("Compressing plot data")
     report.plot_compressed_json = report.compress_json(report.plot_data)
-    report.runtimes["total_compression"] = time.time() - runtime_compression_start
+    report.runtimes.total_compression = time.time() - runtime_compression_start
 
     # Use jinja2 to render the template and overwrite
     report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
@@ -530,6 +534,7 @@ def _write_report():
     if config.filename == "stdout":
         print(report_output.encode("utf-8"), file=sys.stdout)
     else:
+        assert isinstance(config.output_fn, str)
         try:
             with io.open(config.output_fn, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
@@ -538,15 +543,17 @@ def _write_report():
 
         # Copy over files if requested by the theme
         try:
-            for f in template_mod.copy_files:
-                fn = os.path.join(report.tmp_dir, f)
-                dest_dir = os.path.join(os.path.dirname(config.output_fn), f)
+            for copy_file in template_mod.copy_files:
+                fn = os.path.join(report.tmp_dir, copy_file)
+                dest_dir = os.path.join(os.path.dirname(config.output_fn), copy_file)
                 shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
         except AttributeError:
             pass  # No files to copy
 
 
 def _write_pdf():
+    if not isinstance(config.output_fn, str):
+        return
     try:
         pdf_fn_name = config.output_fn.replace(".html", ".pdf")
         pandoc_call = [

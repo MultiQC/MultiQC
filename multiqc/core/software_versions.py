@@ -194,13 +194,13 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str):
+def parse_version(version: str) -> str:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.
     # - https://peps.python.org/pep-0440/
     """
     try:
-        return packaging.version.parse(version)
+        return str(packaging.version.parse(version))
     except packaging.version.InvalidVersion:
         return str(version)

@@ -375,7 +375,7 @@ class ViolinPlot(Plot):
     show_table: bool
     show_table_by_default: bool
     n_samples: int
-    main_table_dt: Optional[DataTable] = None
+    main_table_dt: DataTable
 
     @staticmethod
     def create(
@@ -390,7 +390,7 @@ class ViolinPlot(Plot):
         max_n_samples = len(all_samples)
 
         assert len(dts) > 0
-        main_table_dt: Optional[DataTable] = dts[0]  # used for the table
+        main_table_dt: DataTable = dts[0]  # used for the table
 
         model = Plot.initialize(
             plot_type=PlotType.VIOLIN,
@@ -448,7 +448,6 @@ class ViolinPlot(Plot):
         show_table = True
         if max_n_samples > config.max_table_rows and not no_violin:
             show_table = False
-            main_table_dt = None
             if show_table_by_default:
                 logger.debug(
                     f"Table '{model.id}': sample number {max_n_samples} > {config.max_table_rows}, "
@@ -467,7 +466,7 @@ class ViolinPlot(Plot):
     def buttons(self, flat: bool) -> List[str]:
         """Add a control panel to the plot"""
         buttons = []
-        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets) and self.main_table_dt is not None:
+        if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
                     cls="mqc_table_configModal_btn",
@@ -475,7 +474,7 @@ class ViolinPlot(Plot):
                     data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.id}_configModal"},
                 )
             )
-        if self.show_table and self.main_table_dt is not None:
+        if self.show_table:
             buttons.append(
                 self._btn(
                     cls="mqc-violin-to-table",
@@ -490,7 +489,7 @@ class ViolinPlot(Plot):
         """
         Show the table or violin plot based on the input parameters.
         """
-        if self.main_table_dt and (self.show_table_by_default and violin is not True or table is True):
+        if self.show_table_by_default and violin is not True or table is True:
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
@@ -500,7 +499,7 @@ class ViolinPlot(Plot):
                         if val is not None:
                             data.setdefault(s_name, {})[rid] = val
 
-            import pandas as pd
+            import pandas as pd  # type: ignore
 
             df = pd.DataFrame(data).T
             return df  # Jupyter knows how to display dataframes
@@ -520,7 +519,7 @@ class ViolinPlot(Plot):
         """
         Save the plot to a file
         """
-        if self.main_table_dt and (self.show_table_by_default and violin is not True or table is True):
+        if self.show_table_by_default and violin is not True or table is True:
             # Make Plotly go.Table object and save it
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
@@ -531,7 +530,7 @@ class ViolinPlot(Plot):
                         if val is not None:
                             data.setdefault(s_name, {})[rid] = val
 
-            values = [list(data.keys())]
+            values: List[List[Any]] = [list(data.keys())]
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
                 values.append([data[s].get(rid, "") for s in data.keys()])

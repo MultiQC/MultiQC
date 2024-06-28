@@ -158,7 +158,7 @@ def exec_modules(
             # Exit code 1 for CI failures etc
             sys_exit_code = 1
 
-        report.runtimes["mods"][mod_names[mod_idx]] = time.time() - mod_starttime
+        report.runtimes.mods[mod_names[mod_idx]] = time.time() - mod_starttime
         if config.profile_memory:
             mem_current, mem_peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
@@ -168,9 +168,9 @@ def exec_modules(
                 f"{this_module}: memory change: {mem_current:,d}b, peak during module execution: {mem_peak:,d}b"
             )
         if config.profile_runtime:
-            logger.warning(f"{this_module}: module run time: {report.runtimes['mods'][mod_names[mod_idx]]:.2f}s")
+            logger.warning(f"{this_module}: module run time: {report.runtimes.mods[mod_names[mod_idx]]:.2f}s")
 
-    report.runtimes["total_mods"] = time.time() - total_mods_starttime
+    report.runtimes.total_mods = time.time() - total_mods_starttime
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.

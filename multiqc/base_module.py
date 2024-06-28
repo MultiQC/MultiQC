@@ -3,7 +3,7 @@ MultiQC modules base class, contains helper functions
 """
 
 import dataclasses
-from typing import List, Union, Optional, Dict, Any
+from typing import List, Union, Optional, Dict, Any, cast
 
 import fnmatch
 import io
@@ -73,7 +73,7 @@ class BaseMultiqcModule:
         self.doi = self.mod_cust_config.get("doi", (doi or []))
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions = defaultdict(list)
+        self.versions: Dict[str, List[str]] = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
@@ -166,12 +166,10 @@ class BaseMultiqcModule:
         """
         # Pick up path filters if specified.
         # Allows modules to be called multiple times with different sets of files
-        path_filters: Union[str, List[str]] = self.mod_cust_config.get("path_filters", [])
-        path_filters_exclude: Union[str, List[str]] = self.mod_cust_config.get("path_filters_exclude", [])
-        if isinstance(path_filters, str):
-            path_filters: List[str] = [path_filters]
-        if isinstance(path_filters_exclude, str):
-            path_filters_exclude: List[str] = [path_filters_exclude]
+        _pf = self.mod_cust_config.get("path_filters", [])
+        path_filters: List[str] = _pf if isinstance(_pf, list) else [_pf]
+        _pfe = self.mod_cust_config.get("path_filters_exclude", [])
+        path_filters_exclude: List[str] = _pfe if isinstance(_pfe, list) else [_pfe]
 
         if not isinstance(sp_key, str):
             logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
@@ -179,16 +177,17 @@ class BaseMultiqcModule:
 
         for f in report.files[sp_key]:
             # Make a note of the filename so that we can report it if something crashes
-            report.last_found_file = os.path.join(f["root"], f["fn"])
+            last_found_file: str = os.path.join(f["root"], f["fn"])
+            report.last_found_file = last_found_file
 
             # Filter out files based on exclusion patterns
             if path_filters_exclude and len(path_filters_exclude) > 0:
                 # Try both the given path and also the path prefixed with the analysis dirs
                 exclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pfe) for pfe in path_filters_exclude),
+                    (fnmatch.fnmatch(last_found_file, pfe) for pfe in path_filters_exclude),
                     *(
                         (
-                            fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pfe))
+                            fnmatch.fnmatch(last_found_file, os.path.join(analysis_dir, pfe))
                             for pfe in path_filters_exclude
                         )
                         for analysis_dir in report.analysis_files
@@ -204,9 +203,9 @@ class BaseMultiqcModule:
             if path_filters and len(path_filters) > 0:
                 # Try both the given path and also the path prefixed with the analyis dirs
                 inclusion_hits = itertools.chain(
-                    (fnmatch.fnmatch(report.last_found_file, pf) for pf in path_filters),
+                    (fnmatch.fnmatch(last_found_file, pf) for pf in path_filters),
                     *(
-                        (fnmatch.fnmatch(report.last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
+                        (fnmatch.fnmatch(last_found_file, os.path.join(analysis_dir, pf)) for pf in path_filters)
                         for analysis_dir in report.analysis_files
                     ),
                 )
@@ -403,7 +402,8 @@ class BaseMultiqcModule:
             # Couldn't clean as FASTQ. Just concatenating the clean names.
             return "_".join(clean_names)
 
-        s_name_original = s_name
+        sname: str = cast(str, s_name)
+        sname_original = sname
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
         if isinstance(f, str):
@@ -429,7 +429,7 @@ class BaseMultiqcModule:
                 and seach_pattern_key in config.use_filename_as_sample_name
             )
         ):
-            s_name = filename
+            sname = filename
 
         # Set root to empty string if not known
         if root is None:
@@ -437,7 +437,7 @@ class BaseMultiqcModule:
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
-        s_name = os.path.basename(s_name)
+        sname = os.path.basename(sname)
 
         # Prepend sample name with directory
         if config.prepend_dirs:
@@ -451,7 +451,7 @@ class BaseMultiqcModule:
                 else:
                     dirs = dirs[:d_idx]
             if len(dirs) > 0:
-                s_name = f"{sep.join(dirs)}{sep}{s_name}"
+                sname = f"{sep.join(dirs)}{sep}{sname}"
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
@@ -467,36 +467,36 @@ class BaseMultiqcModule:
                 if isinstance(ext, str):
                     ext = {"type": "truncate", "pattern": ext}
                 if ext.get("type") == "truncate":
-                    s_name = s_name.split(ext["pattern"], 1)[0]
+                    sname = sname.split(ext["pattern"], 1)[0]
                 elif ext.get("type") in ("remove", "replace"):
                     if ext["type"] == "replace":
                         logger.warning(
                             "use 'config.fn_clean_sample_names.remove' instead "
                             "of 'config.fn_clean_sample_names.replace' [deprecated]"
                         )
-                    s_name = s_name.replace(ext["pattern"], "")
+                    sname = sname.replace(ext["pattern"], "")
                 elif ext.get("type") == "regex":
-                    s_name = re.sub(ext["pattern"], "", s_name)
+                    sname = re.sub(ext["pattern"], "", sname)
                 elif ext.get("type") == "regex_keep":
-                    match = re.search(ext["pattern"], s_name)
-                    s_name = match.group() if match else s_name
+                    match = re.search(ext["pattern"], sname)
+                    sname = match.group() if match else sname
                 elif ext.get("type") is None:
                     logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
                     logger.error(f"Unrecognised config.fn_clean_exts type: {ext.get('type')}")
             # Trim off characters at the end of names
             for chrs in config.fn_clean_trim:
-                if s_name.endswith(chrs):
-                    s_name = s_name[: -len(chrs)]
-                if s_name.startswith(chrs):
-                    s_name = s_name[len(chrs) :]
+                if sname.endswith(chrs):
+                    sname = sname[: -len(chrs)]
+                if sname.startswith(chrs):
+                    sname = sname[len(chrs) :]
 
         # Remove trailing whitespace
-        s_name = s_name.strip()
+        sname = sname.strip()
 
         # If we cleaned back to an empty string, just use the original value
-        if s_name == "":
-            s_name = s_name_original
+        if sname == "":
+            sname = sname_original
 
         # Do any hard replacements that are set with --replace-names
         if config.sample_names_replace:
@@ -505,27 +505,27 @@ class BaseMultiqcModule:
                     # Skip if we're looking for exact matches only
                     if config.sample_names_replace_exact:
                         # Simple strings
-                        if not config.sample_names_replace_regex and s_name != s_name_search:
+                        if not config.sample_names_replace_regex and sname != s_name_search:
                             continue
                         # regexes
-                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, s_name):
+                        if config.sample_names_replace_regex and not re.fullmatch(s_name_search, sname):
                             continue
                     # Replace - regex
                     if config.sample_names_replace_regex:
-                        s_name = re.sub(s_name_search, s_name_replace, s_name)
+                        sname = re.sub(s_name_search, s_name_replace, sname)
                     # Replace - simple string
                     else:
                         # Complete name swap
                         if config.sample_names_replace_complete:
-                            if s_name_search in s_name:
-                                s_name = s_name_replace
+                            if s_name_search in sname:
+                                sname = s_name_replace
                         # Partial substring replace
                         else:
-                            s_name = s_name.replace(s_name_search, s_name_replace)
+                            sname = sname.replace(s_name_search, s_name_replace)
                 except re.error as e:
                     logger.error(f"Error with sample name replacement regex: {e}")
 
-        return s_name
+        return sname
 
     def ignore_samples(self, data):
         """Strip out samples which match `sample_names_ignore`"""
@@ -570,10 +570,8 @@ class BaseMultiqcModule:
             hs = set()
             for d in data.values():
                 hs.update(d.keys())
-            hs = list(hs)
-            hs.sort()
             headers = dict()
-            for k in hs:
+            for k in sorted(hs):
                 headers[k] = dict()
 
         # Add the module name to the description if not already done
@@ -607,7 +605,9 @@ class BaseMultiqcModule:
         except AttributeError:
             logger.warning(f"Tried to add data source for {self.name}, but was missing fields data")
 
-    def add_software_version(self, version: str = None, sample: str = None, software_name: str = None):
+    def add_software_version(
+        self, version: Optional[str] = None, sample: Optional[str] = None, software_name: Optional[str] = None
+    ):
         """Save software versions for module."""
         # Don't add if version is None. This allows every module to call this function
         # even those without a version to add. This is useful to check that all modules
@@ -630,12 +630,12 @@ class BaseMultiqcModule:
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise, use raw string is used for version.
         # - https://peps.python.org/pep-0440/
-        version = software_versions.parse_version(version)
+        parsed_version = software_versions.parse_version(version)
 
-        if version in self.versions[software_name]:
+        if parsed_version in self.versions[software_name]:
             return
 
-        self.versions[software_name].append(version)
+        self.versions[software_name].append(parsed_version)
 
         # Sort version in order newest --> oldest
         self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
