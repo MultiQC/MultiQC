@@ -258,3 +258,5 @@ ignore = ["F401"]  # unused-import
 [tool.mypy]
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
+# exclude all files in multiqc/modules
+exclude = "multiqc/modules/*"
