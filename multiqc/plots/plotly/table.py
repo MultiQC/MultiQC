@@ -116,7 +116,7 @@ def make_table(
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     dmin = header.dmin
                     dmax = header.dmax
-                    if dmin is not None and dmax is not None:
+                    if dmin is not None and dmax is not None and dmax != dmin:
                         try:
                             val_float = float(val)
                         except ValueError:
