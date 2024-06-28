@@ -343,7 +343,7 @@ class LinePlot(Plot[Dataset]):
                 minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
                 maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
                 for line in dataset.lines:
-                    ys = [x[1] for x in line["data"]]
+                    ys = [x[1] for x in line.pairs]
                     if len(ys) > 0:
                         minval = min(ys) if minval is None else min(minval, min(ys))
                         maxval = max(ys) if maxval is None else max(maxval, max(ys))
