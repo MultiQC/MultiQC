@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard WgsMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -14,8 +15,8 @@ def parse_reports(module):
     """Find Picard WgsMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample = dict()
-    histogram_by_sample = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
 
     picard_config = getattr(config, "picard_config", {})
     skip_histo = picard_config.get("wgsmetrics_skip_histogram", False)
@@ -114,13 +115,12 @@ def parse_reports(module):
         "hidden": True,
     }
     # user configurable coverage level
-    try:
-        covs = config.picard_config["general_stats_target_coverage"]
-        assert isinstance(covs, list)
-        assert len(covs) > 0
+    picard_config = getattr(config, "picard_config", {})
+    covs = picard_config.get("general_stats_target_coverage", [])
+    if isinstance(covs, list) and len(covs) > 0:
         covs = [str(i) for i in covs]
         log.debug(f"Custom Picard coverage thresholds: {', '.join([i for i in covs])}")
-    except (AttributeError, TypeError, AssertionError, KeyError):
+    else:
         covs = ["30"]
     for c in covs:
         headers[f"PCT_{c}X"] = {
@@ -152,8 +152,8 @@ def parse_reports(module):
                         break
 
         # Cut histogram tail and make a normalised percentage version of the data plus dropoff
-        data = {}
-        data_percent = {}
+        data: Dict = {}
+        data_percent: Dict = {}
         maxval = 0
         for s_name, hist in histogram_by_sample.items():
             data[s_name] = dict()
@@ -198,7 +198,7 @@ def parse_reports(module):
         )
 
     # Bar plot of ignored bases
-    pdata = dict()
+    pdata: Dict = dict()
     for s_name, data in data_by_sample.items():
         pdata[s_name] = dict()
         pdata[s_name]["PCT_EXC_MAPQ"] = data["PCT_EXC_MAPQ"] * 100.0

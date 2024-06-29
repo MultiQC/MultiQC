@@ -3,7 +3,7 @@
 import dataclasses
 import logging
 from collections import OrderedDict
-from typing import Union, Dict, Optional, List, Sequence, Any, cast
+from typing import Union, Dict, Optional, List, Sequence, Any, cast, Mapping
 
 import math
 
@@ -36,12 +36,12 @@ class Category(ValidatedConfig):
 DatasetT = Dict[str, Dict[str, Union[int, float]]]
 
 # Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
-CatT = Union[List[str], Dict[str, Union[Dict[str, str], Category]]]
+CatT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], Category]]]
 
 
 def plot(
-    data: Union[DatasetT, List[DatasetT]],
-    cats: Optional[Union[CatT, List[CatT]]] = None,
+    data: Union[DatasetT, Sequence[DatasetT]],
+    cats: Optional[Union[CatT, Sequence[CatT]]] = None,
     pconfig: Optional[Union[Dict, BarPlotConfig]] = None,
 ) -> Union[bar.BarPlot, str]:
     """Plot a horizontal bar graph. Expects a 2D dict of sample
