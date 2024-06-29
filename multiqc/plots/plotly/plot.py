@@ -341,7 +341,7 @@ class Plot(BaseModel, Generic[T]):
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dataset.label)
             if n_datasets > 1 and "title" not in dconfig:
-                dconfig["title"] = f'{pconfig.title} ({dconfig["name"]})'
+                dconfig["title"] = f"{pconfig.title} ({dataset.label})"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig

@@ -4,6 +4,8 @@ import logging
 from collections import defaultdict
 
 import re
+from typing import Dict
+
 from multiqc import config
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
@@ -62,7 +64,7 @@ FIELD_DESCRIPTIONS = {
 def parse_reports(module):
     """Find Picard HsMetrics reports and parse their data"""
 
-    data_by_bait_by_sample = dict()
+    data_by_bait_by_sample: Dict[str, Dict[str, Dict]] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
@@ -376,7 +378,7 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
 
 
 def _add_target_bases(self, data):
-    data_clean = defaultdict(dict)
+    data_clean: Dict[str, Dict] = defaultdict(dict)
     max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
@@ -407,7 +409,7 @@ def _add_target_bases(self, data):
 
 
 def hs_penalty_plot(self, data):
-    data_clean = defaultdict(dict)
+    data_clean: Dict[str, Dict] = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:

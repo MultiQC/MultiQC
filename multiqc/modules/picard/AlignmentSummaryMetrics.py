@@ -1,10 +1,14 @@
-"""MultiQC submodule to parse output from Picard AlignmentSummaryMetrics"""
+"""
+MultiQC submodule to parse output from Picard AlignmentSummaryMetrics
+"""
 
 import logging
 from collections import OrderedDict
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
+from multiqc.plots.plotly.bar import BarPlotConfig
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -13,7 +17,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard AlignmentSummaryMetrics reports and parse their data"""
 
-    data_by_sample = dict()
+    data_by_sample: Dict[str, Dict] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/alignment_metrics", filehandles=True):
@@ -89,7 +93,7 @@ def parse_reports(module):
         module.general_stats_data[s_name].update(data_by_sample[s_name])
 
     # Make the bar plot of alignment read count + # aligned bases
-    pdata = dict()
+    pdata: Dict[str, Dict] = dict()
     for s_name in data_by_sample.keys():
         pdata[s_name] = dict()
         # Picard reports both reads for PE data. Divide it by two as most people will
@@ -108,11 +112,11 @@ def parse_reports(module):
     keys[1]["PF_ALIGNED_BASES"] = {"name": "Aligned Bases"}
 
     # Config for the plot
-    pconfig = {
-        "id": f"{module.anchor}_alignment_summary",
-        "title": f"{module.name}: Alignment Summary",
-        "ylab": "# Reads",
-        "data_labels": [
+    pconfig = BarPlotConfig(
+        id=f"{module.anchor}_alignment_summary",
+        title=f"{module.name}: Alignment Summary",
+        ylab="# Reads",
+        data_labels=[
             {
                 "name": "Aligned Reads",
                 "ylab": "# Reads",
@@ -124,7 +128,7 @@ def parse_reports(module):
                 "cpswitch_counts_label": "Number of Bases",
             },
         ],
-    }
+    )
 
     # The different data sets we want to plot
     module.add_section(
@@ -138,12 +142,12 @@ def parse_reports(module):
 
     # Make a bar plot of mean read length
     keys = {"MEAN_READ_LENGTH": {"name": "Mean Read Length"}}
-    pconfig = {
-        "id": f"{module.anchor}_alignment_readlength_plot",
-        "title": f"{module.name}: Mean Read Length",
-        "ylab": "Base pairs",
-        "cpswitch": False,
-    }
+    pconfig = BarPlotConfig(
+        id=f"{module.anchor}_alignment_readlength_plot",
+        title=f"{module.name}: Mean Read Length",
+        ylab="Base pairs",
+        cpswitch=False,
+    )
 
     # The different data sets we want to plot
     module.add_section(

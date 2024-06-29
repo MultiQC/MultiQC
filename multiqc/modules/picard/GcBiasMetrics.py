@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard GcBiasMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph
@@ -21,8 +22,8 @@ def parse_reports(module):
     is provided.
     """
 
-    data_by_sample = dict()
-    summary_data_by_sample = dict()
+    data_by_sample: Dict[str, Dict] = dict()
+    summary_data_by_sample: Dict[str, Dict] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/gcbias", filehandles=True):
