@@ -1,7 +1,5 @@
 import os
 
-import pytest
-
 import multiqc
 from multiqc import report
 from multiqc.core.update_config import ClConfig
