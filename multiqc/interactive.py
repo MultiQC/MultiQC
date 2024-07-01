@@ -46,7 +46,7 @@ def parse_logs(
     ignore_samples: Sequence[str] = (),
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
     module_order: Sequence[Union[str, Dict]] = (),
     extra_fn_clean_exts: Sequence = (),
     extra_fn_clean_trim: Sequence = (),
@@ -399,7 +399,7 @@ def write_report(
     no_version_check: Optional[bool] = None,
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
     custom_css_files: Sequence[str] = (),
     module_order: Sequence[Union[str, Dict]] = (),
 ):

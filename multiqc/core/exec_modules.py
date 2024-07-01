@@ -181,7 +181,7 @@ def exec_modules(
         raise RunError()
 
     # Update report with software versions provided in configs
-    software_versions.update_versions_from_config(config, report)
+    software_versions.update_versions_from_config()
 
     # Add section for software versions if any are found
     if not config.skip_versions_section and report.software_versions:
