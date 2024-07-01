@@ -13,12 +13,68 @@ from multiqc import report
 from multiqc.core.update_config import ClConfig
 
 
-def test_software_versions_from_module(data_dir, capsys):
+def test_sorting():
     """
-    Verify capturing versions added by another module.
+    Versions should be sorted by component
     """
     report.reset()
+    mod = multiqc.BaseMultiqcModule()
 
+    mod.add_software_version("1.10.1")
+    mod.add_software_version("1.2.3")
+    mod.add_software_version("1.10")
+    mod.add_software_version("1.2.2")
+
+    assert report.software_versions == {
+        "base": {
+            "base": ["1.2.2", "1.2.3", "1.10", "1.10.1"],
+        },
+    }
+
+
+def test_with_software_name():
+    """
+    Versions should be sorted by component
+    """
+    report.reset()
+    mod = multiqc.BaseMultiqcModule()
+
+    mod.add_software_version("1.10.1", software_name="tool1")
+    mod.add_software_version("1.2.3", software_name="tool2")
+    mod.add_software_version("1.10", software_name="tool2")
+
+    assert report.software_versions == {
+        "base": {
+            "tool1": ["1.10.1"],
+            "tool2": ["1.2.3", "1.10"],
+        },
+    }
+
+
+def test_parsing_and_sorting():
+    """
+    Versions should be parsed for sorting, but represented originally
+    """
+    report.reset()
+    mod = multiqc.BaseMultiqcModule()
+    versions = [
+        "v1.1.1-r505",
+        "v2.r505",
+        "v3-r505",
+        "-r505",
+        "r505",
+    ]
+    for v in versions:
+        mod.add_software_version(v)
+
+    assert report.software_versions == {"base": {"base": versions}}
+
+
+def test_software_versions_from_module(data_dir, capsys):
+    """
+    Verify versions added by another module are captured
+    """
+    report.reset()
     mod_dir = data_dir / "modules" / "bismark"
     assert mod_dir.exists() and mod_dir.is_dir()
 
@@ -33,20 +89,21 @@ def test_software_versions_from_data_and_config(tmp_path, data_dir, capsys):
     Verify finding versions from the config section.
     """
     report.reset()
-
     mod_dir = data_dir / "software_versions"
     assert mod_dir.exists() and mod_dir.is_dir()
 
-    c = {
-        "software_versions": {
-            "example_module": {
-                "example_tool": ["1.4.2"],
-            }
-        }
-    }
     conf_path = tmp_path / "multiqc_config.yaml"
     with open(conf_path, "w") as f:
-        yaml.dump(c, f)
+        yaml.dump(
+            {
+                "software_versions": {
+                    "example_module": {
+                        "example_tool": ["1.4.2"],
+                    }
+                }
+            },
+            f,
+        )
 
     multiqc.parse_logs(mod_dir, config_files=[conf_path])
     multiqc.write_report(filename="stdout")

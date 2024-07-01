@@ -3,7 +3,7 @@
 import logging
 import os
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional
 
 import packaging.version
 import yaml
@@ -99,9 +99,9 @@ def load_versions_from_config():
         softwares = versions_config[group]
         for tool in softwares:
             # Try and convert version to packaging.versions.Version object and remove duplicates
-            versions = list(set([parse_version(version) for version in softwares[tool]]))
-            versions = sort_versions(versions)
-            softwares[tool] = versions
+            ver_and_verstr = list(set((parse_version(version), version) for version in softwares[tool]))
+            ver_and_verstr = sort_versions(ver_and_verstr)
+            softwares[tool] = [v for _, v in ver_and_verstr]
 
     return versions_config
 
@@ -175,14 +175,16 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
     return output
 
 
-def sort_versions(versions):
+def sort_versions(
+    ver_and_verstr: List[Tuple[packaging.version.Version, str]],
+) -> List[Tuple[packaging.version.Version, str]]:
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
     objects.
     """
-    version_objs = [v for v in versions if isinstance(v, packaging.version.Version)]
-    version_strs = [v for v in versions if not isinstance(v, packaging.version.Version)]
-    versions = sorted(version_objs) + sorted(version_strs)
+    version_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is not None]
+    version_not_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is None]
+    versions = sorted(version_parsed) + sorted(version_not_parsed)
     return versions
 
 
@@ -194,13 +196,13 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str) -> str:
+def parse_version(version: str) -> Optional[packaging.version.Version]:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.
     # - https://peps.python.org/pep-0440/
     """
     try:
-        return str(packaging.version.parse(version))
+        return packaging.version.parse(version)
     except packaging.version.InvalidVersion:
-        return str(version)
+        return None
