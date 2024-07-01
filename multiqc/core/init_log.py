@@ -64,7 +64,7 @@ def init_log():
     # Set up the rich console
     global rich_console
     rich_console = rich.console.Console(
-        stderr=False,
+        stderr=True,
         highlight=False,
         force_terminal=force_term_colors(),
         force_interactive=False if config.no_ansi else None,
@@ -106,7 +106,7 @@ def _setup_coloredlogs(log_level, logger, debug_template):
     info_template = "%(module)18s | %(message)s"
 
     # Set up the console logging stream
-    console = logging.StreamHandler(sys.stdout)
+    console = logging.StreamHandler(sys.stderr)
     console.setLevel(log_level)
     level_styles = coloredlogs.DEFAULT_LEVEL_STYLES
     level_styles["debug"] = {"faint": True}

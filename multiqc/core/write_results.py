@@ -532,7 +532,7 @@ def _write_report():
     report.analysis_files = [os.path.realpath(d) for d in report.analysis_files]
     report_output = j_template.render(report=report, config=config)
     if config.filename == "stdout":
-        print(report_output.encode("utf-8"), file=sys.stdout)
+        print(report_output, file=sys.stdout)
     else:
         assert isinstance(config.output_fn, str)
         try:
