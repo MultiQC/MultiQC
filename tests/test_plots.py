@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import pytest
 
 from multiqc import report, Plot
@@ -6,6 +8,9 @@ from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, 
 
 
 def test_barplot():
+    """
+    Normal barplot call. Single datasets, a list of cats, some cats are excluded.
+    """
     plot_id = "test_barplot"
 
     plot = bargraph.plot(
@@ -26,19 +31,25 @@ def test_barplot():
     assert plot_id in report.plot_data
 
 
-def test_bar_plot_no_matching_data():
-    plot_id = "test_bar_plot_no_matching_data"
+def test_bar_plot_no_matching_cats():
+    """
+    None of the cats are matching thd data, so shouldn't produce a plot
+    """
+    plot_id = "test_bar_plot_no_matching_cats"
 
     plot = bargraph.plot(
         {"Sample1": {"Cat0": 1, "Cat1": 1}},
         ["Cat2", "Cat3"],
         {"id": plot_id, "title": "Test: Bar Graph"},
     )
-
+    # Will return a warning message html instead of a plot:
     assert isinstance(plot, str)
 
 
 def test_bar_plot_cats_dicts():
+    """
+    Advanced cats spec - dict with cat properties instead of a simple list
+    """
     plot_id = "test_bar_plot_cats_dicts"
 
     plot = bargraph.plot(
@@ -54,6 +65,9 @@ def test_bar_plot_cats_dicts():
 
 
 def test_bar_plot_cats_dicts_with_typo():
+    """
+    A typo in the cat properties dict - will fill in the name from the dict key
+    """
     plot_id = "test_bar_plot_cats_dicts_with_typo"
 
     plot = bargraph.plot(
@@ -69,28 +83,59 @@ def test_bar_plot_cats_dicts_with_typo():
 
 
 def test_bar_plot_cats_mismatch_cats_and_ds_count():
+    """
+    Multiple datasets, but the list lengths are not matching between data and cats. Should throw an error
+    """
     plot_id = "test_bar_plot_cats_mismatch_cats_and_ds_count"
 
     with pytest.raises(RunError):
         bargraph.plot(
-            [{"Sample1": {"Cat1": 2}}, {"Sample1": {"Cat1": 1}}],
-            {"Cat1": {"name": "My category"}},
+            [{"Sample1": {"Cat1": 2}}],
+            [{"Cat1": {"name": "My category"}}, {"Cat1": {"name": "My category"}}],
             {"id": plot_id, "title": "Test: Bar Graph"},
         )
 
 
+def test_bar_plot_fill_cats():
+    """
+    Multiple datasets, but only one dict of cats - in this case, should copy these cats between datasets
+    """
+    plot_id = "test_bar_plot_fill_cats"
+
+    plot = bargraph.plot(
+        [{"Sample1": {"Cat1": 2, "Cat2": 2}}, {"Sample1": {"Cat1": 2, "Cat3": 2}}],
+        {"Cat1": {"name": "My category"}},
+        {"id": plot_id, "title": "Test: Bar Graph"},
+    )
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data[plot_id]["datasets"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][0]["cats"]) == 1
+    assert len(report.plot_data[plot_id]["datasets"][1]["cats"]) == 1
+    assert report.plot_data[plot_id]["datasets"][0]["cats"][0]["name"] == "My category"
+    assert report.plot_data[plot_id]["datasets"][1]["cats"][0]["name"] == "My category"
+
+
 def test_bar_plot_no_cats():
+    """
+    Cats parameter is missing, will fill in one from the data
+    """
+
     plot_id = "test_bar_plot_no_cats"
 
     plot = bargraph.plot(
-        [{"Sample1": {"Cat1": 2}}, {"Sample1": {"Cat1": 1}}],
+        {
+            "Sample1": {"Cat1": 2, "Cat2": 2},
+            "Sample2": {"Cat1": 1, "Cat3": 1},
+        },
         pconfig={"id": plot_id, "title": "Test: Bar Graph"},
     )
 
     assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
-    assert report.plot_data[plot_id]["datasets"][0]["cats"][0]["name"] == "Cat1"
+    assert len(report.plot_data[plot_id]["datasets"][0]["cats"]) == 3
 
 
 def test_linegraph():
@@ -133,8 +178,8 @@ def test_linegraph_smooth():
         assert min(len(in_series), SMOOTH_TO) == len(out_series["pairs"])
 
 
-def test_multiple_datasets():
-    plot_id = "test_multiple_datasets"
+def test_linegraph_multiple_datasets():
+    plot_id = "test_linegraph_multiple_datasets"
 
     plot = linegraph.plot(
         [{"Sample1": {0: 1, 1: 1}}, {"Sample1": {0: 2, 1: 2}}],
@@ -232,8 +277,8 @@ def test_scatter():
     assert plot_id in report.plot_data
 
 
-def text_box():
-    plot_id = "test_box"
+def test_box_plot():
+    plot_id = "test_box_plot"
 
     plot = box.plot(
         {"Sample1": [1, 2, 3], "Sample2": [4, 5, 6]},

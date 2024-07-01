@@ -84,10 +84,12 @@ def plot(
     else:
         raw_cats_per_ds = [cats]
 
-    if len(raw_datasets) != len(raw_cats_per_ds):
+    if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
+        raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+    elif len(raw_datasets) != len(raw_cats_per_ds):
         raise RunError(
-            f"Number of datasets and categories passed to a bar plot must match, got {len(raw_datasets)} "
-            f"datasets and {len(raw_cats_per_ds)} categories"
+            f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
+            f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
         )
 
     # Parse the categories into pydantic objects
