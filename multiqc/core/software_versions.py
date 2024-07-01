@@ -3,7 +3,7 @@
 import logging
 import os
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Sequence
 
 import packaging.version
 import yaml
@@ -176,8 +176,8 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
 
 
 def sort_versions(
-    ver_and_verstr: List[Tuple[packaging.version.Version, str]],
-) -> List[Tuple[packaging.version.Version, str]]:
+    ver_and_verstr: Sequence[Tuple[Optional[packaging.version.Version], str]],
+) -> List[Tuple[Optional[packaging.version.Version], str]]:
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
     objects.
@@ -185,7 +185,7 @@ def sort_versions(
     version_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is not None]
     version_not_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is None]
     versions = sorted(version_parsed) + sorted(version_not_parsed)
-    return versions
+    return list(versions)
 
 
 def find_matching_module(software_name: str, modules):
