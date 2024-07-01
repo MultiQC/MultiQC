@@ -106,16 +106,16 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
         ]
     )
 
+    # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
+    if "software_versions" not in mod_keys:
+        mod_dicts_in_order.append({"software_versions": {}})
+
     mod_names = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
     mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_names]
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
     assert len(mod_dicts_in_order) == len(mod_names)
-
-    # Always run software_versions module to collect version YAML files
-    # Use config.skip_versions_section to exclude from report
-    if "software_versions" not in mod_names:
-        mod_dicts_in_order.append({"software_versions": {}})
 
     sp_keys = list(mod_names)  # make a copy
     # Add custom content section names

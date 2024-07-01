@@ -16,6 +16,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core.exceptions import RunError
 from multiqc.core import plugin_hooks, software_versions
 from multiqc.validation import ConfigValidationError
+from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionModule
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,8 @@ def exec_modules(
         # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
         or list(m.keys())[0].lower() == "custom_content"
     ]
+    # Special-case software_versions module must be run in the end
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0].lower() != "software_versions"]
     mod_names = [list(m.keys())[0] for m in mod_dicts_in_order]
     if not required_logs_found(mod_names):
         raise RunError()
@@ -179,6 +182,10 @@ def exec_modules(
 
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config(config, report)
+
+    # Add section for software versions if any are found
+    if not config.skip_versions_section and report.software_versions:
+        report.modules.append(SoftwareVersionModule())
 
     # Did we find anything?
     if len(report.modules) == 0:
