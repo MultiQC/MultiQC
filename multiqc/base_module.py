@@ -3,7 +3,7 @@ MultiQC modules base class, contains helper functions
 """
 
 import dataclasses
-from typing import List, Union, Optional, Dict, Any, cast
+from typing import List, Union, Optional, Dict, Any, cast, Tuple
 
 import fnmatch
 import io
@@ -16,6 +16,7 @@ import textwrap
 from collections import defaultdict
 
 import markdown
+import packaging.version
 
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
@@ -73,7 +74,7 @@ class BaseMultiqcModule:
         self.doi = self.mod_cust_config.get("doi", (doi or []))
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions: Dict[str, List[str]] = defaultdict(list)
+        self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
@@ -631,18 +632,17 @@ class BaseMultiqcModule:
         # Otherwise, use raw string is used for version.
         # - https://peps.python.org/pep-0440/
         parsed_version = software_versions.parse_version(version)
-
-        if parsed_version in self.versions[software_name]:
+        if (parsed_version, version) in self.versions[software_name]:
             return
 
-        self.versions[software_name].append(parsed_version)
+        self.versions[software_name].append((parsed_version, version))
 
         # Sort version in order newest --> oldest
         self.versions[software_name] = software_versions.sort_versions(self.versions[software_name])
 
         # Update version list for report section.
         group_name = self.name
-        report.software_versions[group_name][software_name] = self.versions[software_name]
+        report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
 
     def write_data_file(self, data, fn, sort_cols=False, data_format=None):
         """Saves raw data to a dictionary for downstream use, then redirects
