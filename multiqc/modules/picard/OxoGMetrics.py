@@ -2,6 +2,7 @@
 
 import logging
 from collections import defaultdict
+from typing import Dict
 
 from multiqc.modules.picard import util
 
@@ -13,7 +14,7 @@ def parse_reports(module):
     """Find Picard OxoGMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample = dict()
+    data_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/oxogmetrics", filehandles=True):
@@ -78,7 +79,7 @@ def parse_reports(module):
     module.write_data_file(print_data, "multiqc_picard_OxoGMetrics")
 
     # Add to general stats table
-    general_stats_data = dict()
+    general_stats_data: Dict = dict()
     for s_name in data_by_sample:
         general_stats_data[s_name] = dict()
         try:

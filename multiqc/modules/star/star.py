@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -24,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any STAR reports
-        self.star_data = dict()
+        self.star_data: Dict = dict()
         for f in self.find_log_files("star"):
             parsed_data = self.parse_star_report(f["f"])
             if parsed_data is not None:
@@ -269,4 +270,4 @@ class MultiqcModule(BaseMultiqcModule):
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand,
         ]
-        return bargraph.plot(datasets, [keys, keys, keys, keys], pconfig)
+        return bargraph.plot(datasets, [keys, keys, keys], pconfig)

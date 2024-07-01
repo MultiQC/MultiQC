@@ -6,12 +6,13 @@ import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any
+from typing import Dict, Union, List, Optional, Tuple, Any, TypeVar, Generic
 
 import math
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, field_validator, field_serializer, Field
 
+from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
 from multiqc.utils import mqc_colour
@@ -57,7 +58,7 @@ class PConfig(ValidatedConfig):
     tt_label: Optional[str] = None
     xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
     yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
-    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
+    decimalPlaces: Optional[int] = Field(None, deprecated="tt_decimals")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
     tt_decimals: Optional[int] = None
@@ -75,6 +76,19 @@ class PConfig(ValidatedConfig):
     y_clipmax: Optional[Union[float, int]] = None
     save_data_file: bool = True
     showlegend: Optional[bool] = None
+
+    @classmethod
+    def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
+        if pconfig is None:
+            lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
+            return cls(
+                id=f"{cls.__name__.lower()}-{random.randint(1000000, 9999999)}",
+                title=cls.__name__,
+            )
+        elif isinstance(pconfig, PConfig):
+            return pconfig
+        else:
+            return cls(**pconfig)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -132,7 +146,10 @@ class BaseDataset(BaseModel):
         raise NotImplementedError
 
 
-class Plot(BaseModel):
+T = TypeVar("T", bound="BaseDataset")
+
+
+class Plot(BaseModel, Generic[T]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
@@ -140,7 +157,7 @@ class Plot(BaseModel):
     id: str
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[BaseDataset]
+    datasets: List[T]
     pconfig: PConfig
     add_log_tab: bool
     add_pct_tab: bool
@@ -322,9 +339,9 @@ class Plot(BaseModel):
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
-                dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
+                dconfig["ylab"] = dconfig.get("name", dataset.label)
             if n_datasets > 1 and "title" not in dconfig:
-                dconfig["title"] = f'{pconfig.title} ({dconfig["name"]})'
+                dconfig["title"] = f"{pconfig.title} ({dataset.label})"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -356,7 +373,7 @@ class Plot(BaseModel):
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
             try:
-                from IPython.core.display import HTML
+                from IPython.core.display import HTML  # type: ignore
             except ImportError:
                 raise ImportError(
                     "IPython is required to show plot. The function is expected to be run in an interactive environment, "
@@ -539,13 +556,13 @@ class Plot(BaseModel):
         html += "</div>"
         return html
 
-    def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
+    def _btn(self, cls: str, label: str, data_attrs: Optional[Dict[str, str]] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
         if "pid" not in data_attrs:
             data_attrs["pid"] = self.id
-        data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
+        data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
+        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
 
     def buttons(self, flat: bool) -> List[str]:
         """
@@ -572,8 +589,8 @@ class Plot(BaseModel):
         if len(self.datasets) > 1:
             switch_buttons += f'<div class="btn-group {cls} dataset-switch-group">\n'
             for ds_idx, ds in enumerate(self.datasets):
-                data_attrs = {
-                    "dataset-index": ds_idx,
+                data_attrs: Dict[str, str] = {
+                    "dataset-index": str(ds_idx),
                     # For flat plots, we will generate separate flat images for each
                     # dataset and view, so have to save individual image IDs.
                     "dataset-uid": ds.uid,
@@ -645,7 +662,7 @@ def fig_to_static_html(
         if file_name is None:
             raise ValueError("file_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = Path(config.plots_dir_name) / "png" / f"{file_name}.png"
+        img_src = str(Path(config.plots_dir_name) / "png" / f"{file_name}.png")
     else:
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
@@ -734,7 +751,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
 def _dataset_layout(
     pconfig: PConfig,
     dconfig: Dict,
-    default_tt_label: Optional[str],
+    default_tt_label: Optional[str] = None,
 ) -> Tuple[Dict, Dict]:
     """
     Given plot config and dataset config, set layout and trace params.
@@ -777,6 +794,7 @@ def _dataset_layout(
             if pconfig.xlab.endswith(f" ({suf.strip()})"):
                 xsuffix = suf
 
+    tt_label: Optional[str] = None
     if pconfig.tt_label is not None:
         # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig.tt_label
@@ -818,7 +836,7 @@ def _dataset_layout(
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):
             tt_label = "<br>" + tt_label
-    else:
+    elif default_tt_label is not None:
         tt_label = default_tt_label
 
     if tt_label:

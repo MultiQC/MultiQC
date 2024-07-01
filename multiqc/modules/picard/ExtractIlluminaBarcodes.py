@@ -2,9 +2,11 @@
 
 import logging
 from collections import defaultdict
+from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
+from multiqc.plots.bargraph import CatT
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -13,7 +15,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard ExtractIlluminaBarcodes reports and parse their data"""
 
-    data_by_lane = defaultdict(dict)
+    data_by_lane: Dict[str, Dict] = defaultdict(dict)
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/extractilluminabarcodes", filehandles=True):
@@ -78,7 +80,7 @@ def parse_reports(module):
         ],
     }
 
-    plot_cats = [dict(), dict(), dict()]
+    plot_cats: List = [dict(), dict(), dict()]
     plot_cats[0]["READS"] = {"name": "Reads"}
     plot_cats[1]["PERFECT_MATCHES"] = {"name": "Perfect Matching Reads"}
     plot_cats[1]["ONE_MISMATCH_MATCHES"] = {"name": "One Mismatch Reads"}

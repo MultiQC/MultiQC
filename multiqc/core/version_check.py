@@ -3,7 +3,7 @@ import os
 import platform
 import re
 import sys
-from typing import Optional
+from typing import Optional, Dict, Union
 
 import requests
 from packaging import version
@@ -21,7 +21,7 @@ def check_version(interactive_function_name: Optional[str] = None):
 
     try:
         # Fetch the version info from the API
-        meta = {
+        meta: Dict[str, Union[str, bool, None]] = {
             "version_multiqc": config.short_version,
             "version_python": platform.python_version(),
             "operating_system": platform.system(),

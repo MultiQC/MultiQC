@@ -1,17 +1,18 @@
 """MultiQC module to parse output from bcftools"""
 
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the Samtools submodules
-from .stats import StatsReportMixin
+from multiqc.modules.bcftools.stats import parse_bcftools_stats
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
+class MultiqcModule(BaseMultiqcModule):
     """Bcftools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -29,12 +30,12 @@ class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
+        self.general_stats_headers: Dict = dict()
+        self.general_stats_data: Dict = dict()
         n = dict()
 
         # Call submodule functions
-        n["stats"] = self.parse_bcftools_stats()
+        n["stats"] = parse_bcftools_stats(self)
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")
 

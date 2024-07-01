@@ -6,8 +6,8 @@ from collections import defaultdict
 from typing import Dict, List, Union, Optional, Literal
 
 import math
-import plotly.graph_objects as go
-import spectra
+import plotly.graph_objects as go  # type: ignore
+import spectra  # type: ignore
 from pydantic import model_validator
 
 from multiqc.plots.plotly import determine_barplot_height
@@ -136,7 +136,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        val_by_cat_by_sample = defaultdict(dict)
+        val_by_cat_by_sample: Dict[str, Dict[str, str]] = defaultdict(dict)
         for cat in self.cats:
             for d_idx, d_val in enumerate(cat["data"]):
                 s_name = self.samples[d_idx]
@@ -144,7 +144,7 @@ class Dataset(BaseDataset):
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
 
-class BarPlot(Plot):
+class BarPlot(Plot[Dataset]):
     datasets: List[Dataset]
 
     @staticmethod

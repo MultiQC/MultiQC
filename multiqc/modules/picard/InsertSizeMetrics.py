@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard InsertSizeMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -13,9 +14,9 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard InsertSizeMetrics reports and parse their data"""
 
-    data_by_sample = dict()
-    histogram_by_sample = dict()
-    samplestats_by_sample = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
+    samplestats_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/insertsize", filehandles=True):
@@ -157,7 +158,7 @@ def parse_reports(module):
     # Section with histogram plot
     if len(histogram_by_sample) > 0:
         # Make a normalised percentage version of the data
-        data_percent = {}
+        data_percent: Dict = {}
         for s_name, data in histogram_by_sample.items():
             data_percent[s_name] = dict()
             total = float(sum(data.values()))
@@ -165,10 +166,11 @@ def parse_reports(module):
                 data_percent[s_name][k] = (v / total) * 100
 
         # Allow customisation of how smooth the plot is
-        try:
-            insertsize_smooth_points = int(config.picard_config["insertsize_smooth_points"])
+        insertsize_smooth_points = getattr(config, "picard_config", {}).get("insertsize_smooth_points")
+        if insertsize_smooth_points is not None:
             log.debug(f"Custom Picard insert size smoothing: {insertsize_smooth_points}")
-        except (AttributeError, KeyError, ValueError):
+            insertsize_smooth_points = int(insertsize_smooth_points)
+        else:
             insertsize_smooth_points = 500
 
         # Plot the data and add section
@@ -187,10 +189,9 @@ def parse_reports(module):
                 {"name": "Percentages", "ylab": "Percentage of Counts"},
             ],
         }
-        try:
-            pconfig["xmax"] = config.picard_config["insertsize_xmax"]
-        except (AttributeError, KeyError):
-            pass
+        insertsize_xmax = getattr(config, "picard_config", {}).get("insertsize_xmax")
+        if insertsize_xmax is not None:
+            pconfig["xmax"] = int(insertsize_xmax)
 
         module.add_section(
             name="Insert Size",

@@ -121,10 +121,29 @@ Or set it in the [config](http://multiqc.info/docs/#configuring-multiqc):
 strict: True
 ```
 
+## Static code analysis
+
+MultiQC uses type hints and static code analysis with [mypy](http://mypy-lang.org/)
+to prevent bugs. Mypy is run on the entire codebase using a GitHub Actions job,
+however, you can run it locally to check your changes before pushing them.
+
+Install MultiQC in the dev mode, which will bring `mypy` along with additional plugins.
+
+```bash
+pip install -e .[dev]
+```
+
+Then run the following command to check your module:
+
+```bash
+mypy multiqc/modules/your_module
+```
+
+Fix any problems that mypy finds before submitting your pull request.
+
 ## Code formatting
 
-In addition to testing MultiQC functionality, the MultiQC code base is also checked for
-consistency and formatting.
+MultiQC code base is also checked for consistency and formatting.
 
 Everyone has their own preferences when it comes to writing any code, both in the methods
 used but also with simple things like whitespace and whether to use `"` or `'`.
@@ -162,17 +181,23 @@ pip install pre-commit # install the tool
 pre-commit install # set up pre-commit in the MultiQC repository
 ```
 
-This will then automatically run all code checks on the files you have edited when you create a commit. Pre-commit cancels the commit if anything fails - sometimes it will have fixed files for you, in which case just add them and try to commit again. Sometimes you will need to read the logs and fix the problem manually.
+This will then automatically run all code checks on the files you have edited when
+you create a commit. Pre-commit cancels the commit if anything fails - sometimes it will
+have fixed files for you, in which case just add them and try to commit again. Sometimes
+you will need to read the logs and fix the problem manually.
 
-Automated continuous integration tests will run using GitHub Actions to check that all files pass the above tests. If any files do not, that test will fail giving a red ❌ next to the pull request.
+Automated continuous integration tests will run using GitHub Actions to check that all
+files pass the above tests. If any files do not, that test will fail giving a red ❌
+next to the pull request.
 
 :::tip
 Make sure that your configuration is working properly and that you're not changing loads of files
 that you haven't worked with. Pull-requests will not be merged with such changes.
 :::
 
-These tools should be relatively easy to install and run, and have integration with the majority
-of code editors. Once set up, they can run on save and you'll never need to think about them again.
+These tools should be relatively easy to install and run, and have integration with
+the majority of code editors. Once set up, they can run on save, and you'll never need
+to think about them again.
 
 ## Initial setup
 

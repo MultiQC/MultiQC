@@ -11,7 +11,7 @@ import re
 from typing import Tuple
 
 import numpy as np
-import spectra
+import spectra  # type: ignore
 
 from multiqc import config, report
 

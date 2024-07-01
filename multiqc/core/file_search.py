@@ -30,26 +30,24 @@ def _make_analysis_file_list():
 
     # Add files if --file-list option is given
     if config.file_list:
-        paths = []
         file_list_path = Path(config.analysis_dir[0])
         with file_list_path.open() as in_handle:
             for line in in_handle:
-                p = Path(line.strip())
-                if p.exists():
-                    paths.append(p.absolute())
-        if len(paths) == 0:
+                p = line.strip()
+                if Path(p).exists():
+                    report.analysis_files.append(str(Path(p).absolute()))
+        if len(report.analysis_files) == 0:
             raise RunError(
                 f"No files or directories were added from {file_list_path} using --file-list option."
                 f"Please, check that {file_list_path} contains correct paths."
             )
-        report.analysis_files = paths
     else:
         for path in config.analysis_dir:
             expanded_paths = list(glob.glob(str(path)))
             if not expanded_paths:
                 logger.warning(f"No files found by path or pattern: '{path}'")
             for p in expanded_paths:  # Expand glob patterns
-                report.analysis_files.append(p)
+                report.analysis_files.append(str(p))
 
     if not report.analysis_files:
         raise RunError("No files found to analyse. Check that input files and directories exist.")
@@ -79,7 +77,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
         logger.info("Excluding modules '{}'".format("', '".join(config.exclude_modules)))
         if "general_stats" in config.exclude_modules:
             config.skip_generalstats = True
-            config.exclude_modules = tuple(x for x in config.exclude_modules if x != "general_stats")
+            config.exclude_modules = [x for x in config.exclude_modules if x != "general_stats"]
         module_names = [m for m in module_names if m not in config.exclude_modules]
     return module_names
 
@@ -91,33 +89,33 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     Return the list of search pattern keys, and the list of modules/entry points.
     """
 
-    # Build initial list from config.module_order and config.top_modules
+    # Build initial list from report.module_order and config.top_modules
     mod_dicts_in_order: List[Dict[str, Dict]] = [
-        m for m in config.top_modules if list(m.keys())[0] in config.avail_modules.keys()
+        m for m in report.top_modules if list(m.keys())[0] in config.avail_modules.keys()
     ]
-    mod_keys = set(list(m.keys())[0] for m in config.module_order)
+    mod_keys = set(list(m.keys())[0] for m in report.module_order)
     mod_dicts_in_order.extend(
         [{m: {}} for m in config.avail_modules.keys() if m not in mod_keys and m not in mod_dicts_in_order]
     )
     mod_dicts_in_order.extend(
         [
             m
-            for m in config.module_order
+            for m in report.module_order
             if list(m.keys())[0] in config.avail_modules.keys()
             and list(m.keys())[0] not in [list(rm.keys())[0] for rm in mod_dicts_in_order]
         ]
     )
+
+    # Always run software_versions module to collect version YAML files
+    # Use config.skip_versions_section to exclude from report
+    if "software_versions" not in mod_keys:
+        mod_dicts_in_order.append({"software_versions": {}})
 
     mod_names = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
     mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_names]
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
     assert len(mod_dicts_in_order) == len(mod_names)
-
-    # Always run software_versions module to collect version YAML files
-    # Use config.skip_versions_section to exclude from report
-    if "software_versions" not in mod_names:
-        mod_dicts_in_order.append({"software_versions": {}})
 
     sp_keys = list(mod_names)  # make a copy
     # Add custom content section names

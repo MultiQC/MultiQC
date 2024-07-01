@@ -7,12 +7,10 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional
-
+from typing import Dict, Union, List, Optional, Sequence
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.init_log import init_log
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
@@ -44,14 +42,14 @@ def parse_logs(
     no_ansi: Optional[bool] = None,
     profile_runtime: Optional[bool] = None,
     no_version_check: Optional[bool] = None,
-    ignore: List[str] = (),
-    ignore_samples: List[str] = (),
-    run_modules: List[str] = (),
-    exclude_modules: List[str] = (),
-    config_files: List[str] = (),
-    module_order: List[Union[str, Dict]] = (),
-    extra_fn_clean_exts: List = (),
-    extra_fn_clean_trim: List = (),
+    ignore: Sequence[str] = (),
+    ignore_samples: Sequence[str] = (),
+    run_modules: Sequence[str] = (),
+    exclude_modules: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
+    module_order: Sequence[Union[str, Dict]] = (),
+    extra_fn_clean_exts: Sequence = (),
+    extra_fn_clean_trim: Sequence = (),
     preserve_module_raw_data: bool = True,
 ):
     """
@@ -109,8 +107,8 @@ def parse_data_json(path: Union[str, Path]):
 
     json_path_found = False
     json_path: Path
-    if path.endswith(".json"):
-        json_path = path
+    if str(path).endswith(".json"):
+        json_path = Path(path)
         json_path_found = True
     else:
         json_path = Path(path) / "multiqc_data.json"
@@ -177,16 +175,16 @@ def list_samples() -> List[str]:
     return sorted(samples)
 
 
-def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
+def list_plots() -> Dict:
     """
     Return plot names that have been loaded, indexed by module and section.
 
     @return: Dict of plot names indexed by module and section
     """
 
-    result = dict()
+    result: Dict = {}
     for module in report.modules:
-        result[module.name]: List[Union[str, Dict[str, str]]] = list()
+        result[module.name] = list()
         for section in module.sections:
             if not section.plot_id:
                 continue
@@ -258,7 +256,7 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     @return: Dict of general stats data indexed by sample and data key
     """
 
-    data = defaultdict(dict)
+    data: Dict[str, Dict] = defaultdict(dict)
     for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
         for s, val_by_key in data_by_sample.items():
             if sample and s != sample:
@@ -399,11 +397,11 @@ def write_report(
     no_ansi: Optional[bool] = None,
     profile_runtime: Optional[bool] = None,
     no_version_check: Optional[bool] = None,
-    run_modules: List[str] = (),
-    exclude_modules: List[str] = (),
-    config_files: List[str] = (),
-    custom_css_files: List[str] = (),
-    module_order: List[Union[str, Dict]] = (),
+    run_modules: Sequence[str] = (),
+    exclude_modules: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
+    custom_css_files: Sequence[str] = (),
+    module_order: Sequence[Union[str, Dict]] = (),
 ):
     """
     Render HTML from parsed module data, and write a report and data files to disk.

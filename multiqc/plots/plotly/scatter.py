@@ -1,10 +1,10 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union, Optional, Any
+from typing import Dict, List, Union, Optional, Any, Set, Tuple
 
 import numpy as np
-from plotly import graph_objects as go
+from plotly import graph_objects as go  # type: ignore
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class ScatterConfig(PConfig):
     ylab: str
-    categories: List[str] = None
+    categories: Optional[List[str]] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     marker_size: Optional[int] = None
     marker_line_width: Optional[int] = None
@@ -70,7 +70,7 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: Optional[go.Layout] = None,
+        layout: go.Layout,
         is_log=False,
         is_pct=False,
         **kwargs,
@@ -121,10 +121,12 @@ class Dataset(BaseDataset):
 
         # If there are few unique colors, we can additionally put a unique list into a legend
         # (even though some color might belong to many distinct names - we will just crop the list)
-        names_by_legend_key = defaultdict(set)
+        names_by_legend_key: Dict[Tuple[Any, Any, Any, Any], Set[str]] = defaultdict(set)
         for el in self.points:
             legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
-            names_by_legend_key[legend_key].add(el["name"])
+            name = el["name"]
+            assert isinstance(name, str)
+            names_by_legend_key[legend_key].add(name)
         layout.showlegend = True
 
         in_legend = set()
@@ -140,7 +142,7 @@ class Dataset(BaseDataset):
                 key = (color, el.get("marker_size"), el.get("marker_line_width"), group)
                 if key not in in_legend:
                     in_legend.add(key)
-                    names = sorted(names_by_legend_key.get(key))
+                    names = sorted(names_by_legend_key[key])
                     label = ", ".join(names)
                     if group:
                         label = f"{group}: {label}"

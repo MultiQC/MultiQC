@@ -30,9 +30,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = ScatterConfig(**pconfig)
+    pconf = ScatterConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
@@ -43,10 +41,10 @@ def plot(
         d = list()
         for s_name in ds:
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config: ScatterConfig = pconfig.model_copy()
-            if pconfig.data_labels and isinstance(pconfig.data_labels[data_index], dict):
+            series_config: ScatterConfig = pconf.model_copy()
+            if pconf.data_labels and isinstance(pconf.data_labels[data_index], dict):
                 # if not a dict: only dataset name is provided
-                for k, v in pconfig.data_labels[data_index].items():
+                for k, v in pconf.data_labels[data_index].items():
                     if k in series_config.model_fields:
                         setattr(series_config, k, v)
 
@@ -79,26 +77,26 @@ def plot(
                 d.append(point)
         plotdata.append(d)
 
-    if pconfig.square:
-        if pconfig.ymax is None and pconfig.xmax is None:
+    if pconf.square:
+        if pconf.ymax is None and pconf.xmax is None:
             # Find the max value
-            max_val = 0
+            max_val = 0.0
             for d in plotdata:
                 for s in d:
                     max_val = max(max_val, s["x"], s["y"])
-            max_val = 1.02 * max_val  # add 2% padding
-            pconfig.xmax = pconfig.xmax if pconfig.xmax is not None else max_val
-            pconfig.ymax = pconfig.ymax if pconfig.ymax is not None else max_val
+            max_val = 1.02 * float(max_val)  # add 2% padding
+            pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
+            pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
 
     # Add on annotation data series
     # noinspection PyBroadException
     try:
-        if pconfig.extra_series:
-            extra_series = pconfig.extra_series
-            if isinstance(pconfig.extra_series, dict):
-                extra_series = [[pconfig.extra_series]]
-            elif isinstance(pconfig.extra_series, list) and isinstance(pconfig.extra_series[0], dict):
-                extra_series = [pconfig.extra_series]
+        if pconf.extra_series:
+            extra_series = pconf.extra_series
+            if isinstance(pconf.extra_series, dict):
+                extra_series = [[pconf.extra_series]]
+            elif isinstance(pconf.extra_series, list) and isinstance(pconf.extra_series[0], dict):
+                extra_series = [pconf.extra_series]
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
@@ -110,11 +108,11 @@ def plot(
     if "scatter" in mod.__dict__ and callable(mod.scatter):
         # noinspection PyBroadException
         try:
-            return mod.scatter(plotdata, pconfig)
+            return mod.scatter(plotdata, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return scatter.plot(plotdata, pconfig)
+    return scatter.plot(plotdata, pconf)

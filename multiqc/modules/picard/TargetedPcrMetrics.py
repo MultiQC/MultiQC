@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard TargetedPcrMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
@@ -13,8 +14,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard TargetedPcrMetrics reports and parse their data"""
 
-    data_by_sample = dict()
-    histogram_by_sample = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
 
     picard_config = getattr(config, "picard_config", {})
     skip_histo = picard_config.get("targeted_pcr_skip_histogram", False)
