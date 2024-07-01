@@ -34,9 +34,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = HeatmapConfig(**pconfig)
+    pconf: HeatmapConfig = HeatmapConfig.from_pconfig_dict(pconfig)
 
     if ycats is None:
         ycats = xcats
@@ -46,11 +44,11 @@ def plot(
     if "heatmap" in mod.__dict__ and callable(mod.heatmap):
         # noinspection PyBroadException
         try:
-            return mod.heatmap(data, xcats, ycats, pconfig)
+            return mod.heatmap(data, xcats, ycats, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return heatmap.plot(data, pconfig, xcats, ycats)
+    return heatmap.plot(data, pconf, xcats, ycats)

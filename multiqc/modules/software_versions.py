@@ -2,6 +2,7 @@
 
 import logging
 from textwrap import dedent
+from typing import List, Dict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc import config as mqc_config, report as mqc_report
@@ -74,17 +75,22 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def write_software_versions_data_file():
-        """Write software versions to a file for downstream use."""
+        """
+        Write software versions to a file for downstream use
+        """
         # Get rid of the default dicts and Version objects
-        flat_software_versions = {
-            group: {software: list(map(str, software_versions)) for software, software_versions in versions.items()}
+        clean_software_versions: Dict[str, Dict[str, List[str]]] = {
+            group: {software: list(map(str, svs)) for software, svs in versions.items()}
             for group, versions in mqc_report.software_versions.items()
         }
+
         # TSV only allows 2 levels of nesting.
         if mqc_config.data_format == "tsv":
-            flat_software_versions = {
-                group: {software: ", ".join(software_versions) for software, software_versions in versions.items()}
-                for group, versions in flat_software_versions.items()
+            flat_software_versions: Dict[str, Dict[str, str]] = {
+                group: {software: ", ".join(svs) for software, svs in versions.items()}
+                for group, versions in clean_software_versions.items()
             }
-        # Write to a file for downstream use
-        mqc_report.write_data_file(flat_software_versions, "multiqc_software_versions")
+            mqc_report.write_data_file(flat_software_versions, "multiqc_software_versions")
+
+        else:
+            mqc_report.write_data_file(clean_software_versions, "multiqc_software_versions")

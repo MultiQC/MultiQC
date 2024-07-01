@@ -10,6 +10,7 @@ import shutil
 import sys
 import time
 import traceback
+from pathlib import Path
 from typing import Tuple, Optional
 
 import rich_click as click
@@ -187,7 +188,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-t",
     "--template",
-    type=click.Choice(config.avail_templates),
+    type=click.Choice(list(config.avail_templates.keys())),
     metavar=None,
     help="Report template to use.",
 )
@@ -440,15 +441,15 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     """
 
     try:
-        cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
-        other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
-        cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
+        cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.model_fields}
+        other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}
+        cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
 
         # Pass on to a regular function that can be used easily without click
         result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
 
     except KeyboardInterrupt:
-        if clean_up:
+        if clean_up and report.tmp_dir and Path(report.tmp_dir).exists():
             shutil.rmtree(report.tmp_dir)
         logger.critical(
             "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
@@ -524,14 +525,14 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
 
     plugin_hooks.mqc_trigger("execution_finish")
 
-    report.runtimes["total"] = time.time() - start_execution_time
+    report.runtimes.total = time.time() - start_execution_time
     if config.profile_runtime:
-        logger.warning(f"Run took {report.runtimes['total']:.2f} seconds")
-        logger.warning(f" - {report.runtimes['total_sp']:.2f}s: Searching files")
-        logger.warning(f" - {report.runtimes['total_mods']:.2f}s: Running modules")
+        logger.warning(f"Run took {report.runtimes.total:.2f} seconds")
+        logger.warning(f" - {report.runtimes.total_sp:.2f}s: Searching files")
+        logger.warning(f" - {report.runtimes.total_mods:.2f}s: Running modules")
         if config.make_report:
-            logger.warning(f" - {report.runtimes['total_compression']:.2f}s: Compressing report data")
-            logger.info(f"For more information, see the 'Run Time' section in {os.path.relpath(config.output_fn)}")
+            logger.warning(f" - {report.runtimes.total_compression:.2f}s: Compressing report data")
+            logger.info("For more information, see the 'Run Time' section in the report")
 
     if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:

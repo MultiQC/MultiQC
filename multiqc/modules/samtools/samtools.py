@@ -4,26 +4,18 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .stats import StatsReportMixin
-from .flagstat import FlagstatReportMixin
-from .idxstats import IdxstatsReportMixin
-from .rmdup import RmdupReportMixin
-from .coverage import CoverageReportMixin
-from .markdup import MarkdupReportMixin
+from .stats import parse_samtools_stats
+from .flagstat import parse_samtools_flagstat
+from .idxstats import parse_samtools_idxstats
+from .rmdup import parse_samtools_rmdup
+from .coverage import parse_samtools_coverage
+from .markdup import parse_samtools_markdup
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(
-    BaseMultiqcModule,
-    StatsReportMixin,
-    FlagstatReportMixin,
-    IdxstatsReportMixin,
-    RmdupReportMixin,
-    MarkdupReportMixin,
-    CoverageReportMixin,
-):
+class MultiqcModule(BaseMultiqcModule):
     """Samtools has a number of different commands and outputs.
     This MultiQC module supports some but not all. The code for
     each script is split into its own file and adds a section to
@@ -46,27 +38,27 @@ class MultiqcModule(
         n = dict()
 
         # Call submodule functions
-        n["stats"] = self.parse_samtools_stats()
+        n["stats"] = parse_samtools_stats(self)
         if n["stats"] > 0:
             log.info(f"Found {n['stats']} stats reports")
 
-        n["flagstat"] = self.parse_samtools_flagstat()
+        n["flagstat"] = parse_samtools_flagstat(self)
         if n["flagstat"] > 0:
             log.info(f"Found {n['flagstat']} flagstat reports")
 
-        n["idxstats"] = self.parse_samtools_idxstats()
+        n["idxstats"] = parse_samtools_idxstats(self)
         if n["idxstats"] > 0:
             log.info(f"Found {n['idxstats']} idxstats reports")
 
-        n["rmdup"] = self.parse_samtools_rmdup()
+        n["rmdup"] = parse_samtools_rmdup(self)
         if n["rmdup"] > 0:
             log.info(f"Found {n['rmdup']} rmdup reports")
 
-        n["coverage"] = self.parse_samtools_coverage()
+        n["coverage"] = parse_samtools_coverage(self)
         if n["coverage"] > 0:
             log.info(f"Found {n['coverage']} coverage reports")
 
-        n["markdup"] = self.parse_samtools_markdup()
+        n["markdup"] = parse_samtools_markdup(self)
         if n["markdup"] > 0:
             log.info(f"Found {n['markdup']} markdup reports")
 

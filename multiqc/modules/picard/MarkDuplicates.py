@@ -1,6 +1,8 @@
 """MultiQC submodule to parse output from Picard MarkDuplicates"""
 
 import logging
+from typing import Dict, List
+
 import math
 from collections import defaultdict
 
@@ -22,13 +24,10 @@ def parse_reports(
     the parameter.
     """
 
-    data_by_sample = dict()
+    data_by_sample: Dict = dict()
 
     # Get custom config value
-    try:
-        merge_multiple_libraries = config.picard_config["markdups_merge_multiple_libraries"]
-    except (AttributeError, KeyError):
-        merge_multiple_libraries = True
+    merge_multiple_libraries: bool = getattr(config, "picard_config", {}).get("markdups_merge_multiple_libraries", True)
 
     # Function to save results at end of table
     def save_table_results(s_name, keys, parsed_data, recompute_merged_metrics):
@@ -73,7 +72,7 @@ def parse_reports(
     # Go through logs and find Metrics
     for f in module.find_log_files(sp_key, filehandles=True):
         s_name = f["s_name"]
-        parsed_lists = defaultdict(list)
+        parsed_lists: Dict[str, List] = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
@@ -115,18 +114,19 @@ def parse_reports(
                     continue
 
                 # Parse the column values
-                assert len(vals) == len(keys), (keys, vals, f)
-                for k, v in zip(keys, vals):
-                    # More than one library present and merging stats
-                    if k in parsed_lists:
-                        recompute_merged_metrics = True
+                if keys is not None:
+                    assert len(vals) == len(keys), (keys, vals, f)
+                    for k, v in zip(keys, vals):
+                        # More than one library present and merging stats
+                        if k in parsed_lists:
+                            recompute_merged_metrics = True
 
-                    v = v.strip()
-                    try:
-                        v = float(v)
-                    except ValueError:
-                        pass
-                    parsed_lists[k].append(v)
+                        v = v.strip()
+                        try:
+                            v = float(v)
+                        except ValueError:
+                            pass
+                        parsed_lists[k].append(v)
 
         parsed_data = {}
         for k in parsed_lists:

@@ -4,6 +4,7 @@ modules. Contains helper functions to generate markup for report.
 """
 
 import base64
+import dataclasses
 import fnmatch
 import gzip
 import inspect
@@ -18,7 +19,7 @@ import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence
 
 import yaml
 
@@ -41,16 +42,29 @@ initialized = False
 
 tmp_dir: Optional[str] = None
 
+
+@dataclasses.dataclass
+class Runtimes:
+    total: float = 0.0
+    total_sp: float = 0.0
+    total_mods: float = 0.0
+    total_compression: float = 0.0
+    sp: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
+    mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
+
+
 # Uninitialised global variables for static typing
 multiqc_command: str
-analysis_files: List[str]  # Input files to search
-modules: List["BaseMultiqcModule"]  # List of BaseMultiqcModule objects
+top_modules: List[Dict[str, Dict[str, str]]]
+module_order: List[Dict[str, Dict[str, str]]]
+analysis_files: List[str]  # input files to search
+modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
-saved_raw_data: Dict[str, Dict[str, Any]]  # Indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
-runtimes: Dict[str, Union[float, Dict]]
+runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, int]
@@ -63,8 +77,8 @@ plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict]
 general_stats_headers: List[Dict]
-# Map of Software tools to a set of unique version strings
-software_versions: Dict[str, Dict[str, List]]
+software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
+plot_compressed_json: str
 
 
 def __initialise():
@@ -73,6 +87,8 @@ def __initialise():
     global initialized
     global tmp_dir
     global multiqc_command
+    global top_modules
+    global module_order
     global analysis_files
     global modules
     global general_stats_html
@@ -90,6 +106,7 @@ def __initialise():
     global general_stats_data
     global general_stats_headers
     global software_versions
+    global plot_compressed_json
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -97,6 +114,8 @@ def __initialise():
         tmp_dir = tempfile.mkdtemp()
     logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
+    top_modules = []
+    module_order = []
     analysis_files = []
     modules = []
     general_stats_html = ""
@@ -104,14 +123,7 @@ def __initialise():
     num_flat_plots = 0
     saved_raw_data = dict()
     last_found_file = None
-    runtimes = {
-        "total": 0.0,
-        "total_sp": 0.0,
-        "total_mods": 0.0,
-        "total_compression": 0.0,
-        "sp": defaultdict(),
-        "mods": defaultdict(),
-    }
+    runtimes = Runtimes()
     peak_memory_bytes_per_module = dict()
     diff_memory_bytes_per_module = dict()
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
@@ -121,6 +133,7 @@ def __initialise():
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
+    plot_compressed_json = ""
 
     reset_file_search()
 
@@ -255,7 +268,9 @@ class SearchFile:
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
+                raise
             self._iterator = file_line_block_iterator(self._filehandle)
+        assert self._iterator is not None
         try:
             for count_and_block_tuple in self._iterator:
                 self._blocks.append(count_and_block_tuple)
@@ -276,7 +291,7 @@ class SearchFile:
             # When no lines are parsed, self.content_lines should be empty
             if not self._blocks and config.report_readerrors:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
-            return  # No errors.
+            return  # No errors
         self._filehandle.close()
         self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
         self._iterator = file_line_block_iterator(self._filehandle)
@@ -352,7 +367,7 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
     apply ignore_dirs and ignore_paths filters.
     """
 
-    spatterns = [{}, {}, {}, {}, {}, {}, {}]
+    spatterns: List[Dict] = [{}, {}, {}, {}, {}, {}, {}]
     searchfiles = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
@@ -446,7 +461,7 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict] = [{}, {}, {}, {}, {}, {}, {}]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -471,7 +486,7 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
 
 
 def run_search_files(spatterns, searchfiles):
-    runtimes["sp"] = defaultdict()
+    runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
     def add_file(fn, root):
@@ -516,11 +531,11 @@ def run_search_files(spatterns, searchfiles):
                                 # logger.debug(f"File {f.path} matched {key}")
                             # Don't keep searching this file for other modules
                             if not sp.get("shared", False) and key not in config.filesearch_file_shared:
-                                runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
+                                runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
                                 return True
                             # Don't look at other patterns for this module
                             break
-                    runtimes["sp"][key] = runtimes["sp"].get(key, 0) + (time.time() - start)
+                    runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
         return file_matched
 
     def update_fn(i, sf):
@@ -534,13 +549,13 @@ def run_search_files(spatterns, searchfiles):
         desc="searching",
     )
 
-    runtimes["total_sp"] = time.time() - total_sp_starttime
+    runtimes.total_sp = time.time() - total_sp_starttime
     if config.profile_runtime:
-        logger.info(f"Profile-runtime: Searching files took {runtimes['total_sp']:.2f}s")
+        logger.info(f"Profile-runtime: Searching files took {runtimes.total_sp:.2f}s")
 
     # Debug log summary about what we skipped
     summaries = []
-    for key in sorted(file_search_stats, key=file_search_stats.get, reverse=True):
+    for key in sorted(file_search_stats, key=lambda x: file_search_stats[x], reverse=True):
         if "skipped_" in key and file_search_stats[key] > 0:
             summaries.append(f"{key}: {file_search_stats[key]}")
     if summaries:
@@ -669,9 +684,9 @@ def exclude_file(sp, f: SearchFile):
     return False
 
 
-def data_sources_tofile():
+def data_sources_tofile(data_dir: str):
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
-    with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
+    with io.open(os.path.join(data_dir, fn), "w", encoding="utf-8") as f:
         if config.data_format == "json":
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -688,16 +703,16 @@ def data_sources_tofile():
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile(modules: List["BaseMultiqcModule"]):
+def dois_tofile(data_dir, module_list: List["BaseMultiqcModule"]):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
-    for mod in modules:
+    for mod in module_list:
         if mod.doi is not None and mod.doi != "" and mod.doi != []:
             dois[mod.id] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
-    with open(os.path.join(config.data_dir, fn), "w") as f:
+    with open(os.path.join(data_dir, fn), "w") as f:
         if config.data_format == "json":
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -706,9 +721,9 @@ def dois_tofile(modules: List["BaseMultiqcModule"]):
             yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
         else:
             body = ""
-            for mod, dois in dois.items():
-                for doi in dois:
-                    body += f"{doi}{' ' * (50 - len(doi))} # {mod}\n"
+            for mod_name, dois_strings in dois.items():
+                for doi_string in dois_strings:
+                    body += f"{doi_string}{' ' * (50 - len(doi_string))} # {mod_name}\n"
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
@@ -750,7 +765,8 @@ def save_htmlid(html_id, skiplint=False):
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
                 modname = f">{callpath}< "
-                codeline = n[4][0].strip()
+                if isinstance(n[4], str):
+                    codeline = n[4][0].strip()
                 break
         if html_id != html_id_clean:
             errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
@@ -795,6 +811,7 @@ def data_tmp_dir() -> str:
     Temporary directory to collect data files from running modules before copying to the final
     destination in multiqc.core.write_results
     """
+    assert tmp_dir is not None
     path = os.path.join(tmp_dir, "multiqc_data")
     os.makedirs(path, exist_ok=True)
     return path
@@ -805,13 +822,14 @@ def plots_tmp_dir() -> str:
     Temporary directory to collect plot exports from running modules before copying to the final
     destination in multiqc.core.write_results
     """
+    assert tmp_dir is not None
     path = os.path.join(tmp_dir, "multiqc_plots")
     os.makedirs(path, exist_ok=True)
     return path
 
 
 def write_data_file(
-    data: Union[Dict[str, Union[Dict, List]], List[Dict]],
+    data: Union[Mapping[str, Union[Mapping, Sequence]], Sequence[Mapping], Sequence[Sequence]],
     fn: str,
     sort_cols=False,
     data_format=None,
@@ -953,9 +971,9 @@ def multiqc_dump_json():
                 logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
         # Get the absolute paths of analysis directories
         exported_data["config_analysis_dir_abs"] = list()
-        for d in exported_data.get("config_analysis_dir", []):
+        for config_analysis_dir in exported_data.get("config_analysis_dir", []):
             try:
-                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(d)))
+                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(config_analysis_dir)))
             except Exception:
                 pass
     return exported_data

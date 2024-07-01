@@ -62,7 +62,7 @@ def load_versions_from_config(config):
     else:
         versions_config = validate_software_versions(versions_config)
 
-    versions_from_files = defaultdict(lambda: defaultdict(list))
+    versions_from_files: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
     for f in mqc_report.files.get("software_versions", []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as fh:
@@ -147,7 +147,7 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
                 fixed_lst.append(item)
         return fixed_lst
 
-    output = defaultdict(lambda: defaultdict(list))
+    output: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
 
     for level1_key, level1_values in versions_config.items():
         group = level1_key
@@ -194,13 +194,13 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str):
+def parse_version(version: str) -> str:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.
     # - https://peps.python.org/pep-0440/
     """
     try:
-        return packaging.version.parse(version)
+        return str(packaging.version.parse(version))
     except packaging.version.InvalidVersion:
         return str(version)
