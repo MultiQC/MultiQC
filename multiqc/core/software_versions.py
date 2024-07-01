@@ -8,7 +8,7 @@ from typing import List, Dict
 import packaging.version
 import yaml
 
-from multiqc import report as mqc_report
+from multiqc import report as mqc_report, config, report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,10 +19,10 @@ def normalize_name(name: str):
     return name.lower().replace(" ", "").replace("-", "").replace("_", "")
 
 
-def update_versions_from_config(config, report):
+def update_versions_from_config():
     """Update report with software versions from config if provided"""
     # Parse software version from config if provided
-    versions_from_config = load_versions_from_config(config)
+    versions_from_config = load_versions_from_config()
     for group, softwares in versions_from_config.items():
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
@@ -52,10 +52,10 @@ def update_versions_from_config(config, report):
             report.software_versions[group][software] = versions
 
 
-def load_versions_from_config(config):
+def load_versions_from_config():
     """Try to load software versions from config"""
     log.debug("Reading software versions from config.software_versions")
-    versions_config = getattr(config, "software_versions", defaultdict(lambda: defaultdict(list)))
+    versions_config = config.software_versions
     if not isinstance(versions_config, dict):
         log.error("Expected the `software_versions` config section to be a dictionary")
         versions_config = {}

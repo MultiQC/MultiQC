@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 
 import multiqc
-from multiqc import report, reset
+from multiqc import report
 
 
 def test_parse_logs_fn_clean_exts(data_dir):
