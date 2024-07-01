@@ -8,7 +8,7 @@ def test_write_stdout(data_dir, capsys):
     Verify stdout option: stdout contains only HTML, nothing else is written to disk
     """
     report.reset()
-    mod_dir = data_dir / "modules" / "bismark"
+    mod_dir = data_dir / "modules" / "kallisto"
     assert mod_dir.exists() and mod_dir.is_dir()
 
     multiqc.run(mod_dir, cfg=ClConfig(filename="stdout"))
