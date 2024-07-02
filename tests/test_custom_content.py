@@ -210,3 +210,40 @@ sp:
     assert report.plot_by_id["concordance_heatmap"].datasets[0].rows == [[1.0, 0.378]]
     assert report.plot_by_id["concordance_heatmap"].datasets[0].xcats == ["08021342", "08027127"]
     assert report.plot_by_id["concordance_heatmap"].datasets[0].ycats == ["08021342"]
+
+
+def test_full_run_with_config(tmp_path, capsys):
+    file = tmp_path / "mysample-concordance.txt"
+    file.write_text("""Sample	'08021342'	'08027127'\n'08021342'	1.0	0.378""")
+
+    conf_file = tmp_path / "multiqc_config.yaml"
+    conf_file.write_text(
+        """\
+custom_data:
+    concordance:
+        id: 'concordance'
+        section_name: 'Concordance Rates'
+        plot_type: 'heatmap'
+        pconfig:
+            id: 'concordance_heatmap'
+        sort_rows: true
+sp:
+    concordance:
+        fn: '*concordance.txt'
+"""
+    )
+
+    multiqc.run(  # pylint: disable=no-member
+        file,
+        cfg=ClConfig(
+            strict=True,
+            force=True,
+            config_files=[conf_file],
+            filename="stdout",
+        ),
+    )
+
+    out = capsys.readouterr().out
+    assert '<h2 class="mqc-module-title" id="concordance-module">Concordance Rates</h2>' in out
+    assert '<div class="mqc-section mqc-section-concordance-module">' in out
+    assert 'value="0.378"' in out
