@@ -6,13 +6,19 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Union, Tuple, cast, Set
 
 import yaml
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table
+from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
+from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.plotly.scatter import ScatterConfig
+from multiqc.plots.plotly.box import BoxPlotConfig
+from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.plotly.heatmap import HeatmapConfig
+from multiqc.plots.table_object import TableConfig
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -31,7 +37,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mod_by_id: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(lambda: dict()))
+    cust_mod_by_id: Dict[str, Dict[str, Union[Dict, List, str]]] = defaultdict(dict)
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_patterns = ["custom_content"]
@@ -39,158 +45,169 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # First - find files using patterns described in the config
     config_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
-    for k, f in config_data.items():
+    for k, conf_data_item in config_data.items():
         # Check that we have a dictionary
-        if not isinstance(f, dict):
+        if not isinstance(conf_data_item, dict):
             log.debug(f"config.custom_data row was not a dictionary: {k}")
             continue
-        c_id = f.get("id", k)
+        c_id = conf_data_item.get("id", k)
 
         # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
-        if "data" in f:
-            try:
-                cust_mod_by_id[c_id]["data"].update(f["data"])
-            except ValueError:
+        if "data" in conf_data_item:
+            if isinstance(cust_mod_by_id.get(c_id), dict) and isinstance(cust_mod_by_id[c_id].get("data"), dict):
+                d = cust_mod_by_id[c_id]["data"]
+                assert isinstance(d, dict)
+                d.update(conf_data_item["data"])
+            else:
                 # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
-                cust_mod_by_id[c_id]["data"] = f["data"]
-            cust_mod_by_id[c_id]["config"].update({k: v for k, v in f.items() if k != "data"})
-            cust_mod_by_id[c_id]["config"]["id"] = cust_mod_by_id[c_id]["config"].get("id", c_id)
+                cust_mod_by_id[c_id]["data"] = conf_data_item["data"]
+
+            cust_mod_conf = cust_mod_by_id[c_id]["config"]
+            assert isinstance(cust_mod_conf, dict)
+            cust_mod_conf.update({k: v for k, v in conf_data_item.items() if k != "data"})
+            cust_mod_conf["id"] = cust_mod_conf.get("id", c_id)
             continue
 
         # Custom Content ID has search patterns in the config
         if c_id in report.files:
-            cust_mod_by_id[c_id]["config"] = f
-            cust_mod_by_id[c_id]["config"]["id"] = cust_mod_by_id[c_id]["config"].get("id", c_id)
+            assert isinstance(cust_mod_by_id[c_id]["config"], dict)
+            conf_data_item["id"] = conf_data_item.get("id", c_id)
+            cust_mod_by_id[c_id]["config"] = conf_data_item
             search_patterns.append(c_id)
             continue
 
         # Must just be configuration for a separate custom-content class
-        mod_cust_config[c_id] = f
+        mod_cust_config[c_id] = conf_data_item
 
     # Now go through each of the file search patterns
-    bm = BaseMultiqcModule(name="Custom content", anchor="custom_content")
+    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor="custom_content")
     for k in search_patterns:
         num_sp_found_files = 0
         for f in bm.find_log_files(k):
             num_sp_found_files += 1
-            # Handle any exception without messing up for remaining custom content files
-            try:
-                f_extension = os.path.splitext(f["fn"])[1]
 
-                # YAML and JSON files are the easiest
-                parsed_data = None
-                if f_extension == ".yaml" or f_extension == ".yml":
-                    try:
-                        parsed_data = yaml.safe_load(f["f"])
-                    except Exception as e:
-                        log.warning(f"Error parsing YAML file '{f['fn']}' (probably invalid YAML)")
-                        log.debug(f"YAML error: {e}", exc_info=True)
-                        break
-                    parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                elif f_extension == ".json":
-                    try:
-                        parsed_data = json.loads(f["f"])
-                    except Exception as e:
-                        log.warning(f"Error parsing JSON file '{f['fn']}' (probably invalid JSON)")
-                        log.warning(f"JSON error: {e}")
-                        break
-                    parsed_data["id"] = parsed_data.get("id", f["s_name"])
-                elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
-                    image_string = base64.b64encode(f["f"].read()).decode("utf-8")
-                    image_format = "png" if f_extension == ".png" else "jpg"
-                    img_html = (
-                        '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
-                            image_format, image_string
-                        )
+            f_extension = os.path.splitext(f["fn"])[1]
+
+            # YAML and JSON files are the easiest
+            parsed_data = None
+            if f_extension == ".yaml" or f_extension == ".yml":
+                try:
+                    parsed_data = yaml.safe_load(f["f"])
+                except Exception as e:
+                    log.warning(f"Error parsing YAML file '{f['fn']}' (probably invalid YAML)")
+                    log.debug(f"YAML error: {e}", exc_info=True)
+                    break
+                parsed_data["id"] = parsed_data.get("id", f["s_name"])
+            elif f_extension == ".json":
+                try:
+                    parsed_data = json.loads(f["f"])
+                except Exception as e:
+                    log.warning(f"Error parsing JSON file '{f['fn']}' (probably invalid JSON)")
+                    log.warning(f"JSON error: {e}")
+                    break
+                parsed_data["id"] = parsed_data.get("id", f["s_name"])
+            elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
+                image_string = base64.b64encode(f["f"].read()).decode("utf-8")
+                image_format = "png" if f_extension == ".png" else "jpg"
+                img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
+                    image_format, image_string
+                )
+                parsed_data = {
+                    "id": f["s_name"],
+                    "plot_type": "image",
+                    "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
+                    "data": img_html,
+                }
+                cust_mod_conf = cust_mod_by_id.get(k, {}).get("config", {})
+                assert isinstance(cust_mod_conf, dict)
+                # If the search pattern 'k' has an associated custom content section config, use it:
+                parsed_data.update(cust_mod_conf)
+            elif f_extension == ".html":
+                parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
+                parsed_data.update(_find_html_file_header(f))
+
+            if parsed_data is not None:
+                if isinstance(parsed_data.get("data"), dict):
+                    # Run sample-name cleaning on the data keys
+                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+
+                c_id = parsed_data.get("id", k)
+                parsed_item = parsed_data.get("data", {})
+                if parsed_item:
+                    cust_mod_item = cust_mod_by_id[c_id]["data"]
+                    if isinstance(parsed_item, dict) and isinstance(cust_mod_item, dict):
+                        cust_mod_item.update(parsed_item)
+                    else:
+                        cust_mod_by_id[c_id]["data"] = parsed_item
+                    cast(Dict, cust_mod_by_id[c_id]["config"]).update(
+                        {j: k for j, k in parsed_data.items() if j != "data"}
                     )
-                    parsed_data = {
-                        "id": f["s_name"],
-                        "plot_type": "image",
-                        "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
-                        "data": img_html,
-                    }
-                    # If the search pattern 'k' has an associated custom content section config, use it
-                    parsed_data.update(cust_mod_by_id.get(k, {}).get("config", {}))
-                elif f_extension == ".html":
-                    parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
-                    parsed_data.update(_find_html_file_header(f))
-
-                if parsed_data is not None:
-                    if isinstance(parsed_data.get("data"), dict):
-                        # Run sample-name cleaning on the data keys
-                        parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
-
-                    c_id = parsed_data.get("id", k)
-                    if len(parsed_data.get("data", {})) > 0:
-                        if isinstance(parsed_data["data"], dict):
-                            cust_mod_by_id[c_id]["data"].update(parsed_data["data"])
-                        else:
-                            cust_mod_by_id[c_id]["data"] = parsed_data["data"]
-                        cust_mod_by_id[c_id]["config"].update({j: k for j, k in parsed_data.items() if j != "data"})
-                    else:
-                        log.warning(f"No data found in {f['fn']}")
-
-                # txt, csv, tsv etc
                 else:
-                    # Look for configuration details in the header
-                    m_config = _find_file_header(f)
-                    s_name = None
-                    if m_config is not None:
-                        c_id = m_config.get("id", k)
-                        # Update the base config with anything parsed from the file
-                        b_config = cust_mod_by_id.get(c_id, {}).get("config", {})
-                        b_config.update(m_config)
-                        # Now set the module config to the merged dict
-                        m_config = dict(b_config)
-                        s_name = m_config.get("sample_name")
+                    log.warning(f"No data found in {f['fn']}")
+
+            # txt, csv, tsv etc
+            else:
+                # Look for configuration details in the header
+                m_config = _find_file_header(f)
+                s_name = None
+                if m_config is not None:
+                    c_id = m_config.get("id", k)
+                    # Update the base config with anything parsed from the file
+                    b_config = cust_mod_by_id.get(c_id, {}).get("config", {})
+                    assert isinstance(b_config, dict)
+                    b_config.update(m_config)
+                    # Now set the module config to the merged dict
+                    m_config = dict(b_config)
+                    s_name = m_config.get("sample_name")
+                else:
+                    c_id = k
+                    m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
+
+                # Guess sample name if not given
+                if s_name is None:
+                    s_name = f["s_name"]
+
+                # Guess c_id if no information known
+                if k == "custom_content":
+                    c_id = s_name
+                    if not m_config.get("id"):
+                        m_config["id"] = c_id
+
+                # Merge with config from a MultiQC config file if we have it
+                m_config.update(mod_cust_config.get(c_id, {}))
+
+                # Add information about the file to the config dict
+                if "files" not in m_config:
+                    m_config["files"] = dict()
+                m_config["files"].update({s_name: {"fn": f["fn"], "root": f["root"]}})
+
+                # Guess file format if not given
+                if m_config.get("file_format") is None:
+                    m_config["file_format"] = _guess_file_format(f)
+                # Parse data
+
+                parsed_data, parsed_conf = _parse_txt(f, m_config)
+                if parsed_data is None or len(parsed_data) == 0:
+                    log.warning(f"Not able to parse custom data in {f['fn']}")
+                else:
+                    # Did we get a new section id from the file?
+                    if parsed_conf.get("id") is not None:
+                        c_id = parsed_conf.get("id")
+                    # heatmap - special data type
+                    if isinstance(parsed_data, list):
+                        cust_mod_by_id[c_id]["data"] = parsed_data
+                    elif parsed_conf.get("plot_type") == "html":
+                        cust_mod_by_id[c_id]["data"] = parsed_data
                     else:
-                        c_id = k
-                        m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
-
-                    # Guess sample name if not given
-                    if s_name is None:
-                        s_name = f["s_name"]
-
-                    # Guess c_id if no information known
-                    if k == "custom_content":
-                        c_id = s_name
-                        if not m_config.get("id"):
-                            m_config["id"] = c_id
-
-                    # Merge with config from a MultiQC config file if we have it
-                    m_config.update(mod_cust_config.get(c_id, {}))
-
-                    # Add information about the file to the config dict
-                    if "files" not in m_config:
-                        m_config["files"] = dict()
-                    m_config["files"].update({s_name: {"fn": f["fn"], "root": f["root"]}})
-
-                    # Guess file format if not given
-                    if m_config.get("file_format") is None:
-                        m_config["file_format"] = _guess_file_format(f)
-                    # Parse data
-                    try:
-                        parsed_data, conf = _parse_txt(f, m_config)
-                        if parsed_data is None or len(parsed_data) == 0:
-                            log.warning(f"Not able to parse custom data in {f['fn']}")
-                        else:
-                            # Did we get a new section id from the file?
-                            if conf.get("id") is not None:
-                                c_id = conf.get("id")
-                            # heatmap - special data type
-                            if isinstance(parsed_data, list):
-                                cust_mod_by_id[c_id]["data"] = parsed_data
-                            elif conf.get("plot_type") == "html":
-                                cust_mod_by_id[c_id]["data"] = parsed_data
-                            else:
-                                cust_mod_by_id[c_id]["data"].update(parsed_data)
-                            cust_mod_by_id[c_id]["config"].update(conf)
-                    except (IndexError, AttributeError, TypeError):
-                        log.error(f"Unexpected parsing error for {f['fn']}", exc_info=True)
-                        raise  # testing
-            except Exception as e:
-                log.error(f"Uncaught exception raised for file '{f['fn']}'")
-                log.exception(e)
+                        assert isinstance(parsed_data, dict)
+                        cust_data = cust_mod_by_id[c_id].get("data", {})
+                        assert isinstance(cust_data, dict)
+                        cust_data.update(parsed_data)
+                        cust_mod_by_id[c_id]["data"] = cust_data
+                    cust_config = cust_mod_by_id[c_id].get("config", {})
+                    assert isinstance(cust_config, dict)
+                    cust_config.update(parsed_conf)
+                    cust_mod_by_id[c_id]["config"] = cust_config
 
         # Give log message if no files found for search pattern
         if num_sp_found_files == 0 and k != "custom_content":
@@ -198,10 +215,10 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
     # Filter to strip out ignored sample names
     for k in cust_mod_by_id:
-        cust_mod_by_id[k]["data"] = bm.ignore_samples(cust_mod_by_id[k]["data"])
+        cust_mod_by_id[k]["data"] = bm.ignore_samples(cust_mod_by_id[k].get("data", {}))
 
     # Remove any configs that have no data
-    remove_cids = [k for k in cust_mod_by_id if len(cust_mod_by_id[k]["data"]) == 0]
+    remove_cids = [k for k in cust_mod_by_id if len(cust_mod_by_id[k].get("data", {})) == 0]
     for k in remove_cids:
         del cust_mod_by_id[k]
 
@@ -212,13 +229,15 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     parsed_modules = dict()
     for c_id, mod in cust_mod_by_id.items():
         # General Stats
+        assert isinstance(mod["config"], dict)
+        assert isinstance(mod["data"], dict)
         if mod["config"].get("plot_type") == "generalstats":
             gsheaders = mod["config"].get("pconfig")
             if gsheaders is None:
-                headers = set()
-                for d in mod["data"].values():
-                    headers.update(d.keys())
-                headers = list(headers)
+                headers_set: Set[str] = set()
+                for _hd in mod["data"].values():
+                    headers_set.update(_hd.keys())
+                headers = list(headers_set)
                 headers.sort()
                 gsheaders = dict()
                 for h in headers:
@@ -263,14 +282,18 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, "custom_content", {}).get("order", [])
-    sorted_modules = [parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order]
+    sorted_modules: List[BaseMultiqcModule] = [
+        parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order
+    ]
     sorted_modules.extend(
         [parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id]
     )
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        if len(cust_mod_by_id) == 1 and list(cust_mod_by_id.values())[0]["config"].get("plot_type") == "generalstats":
+        item = list(cust_mod_by_id.values())[0]["config"]
+        assert isinstance(item, dict)
+        if len(cust_mod_by_id) == 1 and item.get("plot_type") == "generalstats":
             sorted_modules = [bm]
         else:
             raise ModuleNoSamplesFound
@@ -375,23 +398,29 @@ class MultiqcModule(BaseMultiqcModule):
         # Bar plot
         elif plot_type == "bargraph":
             mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=pconfig)
+            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
 
         # Line plot
         elif plot_type == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig=pconfig)
+            plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
 
         # Scatter plot
         elif plot_type == "scatter":
-            plot = scatter.plot(mod["data"], pconfig=pconfig)
+            plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
+
+        # Box plot
+        elif plot_type == "box":
+            plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
 
         # Heatmap
         elif plot_type == "heatmap":
-            plot = heatmap.plot(mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=pconfig)
+            plot = heatmap.plot(
+                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
+            )
 
         # Violin plot
         elif plot_type in ["violin", "beeswarm"]:
-            plot = violin.plot(mod["data"], pconfig=pconfig)
+            plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
 
         # Raw HTML
         elif plot_type == "html":
@@ -420,7 +449,7 @@ class MultiqcModule(BaseMultiqcModule):
         if plot is not None:
             for i, ds in enumerate(mod["data"]):
                 # Save the data if it's not a html string
-                if not isinstance(ds, str):
+                if not isinstance(plot, str):
                     did = plot.pconfig.id
                     if i > 0:
                         did = f"{did}_{i}"
@@ -524,7 +553,7 @@ def _guess_file_format(f):
     return "spaces"
 
 
-def _parse_txt(f, conf):
+def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
     # Split the data into a list of lists by column
     sep = None
     if conf["file_format"] == "csv":
@@ -573,12 +602,12 @@ def _parse_txt(f, conf):
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
-    if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols >= 2:
-        data = defaultdict(dict)
+    if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols and ncols >= 2:
+        data_ddict: Dict[str, Dict] = defaultdict(dict)
         for i, line in enumerate(d[1:], 1):
             for j, v in enumerate(line[1:], 1):
-                data[line[0]][d[0][j]] = v
-        return data, conf
+                data_ddict[line[0]][d[0][j]] = v
+        return data_ddict, conf
 
     # Heatmap: Number of headers == number of lines
     if conf.get("plot_type") is None and first_row_str == len(lines) and all_numeric:
@@ -586,17 +615,17 @@ def _parse_txt(f, conf):
     if conf.get("plot_type") == "heatmap":
         conf["xcats"] = d[0][1:]
         conf["ycats"] = [s[0] for s in d[1:]]
-        data = [s[1:] for s in d[1:]]
-        return data, conf
+        data_list: List = [s[1:] for s in d[1:]]
+        return data_list, conf
 
     # Header row of strings, or configured as table
     if first_row_str == len(d[0]) or conf.get("plot_type") == "table":
-        data = dict()
+        data_ddict = dict()
         for s in d[1:]:
-            data[s[0]] = dict()
+            data_ddict[s[0]] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(d[0][i + 1])
-                data[s[0]][cat] = v
+                data_ddict[s[0]][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True
@@ -614,9 +643,9 @@ def _parse_txt(f, conf):
                 conf["pconfig"]["col1_header"] = d[0][0].strip()
         # Return parsed data
         if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
-            return data, conf
+            return data_ddict, conf
         else:
-            data = dict()  # reset
+            data_ddict = dict()  # reset
 
     # Scatter plot: First row is  str : num : num
     if (
@@ -629,13 +658,13 @@ def _parse_txt(f, conf):
         conf["plot_type"] = "scatter"
 
     if conf.get("plot_type") == "scatter":
-        data = dict()
+        data_dict = dict()
         for s in d:
             try:
-                data[s[0]] = {"x": float(s[1]), "y": float(s[2])}
+                data_dict[s[0]] = {"x": float(s[1]), "y": float(s[2])}
             except (IndexError, ValueError):
                 pass
-        return data, conf
+        return data_dict, conf
 
     # Single sample line / bar graph - first row has two columns
     if len(d[0]) == 2:
@@ -651,24 +680,24 @@ def _parse_txt(f, conf):
             # Set section id based on directory if not known
             if conf.get("id") is None:
                 conf["id"] = os.path.basename(f["root"])
-            data = dict()
+            data_dict = dict()
             for s in d:
-                data[s[0]] = s[1]
-            return {f["s_name"]: data}, conf
+                data_dict[s[0]] = s[1]
+            return {f["s_name"]: data_dict}, conf
 
     # Multi-sample line graph: No header row, str : lots of num columns
     if conf.get("plot_type") is None and len(d[0]) > 4 and all_numeric:
         conf["plot_type"] = "linegraph"
 
     if conf.get("plot_type") == "linegraph":
-        data = dict()
+        data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
         if d[0][0].strip() == "":
             x_labels = d.pop(0)[1:]
         # Use 1..n range for x values
         for s in d:
-            data[s[0]] = dict()
+            data_ddict[s[0]] = dict()
             for i, v in enumerate(s[1:]):
                 try:
                     x_val = x_labels[i]
@@ -678,8 +707,8 @@ def _parse_txt(f, conf):
                         pass
                 except IndexError:
                     x_val = i + 1
-                data[s[0]][x_val] = v
-        return data, conf
+                data_ddict[s[0]][x_val] = v
+        return data_ddict, conf
 
     # Got to the end and haven't returned. It's a mystery, capn'!
     log.debug(

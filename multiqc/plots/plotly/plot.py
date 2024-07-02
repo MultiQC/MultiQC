@@ -16,7 +16,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
 from multiqc.utils import mqc_colour
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class PConfig(ValidatedConfig):
         if pconfig is None:
             lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
             return cls(
-                id=f"{cls.__name__.lower()}-{random.randint(1000000, 9999999)}",
+                id=f"{cls.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}",
                 title=cls.__name__,
             )
         elif isinstance(pconfig, PConfig):
@@ -92,6 +92,9 @@ class PConfig(ValidatedConfig):
 
     def __init__(self, **data):
         super().__init__(**data)
+
+        if not self.id:
+            self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:

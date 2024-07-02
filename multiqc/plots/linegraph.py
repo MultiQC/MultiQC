@@ -1,7 +1,7 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence, Mapping
+from typing import List, Dict, Union, Tuple, Sequence
 
 from multiqc import config
 from multiqc.plots.plotly import line

@@ -107,8 +107,6 @@ def exec_modules(
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             raise
-        except ConfigValidationError:
-            raise
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.

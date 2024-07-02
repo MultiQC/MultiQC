@@ -6,6 +6,8 @@ from typing import List, Dict, Set
 from pydantic import BaseModel, ValidationError, model_validator
 from typeguard import check_type, TypeCheckError
 
+from multiqc import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +66,8 @@ class ValidatedConfig(BaseModel):
                 for error in sorted(errors):
                     logger.error(f"• {error}")
                 _validation_errors_by_cls[self.__class__.__name__].clear()  # Reset for interactive usage
-                raise ConfigValidationError(module_name=modname)
+                if config.strict:
+                    raise ConfigValidationError(module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
@@ -107,6 +110,7 @@ class ValidatedConfig(BaseModel):
             if field.is_required():
                 if name not in values:
                     add_validation_error(cls, f"missing required field '{name}'")
+                    values[name] = field.annotation() if field.annotation else None
 
         # Check types and validate specific fields
         corrected_values = {}
@@ -135,8 +139,8 @@ class ValidatedConfig(BaseModel):
                 msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                 add_validation_error(cls, msg)
                 logger.debug(f"{msg}: {e}")
-
-            corrected_values[name] = val
+            else:
+                corrected_values[name] = val
 
         values = corrected_values
         return values
