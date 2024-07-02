@@ -40,3 +40,40 @@ def test_write_stdout(data_dir, tmp_path, capsys):
 
     files_after = set(os.listdir(tmp_path))
     assert files_before == files_after
+
+
+def test_custom_content_with_config(tmp_path, capsys):
+    file = tmp_path / "mysample-concordance.txt"
+    file.write_text("""Sample	'08021342'	'08027127'\n'08021342'	1.0	0.378""")
+
+    conf_file = tmp_path / "multiqc_config.yaml"
+    conf_file.write_text(
+        """\
+custom_data:
+    concordance:
+        id: 'concordance'
+        section_name: 'Concordance Rates'
+        plot_type: 'heatmap'
+        pconfig:
+            id: 'concordance_heatmap'
+        sort_rows: true
+sp:
+    concordance:
+        fn: '*concordance.txt'
+"""
+    )
+
+    multiqc.run(  # pylint: disable=no-member
+        file,
+        cfg=ClConfig(
+            strict=True,
+            force=True,
+            config_files=[conf_file],
+            filename="stdout",
+        ),
+    )
+
+    out = capsys.readouterr().out
+    assert '<h2 class="mqc-module-title" id="concordance-module">Concordance Rates</h2>' in out
+    assert '<div class="mqc-section mqc-section-concordance-module">' in out
+    assert 'value="0.378"' in out

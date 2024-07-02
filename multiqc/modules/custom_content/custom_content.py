@@ -43,47 +43,46 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     search_patterns = ["custom_content"]
 
     # First - find files using patterns described in the config
-    config_data = getattr(config, "custom_data", {})
+    config_custom_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
-    for k, conf_data_item in config_data.items():
+    for config_custom_data_id, config_custom_data_item in config_custom_data.items():
         # Check that we have a dictionary
-        if not isinstance(conf_data_item, dict):
-            log.debug(f"config.custom_data row was not a dictionary: {k}")
+        if not isinstance(config_custom_data_item, dict):
+            log.debug(f"config.custom_data row was not a dictionary: {config_custom_data_id}")
             continue
-        c_id = conf_data_item.get("id", k)
+        c_id = config_custom_data_item.get("id", config_custom_data_id)
 
         # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
-        if "data" in conf_data_item:
+        if "data" in config_custom_data_item:
             if isinstance(cust_mod_by_id.get(c_id), dict) and isinstance(cust_mod_by_id[c_id].get("data"), dict):
                 d = cust_mod_by_id[c_id]["data"]
                 assert isinstance(d, dict)
-                d.update(conf_data_item["data"])
+                d.update(config_custom_data_item["data"])
             else:
                 # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
-                cust_mod_by_id[c_id]["data"] = conf_data_item["data"]
+                cust_mod_by_id[c_id]["data"] = config_custom_data_item["data"]
 
             cust_mod_conf = cust_mod_by_id[c_id]["config"]
             assert isinstance(cust_mod_conf, dict)
-            cust_mod_conf.update({k: v for k, v in conf_data_item.items() if k != "data"})
+            cust_mod_conf.update({k: v for k, v in config_custom_data_item.items() if k != "data"})
             cust_mod_conf["id"] = cust_mod_conf.get("id", c_id)
             continue
 
         # Custom Content ID has search patterns in the config
-        if c_id in report.files:
-            assert isinstance(cust_mod_by_id[c_id]["config"], dict)
-            conf_data_item["id"] = conf_data_item.get("id", c_id)
-            cust_mod_by_id[c_id]["config"] = conf_data_item
+        if report.files.get(c_id):
+            config_custom_data_item["id"] = config_custom_data_item.get("id", c_id)
+            cust_mod_by_id[c_id]["config"] = config_custom_data_item
             search_patterns.append(c_id)
             continue
 
         # Must just be configuration for a separate custom-content class
-        mod_cust_config[c_id] = conf_data_item
+        mod_cust_config[c_id] = config_custom_data_item
 
     # Now go through each of the file search patterns
     bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor="custom_content")
-    for k in search_patterns:
+    for config_custom_data_id in search_patterns:
         num_sp_found_files = 0
-        for f in bm.find_log_files(k):
+        for f in bm.find_log_files(config_custom_data_id):
             num_sp_found_files += 1
 
             f_extension = os.path.splitext(f["fn"])[1]
@@ -118,7 +117,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                     "data": img_html,
                 }
-                cust_mod_conf = cust_mod_by_id.get(k, {}).get("config", {})
+                cust_mod_conf = cust_mod_by_id.get(config_custom_data_id, {}).get("config", {})
                 assert isinstance(cust_mod_conf, dict)
                 # If the search pattern 'k' has an associated custom content section config, use it:
                 parsed_data.update(cust_mod_conf)
@@ -131,7 +130,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     # Run sample-name cleaning on the data keys
                     parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
 
-                c_id = parsed_data.get("id", k)
+                c_id = parsed_data.get("id", config_custom_data_id)
                 parsed_item = parsed_data.get("data", {})
                 if parsed_item:
                     cust_mod_item = cust_mod_by_id[c_id]["data"]
@@ -151,7 +150,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 m_config = _find_file_header(f)
                 s_name = None
                 if m_config is not None:
-                    c_id = m_config.get("id", k)
+                    c_id = m_config.get("id", config_custom_data_id)
                     # Update the base config with anything parsed from the file
                     b_config = cust_mod_by_id.get(c_id, {}).get("config", {})
                     assert isinstance(b_config, dict)
@@ -160,7 +159,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     m_config = dict(b_config)
                     s_name = m_config.get("sample_name")
                 else:
-                    c_id = k
+                    c_id = config_custom_data_id
                     m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
 
                 # Guess sample name if not given
@@ -168,7 +167,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     s_name = f["s_name"]
 
                 # Guess c_id if no information known
-                if k == "custom_content":
+                if config_custom_data_id == "custom_content":
                     c_id = s_name
                     if not m_config.get("id"):
                         m_config["id"] = c_id
@@ -210,17 +209,19 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     cust_mod_by_id[c_id]["config"] = cust_config
 
         # Give log message if no files found for search pattern
-        if num_sp_found_files == 0 and k != "custom_content":
-            log.debug(f"No samples found: custom content ({k})")
+        if num_sp_found_files == 0 and config_custom_data_id != "custom_content":
+            log.debug(f"No samples found: custom content ({config_custom_data_id})")
 
     # Filter to strip out ignored sample names
-    for k in cust_mod_by_id:
-        cust_mod_by_id[k]["data"] = bm.ignore_samples(cust_mod_by_id[k].get("data", {}))
+    for config_custom_data_id in cust_mod_by_id:
+        cust_mod_by_id[config_custom_data_id]["data"] = bm.ignore_samples(
+            cust_mod_by_id[config_custom_data_id].get("data", {})
+        )
 
     # Remove any configs that have no data
     remove_cids = [k for k in cust_mod_by_id if len(cust_mod_by_id[k].get("data", {})) == 0]
-    for k in remove_cids:
-        del cust_mod_by_id[k]
+    for config_custom_data_id in remove_cids:
+        del cust_mod_by_id[config_custom_data_id]
 
     if len(cust_mod_by_id) == 0:
         raise ModuleNoSamplesFound
@@ -230,8 +231,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     for c_id, mod in cust_mod_by_id.items():
         # General Stats
         assert isinstance(mod["config"], dict)
-        assert isinstance(mod["data"], dict)
         if mod["config"].get("plot_type") == "generalstats":
+            assert isinstance(mod["data"], dict), mod["data"]
             gsheaders = mod["config"].get("pconfig")
             if gsheaders is None:
                 headers_set: Set[str] = set()

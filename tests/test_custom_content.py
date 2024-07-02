@@ -1,9 +1,11 @@
 import pytest
 
+import multiqc
 from multiqc import report
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.modules.custom_content import custom_module_classes
 from multiqc.validation import ConfigValidationError
+from multiqc.core.file_search import file_search
 
 
 def test_custom_content(tmp_path):
@@ -119,8 +121,8 @@ def test_wrong_fields(tmp_path, capsys, strict):
 
     report.reset()
     report.analysis_files = [file]
-    report.search_files(["custom_content"])
     update_config(cfg=ClConfig(strict=strict))
+    report.search_files(["custom_content"])
 
     if strict:
         with pytest.raises(ConfigValidationError):
@@ -162,15 +164,49 @@ def test_missing_id_and_title(tmp_path, capsys, strict):
     report.reset()
     report.analysis_files = [file]
     report.search_files(["custom_content"])
-    update_config(cfg=ClConfig(strict=strict))
 
     custom_module_classes()
-    err = str(capsys.readouterr().err)
-    print(err)
 
-    # Still should produce output unless strict mode:
     assert len(report.plot_by_id) == 1
     assert f"{id}-plot" in report.plot_by_id
     assert report.plot_by_id[f"{id}-plot"].id == f"{id}-plot"
     assert report.plot_by_id[f"{id}-plot"].plot_type == "xy_line"
     assert report.plot_by_id[f"{id}-plot"].pconfig.xlab == "expression"
+
+
+def test_with_separate_config(tmp_path, capsys):
+    file = tmp_path / "mysample-concordance.txt"
+    file.write_text("""Sample	'08021342'	'08027127'\n'08021342'	1.0	0.378""")
+
+    conf_file = tmp_path / "multiqc_config.yaml"
+    conf_file.write_text(
+        """\
+custom_data:
+    concordance:
+        id: 'concordance'
+        section_name: 'Concordance Rates'
+        plot_type: 'heatmap'
+        pconfig:
+            id: 'concordance_heatmap'
+        sort_rows: true
+sp:
+    concordance:
+        fn: '*concordance.txt'
+"""
+    )
+
+    report.reset()
+    report.analysis_files = [file]
+    update_config(cfg=ClConfig(config_files=[conf_file]))
+
+    file_search()
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    assert "concordance_heatmap" in report.plot_by_id
+    assert report.plot_by_id["concordance_heatmap"].id == "concordance_heatmap"
+    assert report.plot_by_id["concordance_heatmap"].plot_type == "heatmap"
+    assert len(report.plot_by_id["concordance_heatmap"].datasets) == 1
+    assert report.plot_by_id["concordance_heatmap"].datasets[0].rows == [[1.0, 0.378]]
+    assert report.plot_by_id["concordance_heatmap"].datasets[0].xcats == ["08021342", "08027127"]
+    assert report.plot_by_id["concordance_heatmap"].datasets[0].ycats == ["08021342"]

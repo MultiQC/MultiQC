@@ -6,6 +6,7 @@ import logging
 import os
 import re
 from collections import defaultdict
+from typing import Dict
 
 import numpy as np
 
@@ -140,10 +141,10 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1371/journal.pcbi.1008839",
         )
 
-        self.qc3c_data = defaultdict(dict)
+        self.qc3c_data: Dict[str, Dict] = defaultdict(dict)
         # additional members for conditional plotting of per-genotype junction frequency
         self.do_digest_plot = False
-        self.digest_junctions = defaultdict(dict)
+        self.digest_junctions: Dict[str, Dict] = defaultdict(dict)
 
         for f in self.find_log_files("qc3C", filehandles=True):
             self.parse_qc3c_log(f)
@@ -826,15 +827,16 @@ class MultiqcModule(BaseMultiqcModule):
         def _none_to(x, y):
             return y if x is None else y
 
+        parsed: Dict
         try:
-            parsed = [json.loads(_l) for _l in f["f"]]
-            if len(parsed) > 1:
+            parsed_list = [json.loads(_l) for _l in f["f"]]
+            if len(parsed_list) > 1:
                 log.warning(
                     "Multiple records encountered in qc3C JSON file {}. Only the last report will be used".format(
                         os.path.join(f["root"], f["fn"])
                     )
                 )
-            parsed = parsed[-1]
+            parsed = parsed_list[-1]
         except json.JSONDecodeError:
             log.warning(f"Could not parse qc3C JSON: '{f['fn']}'")
             return

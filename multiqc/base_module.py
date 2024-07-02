@@ -176,7 +176,7 @@ class BaseMultiqcModule:
             logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
             return
 
-        for f in report.files[sp_key]:
+        for f in report.files.get(sp_key, []):
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file

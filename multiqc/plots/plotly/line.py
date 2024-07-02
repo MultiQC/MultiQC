@@ -36,7 +36,7 @@ class Marker(BaseModel):
 class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     name: str
     pairs: List[Tuple[KeyT, ValueT]]
-    color: Optional[Color] = None
+    color: Optional[str] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
@@ -57,7 +57,7 @@ class FlatLine(ValidatedConfig):
     """
 
     value: Union[float, int]
-    color: Optional[Color] = None
+    color: Optional[str] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
@@ -89,7 +89,7 @@ class LineBand(ValidatedConfig):
 
     from_: Union[float, int]
     to: Union[float, int]
-    color: Optional[Color] = None
+    color: Optional[str] = None
 
 
 SeriesConf = Union[Series, Dict]
@@ -117,7 +117,7 @@ class LinePlotConfig(PConfig):
     style: Literal["lines", "lines+markers"] = "lines"
     hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
     hide_empty: bool = False
-    colors: Dict[str, Color] = {}
+    colors: Dict[str, str] = {}
 
     @classmethod
     def parse_extra_series(cls, data):

@@ -1,5 +1,6 @@
 import inspect
 import logging
+import re
 from collections import defaultdict
 from typing import List, Dict, Set
 
@@ -154,10 +155,14 @@ class ValidatedConfig(BaseModel):
     def parse_color(cls, val):
         if val is None:
             return None
+        if re.match(r"\d+,\d+,\d+", val):
+            val_correct = f"rgb({val})"
+        else:
+            val_correct = val
         try:
-            ImageColor.getrgb(val)
+            ImageColor.getrgb(val_correct)
         except ValueError:
             add_validation_error(cls, f"invalid color value '{val}'")
             return None
         else:
-            return Color(val)
+            return val
