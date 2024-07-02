@@ -4,7 +4,9 @@ from collections import defaultdict
 from typing import List, Dict, Set
 
 from pydantic import BaseModel, ValidationError, model_validator
+from pydantic.color import Color
 from typeguard import check_type, TypeCheckError
+from PIL import ImageColor
 
 from multiqc import config
 
@@ -110,7 +112,10 @@ class ValidatedConfig(BaseModel):
             if field.is_required():
                 if name not in values:
                     add_validation_error(cls, f"missing required field '{name}'")
-                    values[name] = field.annotation() if field.annotation else None
+                    try:
+                        values[name] = field.annotation() if field.annotation else None
+                    except TypeError:
+                        values[name] = None
 
         # Check types and validate specific fields
         corrected_values = {}
@@ -144,3 +149,15 @@ class ValidatedConfig(BaseModel):
 
         values = corrected_values
         return values
+
+    @classmethod
+    def parse_color(cls, val):
+        if val is None:
+            return None
+        try:
+            ImageColor.getrgb(val)
+        except ValueError:
+            add_validation_error(cls, f"invalid color value '{val}'")
+            return None
+        else:
+            return Color(val)

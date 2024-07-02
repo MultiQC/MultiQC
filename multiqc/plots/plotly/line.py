@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import random
 from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, TypeVar, Generic
 
 import math
@@ -35,7 +36,7 @@ class Marker(BaseModel):
 class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     name: str
     pairs: List[Tuple[KeyT, ValueT]]
-    color: Optional[str] = None
+    color: Optional[Color] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
@@ -46,6 +47,8 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
         if "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
         super().__init__(**data)
+        if not self.name:
+            self.name = f"series-{random.randint(1000000, 9999999)}"
 
 
 class FlatLine(ValidatedConfig):

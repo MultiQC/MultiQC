@@ -382,3 +382,21 @@ def test_missing_id_and_title(strict):
         assert plot_id.startswith("lineplot-")
 
     config.strict = False
+
+
+def test_incorrect_color():
+    pconfig = {
+        "id": "test_incorrect_fields",
+        "title": "Test: Line Graph",
+        "extra_series": [{"color": "invalid"}],
+    }
+
+    with patch("logging.Logger.error") as err:
+        plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
+        errors = [call.args[0] for call in err.mock_calls if call.args]
+        assert "• invalid color value 'invalid'" in errors
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data) == 1
+    assert "test_incorrect_fields" in report.plot_data
