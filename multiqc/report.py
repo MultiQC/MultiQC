@@ -404,7 +404,6 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
         if mod_key.lower() not in [m.lower() for m in sp_keys]:
             ignored_patterns.append(key)
             continue
-        files[key] = list()
         if not isinstance(sps, list):
             sps = [sps]
 
@@ -525,6 +524,8 @@ def run_search_files(spatterns, searchfiles):
                             # Check that we shouldn't exclude this file
                             if not exclude_file(sp, f):
                                 # Looks good! Remember this file
+                                if key not in files:
+                                    files[key] = []
                                 files[key].append(f.to_dict())
                                 file_search_stats[key] = file_search_stats.get(key, 0) + 1
                                 file_matched = True

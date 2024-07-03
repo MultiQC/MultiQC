@@ -1,6 +1,7 @@
 import io
 import logging
 import os
+import random
 from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, TypeVar, Generic
 
 import math
@@ -44,6 +45,8 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
         if "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
         super().__init__(**data)
+        if not self.name:
+            self.name = f"series-{random.randint(1000000, 9999999)}"
 
 
 class FlatLine(ValidatedConfig):
@@ -52,7 +55,7 @@ class FlatLine(ValidatedConfig):
     """
 
     value: Union[float, int]
-    color: str
+    color: Optional[str] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
@@ -70,6 +73,8 @@ class FlatLine(ValidatedConfig):
         return value
 
     def __init__(self, **data):
+        if "dashStyle" in data:
+            data["dash"] = convert_dash_style(data.pop("dashStyle"))
         if "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
         super().__init__(**data)
@@ -152,7 +157,7 @@ def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePl
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    return LinePlot.create(pconfig, lists_of_lines)
+    return create(pconfig, lists_of_lines)
 
 
 class Dataset(BaseDataset):
@@ -278,157 +283,158 @@ class Dataset(BaseDataset):
 class LinePlot(Plot[Dataset]):
     datasets: List[Dataset]
 
-    @staticmethod
-    def create(
-        pconfig: LinePlotConfig,
-        lists_of_lines: List[List[Series]],
-    ) -> "LinePlot":
-        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
 
-        model = Plot.initialize(
-            plot_type=PlotType.LINE,
-            pconfig=pconfig,
-            n_datasets=len(lists_of_lines),
-            n_samples=max_n_samples,
-            axis_controlled_by_switches=["yaxis"],
-            default_tt_label="<br>%{x}: %{y}",
-        )
+def create(
+    pconfig: LinePlotConfig,
+    lists_of_lines: List[List[Series]],
+) -> "LinePlot":
+    max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
 
-        # Very large legend for automatically enabled flat plot mode is not very helpful
-        if pconfig.showlegend is None and max_n_samples > 250:
-            model.layout.showlegend = False
+    model = Plot.initialize(
+        plot_type=PlotType.LINE,
+        pconfig=pconfig,
+        n_datasets=len(lists_of_lines),
+        n_samples=max_n_samples,
+        axis_controlled_by_switches=["yaxis"],
+        default_tt_label="<br>%{x}: %{y}",
+    )
 
-        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+    # Very large legend for automatically enabled flat plot mode is not very helpful
+    if pconfig.showlegend is None and max_n_samples > 250:
+        model.layout.showlegend = False
 
-        # Make a tooltip always show on hover over any point on plot
-        model.layout.hoverdistance = -1
+    model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
-        y_minrange = pconfig.y_minrange
-        x_minrange = pconfig.x_minrange
-        y_bands = pconfig.y_bands
-        x_bands = pconfig.x_bands
-        x_lines = pconfig.x_lines
-        y_lines = pconfig.y_lines
-        if y_minrange or y_bands or y_lines:
-            # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range.
-            for dataset in model.datasets:
-                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
-                for line in dataset.lines:
-                    ys = [x[1] for x in line.pairs]
-                    if len(ys) > 0:
-                        minval = min(ys) if minval is None else min(minval, min(ys))
-                        maxval = max(ys) if maxval is None else max(maxval, max(ys))
-                if maxval is not None and minval is not None:
-                    maxval += (maxval - minval) * 0.05
-                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
-                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and minval is not None and clipmin > minval:
-                    minval = clipmin
-                if clipmax is not None and maxval is not None and clipmax < maxval:
-                    maxval = clipmax
-                if y_minrange is not None and maxval is not None and minval is not None:
-                    maxval = max(maxval, minval + y_minrange)
-                if model.layout.yaxis.type == "log":
-                    minval = math.log10(minval) if minval is not None and minval > 0 else None
-                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-                dataset.layout["yaxis"]["range"] = [minval, maxval]
+    # Make a tooltip always show on hover over any point on plot
+    model.layout.hoverdistance = -1
 
-        if not pconfig.categories and x_minrange or x_bands or x_lines:
-            # same as above but for x-axis
-            for dataset in model.datasets:
-                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
-                for series in dataset.lines:
-                    xs = [x[0] for x in series.pairs]
-                    if len(xs) > 0:
-                        minval = min(xs) if minval is None else min(minval, min(xs))
-                        maxval = max(xs) if maxval is None else max(maxval, max(xs))
-                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
-                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and minval is not None and clipmin > minval:
-                    minval = clipmin
-                if clipmax is not None and maxval is not None and clipmax < maxval:
-                    maxval = clipmax
-                if x_minrange is not None and maxval is not None and minval is not None:
-                    maxval = max(maxval, minval + x_minrange)
-                if model.layout.xaxis.type == "log":
-                    minval = math.log10(minval) if minval is not None and minval > 0 else None
-                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-                dataset.layout["xaxis"]["range"] = [minval, maxval]
+    y_minrange = pconfig.y_minrange
+    x_minrange = pconfig.x_minrange
+    y_bands = pconfig.y_bands
+    x_bands = pconfig.x_bands
+    x_lines = pconfig.x_lines
+    y_lines = pconfig.y_lines
+    if y_minrange or y_bands or y_lines:
+        # We don't want the bands to affect the calculated axis range, so we
+        # find the min and the max from data points, and manually set the range.
+        for dataset in model.datasets:
+            minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+            maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+            for line in dataset.lines:
+                ys = [x[1] for x in line.pairs]
+                if len(ys) > 0:
+                    minval = min(ys) if minval is None else min(minval, min(ys))
+                    maxval = max(ys) if maxval is None else max(maxval, max(ys))
+            if maxval is not None and minval is not None:
+                maxval += (maxval - minval) * 0.05
+            clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+            clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+            if clipmin is not None and minval is not None and clipmin > minval:
+                minval = clipmin
+            if clipmax is not None and maxval is not None and clipmax < maxval:
+                maxval = clipmax
+            if y_minrange is not None and maxval is not None and minval is not None:
+                maxval = max(maxval, minval + y_minrange)
+            if model.layout.yaxis.type == "log":
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        model.layout.shapes = (
-            [
-                dict(
-                    type="rect",
-                    y0=band.from_,
-                    y1=band.to,
-                    x0=0,
-                    x1=1,
-                    xref="paper",  # make x coords are relative to the plot paper [0,1]
-                    fillcolor=band.color,
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in (y_bands or [])
-            ]
-            + [
-                dict(
-                    type="rect",
-                    x0=band.from_,
-                    x1=band.to,
-                    y0=0,
-                    y1=1,
-                    yref="paper",  # make y coords are relative to the plot paper [0,1]
-                    fillcolor=band.color,
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in (x_bands or [])
-            ]
-            + [
-                dict(
-                    type="line",
-                    xref="paper",
-                    yref="y",
-                    x0=0,
-                    y0=line.value,
-                    x1=1,
-                    y1=line.value,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
-                )
-                for line in (y_lines or [])
-            ]
-            + [
-                dict(
-                    type="line",
-                    yref="paper",
-                    xref="x",
-                    x0=line.value,
-                    y0=0,
-                    x1=line.value,
-                    y1=1,
-                    line={
-                        "width": line.width,
-                        "dash": line.dash,
-                        "color": line.color,
-                    },
-                    label=Label(text=line.label, font=dict(color=line.color)),
-                )
-                for line in (x_lines or [])
-            ]
-        )
+    if not pconfig.categories and x_minrange or x_bands or x_lines:
+        # same as above but for x-axis
+        for dataset in model.datasets:
+            minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+            maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+            for series in dataset.lines:
+                xs = [x[0] for x in series.pairs]
+                if len(xs) > 0:
+                    minval = min(xs) if minval is None else min(minval, min(xs))
+                    maxval = max(xs) if maxval is None else max(maxval, max(xs))
+            clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+            clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+            if clipmin is not None and minval is not None and clipmin > minval:
+                minval = clipmin
+            if clipmax is not None and maxval is not None and clipmax < maxval:
+                maxval = clipmax
+            if x_minrange is not None and maxval is not None and minval is not None:
+                maxval = max(maxval, minval + x_minrange)
+            if model.layout.xaxis.type == "log":
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            dataset.layout["xaxis"]["range"] = [minval, maxval]
 
-        return LinePlot(**model.__dict__)
+    model.layout.shapes = (
+        [
+            dict(
+                type="rect",
+                y0=band.from_,
+                y1=band.to,
+                x0=0,
+                x1=1,
+                xref="paper",  # make x coords are relative to the plot paper [0,1]
+                fillcolor=band.color,
+                line={
+                    "width": 0,
+                },
+                layer="below",
+            )
+            for band in (y_bands or [])
+        ]
+        + [
+            dict(
+                type="rect",
+                x0=band.from_,
+                x1=band.to,
+                y0=0,
+                y1=1,
+                yref="paper",  # make y coords are relative to the plot paper [0,1]
+                fillcolor=band.color,
+                line={
+                    "width": 0,
+                },
+                layer="below",
+            )
+            for band in (x_bands or [])
+        ]
+        + [
+            dict(
+                type="line",
+                xref="paper",
+                yref="y",
+                x0=0,
+                y0=line.value,
+                x1=1,
+                y1=line.value,
+                line={
+                    "width": line.width,
+                    "dash": line.dash,
+                    "color": line.color,
+                },
+                label=dict(text=line.label, font=dict(color=line.color)),
+            )
+            for line in (y_lines or [])
+        ]
+        + [
+            dict(
+                type="line",
+                yref="paper",
+                xref="x",
+                x0=line.value,
+                y0=0,
+                x1=line.value,
+                y1=1,
+                line={
+                    "width": line.width,
+                    "dash": line.dash,
+                    "color": line.color,
+                },
+                label=dict(text=line.label, font=dict(color=line.color)),
+            )
+            for line in (x_lines or [])
+        ]
+    )
+
+    return LinePlot(**model.__dict__)
 
 
 def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:

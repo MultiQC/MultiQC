@@ -1,8 +1,12 @@
+from unittest.mock import patch
+
 import pytest
 
 from multiqc import report, Plot
 from multiqc.core.exceptions import RunError
+from multiqc.core.init_log import init_log
 from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, box
+from multiqc.validation import ConfigValidationError
 
 
 def test_barplot():
@@ -305,3 +309,94 @@ def test_flat_plot():
     assert len(report.plot_data) == 0
     assert html is not None
     assert f"""<div class="mqc_mplplot" id="{plot_id}"><img src="data:image/png;base64""" in html
+
+
+def test_missing_pconfig(capsys):
+    report.reset()
+    linegraph.plot({"Sample1": {0: 1, 1: 1}})
+    assert report.lint_errors == [
+        "pconfig with required fields 'id' and 'title' must be provided for plot LinePlotConfig",
+    ]
+
+    plot = linegraph.plot({"Sample1": {0: 1, 1: 1}})
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data) == 1
+    plot_id = list(report.plot_data.keys())[0]
+    assert plot_id.startswith("lineplot-")
+
+
+@pytest.mark.parametrize("strict", [True, False])
+def test_incorrect_fields(strict):
+    from multiqc import config
+
+    config.strict = strict
+
+    pconfig = {
+        "id": "test_incorrect_fields",
+        "title": "Test: Line Graph",
+        "unknown_field": "value",
+        "x_lines": "wrong_type",
+    }
+
+    if strict:
+        with pytest.raises(ConfigValidationError):
+            linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
+    else:
+        with patch("logging.Logger.error") as err, patch("logging.Logger.warning") as warn:
+            plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
+            errors = [call.args[0] for call in err.mock_calls if call.args]
+            assert "• 'x_lines': failed to parse value 'wrong_type'" in errors
+            assert any(e for e in errors if e.startswith("Invalid LinePlot plot configuration"))
+            warnings = [call.args[0] for call in warn.mock_calls if call.args]
+            assert any(w for w in warnings if w.startswith("• unrecognized field 'unknown_field'"))
+        assert isinstance(plot, Plot)
+        report.reset()
+        plot.add_to_report()
+        assert len(report.plot_data) == 1
+        assert "test_incorrect_fields" in report.plot_data
+
+    config.strict = False
+
+
+@pytest.mark.parametrize("strict", [True, False])
+def test_missing_id_and_title(strict):
+    from multiqc import config
+
+    config.strict = strict
+    if strict:
+        with pytest.raises(ConfigValidationError):
+            linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig={})
+    else:
+        with patch("logging.Logger.error") as log:
+            plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig={})
+            errs = [call.args[0] for call in log.mock_calls if call.args]
+            assert "• missing required field 'id'" in errs
+            assert "• missing required field 'title'" in errs
+        assert isinstance(plot, Plot)
+        report.reset()
+        plot.add_to_report()
+        assert len(report.plot_data) == 1
+        plot_id = list(report.plot_data.keys())[0]
+        assert plot_id.startswith("lineplot-")
+
+    config.strict = False
+
+
+def test_incorrect_color():
+    pconfig = {
+        "id": "test_incorrect_fields",
+        "title": "Test: Line Graph",
+        "extra_series": [{"color": "invalid"}],
+    }
+
+    with patch("logging.Logger.error") as err:
+        plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
+        errors = [call.args[0] for call in err.mock_calls if call.args]
+        assert "• invalid color value 'invalid'" in errors
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data) == 1
+    assert "test_incorrect_fields" in report.plot_data
