@@ -339,7 +339,7 @@ def render_and_export_plots():
     iterate_using_progress_bar(
         items=sections,
         update_fn=update_fn,
-        item_to_str_fn=lambda s: f"{s.module}/{s.name}",
+        item_to_str_fn=lambda s: f"{s.module}/{s.name}" if s.name else s.module,
         desc="rendering plots",
         disable_progress=not show_progress,
     )

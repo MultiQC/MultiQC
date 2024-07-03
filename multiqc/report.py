@@ -217,10 +217,10 @@ class SearchFile:
             # process block again
     """
 
-    def __init__(self, filename: str, root: str):
-        self.filename = filename
-        self.root = root
-        self.path: str = os.path.join(root, filename)
+    def __init__(self, path: Path):
+        self.path: Path = path
+        self.filename = path.name
+        self.root = path.parent.absolute()
         self._filehandle: Optional[TextIO] = None
         self._iterator: Optional[Iterator[Tuple[int, str]]] = None
         self._blocks: List[Tuple[int, str]] = []  # cache of read blocks with line count found in each block
@@ -355,14 +355,14 @@ def is_searching_in_source_dir(path: Path) -> bool:
         return False
 
 
-def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
+def prep_ordered_search_files_list(sp_keys) -> Tuple[List[Dict], List[Path]]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
     """
 
     spatterns: List[Dict] = [{}, {}, {}, {}, {}, {}, {}]
-    searchfiles = []
+    searchfiles: List[Path] = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
         """
@@ -374,7 +374,7 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
             file_search_stats["skipped_symlinks"] += 1
             return
         elif item.is_file():
-            searchfiles.append([item.name, os.fspath(item.parent)])
+            searchfiles.append(item)
         elif item.is_dir():
             # Skip directory if it matches ignore patterns
             d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
@@ -478,30 +478,30 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List, List]:
     return spatterns, searchfiles
 
 
-def run_search_files(spatterns, searchfiles):
+def run_search_files(spatterns: List[Dict], searchfiles: List[Path]):
     runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
-    def add_file(fn, root):
+    def add_file(path: Path):
         """
         Function applied to each file found when walking the analysis
         directories. Runs through all search patterns and returns True
         if a match is found.
         """
-        f = SearchFile(fn, root)
+        search_f = SearchFile(path)
 
         # Check that this is a file and not a pipe or anything weird
-        if not os.path.isfile(os.path.join(root, fn)):
+        if not path.is_file():
             file_search_stats["skipped_not_a_file"] += 1
             return False
 
-        if f.filesize is not None and f.filesize > config.log_filesize_limit:
+        if search_f.filesize is not None and search_f.filesize > config.log_filesize_limit:
             file_search_stats["skipped_filesize_limit"] += 1
             return False
 
         # Use mimetypes to exclude binary files where possible
-        if not re.match(r".+_mqc\.(png|jpg|jpeg)", f.filename) and config.ignore_images:
-            (ftype, encoding) = mimetypes.guess_type(f.path)
+        if not re.match(r".+_mqc\.(png|jpg|jpeg)", search_f.filename) and config.ignore_images:
+            (ftype, encoding) = mimetypes.guess_type(str(path))
             if encoding is not None and encoding != "gzip":
                 return False
             if ftype is not None and ftype.startswith("image"):
@@ -509,18 +509,18 @@ def run_search_files(spatterns, searchfiles):
 
         # Test file for each search pattern
         file_matched = False
-        with f:  # Ensure any open filehandles are closed.
+        with search_f:  # Ensure any open filehandles are closed.
             for patterns in spatterns:
                 for key, sps in patterns.items():
                     start = time.time()
                     for sp in sps:
-                        if search_file(sp, f, key):
+                        if search_file(sp, search_f, key):
                             # Check that we shouldn't exclude this file
-                            if not exclude_file(sp, f):
+                            if not exclude_file(sp, search_f):
                                 # Looks good! Remember this file
                                 if key not in files:
                                     files[key] = []
-                                files[key].append(f.to_dict())
+                                files[key].append(search_f.to_dict())
                                 file_search_stats[key] = file_search_stats.get(key, 0) + 1
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {key}")
@@ -533,14 +533,13 @@ def run_search_files(spatterns, searchfiles):
                     runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
         return file_matched
 
-    def update_fn(i, sf):
-        if not add_file(sf[0], sf[1]):
+    def update_fn(_, sf: Path):
+        if not add_file(sf):
             file_search_stats["skipped_no_match"] += 1
 
     iterate_using_progress_bar(
         items=searchfiles,
         update_fn=update_fn,
-        item_to_str_fn=lambda sf: os.path.join(sf[1], sf[0]),
         desc="searching",
     )
 

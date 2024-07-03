@@ -316,7 +316,7 @@ def _no_unicode() -> bool:
     )
 
 
-def iterate_using_progress_bar(items: List, update_fn, item_to_str_fn, desc, disable_progress=False):
+def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn=str, disable_progress=False):
     # GitHub actions doesn't understand ansi control codes to move the cursor,
     # so it prints each update ona a new line. Better disable it for CI.
     disable_progress = disable_progress or config.no_ansi or config.quiet or os.getenv("CI") is not None
