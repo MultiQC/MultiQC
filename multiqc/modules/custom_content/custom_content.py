@@ -133,14 +133,15 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 c_id = parsed_data.get("id", config_custom_data_id)
                 parsed_item = parsed_data.get("data", {})
                 if parsed_item:
-                    cust_mod_item = cust_mod_by_id[c_id]["data"]
-                    if isinstance(parsed_item, dict) and isinstance(cust_mod_item, dict):
-                        cust_mod_item.update(parsed_item)
+                    cust_mod_data = cust_mod_by_id[c_id].get("data")
+                    if isinstance(parsed_item, dict) and isinstance(cust_mod_data, dict):
+                        cust_mod_data.update(parsed_item)
                     else:
                         cust_mod_by_id[c_id]["data"] = parsed_item
-                    cast(Dict, cust_mod_by_id[c_id]["config"]).update(
-                        {j: k for j, k in parsed_data.items() if j != "data"}
-                    )
+                    cust_mod_conf = cust_mod_by_id[c_id].get("config", {})
+                    assert isinstance(cust_mod_conf, dict)
+                    cust_mod_conf.update({j: k for j, k in parsed_data.items() if j != "data"})
+                    cust_mod_by_id[c_id]["config"] = cust_mod_conf
                 else:
                     log.warning(f"No data found in {f['fn']}")
 
