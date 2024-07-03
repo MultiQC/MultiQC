@@ -1,10 +1,9 @@
 import logging
 import os
-import shutil
-import sys
-import time
 from pathlib import Path
 from typing import Optional
+
+from multiqc.utils.util_functions import rmtree_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -47,33 +46,7 @@ def plots_tmp_dir() -> Path:
     return path
 
 
-def rmtree_with_retries(path, _logger=None, max_retries=10):
-    """
-    Robustly tries to delete paths.
-    Retries several times (with increasing delays) if an OSError
-    occurs.  If the final attempt fails, the Exception is propagated
-    to the caller.
-    """
-
-    for i in range(max_retries):
-        try:
-            shutil.rmtree(path)
-            return
-        except OSError:
-            if _logger:
-                _logger.info(f"Unable to remove path: {path}")
-                _logger.info(f"Retrying after {i**2} seconds")
-            else:
-                print(f"Unable to remove path: {path}", file=sys.stderr)
-                print(f"Retrying after {i**2} seconds", file=sys.stderr)
-            time.sleep(i**2)
-
-    # Final attempt, pass any Exceptions up to caller.
-    shutil.rmtree(path)
-
-
-def clean_up(_logger=None):
+def clean_up():
     global _tmp_dir
-    if _tmp_dir is not None and Path(_tmp_dir).exists():
-        rmtree_with_retries(_tmp_dir, _logger)
+    rmtree_with_retries(_tmp_dir)
     _tmp_dir = None

@@ -12,7 +12,7 @@ from rich.syntax import Syntax
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks, software_versions, tmp_dir
-from multiqc.core.exceptions import RunError
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionModule
 
 logger = logging.getLogger(__name__)
@@ -24,10 +24,7 @@ def trace_memory(stage: str):
         logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
 
 
-def exec_modules(
-    mod_dicts_in_order: List[Dict[str, Dict]],
-    clean_up: bool = True,
-) -> None:
+def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     """
     Execute the modules that have been found and loaded.
     """
@@ -184,12 +181,7 @@ def exec_modules(
 
     # Did we find anything?
     if len(report.modules) == 0:
-        logger.warning("No analysis results found. Cleaning up…")
-        if clean_up:
-            tmp_dir.clean_up()
-        logger.info("MultiQC complete")
-        # Exit with an error code if a module broke
-        raise RunError(sys_exit_code=sys_exit_code)
+        raise NoAnalysisFound("No analysis results found", sys_exit_code=sys_exit_code)
 
     plugin_hooks.mqc_trigger("after_modules")
 

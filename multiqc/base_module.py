@@ -377,7 +377,7 @@ class BaseMultiqcModule:
         self,
         s_name: Union[str, List[str]],
         f: Optional[Union[Dict, str]] = None,
-        root: Optional[Union[Path, str]] = None,
+        root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
     ) -> str:
@@ -412,7 +412,7 @@ class BaseMultiqcModule:
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
         if isinstance(f, str):
-            root = Path(f)
+            root = f
             f = None
 
         # Set string variables from f if it was a dict from find_log_files()

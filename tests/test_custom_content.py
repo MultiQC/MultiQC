@@ -253,3 +253,47 @@ sp:
     assert '<h2 class="mqc-module-title" id="concordance-module">Concordance Rates</h2>' in out
     assert '<div class="mqc-section mqc-section-concordance-module">' in out
     assert 'value="0.378"' in out
+
+
+def test_mqc_ext_match_custom_op(tmp_path):
+    """
+    Verify that _mqc.tsv match the specific patterns in sp before being discovered by generic "custom_content" patterns
+    """
+    file1 = tmp_path / "target___test1.o2o_aln.tsv"
+    file2 = tmp_path / "target___test2.o2o_aln_mqc.tsv"
+    file1.write_text(
+        """\
+Sample	Metric
+target___test1	1
+"""
+    )
+    file2.write_text(
+        """\
+Sample	Metric
+target___test2	2
+"""
+    )
+
+    conf = tmp_path / "multiqc_config.yaml"
+    conf.write_text("""
+custom_data:
+  last_o2o:
+    plot_type: "table"
+
+sp:
+  last_o2o:
+    fn: "target__*tsv"
+""")
+
+    report.reset()
+    report.analysis_files = [file1, file2]
+    update_config(cfg=ClConfig(config_files=[conf], run_modules=["custom_content"]))
+
+    file_search()
+    custom_module_classes()
+
+    # Expecting to see only one table, and no bar plot from the _mqc file
+    assert len(report.plot_by_id) == 1
+    assert "last_o2o-plot" in report.plot_by_id
+    assert report.plot_by_id["last_o2o-plot"].id == "last_o2o-plot"
+    assert report.plot_by_id["last_o2o-plot"].plot_type == "violin"

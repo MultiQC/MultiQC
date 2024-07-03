@@ -3,13 +3,39 @@
 import datetime
 import json
 import logging
+import shutil
+import time
 from collections import defaultdict, OrderedDict
+from pathlib import Path
 from typing import Dict
 
 import array
 import math
 
 logger = logging.getLogger(__name__)
+
+
+def rmtree_with_retries(path, max_retries=10):
+    """
+    Robustly tries to delete paths.
+    Retries several times (with increasing delays) if an OSError
+    occurs.  If the final attempt fails, the Exception is propagated
+    to the caller.
+    """
+    if path is None or not Path(path).exists():
+        return
+
+    for i in range(max_retries):
+        try:
+            shutil.rmtree(path)
+            return
+        except OSError:
+            logger.info(f"Unable to remove path: {path}")
+            logger.info(f"Retrying after {i**2} seconds")
+            time.sleep(i**2)
+
+    # Final attempt, pass any Exceptions up to caller.
+    shutil.rmtree(path)
 
 
 def strtobool(val) -> bool:
@@ -174,7 +200,7 @@ def compress_number_lists_for_json(obj):
     return obj
 
 
-def update_dict(target: Dict, source: Dict, none_only=False):
+def update_dict(target: Dict, source: Dict, none_only=False, add_in_the_beginning=False):
     """
     Recursively updates nested dict d from nested dict u
 
@@ -182,6 +208,10 @@ def update_dict(target: Dict, source: Dict, none_only=False):
     {'cutadapt': {'fn': 'new', 'fn2': 'old2'}}
     >>> update_dict({"cutadapt": [{"fn": "old"}]}, {"cutadapt": {"fn": "new"}})
     {'cutadapt': {'fn': 'new'}}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"})
+    {'existing': 'v1', 'new': 'v2'}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"}, add_in_the_beginning=True)
+    {'new': 'v2', 'existing': 'v1'}
     """
     assert target is not None, source is not None
     for key, src_val in source.items():
@@ -192,5 +222,8 @@ def update_dict(target: Dict, source: Dict, none_only=False):
                 if isinstance(src_val, list):
                     target[key] = src_val.copy()
                 else:
-                    target[key] = src_val
+                    if add_in_the_beginning:
+                        target = {key: src_val, **target}
+                    else:
+                        target[key] = src_val
     return target

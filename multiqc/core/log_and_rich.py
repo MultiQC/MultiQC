@@ -213,7 +213,7 @@ def _print_intro_with_rich():
         rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
 
-def move_tmp_log():
+def move_log_to_final_dir():
     """
     Move the temporary log file to the MultiQC data directory if it exists.
     """

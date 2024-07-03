@@ -4,7 +4,7 @@ import os.path
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from multiqc.core.exceptions import RunError
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc import config, report
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,8 @@ def _make_analysis_file_list():
                 report.analysis_files.append(str(p))
 
     if not report.analysis_files:
-        raise RunError("No files found to analyse. Check that input files and directories exist.")
+        raise NoAnalysisFound("No files found to analyse. Check that input files and directories exist.")
+
     for p in report.analysis_files:
         logger.info(f"Search path: {os.path.abspath(p)}")
 
@@ -121,7 +122,7 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     # Add custom content section names
     try:
         if "custom_content" in sp_keys:
-            sp_keys.extend(config.custom_data.keys())
+            sp_keys = list(config.custom_data.keys()) + sp_keys
     except AttributeError:
         pass  # custom_data not in config
 

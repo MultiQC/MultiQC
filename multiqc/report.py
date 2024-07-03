@@ -27,7 +27,8 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.exceptions import RunError
+from multiqc.core import log_and_rich, tmp_dir
+from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
@@ -79,7 +80,7 @@ software_versions: Dict[str, Dict[str, List]]  # map software tools to unique ve
 plot_compressed_json: str
 
 
-def __initialise():
+def reset():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
@@ -154,14 +155,7 @@ def reset_file_search():
     }
 
 
-def reset():
-    """
-    Reset interactive session.
-    """
-    __initialise()
-
-
-__initialise()
+reset()
 
 
 def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tuple[int, str]]:
@@ -562,7 +556,7 @@ def search_files(sp_keys):
     list of files to search. Then fire search functions for each file.
     """
     if not analysis_files:
-        raise RunError("Error: no analysis files found to search")
+        raise NoAnalysisFound("No analysis files found to search")
 
     spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
 
@@ -953,3 +947,8 @@ def multiqc_dump_json():
 
 def get_all_sections() -> List:
     return [s for mod in modules for s in mod.sections if not mod.hidden]
+
+
+def clean_up_tmp_dir():
+    log_and_rich.move_log_to_final_dir()
+    tmp_dir.clean_up()

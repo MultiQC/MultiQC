@@ -14,14 +14,15 @@ from typing import Set
 
 from multiqc.base_module import Section
 from multiqc.core.file_search import include_or_exclude_modules
+from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 
 import jinja2
 
 from multiqc import config, report
-from multiqc.core.exceptions import RunError
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.plots.plotly.plot import Plot
-from multiqc.core import plugin_hooks, tmp_dir
+from multiqc.core import plugin_hooks, tmp_dir, log_and_rich
 from multiqc.utils import megaqc, util_functions
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 
@@ -33,8 +34,7 @@ def write_results(clean_up=True) -> None:
 
     # Did we find anything?
     if len(report.modules) == 0:
-        logger.warning("No analysis results found to make a report")
-        return
+        raise NoAnalysisFound("No analysis data for any module. Check that input files and directories exist")
 
     if config.make_report:
         _order_modules_and_sections()
@@ -88,14 +88,15 @@ def write_results(clean_up=True) -> None:
             )
         )
 
-    # Clean up temporary directory
+    # Clean up data and plot temporary directories
     if clean_up:
-        tmp_dir.clean_up()
+        tmp_dir.rmtree_with_retries(tmp_dir.plots_tmp_dir())
+        tmp_dir.rmtree_with_retries(tmp_dir.data_tmp_dir())
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:
         shutil.make_archive(config.data_dir, "zip", config.data_dir)
-        shutil.rmtree(config.data_dir)
+        tmp_dir.rmtree_with_retries(config.data_dir)
 
 
 def _set_output_paths():
@@ -151,8 +152,7 @@ def _move_exported_plots():
         else:
             logger.error(f"Output directory {config.plots_dir} already exists.")
             logger.info("Use -f or --force to overwrite existing reports")
-            # if os.path.isdir(report.tmp_dir):
-            #     shutil.rmtree(report.tmp_dir)
+            logger.info(f"Keeping the tmp directory at {tmp_dir.plots_tmp_dir()}")
             raise RunError()
 
     # Modules have run, so plots directory should be complete by now. Move its contents.
@@ -166,7 +166,7 @@ def _move_exported_plots():
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    shutil.rmtree(tmp_dir.plots_tmp_dir())
+    rmtree_with_retries(tmp_dir.plots_tmp_dir())
 
 
 def _create_or_override_dirs() -> Set[str]:
