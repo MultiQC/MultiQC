@@ -1,4 +1,4 @@
-name: "Static type analysis with Mypy"
+name: "Mypy"
 on:
   push:
     branches:

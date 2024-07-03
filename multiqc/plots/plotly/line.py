@@ -6,10 +6,8 @@ from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, Ty
 
 import math
 import plotly.graph_objects as go  # type: ignore
-import plotly.validators.bar.marker.line
 from plotly.graph_objs.layout.shape import Label  # type: ignore
 from pydantic import Field, BaseModel
-from pydantic.color import Color
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
