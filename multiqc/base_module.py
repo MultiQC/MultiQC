@@ -166,12 +166,20 @@ class BaseMultiqcModule:
                  for the current matched file (f).
                  As yield is used, the results can be iterated over without loading all files at once
         """
+
         # Pick up path filters if specified.
         # Allows modules to be called multiple times with different sets of files
-        _pf = self.mod_cust_config.get("path_filters", [])
-        path_filters: List[str] = _pf if isinstance(_pf, list) else [_pf]
-        _pfe = self.mod_cust_config.get("path_filters_exclude", [])
-        path_filters_exclude: List[str] = _pfe if isinstance(_pfe, list) else [_pfe]
+        def get_path_filters(key: str) -> List[str]:
+            pfs: List[str] = []
+            val = self.mod_cust_config.get(key, [])
+            for pf in val if isinstance(val, list) else [val]:
+                if pf.startswith("./"):
+                    pf = pf[2:]
+                pfs.append(pf)
+            return pfs
+
+        path_filters: List[str] = get_path_filters("path_filters")
+        path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
         if not isinstance(sp_key, str):
             logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
