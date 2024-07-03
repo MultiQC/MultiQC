@@ -135,7 +135,10 @@ def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
 
     err = str(capsys.readouterr().err)
     assert "unrecognized field 'y__lab'" in err
-    assert "'xlab': expected type 'Optional[str]', got 'bool' True" in err
+    assert (
+        "'xlab': expected type 'Optional[str]', got 'bool' True" in err
+        or "'xlab': expected type 'Union[str, NoneType]', got 'bool' True" in err
+    )
     assert "'ymin': expected type 'Union[float, int, NoneType]', got 'str' '0'" in err
 
     if not strict:
