@@ -236,6 +236,7 @@ class BaseMultiqcModule:
                 try:
                     # Custom content module can now handle image files
                     (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
+                    fh: io.IOBase  # make mypy happy
                     if ftype is not None and ftype.startswith("image"):
                         with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
