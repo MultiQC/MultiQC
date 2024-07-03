@@ -5,6 +5,7 @@ from collections import defaultdict
 from typing import Dict, Set
 
 from pydantic import BaseModel, ValidationError, model_validator
+from pydantic.color import Color
 from typeguard import check_type, TypeCheckError
 from PIL import ImageColor
 

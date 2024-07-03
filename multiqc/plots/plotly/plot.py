@@ -17,7 +17,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
 from multiqc.utils import mqc_colour
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
