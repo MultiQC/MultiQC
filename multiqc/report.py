@@ -216,7 +216,7 @@ class SearchFile:
     def __init__(self, path: Path):
         self.path: Path = path
         self.filename = path.name
-        self.root = path.parent.absolute()
+        self.root = path.parent
         self._filehandle: Optional[TextIO] = None
         self._iterator: Optional[Iterator[Tuple[int, str]]] = None
         self._blocks: List[Tuple[int, str]] = []  # cache of read blocks with line count found in each block
