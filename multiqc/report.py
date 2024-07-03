@@ -327,7 +327,7 @@ class SearchFile:
         self.close()
 
     def to_dict(self):
-        return {"fn": self.filename, "root": self.root}
+        return {"fn": self.filename, "root": str(self.root)}
 
 
 def is_searching_in_source_dir(path: Path) -> bool:
