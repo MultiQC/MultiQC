@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from HOMER findpeaks """
+"""MultiQC module to parse output from HOMER findpeaks"""
 
 import logging
 import os

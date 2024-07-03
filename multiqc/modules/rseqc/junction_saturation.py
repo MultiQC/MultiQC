@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC junction_saturation.py
-http://rseqc.sourceforge.net/#junction-saturation-py """
+"""MultiQC submodule to parse output from RSeQC junction_saturation.py
+http://rseqc.sourceforge.net/#junction-saturation-py"""
 
 import logging
 import re
