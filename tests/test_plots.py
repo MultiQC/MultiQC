@@ -4,7 +4,6 @@ import pytest
 
 from multiqc import report, Plot
 from multiqc.core.exceptions import RunError
-from multiqc.core.init_log import init_log
 from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, box
 from multiqc.validation import ConfigValidationError
 

@@ -21,9 +21,9 @@ import jinja2
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.plot import Plot
-from multiqc.core import plugin_hooks
+from multiqc.core import plugin_hooks, tmp_dir
 from multiqc.utils import megaqc, util_functions
-from multiqc.utils.util_functions import iterate_using_progress_bar
+from multiqc.core.log_and_rich import iterate_using_progress_bar
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +89,8 @@ def write_results(clean_up=True) -> None:
         )
 
     # Clean up temporary directory
-    if clean_up and report.tmp_dir and os.path.isdir(report.tmp_dir):
-        shutil.rmtree(report.tmp_dir)
+    if clean_up:
+        tmp_dir.clean_up()
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:
@@ -156,9 +156,9 @@ def _move_exported_plots():
             raise RunError()
 
     # Modules have run, so plots directory should be complete by now. Move its contents.
-    logger.debug(f"Moving plots directory from '{report.plots_tmp_dir()}' to '{config.plots_dir}'")
+    logger.debug(f"Moving plots directory from '{tmp_dir.plots_tmp_dir()}' to '{config.plots_dir}'")
     shutil.copytree(
-        report.plots_tmp_dir(),
+        tmp_dir.plots_tmp_dir(),
         config.plots_dir,
         # Override default shutil.copy2 function to copy files. The default
         # function copies times and mode, which we want to avoid on purpose
@@ -166,7 +166,7 @@ def _move_exported_plots():
         # shutil.copyfile only copies the file without any metadata.
         copy_function=shutil.copyfile,
     )
-    shutil.rmtree(report.plots_tmp_dir())
+    shutil.rmtree(tmp_dir.plots_tmp_dir())
 
 
 def _create_or_override_dirs() -> Set[str]:
@@ -313,17 +313,17 @@ def render_and_export_plots():
 
     def update_fn(_, s: Section):
         if s.plot_id:
-            plot = report.plot_by_id[s.plot_id]
-            if isinstance(plot, Plot):
-                s.plot = plot.add_to_report()
-            elif isinstance(plot, str):
-                s.plot = plot
+            _plot = report.plot_by_id[s.plot_id]
+            if isinstance(_plot, Plot):
+                s.plot = _plot.add_to_report()
+            elif isinstance(_plot, str):
+                s.plot = _plot
             else:
                 logger.error(f"Unknown plot type for {s.module}/{s.name}")
         else:
             s.plot = ""
 
-    sections = [s for mod in report.modules for s in mod.sections if not mod.hidden]
+    sections = report.get_all_sections()
 
     # Show progress bar if writing any flat images, i.e. export_plots requested, or at least one plot is flat
     show_progress = config.export_plots
@@ -335,6 +335,7 @@ def render_and_export_plots():
                     show_progress = True
                     break
 
+    logger.debug("Rendering plots" + (". This may take a while..." if show_progress else ""))
     iterate_using_progress_bar(
         items=sections,
         update_fn=update_fn,
@@ -393,6 +394,13 @@ def _write_data_files() -> None:
     """
     Write auxiliary data files: module data exports, JSON dump, sources, dev plots data, upload MegaQC
     """
+
+    # Exporting plots to files if requested
+    logger.debug("Exporting plot data to files")
+    for s in report.get_all_sections():
+        if s.plot_id and isinstance(report.plot_by_id.get(s.plot_id), Plot):
+            report.plot_by_id[s.plot_id].save_data_files()
+
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{config.data_dir}'")
     assert config.data_dir is not None
@@ -432,16 +440,14 @@ def _write_report():
     """
     Render and write report HTML to disk
     """
-    assert report.tmp_dir
-
     # Copy over css & js files if requested by the theme
     for mod in report.modules:
         if mod.hidden:
             continue
         try:
             for to, path in mod.css.items():
-                copy_to = os.path.join(report.tmp_dir, to)
-                os.makedirs(os.path.dirname(copy_to))
+                copy_to = tmp_dir.get_tmp_dir() / to
+                copy_to.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, copy_to)
         except OSError as e:
             if e.errno == errno.EEXIST:
@@ -452,8 +458,8 @@ def _write_report():
             pass
         try:
             for to, path in mod.js.items():
-                copy_to = os.path.join(report.tmp_dir, to)
-                os.makedirs(os.path.dirname(copy_to))
+                copy_to = tmp_dir.get_tmp_dir() / to
+                copy_to.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, copy_to)
         except OSError as e:
             if e.errno == errno.EEXIST:
@@ -472,28 +478,28 @@ def _write_report():
     except AttributeError:
         pass  # Not a child theme
     else:
-        shutil.copytree(parent_template.template_dir, report.tmp_dir, dirs_exist_ok=True)
+        shutil.copytree(parent_template.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
 
     # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
     # parent template files are overwritten)
-    shutil.copytree(template_mod.template_dir, report.tmp_dir, dirs_exist_ok=True)
+    shutil.copytree(template_mod.template_dir, tmp_dir.get_tmp_dir(), dirs_exist_ok=True)
 
     # Function to include file contents in Jinja template
-    def include_file(name, fdir=report.tmp_dir, b64=False):
+    def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
         try:
             if fdir is None:
                 fdir = ""
-            path = os.path.join(fdir, name)
+            _path: str = os.path.join(fdir, name)
 
             if config.development:
                 if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
                     fdir = template_mod.template_dir
                     name = dev_path
-                    path = dev_path
+                    _path = dev_path
                 elif parent_template and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
                     fdir = template_mod.template_dir
                     name = dev_path
-                    path = dev_path
+                    _path = dev_path
 
                 if re.match(r".*\.min\.(js|css)$", name):
                     unminimized_name = re.sub(r"\.min\.", ".", name)
@@ -506,17 +512,17 @@ def _write_report():
                     return f'</style><link rel="stylesheet" href="{name}">'
 
             if b64:
-                with io.open(path, "rb") as f:
+                with io.open(_path, "rb") as f:
                     return base64.b64encode(f.read()).decode("utf-8")
             else:
-                with io.open(path, "r", encoding="utf-8") as f:
+                with io.open(_path, "r", encoding="utf-8") as f:
                     return f.read()
         except (OSError, IOError) as e:
             logger.error(f"Could not include file '{name}': {e}")
 
     # Load the report template
     try:
-        env = jinja2.Environment(loader=jinja2.FileSystemLoader(report.tmp_dir))
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
@@ -544,8 +550,8 @@ def _write_report():
         # Copy over files if requested by the theme
         try:
             for copy_file in template_mod.copy_files:
-                fn = os.path.join(report.tmp_dir, copy_file)
-                dest_dir = os.path.join(os.path.dirname(config.output_fn), copy_file)
+                fn = tmp_dir.get_tmp_dir() / copy_file
+                dest_dir = Path(config.output_fn).parent / copy_file
                 shutil.copytree(fn, dest_dir, dirs_exist_ok=True)
         except AttributeError:
             pass  # No files to copy

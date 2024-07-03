@@ -15,7 +15,6 @@ import mimetypes
 import os
 import re
 import sys
-import tempfile
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
@@ -29,18 +28,17 @@ from multiqc import config
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.core.exceptions import RunError
+from multiqc.core.tmp_dir import data_tmp_dir
+from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
-    iterate_using_progress_bar,
 )
 
 logger = logging.getLogger(__name__)
 
 initialized = False
-
-tmp_dir: Optional[str] = None
 
 
 @dataclasses.dataclass
@@ -85,7 +83,6 @@ def __initialise():
     # Set up global variables shared across modules. Inside a function so that the global
     # vars are reset if MultiQC is run more than once within a single session / environment.
     global initialized
-    global tmp_dir
     global multiqc_command
     global top_modules
     global module_order
@@ -110,9 +107,6 @@ def __initialise():
 
     # Create new temporary directory for module data exports
     initialized = True
-    if tmp_dir is None:
-        tmp_dir = tempfile.mkdtemp()
-    logger.debug(f"Using temporary directory: {tmp_dir}")
     multiqc_command = ""
     top_modules = []
     module_order = []
@@ -807,28 +801,6 @@ def compress_json(data):
     return base64_bytes.decode("ascii")
 
 
-def data_tmp_dir() -> str:
-    """
-    Temporary directory to collect data files from running modules before copying to the final
-    destination in multiqc.core.write_results
-    """
-    assert tmp_dir is not None
-    path = os.path.join(tmp_dir, "multiqc_data")
-    os.makedirs(path, exist_ok=True)
-    return path
-
-
-def plots_tmp_dir() -> str:
-    """
-    Temporary directory to collect plot exports from running modules before copying to the final
-    destination in multiqc.core.write_results
-    """
-    assert tmp_dir is not None
-    path = os.path.join(tmp_dir, "multiqc_plots")
-    os.makedirs(path, exist_ok=True)
-    return path
-
-
 def write_data_file(
     data: Union[Mapping[str, Union[Mapping, Sequence]], Sequence[Mapping], Sequence[Sequence]],
     fn: str,
@@ -978,3 +950,7 @@ def multiqc_dump_json():
             except Exception:
                 pass
     return exported_data
+
+
+def get_all_sections() -> List:
+    return [s for mod in modules for s in mod.sections if not mod.hidden]

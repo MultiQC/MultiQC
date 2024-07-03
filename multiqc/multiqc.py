@@ -6,24 +6,21 @@ Imported by __init__.py so available as multiqc.run()
 
 import logging
 import os
-import shutil
 import sys
 import time
 import traceback
-from pathlib import Path
 from typing import Tuple, Optional
 
 import rich_click as click
 
 from multiqc import config, report
-from multiqc.core import plugin_hooks, init_log
+from multiqc.core import plugin_hooks, log_and_rich, tmp_dir
+from multiqc.core.exceptions import RunError
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError
-from multiqc.utils import util_functions
 from multiqc.validation import ConfigValidationError
 
 logger = logging.getLogger(__name__)
@@ -34,7 +31,7 @@ start_execution_time = time.time()
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-emoji = util_functions.choose_emoji(rich=True)
+emoji = log_and_rich.choose_emoji(use_rich=True)
 emoji = f" {emoji}" if emoji else ""
 click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
@@ -449,8 +446,8 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
         result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
 
     except KeyboardInterrupt:
-        if clean_up and report.tmp_dir and Path(report.tmp_dir).exists():
-            shutil.rmtree(report.tmp_dir)
+        if clean_up:
+            tmp_dir.clean_up()
         logger.critical(
             "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
             + "User Cancelled Execution!\nExiting MultiQC..."
@@ -536,7 +533,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
 
     if report.num_flat_plots > 0 and not config.plots_force_flat:
         if not config.plots_force_interactive:
-            init_log.rich_console.print(
+            log_and_rich.rich_console_print(
                 "[blue]|           multiqc[/] | "
                 "Flat-image plots used. Disable with '--interactive'. "
                 "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
@@ -551,6 +548,6 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
 
     if clean_up:
         # Move the log file into the data directory
-        init_log.move_tmp_log()
+        log_and_rich.move_tmp_log()
 
     return RunResult(sys_exit_code=sys_exit_code)
