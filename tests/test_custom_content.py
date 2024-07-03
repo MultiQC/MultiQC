@@ -1,5 +1,4 @@
-import os
-
+import tempfile
 import pytest
 
 import multiqc
@@ -100,7 +99,7 @@ def test_deprecated_fields(tmp_path, capsys):
 
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_wrong_fields(tmp_path, capsys, strict):
+def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
     """
     Values of wrong types. Should fail in strict mode, but still produce output in non-strict mode.
     """
@@ -120,10 +119,9 @@ def test_wrong_fields(tmp_path, capsys, strict):
 0.561167227833894 0.0146313784854042
 """
     )
-
-    os.environ["TMPDIR"] = str(tmp_path / "tmp")
+    (tmp_path / "tmp").mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path / "tmp")
     multiqc.reset()
-
     update_config(cfg=ClConfig(strict=strict))
 
     report.analysis_files = [file]
