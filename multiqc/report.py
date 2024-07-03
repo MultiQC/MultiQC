@@ -341,7 +341,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
         ".gitignore",
     ]
 
-    filenames = [Path(path) / f.name for f in path.iterdir() if f.is_file()]
+    filenames = [f.name for f in path.iterdir() if f.is_file()]
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
