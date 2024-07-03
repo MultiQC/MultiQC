@@ -88,10 +88,9 @@ def write_results(clean_up=True) -> None:
             )
         )
 
-    # Clean up data and plot temporary directories
+    # Clean up temporary directory, reset logger file handler
     if clean_up:
-        tmp_dir.rmtree_with_retries(tmp_dir.plots_tmp_dir())
-        tmp_dir.rmtree_with_retries(tmp_dir.data_tmp_dir())
+        report.reset_tmp_dir()
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:

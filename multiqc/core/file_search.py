@@ -50,7 +50,7 @@ def _make_analysis_file_list():
                 report.analysis_files.append(str(p))
 
     if not report.analysis_files:
-        raise NoAnalysisFound("No files found to analyse. Check that input files and directories exist.")
+        raise NoAnalysisFound("No files found to analyse. Check that input files and directories exist")
 
     for p in report.analysis_files:
         logger.info(f"Search path: {os.path.abspath(p)}")

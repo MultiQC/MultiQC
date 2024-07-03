@@ -24,9 +24,15 @@ from multiqc.core import tmp_dir
 from multiqc.utils import util_functions
 from multiqc.utils.util_functions import is_running_in_notebook
 
-log_tmp_fn = Path("/dev/null")
+log_tmp_fn: Optional[Path] = None
+log_file_handler: Optional[logging.FileHandler] = None
 
 rich_console: Optional[rich.console.Console] = None
+
+logger = logging.getLogger()  # root logger
+
+
+DEBUG_TEMPLATE = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
 
 
 def init_log():
@@ -38,13 +44,6 @@ def init_log():
 
     loglevel (str): Determines the level of the log output.
     """
-    global log_tmp_fn
-    # Have to create a separate directory for the log file otherwise Windows will complain
-    # about same file used by different processes:
-    log_tmp_fn = tmp_dir.get_tmp_dir() / "multiqc.log"
-
-    logger = logging.getLogger()  # root logger
-
     # Remove log handlers left from previous calls to multiqc.run. Makes the function idempotent
     logger.handlers.clear()
 
@@ -90,8 +89,7 @@ def init_log():
         ),
     )
 
-    debug_template = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
-    _setup_coloredlogs(log_level, logger, debug_template)
+    _setup_coloredlogs(log_level, logger)
 
     if not config.quiet:
         if util_functions.is_running_in_notebook():
@@ -99,17 +97,27 @@ def init_log():
         else:
             _print_intro_with_rich()
 
-    # Now set up the file logging stream if we have a data directory
-    file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
-    file_handler.setLevel(logging.DEBUG)  # always DEBUG for the file
-    file_handler.setFormatter(logging.Formatter(debug_template))
-    logger.addHandler(file_handler)
+    add_file_handler()
 
-    logger.debug(f"Using temporary directory: {tmp_dir}")
+
+def add_file_handler() -> logging.Handler:
+    """
+    Set up the file logging stream if we have a data directory
+    """
+    global log_tmp_fn
+    if log_tmp_fn is None:
+        log_tmp_fn = tmp_dir.get_tmp_dir() / "multiqc.log"
+
+    global log_file_handler
+    log_file_handler = logging.FileHandler(log_tmp_fn, encoding="utf-8")
+    log_file_handler.setLevel(logging.DEBUG)  # always DEBUG for the file
+    log_file_handler.setFormatter(logging.Formatter(DEBUG_TEMPLATE))
+    logger.addHandler(log_file_handler)
     logger.debug(f"Logging to file: {log_tmp_fn}")
+    return log_file_handler
 
 
-def _setup_coloredlogs(log_level, logger, debug_template):
+def _setup_coloredlogs(log_level, logger):
     # Use coloredlogs as Rich is breaking output formatting
     info_template = "%(module)18s | %(message)s"
 
@@ -124,10 +132,10 @@ def _setup_coloredlogs(log_level, logger, debug_template):
 
     if log_level == "DEBUG":
         if config.no_ansi is True:
-            console.setFormatter(logging.Formatter(debug_template))
+            console.setFormatter(logging.Formatter(DEBUG_TEMPLATE))
         else:
             console.setFormatter(
-                coloredlogs.ColoredFormatter(fmt=debug_template, level_styles=level_styles, field_styles=field_styles)
+                coloredlogs.ColoredFormatter(fmt=DEBUG_TEMPLATE, level_styles=level_styles, field_styles=field_styles)
             )
     else:
         if config.no_ansi is True:
@@ -213,22 +221,29 @@ def _print_intro_with_rich():
         rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
 
-def move_log_to_final_dir():
+def remove_file_handler():
     """
-    Move the temporary log file to the MultiQC data directory if it exists.
+    Move the temporary log file to the MultiQC data directory if it exists, and remove the file handler.
     """
 
     # https://stackoverflow.com/questions/15435652/python-does-not-release-filehandles-to-logfile
-    logging.shutdown()
+    if log_file_handler is not None:
+        log_file_handler.close()
+        logger.removeHandler(log_file_handler)
 
-    if config.data_dir is None or not Path(config.data_dir).is_dir() or not log_tmp_fn.exists():
-        return
-
-    try:
-        shutil.copy(log_tmp_fn, os.path.join(config.data_dir, "multiqc.log"))
-        os.remove(log_tmp_fn)
-    except IOError:
-        pass
+    global log_tmp_fn
+    if log_tmp_fn is not None:
+        if log_tmp_fn.exists():
+            if config.data_dir is not None and Path(config.data_dir).is_dir():
+                try:
+                    shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
+                except IOError:
+                    pass
+        try:
+            os.remove(log_tmp_fn)
+        except OSError:
+            pass
+        log_tmp_fn = None
 
 
 def get_log_stream(logger):

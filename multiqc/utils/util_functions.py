@@ -4,6 +4,7 @@ import datetime
 import json
 import logging
 import shutil
+import sys
 import time
 from collections import defaultdict, OrderedDict
 from pathlib import Path
@@ -15,7 +16,7 @@ import math
 logger = logging.getLogger(__name__)
 
 
-def rmtree_with_retries(path, max_retries=10):
+def rmtree_with_retries(path, _logger=None, max_retries=10):
     """
     Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
@@ -30,8 +31,12 @@ def rmtree_with_retries(path, max_retries=10):
             shutil.rmtree(path)
             return
         except OSError:
-            logger.info(f"Unable to remove path: {path}")
-            logger.info(f"Retrying after {i**2} seconds")
+            if _logger:
+                _logger.info(f"Unable to remove path: {path}")
+                _logger.info(f"Retrying after {i**2} seconds")
+            else:
+                print(f"Unable to remove path: {path}", file=sys.stderr)
+                print(f"Retrying after {i**2} seconds", file=sys.stderr)
             time.sleep(i**2)
 
     # Final attempt, pass any Exceptions up to caller.

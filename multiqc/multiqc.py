@@ -552,4 +552,4 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
 
     finally:
         if clean_up:
-            report.clean_up_tmp_dir()
+            report.remove_tmp_dir()

@@ -55,9 +55,6 @@ def test_no_analysis_found(monkeypatch, tmp_path, clean_up):
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: report_tmp_dir)
 
     nonexistent_file = tmp_path / "nonexistent"
-    report.reset()
-    report.clean_up_tmp_dir()
-
     result = multiqc.run(nonexistent_file, clean_up=clean_up)
 
     assert result.sys_exit_code == 1

@@ -35,6 +35,7 @@ from multiqc.plots.plotly.plot import Plot
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
+    rmtree_with_retries,
 )
 
 logger = logging.getLogger(__name__)
@@ -131,6 +132,7 @@ def reset():
     plot_compressed_json = ""
 
     reset_file_search()
+    tmp_dir.new_tmp_dir()
 
 
 def reset_file_search():
@@ -949,6 +951,19 @@ def get_all_sections() -> List:
     return [s for mod in modules for s in mod.sections if not mod.hidden]
 
 
-def clean_up_tmp_dir():
-    log_and_rich.move_log_to_final_dir()
-    tmp_dir.clean_up()
+def remove_tmp_dir():
+    """
+    Completely remove tmp dir
+    """
+    log_and_rich.remove_file_handler()
+    rmtree_with_retries(tmp_dir.get_tmp_dir())
+    tmp_dir.new_tmp_dir()
+
+
+def reset_tmp_dir():
+    """
+    Re-create tmp dir
+    """
+    remove_tmp_dir()
+    tmp_dir.get_tmp_dir()
+    log_and_rich.add_file_handler()

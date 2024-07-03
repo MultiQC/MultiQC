@@ -46,7 +46,6 @@ def plots_tmp_dir() -> Path:
     return path
 
 
-def clean_up():
+def new_tmp_dir():
     global _tmp_dir
-    rmtree_with_retries(_tmp_dir)
     _tmp_dir = None
