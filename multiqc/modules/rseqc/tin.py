@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC tin.py
-http://rseqc.sourceforge.net/#tin-py """
+"""MultiQC submodule to parse output from RSeQC tin.py
+http://rseqc.sourceforge.net/#tin-py"""
 
 import csv
 import logging
