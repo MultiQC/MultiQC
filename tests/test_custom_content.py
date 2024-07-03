@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 import multiqc
@@ -119,9 +121,12 @@ def test_wrong_fields(tmp_path, capsys, strict):
 """
     )
 
-    report.reset()
-    report.analysis_files = [file]
+    os.environ["TMPDIR"] = str(tmp_path / "tmp")
+    multiqc.reset()
+
     update_config(cfg=ClConfig(strict=strict))
+
+    report.analysis_files = [file]
     report.search_files(["custom_content"])
 
     if strict:
