@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
-from multiqc.core import init_log, plugin_hooks, strict_helpers
+from multiqc.core import log_and_rich, plugin_hooks, strict_helpers
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.no_ansi = cfg.no_ansi
     if cfg.verbose is not None:
         config.verbose = cfg.verbose > 0
-    init_log.init_log()
+    log_and_rich.init_log()
 
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug("Running Python " + sys.version.replace("\n", " "))

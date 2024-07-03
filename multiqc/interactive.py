@@ -16,7 +16,7 @@ from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
@@ -91,10 +91,12 @@ def parse_logs(
     report.reset_file_search()
     try:
         searched_modules = file_search()
-        exec_modules(searched_modules, clean_up=False)
+        exec_modules(searched_modules)
     except RunError as e:
         if e.message:
             logger.critical(e.message)
+    except NoAnalysisFound as e:
+        logger.warning(e)
 
 
 def parse_data_json(path: Union[str, Path]):
@@ -402,6 +404,7 @@ def write_report(
     config_files: Sequence[Union[str, Path]] = (),
     custom_css_files: Sequence[str] = (),
     module_order: Sequence[Union[str, Dict]] = (),
+    clean_up=True,
 ):
     """
     Render HTML from parsed module data, and write a report and data files to disk.
@@ -434,12 +437,14 @@ def write_report(
     @param config_files: Specific config file to load, after those in MultiQC dir / home dir / working dir
     @param custom_css_files: Custom CSS files to include in the report
     @param module_order: Names of modules in order of precedence to show in report
+    @param clean_up: Clean up temp files after writing the report
     """
 
     if force is None and overwrite is not None:
         force = overwrite
     params = locals()
     del params["overwrite"]
+    del params["clean_up"]
     update_config(cfg=ClConfig(**params))
 
     check_version(write_report.__name__)
@@ -449,7 +454,10 @@ def write_report(
         return
 
     try:
-        write_results()
+        write_results(clean_up=clean_up)
+
+    except NoAnalysisFound:
+        logger.warning("No analysis results found to make a report")
 
     except RunError as e:
         if e.message:

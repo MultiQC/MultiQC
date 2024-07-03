@@ -3,6 +3,7 @@ MultiQC modules base class, contains helper functions
 """
 
 import dataclasses
+from pathlib import Path
 from typing import List, Union, Optional, Dict, Any, cast, Tuple
 
 import fnmatch
@@ -372,13 +373,16 @@ class BaseMultiqcModule:
 
         return None
 
-    def clean_s_name(self, s_name: Union[str, List[str]], f=None, root=None, filename=None, seach_pattern_key=None):
+    def clean_s_name(
+        self,
+        s_name: Union[str, List[str]],
+        f: Optional[Union[Dict, str]] = None,
+        root: Optional[str] = None,
+        filename: Optional[str] = None,
+        search_pattern_key: Optional[str] = None,
+    ) -> str:
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
-        :param s_name: The sample name(s) to clean.
-        :param root: The directory path that this file is within
-        :config.prepend_dirs: boolean, whether to prepend dir name to s_name
-        :return: The cleaned sample name, ready to be used
         """
         if isinstance(s_name, list):
             if len(s_name) == 0:
@@ -387,7 +391,7 @@ class BaseMultiqcModule:
             # Extract a sample name from a list of file names (for example, FASTQ pairs).
             # Each name is cleaned separately first:
             clean_names = [
-                self.clean_s_name(sn, f=f, root=root, filename=filename, seach_pattern_key=seach_pattern_key)
+                self.clean_s_name(sn, f=f, root=root, filename=filename, search_pattern_key=search_pattern_key)
                 for sn in s_name
             ]
             if len(set(clean_names)) == 1:
@@ -417,8 +421,8 @@ class BaseMultiqcModule:
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
-            if "sp_key" in f and seach_pattern_key is None:
-                seach_pattern_key = f["sp_key"]
+            if "sp_key" in f and search_pattern_key is None:
+                search_pattern_key = f["sp_key"]
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
@@ -426,15 +430,11 @@ class BaseMultiqcModule:
             config.use_filename_as_sample_name is True
             or (
                 isinstance(config.use_filename_as_sample_name, list)
-                and seach_pattern_key is not None
-                and seach_pattern_key in config.use_filename_as_sample_name
+                and search_pattern_key is not None
+                and search_pattern_key in config.use_filename_as_sample_name
             )
         ):
             sname = filename
-
-        # Set root to empty string if not known
-        if root is None:
-            root = ""
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
@@ -443,8 +443,7 @@ class BaseMultiqcModule:
         # Prepend sample name with directory
         if config.prepend_dirs:
             sep = config.prepend_dirs_sep
-            root = root.lstrip(f".{os.sep}")
-            dirs = [d.strip() for d in root.split(os.sep) if d.strip() != ""]
+            dirs = [d.strip() for d in (Path(root).parts if root else []) if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
                 if config.prepend_dirs_depth > 0:

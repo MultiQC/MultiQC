@@ -1,4 +1,7 @@
 import os
+import tempfile
+
+import pytest
 
 import multiqc
 from multiqc import report
@@ -40,3 +43,23 @@ def test_write_stdout(data_dir, tmp_path, capsys):
 
     files_after = set(os.listdir(tmp_path))
     assert files_before == files_after
+
+
+@pytest.mark.parametrize("clean_up", [True, False])
+def test_no_analysis_found(monkeypatch, tmp_path, clean_up):
+    """
+    Verify that an error is raised when a module is not found
+    """
+    report_tmp_dir = tmp_path / "report_tmp"
+    report_tmp_dir.mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: report_tmp_dir)
+
+    nonexistent_file = tmp_path / "nonexistent"
+    result = multiqc.run(nonexistent_file, clean_up=clean_up)
+
+    assert result.sys_exit_code == 1
+    assert result.message == "No analysis results found"
+    if clean_up:
+        assert not report_tmp_dir.exists()
+    else:
+        assert report_tmp_dir.exists()

@@ -1,11 +1,9 @@
 import logging
-import shutil
 import sys
 import time
 import traceback
 import tracemalloc
 from importlib.metadata import EntryPoint
-from pathlib import Path
 from typing import Dict, Union, Callable, List
 
 import rich
@@ -13,9 +11,8 @@ from rich.syntax import Syntax
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.core.exceptions import RunError
-from multiqc.core import plugin_hooks, software_versions
-from multiqc.validation import ConfigValidationError
+from multiqc.core import plugin_hooks, software_versions, tmp_dir
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionModule
 
 logger = logging.getLogger(__name__)
@@ -27,10 +24,7 @@ def trace_memory(stage: str):
         logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
 
 
-def exec_modules(
-    mod_dicts_in_order: List[Dict[str, Dict]],
-    clean_up: bool = True,
-) -> None:
+def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     """
     Execute the modules that have been found and loaded.
     """
@@ -137,9 +131,9 @@ def exec_modules(
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            from multiqc.core.init_log import rich_console
+            from multiqc.core.log_and_rich import rich_console_print
 
-            rich_console.print(
+            rich_console_print(
                 rich.panel.Panel(
                     CustomTraceback(),
                     title=f"Oops! The '[underline]{this_module}[/]' MultiQC module broke...",
@@ -187,12 +181,7 @@ def exec_modules(
 
     # Did we find anything?
     if len(report.modules) == 0:
-        logger.warning("No analysis results found. Cleaning up…")
-        if clean_up and report.tmp_dir and Path(report.tmp_dir).exists():
-            shutil.rmtree(report.tmp_dir)
-        logger.info("MultiQC complete")
-        # Exit with an error code if a module broke
-        raise RunError(sys_exit_code=sys_exit_code)
+        raise NoAnalysisFound("No analysis results found", sys_exit_code=sys_exit_code)
 
     plugin_hooks.mqc_trigger("after_modules")
 

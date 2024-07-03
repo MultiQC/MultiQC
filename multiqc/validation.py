@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import List, Dict, Set
+from typing import Dict, Set
 
 from pydantic import BaseModel, ValidationError, model_validator
 from pydantic.color import Color
@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigValidationError(Exception):
-    def __init__(self, module_name: str):
+    def __init__(self, message: str, module_name: str):
+        self.message = message
         self.module_name = module_name
         super().__init__()
 
@@ -65,12 +66,14 @@ class ValidatedConfig(BaseModel):
                 _validation_warnings_by_cls[self.__class__.__name__].clear()  # Reset for interactive usage
 
             if errors:
-                logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
+                msg = f"{modname}Invalid {plot_type} plot configuration {data}"
+                logger.error(msg)
                 for error in sorted(errors):
                     logger.error(f"• {error}")
+                    msg += f"\n• {error}"
                 _validation_errors_by_cls[self.__class__.__name__].clear()  # Reset for interactive usage
                 if config.strict:
-                    raise ConfigValidationError(module_name=modname)
+                    raise ConfigValidationError(message=msg, module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")

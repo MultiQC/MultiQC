@@ -12,6 +12,7 @@ import math
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, field_validator, field_serializer, Field
 
+from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
@@ -486,11 +487,12 @@ class Plot(BaseModel, Generic[T]):
             if config.export_plots:
                 self.flat_plot()
 
-        for dataset in self.datasets:
-            if self.id != "general_stats_table" and self.pconfig.save_data_file:
-                dataset.save_data_file()
-
         return html
+
+    def save_data_files(self):
+        if self.id != "general_stats_table" and self.pconfig.save_data_file:
+            for dataset in self.datasets:
+                dataset.save_data_file()
 
     def interactive_plot(self) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
@@ -642,12 +644,10 @@ def fig_to_static_html(
 
     # Save the plot to the data directory if export is requested
     if export_plots:
-        from multiqc.core.init_log import rich_console
-
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in config.export_plot_formats:
-            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
+            plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
             if file_ext == "svg":
                 # Cannot add logo to SVGs
