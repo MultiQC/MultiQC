@@ -155,7 +155,7 @@ class ValidatedConfig(BaseModel):
     def parse_color(cls, val):
         if val is None:
             return None
-        if re.match(r"\d+,\d+,\d+", val):
+        if re.match(r"\d+,\s*\d+,\s*\d+", val):
             val_correct = f"rgb({val})"
         else:
             val_correct = val
