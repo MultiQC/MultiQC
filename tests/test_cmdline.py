@@ -60,25 +60,25 @@ def test_wrong_module(tmp_path):
     Verify that an error is raised when a module is unknown
     """
     result = subprocess.run(
-        ["multiqc", tmp_path, "-m", "not_a_module"],
+        ["multiqc", tmp_path, "--no-ansi", "-m", "not_a_module"],
         cwd=tmp_path,
         check=False,
         capture_output=True,
     )
     assert result.returncode != 0
-    err = result.stderr.decode(encoding="utf-8")
+    err = result.stderr.decode()
     assert "Invalid value for '-m' / '--module': 'not_a_module' is not one of" in err
 
 
 def test_unknown_command_line_option(tmp_path):
     result = subprocess.run(
-        ["multiqc", tmp_path, "--unknown-command-line-flag"],
+        ["multiqc", tmp_path, "--no-ansi", "--unknown-command-line-flag"],
         cwd=tmp_path,
         check=False,
         capture_output=True,
     )
     assert result.returncode != 0
-    err = result.stderr.decode(encoding="utf-8")
+    err = result.stderr.decode()
     assert "No such option: --unknown-command-line-flag" in err
 
 
@@ -87,11 +87,11 @@ def test_no_files_found(tmp_path):
     Verify that an error is raised when no files are found
     """
     result = subprocess.run(
-        ["multiqc", tmp_path],
+        ["multiqc", "--no-ansi", tmp_path],
         cwd=tmp_path,
         check=False,
         capture_output=True,
     )
     assert result.returncode == 0
-    err = result.stderr.decode(encoding="utf-8")
+    err = result.stderr.decode()
     assert "No analysis results found" in err
