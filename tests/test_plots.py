@@ -1,8 +1,9 @@
+import tempfile
 from unittest.mock import patch
 
 import pytest
 
-from multiqc import report, Plot
+from multiqc import report, Plot, config
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, box
 from multiqc.validation import ConfigValidationError
@@ -293,21 +294,48 @@ def test_box_plot():
     assert plot_id in report.plot_data
 
 
-def test_flat_plot():
-    plot_id = "test_flat_plot"
-
-    plot = linegraph.plot(
-        {"Sample1": {0: 1, 1: 1}},
-        {"id": plot_id, "title": "Test: Flat Line Graph"},
-    )
-
-    assert isinstance(plot, Plot)
-    plot.flat = True
+@pytest.mark.parametrize(
+    "development,export_plots,export_plot_formats",
+    [
+        (False, False, None),  # default mode - embed, no export
+        (False, True, None),  # embed + export all formats
+        (True, True, ["pdf"]),  # link png + export pdf (should also export png for html)
+        (True, False, None),  # link png + no export (should only export png)
+    ],
+)
+def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, export_plots):
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path)
     report.reset()
+    config.reset()
+
+    plot_id = "test_plot"
+    plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, {"id": plot_id, "title": "Line Graph"})
+    assert isinstance(plot, Plot)
+
+    plot.flat = True
+    config.development = development
+    config.export_plots = export_plots
+    if export_plot_formats:
+        config.export_plot_formats = export_plot_formats
+
     html = plot.add_to_report()
+
     assert len(report.plot_data) == 0
     assert html is not None
-    assert f"""<div class="mqc_mplplot" id="{plot_id}"><img src="data:image/png;base64""" in html
+    if not development:
+        assert f'<div class="mqc_mplplot" id="{plot_id}"><img src="data:image/png;base64' in html
+        if not export_plots:
+            for fmt in ["png", "pdf", "svg"]:
+                assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
+    else:
+        assert f'<div class="mqc_mplplot" id="{plot_id}"><img src="multiqc_plots/png/{plot_id}.png' in html
+        assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").is_file()
+        if not export_plots:
+            for fmt in ["pdf", "svg"]:
+                assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
+    if export_plots:
+        for fmt in export_plot_formats or ["png", "pdf", "svg"]:
+            assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
 
 
 def test_missing_pconfig(capsys):
