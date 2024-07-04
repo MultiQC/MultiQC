@@ -33,6 +33,7 @@ class Marker(BaseModel):
 
 class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     name: str
+    data: Optional[Dict[KeyT, ValueT]] = Field(None, deprecated="pairs")
     pairs: List[Tuple[KeyT, ValueT]]
     color: Optional[str] = None
     width: int = 2
@@ -44,7 +45,17 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
     def __init__(self, **data):
         if "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
+
+        pairs: List[Tuple[KeyT, ValueT]] = []
+        for p in data.pop("data") if "data" in data else data.pop("pairs"):
+            if isinstance(p, list):
+                pairs.append(tuple(p))
+            else:
+                pairs.append(p)
+        data["pairs"] = pairs
+
         super().__init__(**data)
+
         if not self.name:
             self.name = f"series-{random.randint(1000000, 9999999)}"
 
