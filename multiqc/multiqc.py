@@ -27,7 +27,10 @@ logger = logging.getLogger(__name__)
 
 start_execution_time = time.time()
 
+NO_ANSI_FLAG = "--no-ansi"
+
 # Configuration for rich-click CLI help
+click.rich_click.COLOR_SYSTEM = "auto" if NO_ANSI_FLAG not in sys.argv else None
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
@@ -395,7 +398,7 @@ click.rich_click.OPTION_GROUPS = {
     help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
 )
 @click.option(
-    "--no-ansi",
+    NO_ANSI_FLAG,
     is_flag=True,
     default=None,
     help="Disable coloured log output",
