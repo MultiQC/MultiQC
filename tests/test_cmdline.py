@@ -66,7 +66,7 @@ def test_wrong_module(tmp_path):
         capture_output=True,
     )
     assert result.returncode != 0
-    err = result.stderr.decode()
+    err = result.stderr.decode(encoding="utf-8")
     assert "Invalid value for '-m' / '--module': 'not_a_module' is not one of" in err
 
 
@@ -78,7 +78,7 @@ def test_unknown_command_line_option(tmp_path):
         capture_output=True,
     )
     assert result.returncode != 0
-    err = result.stderr.decode()
+    err = result.stderr.decode(encoding="utf-8")
     assert "No such option: --unknown-command-line-flag" in err
 
 
@@ -93,5 +93,5 @@ def test_no_files_found(tmp_path):
         capture_output=True,
     )
     assert result.returncode == 0
-    err = result.stderr.decode()
+    err = result.stderr.decode(encoding="utf-8")
     assert "No analysis results found" in err
