@@ -388,7 +388,7 @@ class Plot(BaseModel, Generic[T]):
                 fig_to_static_html(
                     fig,
                     active=True,
-                    embed=True,
+                    embed_in_html=True,
                     export_plots=False,
                     file_name=self.id,
                 )
@@ -485,7 +485,7 @@ class Plot(BaseModel, Generic[T]):
         else:
             html = self.interactive_plot()
             if config.export_plots:
-                self.flat_plot()
+                self.flat_plot(embed_in_html=False)
 
         return html
 
@@ -516,7 +516,9 @@ class Plot(BaseModel, Generic[T]):
         report.plot_data[self.id] = self.model_dump(warnings=False)
         return html
 
-    def flat_plot(self) -> str:
+    def flat_plot(self, embed_in_html: Optional[bool] = None) -> str:
+        embed_in_html = embed_in_html if embed_in_html is not None else not config.development
+
         html = "".join(
             [
                 '<p class="text-info">',
@@ -538,24 +540,28 @@ class Plot(BaseModel, Generic[T]):
                 self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                embed_in_html=embed_in_html,
             )
             if self.add_pct_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
                     file_name=f"{dataset.uid}-pct",
+                    embed_in_html=embed_in_html,
                 )
             if self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
                     file_name=f"{dataset.uid}-log",
+                    embed_in_html=embed_in_html,
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     file_name=f"{dataset.uid}-pct-log",
+                    embed_in_html=embed_in_html,
                 )
 
         html += "</div>"
@@ -626,12 +632,13 @@ def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
     export_plots: Optional[bool] = None,
-    embed: bool = not config.development,
+    embed_in_html: Optional[bool] = None,
     file_name: Optional[str] = None,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
     """
+    embed_in_html = embed_in_html if embed_in_html is not None else not config.development
     export_plots = export_plots if export_plots is not None else config.export_plots
 
     assert fig.layout.width
@@ -642,11 +649,18 @@ def fig_to_static_html(
         scale=2,  # higher detail (retina display)
     )
 
+    formats = set(config.export_plot_formats) if export_plots else set()
+    if not embed_in_html and "png" not in formats:
+        if not export_plots:
+            formats = {"png"}
+        else:
+            formats.add("png")
+
     # Save the plot to the data directory if export is requested
-    if export_plots:
+    if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
-        for file_ext in config.export_plot_formats:
+        for file_ext in formats:
             plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
             if file_ext == "svg":
@@ -661,7 +675,7 @@ def fig_to_static_html(
                 img_buffer.close()
 
     # Now writing the PNGs for the HTML
-    if not embed:
+    if not embed_in_html:
         if file_name is None:
             raise ValueError("file_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
