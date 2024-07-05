@@ -32,21 +32,24 @@ class Marker(BaseModel):
 
 
 class Series(ValidatedConfig, Generic[KeyT, ValueT]):
-    name: str
-    data: Optional[Dict[KeyT, ValueT]] = Field(None, deprecated="pairs")
+    name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
     pairs: List[Tuple[KeyT, ValueT]]
     color: Optional[str] = None
     width: int = 2
-    dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
     showlegend: bool = True
     marker: Optional[Marker] = None
 
     def __init__(self, **data):
-        if "dash" in data:
+        if "dashStyle" in data:
+            add_validation_warning(self.__class__, "'dashStyle' field is deprecated. Please use 'dash' instead")
+            data["dash"] = convert_dash_style(data.pop("dashStyle"))
+        elif "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
 
         tuples: List[Tuple[KeyT, ValueT]] = []
+        if "data" in data:
+            add_validation_warning(self.__class__, "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
                 tuples.append(tuple(p))
@@ -55,9 +58,6 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
         data["pairs"] = tuples
 
         super().__init__(**data)
-
-        if not self.name:
-            self.name = f"series-{random.randint(1000000, 9999999)}"
 
 
 class FlatLine(ValidatedConfig):
@@ -129,13 +129,12 @@ class LinePlotConfig(PConfig):
     colors: Dict[str, str] = {}
 
     @classmethod
-    def parse_extra_series(cls, data):
-        if not isinstance(data, list):
-            data = [data]
-        if not isinstance(data[0], list):
-            data = [data]
-
-        return [[Series(**s) if isinstance(s, dict) else s for s in ss] for ss in data]
+    def parse_extra_series(cls, data: Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]):
+        if isinstance(data, list):
+            if isinstance(data[0], list):
+                return [[Series(**d) if isinstance(d, dict) else d for d in ds] for ds in data]
+            return [Series(**d) if isinstance(d, dict) else d for d in data]
+        return Series(**data) if isinstance(data, dict) else data
 
     @classmethod
     def parse_x_bands(cls, data):
@@ -468,6 +467,9 @@ def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
+        add_validation_warning(
+            LinePlotConfig, f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
+        )
         return mapping[dash_style]
     return "solid"
 

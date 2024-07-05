@@ -6,6 +6,7 @@ import pytest
 from multiqc import report, Plot, config
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, linegraph, table, violin, heatmap, scatter, box
+from multiqc.plots.plotly.line import Series, LinePlotConfig
 from multiqc.validation import ConfigValidationError
 
 
@@ -412,9 +413,10 @@ def test_missing_id_and_title(strict):
 
 
 def test_incorrect_color():
+    plot_id = "my_plot"
     pconfig = {
-        "id": "test_incorrect_fields",
-        "title": "Test: Line Graph",
+        "id": plot_id,
+        "title": "Line Graph",
         "extra_series": [{"color": "invalid"}],
     }
 
@@ -426,4 +428,135 @@ def test_incorrect_color():
     report.reset()
     plot.add_to_report()
     assert len(report.plot_data) == 1
-    assert "test_incorrect_fields" in report.plot_data
+    assert plot_id in report.plot_data
+
+
+def test_extra_series_multiple_datasets():
+    """Should zip series with the datasets"""
+    plot_id = "my_plot"
+    pconfig = LinePlotConfig(
+        id=plot_id,
+        title="Line Graph",
+        extra_series=[Series(pairs=[(1, 2)], name="Extra1")],
+    )
+    plot = linegraph.plot([{"Sample1": {0: 1, 1: 1}}, {"Sample1": {0: 2, 1: 2}}], pconfig=pconfig)
+
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][1]["pairs"]) == 1
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
+
+    assert len(report.plot_data[plot_id]["datasets"][1]["lines"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][1]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][1]["lines"][1]["pairs"]) == 1
+    assert report.plot_data[plot_id]["datasets"][1]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[plot_id]["datasets"][1]["lines"][1]["name"] == "Extra1"
+
+
+def test_multiple_extra_series():
+    """Should add two series to the dataset in addition to the main data"""
+    plot_id = "my_plot"
+    pconfig = LinePlotConfig(
+        id=plot_id,
+        title="Line Graph",
+        extra_series=[Series(pairs=[(1, 2)], name="Extra1"), Series(pairs=[(2, 3)], name="Extra2")],
+    )
+    plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
+
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+
+    assert len(report.plot_data[plot_id]["datasets"]) == 1
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 3
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][1]["pairs"]) == 1
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][2]["pairs"]) == 1
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][2]["name"] == "Extra2"
+
+
+def test_extra_series_multiple_datasets_different_series():
+    """Should zip series with the datasets"""
+    plot_id = "my_plot"
+    pconfig = LinePlotConfig(
+        id=plot_id,
+        title="Line Graph",
+        extra_series=[[Series(pairs=[(1, 2)], name="Extra1")], [Series(pairs=[(2, 3)], name="Extra2")]],
+    )
+    datasets = [{"Sample1": {0: 1, 1: 1}}, {"Sample1": {0: 2, 1: 2}}]
+    plot = linegraph.plot(datasets, pconfig=pconfig)
+
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+
+    assert len(report.plot_data[plot_id]["datasets"]) == 2
+    for ds in report.plot_data[plot_id]["datasets"]:
+        assert len(ds["lines"]) == 2
+        assert len(ds["lines"][0]["pairs"]) == 2
+        assert len(ds["lines"][1]["pairs"]) == 1
+        assert ds["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
+    assert report.plot_data[plot_id]["datasets"][1]["lines"][1]["name"] == "Extra2"
+
+
+def test_extra_series_multiple_datasets_multiple_series():
+    """Should copy the extra series to all datasets"""
+    plot_id = "my_plot"
+    pconfig = LinePlotConfig(
+        id=plot_id,
+        title="Line Graph",
+        extra_series=[Series(pairs=[(1, 2)], name="Extra1"), Series(pairs=[(2, 3)], name="Extra2")],
+    )
+    plot = linegraph.plot([{"Sample1": {0: 1, 1: 1}}, {"Sample1": {0: 2, 1: 2}}], pconfig=pconfig)
+
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+
+    assert len(report.plot_data[plot_id]["datasets"]) == 2
+    for ds in report.plot_data[plot_id]["datasets"]:
+        assert len(ds["lines"]) == 3
+        assert len(ds["lines"][0]["pairs"]) == 2
+        assert len(ds["lines"][1]["pairs"]) == 1
+        assert len(ds["lines"][2]["pairs"]) == 1
+        assert ds["lines"][0]["name"] == "Sample1"
+        assert ds["lines"][1]["name"] == "Extra1"
+        assert ds["lines"][2]["name"] == "Extra2"
+
+
+def test_dash_styles():
+    plot_id = "my_plot"
+    pconfig = {
+        "id": plot_id,
+        "title": "Line Graph",
+        "extra_series": [
+            {"dash": "dash", "pairs": [(1, 1)]},
+            {"dashStyle": "dash", "pairs": [(1, 1)]},
+            {"dash": "ShortDash", "pairs": [(1, 1)]},
+            {"dashStyle": "ShortDash", "pairs": [(1, 1)]},
+        ],
+    }
+    data = {
+        "Sample1": {0: 1, 1: 1},
+    }
+    with patch("logging.Logger.warning") as log:
+        plot = linegraph.plot(data, pconfig=pconfig)
+        warnings = [call.args[0] for call in log.mock_calls if call.args]
+        assert "• 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
+        assert "• 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
+    assert isinstance(plot, Plot)
+    report.reset()
+    plot.add_to_report()
+    assert len(report.plot_data) == 1
+    assert plot_id in report.plot_data
+    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 5
+    for line in report.plot_data[plot_id]["datasets"][0]["lines"][1:]:
+        assert line["dash"] == "dash"

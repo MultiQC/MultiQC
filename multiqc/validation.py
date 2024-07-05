@@ -4,8 +4,7 @@ import re
 from collections import defaultdict
 from typing import Dict, Set
 
-from pydantic import BaseModel, ValidationError, model_validator
-from pydantic.color import Color
+from pydantic import BaseModel, model_validator, ValidationError as PydanticValidationError
 from typeguard import check_type, TypeCheckError
 from PIL import ImageColor
 
@@ -26,12 +25,10 @@ _validation_warnings_by_cls: Dict[str, Set[str]] = defaultdict(set)
 
 
 def add_validation_error(cls: type, error: str):
-    assert issubclass(cls, ValidatedConfig)
     _validation_errors_by_cls[cls.__name__].add(error)
 
 
 def add_validation_warning(cls: type, warning: str):
-    assert issubclass(cls, ValidatedConfig)
     _validation_warnings_by_cls[cls.__name__].add(warning)
 
 
@@ -39,7 +36,7 @@ class ValidatedConfig(BaseModel):
     def __init__(self, **data):
         try:
             super().__init__(**data)
-        except ValidationError as e:
+        except PydanticValidationError as e:
             if not _validation_errors_by_cls.get(self.__class__.__name__):
                 raise
             else:

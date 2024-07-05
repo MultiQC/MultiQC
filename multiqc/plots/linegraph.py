@@ -71,30 +71,22 @@ def plot(
 
     # Add on annotation data series
     # noinspection PyBroadException
-    try:
-        if pconf.extra_series:
-            pconf_es: Union[
-                SeriesConf,
-                List[SeriesConf],
-                List[List[SeriesConf]],
-            ] = pconf.extra_series
-
-            list_of_lists_of_raw_series: List[List[SeriesConf]]
-            if isinstance(pconf_es, list):
-                if isinstance(pconf_es[0], list):
-                    list_of_lists_of_raw_series = pconf_es  # type: ignore
-                else:
-                    list_of_lists_of_raw_series = [pconf_es]  # type: ignore
+    if pconf.extra_series:
+        pconf_es: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
+        list_of_list_of_series: List[List[Series]]
+        if isinstance(pconf_es, list):
+            if isinstance(pconf_es[0], list):
+                list_of_list_of_series = pconf_es  # type: ignore
             else:
-                list_of_lists_of_raw_series = [[pconf_es]]
+                list_of_list_of_series = [pconf_es for _ in datasets]  # type: ignore
+        else:
+            list_of_list_of_series = [[pconf_es] for _ in datasets]
 
-            for i, list_of_raw_series in enumerate(list_of_lists_of_raw_series):
-                assert isinstance(list_of_raw_series, list)
-                for s_dict in list_of_raw_series:
-                    series = Series(**s_dict) if isinstance(s_dict, dict) else s_dict
+        for i, list_of_raw_series in enumerate(list_of_list_of_series):
+            assert isinstance(list_of_raw_series, list)
+            for series in list_of_raw_series:
+                if i < len(datasets):
                     datasets[i].append(series)
-    except Exception:
-        pass
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for di, series_by_sample in enumerate(datasets):
