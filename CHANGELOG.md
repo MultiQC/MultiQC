@@ -90,6 +90,8 @@ Bug fix release. Two major issues are fixed here:
   - Handle missing `vdj_annotation` and `vdj_enrichment` sections ([#2579](https://github.com/MultiQC/MultiQC/pull/2579))
 - **fgbio**
   - Fix links in fgbio.md ([#2586](https://github.com/MultiQC/MultiQC/pull/2586))
+- **Glimpse**:
+  - Add support for Glimpse concordance metrics [#2491](https://github.com/MultiQC/MultiQC/issues/2491)
 - **Custom content**
   - Support DOI for custom content ([#2582](https://github.com/MultiQC/MultiQC/pull/2582))
 

@@ -372,6 +372,12 @@ gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
   num_lines: 2
+glimpse/err_spl:
+  fn: "*.error.spl.txt.gz"
+  num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt.gz"
+  num_lines: 1
 goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
