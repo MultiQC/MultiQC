@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, cast, Set
+from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any, Sequence
 
 import yaml
 
@@ -19,6 +19,7 @@ from multiqc.plots.plotly.box import BoxPlotConfig
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.table_object import TableConfig
+from multiqc.validation import ConfigValidationError
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -148,7 +149,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
-                m_config = _find_file_header(f)
+                m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 if m_config is not None:
                     c_id = m_config.get("id", config_custom_data_id)
@@ -161,7 +162,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     s_name = m_config.get("sample_name")
                 else:
                     c_id = config_custom_data_id
-                    m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
+                    _m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
+                    assert isinstance(_m_config, dict)
+                    m_config = _m_config
 
                 # Guess sample name if not given
                 if s_name is None:
@@ -186,7 +189,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     m_config["file_format"] = _guess_file_format(f)
 
                 # Parse data
-                parsed_data, parsed_conf = _parse_txt(f, m_config)
+                parsed_data, parsed_conf = _parse_txt(f, m_config, non_header_lines)
                 if parsed_data is None or len(parsed_data) == 0:
                     log.warning(f"Not able to parse custom data in {f['fn']}")
                 else:
@@ -467,29 +470,51 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
 
 
-def _find_file_header(f):
+def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
     # Collect commented out header lines
     hlines = []
+    other_lines = []
     for line in f["f"].splitlines():
         if line.startswith("#"):
             hlines.append(line[1:])
+        else:
+            other_lines.append(line)
+
+    # Check if the last header line is the '#'-commented column names
+    sep = None
+    if f["fn"].endswith(".tsv"):
+        sep = "\t"
+    elif f["fn"].endswith(".csv"):
+        sep = ","
+    if (
+        sep
+        and len(hlines) > 0
+        and len(other_lines) > 0
+        and ":" not in hlines[-1]
+        and len(hlines[-1].split(sep)) == len(other_lines[0].split(sep))
+    ):
+        other_lines = [hlines.pop()] + other_lines
+
     if len(hlines) == 0:
-        return None
+        return None, other_lines
+
     try:
         hconfig = yaml.safe_load("\n".join(hlines))
     except yaml.YAMLError:
-        raise ValueError(
+        raise ConfigValidationError(
             f"Could not parse comment file header for MultiQC custom content: {f['fn']}. "
             + "Note that everything behind a comment character '#' is expected to in YAML format. "
-            + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'."
+            + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'.",
+            "custom_content",
         )
     else:
         if not isinstance(hconfig, dict):
-            raise ValueError(
+            raise ConfigValidationError(
                 "Custom Content comment file header looked wrong. It's expected to "
-                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}"
+                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
+                "custom_content",
             )
-    return hconfig
+    return hconfig, other_lines
 
 
 def _find_html_file_header(f):
@@ -555,29 +580,29 @@ def _guess_file_format(f):
     return "spaces"
 
 
-def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
+def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, Dict, List, None], Dict]:
     # Split the data into a list of lists by column
     sep = None
     if conf["file_format"] == "csv":
         sep = ","
     if conf["file_format"] == "tsv":
         sep = "\t"
-    lines = f["f"].splitlines()
-    d = []
 
     # Check for special case - HTML
     if conf.get("plot_type") == "html":
-        for line in lines:
-            if line and not line.startswith("#"):
-                d.append(line)
-        return "\n".join(d), conf
+        lines: List[str] = []
+        for line in non_header_lines:
+            if line:
+                lines.append(line)
+        return "\n".join(lines), conf
 
     # Not HTML, need to parse data
+    matrix: List[List[Union[str, float, int]]] = []
     ncols = None
-    for line in lines:
-        if line and not line.startswith("#"):
-            sections = line.split(sep)
-            d.append(sections)
+    for line in non_header_lines:
+        if line:
+            sections = cast(List[Any], line.split(sep))
+            matrix.append(sections)
             if ncols is None:
                 ncols = len(sections)
             elif ncols != len(sections):
@@ -586,8 +611,8 @@ def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
 
     # Convert values to floats if we can
     first_row_str = 0
-    for i, line in enumerate(d):
-        for j, v in enumerate(line):
+    for i, sections in enumerate(matrix):
+        for j, v in enumerate(sections):
             try:
                 v = float(v)
             except ValueError:
@@ -598,40 +623,42 @@ def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
                 # Count strings in first row (header?)
                 if i == 0:
                     first_row_str += 1
-            d[i][j] = v
+            matrix[i][j] = v
 
-    all_numeric = all([isinstance(line, float) for i in range(1, len(d)) for line in d[i][1:]])
+    all_numeric = all(isinstance(v, (float, int)) for s in matrix[1:] for v in s[1:])
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
-    if conf.get("plot_type") == "generalstats" and len(d) >= 2 and ncols and ncols >= 2:
+    if conf.get("plot_type") == "generalstats" and len(matrix) >= 2 and ncols and ncols >= 2:
         data_ddict: Dict[str, Dict] = defaultdict(dict)
-        for i, line in enumerate(d[1:], 1):
-            for j, v in enumerate(line[1:], 1):
-                data_ddict[line[0]][d[0][j]] = v
+        for i, section in enumerate(matrix[1:], 1):
+            for j, v in enumerate(section[1:], 1):
+                assert isinstance(section[0], str)
+                data_ddict[section[0]][matrix[0][j]] = v
         return data_ddict, conf
 
     # Heatmap: Number of headers == number of lines
-    if conf.get("plot_type") is None and first_row_str == len(lines) and all_numeric:
+    if conf.get("plot_type") is None and first_row_str == len(non_header_lines) and all_numeric:
         conf["plot_type"] = "heatmap"
     if conf.get("plot_type") == "heatmap":
-        conf["xcats"] = d[0][1:]
-        conf["ycats"] = [s[0] for s in d[1:]]
-        data_list: List = [s[1:] for s in d[1:]]
+        conf["xcats"] = matrix[0][1:]
+        conf["ycats"] = [s[0] for s in matrix[1:]]
+        data_list: List = [s[1:] for s in matrix[1:]]
         return data_list, conf
 
     # Header row of strings, or configured as table
-    if first_row_str == len(d[0]) or conf.get("plot_type") == "table":
+    if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
         data_ddict = dict()
-        for s in d[1:]:
+        for s in matrix[1:]:
+            assert isinstance(s[0], str)
             data_ddict[s[0]] = dict()
             for i, v in enumerate(s[1:]):
-                cat = str(d[0][i + 1])
+                cat = str(matrix[0][i + 1])
                 data_ddict[s[0]][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True
-            for r in d[1:]:
+            for r in matrix[1:]:
                 for v in r[1:]:
                     allfloats = allfloats and isinstance(v, float)
             if allfloats:
@@ -639,10 +666,11 @@ def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
             else:
                 conf["plot_type"] = "table"
         # Set table col_1 header
-        if conf.get("plot_type") == "table" and d[0][0].strip() != "":
+        assert isinstance(matrix[0][0], str)
+        if conf.get("plot_type") == "table" and matrix[0][0].strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
-                conf["pconfig"]["col1_header"] = d[0][0].strip()
+                conf["pconfig"]["col1_header"] = matrix[0][0].strip()
         # Return parsed data
         if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
             return data_ddict, conf
@@ -652,29 +680,30 @@ def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
     # Scatter plot: First row is  str : num : num
     if (
         conf.get("plot_type") is None
-        and len(d[0]) == 3
-        and not isinstance(d[0][0], float)
-        and isinstance(d[0][1], float)
-        and isinstance(d[0][2], float)
+        and len(matrix[0]) == 3
+        and not isinstance(matrix[0][0], float)
+        and isinstance(matrix[0][1], float)
+        and isinstance(matrix[0][2], float)
     ):
         conf["plot_type"] = "scatter"
 
     if conf.get("plot_type") == "scatter":
-        data_dict = dict()
-        for s in d:
+        dicts: Dict[str, Dict[str, float]] = dict()
+        for s in matrix:
+            assert isinstance(s[0], str)
             try:
-                data_dict[s[0]] = {"x": float(s[1]), "y": float(s[2])}
+                dicts[s[0]] = {"x": float(s[1]), "y": float(s[2])}
             except (IndexError, ValueError):
                 pass
-        return data_dict, conf
+        return dicts, conf
 
     # Single sample line / bar graph - first row has two columns
-    if len(d[0]) == 2:
+    if len(matrix[0]) == 2:
         # Line graph - num : num
-        if conf.get("plot_type") is None and isinstance(d[0][0], float) and isinstance(d[0][1], float):
+        if conf.get("plot_type") is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
             conf["plot_type"] = "linegraph"
         # Bar graph - str : num
-        if conf.get("plot_type") is None and not isinstance(d[0][0], float) and isinstance(d[0][1], float):
+        if conf.get("plot_type") is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
             conf["plot_type"] = "bargraph"
 
         # Data structure is the same
@@ -682,23 +711,25 @@ def _parse_txt(f, conf: Dict) -> Tuple[Union[str, Dict, List, None], Dict]:
             # Set section id based on directory if not known
             if conf.get("id") is None:
                 conf["id"] = os.path.basename(f["root"])
-            data_dict = dict()
-            for s in d:
+            data_dict: Dict = dict()
+            for s in matrix:
                 data_dict[s[0]] = s[1]
             return {f["s_name"]: data_dict}, conf
 
     # Multi-sample line graph: No header row, str : lots of num columns
-    if conf.get("plot_type") is None and len(d[0]) > 4 and all_numeric:
+    if conf.get("plot_type") is None and len(matrix[0]) > 4 and all_numeric:
         conf["plot_type"] = "linegraph"
 
     if conf.get("plot_type") == "linegraph":
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
-        if d[0][0].strip() == "":
-            x_labels = d.pop(0)[1:]
+        assert isinstance(matrix[0][0], str)
+        if matrix[0][0].strip() == "":
+            x_labels = matrix.pop(0)[1:]
         # Use 1..n range for x values
-        for s in d:
+        for s in matrix:
+            assert isinstance(s[0], str)
             data_ddict[s[0]] = dict()
             for i, v in enumerate(s[1:]):
                 try:
