@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotCoverage """
+"""MultiQC submodule to parse output from deepTools plotCoverage"""
 
 import logging
 

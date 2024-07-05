@@ -94,9 +94,9 @@ class CellRangerVdjMixin:
         else:
             for k in self.vdj_general_data_headers.keys():
                 self.vdj_general_data_headers[k]["title"] = f"{self.vdj_general_data_headers[k]['title']} (VDJ)"
-                self.vdj_general_data_headers[k][
-                    "description"
-                ] = f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+                self.vdj_general_data_headers[k]["description"] = (
+                    f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+                )
 
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 

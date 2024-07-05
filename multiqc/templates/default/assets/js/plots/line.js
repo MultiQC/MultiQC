@@ -35,11 +35,29 @@ class LinePlot extends Plot {
 
     return lines.map((line) => {
       let params = {
-        marker: line["marker"] ?? {},
-        line: line["line"] ?? {},
+        line: {
+          color: line.color,
+          dash: line.dash,
+          width: line.width,
+        },
+        marker: {},
         showlegend: line["showlegend"] ?? null,
         mode: line["mode"] ?? null,
       };
+
+      let marker = line["marker"] ?? null;
+      if (marker) {
+        params.mode = "lines+markers";
+        params.marker = {
+          symbol: marker["symbol"],
+          color: marker["fill_color"] ?? marker["color"] ?? line.color,
+          line: {
+            width: marker["width"],
+            color: marker["line_color"] ?? marker["color"] ?? line.color,
+          },
+        };
+      }
+
       updateObject(params, dataset["trace_params"], true);
 
       if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
@@ -47,10 +65,10 @@ class LinePlot extends Plot {
 
       return {
         type: "scatter",
-        x: line.data.map((x) => x[0]),
-        y: line.data.map((x) => x[1]),
+        x: line.pairs.map((x) => x[0]),
+        y: line.pairs.map((x) => x[1]),
         name: line.name,
-        text: line.data.map(() => line.name),
+        text: line.pairs.map(() => line.name),
         ...params,
       };
     });
@@ -66,7 +84,7 @@ class LinePlot extends Plot {
     let x = null;
     lines.forEach((line) => {
       let thisX;
-      thisX = line.data.map((x) => x[0]);
+      thisX = line.pairs.map((x) => x[0]);
       if (x === null) {
         x = thisX;
       } else if (x.length !== thisX.length) {
@@ -81,12 +99,12 @@ class LinePlot extends Plot {
     if (sharedX) {
       csv += "Sample" + sep + x.join(sep) + "\n";
       lines.forEach((line) => {
-        csv += line.name + sep + line.data.map((x) => x[1]).join(sep) + "\n";
+        csv += line.name + sep + line.pairs.map((x) => x[1]).join(sep) + "\n";
       });
     } else {
       lines.forEach((line) => {
-        csv += line.name + sep + "X" + sep + line.data.map((x) => x[0]).join(sep) + "\n";
-        csv += line.name + sep + "Y" + sep + line.data.map((x) => x[1]).join(sep) + "\n";
+        csv += line.name + sep + "X" + sep + line.pairs.map((x) => x[0]).join(sep) + "\n";
+        csv += line.name + sep + "Y" + sep + line.pairs.map((x) => x[1]).join(sep) + "\n";
       });
     }
     return csv;

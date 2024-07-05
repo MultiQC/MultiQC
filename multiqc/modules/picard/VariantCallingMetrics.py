@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard VariantCallingMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc.plots import bargraph
 
@@ -109,7 +110,7 @@ def parse_reports(module):
 def collect_data(module):
     """Find Picard VariantCallingMetrics reports and parse their data"""
 
-    data = dict()
+    data: Dict = dict()
     for f in module.find_log_files("picard/variant_calling_metrics", filehandles=True):
         s_name = None
         for header, value in table_in(f["f"], pre_header_string="## METRICS CLASS"):

@@ -8,7 +8,7 @@ version = "1.23dev"
 dependencies = [
     "click",
     "humanize",
-    "importlib-metadata",
+    "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
     "markdown",
@@ -60,6 +60,11 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
+    "mypy",
+    "types-PyYAML",
+    "types-tqdm",
+    "types-requests",
+    "types-Markdown",
 ]
 
 [project.urls]
@@ -247,5 +252,10 @@ packages = ["multiqc"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-ignore-init-module-imports = true
-ignore = ["F401"]  # unused-import
+lint.ignore = ["F401"]  # unused-import
+
+[tool.mypy]
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+# exclude all files in multiqc/modules
+exclude = "multiqc/modules/*"

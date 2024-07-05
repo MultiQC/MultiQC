@@ -56,7 +56,7 @@ This checklist is for my own reference, as I forget the steps every time.
 9. Make sure that all tests are passing
 10. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
 11. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-12. Update version numbers to new dev version in `pyproject.toml` + a new section in the changelog for the development version
+12. Update version numbers to new dev version in `pyproject.toml`
 13. Commit and push version bump
 14. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
 15. Look for the automated release PR on `bioconda` and approve / merge

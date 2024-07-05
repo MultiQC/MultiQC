@@ -1,16 +1,22 @@
 import inspect
 import logging
+import re
 from collections import defaultdict
-from typing import List, Dict, Set
+from typing import Dict, Set
 
 from pydantic import BaseModel, ValidationError, model_validator
+from pydantic.color import Color
 from typeguard import check_type, TypeCheckError
+from PIL import ImageColor
+
+from multiqc import config
 
 logger = logging.getLogger(__name__)
 
 
 class ConfigValidationError(Exception):
-    def __init__(self, module_name: str):
+    def __init__(self, message: str, module_name: str):
+        self.message = message
         self.module_name = module_name
         super().__init__()
 
@@ -60,11 +66,14 @@ class ValidatedConfig(BaseModel):
                 _validation_warnings_by_cls[self.__class__.__name__].clear()  # Reset for interactive usage
 
             if errors:
-                logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
+                msg = f"{modname}Invalid {plot_type} plot configuration {data}"
+                logger.error(msg)
                 for error in sorted(errors):
                     logger.error(f"• {error}")
+                    msg += f"\n• {error}"
                 _validation_errors_by_cls[self.__class__.__name__].clear()  # Reset for interactive usage
-                raise ConfigValidationError(module_name=modname)
+                if config.strict:
+                    raise ConfigValidationError(message=msg, module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
@@ -107,6 +116,10 @@ class ValidatedConfig(BaseModel):
             if field.is_required():
                 if name not in values:
                     add_validation_error(cls, f"missing required field '{name}'")
+                    try:
+                        values[name] = field.annotation() if field.annotation else None
+                    except TypeError:
+                        values[name] = None
 
         # Check types and validate specific fields
         corrected_values = {}
@@ -135,8 +148,24 @@ class ValidatedConfig(BaseModel):
                 msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                 add_validation_error(cls, msg)
                 logger.debug(f"{msg}: {e}")
-
-            corrected_values[name] = val
+            else:
+                corrected_values[name] = val
 
         values = corrected_values
         return values
+
+    @classmethod
+    def parse_color(cls, val):
+        if val is None:
+            return None
+        if re.match(r"\d+,\s*\d+,\s*\d+", val):
+            val_correct = f"rgb({val})"
+        else:
+            val_correct = val
+        try:
+            ImageColor.getrgb(val_correct)
+        except ValueError:
+            add_validation_error(cls, f"invalid color value '{val}'")
+            return None
+        else:
+            return val

@@ -3,12 +3,12 @@
 import logging
 import os
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional, Sequence
 
 import packaging.version
 import yaml
 
-from multiqc import report as mqc_report
+from multiqc import report as mqc_report, config, report
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,10 +19,10 @@ def normalize_name(name: str):
     return name.lower().replace(" ", "").replace("-", "").replace("_", "")
 
 
-def update_versions_from_config(config, report):
+def update_versions_from_config():
     """Update report with software versions from config if provided"""
     # Parse software version from config if provided
-    versions_from_config = load_versions_from_config(config)
+    versions_from_config = load_versions_from_config()
     for group, softwares in versions_from_config.items():
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
@@ -52,17 +52,17 @@ def update_versions_from_config(config, report):
             report.software_versions[group][software] = versions
 
 
-def load_versions_from_config(config):
+def load_versions_from_config():
     """Try to load software versions from config"""
     log.debug("Reading software versions from config.software_versions")
-    versions_config = getattr(config, "software_versions", defaultdict(lambda: defaultdict(list)))
+    versions_config = config.software_versions
     if not isinstance(versions_config, dict):
         log.error("Expected the `software_versions` config section to be a dictionary")
         versions_config = {}
     else:
         versions_config = validate_software_versions(versions_config)
 
-    versions_from_files = defaultdict(lambda: defaultdict(list))
+    versions_from_files: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
     for f in mqc_report.files.get("software_versions", []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as fh:
@@ -99,9 +99,9 @@ def load_versions_from_config(config):
         softwares = versions_config[group]
         for tool in softwares:
             # Try and convert version to packaging.versions.Version object and remove duplicates
-            versions = list(set([parse_version(version) for version in softwares[tool]]))
-            versions = sort_versions(versions)
-            softwares[tool] = versions
+            ver_and_verstr = list(set((parse_version(version), version) for version in softwares[tool]))
+            ver_and_verstr = sort_versions(ver_and_verstr)
+            softwares[tool] = [v for _, v in ver_and_verstr]
 
     return versions_config
 
@@ -147,7 +147,7 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
                 fixed_lst.append(item)
         return fixed_lst
 
-    output = defaultdict(lambda: defaultdict(list))
+    output: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
 
     for level1_key, level1_values in versions_config.items():
         group = level1_key
@@ -175,15 +175,17 @@ def validate_software_versions(versions_config: Dict) -> Dict[str, Dict]:
     return output
 
 
-def sort_versions(versions):
+def sort_versions(
+    ver_and_verstr: Sequence[Tuple[Optional[packaging.version.Version], str]],
+) -> List[Tuple[Optional[packaging.version.Version], str]]:
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
     objects.
     """
-    version_objs = [v for v in versions if isinstance(v, packaging.version.Version)]
-    version_strs = [v for v in versions if not isinstance(v, packaging.version.Version)]
-    versions = sorted(version_objs) + sorted(version_strs)
-    return versions
+    version_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is not None]
+    version_not_parsed = [(vobj, vstr) for vobj, vstr in ver_and_verstr if vobj is None]
+    versions = sorted(version_parsed) + sorted(version_not_parsed)
+    return list(versions)
 
 
 def find_matching_module(software_name: str, modules):
@@ -194,7 +196,7 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str):
+def parse_version(version: str) -> Optional[packaging.version.Version]:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.
@@ -203,4 +205,4 @@ def parse_version(version: str):
     try:
         return packaging.version.parse(version)
     except packaging.version.InvalidVersion:
-        return str(version)
+        return None

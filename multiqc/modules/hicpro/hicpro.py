@@ -5,6 +5,7 @@
 
 import logging
 import os.path
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -28,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HiC-Pro summary reports
-        self.hicpro_data = dict()
+        self.hicpro_data: Dict = dict()
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
             for f in self.find_log_files(f"hicpro/{k}"):
                 self.parse_hicpro_stats(f, k)

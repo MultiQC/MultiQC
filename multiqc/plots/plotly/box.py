@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Dict, List, Union
 
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
@@ -98,7 +98,7 @@ class Dataset(BaseDataset):
         report.write_data_file(vals_by_sample, self.uid)
 
 
-class BoxPlot(Plot):
+class BoxPlot(Plot[Dataset]):
     datasets: List[Dataset]
 
     @staticmethod

@@ -1,5 +1,4 @@
-""" MultiQC submodule to parse output from fgbio ErrorRateByReadPosition """
-
+"""MultiQC submodule to parse output from fgbio ErrorRateByReadPosition"""
 
 from multiqc.plots import linegraph
 from multiqc.utils.util_functions import strtobool

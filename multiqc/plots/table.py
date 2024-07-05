@@ -1,11 +1,11 @@
 import logging
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Sequence
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config
 from multiqc.plots.plotly import table
-from multiqc.plots.table_object import TableConfig
+from multiqc.plots.table_object import TableConfig, DatasetT
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[Dict], Dict],
+    data: Union[DatasetT, Sequence[DatasetT]],
     headers: Optional[Union[List[Dict], Dict]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, Plot]:
@@ -47,7 +47,7 @@ def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
     if "table" in mod.__dict__ and callable(mod.table):
         # Collect unique sample names
         s_names = set()
-        for d in dt.data:
+        for d in dt.raw_data:
             for s_name in d.keys():
                 s_names.add(s_name)
 

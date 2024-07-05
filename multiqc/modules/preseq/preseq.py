@@ -8,7 +8,7 @@ import numpy as np
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.plots.plotly.line import Series
+from multiqc.plots.plotly.line import Series, Marker
 from multiqc.utils import mqc_colour
 
 # Initialise the logger
@@ -374,9 +374,9 @@ def _real_counts_to_plot_series(
         series_config = dict(
             color=scale.get_colour(si),
             showlegend=False,
-            marker=Series.Marker(
+            marker=Marker(
                 symbol="diamond",
-                color="black",
+                line_color="black",
                 width=1,
             ),
         )

@@ -7,8 +7,7 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union
-
+from typing import List, Dict, Optional, Union, Set, TextIO
 
 # Default logger will be replaced by caller
 import logging
@@ -19,7 +18,7 @@ from datetime import datetime
 
 import importlib_metadata
 import yaml
-import pyaml_env
+import pyaml_env  # type: ignore
 
 from multiqc.utils.util_functions import strtobool, update_dict
 
@@ -35,13 +34,13 @@ MODULE_DIR = Path(__file__).parent.absolute()
 script_path = str(MODULE_DIR)  # dynamically used by report.multiqc_dump_json()
 REPO_DIR = MODULE_DIR.parent.absolute()
 
-git_root = None
 # noinspection PyBroadException
 try:
-    git_root = subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
-    ).strip()
-    git_root = Path(git_root)
+    git_root = Path(
+        subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+        ).strip()
+    )
     # .git
     # multiqc/
     #   utils/
@@ -101,7 +100,7 @@ make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
 megaqc_url: str
-megaqc_access_token: str
+megaqc_access_token: Optional[str]
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
@@ -165,9 +164,35 @@ use_filename_as_sample_name: bool
 fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
-top_modules: List[Dict[str, Dict]]
-module_order: List[Union[str, Dict]]
+top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
+module_order: List[Union[str, Dict[str, Dict[str, str]]]]
 preserve_module_raw_data: Optional[bool]
+
+# Module filename search patterns
+sp: Dict = {}
+
+# Other defaults that can't be set in YAML
+modules_dir: str
+creation_date: str
+working_dir: str
+analysis_dir: List[str]
+output_dir: str
+kwargs: Dict = {}
+
+# Other variables that set only through the CLI
+run_modules: List[str]
+custom_content_modules: List[str]
+exclude_modules: List[str]
+data_dir: Optional[str]
+plots_dir: Optional[str]
+custom_data: Dict
+report_section_order: Dict
+output_fn: Optional[Union[str, TextIO]]
+filename: Optional[str]
+megaqc_upload: bool
+
+avail_modules: Dict
+avail_templates: Dict
 
 
 def load_defaults():
@@ -180,19 +205,91 @@ def load_defaults():
     for c, v in _default_config.items():
         globals()[c] = v
 
+    # Module filename search patterns
+    with (Path(MODULE_DIR) / "search_patterns.yaml").open() as f:
+        global sp
+        sp = yaml.safe_load(f)
+
+    # Other defaults that can't be set in defaults YAML
+    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    modules_dir = str(Path(MODULE_DIR) / "modules")
+    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
+    working_dir = os.getcwd()
+    analysis_dir = [os.getcwd()]
+    output_dir = os.path.realpath(os.getcwd())
+    megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+    kwargs = {}
+
+    # Other variables that set only through the CLI
+    global \
+        run_modules, \
+        custom_content_modules, \
+        exclude_modules, \
+        data_dir, \
+        plots_dir, \
+        custom_data, \
+        report_section_order, \
+        output_fn, \
+        filename, \
+        megaqc_upload
+    run_modules = []
+    custom_content_modules = []
+    exclude_modules = []
+    data_dir = None
+    plots_dir = None
+    custom_data = {}
+    report_section_order = {}
+    output_fn = None
+    filename = None
+    megaqc_upload = False
+
+    # Available modules.
+    global avail_modules
+    # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
+    # Get all modules, including those from other extension packages
+    avail_modules = dict()
+    for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+        nice_name = entry_point.name
+        avail_modules[nice_name] = entry_point
+
+    # Available templates.
+    global avail_templates
+    # Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
+    # Get all templates, including those from other extension packages
+    avail_templates = {}
+    for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+        nice_name = entry_point.name
+        avail_templates[nice_name] = entry_point
+
+    # Check we have modules & templates
+    # Check that we were able to find some modules and templates
+    # If not, package probably hasn't been installed properly.
+    # Need to do this before click, else will throw cryptic error
+    # Note: Can't use logger here, not yet initiated.
+    if len(avail_modules) == 0 or len(avail_templates) == 0:
+        if len(avail_modules) == 0:
+            print("Error - No MultiQC modules found.", file=sys.stderr)
+        if len(avail_templates) == 0:
+            print("Error - No MultiQC templates found.", file=sys.stderr)
+        print(
+            "Could not load MultiQC - has it been installed? \n\
+            Please either install with pip (pip install multiqc) or by using \n\
+            the local files (pip install .)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 
 load_defaults()
 
-session_user_config_files: List[Path] = []
+# Keeping track to avoid loading twice
+_loaded_found_config_files: Set[Path] = set()
 
 
 def reset():
     """
     Reset the interactive session
     """
-
-    global session_user_config_files
-    session_user_config_files = []
 
     global _loaded_found_config_files
     _loaded_found_config_files = set()
@@ -232,74 +329,13 @@ def load_user_files():
     load_config_file("multiqc_config.yaml")
 
 
-# Module filename search patterns
-searchp_fn = os.path.join(MODULE_DIR, "search_patterns.yaml")
-with open(searchp_fn) as f:
-    sp = yaml.safe_load(f)
-
-# Other defaults that can't be set in YAML
-modules_dir = os.path.join(MODULE_DIR, "modules")
-creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
-working_dir = os.getcwd()
-analysis_dir = [os.getcwd()]
-output_dir = os.path.realpath(os.getcwd())
-megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
-kwargs: Dict = {}
-
-# Other variables that set only through the CLI
-run_modules: List[str] = []
-exclude_modules: List[str] = []
-data_dir: Optional[str] = None
-plots_dir: Optional[str] = None
-custom_data: Dict = {}
-report_section_order: Dict = {}
-output_fn: Optional[str] = None
-filename: Optional[str] = None
-megaqc_upload: bool = False
-
-##### Available modules
-# Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
-# Get all modules, including those from other extension packages
-avail_modules = dict()
-for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
-    nicename = entry_point.name
-    avail_modules[nicename] = entry_point
-
-##### Available templates
-# Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
-# Get all templates, including those from other extension packages
-avail_templates = {}
-for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
-    nicename = entry_point.name
-    avail_templates[nicename] = entry_point
-
-##### Check we have modules & templates
-# Check that we were able to find some modules and templates
-# If not, package probably hasn't been installed properly.
-# Need to do this before click, else will throw cryptic error
-# Note: Can't use logger here, not yet initiated.
-if len(avail_modules) == 0 or len(avail_templates) == 0:
-    if len(avail_modules) == 0:
-        print("Error - No MultiQC modules found.", file=sys.stderr)
-    if len(avail_templates) == 0:
-        print("Error - No MultiQC templates found.", file=sys.stderr)
-    print(
-        "Could not load MultiQC - has it been installed? \n\
-        Please either install with pip (pip install multiqc) or by using \n\
-        the local files (pip install .)",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
-
-# Keeping track to avoid loading twice
-_loaded_found_config_files = set()
-
-
-def load_config_file(yaml_config_path: Union[str, Path]):
+def load_config_file(yaml_config_path: Union[str, Path, None]):
     """
     Load and parse a config file if we find it
     """
+    if not yaml_config_path:
+        return
+
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
@@ -347,7 +383,7 @@ def _env_vars_config() -> Dict:
     """
     RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
     PREFIX = "MULTIQC_"  # Prefix for environment variables
-    env_config = {}
+    env_config: Dict[str, Union[str, int, float, bool]] = {}
     for k, v in os.environ.items():
         if k.startswith(PREFIX) and k not in RESERVED_NAMES:
             conf_key = k[len(PREFIX) :].lower()
@@ -355,19 +391,19 @@ def _env_vars_config() -> Dict:
                 continue
             if isinstance(globals()[conf_key], bool):
                 try:
-                    v = strtobool(v)
+                    env_config[conf_key] = strtobool(v)
                 except ValueError:
                     logger.warning(f"Could not parse a boolean value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], int):
                 try:
-                    v = int(v)
+                    env_config[conf_key] = int(v)
                 except ValueError:
                     logger.warning(f"Could not parse a int value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], float):
                 try:
-                    v = float(v)
+                    env_config[conf_key] = float(v)
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
@@ -377,7 +413,6 @@ def _env_vars_config() -> Dict:
                     f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
-            env_config[conf_key] = v
             logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
     return env_config
 
@@ -393,8 +428,10 @@ def _add_config(conf: Dict, conf_path=None):
     log_filename_clean_trimmings = []
     for c, v in conf.items():
         if c == "sp":
-            # Merge filename patterns instead of replacing
-            update_dict(sp, v)
+            # Merge filename patterns instead of replacing. Add custom pattern to the beginning,
+            # so they supersede the default patterns.
+            global sp
+            sp = update_dict(sp, v, add_in_the_beginning=True)
             log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
             # Prepend to filename cleaning patterns instead of replacing
@@ -521,7 +558,7 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 
 
 # Keep track of all changes to the config
-nondefault_config = dict()
+nondefault_config: Dict = {}
 
 
 def update(u):

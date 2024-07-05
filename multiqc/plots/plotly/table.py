@@ -1,8 +1,8 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
 
-from multiqc.plots.table_object import DataTable
+from multiqc.plots.table_object import DataTable, ValueT
 from multiqc import config, report
 from multiqc.utils import mqc_colour
 
@@ -29,9 +29,9 @@ def make_table(
 
     t_headers = dict()
     t_modal_headers = dict()
-    t_rows = dict()
-    t_rows_empty = dict()
-    raw_vals = defaultdict(lambda: dict())
+    t_rows: Dict[str, Dict[str, str]] = dict()
+    t_rows_empty: Dict[str, Dict[str, bool]] = dict()
+    raw_vals: Dict[str, Dict[str, ValueT]] = defaultdict(lambda: dict())
     empty_cells = dict()
     hidden_cols = 1
     table_title = dt.pconfig.title
@@ -108,38 +108,40 @@ def make_table(
         # Add the data table cells
         for s_name in dt.raw_data[idx].keys():
             if metric in dt.raw_data[idx][s_name]:
-                val = dt.raw_data[idx][s_name][metric]
-                valstring = dt.formatted_data[idx][s_name][metric]
-                if val is None:
-                    continue
+                val: ValueT = dt.raw_data[idx][s_name][metric]
+                valstr: str = dt.formatted_data[idx][s_name][metric]
 
-                kname = f"{header.namespace}_{rid}"
-                raw_vals[s_name][kname] = val
+                raw_vals[s_name][f"{header.namespace}_{rid}"] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
-                    try:
-                        dmin = header.dmin
-                        dmax = header.dmax
-                        percentage = ((float(val) - dmin) / (dmax - dmin)) * 100
-                        # Treat 0 as 0-width and make bars width of absolute value
-                        if header.bars_zero_centrepoint:
-                            dmax = max(abs(header.dmin), abs(header.dmax))
-                            dmin = 0
-                            percentage = ((abs(float(val)) - dmin) / (dmax - dmin)) * 100
-                        percentage = min(percentage, 100)
-                        percentage = max(percentage, 0)
-                    except (ZeroDivisionError, ValueError, TypeError):
-                        percentage = 0
+                    dmin = header.dmin
+                    dmax = header.dmax
+                    if dmin is not None and dmax is not None and dmax != dmin:
+                        try:
+                            val_float = float(val)
+                        except ValueError:
+                            percentage = 0.0
+                        else:
+                            percentage = ((val_float - dmin) / (dmax - dmin)) * 100
+                            # Treat 0 as 0-width and make bars width of absolute value
+                            if header.bars_zero_centrepoint:
+                                dmax = max(abs(dmin), abs(dmax))
+                                dmin = 0
+                                percentage = ((abs(val_float) - dmin) / (dmax - dmin)) * 100
+                            percentage = min(percentage, 100)
+                            percentage = max(percentage, 0)
+                    else:
+                        percentage = 0.0
                 else:
-                    percentage = 100
+                    percentage = 100.0
 
                 # This is horrible, but Python locale settings are worse
                 if config.thousandsSep_format is None:
                     config.thousandsSep_format = '<span class="mqc_small_space"></span>'
                 if config.decimalPoint_format is None:
                     config.decimalPoint_format = "."
-                valstring = valstring.replace(".", "DECIMAL").replace(",", "THOUSAND")
-                valstring = valstring.replace("DECIMAL", config.decimalPoint_format).replace(
+                valstr = valstr.replace(".", "DECIMAL").replace(",", "THOUSAND")
+                valstr = valstr.replace("DECIMAL", config.decimalPoint_format).replace(
                     "THOUSAND", config.thousandsSep_format
                 )
 
@@ -148,7 +150,7 @@ def make_table(
                     # Add a space before the suffix, but not as an actual character, so ClipboardJS would copy
                     # the whole value without the space. Also, remove &nbsp; that we don't want ClipboardJS to copy.
                     suffix = suffix.replace("&nbsp;", " ").strip()
-                    valstring += "<span class='mqc_small_space'></span>" + suffix
+                    valstr += "<span class='mqc_small_space'></span>" + suffix
 
                 # Conditional formatting
                 # Build empty dict for cformatting matches
@@ -192,7 +194,7 @@ def make_table(
                         if cmatches[cfck]:
                             badge_col = cfc[cfck]
                 if badge_col is not None:
-                    valstring = f'<span class="badge" style="background-color:{badge_col}">{valstring}</span>'
+                    valstr = f'<span class="badge" style="background-color:{badge_col}">{valstr}</span>'
 
                 # Determine background color based on scale. Only relevant for hashable values. If value is for some
                 # reason a dict or a list, it's not hashable and the logic determining the color will not work.
@@ -204,11 +206,11 @@ def make_table(
                     print(f"Value {val} is not hashable for table {dt.id}, column {metric}, sample {s_name}")
 
                 # Categorical background colours supplied
-                if hashable and val in header.bgcols.keys():
+                if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstring}</td>'
+                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstr}</td>'
 
                 # Build table cell background colour bar
                 elif hashable and header.scale:
@@ -219,7 +221,7 @@ def make_table(
                     else:
                         col = ""
                     bar_html = f'<span class="bar" style="width:{percentage}%;{col}"></span>'
-                    val_html = f'<span class="val">{valstring}</span>'
+                    val_html = f'<span class="val">{valstr}</span>'
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
                     if s_name not in t_rows:
@@ -230,7 +232,7 @@ def make_table(
                 else:
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}">{valstring}</td>'
+                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}">{valstr}</td>'
 
                 # Is this cell hidden or empty?
                 if s_name not in t_rows_empty:
@@ -352,7 +354,7 @@ def make_table(
 
     # Build the table body
     html += "<tbody>"
-    t_row_keys = t_rows.keys()
+    t_row_keys = list(t_rows.keys())
     if dt.pconfig.sort_rows:
         t_row_keys = sorted(t_row_keys)
     for s_name in t_row_keys:
