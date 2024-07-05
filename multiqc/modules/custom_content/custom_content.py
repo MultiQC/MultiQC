@@ -19,6 +19,7 @@ from multiqc.plots.plotly.box import BoxPlotConfig
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.table_object import TableConfig
+from multiqc.validation import ConfigValidationError
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -498,16 +499,18 @@ def _find_file_header(f) -> (Optional[Dict], List[str]):
     try:
         hconfig = yaml.safe_load("\n".join(hlines))
     except yaml.YAMLError:
-        raise ValueError(
+        raise ConfigValidationError(
             f"Could not parse comment file header for MultiQC custom content: {f['fn']}. "
             + "Note that everything behind a comment character '#' is expected to in YAML format. "
-            + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'."
+            + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'.",
+            "custom_content",
         )
     else:
         if not isinstance(hconfig, dict):
-            raise ValueError(
+            raise ConfigValidationError(
                 "Custom Content comment file header looked wrong. It's expected to "
-                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}"
+                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
+                "custom_content",
             )
     return hconfig, other_lines
 

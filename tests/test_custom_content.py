@@ -297,3 +297,90 @@ sp:
     assert "last_o2o-plot" in report.plot_by_id
     assert report.plot_by_id["last_o2o-plot"].id == "last_o2o-plot"
     assert report.plot_by_id["last_o2o-plot"].plot_type == "violin"
+
+
+@pytest.mark.parametrize(
+    ["section_name", "is_good", "contents"],
+    [
+        (
+            None,
+            True,
+            """\
+FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+        (
+            None,
+            True,
+            """\
+#FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+        (
+            "My section",
+            True,
+            """\
+#section_name: "My section"
+#FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+        (
+            "My section",
+            True,
+            """\
+#section_name: "My section"
+FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+        (
+            None,
+            True,
+            """\
+#key: value
+FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+        (
+            None,
+            False,
+            """\
+#section_name: "Missing closing quote
+FILE	SEQUENCE	START	END	STRAND	GENE
+myfile.fasta	chr1	55312	56664	+	GENE""",
+        ),
+    ],
+)
+def test_from_tsv(tmp_path, section_name, is_good, contents):
+    tmp_path.joinpath("mysample_mqc.tsv").write_text(contents)
+
+    report.reset()
+    report.analysis_files = [tmp_path]
+    update_config(cfg=ClConfig(run_modules=["custom_content"]))
+
+    file_search()
+    if not is_good:
+        with pytest.raises(ConfigValidationError):
+            custom_module_classes()
+        return
+
+    custom_module_classes()
+    assert len(report.plot_by_id) == 1
+    assert "mysample-plot" in report.plot_by_id
+    assert report.plot_by_id["mysample-plot"].plot_type == "violin"
+    assert len(report.plot_by_id["mysample-plot"].datasets) == 1
+    assert report.plot_by_id["mysample-plot"].datasets[0].header_by_metric.keys() == {
+        "SEQUENCE",
+        "START",
+        "END",
+        "STRAND",
+        "GENE",
+    }
+
+    assert report.plot_by_id["mysample-plot"].datasets[0].violin_value_by_sample_by_metric == {
+        "SEQUENCE": {"myfile.fasta": "chr1"},
+        "START": {"myfile.fasta": 55312.0},
+        "END": {"myfile.fasta": 56664.0},
+        "STRAND": {"myfile.fasta": "+"},
+        "GENE": {"myfile.fasta": "GENE"},
+    }
+    assert report.plot_by_id["mysample-plot"].layout.title.text == "My section" if section_name else "mysample"
