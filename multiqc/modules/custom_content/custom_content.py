@@ -711,9 +711,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
             # Set section id based on directory if not known
             if conf.get("id") is None:
                 conf["id"] = os.path.basename(f["root"])
-            data_dict = dict()
+            data_dict: Dict = dict()
             for s in matrix:
-                assert isinstance(s[0], str)
                 data_dict[s[0]] = s[1]
             return {f["s_name"]: data_dict}, conf
 
