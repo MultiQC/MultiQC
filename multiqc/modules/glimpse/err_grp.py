@@ -5,9 +5,9 @@ import logging
 import os
 from typing import Dict, Union
 
+from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
 
-# Initialise the loggerq
 log = logging.getLogger(__name__)
 
 EXPECTED_COLUMNS = [
@@ -33,118 +33,115 @@ EXPECTED_COLUMNS = [
 ]
 
 
-class ErrGrpReportMixin:
-    """Mixin class, loaded by main Glimpse MultiqcModule class."""
+def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
+    """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
-    # parsing functions -------------------------------------------------------------
+    glimpse_err_grp = dict()
+    for f in module.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
+        with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
+            lines = [line.decode() for line in f_gz.readlines()]
 
-    def parse_glimpse_err_grp(self):
-        """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
+        parsed_data = parse_err_grp_report([line.rstrip() for line in lines])
+        if len(parsed_data) > 1:
+            if f["s_name"] in glimpse_err_grp:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+            module.add_data_source(f, section="err_grp")
+            # Filter to strip out ignored sample names
+            glimpse_err_grp[f["s_name"]] = module.ignore_samples(parsed_data)
 
-        self.glimpse_err_grp = dict()
-        for f in self.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
-            with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
-                lines = [line.decode() for line in f_gz.readlines()]
+    n_reports_found = len(glimpse_err_grp)
+    if n_reports_found == 0:
+        return 0
 
-            parsed_data = parse_err_grp_report([line.rstrip() for line in lines])
-            if len(parsed_data) > 1:
-                if f["s_name"] in self.glimpse_err_grp:
-                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-                self.add_data_source(f, section="err_grp")
-                # Filter to strip out ignored sample names
-                self.glimpse_err_grp[f["s_name"]] = self.ignore_samples(parsed_data)
+    log.info(f"Found {n_reports_found} report(s) by allele frequency bin.")
 
-        n_reports_found = len(self.glimpse_err_grp)
-        if n_reports_found == 0:
-            return 0
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-        log.info(f"Found {n_reports_found} report(s) by allele frequency bin.")
+    # Write parsed report data to a file (restructure first)
+    module.write_data_file(glimpse_err_grp, "multiqc_glimpse_err_grp")
 
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
-        self.add_software_version(None)
+    vtypes = ["GCsSAF", "GCsIAF", "GCsVAF"]
+    data_best_gt_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
+    data_imputed_ds_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
+    for sname, dataf in glimpse_err_grp.items():
+        for vtype, data in dataf.items():
+            data_best_gt_rsquared[vtype][sname] = {}
+            data_imputed_ds_rsquared[vtype][sname] = {}
+            for idn, datav in data.items():
+                data_best_gt_rsquared[vtype][sname].update({datav["mean_af"]: datav["best_gt_rsquared"]})
+                data_imputed_ds_rsquared[vtype][sname].update({datav["mean_af"]: datav["imputed_ds_rsquared"]})
 
-        # Write parsed report data to a file (restructure first)
-        self.write_data_file(self.glimpse_err_grp, "multiqc_glimpse_err_grp")
+    # Make a table summarising the stats across all samples
+    accuracy_plot(
+        module,
+        [
+            data_best_gt_rsquared["GCsSAF"],
+            data_imputed_ds_rsquared["GCsSAF"],
+            data_best_gt_rsquared["GCsIAF"],
+            data_imputed_ds_rsquared["GCsIAF"],
+            data_best_gt_rsquared["GCsVAF"],
+            data_imputed_ds_rsquared["GCsVAF"],
+        ],
+    )
 
-        vtype = ["GCsSAF", "GCsIAF", "GCsVAF"]
-        data_best_gt_rsquared = {v: {} for v in vtype}
-        data_imputed_ds_rsquared = {v: {} for v in vtype}
-        for sname, dataf in self.glimpse_err_grp.items():
-            for vtype, data in dataf.items():
-                data_best_gt_rsquared[vtype][sname] = {}
-                data_imputed_ds_rsquared[vtype][sname] = {}
-                for idn, datav in data.items():
-                    data_best_gt_rsquared[vtype][sname].update({datav["mean_af"]: datav["best_gt_rsquared"]})
-                    data_imputed_ds_rsquared[vtype][sname].update({datav["mean_af"]: datav["imputed_ds_rsquared"]})
-
-        # Make a table summarising the stats across all samples
-        self.accuracy_plot(
-            [
-                data_best_gt_rsquared["GCsSAF"],
-                data_imputed_ds_rsquared["GCsSAF"],
-                data_best_gt_rsquared["GCsIAF"],
-                data_imputed_ds_rsquared["GCsIAF"],
-                data_best_gt_rsquared["GCsVAF"],
-                data_imputed_ds_rsquared["GCsVAF"],
-            ]
-        )
-
-        # Return the number of logs that were found
-        return n_reports_found
-
-    def accuracy_plot(self, data):
-        self.add_section(
-            name="Genotype concordance by allele frequency bin",
-            anchor="glimpse-err-grp-plot-section",
-            description=(
-                "Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across allele frequency bins."
-            ),
-            plot=linegraph.plot(
-                data,
-                pconfig={
-                    "data_labels": [
-                        {
-                            "name": "Best genotype r-squared (SNPs)",
-                            "ylab": "Best genotype r-squared (SNPs)",
-                        },
-                        {
-                            "name": "Imputed dosage r-squared (SNPs)",
-                            "ylab": "Imputed dosage r-squared (SNPs)",
-                        },
-                        {
-                            "name": "Best genotype r-squared (indels)",
-                            "ylab": "Best genotype r-squared (indels)",
-                        },
-                        {
-                            "name": "Imputed dosage r-squared (indels)",
-                            "ylab": "Imputed dosage r-squared (indels)",
-                        },
-                        {
-                            "name": "Best genotype r-squared (SNPs + indels)",
-                            "ylab": "Best genotype r-squared (SNPs + indels)",
-                        },
-                        {
-                            "name": "Imputed dosage r-squared (SNPs + indels)",
-                            "ylab": "Imputed dosage r-squared (SNPs + indels)",
-                        },
-                    ],
-                    "id": "glimpse-err-grp-plot",
-                    "xlab": "Minor allele frequency",
-                    "logswitch": True,  # Show the 'Log10' switch?
-                    "logswitch_active": True,  # Initial display with 'Log10' active?
-                    "logswitch_label": "Log10",  # Label for 'Log10' button
-                    "xmin": 0,
-                    "xmax": 0.5,
-                    "ymin": 0,
-                    "ymax": 1.1,
-                    "title": "Glimpse concordance by allele frequency bins",
-                },
-            ),
-        )
+    # Return the number of logs that were found
+    return n_reports_found
 
 
-def parse_err_grp_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
+def accuracy_plot(module, data):
+    module.add_section(
+        name="Genotype concordance by allele frequency bin",
+        anchor="glimpse-err-grp-plot-section",
+        description=(
+            "Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across allele frequency bins."
+        ),
+        plot=linegraph.plot(
+            data,
+            pconfig={
+                "data_labels": [
+                    {
+                        "name": "Best genotype r-squared (SNPs)",
+                        "ylab": "Best genotype r-squared (SNPs)",
+                    },
+                    {
+                        "name": "Imputed dosage r-squared (SNPs)",
+                        "ylab": "Imputed dosage r-squared (SNPs)",
+                    },
+                    {
+                        "name": "Best genotype r-squared (indels)",
+                        "ylab": "Best genotype r-squared (indels)",
+                    },
+                    {
+                        "name": "Imputed dosage r-squared (indels)",
+                        "ylab": "Imputed dosage r-squared (indels)",
+                    },
+                    {
+                        "name": "Best genotype r-squared (SNPs + indels)",
+                        "ylab": "Best genotype r-squared (SNPs + indels)",
+                    },
+                    {
+                        "name": "Imputed dosage r-squared (SNPs + indels)",
+                        "ylab": "Imputed dosage r-squared (SNPs + indels)",
+                    },
+                ],
+                "id": "glimpse-err-grp-plot",
+                "xlab": "Minor allele frequency",
+                "logswitch": True,  # Show the 'Log10' switch?
+                "logswitch_active": True,  # Initial display with 'Log10' active?
+                "logswitch_label": "Log10",  # Label for 'Log10' button
+                "xmin": 0,
+                "xmax": 0.5,
+                "ymin": 0,
+                "ymax": 1.1,
+                "title": "Glimpse concordance by allele frequency bins",
+            },
+        ),
+    )
+
+
+def parse_err_grp_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, float, str]]]]:
     """
     Example:
     #Genotype concordance by allele frequency bin (SNPs)
@@ -158,7 +155,7 @@ def parse_err_grp_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data = {}
+    parsed_data: Dict[str, Dict[str, Dict[str, Union[int, float, str]]]] = {}
     expected_header = "#Genotype concordance by allele frequency bin (SNPs)"
     if lines[0] != expected_header:
         logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")

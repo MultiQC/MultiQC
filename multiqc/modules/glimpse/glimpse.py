@@ -1,19 +1,19 @@
 """MultiQC submodule to parse output from Glimpse concordance analysis"""
 
-
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 # Import the GLIMPSE submodules
-from .err_spl import ErrSplReportMixin
-from .err_grp import ErrGrpReportMixin
+from .err_spl import parse_glimpse_err_spl
+from .err_grp import parse_glimpse_err_grp
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin, ErrGrpReportMixin):
+class MultiqcModule(BaseMultiqcModule):
     """Glimpse has a number of different commands and outputs.
     This MultiQC module supports some but not all."""
 
@@ -28,20 +28,11 @@ class MultiqcModule(BaseMultiqcModule, ErrSplReportMixin, ErrGrpReportMixin):
             doi="10.1101/2022.11.28.518213 ",
         )
 
-        # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-
         # Call submodule functions
         n_reports_found = 1
-
-        # Call submodule functions
-        n_reports_found += self.parse_glimpse_err_spl()
-        n_reports_found += self.parse_glimpse_err_grp()
+        n_reports_found += parse_glimpse_err_spl(self)
+        n_reports_found += parse_glimpse_err_grp(self)
 
         # Exit if we didn't find anything
         if n_reports_found == 0:
             raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
