@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard ValidateSamFile"""
 
 import logging
+from typing import List, Tuple, Union
 
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
@@ -293,10 +294,10 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     status."""
 
     note_html = ['<div class="progress">']
-    pbars = [
-        [float(error_count), "danger", "had errors"],
-        [float(only_warning_count), "warning", "had warnings"],
-        [float(pass_count), "success", "passed"],
+    pbars: List[Tuple[float, str, str]] = [
+        (float(error_count), "danger", "had errors"),
+        (float(only_warning_count), "warning", "had warnings"),
+        (float(pass_count), "success", "passed"),
     ]
     for b in pbars:
         if b[0]:
@@ -309,7 +310,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     return "\n".join(note_html)
 
 
-def _generate_detailed_table(data) -> Plot:
+def _generate_detailed_table(data) -> Union[Plot, str]:
     """
     Generates and returns the HTML table that overviews the details found.
     """

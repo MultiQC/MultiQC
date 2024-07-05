@@ -4,6 +4,7 @@
 import glob
 import logging
 import os
+from pathlib import Path
 
 import yaml
 
@@ -30,10 +31,11 @@ def check_mods_docs_readme():
 
     docs_mods = []
 
-    docs_dir = os.path.join(config.REPO_DIR, "docs", "modules")
-    if not os.path.isdir(docs_dir) and os.environ.get("GITHUB_WORKSPACE"):
-        docs_dir = os.path.join(os.environ.get("GITHUB_WORKSPACE"), "docs", "modules")
-    if not os.path.isdir(docs_dir):
+    docs_dir = Path(config.REPO_DIR) / "docs" / "modules"
+    gh_workspace = os.environ.get("GITHUB_WORKSPACE")
+    if not os.path.isdir(docs_dir) and gh_workspace:
+        docs_dir = Path(gh_workspace) / "docs" / "modules"
+    if not docs_dir.is_dir():
         logger.warning(f"Can't check docs readmes in lint test as directory doesn't exist: {docs_dir}")
         return None
 

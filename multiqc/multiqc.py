@@ -6,7 +6,6 @@ Imported by __init__.py so available as multiqc.run()
 
 import logging
 import os
-import shutil
 import sys
 import time
 import traceback
@@ -15,25 +14,27 @@ from typing import Tuple, Optional
 import rich_click as click
 
 from multiqc import config, report
-from multiqc.core import plugin_hooks, init_log
+from multiqc.core import plugin_hooks, log_and_rich, tmp_dir
+from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError
-from multiqc.utils import util_functions
 from multiqc.validation import ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
 start_execution_time = time.time()
 
+NO_ANSI_FLAG = "--no-ansi"
+
 # Configuration for rich-click CLI help
+click.rich_click.COLOR_SYSTEM = "auto" if NO_ANSI_FLAG not in sys.argv else None
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.SHOW_METAVARS_COLUMN = False
 click.rich_click.APPEND_METAVARS_HELP = True
-emoji = util_functions.choose_emoji(rich=True)
+emoji = log_and_rich.choose_emoji(use_rich=True)
 emoji = f" {emoji}" if emoji else ""
 click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
@@ -187,7 +188,7 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "-t",
     "--template",
-    type=click.Choice(config.avail_templates),
+    type=click.Choice(list(config.avail_templates.keys())),
     metavar=None,
     help="Report template to use.",
 )
@@ -397,7 +398,7 @@ click.rich_click.OPTION_GROUPS = {
     help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
 )
 @click.option(
-    "--no-ansi",
+    NO_ANSI_FLAG,
     is_flag=True,
     default=None,
     help="Disable coloured log output",
@@ -439,25 +440,12 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     For example, to run in the current working directory, use '[blue bold]multiqc .[/]'
     """
 
-    try:
-        cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.__fields__}
-        other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.__fields__}
-        cfg = ClConfig(**cl_config_kwargs, kwargs=other_fields)
+    cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.model_fields}
+    other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}
+    cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
 
-        # Pass on to a regular function that can be used easily without click
-        result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
-
-    except KeyboardInterrupt:
-        if clean_up:
-            shutil.rmtree(report.tmp_dir)
-        logger.critical(
-            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
-            + "User Cancelled Execution!\nExiting MultiQC..."
-        )
-        result = RunResult(sys_exit_code=1)
-
-    except ConfigValidationError:
-        result = RunResult(sys_exit_code=1)
+    # Pass on to a regular function that can be used easily without click
+    result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
 
     # End execution using the exit code returned from MultiQC
     sys.exit(result.sys_exit_code)
@@ -476,7 +464,7 @@ class RunResult:
         self.message = message
 
 
-def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunResult:
+def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -490,6 +478,9 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
     See http://multiqc.info for more details.
     """
 
+    # In case if run() is called multiple times in the same session:
+    report.reset()
+    config.reset()
     update_config(*analysis_dir, cfg=cfg)
 
     check_version()
@@ -504,9 +495,6 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
             "give warnings if anything is not optimally configured in a module or a template."
         )
 
-    # In case if run() is called multiple times in the same session:
-    report.reset()
-
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 
@@ -517,39 +505,54 @@ def run(*analysis_dir, clean_up: bool, cfg: Optional[ClConfig] = None) -> RunRes
 
         write_results()
 
+    except NoAnalysisFound as e:
+        logger.warning(f"{e.message}. Cleaning up…")
+        return RunResult(message="No analysis results found", sys_exit_code=e.sys_exit_code)
+
+    except ConfigValidationError as e:
+        logger.warning("Config validation error. Exiting because strict mode is enabled. Cleaning up…")
+        return RunResult(message=e.message, sys_exit_code=1)
+
     except RunError as e:
         if e.message:
             logger.critical(e.message)
         return RunResult(message=e.message, sys_exit_code=e.sys_exit_code)
 
-    plugin_hooks.mqc_trigger("execution_finish")
+    except KeyboardInterrupt:
+        logger.critical(
+            "User Cancelled Execution!\n{eq}\n{tb}{eq}\n".format(eq=("=" * 60), tb=traceback.format_exc())
+            + "User Cancelled Execution!\nExiting MultiQC..."
+        )
+        return RunResult(sys_exit_code=1)
 
-    report.runtimes["total"] = time.time() - start_execution_time
-    if config.profile_runtime:
-        logger.warning(f"Run took {report.runtimes['total']:.2f} seconds")
-        logger.warning(f" - {report.runtimes['total_sp']:.2f}s: Searching files")
-        logger.warning(f" - {report.runtimes['total_mods']:.2f}s: Running modules")
-        if config.make_report:
-            logger.warning(f" - {report.runtimes['total_compression']:.2f}s: Compressing report data")
-            logger.info(f"For more information, see the 'Run Time' section in {os.path.relpath(config.output_fn)}")
+    else:
+        plugin_hooks.mqc_trigger("execution_finish")
 
-    if report.num_flat_plots > 0 and not config.plots_force_flat:
-        if not config.plots_force_interactive:
-            init_log.rich_console.print(
-                "[blue]|           multiqc[/] | "
-                "Flat-image plots used. Disable with '--interactive'. "
-                "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
-            )
+        report.runtimes.total = time.time() - start_execution_time
+        if config.profile_runtime:
+            logger.warning(f"Run took {report.runtimes.total:.2f} seconds")
+            logger.warning(f" - {report.runtimes.total_sp:.2f}s: Searching files")
+            logger.warning(f" - {report.runtimes.total_mods:.2f}s: Running modules")
+            if config.make_report:
+                logger.warning(f" - {report.runtimes.total_compression:.2f}s: Compressing report data")
+                logger.info("For more information, see the 'Run Time' section in the report")
 
-    sys_exit_code = 0
-    if config.strict and len(report.lint_errors) > 0:
-        logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
-        sys_exit_code = 1
+        if report.num_flat_plots > 0 and not config.plots_force_flat:
+            if not config.plots_force_interactive:
+                log_and_rich.rich_console_print(
+                    "[blue]|           multiqc[/] | "
+                    "Flat-image plots used. Disable with '--interactive'. "
+                    "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
+                )
 
-    logger.info("MultiQC complete")
+        sys_exit_code = 0
+        if config.strict and len(report.lint_errors) > 0:
+            logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
+            sys_exit_code = 1
 
-    if clean_up:
-        # Move the log file into the data directory
-        init_log.move_tmp_log()
+        logger.info("MultiQC complete")
+        return RunResult(sys_exit_code=sys_exit_code)
 
-    return RunResult(sys_exit_code=sys_exit_code)
+    finally:
+        if clean_up:
+            report.remove_tmp_dir()

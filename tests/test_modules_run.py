@@ -11,14 +11,20 @@ from typing import Callable, List, Union
 
 import pytest
 
-from multiqc import BaseMultiqcModule, config, report
-
+from multiqc import BaseMultiqcModule, config, report, reset
+from multiqc.core.update_config import update_config
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
 
+@pytest.fixture(scope="module")
+def multiqc_reset():
+    reset()
+    update_config()
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
-def test_all_modules(module_id, entry_point, data_dir):
+def test_all_modules(module_id, entry_point, data_dir, multiqc_reset):
     """
     Verify that all modules do at least something
     """
@@ -30,6 +36,6 @@ def test_all_modules(module_id, entry_point, data_dir):
     report.search_files([module_id])
 
     module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
-    module = module_cls()
-
-    assert len(report.general_stats_data) > 0 or len(module.sections) > 0
+    _module = module_cls()
+    for m in _module if isinstance(_module, List) else [_module]:
+        assert len(report.general_stats_data) > 0 or len(m.sections) > 0

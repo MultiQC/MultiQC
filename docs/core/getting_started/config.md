@@ -127,7 +127,7 @@ extra_fn_clean_exts:
 #### `regex`
 
 You can also remove a substring with a regular expression.
-A useful website to work with writing regexes is <https://regex101.com>.
+A useful website to work with writing regexes is [regex101.com](https://regex101.com).
 
 :::info{title=Example}
 
@@ -430,9 +430,12 @@ fail silently and add negligable run time.
 However, if you prefer you can explicitly disable the version check by adding
 `no_version_check: true` to your MultiQC config.
 
-The check is done with the main MultiQC website (<https://multiqc.info>).
-The only statistics that are collected are the number of checks and the version of MultiQC
-that is being run. No identifiable information (eg. IP address etc) is stored.
+The check is done with the main [MultiQC API](https://api.multiqc.info/)
+(see [source code](https://github.com/MultiQC/api.multiqc.info)).
+The only statistics that are collected are the number of checks and a handful of metrics about
+the running environment of MultiQC, such as the Python version and installation method
+(see [source code](https://github.com/MultiQC/MultiQC/blob/06faefd772ade811c3f9968d8db6106bd14eb57a/multiqc/core/version_check.py#L24-L34)).
+No identifiable information (such as IP address) is stored.
 
 ## Command-line config
 

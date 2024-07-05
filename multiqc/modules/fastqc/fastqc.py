@@ -10,6 +10,8 @@
 import io
 import json
 import logging
+from typing import Dict, Set
+
 import math
 import os
 import re
@@ -40,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
             # No publication / DOI // doi=
         )
 
-        self.fastqc_data = dict()
+        self.fastqc_data: Dict = dict()
 
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files("fastqc/data"):
@@ -67,13 +69,13 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 path = os.path.join(d_name, "fastqc_data.txt")
                 with fqc_zip.open(path) as fh:
-                    r_data = fh.read()
+                    r_data_binary = fh.read()
                     try:
-                        r_data = r_data.decode("utf8")
+                        r_data = r_data_binary.decode("utf8")
                     except UnicodeDecodeError as e:
                         log.debug(f"Could not parse {path} as Unicode: {e}, attempting the latin-1 encoding")
                         try:
-                            r_data = r_data.decode("latin-1")
+                            r_data = r_data_binary.decode("latin-1")
                         except Exception as e:
                             log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
                             continue
@@ -114,7 +116,7 @@ class MultiqcModule(BaseMultiqcModule):
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
-        statuses = dict()
+        statuses: Dict = dict()
         if status_checks:
             for s_name in self.fastqc_data:
                 for section, status in self.fastqc_data[s_name]["statuses"].items():
@@ -249,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
         table at the top of the report"""
 
         # Prep the data
-        data = dict()
+        data: Dict = dict()
         for s_name in self.fastqc_data:
             data[s_name] = dict()
             bs = self.fastqc_data[s_name]["basic_statistics"]
@@ -356,7 +358,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of reads",
             "hide_empty": False,
         }
-        pdata = dict()
+        pdata: Dict = dict()
         has_dups = False
         has_total = False
         for s_name in self.fastqc_data:
@@ -617,8 +619,8 @@ class MultiqcModule(BaseMultiqcModule):
     def gc_content_plot(self, status_checks=True):
         """Create the HTML for the FastQC GC content plot"""
 
-        data = dict()
-        data_norm = dict()
+        data: Dict = dict()
+        data_norm: Dict = dict()
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
@@ -801,8 +803,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the HTML for the Sequence Length Distribution plot"""
 
         data = dict()
-        avg_seq_lengths = set()
-        multiple_lenths = False
+        avg_seq_lengths: Set[str] = set()
+        multiple_lengths: bool = False
         for s_name in self.fastqc_data:
             try:
                 data[s_name] = {
@@ -811,14 +813,14 @@ class MultiqcModule(BaseMultiqcModule):
                 }
                 avg_seq_lengths.update(data[s_name].keys())
                 if len(set(data[s_name].keys())) > 1:
-                    multiple_lenths = True
+                    multiple_lengths = True
             except KeyError:
                 pass
         if len(data) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
             return None
 
-        if not multiple_lenths:
+        if not multiple_lengths:
             lengths = "bp , ".join([str(line) for line in list(avg_seq_lengths)])
             desc = f"All samples have sequences of a single length ({lengths}bp)."
             if len(avg_seq_lengths) > 1:
@@ -855,7 +857,7 @@ class MultiqcModule(BaseMultiqcModule):
     def seq_dup_levels_plot(self, status_checks):
         """Create the HTML for the Sequence Duplication Levels plot"""
 
-        data = dict()
+        data: Dict = dict()
         max_dupval = 0
         for s_name in self.fastqc_data:
             try:
@@ -928,10 +930,10 @@ class MultiqcModule(BaseMultiqcModule):
     def overrepresented_sequences(self):
         """Sum the percentages of overrepresented sequences and display them in a bar plot"""
 
-        data = dict()
+        data: Dict = dict()
         # Count the number of samples where a sequence is overrepresented
-        overrep_by_sample = Counter()
-        overrep_total_cnt = Counter()
+        overrep_by_sample: Counter = Counter()
+        overrep_total_cnt: Counter = Counter()
         for s_name in self.fastqc_data:
             data[s_name] = dict()
             try:
@@ -1089,7 +1091,7 @@ class MultiqcModule(BaseMultiqcModule):
     def adapter_content_plot(self, status_checks=True):
         """Create the HTML for the FastQC adapter plot"""
 
-        data = dict()
+        data: Dict = dict()
         for s_name in self.fastqc_data:
             try:
                 for adapters in self.fastqc_data[s_name]["adapter_content"]:

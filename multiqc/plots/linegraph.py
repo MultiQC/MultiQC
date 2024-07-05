@@ -1,12 +1,12 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple
+from typing import List, Dict, Union, Tuple, Sequence
 
 from multiqc import config
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT
-from multiqc.utils import mqc_colour
 from multiqc.plots.plotly import line
+from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf, XToYDictT, KeyT
+from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[Dict[str, Dict[ValueT, ValueT]]], Dict[str, Dict[ValueT, ValueT]]],
+    data: Union[DatasetT, Sequence[DatasetT]],
     pconfig: Union[Dict, LinePlotConfig, None] = None,
 ) -> Union[line.LinePlot, str]:
     """
@@ -32,86 +32,90 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = LinePlotConfig(**pconfig)
+    pconf = LinePlotConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
-    if not isinstance(data, list):
-        data = [data]
+    raw_dataset_list: List[DatasetT]
+    if isinstance(data, Sequence):
+        raw_dataset_list = list(data)
+    else:
+        raw_dataset_list = [data]
+    del data
 
-    if pconfig.data_labels:
-        if len(pconfig.data_labels) != len(data):
+    if pconf.data_labels:
+        if len(pconf.data_labels) != len(raw_dataset_list):
             raise ValueError(
                 f"Length of data_labels does not match the number of datasets. "
                 f"Please check your module code and ensure that the data_labels "
-                f"list is the same length as the data list: {len(pconfig.data_labels)} != {len(data)}. "
-                f"pconfig={pconfig}"
+                f"list is the same length as the data list: "
+                f"{len(pconf.data_labels)} != {len(raw_dataset_list)}. pconfig={pconf}"
             )
-        pconfig.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconfig.data_labels]
+        pconf.data_labels = [dl if isinstance(dl, dict) else {"name": dl} for dl in pconf.data_labels]
     else:
-        pconfig.data_labels = []
+        pconf.data_labels = []
 
     # Smooth dataset if requested in config
-    if pconfig.smooth_points is not None:
-        for i, data_by_sample in enumerate(data):
-            data[i] = smooth_line_data(data_by_sample, pconfig.smooth_points)
+    if pconf.smooth_points is not None:
+        for i, raw_data_by_sample in enumerate(raw_dataset_list):
+            raw_dataset_list[i] = smooth_line_data(raw_data_by_sample, pconf.smooth_points)
 
     datasets: List[List[Series]] = []
-    for ds_idx, data_by_sample in enumerate(data):
-        list_of_series_dicts: List[Series] = []
-        for s in sorted(data_by_sample.keys()):
-            series: Series = _make_series_dict(pconfig, ds_idx, s, data_by_sample[s])
-            if pconfig.hide_empty and not series.pairs:
+    for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
+        list_of_series: List[Series] = []
+        for s in sorted(raw_data_by_sample.keys()):
+            series: Series = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
+            if pconf.hide_empty and not series.pairs:
                 continue
-            list_of_series_dicts.append(series)
-        datasets.append(list_of_series_dicts)
+            list_of_series.append(series)
+        datasets.append(list_of_series)
 
     # Add on annotation data series
     # noinspection PyBroadException
-    try:
-        if pconfig.extra_series:
-            extra_series = pconfig.extra_series
-            if not isinstance(extra_series, list):
-                extra_series = [extra_series]
-            if not isinstance(extra_series[0], list):
-                extra_series = [extra_series]
-            for i, es in enumerate(extra_series):
-                for s in es:
-                    if isinstance(s, dict):
-                        s = Series(**s)
-                    datasets[i].append(s)
-    except Exception:
-        pass
+    if pconf.extra_series:
+        pconf_es: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
+        list_of_list_of_series: List[List[Series]]
+        if isinstance(pconf_es, list):
+            if isinstance(pconf_es[0], list):
+                list_of_list_of_series = pconf_es  # type: ignore
+            else:
+                list_of_list_of_series = [pconf_es for _ in datasets]  # type: ignore
+        else:
+            list_of_list_of_series = [[pconf_es] for _ in datasets]
+
+        for i, list_of_raw_series in enumerate(list_of_list_of_series):
+            assert isinstance(list_of_raw_series, list)
+            for series in list_of_raw_series:
+                if i < len(datasets):
+                    datasets[i].append(series)
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, data_by_sample in enumerate(datasets):
-        for di, series in enumerate(data_by_sample):
+    for di, series_by_sample in enumerate(datasets):
+        for si, series in enumerate(series_by_sample):
             if not series.color:
-                series.color = scale.get_colour(di, lighten=1)
+                series.color = scale.get_colour(si, lighten=1)
 
     # Make a plot - template custom, or interactive or flat
     mod = get_template_mod()
     if "linegraph" in mod.__dict__ and callable(mod.linegraph):
         # noinspection PyBroadException
         try:
-            return mod.linegraph(datasets, pconfig)
+            return mod.linegraph(datasets, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return line.plot(datasets, pconfig)
+    return line.plot(datasets, pconf)
 
 
 def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: Dict[ValueT, ValueT],
+    y_by_x: XToYDictT[KeyT, ValueT],
 ) -> Series:
-    pairs: List[Tuple[ValueT, ValueT]] = []
+    pairs: List[Tuple[KeyT, ValueT]] = []
 
     x_are_categories = pconfig.categories
     ymax = pconfig.ymax
@@ -120,18 +124,20 @@ def _make_series_dict(
     xmin = pconfig.xmin
     colors = pconfig.colors
     if pconfig.data_labels:
-        x_are_categories = pconfig.data_labels[ds_idx].get("categories", x_are_categories)
-        ymax = pconfig.data_labels[ds_idx].get("ymax", ymax)
-        ymin = pconfig.data_labels[ds_idx].get("ymin", ymin)
-        xmax = pconfig.data_labels[ds_idx].get("xmax", xmax)
-        xmin = pconfig.data_labels[ds_idx].get("xmin", xmin)
-        colors = pconfig.data_labels[ds_idx].get("colors", colors)
+        dl = pconfig.data_labels[ds_idx]
+        if isinstance(dl, dict):
+            x_are_categories = dl.get("categories", x_are_categories)
+            ymax = dl.get("ymax", ymax)
+            ymin = dl.get("ymin", ymin)
+            xmax = dl.get("xmax", xmax)
+            xmin = dl.get("xmin", xmin)
+            colors = dl.get("colors", colors)
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
     discard_ymax = None
     discard_ymin = None
-    xs = y_by_x.keys()
+    xs = [x for x in y_by_x.keys()]
     if not x_are_categories:
         xs = sorted(xs)
 
@@ -141,16 +147,18 @@ def _make_series_dict(
                 continue
             if xmin is not None and float(x) < float(xmin):
                 continue
-        if y_by_x[x] is not None and ymax is not None:
-            if float(y_by_x[x]) > float(ymax):
-                discard_ymax = True
-            elif discard_ymax is True:
-                discard_ymax = False
-        if y_by_x[x] is not None and ymin is not None:
-            if float(y_by_x[x]) > float(ymin):
-                discard_ymin = True
-            elif discard_ymin is True:
-                discard_ymin = False
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None:
+                if float(y) > float(ymax):
+                    discard_ymax = True
+                elif discard_ymax is True:
+                    discard_ymax = False
+            if ymin is not None:
+                if float(y) > float(ymin):
+                    discard_ymin = True
+                elif discard_ymin is True:
+                    discard_ymin = False
 
     # Build the plot data structure
     for x in xs:
@@ -160,17 +168,18 @@ def _make_series_dict(
             if xmin is not None and float(x) < float(xmin):
                 continue
 
-        if y_by_x[x] is not None:
-            if ymax is not None and float(y_by_x[x]) > float(ymax) and discard_ymax is not False:
+        y = y_by_x[x]
+        if y is not None:
+            if ymax is not None and float(y) > float(ymax) and discard_ymax is not False:
                 continue
-            if ymin is not None and float(y_by_x[x]) < float(ymin) and discard_ymin is not False:
+            if ymin is not None and float(y) < float(ymin) and discard_ymin is not False:
                 continue
-        pairs.append((x, y_by_x[x]))
+        pairs.append((x, y))
 
     return Series(name=s, pairs=pairs, color=colors.get(s))
 
 
-def smooth_line_data(data_by_sample: Dict[str, ValueT], numpoints: int) -> Dict[str, ValueT]:
+def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.

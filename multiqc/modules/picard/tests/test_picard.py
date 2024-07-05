@@ -34,6 +34,8 @@ def test_picard_data_parsed(tool, data_dir):
 
     # Check that all test files are parsed
     for path in tool_subdir.rglob("*"):
+        if path.name.startswith("."):
+            continue
         if path.parent.name == "multiqc_data" or path.name == "multiqc_report.html" or not path.is_file():
             continue
 

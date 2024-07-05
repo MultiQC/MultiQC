@@ -23,7 +23,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
     """
     all_data = dict()
     assert len(formats) == len(headers)
-    sample_data = None
+    sample_data: Optional[Dict] = None
 
     # Go through logs and find Metrics
     for f in module.find_log_files(program_key, filehandles=True):
@@ -36,6 +36,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
                 picard_tool=picard_tool,
                 sentieon_algo=sentieon_algo,
             )
+
             if maybe_s_name:
                 s_name = maybe_s_name
                 sample_data = None

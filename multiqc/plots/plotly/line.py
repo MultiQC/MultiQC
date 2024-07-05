@@ -1,46 +1,107 @@
 import io
 import logging
 import os
-from typing import Dict, List, Union, Tuple, Optional, Literal
+import random
+from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, TypeVar, Generic
 
 import math
-import plotly.graph_objects as go
-from pydantic import Field, BaseModel, field_validator
+import plotly.graph_objects as go  # type: ignore
+from plotly.graph_objs.layout.shape import Label  # type: ignore
+from pydantic import Field, BaseModel
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
 from multiqc.utils.util_functions import update_dict
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
 
-ValueT = Union[float, int, str, None]
+KeyT = TypeVar("KeyT", int, str, float)
+ValueT = TypeVar("ValueT", int, str, float, None)
+XToYDictT = Mapping[KeyT, ValueT]
+DatasetT = Mapping[str, XToYDictT]
 
 
-class Series(ValidatedConfig):
-    name: str
-    data: Optional[List[Tuple[ValueT, ValueT]]] = Field(None, deprecated="pairs")
-    pairs: List[Tuple[ValueT, ValueT]]
+class Marker(BaseModel):
+    symbol: Optional[str] = None
     color: Optional[str] = None
-    width: Optional[int] = None
+    line_color: Optional[str] = None
+    fill_color: Optional[str] = None
+    width: int = 1
+
+
+class Series(ValidatedConfig, Generic[KeyT, ValueT]):
+    name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
+    pairs: List[Tuple[KeyT, ValueT]]
+    color: Optional[str] = None
+    width: int = 2
     dash: Optional[str] = None
     showlegend: bool = True
-
-    class Marker(BaseModel):
-        symbol: Optional[str] = None
-        color: Optional[str] = None
-        width: int = 1
-
     marker: Optional[Marker] = None
 
-    # noinspection PyNestedDecorators
-    @field_validator("marker", mode="before")
+    def __init__(self, **data):
+        if "dashStyle" in data:
+            add_validation_warning(self.__class__, "'dashStyle' field is deprecated. Please use 'dash' instead")
+            data["dash"] = convert_dash_style(data.pop("dashStyle"))
+        elif "dash" in data:
+            data["dash"] = convert_dash_style(data["dash"])
+
+        tuples: List[Tuple[KeyT, ValueT]] = []
+        if "data" in data:
+            add_validation_warning(self.__class__, "'data' field is deprecated. Please use 'pairs' instead")
+        for p in data.pop("data") if "data" in data else data.get("pairs", []):
+            if isinstance(p, list):
+                tuples.append(tuple(p))
+            else:
+                tuples.append(p)
+        data["pairs"] = tuples
+
+        super().__init__(**data)
+
+
+class FlatLine(ValidatedConfig):
+    """
+    Extra X=const or Y=const line added to the plot
+    """
+
+    value: Union[float, int]
+    color: Optional[str] = None
+    width: int = 2
+    dashStyle: Optional[str] = Field(None, deprecated="dash")
+    dash: Optional[str] = None
+    label: Optional[Union[str, Dict]] = None
+
     @classmethod
-    def parse_marker(cls, d):
-        if isinstance(d, dict):
-            return Series.Marker(**d)
-        return d
+    def parse_label(cls, value):
+        if isinstance(value, dict):
+            add_validation_warning(
+                cls,
+                "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
+                "Other fields other than 'text' are deprecated and will be ignored",
+            )
+            return value["text"]
+        return value
+
+    def __init__(self, **data):
+        if "dashStyle" in data:
+            data["dash"] = convert_dash_style(data.pop("dashStyle"))
+        if "dash" in data:
+            data["dash"] = convert_dash_style(data["dash"])
+        super().__init__(**data)
+
+
+class LineBand(ValidatedConfig):
+    """
+    Extra X1-X2 or Y1-Y2 band added to the plot
+    """
+
+    from_: Union[float, int]
+    to: Union[float, int]
+    color: Optional[str] = None
+
+
+SeriesConf = Union[Series, Dict]
 
 
 class LinePlotConfig(PConfig):
@@ -49,34 +110,47 @@ class LinePlotConfig(PConfig):
     categories: bool = False
     smooth_points: Optional[int] = None
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
-    extra_series: Optional[Union[Series, List[Series], List[List[Series]], Dict, List[Dict], List[List[Dict]]]] = None
+    extra_series: Optional[Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
     y_minrange: Optional[Union[float, int]] = None
-    xPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_bands")
-    yPlotBands: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_bands")
-    xPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="x_lines")
-    yPlotLines: Optional[List[Dict[str, Union[float, int, str]]]] = Field(None, deprecated="y_lines")
-    x_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    y_bands: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    x_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
-    y_lines: Optional[List[Dict[str, Union[float, int, str]]]] = None
+    xPlotBands: Optional[List[LineBand]] = Field(None, deprecated="x_bands")
+    yPlotBands: Optional[List[LineBand]] = Field(None, deprecated="y_bands")
+    xPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="x_lines")
+    yPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="y_lines")
+    x_bands: Optional[List[LineBand]] = None
+    y_bands: Optional[List[LineBand]] = None
+    x_lines: Optional[List[FlatLine]] = None
+    y_lines: Optional[List[FlatLine]] = None
     style: Literal["lines", "lines+markers"] = "lines"
     hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
     hide_empty: bool = False
     colors: Dict[str, str] = {}
 
-    # noinspection PyNestedDecorators
-    @field_validator("extra_series", mode="before")
     @classmethod
-    def parse_extra_series(cls, data):
-        if not isinstance(data, list):
-            data = [data]
-        if not isinstance(data[0], list):
-            data = [data]
+    def parse_extra_series(cls, data: Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]):
+        if isinstance(data, list):
+            if isinstance(data[0], list):
+                return [[Series(**d) if isinstance(d, dict) else d for d in ds] for ds in data]
+            return [Series(**d) if isinstance(d, dict) else d for d in data]
+        return Series(**data) if isinstance(data, dict) else data
 
-        return [[Series(**s) if isinstance(s, dict) else s for s in ss] for ss in data]
+    @classmethod
+    def parse_x_bands(cls, data):
+        return [LineBand(**d) for d in data]
+
+    @classmethod
+    def parse_y_bands(cls, data):
+        return [LineBand(**d) for d in data]
+
+    @classmethod
+    def parse_x_lines(cls, data):
+        return [FlatLine(**d) for d in data]
+
+    @classmethod
+    def parse_y_lines(cls, data):
+        return [FlatLine(**d) for d in data]
 
 
 def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":
@@ -93,7 +167,7 @@ def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePl
     # Create a violin of median values in each sample, showing dots for outliers
     # Clicking on a dot of a violin will show the line plot for that sample
 
-    return LinePlot.create(pconfig, lists_of_lines)
+    return create(pconfig, lists_of_lines)
 
 
 class Dataset(BaseDataset):
@@ -105,40 +179,11 @@ class Dataset(BaseDataset):
         lines: List[Series],
         pconfig: LinePlotConfig,
     ) -> "Dataset":
-        dataset: Dataset = Dataset(
-            **dataset.model_dump(),
-            lines=lines,
-        )
+        dataset = Dataset(**dataset.model_dump(), lines=lines)
 
-        # Prevent Plotly from parsing strings as numbers
+        # Prevent Plotly-JS from parsing strings as numbers
         if pconfig.categories or dataset.dconfig.get("categories"):
             dataset.layout["xaxis"]["type"] = "category"
-
-        # convert HighCharts-style hardcoded trace parameters to Plotly style
-        lines = []
-        for series in dataset.lines:
-            new_line = {
-                "name": series.name,
-                "data": series.pairs,
-                "color": series.color,
-                "showlegend": series.showlegend,
-                "line": {
-                    "dash": convert_dash_style(series.dash),
-                    "width": series.width,
-                },
-            }
-            if series.marker:
-                new_line["mode"] = "lines+markers"
-                new_line["marker"] = {
-                    "symbol": series.marker.symbol,
-                    "line": {
-                        "width": series.marker.width,
-                        "color": series.marker.color,
-                    },
-                }
-            lines.append(remove_nones_and_empty_dicts(new_line))
-
-        dataset.lines = lines
 
         mode = pconfig.style
         if config.lineplot_style == "lines+markers":
@@ -170,59 +215,72 @@ class Dataset(BaseDataset):
             layout.height += len(self.lines) * 5
 
         fig = go.Figure(layout=layout)
-        for line in self.lines:
-            xs = [x[0] for x in line["data"]]
-            ys = [x[1] for x in line["data"]]
-            params = dict(
-                marker=line.get("marker", {}),
-                line=line.get("line", {}),
-                showlegend=line.get("showlegend", None),
-                mode=line.get("mode", None),
-            )
+        for series in self.lines:
+            xs = [x[0] for x in series.pairs]
+            ys = [x[1] for x in series.pairs]
+            if series.dash:
+                print(series)
+            params: Dict[str, Any] = {
+                "showlegend": series.showlegend,
+                "line": {
+                    "color": series.color,
+                    "dash": series.dash,
+                    "width": series.width,
+                },
+            }
+            if series.marker:
+                params["mode"] = "lines+markers"
+                params["marker"] = {
+                    "symbol": series.marker.symbol,
+                    "color": series.marker.fill_color or series.marker.color or series.color,
+                    "line": {
+                        "width": series.marker.width,
+                        "color": series.marker.line_color or series.marker.color or "black",
+                    },
+                }
             params = update_dict(params, self.trace_params, none_only=True)
-            params["marker"]["color"] = line.get("color")
 
             fig.add_trace(
                 go.Scatter(
                     x=xs,
                     y=ys,
-                    name=line["name"],
-                    text=[line["name"]] * len(xs),
+                    name=series.name,
+                    text=[series.name] * len(xs),
                     **params,
                 )
             )
         return fig
 
     def save_data_file(self) -> None:
-        y_by_x_by_sample = dict()
+        y_by_x_by_sample: Dict[str, Dict] = dict()
         last_cats = None
         shared_cats = True
-        for line in self.lines:
-            y_by_x_by_sample[line["name"]] = dict()
+        for series in self.lines:
+            y_by_x_by_sample[series.name] = dict()
 
             # Check to see if all categories are the same
-            if len(line["data"]) > 0 and isinstance(line["data"][0], list):
+            if len(series.pairs) > 0 and isinstance(series.pairs[0], list):
                 if last_cats is None:
-                    last_cats = [x[0] for x in line["data"]]
-                elif last_cats != [x[0] for x in line["data"]]:
+                    last_cats = [x[0] for x in series.pairs]
+                elif last_cats != [x[0] for x in series.pairs]:
                     shared_cats = False
 
-            for i, x in enumerate(line["data"]):
+            for i, x in enumerate(series.pairs):
                 if isinstance(x, list):
-                    y_by_x_by_sample[line["name"]][x[0]] = x[1]
+                    y_by_x_by_sample[series.name][x[0]] = x[1]
                 else:
                     try:
-                        y_by_x_by_sample[line["name"]][self.dconfig["categories"][i]] = x
+                        y_by_x_by_sample[series.name][self.dconfig["categories"][i]] = x
                     except (ValueError, KeyError, IndexError):
-                        y_by_x_by_sample[line["name"]][str(i)] = x
+                        y_by_x_by_sample[series.name][str(i)] = x
 
         # Custom tsv output if the x-axis varies
         if not shared_cats and config.data_format in ["tsv", "csv"]:
             sep = "\t" if config.data_format == "tsv" else ","
             fout = ""
-            for line in self.lines:
-                fout += line["name"] + sep + "X" + sep + sep.join([str(x[0]) for x in line["data"]]) + "\n"
-                fout += line["name"] + sep + "Y" + sep + sep.join([str(x[1]) for x in line["data"]]) + "\n"
+            for series in self.lines:
+                fout += series.name + sep + "X" + sep + sep.join([str(x[0]) for x in series.pairs]) + "\n"
+                fout += series.name + sep + "Y" + sep + sep.join([str(x[1]) for x in series.pairs]) + "\n"
 
             fn = f"{self.uid}.{config.data_format_extensions[config.data_format]}"
             fpath = os.path.join(report.data_tmp_dir(), fn)
@@ -232,163 +290,167 @@ class Dataset(BaseDataset):
             report.write_data_file(y_by_x_by_sample, self.uid)
 
 
-class LinePlot(Plot):
+class LinePlot(Plot[Dataset]):
     datasets: List[Dataset]
 
-    @staticmethod
-    def create(
-        pconfig: LinePlotConfig,
-        lists_of_lines: List[List[Series]],
-    ) -> "LinePlot":
-        max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
 
-        model = Plot.initialize(
-            plot_type=PlotType.LINE,
-            pconfig=pconfig,
-            n_datasets=len(lists_of_lines),
-            n_samples=max_n_samples,
-            axis_controlled_by_switches=["yaxis"],
-            default_tt_label="<br>%{x}: %{y}",
-        )
+def create(
+    pconfig: LinePlotConfig,
+    lists_of_lines: List[List[Series]],
+) -> "LinePlot":
+    max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
 
-        # Very large legend for automatically enabled flat plot mode is not very helpful
-        if pconfig.showlegend is None and max_n_samples > 250:
-            model.layout.showlegend = False
+    model = Plot.initialize(
+        plot_type=PlotType.LINE,
+        pconfig=pconfig,
+        n_datasets=len(lists_of_lines),
+        n_samples=max_n_samples,
+        axis_controlled_by_switches=["yaxis"],
+        default_tt_label="<br>%{x}: %{y}",
+    )
 
-        model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
+    # Very large legend for automatically enabled flat plot mode is not very helpful
+    if pconfig.showlegend is None and max_n_samples > 250:
+        model.layout.showlegend = False
 
-        # Make a tooltip always show on hover over any point on plot
-        model.layout.hoverdistance = -1
+    model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
-        y_minrange = pconfig.y_minrange
-        x_minrange = pconfig.x_minrange
-        y_bands = pconfig.y_bands
-        x_bands = pconfig.x_bands
-        x_lines = pconfig.x_lines
-        y_lines = pconfig.y_lines
-        if y_minrange or y_bands or y_lines:
-            # We don't want the bands to affect the calculated axis range, so we
-            # find the min and the max from data points, and manually set the range.
-            for dataset in model.datasets:
-                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
-                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
-                for line in dataset.lines:
-                    ys = [x[1] for x in line["data"]]
-                    if len(ys) > 0:
-                        minval = min(ys) if minval is None else min(minval, min(ys))
-                        maxval = max(ys) if maxval is None else max(maxval, max(ys))
-                if maxval is not None and minval is not None:
-                    maxval += (maxval - minval) * 0.05
-                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
-                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and minval is not None and clipmin > minval:
-                    minval = clipmin
-                if clipmax is not None and maxval is not None and clipmax < maxval:
-                    maxval = clipmax
-                if y_minrange is not None and maxval is not None and minval is not None:
-                    maxval = max(maxval, minval + y_minrange)
-                if model.layout.yaxis.type == "log":
-                    minval = math.log10(minval) if minval is not None and minval > 0 else None
-                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-                dataset.layout["yaxis"]["range"] = [minval, maxval]
+    # Make a tooltip always show on hover over any point on plot
+    model.layout.hoverdistance = -1
 
-        if not pconfig.categories and x_minrange or x_bands or x_lines:
-            # same as above but for x-axis
-            for dataset in model.datasets:
-                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
-                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
-                for line in dataset.lines:
-                    xs = [x[0] for x in line["data"]]
-                    if len(xs) > 0:
-                        minval = min(xs) if minval is None else min(minval, min(xs))
-                        maxval = max(xs) if maxval is None else max(maxval, max(xs))
-                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
-                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
-                if clipmin is not None and minval is not None and clipmin > minval:
-                    minval = clipmin
-                if clipmax is not None and maxval is not None and clipmax < maxval:
-                    maxval = clipmax
-                if x_minrange is not None and maxval is not None and minval is not None:
-                    maxval = max(maxval, minval + x_minrange)
-                if model.layout.xaxis.type == "log":
-                    minval = math.log10(minval) if minval is not None and minval > 0 else None
-                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-                dataset.layout["xaxis"]["range"] = [minval, maxval]
+    y_minrange = pconfig.y_minrange
+    x_minrange = pconfig.x_minrange
+    y_bands = pconfig.y_bands
+    x_bands = pconfig.x_bands
+    x_lines = pconfig.x_lines
+    y_lines = pconfig.y_lines
+    if y_minrange or y_bands or y_lines:
+        # We don't want the bands to affect the calculated axis range, so we
+        # find the min and the max from data points, and manually set the range.
+        for dataset in model.datasets:
+            minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+            maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+            for line in dataset.lines:
+                ys = [x[1] for x in line.pairs]
+                if len(ys) > 0:
+                    minval = min(ys) if minval is None else min(minval, min(ys))
+                    maxval = max(ys) if maxval is None else max(maxval, max(ys))
+            if maxval is not None and minval is not None:
+                maxval += (maxval - minval) * 0.05
+            clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+            clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+            if clipmin is not None and minval is not None and clipmin > minval:
+                minval = clipmin
+            if clipmax is not None and maxval is not None and clipmax < maxval:
+                maxval = clipmax
+            if y_minrange is not None and maxval is not None and minval is not None:
+                maxval = max(maxval, minval + y_minrange)
+            if model.layout.yaxis.type == "log":
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-        model.layout.shapes = (
-            [
-                dict(
-                    type="rect",
-                    y0=band["from"],
-                    y1=band["to"],
-                    x0=0,
-                    x1=1,
-                    xref="paper",  # make x coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in (y_bands or [])
-            ]
-            + [
-                dict(
-                    type="rect",
-                    x0=band["from"],
-                    x1=band["to"],
-                    y0=0,
-                    y1=1,
-                    yref="paper",  # make y coords are relative to the plot paper [0,1]
-                    fillcolor=band["color"],
-                    line={
-                        "width": 0,
-                    },
-                    layer="below",
-                )
-                for band in (x_bands or [])
-            ]
-            + [
-                dict(
-                    type="line",
-                    xref="paper",
-                    yref="y",
-                    x0=0,
-                    y0=line["value"],
-                    x1=1,
-                    y1=line["value"],
-                    line={
-                        "width": line.get("width", 2),
-                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
-                        "color": line["color"],
-                    },
-                )
-                for line in (y_lines or [])
-            ]
-            + [
-                dict(
-                    type="line",
-                    yref="paper",
-                    xref="x",
-                    x0=line["value"],
-                    y0=0,
-                    x1=line["value"],
-                    y1=1,
-                    line={
-                        "width": line.get("width", 2),
-                        "dash": convert_dash_style(line.get("dash", line.get("dashStyle"))),
-                        "color": line["color"],
-                    },
-                )
-                for line in (x_lines or [])
-            ]
-        )
+    if not pconfig.categories and x_minrange or x_bands or x_lines:
+        # same as above but for x-axis
+        for dataset in model.datasets:
+            minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+            maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+            for series in dataset.lines:
+                xs = [x[0] for x in series.pairs]
+                if len(xs) > 0:
+                    minval = min(xs) if minval is None else min(minval, min(xs))
+                    maxval = max(xs) if maxval is None else max(maxval, max(xs))
+            clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+            clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+            if clipmin is not None and minval is not None and clipmin > minval:
+                minval = clipmin
+            if clipmax is not None and maxval is not None and clipmax < maxval:
+                maxval = clipmax
+            if x_minrange is not None and maxval is not None and minval is not None:
+                maxval = max(maxval, minval + x_minrange)
+            if model.layout.xaxis.type == "log":
+                minval = math.log10(minval) if minval is not None and minval > 0 else None
+                maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+            dataset.layout["xaxis"]["range"] = [minval, maxval]
 
-        return LinePlot(**model.__dict__)
+    model.layout.shapes = (
+        [
+            dict(
+                type="rect",
+                y0=band.from_,
+                y1=band.to,
+                x0=0,
+                x1=1,
+                xref="paper",  # make x coords are relative to the plot paper [0,1]
+                fillcolor=band.color,
+                line={
+                    "width": 0,
+                },
+                layer="below",
+            )
+            for band in (y_bands or [])
+        ]
+        + [
+            dict(
+                type="rect",
+                x0=band.from_,
+                x1=band.to,
+                y0=0,
+                y1=1,
+                yref="paper",  # make y coords are relative to the plot paper [0,1]
+                fillcolor=band.color,
+                line={
+                    "width": 0,
+                },
+                layer="below",
+            )
+            for band in (x_bands or [])
+        ]
+        + [
+            dict(
+                type="line",
+                xref="paper",
+                yref="y",
+                x0=0,
+                y0=line.value,
+                x1=1,
+                y1=line.value,
+                line={
+                    "width": line.width,
+                    "dash": line.dash,
+                    "color": line.color,
+                },
+                label=dict(text=line.label, font=dict(color=line.color)),
+            )
+            for line in (y_lines or [])
+        ]
+        + [
+            dict(
+                type="line",
+                yref="paper",
+                xref="x",
+                x0=line.value,
+                y0=0,
+                x1=line.value,
+                y1=1,
+                line={
+                    "width": line.width,
+                    "dash": line.dash,
+                    "color": line.color,
+                },
+                label=dict(text=line.label, font=dict(color=line.color)),
+            )
+            for line in (x_lines or [])
+        ]
+    )
+
+    return LinePlot(**model.__dict__)
 
 
-def convert_dash_style(dash_style: str) -> str:
+def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
+    if dash_style is None:
+        return None
     mapping = {
         "Solid": "solid",
         "ShortDash": "dash",
@@ -405,12 +467,13 @@ def convert_dash_style(dash_style: str) -> str:
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
+        add_validation_warning(
+            LinePlotConfig, f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
+        )
         return mapping[dash_style]
     return "solid"
 
 
-def remove_nones_and_empty_dicts(d: Dict) -> Dict:
+def remove_nones_and_empty_dicts(d: Mapping) -> Dict:
     """Remove None and empty dicts from a dict recursively."""
-    if not isinstance(d, Dict):
-        return d
     return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}

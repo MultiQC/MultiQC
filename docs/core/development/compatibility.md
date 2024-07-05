@@ -22,7 +22,7 @@ On December 18th 2023, just after the v1.19 release of MultiQC, the GitHub repo 
 
 ### GitHub repository name change
 
-The repository <https://github.com/MultiQC/MultiQC> was moved to <https://github.com/MultiQC/MultiQC>.
+The [`ewels/MultiQC` repository](https://github.com/ewels/MultiQC) was moved to [`MultiQC/MultiQC`](https://github.com/MultiQC/MultiQC).
 All issues, pull-requests and other GitHub metadata moved with it.
 In most cases, GitHub should automatically redirect to the new location and you should not notice any difference.
 However, if you have a local clone / fork of the repository it's still a good idea to update the remote name.
