@@ -76,7 +76,6 @@ def plot(
         list_of_list_of_series: List[List[Series]]
         if isinstance(pconf_es, list):
             if isinstance(pconf_es[0], list):
-                assert len(pconf_es) == len(datasets), f"{len(pconf_es)} != {len(datasets)}"
                 list_of_list_of_series = pconf_es  # type: ignore
             else:
                 list_of_list_of_series = [pconf_es for _ in datasets]  # type: ignore
@@ -86,7 +85,8 @@ def plot(
         for i, list_of_raw_series in enumerate(list_of_list_of_series):
             assert isinstance(list_of_raw_series, list)
             for series in list_of_raw_series:
-                datasets[i].append(series)
+                if i < len(datasets):
+                    datasets[i].append(series)
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     for di, series_by_sample in enumerate(datasets):
