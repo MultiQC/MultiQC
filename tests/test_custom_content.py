@@ -154,8 +154,7 @@ def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
         assert report.plot_by_id[f"{id}-plot"].pconfig.ymin is None  # wrong type
 
 
-@pytest.mark.parametrize("strict", [True, False])
-def test_missing_id_and_title(tmp_path, capsys, strict):
+def test_missing_id_and_title(tmp_path, capsys):
     id = "mysample"
     file = tmp_path / f"{id}_mqc.txt"
     file.write_text(
