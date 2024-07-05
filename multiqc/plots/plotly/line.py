@@ -46,13 +46,13 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
         if "dash" in data:
             data["dash"] = convert_dash_style(data["dash"])
 
-        pairs: List[Tuple[KeyT, ValueT]] = []
+        tuples: List[Tuple[KeyT, ValueT]] = []
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
-                pairs.append(tuple(p))
+                tuples.append(tuple(p))
             else:
-                pairs.append(p)
-        data["pairs"] = pairs
+                tuples.append(p)
+        data["pairs"] = tuples
 
         super().__init__(**data)
 
