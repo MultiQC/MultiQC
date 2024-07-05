@@ -184,8 +184,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # Guess file format if not given
                 if m_config.get("file_format") is None:
                     m_config["file_format"] = _guess_file_format(f)
-                # Parse data
 
+                # Parse data
                 parsed_data, parsed_conf = _parse_txt(f, m_config)
                 if parsed_data is None or len(parsed_data) == 0:
                     log.warning(f"Not able to parse custom data in {f['fn']}")
