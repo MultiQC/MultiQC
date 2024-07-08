@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_column_metadata["Softclips (bp)"] = dict(bases, **{"title": "Bases Softclipped"})
         table_column_metadata["Percent Aligned"] = dict(**{"title": '% reads aligned', "suffix":'%', 'shared_key':'vg_read_percentage'})
         table_column_metadata["Percent Properly Paired"] = dict(**{"title": "'% reads properly paired'", "suffix":'%', 'shared_key':'vg_read_percentage'})
-        table_column_metadata["Alignment score"] = dict(**{"title": "Mean alignment score", "description": "Smith-Waterman alignment score",'min':0})
+        table_column_metadata["Alignment score"] = dict(**{"title": "Mean alignment score", "description": "Smith-Waterman alignment score",'min':0, 'max':150})
         table_column_metadata["Mapping quality"] = dict(**{"title": "Mean MQ", "description": "Read MQ (Li and Durbin method)", 'min':0, 'max':60})
 
         ## Data to report out in table format, but not showed by default in report
