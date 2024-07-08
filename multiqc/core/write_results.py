@@ -439,7 +439,6 @@ def _write_report():
             logger.error(f"Could not include file '{name}': {e}")
 
     # Load the report template
-    assert len(report.analysis_files) > 0, report.analysis_files
     try:
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(tmp_dir.get_tmp_dir()))
         env.globals["include_file"] = include_file
