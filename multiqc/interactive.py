@@ -11,6 +11,7 @@ from typing import Dict, Union, List, Optional, Sequence
 
 from multiqc import report, config
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.file_search import file_search
 from multiqc.core.exec_modules import exec_modules
@@ -449,11 +450,9 @@ def write_report(
 
     check_version(write_report.__name__)
 
-    if len(report.modules) == 0:
-        logger.error("No analysis results found to make a report")
-        return
-
     try:
+        order_modules_and_sections()
+
         write_results(clean_up=clean_up)
 
     except NoAnalysisFound:

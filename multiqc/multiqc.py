@@ -14,10 +14,11 @@ from typing import Tuple, Optional
 import rich_click as click
 
 from multiqc import config, report
-from multiqc.core import plugin_hooks, log_and_rich, tmp_dir
+from multiqc.core import plugin_hooks, log_and_rich
 from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.file_search import file_search
+from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
@@ -502,6 +503,8 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
         mod_dicts_in_order = file_search()
 
         exec_modules(mod_dicts_in_order)
+
+        order_modules_and_sections()
 
         write_results()
 
