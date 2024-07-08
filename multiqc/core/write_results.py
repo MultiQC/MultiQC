@@ -240,9 +240,10 @@ def _order_modules_and_sections():
         # Importing here to avoid circular imports
         from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
 
-        # if the software versions module is not in report.modules, add it:
-        if not any([isinstance(m, SoftwareVersionsModule) for m in report.modules]):
-            report.modules.append(SoftwareVersionsModule())
+        # Remove existing software_versions module that can be already added into the end.
+        # That can happen if write_report was already called in an interactive session.
+        report.modules = [m for m in report.modules if not isinstance(m, SoftwareVersionsModule)]
+        report.modules.append(SoftwareVersionsModule())
 
     # Special-case module if we want to profile the MultiQC running time
     if config.profile_runtime:
@@ -377,6 +378,10 @@ def _render_general_stats_table() -> None:
 
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0 and not all_hidden:
+        # Clean previous general stats table if running write_report interactively second time
+        if "general_stats_table" in report.html_ids:
+            report.html_ids.remove("general_stats_table")
+            del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
             "title": "General Statistics",

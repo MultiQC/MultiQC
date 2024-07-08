@@ -2,6 +2,7 @@ import os
 
 import multiqc
 from multiqc import report
+from multiqc.core.write_results import _order_modules_and_sections
 
 
 def test_parse_logs_fn_clean_exts(data_dir):
@@ -28,16 +29,24 @@ def test_parse_logs_ignore_samples(data_dir):
 
 def test_write_report(tmp_path):
     multiqc.reset()
-    module = multiqc.BaseMultiqcModule(
-        name="my-module",
-        anchor="custom_data",
-    )
+    module = multiqc.BaseMultiqcModule(name="my-module", anchor="custom_data")
     module.add_section()
     report.modules = [module]
 
     multiqc.write_report(force=True, output_dir=str(tmp_path))
     assert (tmp_path / "multiqc_report.html").is_file()
     assert (tmp_path / "multiqc_data").is_dir()
+
+
+def test_write_report_multiple_times(data_dir, tmp_path):
+    multiqc.reset()
+    multiqc.parse_logs(data_dir / "modules/fastp")
+    multiqc.write_report(output_dir=str(tmp_path))
+    assert multiqc.list_modules() == ["fastp", "Software Versions"]
+
+    multiqc.parse_logs(data_dir / "modules/bcftools")
+    multiqc.write_report(output_dir=str(tmp_path))
+    assert multiqc.list_modules() == ["fastp", "Bcftools", "Software Versions"]
 
 
 def test_run_twice(data_dir, tmp_path):
@@ -67,3 +76,12 @@ def test_run_twice(data_dir, tmp_path):
     )
     assert (tmp_path / "multiqc_report.html").is_file()
     assert (tmp_path / "multiqc_data").is_dir()
+
+
+def test_software_versions_section(data_dir, tmp_path):
+    multiqc.reset()
+
+    multiqc.parse_logs(data_dir / "modules/fastp")
+    multiqc.parse_logs(data_dir / "modules/bcftools")
+    multiqc.write_report(filename="stdout")  # triggers adding software_versions module
+    assert multiqc.list_modules() == ["fastp", "bcftools", "Software Versions"]

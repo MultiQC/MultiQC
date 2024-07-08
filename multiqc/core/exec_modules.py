@@ -175,10 +175,6 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     # Update report with software versions provided in configs
     software_versions.update_versions_from_config()
 
-    # Add section for software versions if any are found
-    if not config.skip_versions_section and report.software_versions:
-        report.modules.append(SoftwareVersionModule())
-
     # Did we find anything?
     if len(report.modules) == 0:
         raise NoAnalysisFound("No analysis results found", sys_exit_code=sys_exit_code)
