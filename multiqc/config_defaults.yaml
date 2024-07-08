@@ -471,6 +471,7 @@ module_order:
   - cellranger
   - snpsplit
   - odgi
+  - vg
   - pangolin
   - nextclade
   - freyja

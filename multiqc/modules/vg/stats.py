@@ -188,7 +188,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_column_metadata["Softclips (bp)"] = dict(bases, **{"title": "Bases Softclipped"})
         table_column_metadata["Percent Aligned"] = dict(**{"title": '% reads aligned', "suffix":'%', 'shared_key':'vg_read_percentage'})
         table_column_metadata["Percent Properly Paired"] = dict(**{"title": "'% reads properly paired'", "suffix":'%', 'shared_key':'vg_read_percentage'})
-        table_column_metadata["Alignment score"] = dict(**{"title": "Mean alignment score", "description": "Smith-Waterman alignment score",'min':0, 'max':150})
+        table_column_metadata["Alignment score"] = dict(**{"title": "Mean alignment score", "description": "Smith-Waterman alignment score",'min':0})
         table_column_metadata["Mapping quality"] = dict(**{"title": "Mean MQ", "description": "Read MQ (Li and Durbin method)", 'min':0, 'max':60})
 
         ## Data to report out in table format, but not showed by default in report
@@ -197,12 +197,10 @@ class MultiqcModule(BaseMultiqcModule):
         table_column_metadata["Total paired"] = dict(reads, **{"title": "Total paired", "description": "Total number of reads in a read pair", 'hidden':True})
         table_column_metadata["Total gapless (softclips allowed)"] = dict(reads, **{"title": "Total gapless (softclips allowed)", "description": "Total reads without indels or substitutions", 'hidden':True})
         table_column_metadata["Total time (seconds)"] = dict(hours, **{"title": "Total running time (cpu-hours)", "description":"Total cpu-hours per sample", 'hidden':True})
-        # print (self.vg_stats_map.keys())
-        print ([x for x in self.vg_stats_map['HSB8153'].keys() if x not in table_column_metadata.keys()])
-        print ([x for x in table_column_metadata.keys() if x not in self.vg_stats_map['HSB8153'].keys()])
+
         self.add_section(
             name="Alignment stats",
-            anchor="vg stats",
+            # anchor="vg_stats",
             description="This module parses the output from <code>vg stats</code>. All numbers in millions.",
             helptext="These data represent alignment statistics calculated from a gam file of reads aligned to a graphical genome. The process of surjecting these alignments to a linear reference to produce a sam/bam aligned file results in the loss of aligned reads. (For example, a read that aligns to a non-reference insertion has no aligned location in the linear reference genome.) As result, these statistics will differ from those produced by a samtools stats report of the surjected bam file.",
             plot=violin.plot(
