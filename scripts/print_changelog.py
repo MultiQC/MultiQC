@@ -79,35 +79,41 @@ def main():
     assert_milestone_exists(milestones, previous_tag)
     prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_tag)
 
-    sections: Dict[str, List[PullRequest]] = {
-        "MultiQC fixes": [],
-        "MultiQC updates": [],
+    label_to_section: Dict[str, str] = {
+        "module: new": "New modules",
+        "bug: module": "Module fixes",
+        "module: enhancement": "Module updates",
+        "module: change": "Updates",
+        "bug: core": "Fixes",
+        "core: infrastructure": "Infrastructure",
+        "core: refactoring": "Refactoring",
+        "documentation": "Chores",
+    }
+    sections_to_prs: Dict[str, List[PullRequest]] = {
+        "Fixes": [],
+        "Updates": [],
         "New modules": [],
         "Module fixes": [],
         "Module updates": [],
+        "Refactoring": [],
         "Infrastructure": [],
         "Chores": [],
     }
     for pr in prs:
         if skip_pr(pr.title):
             continue
-        for label in pr.labels:
-            section_name = {
-                "module: new": "New modules",
-                "bug: module": "Module fixes",
-                "module: enhancement": "Module updates",
-                "module: change": "Module updates",
-                "bug: core": "MultiQC fixes",
-                "core: infrastructure": "Infrastructure",
-                "documentation": "Chores",
-            }.get(label.name, "MultiQC updates")
-            sections[section_name].append(pr)
+        if pr.labels:
+            for label in pr.labels:
+                section_name = label_to_section.get(label.name, "Updates")
+                sections_to_prs[section_name].append(pr)
+        else:
+            sections_to_prs["Updates"].append(pr)
 
     print("")
     print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")
     print("")
 
-    for section, prs in sections.items():
+    for section, prs in sections_to_prs.items():
         if section == "Chores":
             continue
         print(f"### {section}")
