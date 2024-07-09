@@ -38,15 +38,28 @@ tests that take the specific module logic into account, and place them in
 
 #### Fixes
 
-- Multiple fixes of the custom content parsing logic ([#2674](https://github.com/MultiQC/MultiQC/pull/2674))
+- Custom content"
+  - Multiple fixes of the custom content parsing logic ([#2674](https://github.com/MultiQC/MultiQC/pull/2674))
+  - Fix parsing custom content submodules with a custom config ([#2654](https://github.com/MultiQC/MultiQC/pull/2654))
+  - Line plot: fix spreading `extra_series` between multiple datasets ([#2684](https://github.com/MultiQC/MultiQC/pull/2684))
+  - Line plot series: allow pass lists instead of x/y tuples to work properly with YAML ([#2683](https://github.com/MultiQC/MultiQC/pull/2683))
 - Re-enabling the `software_version` module section ([#2670](https://github.com/MultiQC/MultiQC/pull/2670))
-- Fix parsing custom content submodules with a custom config ([#2654](https://github.com/MultiQC/MultiQC/pull/2654))
+- When `--no-ansi` is set, disable colors in `rich_click` too ([#2678](https://github.com/MultiQC/MultiQC/pull/2678))
+- Support CWD path filters ( `./path/...`) in config ([#2676](https://github.com/MultiQC/MultiQC/pull/2676))
+- Fix writing report to stdout with `--filename stdout`, log to stderr ([#2672](https://github.com/MultiQC/MultiQC/pull/2672))
+- Interactive use:
+  - Reset all config values in `config.reset()`, even those that are not in `config_default.yaml` ([#2660](https://github.com/MultiQC/MultiQC/pull/2660))
+  - Reset config between `multiqc.run()` calls ([#2655](https://github.com/MultiQC/MultiQC/pull/2655))
+  - Better handling of calling `write_report` twice ([#2688](https://github.com/MultiQC/MultiQC/pull/2688))
 
 #### Updates
 
-- Custom content: allow hash-fenced table columns ([#2649](https://github.com/MultiQC/MultiQC/pull/2649))
-- Line plot series: allow pass lists instead of x/y tuples to work properly with YAML ([#2683](https://github.com/MultiQC/MultiQC/pull/2683))
 - Run mypy on core library ([#2665](https://github.com/MultiQC/MultiQC/pull/2665))
+- Add tests for plot export ([#2682](https://github.com/MultiQC/MultiQC/pull/2682))
+- Add tests for command line use, including for passing `TMPDIR` ([#2677](https://github.com/MultiQC/MultiQC/pull/2677))
+- Custom content: allow hash-fenced table columns ([#2649](https://github.com/MultiQC/MultiQC/pull/2649))
+- Software versions: parse for sorting, but preserve the original strings ([#2671](https://github.com/MultiQC/MultiQC/pull/2671))
+- Allow both table-level and column-level custom plot config for table ([#2662](https://github.com/MultiQC/MultiQC/pull/2662))
 
 #### New modules
 
@@ -60,6 +73,11 @@ tests that take the specific module logic into account, and place them in
 #### Module updates
 
 - Picard HsMetrics: support any custom X coverage metrics ([#2663](https://github.com/MultiQC/MultiQC/pull/2663))
+- Samtools coverage: avoid hard crash for invalid file contents ([#2664](https://github.com/MultiQC/MultiQC/pull/2664))
+
+#### Refactoring
+
+- Abstract code related to temporary directory creation into a separate module ([#2675](https://github.com/MultiQC/MultiQC/pull/2675))
 
 #### Infrastructure
 
