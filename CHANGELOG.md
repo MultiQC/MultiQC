@@ -61,6 +61,10 @@ tests that take the specific module logic into account, and place them in
 
 - Picard HsMetrics: support any custom X coverage metrics ([#2663](https://github.com/MultiQC/MultiQC/pull/2663))
 
+#### Infrastructure
+
+- Use pull-request labels and milestones for changelog generation ([#2691](https://github.com/MultiQC/MultiQC/pull/2691))
+
 ## [MultiQC v1.22.3](https://github.com/MultiQC/MultiQC/releases/tag/v1.22.3) - 2024-06-22
 
 Contains fixes of multiple bugs collected after the last release, along with few minor improvements.
