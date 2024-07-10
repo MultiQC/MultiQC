@@ -2,21 +2,21 @@
 name: vg
 url: https://github.com/vgteam/vg
 description: >
-  VG is a suite of tools designed to allow users to manipulate graphical genomes, including aligning reads to graphical genomes.
+  VG is a suite of tools designed to allow users to manipulate graphical genomes.
 ---
 
-The vg module parses [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats) alignment reports. It is specifically designed to parse the output of a vg stats report summarizing the alignment of reads to a graphical genome in a GAM file.
-vg stats is capable of producing many reports summarizing many aspects of graphical genomes, including specific aspects of aligned gam files such as node coverage. This module is not meant to gather those data. Rather, this module is designed to summarize the alignment performance of gam files produced by vg giraffe created from the stdout of the vg stats command:
+The module parses the [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats)
+reports that summarize the stats of read alignment to a graphical genome in a GAM file.
+
+`vg stats` is capable of producing many reports summarizing many aspects of graphical
+genomes, including specific aspects of aligned GAM files such as node coverage.
+This module is not meant to gather those data. Rather, this module is designed to
+summarize the alignment performance of GAM files produced by `vg giraffe` created
+from the stdout of the `vg stats` command:
 
 ```sh
-vg stats -a mapped.gam
-```
-
-It is not guaranteed that output created using any other parameter combination can be parsed using this module.
-An example output file is below:
-
-```txt
----
+$ vg stats -a mapped.gam > sample-stats.txt
+$ cat sample-stats.txt
 Total alignments: 727413268
 Total primary: 727413268
 Total secondary: 0
@@ -35,27 +35,25 @@ Total time: 291465 seconds
 Speed: 2495.71 reads/second
 ```
 
-For the vg module to discover the [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats) reports, the file must match one of the following patterns:
-
-- "\*.txt"
-- "\*.vgstats"
+It is not guaranteed that output created using any other parameter combination can
+be parsed using this module.
 
 The graphical reports are designed to mimic a samtools stats report, including:
-  1) A bar chart of the number of reads aligned/not aligned
-  2) A bee swarm of:
-     a) Total sequences
-     b) Total properly paired alignments
-     c) Total gapless alignments
-     d) Total perfect alignments
-     e) Mapping quality
-     f) Insertions (reads)
-     g) Deletions (reads)
-     h) Substitutions (reads)
-     i) Softclips (reads)
-     j) Insertions (bases)
-     k) Deletions (bp)
-     l) Substitutions (bp)
-     m) Softclips (bp)
-     n) % of total reads aligned
-     o) % of total reads properly paired
 
+1. A bar chart of the number of reads aligned/not aligned
+2. A violing plot of:
+   a) Total sequences
+   b) Total properly paired alignments
+   c) Total gapless alignments
+   d) Total perfect alignments
+   e) Mapping quality
+   f) Insertions (reads)
+   g) Deletions (reads)
+   h) Substitutions (reads)
+   i) Softclips (reads)
+   j) Insertions (bases)
+   k) Deletions (bp)
+   l) Substitutions (bp)
+   m) Softclips (bp)
+   n) % of total reads aligned
+   o) % of total reads properly paired
