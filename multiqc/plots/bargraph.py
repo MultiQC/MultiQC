@@ -1,6 +1,5 @@
 """MultiQC functions to plot a bargraph"""
 
-import dataclasses
 import logging
 from collections import OrderedDict
 from typing import Union, Dict, Optional, List, Sequence, Any, cast, Mapping
