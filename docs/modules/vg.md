@@ -41,19 +41,4 @@ be parsed using this module.
 The graphical reports are designed to mimic a samtools stats report, including:
 
 1. A bar chart of the number of reads aligned/not aligned
-2. A violing plot of:
-   a) Total sequences
-   b) Total properly paired alignments
-   c) Total gapless alignments
-   d) Total perfect alignments
-   e) Mapping quality
-   f) Insertions (reads)
-   g) Deletions (reads)
-   h) Substitutions (reads)
-   i) Softclips (reads)
-   j) Insertions (bases)
-   k) Deletions (bp)
-   l) Substitutions (bp)
-   m) Softclips (bp)
-   n) % of total reads aligned
-   o) % of total reads properly paired
+2. A violin plot of all metrics

@@ -3,9 +3,8 @@
 import logging
 from typing import Dict
 
-from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import violin
+from multiqc.plots import violin, bargraph
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="VG",
             anchor="vg",
             href="https://github.com/vgteam/vg",
-            info="is a tool to manipulate and analyze graphical genomes",
+            info="is a toolkit to manipulate and analyze graphical genomes, including read alignment",
             doi="10.1038/nbt.4227",
         )
 
@@ -55,34 +54,36 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "multiqc_vg_stats")
 
         # Add data to summary table
-        headers = {
-            "Percent Aligned": {
-                "title": "Aligned",
-                "description": "Percentage of total reads aligned by vg giraffe to pangenomic reference",
-                "max": 100,
-                "min": 0,
-                "scale": "RdYlGn",
-                "suffix": "%",
+        self.general_stats_addcols(
+            data_by_sample,
+            {
+                "Percent Aligned": {
+                    "title": "Aligned",
+                    "description": "Percentage of total reads aligned by vg giraffe to pangenomic reference",
+                    "max": 100,
+                    "min": 0,
+                    "scale": "RdYlGn",
+                    "suffix": "%",
+                },
+                "Percent Properly Paired": {
+                    "title": "Properly paired",
+                    "description": "Percentage of graph-aligned reads in a GAM file that are properly paired",
+                    "max": 100,
+                    "min": 0,
+                    "scale": "Blues",
+                    "suffix": "%",
+                },
+                "Mapping quality": {
+                    "title": "MQ",
+                    "description": "Average mapping quality of graph-aligned reads in a GAM file",
+                    "max": 60,
+                    "min": 0,
+                    "scale": "BuGn",
+                },
             },
-            "Percent Properly Paired": {
-                "title": "Properly paired",
-                "description": "Percentage of graph-aligned reads in a GAM file that are properly paired",
-                "max": 100,
-                "min": 0,
-                "scale": "Blues",
-                "suffix": "%",
-            },
-            "Mapping quality": {
-                "title": "MQ",
-                "description": "Average mapping quality of graph-aligned reads in a GAM file",
-                "max": 60,
-                "min": 0,
-                "scale": "BuGn",
-            },
-        }
+        )
 
-        # Add % Aligned, % Properly Paired, and average MQ to summary table
-        self.general_stats_addcols(data_by_sample, headers)
+        self.make_barplot(data_by_sample)
 
         # Add violin plot section to report, plotting major vg stats metrics
         self.make_violin_plot(data_by_sample)
@@ -138,99 +139,135 @@ class MultiqcModule(BaseMultiqcModule):
                 data[k] = float(v)
         return data
 
+    def make_barplot(self, data_by_sample: Dict):
+        cats = {
+            "Perfect": {"color": "#437bb1", "name": "Perfect"},
+            "Imperfect": {"color": "#FF9933", "name": "Imperfect"},
+            "Unaligned": {"color": "#b1084c", "name": "Unaligned"},
+        }
+
+        bar_data_by_sample: Dict = {
+            s: {
+                "Perfect": d["Total perfect"],
+                "Imperfect": d["Total aligned"] - d["Total perfect"],
+                "Unaligned": d["Total alignments"] - d["Total aligned"],
+            }
+            for s, d in data_by_sample.items()
+        }
+        self.add_section(
+            name="Reads aligned",
+            anchor="vg_stats_aligned",
+            description="Read alignment breakdown from <code>vg stats</code> as calculated from the GAM file produced by `vg giraffe`",
+            helptext="""
+"Imperfect" is calculated as the difference between "Total aligned" and "Total perfect",
+and "Unaligned" is calculated as the difference between "Total alignments" and "Total aligned" reads.
+""",
+            plot=bargraph.plot(
+                data=bar_data_by_sample,
+                cats=cats,
+                pconfig={
+                    "id": "vg_stats_aligned_barplot",
+                    "title": "VG stats: alignment scores",
+                },
+            ),
+        )
+
     def make_violin_plot(self, data_by_sample: Dict):
         # Make dot plot of counts
-        table_column_metadata = {}
-        reads = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": config.read_count_prefix,
-            "tt_decimals": 2,
-            "shared_key": "read_count",
-        }
-        bases = {
-            "min": 0,
-            "modify": lambda x: float(x) * config.base_count_multiplier,
-            "suffix": config.base_count_prefix,
-            "tt_decimals": 2,
-            "shared_key": "base_count",
-        }
-        hours = {
-            "min": 0,
-            "modify": lambda x: float(x) / 3600,
-            "suffix": "h",
-            "tt_decimals": 2,
-            "shared_key": "cpu_hours",
-        }
-
-        table_column_metadata["Total alignments"] = dict(reads, **{"title": "Total reads"})
-        table_column_metadata["Total aligned"] = dict(reads, **{"title": "Reads aligned"})
-        table_column_metadata["Total perfect"] = dict(
-            reads,
-            **{
+        headers = {
+            "Total alignments": {
+                "title": "Total reads",
+                "shared_key": "read_count",
+            },
+            "Total aligned": {
+                "title": "Reads aligned",
+                "shared_key": "read_count",
+            },
+            "Total perfect": {
                 "title": "Total reads perfectly aligned",
                 "description": "Properly paired reads aligned with no indels, soft clips, or mismatches",
+                "shared_key": "read_count",
             },
-        )
-        table_column_metadata["Total properly paired"] = dict(
-            reads,
-            **{
+            "Total properly paired": {
                 "title": "Properly paired",
                 "description": "Read pair is mapped to same contig, properly oriented, and within 6 SD of mean insert length.",
+                "shared_key": "read_count",
             },
-        )
-        table_column_metadata["Insertions (reads)"] = dict(reads, **{"title": "Insertions (reads)"})
-        table_column_metadata["Deletions (reads)"] = dict(reads, **{"title": "Deletions (reads)"})
-        table_column_metadata["Substitutions (reads)"] = dict(reads, **{"title": "Substitutions (reads)"})
-        table_column_metadata["Softclips (reads)"] = dict(reads, **{"title": "Softclips (reads)"})
-        table_column_metadata["Insertions (bp)"] = dict(bases, **{"title": "Insertions (bases)"})
-        table_column_metadata["Deletions (bp)"] = dict(bases, **{"title": "Deletions (bases)"})
-        table_column_metadata["Substitutions (bp)"] = dict(bases, **{"title": "Substitutions (bases)"})
-        table_column_metadata["Softclips (bp)"] = dict(bases, **{"title": "Bases Softclipped"})
-        table_column_metadata["Percent Aligned"] = dict(
-            **{"title": "% reads aligned", "suffix": "%", "shared_key": "vg_read_percentage"}
-        )
-        table_column_metadata["Percent Properly Paired"] = dict(
-            **{"title": "'% reads properly paired'", "suffix": "%", "shared_key": "vg_read_percentage"}
-        )
-        table_column_metadata["Alignment score"] = dict(
-            **{"title": "Mean alignment score", "description": "Smith-Waterman alignment score", "min": 0, "max": 150}
-        )
-        table_column_metadata["Mapping quality"] = dict(
-            **{"title": "Mean MQ", "description": "Read MQ (Li and Durbin method)", "min": 0, "max": 60}
-        )
-
-        ## Data to report out in table format, but not showed by default in report
-        table_column_metadata["Total primary"] = dict(reads, **{"title": "Total primary alignments", "hidden": True})
-        table_column_metadata["Total secondary"] = dict(
-            reads, **{"title": "Total secondary alignments", "hidden": True}
-        )
-        table_column_metadata["Total paired"] = dict(
-            reads, **{"title": "Total paired", "description": "Total number of reads in a read pair", "hidden": True}
-        )
-        table_column_metadata["Total gapless (softclips allowed)"] = dict(
-            reads,
-            **{
+            "Insertions (reads)": {"title": "Insertions (reads)", "shared_key": "read_count"},
+            "Deletions (reads)": {"title": "Deletions (reads)", "shared_key": "read_count"},
+            "Substitutions (reads)": {"title": "Substitutions (reads)", "shared_key": "read_count"},
+            "Softclips (reads)": {"title": "Softclips (reads)", "shared_key": "read_count"},
+            "Insertions (bp)": {"title": "Insertions (bases)", "shared_key": "base_count"},
+            "Deletions (bp)": {"title": "Deletions (bases)", "shared_key": "base_count"},
+            "Substitutions (bp)": {"title": "Substitutions (bases)", "shared_key": "base_count"},
+            "Softclips (bp)": {"title": "Bases soft-clipped", "shared_key": "base_count"},
+            "Percent Aligned": {
+                "title": "% reads aligned",
+                "suffix": "%",
+                "shared_key": "vg_read_percentage",
+            },
+            "Percent Properly Paired": {
+                "title": "'% reads properly paired'",
+                "suffix": "%",
+                "shared_key": "vg_read_percentage",
+            },
+            "Alignment score": {
+                "title": "Mean alignment score",
+                "description": "Smith-Waterman alignment score",
+                "min": 0,
+                "max": 150,
+            },
+            "Mapping quality": {
+                "title": "Mean MQ",
+                "description": "Read MQ (Li and Durbin method)",
+                "min": 0,
+                "max": 60,
+            },
+            "Total primary": {
+                "title": "Total primary alignments",
+                "hidden": True,
+                "shared_key": "read_count",
+            },
+            "Total secondary": {
+                "title": "Total secondary alignments",
+                "hidden": True,
+                "shared_key": "read_count",
+            },
+            "Total paired": {
+                "title": "Total paired",
+                "description": "Total number of reads in a read pair",
+                "hidden": True,
+                "shared_key": "read_count",
+            },
+            "Total gapless (softclips allowed)": {
                 "title": "Total gapless (softclips allowed)",
                 "description": "Total reads without indels or substitutions",
                 "hidden": True,
+                "shared_key": "read_count",
             },
-        )
-        table_column_metadata["Total time (seconds)"] = dict(
-            hours,
-            **{"title": "Total running time (cpu-hours)", "description": "Total cpu-hours per sample", "hidden": True},
-        )
+            "Total time (seconds)": {
+                "min": 0,
+                "modify": lambda x: float(x) / 3600,
+                "suffix": "h",
+                "tt_decimals": 2,
+                "title": "Total running time (cpu-hours)",
+                "description": "Total cpu-hours per sample",
+                "hidden": True,
+            },
+        }
+
+        # Data to report out in table format, but not showed by default in report
 
         self.add_section(
             name="Alignment stats",
-            # anchor="vg_stats",
-            description="This module parses the output from <code>vg stats</code>. All numbers in millions.",
-            helptext="These data represent alignment statistics calculated from a gam file of reads aligned to a graphical genome. The process of surjecting these alignments to a linear reference to produce a sam/bam aligned file results in the loss of aligned reads. (For example, a read that aligns to a non-reference insertion has no aligned location in the linear reference genome.) As result, these statistics will differ from those produced by a samtools stats report of the surjected bam file.",
+            anchor="vg_stats",
+            description="Alignment metrics from <code>vg stats</code> as calculated from the GAM file produced by `vg giraffe`",
+            helptext="These data represent alignment statistics calculated from a GAM file of reads aligned to a graphical genome. The process of mapping these alignments to a linear reference to produce a SAM/BAM aligned file results in the loss of aligned reads. (For example, a read that aligns to a non-reference insertion has no aligned location in the linear reference genome.) As result, these statistics will differ from those produced by a samtools stats report of the mapping BAM file.",
             plot=violin.plot(
                 data=data_by_sample,
-                headers=table_column_metadata,
+                headers=headers,
                 pconfig={
-                    "id": "vg_stats",
+                    "id": "vg_stats_violin",
                     "title": "VG stats: Graphical Genome Alignment Stats",
                 },
             ),
