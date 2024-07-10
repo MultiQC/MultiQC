@@ -18,9 +18,10 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence, Set
 
 import yaml
+from pydantic import BaseModel, Field
 
 from multiqc import config
 
@@ -351,13 +352,56 @@ def is_searching_in_source_dir(path: Path) -> bool:
         return False
 
 
-def prep_ordered_search_files_list(sp_keys) -> Tuple[List[Dict], List[Path]]:
+class SearchPattern(BaseModel):
+    fn: Optional[str] = None
+    fn_re: Optional[re.Pattern] = None
+    contents: Set[str] = Field(default_factory=set)
+    contents_re: Set[re.Pattern] = Field(default_factory=set)
+    num_lines: Optional[int] = None
+    shared: bool = False
+    skip: bool = False
+    max_filesize: Optional[int] = None
+    exclude_fn: Set[str] = Field(default_factory=set)
+    exclude_fn_re: Set[re.Pattern] = Field(default_factory=set)
+    exclude_contents: Set[str] = Field(default_factory=set)
+    exclude_contents_re: Set[re.Pattern] = Field(default_factory=set)
+
+    @staticmethod
+    def parse(d: Dict, key: str) -> Optional["SearchPattern"]:
+        one_of_required = ["fn", "fn_re", "contents", "contents_re"]
+        if not any(d.get(k) for k in one_of_required):
+            msg = f"At least one of the keys must be specified in search pattern: {one_of_required}, got: '{key}': {d}"
+            logger.error(msg)
+            if config.strict:
+                lint_errors.append(msg)
+            return None
+
+        # Convert the values that can be lists/sets or str into sets
+        for k in ["contents", "contents_re", "exclude_fn", "exclude_fn_re" "exclude_contents", "exclude_contents_re"]:
+            val = d.get(k, [])
+            if val:
+                strs = [val] if isinstance(val, str) else val
+                d[k] = set(strs)
+
+        # Convert patterns into regex objects
+        for k in ["contents_re", "exclude_fn_re", "exclude_contents_re"]:
+            strs = d.get(k, [])
+            if strs:
+                d[k] = {re.compile(s) for s in set(strs)}
+
+        if "fn_re" in d:
+            d["fn_re"] = re.compile(d["fn_re"])
+
+        return SearchPattern(**d)
+
+
+def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, List[SearchPattern]]], List[Path]]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
     """
 
-    spatterns: List[Dict] = [{}, {}, {}, {}, {}, {}, {}]
+    spatterns: List[Dict[str, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     searchfiles: List[Path] = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
@@ -389,68 +433,57 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List[Dict], List[Path]]:
     ignored_patterns = []
     skipped_patterns = []
 
-    for key, sps in config.sp.items():
+    for key, sp_dicts in config.sp.items():
         mod_key = key.split("/", 1)[0]
         if mod_key.lower() not in [m.lower() for m in sp_keys]:
             ignored_patterns.append(key)
             continue
-        if not isinstance(sps, list):
-            sps = [sps]
+        if not isinstance(sp_dicts, list):
+            sp_dicts = [sp_dicts]
 
         # Warn if we have any unrecognised search pattern keys
-        expected_sp_keys = [
-            "fn",
-            "fn_re",
-            "contents",
-            "contents_re",
-            "num_lines",
-            "shared",
-            "skip",
-            "max_filesize",
-            "exclude_fn",
-            "exclude_fn_re",
-            "exclude_contents",
-            "exclude_contents_re",
-        ]
-        unrecognised_keys = [y for x in sps for y in x.keys() if y not in expected_sp_keys]
+        expected_sp_keys = [k for k in SearchPattern.model_fields]
+        unrecognised_keys = [y for x in sp_dicts for y in x.keys() if y not in expected_sp_keys]
         if len(unrecognised_keys) > 0:
             logger.warning(f"Unrecognised search pattern keys for '{key}': {', '.join(unrecognised_keys)}")
 
+        sps: List[SearchPattern] = [v for v in [SearchPattern.parse(d, key) for d in sp_dicts] if v is not None]
+
         # Check if we are skipping this search key
-        if any([x.get("skip") for x in sps]):
+        if any([x.skip for x in sps]):
             skipped_patterns.append(key)
 
         # Split search patterns according to speed of execution.
-        if any([x for x in sps if "contents_re" in x]):
-            if any([x for x in sps if "num_lines" in x]):
+        if any([x for x in sps if x.contents_re]):
+            if any([x for x in sps if x.num_lines is not None]):
                 spatterns[4][key] = sps
-            elif any([x for x in sps if "max_filesize" in x]):
+            elif any([x for x in sps if x.max_filesize is not None]):
                 spatterns[5][key] = sps
             else:
                 spatterns[6][key] = sps
-        elif any([x for x in sps if "contents" in x]):
-            if any([x for x in sps if "num_lines" in x]):
+        elif any([x for x in sps if x.contents]):
+            if any([x for x in sps if x.num_lines is not None]):
                 spatterns[1][key] = sps
-            elif any([x for x in sps if "max_filesize" in x]):
+            elif any([x for x in sps if x.max_filesize is not None]):
                 spatterns[2][key] = sps
             else:
                 spatterns[3][key] = sps
         else:
             spatterns[0][key] = sps
 
-    def _sort_by_key(sps: Dict[str, List[Dict[str, str]]], key: str) -> Dict:
+    def _sort_by_key(_sps: Dict[str, List[SearchPattern]], _key: str) -> Dict[str, List[SearchPattern]]:
         """Sort search patterns dict by key like num_lines or max_filesize."""
 
         def _sort_key(kv) -> int:
-            _, sps = kv
+            _, __sps = kv
             # Since modules can have multiple search patterns, we sort by the slowest one:
-            return max([sp.get(key, 0) for sp in sps])
+            return max([getattr(sp, _key) or 0 for sp in __sps])
 
-        return dict(sorted(sps.items(), key=_sort_key))
+        return dict(sorted(_sps.items(), key=_sort_key))
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[str, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -474,7 +507,7 @@ def prep_ordered_search_files_list(sp_keys) -> Tuple[List[Dict], List[Path]]:
     return spatterns, searchfiles
 
 
-def run_search_files(spatterns: List[Dict], searchfiles: List[Path]):
+def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfiles: List[Path]):
     runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
@@ -521,7 +554,7 @@ def run_search_files(spatterns: List[Dict], searchfiles: List[Path]):
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {key}")
                             # Don't keep searching this file for other modules
-                            if not sp.get("shared", False) and key not in config.filesearch_file_shared:
+                            if not sp.shared and key not in config.filesearch_file_shared:
                                 runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
                                 return True
                             # Don't look at other patterns for this module
@@ -565,41 +598,31 @@ def search_files(sp_keys):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern, f: SearchFile, module_key):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key):
     """
     Function to search a single file for a single search pattern.
     """
 
     global file_search_stats
-    fn_matched = False
-    contents_matched = False
 
     # Search pattern specific filesize limit
-    max_filesize = pattern.get("max_filesize")
-    if max_filesize is not None and f.filesize:
-        if f.filesize > max_filesize:
+    if pattern.max_filesize is not None and f.filesize:
+        if f.filesize > pattern.max_filesize:
             file_search_stats["skipped_module_specific_max_filesize"] += 1
             return False
 
     # Search by file name (glob)
-    filename_pattern = pattern.get("fn")
-    if filename_pattern is not None:
-        if fnmatch.fnmatch(f.filename, filename_pattern):
-            fn_matched = True
-        else:
+    if pattern.fn is not None:
+        if not fnmatch.fnmatch(f.filename, pattern.fn):
             return False
 
     # Search by file name (regex)
-    filename_regex_pattern = pattern.get("fn_re")
-    if filename_regex_pattern is not None:
-        if re.match(filename_regex_pattern, f.filename):
-            fn_matched = True
-        else:
+    if pattern.fn_re is not None:
+        if not re.match(pattern.fn_re, f.filename):
             return False
 
-    contents_pattern = pattern.get("contents")
-    contents_regex_pattern = pattern.get("contents_re")
-    if fn_matched and contents_pattern is None and contents_regex_pattern is None:
+    # If we only had fn and fn_re, can assume matching is done:
+    if not pattern.contents and not pattern.contents_re:
         return True
 
     # Before parsing file content, check that we don't want to ignore this file to avoid parsing large files
@@ -609,29 +632,34 @@ def search_file(pattern, f: SearchFile, module_key):
         return False
 
     # Search by file contents
-    if contents_pattern is not None or contents_regex_pattern is not None:
-        if pattern.get("contents_re") is not None:
-            repattern = re.compile(pattern["contents_re"])
-        else:
-            repattern = None
-        num_lines = pattern.get("num_lines", config.filesearch_lines_limit)
-        expected_contents = pattern.get("contents")
-        try:
-            for line_count, line in f.line_iterator():
-                if expected_contents and expected_contents in line:
-                    contents_matched = True
-                    break
-                if repattern and repattern.match(line):
-                    contents_matched = True
-                    break
-                if line_count >= num_lines:
-                    break
-        except Exception:
-            file_search_stats["skipped_file_contents_search_errors"] += 1
-            return False
-        if filename_pattern is None and filename_regex_pattern is None and contents_matched:
-            return True
-        return fn_matched and contents_matched
+    num_lines = pattern.num_lines or config.filesearch_lines_limit
+
+    match_strs: Set[str] = set()
+    match_re_patterns: Set[re.Pattern] = set()
+    try:
+        for line_count, line in f.line_iterator():
+            for s in pattern.contents:
+                if s in line:
+                    match_strs.add(s)
+                    if len(match_strs) == len(pattern.contents):  # all strings matched
+                        break
+            for p in pattern.contents_re:
+                if p.match(line):
+                    match_re_patterns.add(p)
+                    if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
+                        break
+            if line_count >= num_lines:
+                break
+    except Exception:
+        file_search_stats["skipped_file_contents_search_errors"] += 1
+        return False
+
+    return (
+        pattern.contents
+        and len(match_strs) == len(pattern.contents)
+        or pattern.contents_re
+        and len(match_re_patterns) == len(pattern.contents_re)
+    )
 
 
 def exclude_file(sp, f: SearchFile):
