@@ -40,5 +40,5 @@ be parsed using this module.
 
 The graphical reports are designed to mimic a samtools stats report, including:
 
-1. A bar chart of the number of reads aligned/not aligned
-2. A violin plot of all metrics
+1. A bar chart showing the breakdown of aligned, perfectly aligned, and unaligned reads.
+2. A violin plot for all metrics.
