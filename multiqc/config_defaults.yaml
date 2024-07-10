@@ -307,6 +307,7 @@ fn_clean_exts:
   - ".cluster_report"
   - ".error.spl"
   - ".error.grp"
+  - ".vgstats"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
@@ -360,6 +361,8 @@ fn_ignore_files:
   - "*.parquet"
   - "*[!s][!u][!m][!_\\.m][!mva][!qer][!cpy].html" # Allow _mqc.html, _vep.html and summary.html files
   - "multiqc_data.json"
+  - "*.gam"
+  - "*.gamp"
 
 # Favourite modules that should appear at the top in preference
 # This is in addition to those below. These appear above _all_ other
@@ -468,6 +471,7 @@ module_order:
   - cellranger
   - snpsplit
   - odgi
+  - vg
   - pangolin
   - nextclade
   - freyja

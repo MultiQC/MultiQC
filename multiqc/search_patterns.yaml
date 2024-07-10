@@ -959,6 +959,13 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+vg/stats:
+  contents:
+    - "Total perfect:"
+    - "Total gapless (softclips allowed):"
+    - "Total time:"
+    - "Speed:"
+  num_lines: 30
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1
