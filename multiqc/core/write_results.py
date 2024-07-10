@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Set
 
 from multiqc.base_module import Section
-from multiqc.core.file_search import include_or_exclude_modules
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 
@@ -22,7 +21,7 @@ import jinja2
 from multiqc import config, report
 from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.plots.plotly.plot import Plot
-from multiqc.core import plugin_hooks, tmp_dir, log_and_rich
+from multiqc.core import plugin_hooks, tmp_dir
 from multiqc.utils import megaqc, util_functions
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 
@@ -35,9 +34,6 @@ def write_results(clean_up=True) -> None:
     # Did we find anything?
     if len(report.modules) == 0:
         raise NoAnalysisFound("No analysis data for any module. Check that input files and directories exist")
-
-    if config.make_report:
-        _order_modules_and_sections()
 
     _set_output_paths()
 
@@ -224,87 +220,6 @@ def _create_or_override_dirs() -> Set[str]:
     return overwritten
 
 
-def _order_modules_and_sections():
-    """
-    Finalise modules and sections: place in the write order, add special-case modules
-    """
-
-    # In case if user passed exclude_modules or include_modules again:
-    mod_ids = include_or_exclude_modules([mod.id for mod in report.modules])
-    for mod in report.modules:
-        if mod.id not in mod_ids:
-            mod.hidden = True
-
-    # Add section for software versions if any are found
-    if not config.skip_versions_section and report.software_versions:
-        # Importing here to avoid circular imports
-        from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
-
-        # if the software versions module is not in report.modules, add it:
-        if not any([isinstance(m, SoftwareVersionsModule) for m in report.modules]):
-            report.modules.append(SoftwareVersionsModule())
-
-    # Special-case module if we want to profile the MultiQC running time
-    if config.profile_runtime:
-        from multiqc.modules.profile_runtime import MultiqcModule as ProfileRuntimeModule
-
-        # if the software versions module is not in report.modules, add it:
-        if not any([isinstance(m, ProfileRuntimeModule) for m in report.modules]):
-            report.modules.append(ProfileRuntimeModule())
-
-    # Sort the report module output if we have a config
-    if len(config.report_section_order) > 0:
-        section_id_order = {}
-        idx = 10
-        for mod in reversed(report.modules):
-            section_id_order[mod.anchor] = idx
-            idx += 10
-        for anchor, ss in config.report_section_order.items():
-            if anchor not in section_id_order.keys():
-                logger.debug(f"Reordering sections: anchor '{anchor}' not found.")
-                continue
-            if ss.get("order") is not None:
-                section_id_order[anchor] = ss["order"]
-            if ss.get("after") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["after"]] + 1
-            if ss.get("before") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["before"]] - 1
-        sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
-        report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
-
-    # Sort the report sections if we have a config
-    # Basically the same as above, but sections within a module
-    if len(config.report_section_order) > 0:
-        # Go through each module
-        for midx, mod in enumerate(report.modules):
-            section_id_order = dict()
-            # Get a list of the section anchors
-            idx = 10
-            for s in mod.sections:
-                section_id_order[s.anchor] = idx
-                idx += 10
-            # Go through each section to be reordered
-            for anchor, ss in config.report_section_order.items():
-                # Section to be moved is not in this module
-                if anchor not in section_id_order.keys():
-                    logger.debug(f"Reordering sections: anchor '{anchor}' not found for module '{mod.name}'.")
-                    continue
-                if ss == "remove":
-                    section_id_order[anchor] = False
-                    continue
-                if ss.get("order") is not None:
-                    section_id_order[anchor] = ss["order"]
-                if ss.get("after") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["after"]] + 1
-                if ss.get("before") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["before"]] - 1
-            # Remove module sections
-            section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
-            # Sort the module sections
-            sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
-            report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
-
-
 def render_and_export_plots():
     """
     Render plot HTML, write PNG/SVG and plot data TSV/JSON to plots_tmp_dir() and data_tmp_dir(). Populates report.plot_data
@@ -377,6 +292,10 @@ def _render_general_stats_table() -> None:
 
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0 and not all_hidden:
+        # Clean previous general stats table if running write_report interactively second time
+        if "general_stats_table" in report.html_ids:
+            report.html_ids.remove("general_stats_table")
+            del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
             "title": "General Statistics",

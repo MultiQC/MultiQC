@@ -124,10 +124,11 @@ strict: True
 ## Static code analysis
 
 MultiQC uses type hints and static code analysis with [mypy](http://mypy-lang.org/)
-to prevent bugs. Mypy is run on the entire codebase using a GitHub Actions job,
-however, you can run it locally to check your changes before pushing them.
+to prevent bugs.
 
-Install MultiQC in the dev mode, which will bring `mypy` along with additional plugins.
+Mypy is run on the entire codebase using a GitHub Actions job,
+however, you can run it locally to check your changes before pushing them. In order to
+do that, install MultiQC in the dev mode, which will bring `mypy` along with additional pluginsL
 
 ```bash
 pip install -e .[dev]
@@ -140,6 +141,11 @@ mypy multiqc/modules/your_module
 ```
 
 Fix any problems that mypy finds before submitting your pull request.
+
+For a more convenient development experience, you can consider installing a mypy plugin
+for your editor. Both [VS Code](https://github.com/microsoft/vscode-mypy) and
+[PyCharm](https://plugins.jetbrains.com/plugin/11086-mypy) have plugins that can
+highlight type errors in your code as you write it.
 
 ## Code formatting
 
@@ -215,10 +221,11 @@ you will need to edit or create are as follows:
 │   ├── modules
 │   |   └── <your_module>
 │   │       ├── __init__.py
-│   │       └── <your_module>.py
-│   └── utils
-│       └── search_patterns.yaml
-├── CHANGELOG.md
+│   │       ├── <your_module>.py
+│   │       └── tests
+│   │           ├── __init__.py
+│   │           └── test_<your_module>.py
+│   └── search_patterns.yaml
 └── pyproject.toml
 ```
 
@@ -227,7 +234,7 @@ These files are described in more detail below.
 ### Submodule
 
 MultiQC modules are Python submodules - as such, they need their own
-directory in `/multiqc/` with an `__init__.py` file. The directory should
+directory in `multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
 code itself usually then goes in a separate python file (also with the same
 name, i.e. `multiqc/modname/modname.py`) which is then imported by the
@@ -298,6 +305,22 @@ you think would be helpful. Please avoid using heading levels 1 to 3.
 The file search patterns will be shown on the website page automatically
 and do not need to be included in this file.
 
+### Tests
+
+Tests are written for [pytest](https://docs.pytest.org/), and placed in the `tests/`
+subdirectory within the module directory.
+
+MultiQC has a [blanket test](https://github.com/MultiQC/MultiQC/blob/main/tests/test_modules_run.py) that just checks
+that each module didn't crash when being run on the corresponding data in [test-data](https://github.com/MultiQC/test-data),
+and added _something_ into the report. However, users are encouraged to write more
+comprehensive tests that take the specific module logic into account. For some examples,
+consider checking:
+
+- the [samtools flagstat](https://github.com/MultiQC/MultiQC/blob/main/multiqc/modules/samtools/tests/test_flagstat.py)
+  test that verifies some logic in the `flagstat` submodule of the `samtools` module;
+- the [picard tools](https://github.com/MultiQC/MultiQC/blob/main/multiqc/modules/picard/tests/test_picard.py)
+  test that checks that every submodule for each Picard tool worked correctly.
+
 ### MultiqcModule Class
 
 If you've copied one of the other entry point statements, it will have ended
@@ -355,14 +378,14 @@ Instead, use the `logger` module as follows:
 ```python
 import logging
 log = logging.getLogger(__name__)
-# Initialise your class and so on
+
 log.info('Hello World!')
 ```
 
 Log messages can come in a range of formats:
 
 - `log.debug`
-  - Thes only show if MultiQC is run in `-v`/`--verbose` mode
+  - These only show if MultiQC is run in `-v`/`--verbose` mode
 - `log.info`
   - For more important status updates
 - `log.warning`
@@ -370,13 +393,17 @@ Log messages can come in a range of formats:
 - `log.error` and `log.critical`
   - Not often used, these are for show-stopping problems
 
-### Changelog
+### Pull-request tags
 
-When opening a pull-request, please ensure that the PR title is
-formatted as `New module: XYZ`, where `XYZ` is the name of your module.
+Pull-request labels/tags are essential for auto-generation of the release changelog,
+so consider adding them to your PR.
 
-The changelog entry will be automatically generated for you, based on
-the meta-information that you add to the module `MultiqcModule` class.
+- When opening a pull-request for a new module, please add the `module: new` label.
+- If the pull-request only fixes an existing module, please add the `bug: module` label.
+- If it's an enhancement of an existing module, add the `module: enhancement` label.
+- If the PR fixes the core codebase, add the `bug: core`.
+- For other options, consider, like `core: frontend`, `core: refactoring`,
+  `core: infrastructure` (e.g. CI workflows and tests), `documentation`.
 
 :::tip
 Please do not add anything to the `CHANGELOG.md` file!
@@ -787,20 +814,21 @@ To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
 
 ```python
+from multiqc.plots.table_object import TableColumn
 headers = {
-    'first_col': {
-        'title': 'First',
-        'description': 'My First Column',
-        'scale': 'RdYlGn-rev'
-    },
-    'second_col': {
-        'title': 'Second',
-        'description': 'My Second Column',
-        'max': 100,
-        'min': 0,
-        'scale': 'Blues',
-        'suffix': '%'
-    }
+    'first_col': TableColumn(
+        title='First',
+        description='My First Column',
+        scale='RdYlGn-rev'
+    ),
+    'second_col': TableColumn(
+        title='Second',
+        description='My Second Column',
+        max=100,
+        min=0,
+        scale='Blues',
+        suffix='%'
+    )
 }
 self.general_stats_addcols(data, headers)
 ```
@@ -808,20 +836,20 @@ self.general_stats_addcols(data, headers)
 Here are all options for headers, with defaults:
 
 ```python
-headers['name'] = {
-    'namespace': '',                # Module name. Auto-generated for core modules in General Statistics.
-    'title': '[ dict key ]',        # Short title, table column title
-    'description': '[ dict key ]',  # Longer description, goes in mouse hover text
-    'max': None,                    # Minimum value in range, for bar / colour coding
-    'min': None,                    # Maximum value in range, for bar / colour coding
-    'scale': 'GnBu',                # Colour scale for colour coding. Set to False to disable.
-    'suffix': None,                 # Suffix for value (eg. '%')
-    'format': '{:,.1f}',            # Output format() string. Can also be a lambda function.
-    'shared_key': None,             # See below for description
-    'modify': None,                 # Lambda function to modify values
-    'hidden': False,                # Set to True to hide the column on page load
-    'placement' : 1000.0,           # Alter the default ordering of columns in the table
-}
+headers['name'] = TableColumn(
+    namespace='',                # Module name. Auto-generated for core modules in General Statistics.
+    title='[ dict key ]',        # Short title, table column title
+    description='[ dict key ]',  # Longer description, goes in mouse hover text
+    max=None,                    # Minimum value in range, for bar / colour coding
+    min=None,                    # Maximum value in range, for bar / colour coding
+    scale='GnBu',                # Colour scale for colour coding. Set to False to disable.
+    suffix=None,                 # Suffix for value (eg. '%')
+    format='{:,.1f}',            # Output format() string. Can also be a lambda function.
+    shared_key=None,             # See below for description
+    modify=None,                 # Lambda function to modify values
+    hidden=False,                # Set to True to hide the column on page load
+    placement= 1000.0,           # Alter the default ordering of columns in the table
+)
 ```
 
 - `namespace`
@@ -860,13 +888,14 @@ that should be used to allow users to change the multiplier for read counts:
 `read_count_multiplier`, `read_count_prefix` and `read_count_desc`. For example:
 
 ```python
-pconfig = {
-    "title": "Reads",
-    "description": f"Number of reads ({config.read_count_desc})",
-    "modify": lambda x: x * config.read_count_multiplier,
-    "suffix": f" {config.read_count_prefix}",
+from multiqc.plots.table_object import TableConfig
+pconfig = TableConfig(
+    title="Reads",
+    description=f"Number of reads ({config.read_count_desc})",
+    modify=lambda x: x * config.read_count_multiplier,
+    suffix=f" {config.read_count_prefix}",
     ...
-}
+)
 ```
 
 Similar config options apply for base pairs: `base_count_multiplier`, `base_count_prefix` and
@@ -880,17 +909,17 @@ Note that adding e.g. `"shared_key": "read_count"` will automatically add corres
 will be sufficient:
 
 ```python
-pconfig = {
-    "title": "Reads",
-    "shared_key": "read_count",
+pconfig = TableConfig(
+    title="Reads",
+    shared_key="read_count",
     ...
-}
+)
 ...
-pconfig2 = {
-    "title": "Base pairs",
-    "shared_key": "base_count",
+pconfig2 = TableConfig(
+    title="Base pairs",
+    shared_key="base_count",
     ...
-}
+)
 ```
 
 A third parameter can be passed to this function, `namespace`. This is usually
@@ -961,19 +990,23 @@ This supports the following arguments:
 For example:
 
 ```python
-self.add_section (
+from multiqc.plots import linegraph, bargraph
+from multiqc.plots.linegraph import LinePlotConfig
+from multiqc.plots.bargraph import BarPlotConfig
+
+self.add_section(
     name="Second Module Section",
     anchor="mymod-second",
-    plot=linegraph.plot(data2, pconfig={
-        "id": "mymod-second",
-        "title": "My Module: Duplication Rate"
-    }),
+    plot=linegraph.plot(data2, pconfig=LinePlotConfig(
+        id="mymod-second",
+        title="My Module: Duplication Rate"
+    )),
 )
-self.add_section (
-    name = 'First Module Section',
-    anchor = 'mymod-first',
-    description = 'My amazing module output, from the first section',
-    helptext = """
+self.add_section(
+    name='First Module Section',
+    anchor='mymod-first',
+    description='My amazing module output, from the first section',
+    helptext="""
         If you're not sure _how_ to interpret the data, we can help!
         Most modules use multi-line strings for these text blocks,
         with triple quotation marks.
@@ -983,18 +1016,18 @@ self.add_section (
         * Are
         * `Great`
     """,
-    plot = bargraph.plot(data, pconfig={
-        "id": "mymod-first",
-        "title": "My Module: Read Counts"
-    })
+    plot = bargraph.plot(data, pconfig=BarPlotConfig(
+        id="mymod-first",
+        title="My Module: Read Counts"
+    ))
 )
-self.add_section (
-    content = '<p>Some custom HTML.</p>'
+self.add_section(
+    content='<p>Some custom HTML.</p>'
 )
 ```
 
 If a module has more than one section, these will automatically be labelled and linked
-in the left side-bar navigation (unless `name` is not specified).
+in the left sidebar navigation (unless `name` is not specified).
 
 ## Step 6 - Plot some data
 
@@ -1005,10 +1038,10 @@ types is described in the _Plotting Functions_ section of the docs.
 
 ### User configuration
 
-Instead of hardcoding defaults, it's a great idea to allow users to configure
+Instead of hard-coding the defaults, it's a great idea to allow users to configure
 the behaviour of MultiQC module code.
 
-It's pretty easy to use the built in MultiQC configuration settings to do this,
+It's pretty easy to use the built-in MultiQC configuration settings to do this,
 so that users can set up their config as described in the
 [Configuration docs](../getting_started/config.md).
 
@@ -1045,7 +1078,7 @@ by using `cProfile` to profile the code execution.
 
 To do this, first find out where your copy of MultiQC is located:
 
-```
+```sh
 $ which multiqc
 /Users/you/anaconda/envs/myenv/bin/multiqc
 ```
@@ -1088,6 +1121,7 @@ includes the content file directly in the HTML)_. The dictionary value should be
 the path to the desired file. For example, see how it's done in the FastQC module:
 
 ```python
+import os
 self.css = {
     "assets/css/multiqc_fastqc.css": os.path.join(os.path.dirname(__file__), "assets", "css", "multiqc_fastqc.css")
 }

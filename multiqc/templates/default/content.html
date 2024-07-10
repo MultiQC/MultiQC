@@ -20,9 +20,19 @@ the output from each module and print it in sections.
               <div class="text-muted">
                 {% for tool, versions in m.versions.items() %}
                   {% if tool == m.name %}
-                    <em>Version{% if versions|length > 1 %}s{% endif %}:</em> <code>{{versions|join("</code>, <code>")}}</code>
+                    <em>Version{% if versions|length > 1 %}s{% endif %}: </em>
+                    <code>
+                      {% for version in versions %}
+                        {{ version[1] }}{% if not loop.last %}, {% endif %}
+                      {% endfor %}
+                    </code>
                   {% else %}
-                    <em>{{ tool }}:</em> <code>{{ versions|join("</code>, <code>") }}</code>
+                    <em>{{ tool }}:</em>
+                    <code>
+                      {% for version in versions %}
+                        {{ version[1] }}{% if not loop.last %}, {% endif %}
+                      {% endfor %}
+                    </code>
                   {% endif %}
                 {% endfor %}
               </div>

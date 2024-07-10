@@ -1,5 +1,88 @@
 # MultiQC Version History
 
+## [MultiQC v1.23](https://github.com/MultiQC/MultiQC/releases/tag/v1.23) - 2024-07-09
+
+Bug fixes, integration of `pytest` and `mypy`, and one new module.
+
+From the user perspective, this is mostly a maintenance release, containing several
+important bugfixes, plus minor improvements and a new module - Glimpse.
+
+For developers, there are two significant additions to the CI workflow:
+
+- [pytest](https://docs.pytest.org/), along with unit tests covering the core library,
+- and [mypy](https://mypy-lang.org/), along with ensuring that the core codebase is fully
+  type-annotated.
+
+The core unit tests are located in the `multiqc/tests` folder, and the module tests are
+located in the corresponding `multiqc/modules/*/tests` subfolders.
+The [CI workflows](https://github.com/MultiQC/MultiQC/tree/main/.github/workflows)
+are refactored to separate the integration tests and the unit tests, to improve the
+granularity and parallelization. The tests are discovered and executed with pytest,
+and the coverage is reported by [codecov](https://app.codecov.io/gh/MultiQC/MultiQC).
+
+The `multiqc/tests` subfolder has several test files that cover most of the core library.
+It also has a [test_modules_run.py](https://github.com/MultiQC/MultiQC/blob/main/tests/test_modules_run.py)
+tests that checks that every module didn't crash when being run on the corresponding data
+in [test-data](https://github.com/MultiQC/test-data), and added _something_ into the report.
+That is somewhat of a blanket test for modules, that doesn't check if the modules logic
+worked correctly. For that reason, the users are encouraged to write more comprehensive
+tests that take the specific module logic into account, and place them in
+`multiqc/modules/*/tests`. For some initial examples, consider checking:
+
+- The [samtools flagstat](https://github.com/MultiQC/MultiQC/blob/main/multiqc/modules/samtools/tests/test_flagstat.py)
+  test that verifies some logic in the `flagstat` submodule of the `samtools` module;
+- The [picard tools](https://github.com/MultiQC/MultiQC/blob/main/multiqc/modules/picard/tests/test_picard.py)
+  test that checks that every submodule for each Picard tool worked correctly.
+
+### Other changes & fixes
+
+#### Fixes
+
+- Custom content"
+  - Multiple fixes of the custom content parsing logic ([#2674](https://github.com/MultiQC/MultiQC/pull/2674))
+  - Fix parsing custom content submodules with a custom config ([#2654](https://github.com/MultiQC/MultiQC/pull/2654))
+  - Line plot: fix spreading `extra_series` between multiple datasets ([#2684](https://github.com/MultiQC/MultiQC/pull/2684))
+  - Line plot series: allow pass lists instead of x/y tuples to work properly with YAML ([#2683](https://github.com/MultiQC/MultiQC/pull/2683))
+- Re-enabling the `software_version` module section ([#2670](https://github.com/MultiQC/MultiQC/pull/2670))
+- When `--no-ansi` is set, disable colors in `rich_click` too ([#2678](https://github.com/MultiQC/MultiQC/pull/2678))
+- Support CWD path filters ( `./path/...`) in config ([#2676](https://github.com/MultiQC/MultiQC/pull/2676))
+- Fix writing report to stdout with `--filename stdout`, log to stderr ([#2672](https://github.com/MultiQC/MultiQC/pull/2672))
+- Interactive use:
+  - Reset all config values in `config.reset()`, even those that are not in `config_default.yaml` ([#2660](https://github.com/MultiQC/MultiQC/pull/2660))
+  - Reset config between `multiqc.run()` calls ([#2655](https://github.com/MultiQC/MultiQC/pull/2655))
+  - Better handling of calling `write_report` twice ([#2688](https://github.com/MultiQC/MultiQC/pull/2688))
+
+#### Updates
+
+- Run mypy on core library ([#2665](https://github.com/MultiQC/MultiQC/pull/2665))
+- Add tests for plot export ([#2682](https://github.com/MultiQC/MultiQC/pull/2682))
+- Add tests for command line use, including for passing `TMPDIR` ([#2677](https://github.com/MultiQC/MultiQC/pull/2677))
+- Custom content: allow hash-fenced table columns ([#2649](https://github.com/MultiQC/MultiQC/pull/2649))
+- Software versions: parse for sorting, but preserve the original strings ([#2671](https://github.com/MultiQC/MultiQC/pull/2671))
+- Allow both table-level and column-level custom plot config for table ([#2662](https://github.com/MultiQC/MultiQC/pull/2662))
+
+#### New modules
+
+- Glimpse ([#2492](https://github.com/MultiQC/MultiQC/pull/2492))
+
+#### Module fixes
+
+- Fix parsing kraken vs. bracken: respect `num_lines` in search patterns ([#2657](https://github.com/MultiQC/MultiQC/pull/2657))
+- Fix the `bbmap/qchist` search pattern ([#2661](https://github.com/MultiQC/MultiQC/pull/2661))
+
+#### Module updates
+
+- Picard HsMetrics: support any custom X coverage metrics ([#2663](https://github.com/MultiQC/MultiQC/pull/2663))
+- Samtools coverage: avoid hard crash for invalid file contents ([#2664](https://github.com/MultiQC/MultiQC/pull/2664))
+
+#### Refactoring
+
+- Abstract code related to temporary directory creation into a separate module ([#2675](https://github.com/MultiQC/MultiQC/pull/2675))
+
+#### Infrastructure
+
+- Use pull-request labels and milestones for changelog generation ([#2691](https://github.com/MultiQC/MultiQC/pull/2691))
+
 ## [MultiQC v1.22.3](https://github.com/MultiQC/MultiQC/releases/tag/v1.22.3) - 2024-06-22
 
 Contains fixes of multiple bugs collected after the last release, along with few minor improvements.

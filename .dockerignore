@@ -1,14 +1,22 @@
 # Git things
 .git/
 .gitignore
-.github
+.github/
 
 # Python build things
 build/
 dist/
 *.egg-info
-
+.pytest_cache/
 venv
 venv38
 venv311
+
+# MultiQC results
+multiqc_config.yaml
+multiqc_report.html
+multiqc_data/
+multiqc_plots/
 result
+
+test-data
