@@ -343,7 +343,7 @@ class Plot(BaseModel, Generic[T]):
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
-                dconfig["ylab"] = dconfig.get("name", dataset.label)
+                dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
             if n_datasets > 1 and "title" not in dconfig:
                 dconfig["title"] = f"{pconfig.title} ({dataset.label})"
 
