@@ -1,3 +1,3 @@
-from .stats import MultiqcModule
+from .vg import MultiqcModule
 
 __all__ = ["MultiqcModule"]
