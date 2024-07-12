@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _parse_s_name(self, f) -> Optional[str]:
         # Get the s_name from the input file if possible
-        # stdin : <_io.TextIOWrapper name='M18-39155_T1.Aligned.sortedByCoord.out.bam' mode='r' encoding='UTF-8'>
+        # stdout : <_io.TextIOWrapper name='RAP1_UNINDUCED_REP1.umi_extract.fastq.gz' encoding='ascii'>
         s_name_re = r"stdout\s+:\s+<_io\.TextIOWrapper name='([^\']+)'"
         s_name_match = re.search(s_name_re, f["f"])
         if s_name_match:
