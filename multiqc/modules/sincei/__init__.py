@@ -1,0 +1,1 @@
+from .sincei import MultiqcModule

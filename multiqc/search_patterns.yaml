@@ -839,6 +839,12 @@ sexdeterrmine:
 sickle:
   contents_re: 'FastQ \w*\s?records kept: .*'
   num_lines: 2
+sincei/scFilterStats:
+  contents: "Cell_ID	Total_sampled	Filtered	Blacklisted	Low_MAPQ	Missing_Flags	Excluded_Flags"
+  num_lines: 1
+sincei/scCountQC:
+  fn: "*.cells.tsv"
+  contents: "cell_id	barcodes	sample	n_genes_by_counts	log1p_n_genes_by_counts	total_counts"
 skewer:
   contents: "maximum error ratio allowed (-r):"
 slamdunk/summary:
