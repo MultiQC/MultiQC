@@ -248,9 +248,8 @@ For more information, please see the MultiQC release blog article on the Seqera 
   - New module: Hostile is a short and long host reads removal tool
 - [**Sequali**](https://github.com/rhpvorderman/sequali) ([#2441](https://github.com/MultiQC/MultiQC/pull/2441))
   - New module: Sequali Universal sequencing QC
-
 - [**sincei**](http://sincei.rtfd.io/)
-  - a toolkit to explore single-cell (epi)-genomics data. It contains modules for read-level and count-level quality control of such data from BAM files.
+  - New module: sincei is a toolkit to explore single-cell (epi)-genomics data. It contains modules for read-level and count-level quality control of such data from BAM files.
 
 ### Module updates
 
