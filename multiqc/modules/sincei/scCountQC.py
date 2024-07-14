@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from sincei scCountQC """
+"""MultiQC submodule to parse output from sincei scCountQC"""
 
 import logging
 import csv

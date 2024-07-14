@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from sincei scFilterStats """
+"""MultiQC submodule to parse output from sincei scFilterStats"""
 
 import logging
 import csv

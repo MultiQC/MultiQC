@@ -1,8 +1,9 @@
 """MultiQC module to parse the output from sincei"""
+
 import logging
 from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 # sincei modules
 from .scCountQC import scCountQCMixin
