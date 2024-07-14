@@ -5,6 +5,9 @@ description: >
   mgikit is a collection of tools used to demultiplex fastq files and generate demultiplexing and quality reports.
 ---
 
+![SAGC-Bioinformatics](https://sa-genomics.com.au/hs-fs/hubfs/sagc-logo.png?width=200&height=112&name=sagc-logo.png)
+
+
 # mgikit-multiqc Plugin
 
 ## General Information
@@ -22,15 +25,15 @@ This plugin reads the log files of MGIKIT demultiplexing tool. The possible outp
 
 ## Parameters
 All parameters below are optional:
-+ **`--disable-mgikit-plugin`**: Disable the mgikit MultiQC plugin on this run. The default is False.
-+ **`--undetermined-barcode`**: The number of undetermined barcodes to be presented in the report. It
++ **`--mgikit-disable-plugin`**: Disable the mgikit MultiQC plugin on this run. The default is False.
++ **`--mgikit-undetermined-barcode`**: The number of undetermined barcodes to be presented in the report. It
 takes any positive value less than or equal to the number of barcodes in the demultiplexer reports
 which is usually 50. The default is 25.
-+ **`--decimal-positions`**: The number of decimal positions to be used with the values in the tables of the mgikit
++ **`--mgikit-decimal-positions`**: The number of decimal positions to be used with the values in the tables of the mgikit
 plugin. 2 decimal positions are the default option.
-+ **`--brief-report`**: Generate a brief version of the report. This ignores the reports for cluster per sample
++ **`--mgikit-brief-report`**: Generate a brief version of the report. This ignores the reports for cluster per sample
 per lane. The default is False.
-+ **`--keep-core-samples`**: Ignore undetermined and ambiguous cases in the report. The default is False.
++ **`--mgikit-keep-core-samples`**: Ignore undetermined and ambiguous cases in the report. The default is False.
 
 ## Usage
 When running MultiQC (after installing the mgikit plugin), the plugin will check for the mgikit reports
