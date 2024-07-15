@@ -2,14 +2,13 @@
 
 """MultiQC example plugin module"""
 
-import logging
 from __future__ import print_function
 from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import table, bargraph
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.base_module import ModuleNoSamplesFound
-
+import logging
 
 # Initialise the main MultiQC logger
 log = logging.getLogger("multiqc")
@@ -24,15 +23,13 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mgikit",
             href="https://github.com/sagc-bioinformatics/mgikit",
             info="can be used to demultiplex demultiplex FASTQ files from an MGI sequencing instrument for downstream analysis.",
-            doi= "https://doi.org/10.1101/2024.01.09.574938"
+            doi= "https://doi.org/10.1101/2024.01.09.574938",
         )
         
         # Halt execution if we've disabled the plugin
         if config.kwargs.get("mgikit_disable_plugin", True):
             return None
         
-        #if len(self.mod_data) == 0:
-        #    raise ModuleNoSamplesFound
         for f in self.find_log_files('mgikit'):
             self.add_data_source(f)
 
@@ -75,7 +72,6 @@ class MultiqcModule(BaseMultiqcModule):
         ################
         # General statistics
         general_info_logs = self.find_log_files("mgikit/mgi_general_info")
-        
         mgi_general_statistics = {}
         columns_headers = OrderedDict()
         columns_headers["M Clusters"] = {
@@ -138,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in general_info_logs:
             file_cnt += 1
             collect_data = False
-            lines = f["contents_lines"]
+            lines = f["f"].splitlines()
             line_itr = 0
             header = None
             while line_itr < len(lines):
@@ -222,7 +218,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         for f in general_info_logs:
-            lines = f["contents_lines"]
+            lines = f["f"].splitlines()
             for line_itr in range(len(lines)):
                 line = lines[line_itr]
                 if line.startswith("#Lane statistics"):
@@ -268,7 +264,7 @@ class MultiqcModule(BaseMultiqcModule):
             # print(log_details)
             mgi_lane_read_data[curr_label] = {}
             mgi_lane_sample_read_data[curr_label] = {}
-            lines = f["contents_lines"]
+            lines = f["f"].splitlines()
             header = [x.strip() for x in lines[0].split("\t")]
             for i in range(1, len(header)):
                 mgi_lane_read_data[curr_label][header[i]] = 0
@@ -401,7 +397,7 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 curr_label = log_details[-4] + "-" + log_details[-3]
 
-            lines = f["contents_lines"]
+            lines = f["f"].splitlines()
             cat_lane[curr_label] = {
                 "name": curr_label,
                 "color": mgikit_colors[file_cnt - 1],
@@ -465,7 +461,7 @@ class MultiqcModule(BaseMultiqcModule):
                 curr_label = log_details[-3]
             else:
                 curr_label = log_details[-4] + "-" + log_details[-3]
-            lines = f["contents_lines"]
+            lines = f["f"].splitlines()
             for line in lines:
                 vals = [x.strip() for x in line.split()]
                 if len(vals) < 2:

@@ -31,12 +31,12 @@ All parameters below are optional:
 
 - **`--mgikit-disable-plugin`**: Disable the mgikit MultiQC plugin on this run. The default is False.
 - **`--mgikit-undetermined-barcode`**: The number of undetermined barcodes to be presented in the report. It
-takes any positive value less than or equal to the number of barcodes in the demultiplexer reports
-which is usually 50. The default is 25.
+  takes any positive value less than or equal to the number of barcodes in the demultiplexer reports
+  which is usually 50. The default is 25.
 - **`--mgikit-decimal-positions`**: The number of decimal positions to be used with the values in the tables of the mgikit
-plugin. 2 decimal positions are the default option.
+  plugin. 2 decimal positions are the default option.
 - **`--mgikit-brief-report`**: Generate a brief version of the report. This ignores the reports for cluster per sample
-per lane. The default is False.
+  per lane. The default is False.
 - **`--mgikit-keep-core-samples`**: Ignore undetermined and ambiguous cases in the report. The default is False.
 
 ## Usage
