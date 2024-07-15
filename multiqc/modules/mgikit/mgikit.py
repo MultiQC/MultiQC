@@ -25,11 +25,11 @@ class MultiqcModule(BaseMultiqcModule):
             info="can be used to demultiplex demultiplex FASTQ files from an MGI sequencing instrument for downstream analysis.",
             doi="https://doi.org/10.1101/2024.01.09.574938",
         )
-        
+
         # Halt execution if we've disabled the plugin
         if config.kwargs.get("mgikit_disable_plugin", True):
             return None
-        
+
         for f in self.find_log_files("mgikit"):
             self.add_data_source(f)
 
