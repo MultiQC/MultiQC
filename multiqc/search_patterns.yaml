@@ -537,7 +537,7 @@ mgikit/mgi_ambiguous_barcode:
   fn: "*.mgikit.ambiguous_barcode"
 mgikit/mgi_general_info:
   fn: "*.mgikit.general"
-mgikit/mgi_sample_reads: 
+mgikit/mgi_sample_reads:
   fn: "*.mgikit.info"
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"

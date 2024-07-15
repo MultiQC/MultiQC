@@ -2,13 +2,13 @@
 
 """MultiQC example plugin module"""
 
+import logging
 from __future__ import print_function
 from collections import OrderedDict
-import logging
-
 from multiqc import config
 from multiqc.plots import table, bargraph
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.modules.base_module import ModuleNoSamplesFound
 
 
 # Initialise the main MultiQC logger
@@ -24,12 +24,19 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mgikit",
             href="https://github.com/sagc-bioinformatics/mgikit",
             info="can be used to demultiplex demultiplex FASTQ files from an MGI sequencing instrument for downstream analysis.",
+            doi= "https://doi.org/10.1101/2024.01.09.574938"
         )
         
         # Halt execution if we've disabled the plugin
         if config.kwargs.get("mgikit_disable_plugin", True):
             return None
+        
+        #if len(self.mod_data) == 0:
+        #    raise ModuleNoSamplesFound
+        for f in self.find_log_files('mgikit'):
+            self.add_data_source(f)
 
+        self.add_software_version(None)
         module_name = "MGIKIT"
         # Colours from Set3 of ColorBrewer R package, with a few additions for perfect matches (#1f78b4),
         # undetermined reads (#000000) and ambiguous reads (#a6761d)
@@ -68,9 +75,9 @@ class MultiqcModule(BaseMultiqcModule):
         ################
         # General statistics
         general_info_logs = self.find_log_files("mgikit/mgi_general_info")
+        
         mgi_general_statistics = {}
         columns_headers = OrderedDict()
-
         columns_headers["M Clusters"] = {
             "namespace": "mgikit",
             "title": "M Total Clusters",  # Short title, table column title
@@ -83,14 +90,12 @@ class MultiqcModule(BaseMultiqcModule):
             "description": "Number of bases (millions)",
             "format": "{:,." + decimal_positions + "f}",
         }
-
         columns_headers["Mb Yield ≥ Q30"] = {
             "namespace": "mgikit",
             "title": "Mb Yield ≥ Q30",  # Short title, table column title
             "description": "Number of bases (millions)",
             "format": "{:,." + decimal_positions + "f}",
         }
-
         columns_headers["% R1 Yield ≥ Q30"] = {
             "namespace": "mgikit",
             "title": "% R1 Yield ≥ Q30",  # Short title, table column title
@@ -100,7 +105,6 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",  # Suffix for value (eg. '%')
             "format": "{:,." + decimal_positions + "f}",
         }
-
         columns_headers["% R2 Yield ≥ Q30"] = {
             "namespace": "mgikit",
             "title": "% R2 Yield ≥ Q30",  # Short title, table column title
@@ -110,7 +114,6 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",  # Suffix for value (eg. '%')
             "format": "{:,." + decimal_positions + "f}",
         }
-
         columns_headers["% R3 Yield ≥ Q30"] = {
             "namespace": "mgikit",
             "title": "% R3 Yield ≥ Q30",  # Short title, table column title
@@ -121,7 +124,6 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
             "format": "{:,." + decimal_positions + "f}",
         }
-
         columns_headers["% Perfect Index"] = {
             "namespace": "mgikit",
             "title": "% Perfect Index",  # Short title, table column title
@@ -136,8 +138,9 @@ class MultiqcModule(BaseMultiqcModule):
         for f in general_info_logs:
             file_cnt += 1
             collect_data = False
-            lines = f["f"].splitlines()
+            lines = f["contents_lines"]
             line_itr = 0
+            header = None
             while line_itr < len(lines):
                 line = lines[line_itr]
                 if collect_data:
@@ -158,6 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
         # print(mgi_general_statistics)
         if len(mgi_general_statistics.keys()) > 0:
             self.general_stats_addcols(mgi_general_statistics, columns_headers)
+            self.write_data_file(mgi_general_statistics, "multiqc_mgikit_general")
 
         if file_cnt > 0:
             log.info("{} general information log files (*.mgikit.general) were loaded!".format(file_cnt))
@@ -218,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         for f in general_info_logs:
-            lines = f["f"].splitlines()
+            lines = f["contents_lines"]
             for line_itr in range(len(lines)):
                 line = lines[line_itr]
                 if line.startswith("#Lane statistics"):
@@ -264,7 +268,7 @@ class MultiqcModule(BaseMultiqcModule):
             # print(log_details)
             mgi_lane_read_data[curr_label] = {}
             mgi_lane_sample_read_data[curr_label] = {}
-            lines = f["f"].splitlines()
+            lines = f["contents_lines"]
             header = [x.strip() for x in lines[0].split("\t")]
             for i in range(1, len(header)):
                 mgi_lane_read_data[curr_label][header[i]] = 0
@@ -336,7 +340,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Nothing found - raise a UserWarning to tell MultiQC
             if not mgi_sample_reads_data_filtered or len(mgi_sample_reads_data_filtered.keys()) == 0:
-                log.info("No sample left after filteration!".format(config.analysis_dir))
+                log.info("No sample left after filteration!")
                 raise UserWarning
             else:
                 pconfig = {
@@ -397,7 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 curr_label = log_details[-4] + "-" + log_details[-3]
 
-            lines = f["f"].splitlines()
+            lines = f["contents_lines"]
             cat_lane[curr_label] = {
                 "name": curr_label,
                 "color": mgikit_colors[file_cnt - 1],
@@ -461,7 +465,7 @@ class MultiqcModule(BaseMultiqcModule):
                 curr_label = log_details[-3]
             else:
                 curr_label = log_details[-4] + "-" + log_details[-3]
-            lines = f["f"].splitlines()
+            lines = f["contents_lines"]
             for line in lines:
                 vals = [x.strip() for x in line.split()]
                 if len(vals) < 2:
