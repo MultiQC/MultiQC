@@ -7,7 +7,7 @@ from collections import OrderedDict
 from multiqc import config
 from multiqc.plots import table, bargraph
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.modules.base_module import ModuleNoSamplesFound
+#from multiqc.base_module import ModuleNoSamplesFound
 import logging
 
 # Initialise the main MultiQC logger
