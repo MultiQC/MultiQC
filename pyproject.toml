@@ -65,6 +65,7 @@ dev = [
     "types-tqdm",
     "types-requests",
     "types-Markdown",
+    "types-beautifulsoup4",
 ]
 
 [project.urls]
