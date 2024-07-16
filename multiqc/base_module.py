@@ -67,7 +67,6 @@ class BaseMultiqcModule:
         self.name = self.mod_cust_config.get("name", name)
         self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
-        target = self.mod_cust_config.get("target", target)
         self.href = self.mod_cust_config.get("href", href)
         self.info = self.mod_cust_config.get("info", info)
         self.comment = self.mod_cust_config.get("comment", comment)
@@ -89,12 +88,15 @@ class BaseMultiqcModule:
 
         if self.info is None:
             self.info = ""
-        # Always finish with a ".", as we may add a DOI after the intro.
-        if len(self.info) > 0 and self.info[-1] != ".":
-            self.info += "."
+        self.info = self.info.strip().strip(".")
+        # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
+        if self.info and self.info[0].islower():
+            self.info = f"{self.name} {self.info}"
+
         if self.extra is None:
             self.extra = ""
-        self.doi_link = ""
+
+        doi_link = ""
         if isinstance(self.doi, str):
             self.doi = [self.doi]
         self.doi = [i for i in self.doi if i != ""]
@@ -105,18 +107,17 @@ class BaseMultiqcModule:
                 doi_links.append(
                     f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
                 )
-            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
+            doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
                 "; ".join(doi_links)
             )
 
-        if target is None:
-            target = self.name
+        url_link = ""
         if self.href is not None:
-            self.mname = f'<a href="{self.href}" target="_blank">{target}</a>'
-        else:
-            self.mname = target
-        if self.href or self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.mname} {self.info}{self.doi_link}</p>{self.extra}"
+            url_href = f'<a href="{self.href}" target="_blank">{self.href}</a>'
+            url_link = f'<em class="text-muted small" style="margin-left: 1rem;">URL: {url_href}</em>'
+
+        if self.href or self.info or self.extra or doi_link:
+            self.intro = f"<p>{self.info}.{url_link}{doi_link}</p>{self.extra}"
 
         # Format the markdown strings
         if autoformat:
