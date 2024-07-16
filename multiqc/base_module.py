@@ -55,7 +55,7 @@ class BaseMultiqcModule:
         name="base",
         anchor="base",
         target=None,
-        href=None,
+        href: Union[str, List[str], None] = None,
         info=None,
         comment=None,
         extra=None,
@@ -67,11 +67,11 @@ class BaseMultiqcModule:
         self.name = self.mod_cust_config.get("name", name)
         self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
-        self.href = self.mod_cust_config.get("href", href)
+        self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
         self.comment = self.mod_cust_config.get("comment", comment)
         self.extra = self.mod_cust_config.get("extra", extra)
-        self.doi = self.mod_cust_config.get("doi", (doi or []))
+        self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
@@ -112,9 +112,13 @@ class BaseMultiqcModule:
             )
 
         url_link = ""
-        if self.href is not None:
-            url_href = f'<a href="{self.href}" target="_blank">{self.href}</a>'
-            url_link = f'<em class="text-muted small" style="margin-left: 1rem;">URL: {url_href}</em>'
+        if len(self.href) > 1:
+            url_links = []
+            for url in self.href:
+                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
+            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
+                "; ".join(url_links)
+            )
 
         if self.href or self.info or self.extra or doi_link:
             self.intro = f"<p>{self.info}.{url_link}{doi_link}</p>{self.extra}"

@@ -69,7 +69,7 @@ for mod_id, entry_point in config.avail_modules.items():
     text = f"""\
 ---
 name: {module.name}
-url: {module.href}
+url: {module.href[0] if len(module.href) == 1 else module.href}
 description: {module.info}
 ---
 {dedent(docstring)}
