@@ -6,22 +6,29 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """BUSCO module"""
+    """
+    BUSCO v2 provides quantitative measures for the assessment of genome
+    assembly, gene set, and transcriptome completeness, based on
+    evolutionarily-informed expectations of gene content from near-universal
+    single-copy orthologs selected from OrthoDB v9.
+
+    The MultiQC module parses the `short_summary_[samplename].txt` files and
+    plots the proportion of BUSCO types found. MultiQC has been tested with
+    output from BUSCO v1.22 - v2.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BUSCO",
             anchor="busco",
             href="http://busco.ezlab.org/",
-            info="assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.",
+            info="Assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.",
             doi="10.1093/bioinformatics/btv351",
         )
 
