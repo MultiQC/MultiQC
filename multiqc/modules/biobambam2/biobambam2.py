@@ -11,8 +11,13 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    This module is super weird. The output from these tools is essentially
-    identical to Picard MarkDuplicates, so we just hijack that module instead
+    Currently, the biobambam2 module only processes output from the `bamsormadup` command.
+    Not only that, but it cheats by using the module code from Picard/MarkDuplicates.
+    The output is so similar that the code simply sets up a module with unique name and
+    filename search pattern and then uses the parsing code from the Picard module.
+
+    Apart from behind the scenes coding, this module should work in exactly the same way
+    as all other MultiQC modules.
     """
 
     def __init__(self):
@@ -21,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="biobambam2",
             anchor="biobambam2",
             href="https://gitlab.com/german.tischler/biobambam2",
-            info="provides tools for early stage alignment file processing",
+            info="Provides tools for early stage alignment file processing",
             doi="10.1186/1751-0473-9-13",
         )
 

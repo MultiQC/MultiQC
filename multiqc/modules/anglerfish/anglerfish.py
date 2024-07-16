@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
@@ -12,7 +13,9 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Anglerfish module class
+    Anglerfish is a tool designed to de-multiplex Illumina libraries sequenced on Oxford Nanopore Technologies
+    flowcells for the purpose of quality control. Assessment of pool balancing, contamination and insert sizes
+    are currently supported.
     """
 
     def __init__(self):
@@ -21,12 +24,12 @@ class MultiqcModule(BaseMultiqcModule):
             name="Anglerfish",
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
-            info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
+            info="Assesses contamination and composition of Illumina sequencing libraries based on a Nanopore trial sequencing with high concordance.",
             # doi="", No DOI available
         )
 
         # Find and load any anglerfish reports
-        self.anglerfish_data = dict()
+        self.anglerfish_data: Dict = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
