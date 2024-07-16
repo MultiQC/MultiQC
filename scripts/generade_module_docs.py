@@ -30,10 +30,7 @@ for mod_id, entry_point in config.avail_modules.items():
     report.search_files([mod_id])
 
     module_cls = entry_point.load()
-    docstring = module_cls.__doc__
-    if not docstring:
-        print(f"Skipping {mod_id}: no docstring")
-        continue
+    docstring = module_cls.__doc__ or ""
 
     module: BaseMultiqcModule = module_cls()
 

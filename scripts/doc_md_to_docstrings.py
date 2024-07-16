@@ -25,6 +25,7 @@ for mod_id, entry_point in config.avail_modules.items():
     output_path = config.REPO_DIR / "docs/modules" / f"{mod_id}.md"
     if not output_path.exists():
         print(f"md file {output_path} doesn't exist, skipping")
+        continue
 
     with output_path.open("r") as fh:
         text = fh.read()
