@@ -1,6 +1,5 @@
 """MultiQC module to parse QC output from PURPLE"""
 
-# Initialise the logger
 import logging
 from collections import defaultdict
 
@@ -12,21 +11,20 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    PURPLE is a purity ploidy estimator. It combines B-allele frequency (BAF) from AMBER,
-    read depth ratios from COBALT, somatic variants and structural variants to estimate the
-    purity and copy number profile of a tumor sample.
+    A purity, ploidy and copy number estimator for whole genome tumor data
+
+    PURPLE combines B-allele frequency (BAF), read depth ratios, somatic variants and
+    structural variant breakpoints to estimate the purity and copy number profile
+    of a tumor sample, and also predicts gender, the MSI status, tumor mutational
+    load and burden, clonality and the whole genome duplication status.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="PURPLE",
             anchor="purple",
             href="https://github.com/hartwigmedical/hmftools/",
-            info="""combines B-allele frequency (BAF), read depth ratios, somatic variants and
-                    structural variant breakpoints to estimate the purity and copy number profile
-                    of a tumor sample, and also predicts gender, the MSI status, tumor mutational
-                    load and burden, clonality and the whole genome duplication status.""",
+            info="A purity, ploidy and copy number estimator for whole genome tumor data",
             doi="10.1038/s41586-019-1689-y",
         )
 

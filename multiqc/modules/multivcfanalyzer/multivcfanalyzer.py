@@ -6,21 +6,22 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MultiVCFAnalyzer module"""
+    """
+    MultiVCFanalyzer reads multiple VCF files as produced by GATK UnifiedGenotyper, performs filtering based on
+    a number of criteria, and provides the combined genotype calls in a number of formats that are suitable for
+    follow-up analyses such as phylogenetic reconstruction, SNP effect analyses, population genetic analyses etc.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way,
-            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="Collects multiple VCF files into combined genotype calls, produces summary statistics and downstream formats for phylogeny reconstruction.",
             doi="10.1038/nature13591",
         )
 

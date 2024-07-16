@@ -8,11 +8,16 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Rockhopper is a comprehensive and user-friendly system for computational analysis of bacterial RNA-seq data.
+
+    Rockhopper aligns reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs on both the sense and anti-sense strand. These statistics are summarized in the Rockhopper bar plot in this module.
+    """
+
     def __init__(self):
         # Initialize the parent object
         super(MultiqcModule, self).__init__(

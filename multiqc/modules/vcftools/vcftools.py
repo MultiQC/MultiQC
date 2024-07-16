@@ -9,7 +9,6 @@ from .tstv_by_count import TsTvByCountMixin
 from .tstv_by_qual import TsTvByQualMixin
 from .tstv_summary import TsTvSummaryMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 

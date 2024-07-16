@@ -7,18 +7,23 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    iVar is a computational package that contains functions broadly useful for viral amplicon-based sequencing.
+
+    This module parses the output from the `ivar trim` command and creates a table view.
+    Both output from V1 and V2 of the tool are supported and parsed accordingly.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="iVar",
             anchor="iVar",
             href="https://github.com/andersen-lab/ivar",
-            info="is a computational package that contains functions broadly useful for viral amplicon-based sequencing.",
+            info="Functions for viral amplicon-based sequencing.",
             doi="10.1101/383513",
         )
 

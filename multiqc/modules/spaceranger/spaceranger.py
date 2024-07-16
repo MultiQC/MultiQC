@@ -7,7 +7,6 @@ from multiqc.base_module import BaseMultiqcModule
 # Import the Samtools submodules
 from .count import SpaceRangerCountMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -18,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule, SpaceRangerCountMixin):
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Space Ranger",
             anchor="spaceranger",

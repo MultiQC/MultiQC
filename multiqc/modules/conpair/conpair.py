@@ -5,25 +5,22 @@ import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Conpair module class.
+    [Conpair](https://github.com/nygenome/Conpair) is a fast and robust method dedicated for human tumour-normal
+    studies to perform concordance verification (= samples coming from the same individual), as well as
+    cross-individual contamination level estimation in whole-genome and whole-exome sequencing experiments.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Conpair",
             anchor="conpair",
             href="https://github.com/nygenome/Conpair",
-            info="is a fast and robust method dedicated for human tumor-normal "
-            "studies to perform concordance verification, as well as "
-            "cross-individual contamination level estimation in "
-            "whole-genome and whole-exome sequencing experiments.",
+            info="Conpair estimates concordance and contamination for tumour–normal pairs",
             doi="bioinformatics/btw389",
         )
 

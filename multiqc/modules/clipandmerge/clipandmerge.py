@@ -7,20 +7,20 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """ClipAndMerge module"""
+    """
+    An application to clip adapter sequences and merge reads in ancient DNA analysis. Note, that versions < 1.7.8 use the basename of the file path to distinguish samples, whereas newer versions produce logfiles with a sample identifer that gets parsed by MultiQC.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ClipAndMerge",
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
-            info="is a tool for adapter clipping and read merging for ancient DNA data.",
+            info="Tool for adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
         )
 

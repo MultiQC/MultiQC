@@ -7,7 +7,6 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 # Import the Sambamba submodules
 from .markdup import SambambaMarkdupMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -18,7 +17,6 @@ class MultiqcModule(BaseMultiqcModule, SambambaMarkdupMixin):
     the module output if logs are found."""
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Sambamba",
             anchor="sambamba",

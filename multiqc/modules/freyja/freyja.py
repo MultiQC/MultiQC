@@ -6,18 +6,20 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing problem.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Freyja",
             anchor="freyja",
             href="https://github.com/andersen-lab/Freyja",
-            info="Recover relative lineage abundances from mixed SARS-CoV-2 samples.",
+            info="Recovers relative lineage abundances from mixed SARS-CoV-2 samples.",
             doi="10.1038/s41586-022-05049-6",
         )
 

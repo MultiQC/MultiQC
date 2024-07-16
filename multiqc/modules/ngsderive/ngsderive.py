@@ -7,22 +7,23 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    ngsderive module class, parses stderr logs.
+    `ngsderive` is a forensic analysis tool useful in backwards computing information from next-generation
+    sequencing data. Notably, results are provided as a 'best guess' — the tool does not claim 100% accuracy
+    and results should be considered with that understanding. Please see the
+    [documentation](https://stjudecloud.github.io/ngsderive) for more information.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="attempts to predict library information from next-generation sequencing data.",
+            info="Predicts library information by backwards computing sequencing data",
             # Can't find a DOI // doi=
         )
 

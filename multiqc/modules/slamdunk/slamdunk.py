@@ -7,7 +7,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, scatter, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
@@ -15,11 +14,18 @@ VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
+    Slamdunk is a tool to analyze SLAM-Seq data.
+
+    [Slamdunk](http://t-neumann.github.io/slamdunk/) is a tool to analyze data from the SLAM-Seq sequencing protocol.
+
+    This module should be able to parse logs from v0.2.2-dev onwards.
+    """
+
+    """
     Slamdunk module class, parses slamdunk logs.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Slamdunk",
             anchor="slamdunk",

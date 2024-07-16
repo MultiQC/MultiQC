@@ -7,24 +7,24 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from . import ErrorRateByReadPosition
 from .groupreadsbyumi import GroupReadsByUmiMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, GroupReadsByUmiMixin):
-    """fgbio has a number of different commands and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found."""
+    """
+    The fgbio MultiQC module currently supports tool the following outputs:
+
+    - [GroupReadsByUmi](http://fulcrumgenomics.github.io/fgbio/tools/latest/GroupReadsByUmi.html)
+    - [ErrorRateByReadPosition](http://fulcrumgenomics.github.io/fgbio/tools/latest/ErrorRateByReadPosition.html)
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fgbio",
             anchor="fgbio",
             target="fgbio",
             href="http://fulcrumgenomics.github.io/fgbio/",
-            info=" is a command line toolkit for working with genomic and particularly next generation sequencing data..",
+            info="Processing and evaluating data containing UMIs",
             # No publication / DOI // doi=
         )
 

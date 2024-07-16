@@ -11,13 +11,21 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This tool performs screening of output from the ancient DNA optimised BLAST-replacement tool MALT,
+    to identify taxa that have expected ancient DNA characteristics.
+
+    This module takes the JSON output of the HOPS postprocessing R script (version >= 0.34) to recreate the
+    possible positives heatmap, with the heat intensity representing the number of 'ancient DNA characteristics'
+    categories (small edit distance, damage, both edit distance and aDNA damage) that a particular taxon has.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HOPS",
             anchor="hops",
             href="https://github.com/rhuebler/HOPS/",
-            info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
+            info="Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
             doi="10.1186/s13059-019-1903-0",
         )
 

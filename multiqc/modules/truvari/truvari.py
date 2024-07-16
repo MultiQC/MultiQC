@@ -7,7 +7,6 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 # Import the truvari submodules
 from .bench import BenchSummary
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -15,7 +14,6 @@ class MultiqcModule(BaseMultiqcModule, BenchSummary):
     """This is the MultiQC module for truvari."""
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Truvari",
             anchor="truvari",

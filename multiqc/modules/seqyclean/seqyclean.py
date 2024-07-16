@@ -4,13 +4,19 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    SeqyClean is a comprehensive preprocessing software application for NGS reads.
+
+    The SeqyClean module will visualize the results from a [SeqyClean](https://github.com/ibest/seqyclean), a comprehensive preprocessing software pipeline. SeqyClean removes noise from Fastq files to improve de-novo genome assembly and genome mapping.
+
+    The module parses the `*SummaryStatistics.tsv` files that results from a SeqyClean cleaning.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SeqyClean",
             anchor="seqyclean",

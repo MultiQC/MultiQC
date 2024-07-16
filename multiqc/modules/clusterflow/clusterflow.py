@@ -9,22 +9,32 @@ import time
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Cluster Flow module class, parses run logs.
+    Cluster Flow is a simple and flexible bioinformatics pipeline tool.
+    It's designed to be quick and easy to install, with flexible configuration
+    and simple customization.
+
+    Cluster Flow easy enough to set up and use for non-bioinformaticians
+    (given a basic knowledge of the command line), and it's simplicity
+    makes it great for low to medium throughput analyses.
+
+    The MultiQC module for Cluster Flow parses `*_clusterflow.txt` logs
+    and finds consensus commands executed by modules in each pipeline run.
+
+    The Cluster Flow `*.run` files are also parsed and pipeline information
+    shown (some basic statistics plus the pipeline steps / params used).
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cluster Flow",
             anchor="clusterflow",
             href="http://clusterflow.io",
-            info="is a simple and flexible bioinformatics pipeline tool.",
+            info="Simple and flexible bioinformatics pipeline tool.",
             doi="10.12688/f1000research.10335.2",
         )
 

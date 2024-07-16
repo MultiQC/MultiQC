@@ -7,7 +7,6 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from .compare import CompareMixin
 from .gather import GatherMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 

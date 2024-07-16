@@ -8,17 +8,23 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
+    UMI-tools contains tools for dealing with Unique Molecular Identifiers (UMIs) / Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
+
+    The MultiQC module for umitools parses logs from umi-tools
+
+    Currently `dedup` and `extract` commands are supported.
+    """
+
+    """
     umitools module class, parses dedup logs
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="UMI-tools",
             anchor="umitools",
