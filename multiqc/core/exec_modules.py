@@ -11,9 +11,8 @@ from rich.syntax import Syntax
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.core import plugin_hooks, software_versions, tmp_dir
+from multiqc.core import plugin_hooks, software_versions
 from multiqc.core.exceptions import RunError, NoAnalysisFound
-from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionModule
 
 logger = logging.getLogger(__name__)
 
