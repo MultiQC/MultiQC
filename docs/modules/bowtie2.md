@@ -1,6 +1,6 @@
 ---
 name: Bowtie 2 / HiSAT2
-url: ["http://bowtie-bio.sourceforge.net/bowtie2/", "https://ccb.jhu.edu/software/hisat2/"]
+url: "http://bowtie-bio.sourceforge.net/bowtie2/, https://ccb.jhu.edu/software/hisat2/"
 description: >
   Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome
 ---

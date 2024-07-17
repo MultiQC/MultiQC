@@ -34,18 +34,20 @@ for mod_id, entry_point in config.avail_modules.items():
 
     module: BaseMultiqcModule = module_cls()
 
+    href = module.href[0] if len(module.href) == 1 else ('"' + ", ".join(module.href) + '"')
+
     text = f"""\
 ---
 name: {module.name}
-url: {module.href[0] if len(module.href) == 1 else module.href}
-description: > 
-    {module.info}
+url: {href}
+description: >
+  {module.info}
 ---
 
 {dedent(module.extra)}
 
 {dedent(docstring)}
-"""
+""".strip()
 
     # Remove double empty lines
     while "\n\n\n" in text:

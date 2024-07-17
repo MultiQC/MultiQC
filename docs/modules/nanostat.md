@@ -1,6 +1,6 @@
 ---
 name: NanoStat
-url: ["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"]
+url: "https://github.com/wdecoster/nanostat/, https://github.com/wdecoster/nanoplot/"
 description: >
   Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
 ---
