@@ -1,3 +1,3 @@
-from .feature_counts import MultiqcModule
+from .featurecounts import MultiqcModule
 
 __all__ = ["MultiqcModule"]

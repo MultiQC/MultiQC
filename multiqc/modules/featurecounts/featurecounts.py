@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Dict, List
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -32,8 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any featureCounts reports
-        self.featurecounts_data = dict()
-        self.featurecounts_keys = list()
+        self.featurecounts_data: Dict = dict()
+        self.featurecounts_keys: List = list()
         for f in self.find_log_files("featurecounts"):
             self.parse_featurecounts_report(f)
 

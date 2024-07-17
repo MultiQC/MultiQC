@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import List
+from typing import List, Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.qorts_data = dict()
+        self.qorts_data: Dict = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
             self.add_data_source(f)
@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_names: List[str] = []
         for line in f["f"]:
             s = line.split("\t")
-            if s_names is None:
+            if not s_names:
                 raw_s_names = s[1:]
                 s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
                 if len(s_names) <= 2 and raw_s_names[0].endswith("COUNT"):
