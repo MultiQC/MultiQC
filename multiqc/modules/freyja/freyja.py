@@ -14,7 +14,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="freyja",
             href="https://github.com/andersen-lab/Freyja",
             info="Recovers relative lineage abundances from mixed SARS-CoV-2 samples.",
-            extra="""Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a 
+            extra="""
+            Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a 
             sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global 
             phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing problem.
             """,

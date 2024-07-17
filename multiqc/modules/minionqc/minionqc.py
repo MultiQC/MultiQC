@@ -22,7 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
             info="Quality control for ONT (Oxford Nanopore) long reads",
-            extra="""It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies) 
+            extra="""
+            It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies) 
             long-read base-callers to perform QC on the reads. It allows quick-and-easy comparison of data from 
             multiple flowcells
             """,

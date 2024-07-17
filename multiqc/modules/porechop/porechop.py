@@ -23,9 +23,11 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="porechop",
             href="https://github.com/rrwick/Porechop",
             info="Finds and removes adapters from Oxford Nanopore reads.",
-            extra="""Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle, 
+            extra="""
+            Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle, 
             it is treated as chimeric and chopped into separate reads. Porechop performs thorough alignments to 
-            effectively find adapters, even at low sequence identity.""",
+            effectively find adapters, even at low sequence identity.
+            """,
             # doi="",  # No DOI available
         )
 

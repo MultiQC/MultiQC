@@ -22,7 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="busco",
             href="http://busco.ezlab.org/",
             info="Assesses genome assembly and annotation completeness",
-            extra="""BUSCO v2 provides quantitative measures for the assessment of genome
+            extra="""
+            BUSCO v2 provides quantitative measures for the assessment of genome
             assembly, gene set, and transcriptome completeness, based on
             evolutionarily-informed expectations of gene content from near-universal
             single-copy orthologs selected from OrthoDB v9.""",

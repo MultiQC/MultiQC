@@ -23,7 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             target="GLIMPSE",
             href="https://odelaneau.github.io/GLIMPSE/",
             info="Low-coverage whole genome sequencing imputation",
-            extra="""The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing
+            extra="""
+            The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing
             hundreds of thousands of reference samples, with a special focus on rare variants.
         
             The concordance rates values are displayed in a scatter plot, with the option to switch between

@@ -78,9 +78,11 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
             info="Estimates metagenomic coverage and sequence diversity ",
-            extra="""Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
+            extra="""
+            Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
             the average coverage and predict the amount of sequences that will be required
-            to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.""",
+            to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
+            """,
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options

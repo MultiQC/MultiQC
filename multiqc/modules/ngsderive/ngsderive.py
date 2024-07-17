@@ -15,8 +15,10 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
             info="Forensic tool for by backwards computing library information in sequencing data",
-            extra="""Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
-            should be considered with that understanding. Please see the documentation for more information.""",
+            extra="""
+            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            should be considered with that understanding. Please see the documentation for more information.
+            """,
             # Can't find a DOI // doi=
         )
 

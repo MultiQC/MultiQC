@@ -20,7 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="macs",
             href="https://macs3-project.github.io/MACS/",
             info="Identifies transcription factor binding sites in ChIP-seq data.",
-            extra="""MACS2 _(Model-based Analysis of ChIP-Seq)_ is a tool for identifying transcript
+            extra="""
+            MACS2 _(Model-based Analysis of ChIP-Seq)_ is a tool for identifying transcript
             factor binding sites. MACS captures the influence of genome complexity to
             evaluate the significance of enriched ChIP regions.""",
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],

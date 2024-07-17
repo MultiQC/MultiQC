@@ -14,7 +14,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
             info="Bayesian reconstruction of ancient DNA",
-            extra="""leeHom is a Bayesian maximum a posteriori algorithm for stripping
+            extra="""
+            leeHom is a Bayesian maximum a posteriori algorithm for stripping
             sequencing adapters and merging overlapping portions of reads.
             The algorithm is mostly aimed at ancient DNA and Illumina data but
             can be used for any dataset.

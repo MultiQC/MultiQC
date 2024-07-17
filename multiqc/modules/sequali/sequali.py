@@ -87,7 +87,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali",
             href="https://github.com/rhpvorderman/sequali",
             info="Sequencing quality control for both long-read and short-read data",
-            extra="""Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
+            extra="""
+            Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
             FASTQ and uBAM inputs.
             """,
             doi="10.5281/zenodo.10822485",

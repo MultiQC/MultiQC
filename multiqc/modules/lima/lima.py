@@ -32,10 +32,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="lima",
             href="https://github.com/PacificBiosciences/barcoding",
             info="Demultiplex PacBio single-molecule sequencing reads.",
-            extra="""Lima, the PacBio barcode demultiplexer, is the standard tool to identify barcode
-            sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the
-            tool that powers the Demultiplex Barcodes GUI-based analysis application.
-            """,
+            extra="Lima, the PacBio barcode demultiplexer, is the standard tool to identify barcode "
+            "sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the "
+            "tool that powers the Demultiplex Barcodes GUI-based analysis application.",
             # No publication / DOI // doi=
         )
 
