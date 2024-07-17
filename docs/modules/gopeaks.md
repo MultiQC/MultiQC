@@ -1,7 +1,8 @@
 ---
 name: GoPeaks
 url: https://github.com/maxsonBraunLab/gopeaks
-description: Calls peaks in CUT&TAG/CUT&RUN datasets
+description: >
+  Calls peaks in CUT&TAG/CUT&RUN datasets
 ---
 
 Gopeaks uses a binomial distribution to model the read counts in sliding windows across

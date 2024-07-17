@@ -1,7 +1,8 @@
 ---
 name: featureCounts
 url: http://subread.sourceforge.net/
-description: Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
+description: >
+  Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
 ---
 
 As of MultiQC v1.10, the module should also work with output from

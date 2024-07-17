@@ -1,7 +1,8 @@
 ---
 name: GATK
 url: https://www.broadinstitute.org/gatk/
-description: Wide variety of tools with a primary focus on variant discovery and genotyping
+description: >
+  Wide variety of tools with a primary focus on variant discovery and genotyping
 ---
 
 Supported tools:

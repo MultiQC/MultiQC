@@ -1,7 +1,8 @@
 ---
 name: Prokka
 url: http://www.vicbioinformatics.com/software.prokka.shtml
-description: Rapid annotation of prokaryotic genomes
+description: >
+  Rapid annotation of prokaryotic genomes
 ---
 
 The Prokka module accepts two configuration options:

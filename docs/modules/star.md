@@ -1,7 +1,8 @@
 ---
 name: STAR
 url: https://github.com/alexdobin/STAR
-description: Universal RNA-seq aligner
+description: >
+  Universal RNA-seq aligner
 ---
 
 This module parses summary statistics from the `Log.final.out` log files.

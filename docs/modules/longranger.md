@@ -1,7 +1,8 @@
 ---
 name: Long Ranger
 url: https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger
-description: Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling
+description: >
+  Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling
 ---
 
 Currently supported Longranger pipelines:

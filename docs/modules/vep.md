@@ -1,7 +1,8 @@
 ---
 name: VEP
 url: https://www.ensembl.org/info/docs/tools/vep/index.html
-description: Ensembl VEP determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions
+description: >
+  Ensembl VEP determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions
 ---
 
 MultiQC parses the Ensembl VEP summary statistics stored in either HTML or plain text format.

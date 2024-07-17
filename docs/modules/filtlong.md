@@ -1,7 +1,8 @@
 ---
 name: Filtlong
 url: https://github.com/rrwick/Filtlong
-description: Filters long reads by quality
+description: >
+  Filters long reads by quality
 ---
 
 It can take a set of long reads and produce a smaller, better subset. It uses both read length (longer is better) and read identity (higher is better) when choosing which reads pass the filter.

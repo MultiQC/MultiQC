@@ -1,7 +1,8 @@
 ---
 name: Bakta
 url: https://github.com/oschwengers/bakta
-description: Rapid & standardized annotation of bacterial genomes, MAGs & plasmids
+description: >
+  Rapid & standardized annotation of bacterial genomes, MAGs & plasmids
 ---
 
 The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The

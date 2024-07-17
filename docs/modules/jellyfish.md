@@ -1,7 +1,8 @@
 ---
 name: Jellyfish
 url: https://github.com/gmarcais/Jellyfish
-description: Counting k-mers in DNA
+description: >
+  Counting k-mers in DNA
 ---
 
 A k-mer is a substring of length k, and counting the occurrences of all such substrings

@@ -1,7 +1,8 @@
 ---
 name: Lima
 url: https://github.com/PacificBiosciences/barcoding
-description: Demultiplex PacBio single-molecule sequencing reads
+description: >
+  Demultiplex PacBio single-molecule sequencing reads
 ---
 
 Lima, the PacBio barcode demultiplexer, is the standard tool to identify barcode sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the tool that powers the Demultiplex Barcodes GUI-based analysis application.

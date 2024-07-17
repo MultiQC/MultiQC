@@ -1,7 +1,8 @@
 ---
 name: THetA2
 url: http://compbio.cs.brown.edu/projects/theta/
-description: Estimates tumour purity and clonal / subclonal copy number
+description: >
+  Estimates tumour purity and clonal / subclonal copy number
 ---
 
 The module plots the % germline and % tumour subclone for each sample.

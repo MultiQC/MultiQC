@@ -1,7 +1,8 @@
 ---
 name: Cluster Flow
 url: http://clusterflow.io
-description: Simple and flexible bioinformatics pipeline tool
+description: >
+  Simple and flexible bioinformatics pipeline tool
 ---
 
 The module for Cluster Flow parses `*_clusterflow.txt` logs

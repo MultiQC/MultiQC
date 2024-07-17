@@ -1,7 +1,8 @@
 ---
 name: SNPsplit
 url: https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/
-description: Allele-specific alignment sorter, that reads SAM/BAM files and determine the allelic origin of reads that cover known SNP positions
+description: >
+  Allele-specific alignment sorter, that reads SAM/BAM files and determine the allelic origin of reads that cover known SNP positions
 ---
 
 Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.

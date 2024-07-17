@@ -1,7 +1,8 @@
 ---
 name: MinIONQC
 url: https://github.com/roblanf/minion_qc
-description: Quality control for ONT (Oxford Nanopore) long reads
+description: >
+  Quality control for ONT (Oxford Nanopore) long reads
 ---
 
 It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies)

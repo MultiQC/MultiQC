@@ -1,7 +1,8 @@
 ---
 name: MEGAHIT
 url: https://github.com/voutcn/megahit
-description: NGS read assembler
+description: >
+  NGS read assembler
 ---
 
 MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file

@@ -1,7 +1,8 @@
 ---
 name: Librarian
 url: https://github.com/DesmondWillowbrook/Librarian
-description: Predicts the sequencing library type from the base composition of a FastQ file
+description: >
+  Predicts the sequencing library type from the base composition of a FastQ file
 ---
 
 Librarian reads from high throughput sequencing experiments show base compositions that are

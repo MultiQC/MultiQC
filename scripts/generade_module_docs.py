@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import textwrap
 from textwrap import dedent
 
 from multiqc import config, report, BaseMultiqcModule
@@ -38,7 +39,8 @@ for mod_id, entry_point in config.avail_modules.items():
 ---
 name: {module.name}
 url: {module.href[0] if len(module.href) == 1 else module.href}
-description: {module.info}
+description: > 
+    {module.info}
 ---
 
 {dedent(module.extra)}

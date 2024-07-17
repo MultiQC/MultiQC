@@ -1,7 +1,8 @@
 ---
 name: Cutadapt
 url: https://cutadapt.readthedocs.io/
-description: Find and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences
+description: >
+  Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences
 ---
 
 This module should be able to parse logs from a wide range of versions of Cutadapt.

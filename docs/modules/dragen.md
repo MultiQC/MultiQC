@@ -1,7 +1,8 @@
 ---
 name: DRAGEN
 url: https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html
-description: Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+description: >
+  Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
 ---
 
 DRAGEN has a number of different pipelines and outputs, including base calling, DNA and RNA alignment,

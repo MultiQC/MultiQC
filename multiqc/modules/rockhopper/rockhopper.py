@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="rockhopper",
             href="https://cs.wellesley.edu/~btjaden/Rockhopper/",
             info="Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs",
-            extra="Can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
+            extra="It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
             "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )

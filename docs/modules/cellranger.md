@@ -1,7 +1,8 @@
 ---
 name: Cell Ranger
 url: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger
-description: Analyzes single cell expression or VDJ data produced by 10X Genomics
+description: >
+  Analyzes single cell expression or VDJ data produced by 10X Genomics
 ---
 
 The module summarizes the main information useful for QC, including:

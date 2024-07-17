@@ -1,7 +1,8 @@
 ---
 name: QualiMap
 url: http://qualimap.bioinfo.cipf.es/
-description: Quality control of alignment data and its derivatives like feature counts
+description: >
+  Quality control of alignment data and its derivatives like feature counts
 ---
 
 The module supports the Qualimap commands `BamQC` and `RNASeq`.

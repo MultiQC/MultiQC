@@ -1,7 +1,8 @@
 ---
 name: DIAMOND
 url: https://github.com/bbuchfink/diamond
-description: Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST
+description: >
+  Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST
 ---
 
 Key features are:

@@ -1,7 +1,8 @@
 ---
 name: Nonpareil
 url: https://github.com/lmrodriguezr/nonpareil
-description: Estimates metagenomic coverage and sequence diversity
+description: >
+  Estimates metagenomic coverage and sequence diversity
 ---
 
 Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate

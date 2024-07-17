@@ -1,7 +1,8 @@
 ---
 name: bcl2fastq
 url: https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html
-description: Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+description: >
+  Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
 ---
 
 There are two versions of this software: `bcl2fastq` for MiSeq and HiSeq

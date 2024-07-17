@@ -1,7 +1,8 @@
 ---
 name: MetaPhlAn
 url: https://github.com/biobakery/MetaPhlAn
-description: Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+description: >
+  Profiles the composition of microbial communities from metagenomic shotgun sequencing data
 ---
 
 The module supports outputs from MetaPhlAn, that look like the following:

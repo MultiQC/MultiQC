@@ -1,7 +1,8 @@
 ---
 name: HOMER
 url: http://homer.ucsd.edu/homer/
-description: Motif discovery and next-gen sequencing analysis
+description: >
+  Motif discovery and next-gen sequencing analysis
 ---
 
 HOMER contains many useful tools for analyzing ChIP-Seq, GRO-Seq, RNA-Seq, DNase-Seq, Hi-C and numerous

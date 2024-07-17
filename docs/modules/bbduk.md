@@ -1,7 +1,8 @@
 ---
 name: BBDuk
 url: https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/
-description: Common data-quality-related trimming, filtering, and masking operations with a kmer based approach
+description: >
+  Common data-quality-related trimming, filtering, and masking operations with a kmer based approach
 ---
 
 The module produces summary statistics from the stdout logging information from the BBDuk tool of the

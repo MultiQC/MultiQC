@@ -1,7 +1,8 @@
 ---
 name: CCS
 url: https://github.com/PacificBiosciences/ccs
-description: PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)
+description: >
+  PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)
 ---
 
 CCS takes multiple subreads of the same SMRTbell molecule and combines them

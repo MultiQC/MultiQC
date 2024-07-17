@@ -1,7 +1,8 @@
 ---
 name: BUSCO
 url: http://busco.ezlab.org/
-description: Assesses genome assembly and annotation completeness
+description: >
+  Assesses genome assembly and annotation completeness
 ---
 
 BUSCO v2 provides quantitative measures for the assessment of genome

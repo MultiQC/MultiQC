@@ -1,7 +1,8 @@
 ---
 name: FastQC
 url: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
-description: Quality control tool for high throughput sequence data
+description: >
+  Quality control tool for high throughput sequencing data
 ---
 
 FastQC generates a HTML report which is what most people use when

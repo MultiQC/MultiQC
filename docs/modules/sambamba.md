@@ -1,7 +1,8 @@
 ---
 name: Sambamba
 url: https://lomereiter.github.io/sambamba/
-description: Toolkit for interacting with BAM/CRAM files
+description: >
+  Toolkit for interacting with BAM/CRAM files
 ---
 
 It is functionally similar to Samtools, but the source code is written in the D Language. It allows for faster performance while still being easy to use.

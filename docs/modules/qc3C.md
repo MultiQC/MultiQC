@@ -1,7 +1,8 @@
 ---
 name: qc3C
 url: http://github.com/cerebis/qc3C
-description: Reference-free and BAM based quality control for Hi-C data
+description: >
+  Reference-free and BAM based quality control for Hi-C data
 ---
 
 qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product

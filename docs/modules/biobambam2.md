@@ -1,7 +1,8 @@
 ---
 name: biobambam2
 url: https://gitlab.com/german.tischler/biobambam2
-description: Tools for early stage alignment file processing
+description: >
+  Tools for early stage alignment file processing
 ---
 
 Currently, the biobambam2 module only processes output from the `bamsormadup` command.

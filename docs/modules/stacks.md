@@ -1,7 +1,8 @@
 ---
 name: Stacks
 url: http://catchenlab.life.illinois.edu/stacks/
-description: Analyzes restriction enzyme-based data (e.g. RAD-seq)
+description: >
+  Analyzes restriction enzyme-based data (e.g. RAD-seq)
 ---
 
 This module is designed to only parse some of the output from the Stacks `denovo_map` pipeline.

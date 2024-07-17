@@ -1,7 +1,8 @@
 ---
 name: Pychopper
 url: https://github.com/nanoporetech/pychopper
-description: Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads
+description: >
+  Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads
 ---
 
 The module parses the pychopper stats file. Pychopper needs to be run with the `-S stats_output` option to create the file. The name of the output file defines the sample name.

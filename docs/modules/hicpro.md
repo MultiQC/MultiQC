@@ -1,7 +1,8 @@
 ---
 name: HiC-Pro
 url: https://github.com/nservant/HiC-Pro
-description: Pipeline for Hi-C data processing
+description: >
+  Pipeline for Hi-C data processing
 ---
 
 **Note** - because this module shares sample identifiers across multiple files,

@@ -1,7 +1,8 @@
 ---
 name: Picard
 url: http://broadinstitute.github.io/picard/
-description: Tools for manipulating high-throughput sequencing data
+description: >
+  Tools for manipulating high-throughput sequencing data
 ---
 
 Supported commands:

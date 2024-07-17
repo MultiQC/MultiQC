@@ -1,7 +1,8 @@
 ---
 name: Bcftools
 url: https://samtools.github.io/bcftools/
-description: Utilities for variant calling and manipulating VCFs and BCFs
+description: >
+  Utilities for variant calling and manipulating VCFs and BCFs
 ---
 
 Supported commands: `stats`

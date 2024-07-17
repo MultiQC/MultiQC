@@ -1,7 +1,8 @@
 ---
 name: phantompeakqualtools
 url: https://www.encodeproject.org/software/phantompeakqualtools
-description: Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data
+description: >
+  Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data
 ---
 
 Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation)

@@ -1,7 +1,8 @@
 ---
 name: Samtools
 url: http://www.htslib.org
-description: Toolkit for interacting with BAM/CRAM files
+description: >
+  Toolkit for interacting with BAM/CRAM files
 ---
 
 Supported commands:

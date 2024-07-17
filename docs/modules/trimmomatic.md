@@ -1,7 +1,8 @@
 ---
 name: Trimmomatic
 url: http://www.usadellab.org/cms/?page=trimmomatic
-description: Read trimming tool for Illumina NGS data
+description: >
+  Read trimming tool for Illumina NGS data
 ---
 
 The module parses the stderr output, that can be captured by directing it to a file e.g.:

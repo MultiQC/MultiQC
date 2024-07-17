@@ -1,7 +1,8 @@
 ---
 name: Bamdst
 url: https://https://github.com/shiquan/bamdst
-description: Lightweight tool to stat the depth coverage of target regions of BAM file(s)
+description: >
+  Lightweight tool to stat the depth coverage of target regions of BAM file(s)
 ---
 
 The module reads data from two types of Bamdst logs:

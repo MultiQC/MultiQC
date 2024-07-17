@@ -1,7 +1,8 @@
 ---
 name: VG
 url: https://github.com/vgteam/vg
-description: Toolkit to manipulate and analyze graphical genomes, including read alignment
+description: >
+  Toolkit to manipulate and analyze graphical genomes, including read alignment
 ---
 
 The module parses the

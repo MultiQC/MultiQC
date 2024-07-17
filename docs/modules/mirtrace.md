@@ -1,7 +1,8 @@
 ---
 name: miRTrace
 url: https://github.com/friedlanderlab/mirtrace
-description: Quality control for small RNA sequencing data
+description: >
+  Quality control for small RNA sequencing data
 ---
 
 miRTrace performs adapter trimming and discards the reads that fail to pass

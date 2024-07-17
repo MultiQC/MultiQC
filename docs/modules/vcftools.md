@@ -1,7 +1,8 @@
 ---
 name: VCFTools
 url: https://vcftools.github.io
-description: Program to analyse and reporting on VCF files
+description: >
+  Program to analyse and reporting on VCF files
 ---
 
 #### Important General Note

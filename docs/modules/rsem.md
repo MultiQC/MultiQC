@@ -1,7 +1,8 @@
 ---
 name: RSEM
 url: https://deweylab.github.io/RSEM/
-description: Estimates gene and isoform expression levels from RNA-Seq data
+description: >
+  Estimates gene and isoform expression levels from RNA-Seq data
 ---
 
 Supported scripts:

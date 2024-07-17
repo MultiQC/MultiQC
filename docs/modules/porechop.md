@@ -1,7 +1,8 @@
 ---
 name: Porechop
 url: https://github.com/rrwick/Porechop
-description: Finds and removes adapters from Oxford Nanopore reads
+description: >
+  Finds and removes adapters from Oxford Nanopore reads
 ---
 
 Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle,

@@ -1,7 +1,8 @@
 ---
 name: OptiType
 url: https://github.com/FRED-2/OptiType
-description: Precision HLA typing from next-generation sequencing data
+description: >
+  Precision HLA typing from next-generation sequencing data
 ---
 
 Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit

@@ -1,7 +1,8 @@
 ---
 name: Hostile
 url: https://github.com/bede/hostile
-description: Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]
+description: >
+  Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]
 ---
 
 Hostile write the log in JSON format. Which is being used to generate the report.

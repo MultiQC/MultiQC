@@ -1,7 +1,8 @@
 ---
 name: PURPLE
 url: https://github.com/hartwigmedical/hmftools/
-description: A purity, ploidy and copy number estimator for whole genome tumor data
+description: >
+  A purity, ploidy and copy number estimator for whole genome tumor data
 ---
 
 PURPLE combines B-allele frequency (BAF), read depth ratios, somatic variants and

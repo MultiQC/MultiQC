@@ -1,7 +1,8 @@
 ---
 name: ODGI
 url: https://github.com/pangenome/odgi
-description: Analysis and manipulation of pangenome graphs structured in the variation graph model
+description: >
+  Analysis and manipulation of pangenome graphs structured in the variation graph model
 ---
 
 The odgi module parses [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html) reports.

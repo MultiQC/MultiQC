@@ -1,7 +1,8 @@
 ---
 name: GLIMPSE
 url: https://odelaneau.github.io/GLIMPSE/
-description: Low-coverage whole genome sequencing imputation
+description: >
+  Low-coverage whole genome sequencing imputation
 ---
 
 The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing

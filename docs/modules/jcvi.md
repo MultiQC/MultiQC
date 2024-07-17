@@ -1,7 +1,8 @@
 ---
 name: JCVI Genome Annotation
 url: https://pypi.org/project/jcvi/
-description: Computes statistics on genome annotation
+description: >
+  Computes statistics on genome annotation
 ---
 
 The JCVI module parses the output of `python -m jcvi.annotation.stats genestats <input.gff>`.

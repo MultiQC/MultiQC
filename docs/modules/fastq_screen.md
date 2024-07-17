@@ -1,7 +1,8 @@
 ---
 name: FastQ Screen
 url: http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/
-description: Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect
+description: >
+  Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect
 ---
 
 By default, the module creates a plot that emulates the FastQ Screen output

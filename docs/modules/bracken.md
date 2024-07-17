@@ -1,7 +1,8 @@
 ---
 name: Bracken
 url: https://ccb.jhu.edu/software/bracken/
-description: Computes the abundance of species in DNA sequences from a metagenomics sample
+description: >
+  Computes the abundance of species in DNA sequences from a metagenomics sample
 ---
 
 This module works with Bracken output files that resemble Kraken reports. They look like the following:

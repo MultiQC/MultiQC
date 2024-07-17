@@ -1,7 +1,8 @@
 ---
 name: fastp
 url: https://github.com/OpenGene/fastp
-description: All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+description: >
+  All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
 ---
 
 Fastp goes through fastq files in a folder and perform a series of quality control and filtering.

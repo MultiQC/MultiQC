@@ -1,7 +1,8 @@
 ---
 name: Illumina InterOp Statistics
 url: http://illumina.github.io/interop/index.html
-description: Reading and writing InterOp metric files
+description: >
+  Reading and writing InterOp metric files
 ---
 
 The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.

@@ -1,7 +1,8 @@
 ---
 name: Flexbar
 url: https://github.com/seqan/flexbar
-description: Barcode and adapter removal tool
+description: >
+  Barcode and adapter removal tool
 ---
 
 Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes

@@ -1,7 +1,8 @@
 ---
 name: Sourmash
 url: https://github.com/sourmash-bio/sourmash
-description: Quickly searches, compares, and analyzes genomic and metagenomic data sets
+description: >
+  Quickly searches, compares, and analyzes genomic and metagenomic data sets
 ---
 
 The module can summarise data from the following sourmash output files

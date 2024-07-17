@@ -1,7 +1,8 @@
 ---
 name: BBTools
 url: http://jgi.doe.gov/data-and-tools/bbtools/
-description: Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
+description: >
+  Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
 ---
 
 The module produces summary statistics from the

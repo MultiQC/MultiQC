@@ -1,7 +1,8 @@
 ---
 name: Preseq
 url: http://smithlabresearch.org/software/preseq/
-description: Estimates the complexity of a library, showing how many additional unique reads are sequenced for increasing total read count
+description: >
+  Estimates the complexity of a library, showing how many additional unique reads are sequenced for increasing total read count
 ---
 
 A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library where total reads = unique reads.

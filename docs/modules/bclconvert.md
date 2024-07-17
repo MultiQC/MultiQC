@@ -1,7 +1,8 @@
 ---
 name: BCL Convert
 url: https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html
-description: Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+description: >
+  Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
 ---
 
 This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple

@@ -1,7 +1,8 @@
 ---
 name: Supernova
 url: https://www.10xgenomics.com/
-description: De novo genome assembler of 10X Genomics linked-reads
+description: >
+  De novo genome assembler of 10X Genomics linked-reads
 ---
 
 The module parses the reports from an assembly run. As a bare minimum it requires the file `report.txt`,

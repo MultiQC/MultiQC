@@ -1,7 +1,8 @@
 ---
 name: DeDup
 url: http://www.github.com/apeltzer/DeDup
-description: Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+description: >
+  Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
 ---
 
 By default, tables show read counts in thousands.

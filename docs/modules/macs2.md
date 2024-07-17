@@ -1,7 +1,8 @@
 ---
 name: MACS2
 url: https://macs3-project.github.io/MACS/
-description: Identifies transcription factor binding sites in ChIP-seq data
+description: >
+  Identifies transcription factor binding sites in ChIP-seq data
 ---
 
 MACS2 _(Model-based Analysis of ChIP-Seq)_ is a tool for identifying transcript

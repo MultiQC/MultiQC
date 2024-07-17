@@ -1,7 +1,8 @@
 ---
 name: VerifyBAMID
 url: https://genome.sph.umich.edu/wiki/VerifyBamID
-description: Detects sample contamination and/or sample swaps
+description: >
+  Detects sample contamination and/or sample swaps
 ---
 
 VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.

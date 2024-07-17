@@ -1,7 +1,8 @@
 ---
 name: Nextclade
 url: https://github.com/nextstrain/nextclade
-description: Viral genome alignment, clade assignment, mutation calling, and quality checks
+description: >
+  Viral genome alignment, clade assignment, mutation calling, and quality checks
 ---
 
 Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences

@@ -1,7 +1,8 @@
 ---
 name: mirtop
 url: https://github.com/miRTop/mirtop/
-description: Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
+description: >
+  Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
 ---
 
 This tool is dedicated to the creation and management of miRNA alignment output using the standardized

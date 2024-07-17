@@ -1,7 +1,8 @@
 ---
 name: FLASh
 url: https://ccb.jhu.edu/software/FLASH/
-description: Merges paired-end reads from next-generation sequencing experiments
+description: >
+  Merges paired-end reads from next-generation sequencing experiments
 ---
 
 To create a log file suitable for the module, you can use `tee`. From the FLASh help:

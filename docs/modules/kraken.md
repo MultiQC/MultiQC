@@ -1,7 +1,8 @@
 ---
 name: Kraken
 url: https://ccb.jhu.edu/software/kraken/
-description: Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+description: >
+  Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
 ---
 
 The MultiQC module supports outputs from both Kraken and Kraken 2.
