@@ -3,6 +3,8 @@ name: Docs - Netlify preview
 on:
   pull_request:
     paths: ["docs/**"]
+  push:
+    branches: [docstrings]
 
 jobs:
   deploy:
