@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Longranger"""
-
 import logging
 import os
 import re
@@ -12,8 +10,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    A set of analysis pipelines that perform sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
-
     Currently supported Longranger pipelines:
 
     - `wgs`

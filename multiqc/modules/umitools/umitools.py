@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from UMI-tools"""
-
 import logging
 import re
 from typing import Dict, Optional
@@ -13,15 +11,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    UMI-tools contains tools for dealing with Unique Molecular Identifiers (UMIs) / Random Molecular Tags (RMTs) and single cell RNA-Seq cell barcodes.
-
-    The MultiQC module for umitools parses logs from umi-tools
-
-    Currently `dedup` and `extract` commands are supported.
-    """
-
-    """
-    umitools module class, parses dedup logs
+    Currently, `dedup` and `extract` commands are supported.
     """
 
     def __init__(self):
@@ -29,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="UMI-tools",
             anchor="umitools",
             href="https://github.com/CGATOxford/UMI-tools",
-            info="contains tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
+            info="Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
             doi="10.1101/gr.209601.116",
         )
 

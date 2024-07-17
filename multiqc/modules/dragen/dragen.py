@@ -39,9 +39,6 @@ class MultiqcModule(
     DragenScAtacMetrics,
 ):
     """
-    Illumina DRAGEN is a Bio-IT Platform that provides ultra-rapid secondary analysis of sequencing data using field-programmable
-    gate array technology (FPGA).
-
     DRAGEN has a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
     post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.
     For each stage, it generates QC files with metrics resembling those of samtools-stats, mosdepth, bcftools-stats
@@ -92,7 +89,7 @@ class MultiqcModule(
             name="DRAGEN",
             anchor="DRAGEN",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
-            info="Illumina Bio-IT Platform that uses FPGA for secondary NGS analysis.",
+            info="Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data.",
             # Can't find a DOI // doi=
         )
 

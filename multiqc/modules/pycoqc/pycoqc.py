@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from pycoQC"""
-
 import logging
 
 import yaml

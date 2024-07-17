@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from VerifyBAMID"""
-
 import logging
 
 from multiqc import config
@@ -11,12 +9,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
-
-    A key step in any genetic analysis is to verify whether data being generated matches expectations. verifyBamID checks whether reads in a BAM file match previous genotypes for a specific sample. In addition, it detects possible sample mixture from population allele frequency only, which can be particularly useful when the genotype data is not available.
-
-    Using a mathematical model that relates observed sequence reads to an hypothetical true genotype, verifyBamID tries to decide whether sequence reads match a particular individual or are more likely to be contaminated (including a small proportion of foreign DNA), derived from a closely related individual, or derived from a completely different individual.
-
     This module currently only imports data from the `.selfSM` output.
     The chipmix and freemix columns are imported into the general statistics table.
     A verifyBAMID section is then added, with a table containing the entire selfSM file.
@@ -33,16 +25,25 @@ class MultiqcModule(BaseMultiqcModule):
     This was designed to work with verifyBamID 1.1.3 January 2018
     """
 
-    """
-    module class, parses stderr logs.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="VerifyBAMID",
             anchor="verifybamid",
             href="https://genome.sph.umich.edu/wiki/VerifyBamID",
-            info="detects sample contamination and/or sample swaps.",
+            info="Detects sample contamination and/or sample swaps.",
+            extra="""
+            VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
+        
+            A key step in any genetic analysis is to verify whether data being generated matches expectations. 
+            verifyBamID checks whether reads in a BAM file match previous genotypes for a specific sample. 
+            In addition, it detects possible sample mixture from population allele frequency only, which can be 
+            particularly useful when the genotype data is not available.
+        
+            Using a mathematical model that relates observed sequence reads to an hypothetical true genotype, 
+            verifyBamID tries to decide whether sequence reads match a particular individual or are more likely 
+            to be contaminated (including a small proportion of foreign DNA), derived from a closely related 
+            individual, or derived from a completely different individual.
+            """,
             doi="10.1016/j.ajhg.2012.09.004",
         )
 

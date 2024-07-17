@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MultiVCFAnalyzer"""
-
 import json
 import logging
 
@@ -10,18 +8,14 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    MultiVCFanalyzer reads multiple VCF files as produced by GATK UnifiedGenotyper, performs filtering based on
-    a number of criteria, and provides the combined genotype calls in a number of formats that are suitable for
-    follow-up analyses such as phylogenetic reconstruction, SNP effect analyses, population genetic analyses etc.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="Collects multiple VCF files into combined genotype calls, produces summary statistics and downstream formats for phylogeny reconstruction.",
+            info="Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats",
+            extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
+            "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
         )
 

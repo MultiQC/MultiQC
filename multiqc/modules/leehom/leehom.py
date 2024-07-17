@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from leeHom"""
-
 import logging
 import re
 
@@ -10,19 +8,17 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    leeHom is a Bayesian maximum _a posteriori_ algorithm for stripping
-    sequencing adapters and merging overlapping portions of reads.
-    The algorithm is mostly aimed at ancient DNA and Illumina data but
-    can be used for any dataset.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="leeHom",
             anchor="leehom",
             href="https://github.com/grenaud/leeHom",
             info="Bayesian reconstruction of ancient DNA",
+            extra="""leeHom is a Bayesian maximum a posteriori algorithm for stripping
+            sequencing adapters and merging overlapping portions of reads.
+            The algorithm is mostly aimed at ancient DNA and Illumina data but
+            can be used for any dataset.
+            """,
             doi="10.1093/nar/gku699",
         )
 

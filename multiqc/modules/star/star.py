@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from STAR"""
-
 import logging
 import os
 import re
@@ -14,11 +12,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    STAR is an ultrafast universal RNA-seq aligner.
-
-    [STAR](https://github.com/alexdobin/STAR) is an ultrafast universal RNA-seq aligner.
-
-    This MultiQC module parses summary statistics from the `Log.final.out` log files.
+    This module parses summary statistics from the `Log.final.out` log files.
     Sample names are taken either from the filename prefix (`sampleNameLog.final.out`)
     when set with `--outFileNamePrefix` in STAR. If there is no filename prefix,
     the sample name is set as the name of the directory containing the file.
@@ -32,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="STAR",
             anchor="star",
             href="https://github.com/alexdobin/STAR",
-            info="is an ultrafast universal RNA-seq aligner.",
+            info="Universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
         )
 

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from mosdepth"""
-
 import fnmatch
 import logging
 from collections import defaultdict

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from DIAMOND"""
-
 import logging
 import re
 
@@ -12,14 +10,8 @@ VERSION_REGEX = r"diamond v([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Sequence aligner for protein and translated DNA searches and functions as a drop-in replacement for the NCBI BLAST software tools. The key features are:
-
-    - Pairwise alignment of proteins and translated DNA at 100x-10,000x speed of BLAST.
-    - Frameshift alignments for long read analysis.
-    - Low resource requirements and suitable for running on standard desktops or laptops.
-    - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
-
-    The module takes summary statistics from the `diamond.log` file (`--log` option). It parses and reports the number of sequences aligned and displays them in the General Stats table.
+    The module takes summary statistics from the `diamond.log` file (`--log` option). It parses and reports
+    the number of sequences aligned and displays them in the General Stats table.
     """
 
     def __init__(self):
@@ -27,7 +19,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",
-            info="Sequence aligner for protein and translated DNA searches, designed for high performance analysis of big sequence data.",
+            info="Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST",
+            extra="""
+            Key features are:
+            - Pairwise alignment of proteins and translated DNA at 100x-10,000x speed of BLAST.
+            - Frameshift alignments for long read analysis.
+            - Low resource requirements and suitable for running on standard desktops or laptops.
+            - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
+            """,
             doi="10.1038/s41592-021-01101-x",
         )
 

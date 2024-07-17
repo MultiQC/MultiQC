@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Librarian"""
-
 import logging
 
 from multiqc import config
@@ -12,12 +10,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Librarian reads from high throughput sequencing experiments show base compositions that are characteristic for their library type.
-    For example, data from RNA-seq and WGBS-seq libraries show markedly different distributions of G, A, C and T across the reads.
-
-    Librarian makes use of different composition signatures for library quality control: Test library compositions are extracted and compared against previously published data sets from mouse and human.
-
-    This MultiQC module generates the _Prediction Plot_ showing the likelihood that samples are a given library type.
+    This module generates the _Prediction Plot_ showing the likelihood that samples are a given library type.
 
     ### General Stats
 
@@ -40,6 +33,13 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="librarian",
             href="https://github.com/DesmondWillowbrook/Librarian",
             info="Predicts the sequencing library type from the base composition of a FastQ file.",
+            extra="""Librarian reads from high throughput sequencing experiments show base compositions that are 
+            characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly 
+            different distributions of G, A, C and T across the reads.
+            
+            Librarian makes use of different composition signatures for library quality control: Test library 
+            compositions are extracted and compared against previously published data sets from mouse and human.
+            """,
             doi="10.12688/f1000research.125325.1",
         )
 

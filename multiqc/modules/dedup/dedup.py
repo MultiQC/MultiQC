@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from DeDup"""
-
 import json
 import logging
 from json import JSONDecodeError
@@ -13,8 +11,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
-
     By default, tables show read counts in thousands.
     To customise this, you can set the following MultiQC config variables:
 

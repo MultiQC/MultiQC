@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Lima"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -10,16 +8,12 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    HUMID is a tool to quickly and easily remove duplicate reads from FastQ files, with or without UMIs.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="HUMID",
             anchor="humid",
             href="https://github.com/jfjlaros/HUMID",
-            info="Reference-free tool to remove (UMI) duplicates from sequencing data",
+            info="Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.",
             # No publication / DOI // doi=
         )
         self.stats = None

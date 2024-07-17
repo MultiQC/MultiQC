@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MALT"""
-
 import logging
 import re
 
@@ -14,10 +12,7 @@ VERSION_REGEX = r"Version\s+MALT \(version ([\d\.]+),.*"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    MEGAN alignment tool. Performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.
-
-    The MALT MultiQC module reads the header of the MALT log files
-    and procudes three MultiQC sections:
+    The MALT MultiQC module reads the header of the MALT log files and produces three MultiQC sections:
 
     - A MALT summary statistics table
     - A Mappability bargraph
@@ -29,7 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="MALT",
             anchor="malt",
             href="http://ab.inf.uni-tuebingen.de/software/malt/",
-            info="Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
+            info="Aligns of metagenomic reads to a database of reference sequences "
+            "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
         )
 

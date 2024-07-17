@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from THetA2"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -10,13 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    THeTA2 estimates tumour purity and clonal / subclonal copy number.
-
-    [THeTA2](http://compbio.cs.brown.edu/projects/theta/) (Tumor Heterogeneity Analysis)
-    is an algorithm that estimates the tumour purity and clonal / subclonal copy number
-    aberrations directly from high-throughput DNA sequencing data.
-
-    The THeTA2 MultiQC module plots the % germline and % tumour subclone for each sample.
+    The module plots the % germline and % tumour subclone for each sample.
     Note that each sample can have multiple maximum likelihood solutions - the MultiQC
     module plots proportions for the first one in the results file (`*.BEST.results`).
     Also note that if there are more than 5 tumour subclones, their percentages are summed.
@@ -27,8 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="THetA2",
             anchor="theta2",
             href="http://compbio.cs.brown.edu/projects/theta/",
-            info="<em>(Tumor Heterogeneity Analysis)</em> estimates tumour purity "
-            "and clonal / subclonal copy number.",
+            info="Estimates tumour purity and clonal / subclonal copy number.",
             doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
         )
 

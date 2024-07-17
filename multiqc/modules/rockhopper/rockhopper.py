@@ -1,6 +1,3 @@
-"""MultiQC submodule to parse output from Rockhopper summary files
-https://cs.wellesley.edu/~btjaden/Rockhopper/"""
-
 import logging
 import re
 
@@ -12,25 +9,15 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Rockhopper is a comprehensive and user-friendly system for computational analysis of bacterial RNA-seq data.
-
-    Rockhopper aligns reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs on both the sense and anti-sense strand. These statistics are summarized in the Rockhopper bar plot in this module.
-    """
-
     def __init__(self):
         # Initialize the parent object
         super(MultiqcModule, self).__init__(
             name="Rockhopper",
             anchor="rockhopper",
             href="https://cs.wellesley.edu/~btjaden/Rockhopper/",
-            info="""
-            is a comprehensive and user-friendly system
-            for computational analysis of bacterial RNA-seq data.
-            It can align reads to genomes, assemble transcripts,
-            identify transcript boundaries, and discover novel
-            transcripts such as small RNAs.
-            """,
+            info="Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs",
+            extra="Can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
+            "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 

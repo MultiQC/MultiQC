@@ -1,5 +1,3 @@
-"""MultiQC module to parse the output from deepTools"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -31,9 +29,7 @@ class MultiqcModule(
     plotCorrelationMixin,
 ):
     """
-    deepTools addresses the challenge of handling the large amounts of data that are now routinely generated from DNA sequencing centers. deepTools contains useful modules to process the mapped reads data for multiple quality checks, creating **normalized coverage files** in standard bedGraph and bigWig file formats, that allow comparison between different files (for example, treatment and control). Finally, using such normalized and standardized files, deepTools can create many publication-ready **visualizations** to identify enrichments and for functional annotations of the genome.
-
-    The MultiQC module for deepTools parses a number of the text files that deepTools can produce. In particular, the following are supported:
+    The module for deepTools parses a number of the text files that deepTools can produce. In particular, the following are supported:
 
     - `bamPEFragmentSize --table`
     - `bamPEFragmentSize --outRawFragmentLengths`
@@ -56,7 +52,13 @@ class MultiqcModule(
             anchor="deepTools",
             target="deepTools",
             href="http://deeptools.readthedocs.io",
-            info="Suite of tools to process and analyze deep sequencing data.",
+            info="Tools to process and analyze deep sequencing data.",
+            extra="deepTools addresses the challenge of handling the large amounts of data that are now routinely"
+            "generated from DNA sequencing centers. deepTools contains useful modules to process the mapped "
+            "reads data for multiple quality checks, creating **normalized coverage files** in standard bedGraph "
+            "and bigWig file formats, that allow comparison between different files (for example, treatment and control). "
+            "Finally, using such normalized and standardized files, deepTools can create many publication-ready "
+            "**visualizations** to identify enrichments and for functional annotations of the genome.",
             doi="10.1093/nar/gkw257",
         )
 

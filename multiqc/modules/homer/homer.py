@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from HOMER"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -12,14 +10,10 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
     """
-    HOMER _(Hypergeometric Optimization of Motif EnRichment)_ is a suite of tools for
-    Motif Discovery and next-gen sequencing analysis. HOMER contains many useful tools
-    for analyzing ChIP-Seq, GRO-Seq, RNA-Seq, DNase-Seq, Hi-C and numerous other types
-    of functional genomics sequencing data sets.
-
-    The HOMER MultiQC module currently only parses output from the `findPeaks` tool.
-    If you would like support to be added for other HOMER tools, please open a
-    [new issue](https://github.com/MultiQC/MultiQC/issues/new) on the MultiQC GitHub page.
+    HOMER contains many useful tools for analyzing ChIP-Seq, GRO-Seq, RNA-Seq, DNase-Seq, Hi-C and numerous
+    other types of functional genomics sequencing data sets. The module currently only parses output from the
+    `findPeaks` and `TagDirectory` tools. If you would like support to be added for other HOMER tools please
+    open a [new issue](https://github.com/MultiQC/MultiQC/issues/new) on the MultiQC GitHub page.
 
     #### FindPeaks
 
@@ -39,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
             name="HOMER",
             anchor="homer",
             href="http://homer.ucsd.edu/homer/",
-            info="Suite of tools for Motif Discovery and next-gen sequencing analysis.",
+            info="Motif discovery and next-gen sequencing analysis.",
             doi="10.1016/j.molcel.2010.05.004",
         )
 

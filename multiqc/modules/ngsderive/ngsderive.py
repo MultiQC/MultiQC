@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from ngsderive"""
-
 import csv
 import io
 import logging
@@ -11,19 +9,14 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    `ngsderive` is a forensic analysis tool useful in backwards computing information from next-generation
-    sequencing data. Notably, results are provided as a 'best guess' — the tool does not claim 100% accuracy
-    and results should be considered with that understanding. Please see the
-    [documentation](https://stjudecloud.github.io/ngsderive) for more information.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="Predicts library information by backwards computing sequencing data",
+            info="Forensic tool for by backwards computing library information in sequencing data",
+            extra="""Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            should be considered with that understanding. Please see the documentation for more information.""",
             # Can't find a DOI // doi=
         )
 

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from kraken"""
-
 import logging
 import re
 
@@ -41,7 +39,8 @@ class MultiqcModule(BaseMultiqcModule):
         name="Kraken",
         anchor="kraken",
         href="https://ccb.jhu.edu/software/kraken/",
-        info="Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
+        info="Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor "
+        "(LCA) of a given sequence.",
         doi="10.1186/gb-2014-15-3-r46",
         sp_key="kraken",
     ):

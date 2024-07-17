@@ -1,5 +1,3 @@
-"""Module to parse output from mOTUs"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -11,9 +9,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    [mOTUs](https://github.com/brentp/mosdepth/) performs microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).
-
-    The mOTUs module takes as input in the STDOUT of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.
+    The module takes as input in the stdout of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.
     """
 
     def __init__(self):

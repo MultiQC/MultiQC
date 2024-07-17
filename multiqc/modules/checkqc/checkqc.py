@@ -1,5 +1,3 @@
-"""MultiQC module to parse CheckQC JSON output"""
-
 import json
 import logging
 import re
@@ -22,9 +20,7 @@ handlers = (
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    CheckQC is a program designed to check a set of quality criteria against an Illumina runfolder.
-
-    It parses a CheckQC JSON file, so make sure to use CheckQC with the `--json` flag and collect the stdout in a file.
+    The module parses a CheckQC JSON file, so make sure to use CheckQC with the `--json` flag and collect the stdout in a file.
     """
 
     def __init__(self):
@@ -32,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="CheckQC",
             anchor="checkqc",
             href="https://github.com/Molmed/checkQC",
-            info="Program designed to check a set of quality criteria against an Illumina runfolder.",
+            info="Checks a set of quality criteria against an Illumina runfolder.",
             comment="Samples are only shown in the report if they fail a check",
             doi="10.21105/joss.00556",
         )

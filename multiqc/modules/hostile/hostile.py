@@ -9,10 +9,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Hostile removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz] input.
-
-    ## Output of hostile
-
     Hostile write the log in JSON format. Which is being used to generate the report.
 
     ```log
@@ -48,7 +44,8 @@ class MultiqcModule(BaseMultiqcModule):
     ]
     ```
 
-    A barplot using the JSON reports from different samples. Plot will shows the number of reads classified as host-reads vs cleaned-reads (non-host reads).
+    A barplot using the JSON reports from different samples. Plot will shows the number of reads classified
+    as host-reads vs cleaned-reads (non-host reads).
     """
 
     def __init__(self):
@@ -56,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Hostile",
             anchor="hostile",
             href="https://github.com/bede/hostile",
-            info="Short and long host reads removal tool",
+            info="Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]",
             doi="10.1093/bioinformatics/btad728",
         )
 

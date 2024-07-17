@@ -1,17 +1,14 @@
-"""MultiQC module to parse output from Bakta"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The Bakta module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
+    The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
     summary text file used is included in the Bakta output since v1.3.0. The MultiQC module was written for
     the output of v1.7.0.
     """

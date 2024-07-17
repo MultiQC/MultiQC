@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Slamdunk"""
-
 import logging
 import re
 
@@ -14,15 +12,7 @@ VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Slamdunk is a tool to analyze SLAM-Seq data.
-
-    [Slamdunk](http://t-neumann.github.io/slamdunk/) is a tool to analyze data from the SLAM-Seq sequencing protocol.
-
     This module should be able to parse logs from v0.2.2-dev onwards.
-    """
-
-    """
-    Slamdunk module class, parses slamdunk logs.
     """
 
     def __init__(self):
@@ -30,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Slamdunk",
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
-            info="is a tool to analyze SLAMSeq data.",
+            info="Tool to analyze SLAM-Seq data.",
             doi="10.1186/s12859-019-2849-7",
         )
 

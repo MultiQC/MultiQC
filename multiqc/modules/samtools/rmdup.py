@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Samtools rmdup"""
-
 import logging
 import re
 from typing import Dict

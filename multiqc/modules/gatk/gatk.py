@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from GATK"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -13,12 +11,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRecalibratorMixin, VariantEvalMixin):
     """
-    Developed by the [Data Science and Data Engineering](http://www.broadinstitute.org/dsde)
-    group at the [Broad Institute](http://www.broadinstitute.org/), the GATK toolkit offers
-    a wide variety of tools with a primary focus on variant discovery and genotyping.
-    Its powerful processing engine and high-performance computing features make it capable
-    of taking on projects of any size.
-
     Supported tools:
 
     - `AnalyzeSaturationMutagenesis`
@@ -53,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
             anchor="gatk",
             target="GATK",
             href="https://www.broadinstitute.org/gatk/",
-            info="Toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping.",
+            info="Wide variety of tools with a primary focus on variant discovery and genotyping.",
             doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
         )
 

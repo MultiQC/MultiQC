@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
     This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple
     bclconvert run outputs as long as they are from the same sequencing run. When doing this,
     the undetermined reads will be 'corrected' and re-calculated (as an unknown read from
-    some one bclcovnert run might not be truly unknown, but simply from another run).
+    one bclcovnert run might not be truly unknown, but simply from another run).
 
     #### Calculate estimated depth
 
@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="BCL Convert",
             anchor="bclconvert",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html",
-            info="Used to demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
+            info="Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
         )
 

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from vg stats"""
-
 import logging
 from typing import Dict
 
@@ -11,9 +9,8 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    VG is a suite of tools designed to allow users to manipulate graphical genomes.
-
-    The module parses the [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats)
+    The module parses the
+    [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats)
     reports that summarize the stats of read alignment to a graphical genome in a GAM file.
 
     `vg stats` is capable of producing many reports summarizing many aspects of graphical
@@ -57,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="VG",
             anchor="vg",
             href="https://github.com/vgteam/vg",
-            info="is a toolkit to manipulate and analyze graphical genomes, including read alignment",
+            info="Toolkit to manipulate and analyze graphical genomes, including read alignment",
             doi="10.1038/nbt.4227",
         )
 

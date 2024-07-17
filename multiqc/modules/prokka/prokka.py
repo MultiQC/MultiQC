@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Prokka"""
-
 import logging
 
 from multiqc import config
@@ -11,9 +9,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The Prokka module analyses summary results from the
-    [Prokka](http://www.vicbioinformatics.com/software.prokka.shtml) annotation
-    pipeline for prokaryotic genomes.
     The Prokka module accepts two configuration options:
 
     - `prokka_table`: default `False`. Show a table in the report.
@@ -39,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Prokka",
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
-            info="Software tool for the rapid annotation of prokaryotic genomes.",
+            info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
         )
 

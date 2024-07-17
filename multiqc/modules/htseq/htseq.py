@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from HTSeq Count"""
-
 import logging
 
 from multiqc import config

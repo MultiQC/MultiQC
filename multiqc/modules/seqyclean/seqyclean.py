@@ -9,9 +9,8 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    SeqyClean is a comprehensive preprocessing software application for NGS reads.
-
-    The SeqyClean module will visualize the results from a [SeqyClean](https://github.com/ibest/seqyclean), a comprehensive preprocessing software pipeline. SeqyClean removes noise from Fastq files to improve de-novo genome assembly and genome mapping.
+    SeqyClean is a comprehensive preprocessing software application for NGS reads, that removes noise from FastQ
+    files to improve de-novo genome assembly and genome mapping.
 
     The module parses the `*SummaryStatistics.tsv` files that results from a SeqyClean cleaning.
     """
@@ -21,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="SeqyClean",
             anchor="seqyclean",
             href="https://github.com/ibest/seqyclean",
-            info="is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.",
+            info="Filters adapters, vectors, and contaminants while quality trimming.",
             doi="10.1145/3107411.3107446",
         )
 

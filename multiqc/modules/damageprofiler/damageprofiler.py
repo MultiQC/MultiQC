@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from DamageProfiler"""
-
 import json
 import logging
 
@@ -10,20 +8,12 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    A tool for DNA damage pattern retrieval for ancient DNA analysis and verification.
-    """
-
     def __init__(self):
-        """
-        damageprofiler module class
-        """
-
         super(MultiqcModule, self).__init__(
             name="DamageProfiler",
             anchor="damageprofiler",
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
-            info="DNA damage investigation tool for ancient DNA analysis",
+            info="DNA damage pattern retrieval for ancient DNA analysis",
             doi="10.1093/bioinformatics/btab190",
         )
 

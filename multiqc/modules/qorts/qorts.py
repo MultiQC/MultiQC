@@ -1,8 +1,7 @@
-"""MultiQC module to parse output from QoRTs"""
-
 import logging
 import os
 import re
+from typing import List
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -11,25 +10,19 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    QoRTs is a fast, efficient, and portable toolkit designed to assist in the analysis, QC and data management of RNA-Seq datasets.
-
-    The QoRTs software package is a fast, efficient, and portable multifunction
-    toolkit designed to assist in the analysis, quality control, and data
-    management of RNA-Seq datasets. Its primary function is to aid in the
-    detection and identification of errors, biases, and artifacts produced
-    by paired-end high-throughput RNA-Seq technology. In addition, it can produce
-    count data designed for use with differential expression and differential
-    exon usage tools, as well as individual-sample and/or group-summary genome
-    track files suitable for use with the UCSC genome browser.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="QoRTs",
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
-            info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            info="Toolkit for analysis, QC, and data management of RNA-Seq datasets.",
+            extra="""
+            Aids in the detection and identification of errors, biases, and artifacts produced
+            by paired-end high-throughput RNA-Seq technology. In addition, it can produce
+            count data designed for use with differential expression and differential
+            exon usage tools, as well as individual-sample and/or group-summary genome
+            track files suitable for use with the UCSC genome browser.
+            """,
             doi="10.1186/s12859-015-0670-5",
         )
 
@@ -64,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_strandedness_plot()
 
     def parse_qorts(self, f):
-        s_names = None
+        s_names: List[str] = []
         for line in f["f"]:
             s = line.split("\t")
             if s_names is None:

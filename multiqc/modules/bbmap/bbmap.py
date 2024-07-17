@@ -5,13 +5,12 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 from .bbmap_filetypes import file_types, section_order
 
-# Initialize the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The BBMap module produces summary statistics from the
+    The module produces summary statistics from the
     [BBMap](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
     The module can summarise data from the following BBMap output files
     (descriptions from command line help output):
@@ -62,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="BBTools",
             anchor="bbmap",
             href="http://jgi.doe.gov/data-and-tools/bbtools/",
-            info="Suite of pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads",
+            info="Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads",
             # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
         )

@@ -1,5 +1,3 @@
-"""MultiQC module to parse the output from SNPsplit"""
-
 import logging
 import re
 
@@ -13,8 +11,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    SNPsplit is an allele-specific alignment sorter, which is designed to read in alignment files in SAM/BAM format and determine the allelic origin of reads that cover known SNP positions.
-
     Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.
     The log files from the genome creation steps are not parsed and there are no plots/tables produced from the "SNP coverage" report.
 
@@ -29,7 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="SNPsplit",
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
-            info="A tool to determine allele-specific alignments from high-throughput sequencing experiments that have been aligned to N-masked genomes",
+            info="Allele-specific alignment sorter, that reads SAM/BAM files and determine the allelic origin of "
+            "reads that cover known SNP positions.",
             doi="10.12688/f1000research.9037.2",
         )
 

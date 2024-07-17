@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from phantompeakqualtools"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -8,16 +6,18 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation) and RSC (relative strand cross-correlation) metrics use cross-correlation of stranded read density profiles to measure enrichment independently of peak calling. The PBC (PCR bottleneck coefficient) is an approximate measure of library complexity. PBC is the ratio of (non-redundant, uniquely mappable reads)/(uniquely mappable reads).
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="phantompeakqualtools",
             anchor="phantompeakqualtools",
             href="https://www.encodeproject.org/software/phantompeakqualtools",
-            info="Compute informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.",
+            info="Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.",
+            extra="""
+            Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation) 
+            and RSC (relative strand cross-correlation) metrics use cross-correlation of stranded read density profiles 
+            to measure enrichment independently of peak calling. The PBC (PCR bottleneck coefficient) is an approximate 
+            measure of library complexity. PBC is the ratio of (non-redundant, uniquely mappable reads)/(uniquely mappable reads).
+            """,
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
         )
 

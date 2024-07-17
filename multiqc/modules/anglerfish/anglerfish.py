@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Anglerfish"""
-
 import json
 import logging
 from typing import Dict
@@ -7,24 +5,18 @@ from typing import Dict
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Anglerfish is a tool designed to de-multiplex Illumina libraries sequenced on Oxford Nanopore Technologies
-    flowcells for the purpose of quality control. Assessment of pool balancing, contamination and insert sizes
-    are currently supported.
-    """
-
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Anglerfish",
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
-            info="Assesses contamination and composition of Illumina sequencing libraries based on a Nanopore trial sequencing with high concordance.",
+            info="Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells",
+            extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
         )
 

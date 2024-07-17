@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MetaPhlAn"""
-
 import logging
 import re
 
@@ -12,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module supports outputs from MetaPhlAn, that look like the following:
+    The module supports outputs from MetaPhlAn, that look like the following:
 
     ```tsv
     k__Bacteria	2	100.0

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from ClipAndMerge"""
-
 import logging
 import os
 import re
@@ -12,7 +10,8 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    An application to clip adapter sequences and merge reads in ancient DNA analysis. Note, that versions < 1.7.8 use the basename of the file path to distinguish samples, whereas newer versions produce logfiles with a sample identifer that gets parsed by MultiQC.
+    Note that the versions < 1.7.8 use the basename of the file path to distinguish samples, whereas newer
+    versions produce logfiles with a sample identifer that gets parsed by MultiQC.
     """
 
     def __init__(self):
@@ -20,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="ClipAndMerge",
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
-            info="Tool for adapter clipping and read merging for ancient DNA data.",
+            info="Adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
         )
 

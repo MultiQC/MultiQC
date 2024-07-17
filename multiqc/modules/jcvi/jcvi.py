@@ -12,9 +12,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    JCVI Genome Annotation provides quantitative measures for the assessment of genome
-    annotation.
-
     The JCVI module parses the output of `python -m jcvi.annotation.stats genestats <input.gff>`.
     The file name is used as the sample name.
     If the output from the `python -m jcvi.annotation.stats stats <input.gff>` is present in the same directory,

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MEGAHIT"""
-
 import logging
 import re
 
@@ -13,7 +11,8 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file name (e.g. `sample1.log` will yield a sample name of `sample1`).
+    MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
+    name (e.g. `sample1.log` will yield a sample name of `sample1`).
     """
 
     def __init__(self):

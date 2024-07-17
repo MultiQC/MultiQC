@@ -1,5 +1,3 @@
-"""Module to parse output from BBDuk"""
-
 import logging
 import re
 from typing import Dict
@@ -15,8 +13,8 @@ VERSION_REGEX = r"Version ([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The BBDuk module produces summary statistics from the stdout logging information
-    from the BBDuk tool of the [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
+    The module produces summary statistics from the stdout logging information from the BBDuk tool of the
+    [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
 
     "Duk" stands for Decontamination Using Kmers. BBDuk was developed to combine
     most common data-quality-related trimming, filtering, and masking operations
@@ -41,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="BBDuk",
             anchor="bbduk",
             href="https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/",
-            info="Tool for common data-quality-related trimming, filtering, and masking operations with a kmer based approach",
+            info="Common data-quality-related trimming, filtering, and masking operations with a kmer based approach",
             # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
         )

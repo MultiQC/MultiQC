@@ -11,7 +11,6 @@ VERSION_REGEX = r"\[M::main\] Version: ([\d\.r\-]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="HiFiasm",
             anchor="hifiasm",

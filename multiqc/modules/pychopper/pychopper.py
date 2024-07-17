@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from pychopper"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -10,9 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Pychopper is a tool to identify, orient and trim full-length Nanopore cDNA reads. The tool is also able to rescue fused reads.
-
-    The MultiQC module parses the pychopper stats file. Pychopper needs to be run with the `-S stats_output` option to create the file. The name of the output file defines the sample name.
+    The module parses the pychopper stats file. Pychopper needs to be run with the `-S stats_output` option to create the file. The name of the output file defines the sample name.
 
     The stats file is a three column `tsv` file with the format `category name value`.
 
@@ -26,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Pychopper",
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
-            info="Identifies, orients, trims and rescues full length Nanopore cDNA reads.",
+            info="Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.",
             # Can't find a DOI // doi=
         )
 

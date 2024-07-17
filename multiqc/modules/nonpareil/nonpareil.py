@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from nonpareil"""
-
 import logging
 from typing import List
 
@@ -18,10 +16,6 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
-    the average coverage and predict the amount of sequences that will be required
-    to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
-
     Since Nonpareil main output has no model information, it is necessary to run its
     auxiliary `R` plot functions and save the `curves` object as a `JSON` file. Briefly,
     call function `export_curve()` on object `curves` (for an example, see [snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/nonpareil/plot.html#code)):
@@ -84,6 +78,9 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
             info="Estimates metagenomic coverage and sequence diversity ",
+            extra="""Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
+            the average coverage and predict the amount of sequences that will be required
+            to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.""",
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options

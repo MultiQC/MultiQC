@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Conpair"""
-
 import logging
 import re
 
@@ -9,18 +7,14 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    [Conpair](https://github.com/nygenome/Conpair) is a fast and robust method dedicated for human tumour-normal
-    studies to perform concordance verification (= samples coming from the same individual), as well as
-    cross-individual contamination level estimation in whole-genome and whole-exome sequencing experiments.
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Conpair",
             anchor="conpair",
             href="https://github.com/nygenome/Conpair",
-            info="Conpair estimates concordance and contamination for tumour–normal pairs",
+            info="Estimates concordance and contamination for tumor–normal pairs",
+            extra="Useful for tumor-normal studies. Performs concordance verification (= samples coming from the same "
+            "individual), and cross-individual contamination level estimation in WGS and WES sequencing experiments",
             doi="bioinformatics/btw389",
         )
 

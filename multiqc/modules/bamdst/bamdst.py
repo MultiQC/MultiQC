@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Bamdst"""
-
 import logging
 from collections import defaultdict
 from typing import Dict, Union
@@ -12,7 +10,6 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
 from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -66,7 +63,7 @@ def _read_config():
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module reads data from two types of Bamdst logs:
+    The module reads data from two types of Bamdst logs:
 
     - `coverage.report`: used to build a table with coverage statistics. The sample name is read from this file.
     - `chromosomes.report`: if this file is found in the same directory as the file above, additionally a per-contig coverage plot will be generated. This file must be named exactly this way, with the `.report` extension.
@@ -132,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",
-            info="Lightweight tool to stat the depth coverage of target regions of bam file(s)",
+            info="Lightweight tool to stat the depth coverage of target regions of BAM file(s)",
             # doi="", # No DOI
         )
 

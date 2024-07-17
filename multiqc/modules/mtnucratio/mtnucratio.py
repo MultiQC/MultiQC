@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from mtnucratio"""
-
 import json
 import logging
 
