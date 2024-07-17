@@ -91,7 +91,7 @@ class BaseMultiqcModule:
         self.info = self.info.strip().strip(".")
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
-            self.info = f"{self.name} {self.info}."
+            self.info = f"{self.name} {self.info}"
 
         if self.extra is None:
             self.extra = ""
@@ -143,7 +143,8 @@ class BaseMultiqcModule:
                 "; ".join(url_links)
             )
 
-        return f"<p>{self.info}{url_link}{doi_html}</p>{self.extra}"
+        info = (self.info + ".") if self.info else ""
+        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
 
     def clean_child_attributes(self):
         """
