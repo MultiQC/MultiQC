@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any, Sequence
+from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
 
 import yaml
 
@@ -358,8 +358,6 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
 
-        section_description = mod["config"].get("description", "")
-
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
             pconfig["id"] = f"{c_id}-plot"
@@ -459,10 +457,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if self.info and section_description.strip(".") == self.info.strip("."):
-            section_description = ""
 
-        self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
+        self.add_section(name=section_name, anchor=c_id, plot=plot, content=content)
 
 
 def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
