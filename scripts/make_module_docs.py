@@ -3,8 +3,8 @@ Generate docs/modules/<module.md> files for each module in MultiQC from the Mult
 
 Usage:
 
-    python scripts/generate_module_docs.py
-    python scripts/generate_module_docs.py samtools
+    python scripts/make_module_docs.py
+    python scripts/make_module_docs.py samtools
 """
 
 import argparse

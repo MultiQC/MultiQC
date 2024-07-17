@@ -21,6 +21,20 @@ jobs:
         with:
           path: ./MultiQC
 
+      - uses: actions/setup-python@v5
+
+      - name: Install MultiQC
+        run: pip install .
+
+      - name: Download test data
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
+      - name: Generate module docs
+        run: python scripts/make_module_docs.py
+
       - name: Checkout MultiQC website repo
         uses: actions/checkout@v4
         with:
