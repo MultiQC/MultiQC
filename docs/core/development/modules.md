@@ -1091,7 +1091,7 @@ with your module name is a good idea as in the example above. Keep all module co
 options under the same top-level name for clarity.
 
 Finally, don't forget to document the usage of your module-specific configuration
-in `docs/modules/mymodule.md` so that people know how to use it.
+in the `MultiqcModule` class docstring, so that people know how to use it.
 
 ### Profiling Performance
 

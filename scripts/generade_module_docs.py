@@ -8,7 +8,6 @@ Usage:
 """
 
 import argparse
-import textwrap
 from textwrap import dedent
 
 from multiqc import config, report, BaseMultiqcModule
