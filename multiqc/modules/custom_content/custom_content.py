@@ -332,10 +332,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi=mod["config"].get("doi"),
         )
 
-        # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
-
         if "custom_content" in config.run_modules:
             # To allow file_search.include_or_exclude_modules() correctly filter these modules
             config.custom_content_modules.append(anchor)
@@ -355,8 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
         if self.extra is None or self.info == "":
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
-        if self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
+        self.intro = self._get_intro()
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())

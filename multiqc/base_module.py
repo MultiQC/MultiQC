@@ -91,37 +91,16 @@ class BaseMultiqcModule:
         self.info = self.info.strip().strip(".")
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
-            self.info = f"{self.name} {self.info}"
+            self.info = f"{self.name} {self.info}."
 
         if self.extra is None:
             self.extra = ""
 
-        doi_link = ""
         if isinstance(self.doi, str):
             self.doi = [self.doi]
         self.doi = [i for i in self.doi if i != ""]
-        if len(self.doi) > 0:
-            doi_links = []
-            for doi in self.doi:
-                # Build the HTML link for the DOI
-                doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
-                )
-            doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
-                "; ".join(doi_links)
-            )
 
-        url_link = ""
-        if len(self.href) > 1:
-            url_links = []
-            for url in self.href:
-                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
-            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
-                "; ".join(url_links)
-            )
-
-        if self.href or self.info or self.extra or doi_link:
-            self.intro = f"<p>{self.info}.{url_link}{doi_link}</p>{self.extra}"
+        self.intro = self._get_intro()
 
         # Format the markdown strings
         if autoformat:
@@ -141,6 +120,30 @@ class BaseMultiqcModule:
 
         # Get list of all base attributes, so we clean up any added by child modules
         self._base_attributes = [k for k in dir(self)]
+
+    def _get_intro(self):
+        doi_html = ""
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
+                "; ".join(doi_links)
+            )
+
+        url_link = ""
+        if len(self.href) > 1:
+            url_links = []
+            for url in self.href:
+                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
+            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
+                "; ".join(url_links)
+            )
+
+        return f"<p>{self.info}{url_link}{doi_html}</p>{self.extra}"
 
     def clean_child_attributes(self):
         """

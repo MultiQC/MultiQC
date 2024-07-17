@@ -68,10 +68,10 @@ class MultiqcModule(BaseMultiqcModule):
         demuxes, qmetrics, multiple_sequencing_runs, last_run_id = self._collate_log_files()
 
         # variables to store reads for undetermined read recalculation
-        self.per_lane_undetermined_reads = dict()
-        self.total_reads_in_lane_per_file = dict()
+        self.per_lane_undetermined_reads: Optional[Dict] = dict()
+        self.total_reads_in_lane_per_file: Dict = dict()
 
-        bclconvert_data = dict()
+        bclconvert_data: Dict = dict()
         for demux in demuxes.values():
             self.parse_demux_data(demux, bclconvert_data, len(demuxes))
         for qmetric in qmetrics.values():
