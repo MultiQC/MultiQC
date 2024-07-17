@@ -144,8 +144,6 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     if cfg.strict is not None:
         config.strict = cfg.strict
         config.lint = cfg.strict  # Deprecated since v1.17
-        if cfg.strict:
-            strict_helpers.run_tests()
     if cfg.development is not None:
         config.development = cfg.development
         if cfg.development:
