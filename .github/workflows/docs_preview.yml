@@ -9,31 +9,36 @@ jobs:
     name: "Deploy preview"
     runs-on: ubuntu-latest
     if: github.repository == 'MultiQC/MultiQC'
-    defaults:
-      run:
-        working-directory: ./MultiQC_website
     permissions:
       pull-requests: write
 
     steps:
+      - uses: actions/setup-python@v5
+
       - name: Checkout MultiQC repo
         uses: actions/checkout@v4
         with:
           path: ./MultiQC
 
-      - uses: actions/setup-python@v5
-
       - name: Install MultiQC
-        run: pip install MultiQC
+        working-directory: ./MultiQC
+        run: pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
+        working-directory: ./MultiQC
         with:
           repository: MultiQC/test-data
           path: test-data
 
       - name: Generate module docs
+        working-directory: ./MultiQC
         run: python scripts/make_module_docs.py
+
+      - name: Set up Node.js 18.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
 
       - name: Checkout MultiQC website repo
         uses: actions/checkout@v4
@@ -42,18 +47,16 @@ jobs:
           path: ./MultiQC_website
           ref: "move-sp"
 
-      - name: Set up Node.js 18.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18.x
-
       - name: Install npm deps
+        working-directory: ./MultiQC_website
         run: npm install
 
       - name: Build website
+        working-directory: ./MultiQC_website
         run: npm run build
 
       - name: Deploy to Netlify
+        working-directory: ./MultiQC_website
         uses: nwtgck/actions-netlify@v2.1.0
         with:
           publish-dir: "./MultiQC_website/dist"
