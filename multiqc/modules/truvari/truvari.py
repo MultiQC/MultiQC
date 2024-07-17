@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Truvari",
             anchor="truvari",
             href="https://github.com/ACEnglish/truvari",
-            info="Toolkit for benchmarking, merging, and annotating structural variants",
+            info="Benchmarking, merging, and annotating structural variants",
             doi="https://doi.org/10.1101/2022.02.21.481353",
         )
 

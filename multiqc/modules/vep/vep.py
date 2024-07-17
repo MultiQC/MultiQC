@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="VEP",
             anchor="vep",
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",
-            info="Ensembl VEP determines the effect of variants on genes, transcripts and protein sequences, "
+            info="Determines the effect of variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
             doi="10.1186/s13059-016-0974-4",
         )

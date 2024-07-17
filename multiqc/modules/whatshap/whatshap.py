@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
-            info="""Program for phasing genomic variants using DNA sequencing
+            info="""Phasing genomic variants using DNA sequencing
                     reads, also called read-based phasing, or haplotype assembly. It
                     is especially suitable for long reads, but also works well with
                     short reads.""",
