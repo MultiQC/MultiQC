@@ -183,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="FastQC",
             anchor="fastqc",
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
-            info="Quality control tool for high throughput sequence data",
+            info="Quality control tool for high throughput sequencing data",
             # No publication / DOI // doi=
         )
 
@@ -199,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["fn"]
             if s_name.endswith("_fastqc.zip"):
                 s_name = s_name[:-11]
-            # Skip if we already have this report - parsing zip files is slow..
+            # Skip if we already have this report - parsing zip files is slow
             if s_name in self.fastqc_data.keys():
                 log.debug(f"Skipping '{f['fn']}' as already parsed '{s_name}'")
                 continue

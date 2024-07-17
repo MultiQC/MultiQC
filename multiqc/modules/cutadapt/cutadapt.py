@@ -4,6 +4,7 @@ import os
 import re
 import shlex
 import json
+from typing import Dict
 
 from packaging import version
 
@@ -39,15 +40,15 @@ class MultiqcModule(BaseMultiqcModule):
             name="Cutadapt",
             anchor="cutadapt",
             href="https://cutadapt.readthedocs.io/",
-            info="Find and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
+            info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data = dict()
-        self.cutadapt_length_counts = {"default": dict()}
-        self.cutadapt_length_exp = {"default": dict()}
-        self.cutadapt_length_obsexp = {"default": dict()}
+        self.cutadapt_data: Dict = dict()
+        self.cutadapt_length_counts: Dict[str, Dict] = {"default": dict()}
+        self.cutadapt_length_exp: Dict[str, Dict] = {"default": dict()}
+        self.cutadapt_length_obsexp: Dict[str, Dict] = {"default": dict()}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -278,14 +279,15 @@ class MultiqcModule(BaseMultiqcModule):
                     log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search(r"Type: regular (\d)'", line)
-                if end_regex:
-                    end = end_regex.group(1)
+                end_match = re.search(r"Type: regular (\d)'", line)
+                if end_match:
+                    end = end_match.group(1)
 
                 if "Overview of removed sequences" in line:
                     if "' end" in line:
-                        res = re.search(r"(\d)' end", line)
-                        end = res.group(1)
+                        end_match = re.search(r"(\d)' end", line)
+                        if end_match:
+                            end = end_match.group(1)
 
                     # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
