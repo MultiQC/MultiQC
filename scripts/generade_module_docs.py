@@ -40,8 +40,15 @@ name: {module.name}
 url: {module.href[0] if len(module.href) == 1 else module.href}
 description: {module.info}
 ---
+
+{dedent(module.extra)}
+
 {dedent(docstring)}
 """
+
+    # Remove double empty lines
+    while "\n\n\n" in text:
+        text = text.replace("\n\n\n", "\n\n")
 
     output_path = config.REPO_DIR / "docs/modules" / f"{mod_id}.md"
     with output_path.open("w") as fh:
