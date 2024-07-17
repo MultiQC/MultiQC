@@ -2,7 +2,7 @@
 name: WhatsHap
 url: https://whatshap.readthedocs.io/
 description: >
-  Program for phasing genomic variants using DNA sequencing
+  Phasing genomic variants using DNA sequencing
                     reads, also called read-based phasing, or haplotype assembly. It
                     is especially suitable for long reads, but also works well with
                     short reads
