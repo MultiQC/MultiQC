@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     **Note**: As of MultiQC v1.9, the module supports only BISCUIT version v0.3.16 and onwards.
     If you have BISCUIT data from before this, please use MultiQC v1.8.
 
-    ### Insert Size Distribution
+    #### Insert Size Distribution
 
     The second tab of this plot uses the config option `read_count_multiplier`,
     so if millions of reads is not useful for your data you can customise this.

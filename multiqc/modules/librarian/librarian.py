@@ -12,7 +12,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
     This module generates the _Prediction Plot_ showing the likelihood that samples are a given library type.
 
-    ### General Stats
+    #### General Stats
 
     The module can also show the most likely library type in the General Statistics table, however this is disabled by default.
     This is because several library types are very similar to each other and can come out as a mix.

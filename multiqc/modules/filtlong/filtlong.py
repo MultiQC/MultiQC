@@ -10,7 +10,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
     The module takes summary statistics of number of long reads filtered and displays them in the General Stats table.
 
-    ### Bases Kept
+    #### Bases Kept
 
     Sometimes, the Filtlong log message contains this:
 

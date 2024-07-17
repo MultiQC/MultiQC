@@ -13,7 +13,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     - `markdup`
 
-    ### markdup
+    #### markdup
 
     This module parses key phrases in the output log files to find duplicate +
     unique reads and then calculates duplicate rate per sample. It will work for both

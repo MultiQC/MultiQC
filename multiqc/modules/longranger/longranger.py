@@ -245,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        ### Parse the data
+        # Parse the data
         self.longranger_data = dict()
         self.paths_dict = dict()
         for f in self.find_log_files("longranger/invocation"):
@@ -285,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
             version_str = f" All samples were processed using Longranger version {list(longranger_versions)[0]}"
             del self.headers["longranger_version"]
 
-        ### Write the table
+        # Write the table
         config_table = {
             "id": "longranger_table",
             "namespace": "longranger",
@@ -303,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(self.longranger_data, self.headers, config_table),
         )
 
-        ### Bar plot of phasing stats
+        # Bar plot of phasing stats
         phase_pdata = {}
         snps_phased_pct = {}
         genes_phased_pct = {}
@@ -365,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
 
-        ### Bar plot of mapping statistics
+        # Bar plot of mapping statistics
         mapping_counts_data = {}
         for s_name in self.longranger_data:
             mapped_reads = float(self.longranger_data[s_name]["number_reads"]) * float(

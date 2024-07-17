@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
     write(y, "output.json")
     ```
 
-    ### Module config options
+    #### Module config options
 
     The module plots a line graph for each sample, with a tab panel to switch between only observed data, only models,
     or both combined (model with a dashed line). It will use the colors specified in the JSON file by `nonpareil` and,

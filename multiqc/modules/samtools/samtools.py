@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
     - `coverage`
     - `markdup`
 
-    ### idxstats
+    #### idxstats
 
     The `samtools idxstats` prints its results to standard out (no consistent file name) and has no header lines
     (no way to recognise from content of file). As such, `idxstats` result files must have the string `idxstat`

@@ -17,13 +17,13 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
     - `BaseRecalibrator`
     - `VariantEval`
 
-    ### AnalyzeSaturationMutagenesis
+    #### AnalyzeSaturationMutagenesis
 
     [AnalyzeSaturationMutagenesis](https://gatk.broadinstitute.org/hc/en-us/articles/4404604903451-AnalyzeSaturationMutagenesis-BETA-)
     is a (beta!) tool for counting variants in saturation mutagenesis experiments. It accepts mapped reads and a reference sequence and outputs
     a number of files for further analysis.
 
-    ### BaseRecalibrator
+    #### BaseRecalibrator
 
     [BaseRecalibrator](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_bqsr_BaseRecalibrator.php)
     is a tool for detecting systematic errors in read base quality scores of aligned high-throughput
@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRe
     [PrintReads](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_readutils_PrintReads.php)
     tool to recalibrate base quality scores.
 
-    ### VariantEval
+    #### VariantEval
 
     [VariantEval](https://software.broadinstitute.org/gatk/gatkdocs/current/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
     is a general-purpose tool for variant evaluation. It gives information about percentage of

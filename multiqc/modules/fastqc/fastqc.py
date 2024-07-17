@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
     `Filename` in `fastqc_data.txt`, _not_ based on the FastQC report names.
     :::
 
-    ### Theoretical GC Content
+    #### Theoretical GC Content
 
     It is possible to plot a dashed line showing the theoretical GC content for a
     reference genome. MultiQC comes with genome and transcriptome guides for Human
@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
       fastqc_theoretical_gc: "/path/to/your/custom_fastqc_theoretical_gc.txt"
     ```
 
-    ### Overrepresented sequences
+    #### Overrepresented sequences
 
     The overrepresented sequences table shows the most common sequences found,
     measured by the number of samples they occur as overrepresented. By default, the
@@ -152,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
       top_overrepresented_sequences_by: "total"
     ```
 
-    ### Changing the order of sections
+    #### Changing the order of sections
 
     Remember that it is possible to customise the order in which the different module sections appear
     in the report if you wish.
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         order: -1000
     ```
 
-    ### Showing FastQC status checks
+    #### Showing FastQC status checks
 
     FastQC uses thresholds to mark samples as "pass", "warn" or "fail" for various checks.
     If you prefer the MultiQC module to ignore those thresholds, and use standard MultiQC
