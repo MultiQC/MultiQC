@@ -43,24 +43,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: MultiQC/website
-          path: ../website
-          ref: "move-sp"
+          path: website
+          ref: "module-extra"
 
       - name: Install npm deps
         run: |
-          cd ../website
+          cd website
           npm install
 
       - name: Build website
         run: |
-          cd ../website
+          cd website
           npm run build
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2.1.0
         with:
-          working-directory: ../website
-          publish-dir: "./MultiQC_website/dist"
+          publish-dir: "./website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
           alias: mqc-pr-${{ github.event.pull_request.number }}
