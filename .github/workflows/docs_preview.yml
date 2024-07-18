@@ -17,26 +17,18 @@ jobs:
 
       - name: Checkout MultiQC repo
         uses: actions/checkout@v4
-        with:
-          path: ./MultiQC
 
       - name: Install MultiQC
-        run: pip install MultiQC
+        run: pip install .
 
       - name: Download test data
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
-          path: MultiQC/test-data
+          path: test-data
 
       - name: Generate module docs
         run: |
-          ls
-          cd MultiQC
-          ls
-          ls test-data
-          ls test-data/data
-          ls test-data/data/modules
           mkdir -p docs/modules
           python scripts/make_module_docs.py
           cd ..
@@ -50,25 +42,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: MultiQC/website
-          path: ./MultiQC_website
+          path: ../website
           ref: "move-sp"
 
       - name: Install npm deps
         run: |
-          cd MultiQC_website
+          cd ../website
           npm install
-          cd ..
 
       - name: Build website
         run: |
-          cd MultiQC_website
+          cd ../website
           npm run build
-          cd ..
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2.1.0
         with:
-          working-directory: ./MultiQC_website
+          working-directory: ../website
           publish-dir: "./MultiQC_website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
