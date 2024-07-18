@@ -21,7 +21,7 @@ jobs:
           python-version: 3.12
 
       - name: Install MultiQC
-        run: pip install .
+        run: pip install -e .
 
       - name: Download test data
         uses: actions/checkout@v4
@@ -31,8 +31,6 @@ jobs:
 
       - name: Generate module docs
         run: |
-          ls
-          ls test-data
           mkdir -p docs/modules
           python scripts/make_module_docs.py
 

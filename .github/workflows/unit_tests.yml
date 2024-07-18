@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install MultiQC
-        run: pip install '.[dev]'
+        run: pip install -e '.[dev]'
 
       - name: Download test data
         uses: actions/checkout@v4

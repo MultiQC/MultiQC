@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+from pathlib import Path
 from textwrap import dedent, indent
 
 from multiqc import config, report, BaseMultiqcModule
@@ -23,8 +24,7 @@ for mod_id, entry_point in config.avail_modules.items():
     if mod_id == "custom_content":
         continue
 
-    data_dir = config.REPO_DIR / "test-data" / "data"
-    mod_dir = data_dir / "modules" / mod_id
+    mod_dir = Path("test-data") / "data" / "modules" / mod_id
     assert mod_dir.exists() and mod_dir.is_dir(), mod_dir
     report.analysis_files = [mod_dir]
     report.search_files([mod_id])
@@ -54,7 +54,7 @@ summary: >
     while "\n\n\n" in text:
         text = text.replace("\n\n\n", "\n\n")
 
-    output_path = config.REPO_DIR / "docs/modules" / f"{mod_id}.md"
+    output_path = Path("docs") / "modules" / f"{mod_id}.md"
     with output_path.open("w") as fh:
         fh.write(text)
 
