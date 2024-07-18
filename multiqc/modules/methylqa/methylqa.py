@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from methylQA"""
-
 import logging
 import os
 import re
@@ -7,19 +5,17 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="methylQA",
             anchor="methylqa",
             target="methylqa",
             href="http://methylqa.sourceforge.net/",
-            info=" - a methylation sequencing data quality assessment tool.",
+            info="Methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
         )
 

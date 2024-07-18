@@ -1,30 +1,35 @@
-"""MultiQC submodule to parse output from Glimpse concordance analysis"""
-
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Import the GLIMPSE submodules
 from .err_spl import parse_glimpse_err_spl
 from .err_grp import parse_glimpse_err_grp
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Glimpse has a number of different commands and outputs.
-    This MultiQC module supports some but not all."""
+    """
+    The supported files are generated from the `GLIMPSE2_concordance` command. The following files are supported:
+
+    - `*.error.spl.txt`
+    - `*.error.grp.txt`
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GLIMPSE",
             anchor="glimpse",
             target="GLIMPSE",
             href="https://odelaneau.github.io/GLIMPSE/",
-            info="Set of tools for low-coverage whole genome sequencing imputation",
+            info="Low-coverage whole genome sequencing imputation",
+            extra="""
+            The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing
+            hundreds of thousands of reference samples, with a special focus on rare variants.
+        
+            The concordance rates values are displayed in a scatter plot, with the option to switch between
+            the different concordance metrics.
+            """,
             doi="10.1101/2022.11.28.518213 ",
         )
 

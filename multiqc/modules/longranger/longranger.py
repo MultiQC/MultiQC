@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Longranger"""
-
 import logging
 import os
 import re
@@ -7,21 +5,33 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Longranger module"""
+    """
+    Currently supported Longranger pipelines:
+
+    - `wgs`
+    - `targeted`
+    - `align`
+
+    Usage:
+
+    ```bash
+    longranger wgs --fastqs=/path/to/fastq --id=NA12878
+    multiqc /path/to/NA12878
+    ```
+
+    This module will look for the files `_invocation` and `summary.csv` in the `NA12878` folder, i.e. the output folder of Longranger in this example. The file `summary.csv` is required. If the file `_invocation` is not found the sample will receive a generic name in the MultiQC report (`longranger#1`), instead of `NA12878` or whatever was given by the `--id` parameter.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Long Ranger",
             anchor="longranger",
             href="https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger",
-            info="A set of analysis pipelines that perform sample demultiplexing, "
-            "barcode processing, alignment, quality control, variant calling, phasing, "
+            info="Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, "
             "and structural variant calling.",
             doi="10.1101/gr.234443.118",
         )
@@ -235,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        ### Parse the data
+        # Parse the data
         self.longranger_data = dict()
         self.paths_dict = dict()
         for f in self.find_log_files("longranger/invocation"):
@@ -275,7 +285,7 @@ class MultiqcModule(BaseMultiqcModule):
             version_str = f" All samples were processed using Longranger version {list(longranger_versions)[0]}"
             del self.headers["longranger_version"]
 
-        ### Write the table
+        # Write the table
         config_table = {
             "id": "longranger_table",
             "namespace": "longranger",
@@ -293,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(self.longranger_data, self.headers, config_table),
         )
 
-        ### Bar plot of phasing stats
+        # Bar plot of phasing stats
         phase_pdata = {}
         snps_phased_pct = {}
         genes_phased_pct = {}
@@ -355,7 +365,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             )
 
-        ### Bar plot of mapping statistics
+        # Bar plot of mapping statistics
         mapping_counts_data = {}
         for s_name in self.longranger_data:
             mapped_reads = float(self.longranger_data[s_name]["number_reads"]) * float(

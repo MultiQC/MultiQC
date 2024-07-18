@@ -9,9 +9,6 @@ jobs:
     name: "Deploy preview"
     runs-on: ubuntu-latest
     if: github.repository == 'MultiQC/MultiQC'
-    defaults:
-      run:
-        working-directory: ./MultiQC_website
     permissions:
       pull-requests: write
 
@@ -19,30 +16,54 @@ jobs:
       - name: Checkout MultiQC repo
         uses: actions/checkout@v4
         with:
-          path: ./MultiQC
+          repository: MultiQC/MultiQC
+          path: MultiQC
 
-      - name: Checkout MultiQC website repo
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+
+      - name: Install MultiQC
+        run: pip install -e MultiQC
+
+      - name: Download test data
         uses: actions/checkout@v4
         with:
-          repository: MultiQC/website
-          path: ./MultiQC_website
-          ref: "move-sp"
+          repository: MultiQC/test-data
+          path: MultiQC/test-data
+
+      - name: Generate module docs
+        run: |
+          cd MultiQC
+          mkdir -p docs/modules
+          python scripts/make_module_docs.py
 
       - name: Set up Node.js 18.x
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
 
+      - name: Checkout MultiQC website repo
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/website
+          path: website
+          ref: "module-extra"
+
       - name: Install npm deps
-        run: npm install
+        run: |
+          cd website
+          npm install
 
       - name: Build website
-        run: npm run build
+        run: |
+          cd website
+          npm run build
 
       - name: Deploy to Netlify
         uses: nwtgck/actions-netlify@v2.1.0
         with:
-          publish-dir: "./MultiQC_website/dist"
+          publish-dir: "./website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
           alias: mqc-pr-${{ github.event.pull_request.number }}

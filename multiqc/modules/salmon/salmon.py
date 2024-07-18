@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Salmon"""
-
 import json
 import logging
 import os
@@ -8,18 +6,25 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The Salmon module parses `meta_info.json`, `lib_format_counts.json` and `flenDist.txt` files, if found.
+
+    :::note
+    Note that `meta_info.json` must be within a directory called either `aux_info` or `aux` and will be ignored
+    otherwise.
+    :::
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Salmon",
             anchor="salmon",
             href="https://combine-lab.github.io/salmon/",
-            info="is a tool for quantifying the expression of transcripts using RNA-seq data.",
+            info="Quantifies expression of transcripts using RNA-seq data.",
             doi="10.1038/nmeth.4197",
         )
 

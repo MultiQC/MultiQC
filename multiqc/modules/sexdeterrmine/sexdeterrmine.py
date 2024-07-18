@@ -1,26 +1,20 @@
-"""MultiQC module to parse output from SexdetErrmine"""
-
 import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """SexDeterrmine module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SexDetErrmine",
             anchor="sexdeterrmine",
             href="https://github.com/TCLamnidis/Sex.DetERRmine",
-            info="""A python script to calculate the relative coverage of X and Y chromosomes,
-            and their associated error bars, from the depth of coverage at specified SNPs.""",
+            info="Calculates relative coverage of X and Y chromosomes and their associated error bars from "
+            "the depth of coverage at specified SNPs.",
             doi="10.1038/s41467-018-07483-5",
         )
 

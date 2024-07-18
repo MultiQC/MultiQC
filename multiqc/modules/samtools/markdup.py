@@ -1,5 +1,3 @@
-"""MultiQC submodule to parse output from Samtools markdup"""
-
 import json
 import logging
 import re

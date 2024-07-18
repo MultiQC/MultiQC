@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Slamdunk"""
-
 import logging
 import re
 
@@ -7,7 +5,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, scatter, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
@@ -15,16 +12,15 @@ VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Slamdunk module class, parses slamdunk logs.
+    This module should be able to parse logs from v0.2.2-dev onwards.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Slamdunk",
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
-            info="is a tool to analyze SLAMSeq data.",
+            info="Tool to analyze SLAM-Seq data.",
             doi="10.1186/s12859-019-2849-7",
         )
 
