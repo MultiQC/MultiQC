@@ -84,3 +84,47 @@ def test_run_twice(data_dir, tmp_path):
     )
     assert (tmp_path / "multiqc_report.html").is_file()
     assert (tmp_path / "multiqc_data").is_dir()
+
+
+def test_user_config(tmp_path, capsys):
+    import multiqc
+
+    config_yml = tmp_path / "custom_config.yml"
+    expected_title = "Custom Title"
+    config_yml.write_text(f'title: "{expected_title}"')
+
+    data_file = tmp_path / "data_mqc.txt"
+    data_file.write_text("sample1\t100\nsample2\t200\n")
+
+    multiqc.load_config(config_yml)
+    assert multiqc.config.title == expected_title
+
+    multiqc.parse_logs(data_file)
+    assert multiqc.config.title == expected_title
+
+    multiqc.write_report(output_dir=str(tmp_path / "output"))
+    assert multiqc.config.title == expected_title
+
+    config_yml2 = tmp_path / "custom_config2.yml"
+    config_yml2.write_text("""table_cond_formatting_rules:
+  mqc_generalstats_fastqc_percent_duplicates:
+    pass:
+      - gt: 50
+    """)
+    multiqc.load_config(config_yml2)
+    assert multiqc.config.title == expected_title
+    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
+        {"gt": 50}
+    ]
+
+    multiqc.parse_logs(data_file)
+    assert multiqc.config.title == expected_title
+    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
+        {"gt": 50}
+    ]
+
+    multiqc.write_report(output_dir=str(tmp_path / "output"))
+    assert multiqc.config.title == expected_title
+    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
+        {"gt": 50}
+    ]
