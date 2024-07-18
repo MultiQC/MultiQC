@@ -476,4 +476,4 @@ def load_config(config_file: Union[str, Path]):
     if not path.exists():
         raise ValueError(f"Config file '{config_file}' not found")
 
-    config.load_config_file(config_file)
+    config.load_config_file(config_file, is_explicit_config=True)
