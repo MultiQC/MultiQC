@@ -97,13 +97,12 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     # Re-loading explicit user configs
     path: Union[Path, str]
-    for path in config.loaded_user_config_files:
+    for path in config.explicit_user_config_files:
         config.load_config_file(path)
 
-    # Set up session config files passed with -c or interactive.load_config().
-    # They are kept for the entire interactive session.
+    # Set up session config files passed with -c or cfg=
     for path in cfg.config_files:
-        config.load_config_file(str(path))
+        config.load_config_file(str(path), is_explicit_config=False)
 
     # Command-line config YAML
     if len(cfg.cl_config) > 0:

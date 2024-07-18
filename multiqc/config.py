@@ -283,7 +283,7 @@ def load_defaults():
 load_defaults()
 
 # To restore after load_defaults()
-loaded_user_config_files: Set[Path] = set()
+explicit_user_config_files: Set[Path] = set()
 
 
 def reset():
@@ -291,6 +291,7 @@ def reset():
     Reset the interactive session
     """
 
+    explicit_user_config_files.clear()
     load_defaults()
 
 
@@ -352,7 +353,7 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
 
     if path.is_file():
         if is_explicit_config:
-            loaded_user_config_files.add(path)
+            explicit_user_config_files.add(path)
 
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
