@@ -13,10 +13,12 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/setup-python@v5
-
       - name: Checkout MultiQC repo
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
 
       - name: Install MultiQC
         run: pip install .
