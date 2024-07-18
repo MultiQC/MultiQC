@@ -25,7 +25,7 @@ for mod_id, entry_point in config.avail_modules.items():
 
     data_dir = config.REPO_DIR / "test-data" / "data"
     mod_dir = data_dir / "modules" / mod_id
-    assert mod_dir.exists() and mod_dir.is_dir()
+    assert mod_dir.exists() and mod_dir.is_dir(), mod_dir
     report.analysis_files = [mod_dir]
     report.search_files([mod_id])
 

@@ -31,9 +31,10 @@ jobs:
 
       - name: Generate module docs
         run: |
+          ls
+          ls test-data
           mkdir -p docs/modules
           python scripts/make_module_docs.py
-          cd ..
 
       - name: Set up Node.js 18.x
         uses: actions/setup-node@v4
