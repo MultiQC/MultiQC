@@ -23,21 +23,23 @@ jobs:
           path: ./MultiQC
 
       - name: Install MultiQC
-        working-directory: ./MultiQC
         run: pip install .
+        with:
+          working-directory: ./MultiQC
 
       - name: Download test data
         uses: actions/checkout@v4
-        working-directory: ./MultiQC
         with:
+          working-directory: ./MultiQC
           repository: MultiQC/test-data
           path: test-data
 
       - name: Generate module docs
-        working-directory: ./MultiQC
         run: |
           mkdir -p docs/modules
           python scripts/make_module_docs.py
+        with:
+          working-directory: ./MultiQC
 
       - name: Set up Node.js 18.x
         uses: actions/setup-node@v4
@@ -52,17 +54,19 @@ jobs:
           ref: "move-sp"
 
       - name: Install npm deps
-        working-directory: ./MultiQC_website
         run: npm install
+        with:
+          working-directory: ./MultiQC_website
 
       - name: Build website
-        working-directory: ./MultiQC_website
         run: npm run build
+        with:
+          working-directory: ./MultiQC_website
 
       - name: Deploy to Netlify
-        working-directory: ./MultiQC_website
         uses: nwtgck/actions-netlify@v2.1.0
         with:
+          working-directory: ./MultiQC_website
           publish-dir: "./MultiQC_website/dist"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           deploy-message: "MultiQC PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}"
