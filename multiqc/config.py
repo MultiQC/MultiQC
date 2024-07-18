@@ -282,8 +282,8 @@ def load_defaults():
 
 load_defaults()
 
-# Keeping track to avoid loading twice
-_loaded_found_config_files: Set[Path] = set()
+# To restore after load_defaults()
+loaded_user_config_files: Set[Path] = set()
 
 
 def reset():
@@ -291,13 +291,10 @@ def reset():
     Reset the interactive session
     """
 
-    global _loaded_found_config_files
-    _loaded_found_config_files = set()
-
     load_defaults()
 
 
-def load_user_files():
+def find_user_files():
     """
     Overwrite config defaults with user config files.
 
@@ -306,32 +303,45 @@ def load_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
+    _loaded = set()
+
+    def _load_found_file(path: Union[Path, str, None]):
+        if not path:
+            return
+        if Path(path).absolute() in _loaded:
+            return
+        load_config_file(path, is_explicit_config=False)
+        _loaded.add(Path(path).absolute())
+
     # Load and parse installation config file if we find it
-    load_config_file(REPO_DIR / "multiqc_config.yaml")
+    _load_found_file(REPO_DIR / "multiqc_config.yaml")
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    load_config_file(
+    _load_found_file(
         os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
     )
 
     # Load and parse a user config file if we find it
-    load_config_file(os.path.expanduser("~/.multiqc_config.yaml"))
+    _load_found_file(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        load_config_file(os.environ.get("MULTIQC_CONFIG_PATH"))
+        _load_found_file(os.environ.get("MULTIQC_CONFIG_PATH"))
 
     # Load separate config entries from MULTIQC_* environment variables
     _add_config(_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
-    load_config_file("multiqc_config.yaml")
+    _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None]):
+def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True):
     """
-    Load and parse a config file if we find it
+    Load and parse a config file if we find it.
+
+    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults.
     """
     if not yaml_config_path:
         return
@@ -340,11 +350,10 @@ def load_config_file(yaml_config_path: Union[str, Path, None]):
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
 
-    if path.absolute() in _loaded_found_config_files:
-        return
-    _loaded_found_config_files.add(path.absolute())
-
     if path.is_file():
+        if is_explicit_config:
+            loaded_user_config_files.add(path)
+
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
             # new_config can be None if the file is empty

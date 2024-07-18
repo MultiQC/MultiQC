@@ -92,7 +92,13 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     plugin_hooks.mqc_trigger("before_config")
 
-    config.load_user_files()
+    # Re-finding implicit configs
+    config.find_user_files()
+
+    # Re-loading explicit user configs
+    path: Union[Path, str]
+    for path in config.loaded_user_config_files:
+        config.load_config_file(path)
 
     # Set up session config files passed with -c or interactive.load_config().
     # They are kept for the entire interactive session.
