@@ -15,22 +15,26 @@ jobs:
     steps:
       - name: Checkout MultiQC repo
         uses: actions/checkout@v4
+        with:
+          repository: MultiQC/MultiQC
+          path: MultiQC
 
       - uses: actions/setup-python@v5
         with:
           python-version: 3.12
 
       - name: Install MultiQC
-        run: pip install -e .
+        run: pip install -e MultiQC
 
       - name: Download test data
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
-          path: test-data
+          path: MultiQC/test-data
 
       - name: Generate module docs
         run: |
+          cd MultiQC
           mkdir -p docs/modules
           python scripts/make_module_docs.py
 
