@@ -9,7 +9,7 @@ class MultiqcModule(KrakenModule):
     """
     This module works with Bracken output files that resemble Kraken reports. They look like the following:
 
-    ```ts
+    ```tsv
     100.00	1188381	0	R	1	root
     100.00	1188380	0	R1	131567	  cellular organisms
     100.00	1188328	0	D	2	    Bacteria

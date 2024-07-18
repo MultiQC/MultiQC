@@ -8,7 +8,7 @@ Usage:
 """
 
 import argparse
-from textwrap import dedent
+from textwrap import dedent, indent
 
 from multiqc import config, report, BaseMultiqcModule
 
@@ -34,17 +34,18 @@ for mod_id, entry_point in config.avail_modules.items():
 
     module: BaseMultiqcModule = module_cls()
 
-    href = module.href[0] if len(module.href) == 1 else ('"' + ", ".join(module.href) + '"')
-
+    if module.extra:
+        extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
+        extra = "\nextra_description: >\n" + indent(extra, "  ")
+    else:
+        extra = ""
     text = f"""\
 ---
 name: {module.name}
-url: {href}
-description: >
-  {module.info}
+urls: {module.href}
+summary: >
+  {module.info}{extra}
 ---
-
-{dedent(module.extra)}
 
 {dedent(docstring)}
 """.strip()

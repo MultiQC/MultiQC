@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="Preseq",
             anchor="preseq",
             href="http://smithlabresearch.org/software/preseq/",
-            info="Estimates the complexity of a library, showing how many additional unique reads are sequenced for "
+            info="Estimates library complexity, showing how many additional unique reads are sequenced for "
             "increasing total read count.",
             extra="A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library "
             "where total reads = unique reads.",

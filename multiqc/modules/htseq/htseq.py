@@ -21,8 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="htseq",
             target="HTSeq Count",
             href="https://htseq.readthedocs.io/en/master/htseqcount.html",
-            info="Part of the HTSeq Python package - it takes a file with aligned sequencing "
-            "reads, plus a list of genomic features and counts how many reads map to each feature.",
+            info="Part of the HTSeq package: counts reads covering specified genomic features",
             doi="10.1093/bioinformatics/btu638",
         )
 

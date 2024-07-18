@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 class MultiqcModule(BaseMultiqcModule):
     """
     Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.
+
     The log files from the genome creation steps are not parsed and there are no plots/tables produced from the "SNP coverage" report.
 
     Differences between the numbers in the tagging and sorting reports are due to paired-end reads.
@@ -25,8 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="SNPsplit",
             target="SNPsplit",
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
-            info="Allele-specific alignment sorter, that reads SAM/BAM files and determine the allelic origin of "
-            "reads that cover known SNP positions.",
+            info="Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions",
             doi="10.12688/f1000research.9037.2",
         )
 

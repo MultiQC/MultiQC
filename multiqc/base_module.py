@@ -135,7 +135,7 @@ class BaseMultiqcModule:
             )
 
         url_link = ""
-        if len(self.href) > 1:
+        if len(self.href) > 0:
             url_links = []
             for url in self.href:
                 url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')

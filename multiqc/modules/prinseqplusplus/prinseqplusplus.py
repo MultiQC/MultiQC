@@ -19,8 +19,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",
-            info="C++ implementation of the prinseq-lite.pl program. It can be used to filter, reformat or "
-            "trim genomic and metagenomic sequence data.",
+            info="C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and "
+            "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
         )
 
