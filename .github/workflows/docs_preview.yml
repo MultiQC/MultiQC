@@ -31,7 +31,12 @@ jobs:
 
       - name: Generate module docs
         run: |
+          ls
           cd MultiQC
+          ls
+          ls test-data
+          ls test-data/data
+          ls test-data/data/modules
           mkdir -p docs/modules
           python scripts/make_module_docs.py
           cd ..
