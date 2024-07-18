@@ -107,24 +107,18 @@ def test_user_config(tmp_path, capsys):
 
     config_yml2 = tmp_path / "custom_config2.yml"
     config_yml2.write_text("""table_cond_formatting_rules:
-  mqc_generalstats_fastqc_percent_duplicates:
+  column:
     pass:
       - gt: 50
     """)
     multiqc.load_config(config_yml2)
     assert multiqc.config.title == expected_title
-    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
-        {"gt": 50}
-    ]
+    assert multiqc.config.table_cond_formatting_rules["column"]["pass"] == [{"gt": 50}]
 
     multiqc.parse_logs(data_file)
     assert multiqc.config.title == expected_title
-    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
-        {"gt": 50}
-    ]
+    assert multiqc.config.table_cond_formatting_rules["column"]["pass"] == [{"gt": 50}]
 
     multiqc.write_report(output_dir=str(tmp_path / "output"))
     assert multiqc.config.title == expected_title
-    assert multiqc.config.table_cond_formatting_rules["mqc_generalstats_fastqc_percent_duplicates"]["pass"] == [
-        {"gt": 50}
-    ]
+    assert multiqc.config.table_cond_formatting_rules["column"]["pass"] == [{"gt": 50}]
