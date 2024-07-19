@@ -641,11 +641,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
         data_ddict = dict()
         for s in matrix[1:]:
-            assert isinstance(s[0], str)
-            data_ddict[s[0]] = dict()
+            sname = str(s[0])
+            data_ddict[sname] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(matrix[0][i + 1])
-                data_ddict[s[0]][cat] = v
+                data_ddict[sname][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True
