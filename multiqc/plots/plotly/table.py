@@ -38,6 +38,9 @@ def make_table(
     if table_title is None:
         table_title = dt.id.replace("_", " ").title()
 
+    def escape(s: str) -> str:
+        return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
+
     for idx, metric, header in dt.get_headers_in_order():
         rid = header.rid
 
@@ -144,6 +147,7 @@ def make_table(
                 valstr = valstr.replace("DECIMAL", config.decimalPoint_format).replace(
                     "THOUSAND", config.thousandsSep_format
                 )
+                valstr = valstr
 
                 suffix = header.suffix
                 if suffix:
@@ -210,7 +214,7 @@ def make_table(
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}" {col}>{valstr}</td>'
+                    t_rows[s_name][rid] = f'<td val="{escape(str(val))}" class="{rid} {hide}" {col}>{valstr}</td>'
 
                 # Build table cell background colour bar
                 elif hashable and header.scale:
@@ -226,13 +230,15 @@ def make_table(
 
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{val}" class="data-coloured {rid} {hide}">{wrapper_html}</td>'
+                    t_rows[s_name][rid] = (
+                        f'<td val="{escape(str(val))}" class="data-coloured {rid} {hide}">{wrapper_html}</td>'
+                    )
 
                 # Scale / background colours are disabled
                 else:
                     if s_name not in t_rows:
                         t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{val}" class="{rid} {hide}">{valstr}</td>'
+                    t_rows[s_name][rid] = f'<td val="{escape(str(val))}" class="{rid} {hide}">{valstr}</td>'
 
                 # Is this cell hidden or empty?
                 if s_name not in t_rows_empty:
@@ -362,7 +368,7 @@ def make_table(
         row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else ""
         html += f"<tr{row_hidden}>"
         # Sample name row header
-        html += f'<th class="rowheader" data-original-sn="{s_name}">{s_name}</th>'
+        html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{s_name}</th>'
         for metric in t_headers:
             html += t_rows[s_name].get(metric, empty_cells[metric])
         html += "</tr>"
