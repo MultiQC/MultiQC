@@ -92,12 +92,17 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
 
     plugin_hooks.mqc_trigger("before_config")
 
-    config.load_user_files()
+    # Re-finding implicit configs
+    config.find_user_files()
 
-    # Set up session config files passed with -c or interactive.load_config().
-    # They are kept for the entire interactive session.
+    # Re-loading explicit user configs
+    path: Union[Path, str]
+    for path in config.explicit_user_config_files:
+        config.load_config_file(path)
+
+    # Set up session config files passed with -c or cfg=
     for path in cfg.config_files:
-        config.load_config_file(str(path))
+        config.load_config_file(str(path), is_explicit_config=False)
 
     # Command-line config YAML
     if len(cfg.cl_config) > 0:
@@ -144,8 +149,6 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     if cfg.strict is not None:
         config.strict = cfg.strict
         config.lint = cfg.strict  # Deprecated since v1.17
-        if cfg.strict:
-            strict_helpers.run_tests()
     if cfg.development is not None:
         config.development = cfg.development
         if cfg.development:

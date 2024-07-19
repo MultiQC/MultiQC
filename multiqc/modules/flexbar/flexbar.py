@@ -1,12 +1,9 @@
-"""MultiQC module to parse output from Flexbar"""
-
 import logging
 import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.]+)"
@@ -14,12 +11,16 @@ VERSION_REGEX = r"Flexbar - flexible barcode and adapter removal, version ([\d\.
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Flexbar",
             anchor="flexbar",
             href="https://github.com/seqan/flexbar",
-            info="is a barcode and adapter removal tool.",
+            info="Barcode and adapter removal tool.",
+            extra="""
+            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes 
+            barcoded runs and removes adapter sequences. Moreover, trimming and filtering features are provided.
+            Flexbar increases read mapping rates and improves genome as well as transcriptome assemblies.
+            """,
             doi="10.1093/bioinformatics/btx330",
         )
 

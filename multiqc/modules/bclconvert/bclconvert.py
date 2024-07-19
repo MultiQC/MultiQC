@@ -15,13 +15,52 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple
+    bclconvert run outputs as long as they are from the same sequencing run. When doing this,
+    the undetermined reads will be 'corrected' and re-calculated (as an unknown read from
+    one bclcovnert run might not be truly unknown, but simply from another run).
+
+    #### Calculate estimated depth
+
+    You can specify a genome size in config
+
+    It's often useful to talk about sequencing yield in terms of estimated depth of coverage.
+    In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+
+    ```yaml
+    bclconvert:
+      genome_size: 3049315783
+    ```
+
+    The coverage depth will be estimated as the yield Q30 dvivided by the genome size.
+
+    MultiQC comes with effective genome size presets for Human and Mouse, so you can
+    provide the genome build name instead, like this: `genome_size: hg38_genome`. The
+    following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
+
+    #### Add barplots containing undetermined barcodes
+
+    By default, the bar plot of undetermined barcodes is only shown when reporting from a single demultiplexing run.
+
+    If you would like to show it with multiple runs (eg. bclconvert runs are split by lane),
+    you can specify following parameter in your MultiQC config:
+
+    ```yaml
+    bclconvert:
+      create_undetermined_barcode_barplots: True
+    ```
+
+    The default of this configuration value is `False`
+    """
+
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BCL Convert",
             anchor="bclconvert",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html",
-            info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
+            info="Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
         )
 
@@ -29,10 +68,10 @@ class MultiqcModule(BaseMultiqcModule):
         demuxes, qmetrics, multiple_sequencing_runs, last_run_id = self._collate_log_files()
 
         # variables to store reads for undetermined read recalculation
-        self.per_lane_undetermined_reads = dict()
-        self.total_reads_in_lane_per_file = dict()
+        self.per_lane_undetermined_reads: Optional[Dict] = dict()
+        self.total_reads_in_lane_per_file: Dict = dict()
 
-        bclconvert_data = dict()
+        bclconvert_data: Dict = dict()
         for demux in demuxes.values():
             self.parse_demux_data(demux, bclconvert_data, len(demuxes))
         for qmetric in qmetrics.values():

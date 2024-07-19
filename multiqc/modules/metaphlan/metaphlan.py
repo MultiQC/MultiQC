@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MetaPhlAn"""
-
 import logging
 import re
 
@@ -11,15 +9,35 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MetaPhlAn module"""
+    """
+    The module supports outputs from MetaPhlAn, that look like the following:
+
+    ```tsv
+    k__Bacteria	2	100.0
+    k__Bacteria|p__Firmicutes	2|1239	44.30422
+    k__Bacteria|p__Bacteroidetes	2|976	34.73101
+    ```
+
+    A bar graph is generated that shows the relative abundance for each sample that
+    fall into the top-10 categories for each taxa rank. The top categories are calculated
+    by summing the relative abundances across all samples.
+
+    Any species under the Additional Species column are ignored when making the graphs.
+
+    The number of top categories to plot can be customized in the config file:
+
+    ```yaml
+    metaphlan:
+      top_n: 10
+    ```
+    """
 
     def __init__(
-        # Initialise the parent object
         self,
         name="MetaPhlAn",
         anchor="metaphlan",
         href="https://github.com/biobakery/MetaPhlAn",
-        info="is a computational tool for profiling the composition of microbial communities from metagenomic shotgun sequencing data.",
+        info="Profiles the composition of microbial communities from metagenomic shotgun sequencing data.",
         doi="10.1038/s41587-023-01688-w",
     ):
         super(MultiqcModule, self).__init__(

@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Peddy"""
-
 import json
 import logging
 import random
@@ -7,22 +5,20 @@ import random
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Peddy module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Peddy",
             anchor="peddy",
             href="https://github.com/brentp/peddy",
-            info="calculates genotype :: pedigree correspondence checks, ancestry checks and sex checks using VCF files.",
+            info="Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.",
+            extra="It samples the VCF at about 25000 sites (plus chrX) to accurately estimate relatedness, IBS0, "
+            "heterozygosity, sex and ancestry. It uses 2504 thousand genome samples as backgrounds to calibrate "
+            "the relatedness calculation and to make ancestry predictions.\n\n"
+            "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
         )
 

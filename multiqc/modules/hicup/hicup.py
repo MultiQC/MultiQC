@@ -1,25 +1,19 @@
-"""MultiQC module to parse output from HiCUP"""
-
 import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """HiCUP module, parses log files saved by HiCUP."""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiCUP",
             anchor="hicup",
             href="http://www.bioinformatics.babraham.ac.uk/projects/hicup/",
-            info="(Hi-C User Pipeline) is a tool for mapping and performing quality control on Hi-C data.",
+            info="Mapping and quality control on Hi-C data.",
             doi="10.12688/f1000research.7334.1",
         )
 

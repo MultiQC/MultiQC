@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from SortMeRNA"""
-
 import logging
 import os
 import re
@@ -8,18 +6,30 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses the log files, which are created when `SortMeRNA` is run with the `--log` option.
+
+    The default header in the 'General Statistics' table is '% rRNA'. Users can override this using the configuration option:
+
+    ```yaml
+    sortmerna:
+      tab_header: "My database hits"
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SortMeRNA",
             anchor="sortmerna",
             href="http://bioinfo.lifl.fr/RNA/sortmerna/",
-            info="is a program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.",
+            info="Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.",
+            extra="The core algorithm is based on approximate seeds and allows for fast and sensitive analyses "
+            "of nucleotide sequences. The main application of SortMeRNA is filtering ribosomal RNA from "
+            "metatranscriptomic data.",
             doi="10.1093/bioinformatics/bts611",
         )
 

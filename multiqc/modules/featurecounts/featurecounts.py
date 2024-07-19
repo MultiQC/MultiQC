@@ -1,33 +1,40 @@
-"""MultiQC module to parse output from featureCounts"""
-
 import logging
 import re
+from typing import Dict, List
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    As of MultiQC v1.10, the module should also work with output from
+    [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html).
+    Note that your filenames must end in `.summary` to be discovered.
+    See [Module search patterns](#module-search-patterns) for how to customise this.
+
+    Please note that if files are in "Rsubread mode" then lines will be split by any
+    whitespace, instead of tab characters. As such, filenames with spaces in will
+    cause the parsing to fail.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="featureCounts",
             anchor="featurecounts",
             target="Subread featureCounts",
             href="http://subread.sourceforge.net/",
-            info="is a highly efficient general-purpose read summarization program"
-            " that counts mapped reads for genomic features such as genes, exons,"
-            " promoter, gene bodies, genomic bins and chromosomal locations.",
+            info="Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, "
+            "genomic bins and chromosomal locations.",
             doi="10.1093/bioinformatics/btt656",
         )
 
         # Find and load any featureCounts reports
-        self.featurecounts_data = dict()
-        self.featurecounts_keys = list()
+        self.featurecounts_data: Dict = dict()
+        self.featurecounts_keys: List = list()
         for f in self.find_log_files("featurecounts"):
             self.parse_featurecounts_report(f)
 

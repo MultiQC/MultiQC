@@ -1,27 +1,39 @@
-"""MultiQC module to parse output from Adapter Removal"""
-
 import logging
 import re
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"AdapterRemoval ver. ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses `*.settings` logs from Adapter Removal.
+
+    Supported setting file results:
+
+    - `single end`
+    - `paired end noncollapsed`
+    - `paired end collapsed`
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Adapter Removal",
             anchor="adapterremoval",
-            target="Adapter Removal",
-            href="https://github.com/MikkelSchubert/adapterremoval",
-            info=" rapid adapter trimming, identification, and read merging ",
+            href="https://github.com/mikkelschubert/adapterremoval",
+            info="Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus",
+            extra="AdapterRemoval searches for and removes remnant adapter sequences from High-Throughput "
+            "Sequencing (HTS) data and (optionally) trims low quality bases from the 3' end of "
+            "reads following adapter removal. It can analyze both single end and paired end data, "
+            "and can be used to merge overlapping paired-ended reads into (longer) consensus sequences. "
+            "Additionally, the AdapterRemoval may be used to recover a consensus adapter sequence for "
+            "paired-ended data, for which this information is not available.",
             doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
         )
 
@@ -32,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.s_name = None
         self.adapter_removal_data = {}
 
-        self.len_dist_plot_data = {
+        self.len_dist_plot_data: Dict[str, Dict] = {
             "mate1": dict(),
             "mate2": dict(),
             "singleton": dict(),

@@ -1,5 +1,3 @@
-"""Module to parse output from mOTUs"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -10,13 +8,16 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module takes as input in the stdout of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Motus",
             anchor="motus",
             href="https://motu-tool.org/",
-            info="is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
+            info="Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
             doi="10.1038/s41467-019-08844-4",
         )
 

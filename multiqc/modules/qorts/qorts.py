@@ -1,29 +1,31 @@
-"""MultiQC module to parse output from QoRTs"""
-
 import logging
 import os
 import re
+from typing import List, Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="QoRTs",
             anchor="qorts",
             href="http://hartleys.github.io/QoRTs/",
-            info="is toolkit for analysis, QC and data management of RNA-Seq datasets.",
+            info="Toolkit for analysis, QC, and data management of RNA-Seq datasets.",
+            extra="Aids in the detection and identification of errors, biases, and artifacts produced "
+            "by paired-end high-throughput RNA-Seq technology. In addition, it can produce "
+            "count data designed for use with differential expression and differential "
+            "exon usage tools, as well as individual-sample and/or group-summary genome "
+            "track files suitable for use with the UCSC genome browser.",
             doi="10.1186/s12859-015-0670-5",
         )
 
         # Parse logs
-        self.qorts_data = dict()
+        self.qorts_data: Dict = dict()
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
             self.add_data_source(f)
@@ -53,10 +55,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_strandedness_plot()
 
     def parse_qorts(self, f):
-        s_names = None
+        s_names: List[str] = []
         for line in f["f"]:
             s = line.split("\t")
-            if s_names is None:
+            if not s_names:
                 raw_s_names = s[1:]
                 s_names = [self.clean_s_name(s_name, f) for s_name in raw_s_names]
                 if len(s_names) <= 2 and raw_s_names[0].endswith("COUNT"):

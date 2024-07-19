@@ -1,32 +1,27 @@
-"""MultiQC module to parse output from Anglerfish"""
-
 import json
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Anglerfish module class
-    """
-
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Anglerfish",
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
-            info="A tool to assess Illumina libraries sequenced on Oxford Nanopore for the purpose of quality control.",
+            info="Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells",
+            extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
         )
 
         # Find and load any anglerfish reports
-        self.anglerfish_data = dict()
+        self.anglerfish_data: Dict = dict()
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)

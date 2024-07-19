@@ -8,13 +8,19 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module requires that PRINSEQ++ has been run with the flag `-VERBOSE 1`.
+
+    It uses the log file name as the sample name.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",
-            info="PRINSEQ++ is a C++ implementation of the prinseq-lite.pl program. It can be used to filter, reformat or trim genomic and metagenomic sequence data.",
+            info="C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and "
+            "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
         )
 

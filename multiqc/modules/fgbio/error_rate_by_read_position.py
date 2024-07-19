@@ -1,11 +1,13 @@
-"""MultiQC submodule to parse output from fgbio ErrorRateByReadPosition"""
+from typing import Dict
 
+from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
 from multiqc.utils.util_functions import strtobool
 
 
-def parse_reports(self):
-    """Parser metric files for fgbio ErrorRateByReadPosition.
+def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
+    """
+    Parser metric files for rgb ErrorRateByReadPosition.
 
     Stores the per-read-per-position metrics into a data file and adds a section
     with a per-sample plot.
@@ -34,8 +36,8 @@ def parse_reports(self):
     y_max = 0.01  # default to 1%
     collapse = True  # same as the `--collapse` option on `ErrorRateByReadPosition`
     is_new_format = False  # Test if this is new or old format
-    for f in self.find_log_files("fgbio/errorratebyreadposition", filehandles=True):
-        self.add_data_source(f, section="Error rate by read position")
+    for f in module.find_log_files("fgbio/errorratebyreadposition", filehandles=True):
+        module.add_data_source(f, section="Error rate by read position")
 
         fh = f["f"]
         header = fh.readline().rstrip("\r\n").split("\t")
@@ -48,7 +50,7 @@ def parse_reports(self):
 
         # slurp in the data for this sample
         s_name = f["s_name"]
-        s_data = dict()
+        s_data: Dict = dict()
         bases_total = 0
         errors = 0
         for line in fh:
@@ -83,18 +85,18 @@ def parse_reports(self):
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
-        self.add_software_version(None, f["s_name"])
+        module.add_software_version(None, f["s_name"])
 
     # ignore samples
-    all_data = self.ignore_samples(all_data)
+    all_data = module.ignore_samples(all_data)
 
     # if no data, then do nothing
     if not all_data:
         return 0
 
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_fgbio_ErrorRateByReadPosition_per_position")
-    self.write_data_file(error_rates, "multiqc_fgbio_ErrorRateByReadPosition_total")
+    module.write_data_file(all_data, "multiqc_fgbio_ErrorRateByReadPosition_per_position")
+    module.write_data_file(error_rates, "multiqc_fgbio_ErrorRateByReadPosition_total")
 
     # Plot the data and add section
     pconfig = {
@@ -139,7 +141,7 @@ def parse_reports(self):
                 lg[s_name_with_read] = dict((d["position"], d[keys[index]]) for d in read_data.values())
 
     # add a section for the plot
-    self.add_section(
+    module.add_section(
         name="Error Rate by Read Position",
         anchor="fgbio-error-rate-by-read-position",
         description="Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={}`".format(
@@ -179,6 +181,6 @@ def parse_reports(self):
             "modify": lambda x: 100.0 * x,
         }
     }
-    self.general_stats_addcols(error_rates, headers)
+    module.general_stats_addcols(error_rates, headers)
 
     return len(all_data)

@@ -1,12 +1,9 @@
-"""MultiQC module to parse output from WhatsHap"""
-
 import logging
 from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -15,20 +12,15 @@ ALL_CHROM = "ALL"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    WhatsHap module class, parses WhatsHap output.
+    The module is currently restricted to the output from `whatshap stats --tsv`.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
-            info="""is a program for phasing genomic variants using DNA sequencing
-                    reads, also called read-based phasing or haplotype assembly. It
-                    is especially suitable for long reads, but also works well with
-                    short reads.
-                    """,
+            info="Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)",
             doi="10.1101/085050",
         )
 

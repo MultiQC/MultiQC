@@ -1,27 +1,21 @@
-"""MultiQC module to parse logs from Skewer"""
-
 import logging
 import re
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"skewer v([\d\.]+) \[.+\]"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Skewer"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Skewer",
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",
-            info="is an adapter trimming tool specially designed for processing next-generation sequencing (NGS) paired-end sequences.",
+            info="Adapter trimming tool for NGS paired-end sequences.",
             doi="10.1186/1471-2105-15-182",
         )
 

@@ -419,7 +419,7 @@ module_order:
   - gatk
   - htseq
   - bcftools
-  - featureCounts
+  - featurecounts
   - fgbio
   - dragen
   - dragen_fastqc

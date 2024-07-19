@@ -215,8 +215,6 @@ you will need to edit or create are as follows:
 
 ```
 ├── docs
-│   └── modules
-│       └── <your_module>.md
 ├── multiqc
 │   ├── modules
 │   |   └── <your_module>
@@ -276,35 +274,6 @@ In `multiqc/utils/config_defaults.yaml` you should see a list variable called
 `module_order`. This contains the name of modules in order of precedence. Add your
 module here in an appropriate position.
 
-### Documentation
-
-Next up, you need to create a documentation file for your module. The reason
-for this is twofold: firstly, docs are important to help people to use, debug
-and extend MultiQC (you're reading this, aren't you?). Secondly,
-having the file there with the appropriate YAML front matter will make the
-module show up on the [MultiQC homepage](http://multiqc.info) so that everyone
-knows it exists. This process is automated once the file is added to the core
-repository.
-
-These docs file should be placed in `docs/modules/<your_module_name>.md` and
-should have the following structure:
-
-```markdown
----
-name: Tool Name
-url: http://www.amazing-bfx-tool.com
-description: >
-  This amazing tool does some really cool stuff. Multiple lines
-  are ok if you want. Not too long though!
----
-
-Your module documentation goes here. Feel free to use markdown and write whatever
-you think would be helpful. Please avoid using heading levels 1 to 3.
-```
-
-The file search patterns will be shown on the website page automatically
-and do not need to be included in this file.
-
 ### Tests
 
 Tests are written for [pytest](https://docs.pytest.org/), and placed in the `tests/`
@@ -337,13 +306,12 @@ from multiqc.modules.base_module import BaseMultiqcModule
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
           name='My Module',
           anchor='mymod',
-          href="http://www.awesome_bioinfo.com/my_module",
-          info="is an example analysis module used for writing documentation.",
-          doi="01.2345/journal/abc123"
+          href="https://www.awesome_bioinfo.com/my_module",
+          info="Example analysis module used for writing documentation.",
+          doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
         )
 ```
 
@@ -358,7 +326,7 @@ The available arguments when initialising a module as follows:
 - `info` - Very short description text about the tool
 - `doi` - One or more publication DOIs (`str`, or `list` of `str`s)
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
-- `extra` - Additional custom HTML after description text.
+- `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
 - `autoformat` - (default: `True`)
 - `autoformat_type` - (default: `markdown`)
@@ -366,6 +334,61 @@ The available arguments when initialising a module as follows:
 Ok, that should be it! The `__init__()` function will now be executed every
 time MultiQC runs. Try adding a `print("Hello World!")` statement and see
 if it appears in the MultiQC logs at the appropriate time...
+
+### Documentation
+
+If there are any specific considerations for the users before running the module,
+add them into the module docstring, e.g.:
+
+````py
+class MultiqcModule(BaseMultiqcModule):
+    """
+    The tool provides multiple subcommands, and the MultiQC module currently only
+    supports `command1`.
+
+    The tool outputs useful information into stdout, and you need to capture it to
+    a file for the module to recognize. To pipe stderr into a file, run the tool
+    as follows:
+
+    ```
+    mymod command1 2> sample1.log
+    ```
+
+    Note the that the sample name is parsed from the filename by default, in this case,
+    the reported name will be "sample1".
+
+    #### Configuration
+
+    By default, the tool uses the following thresholds to report something: 1, 2, 3.
+
+    To override them, use the following config:
+
+    ```yaml
+    mymod:
+      thresholds:
+        - 1
+        - 2
+        - 3
+    ```
+
+    Version 1.1.0 of the tool is tested.
+    """
+    def __init__(self):
+        super(MultiqcModule, self).__init__(
+            ...
+````
+
+The consideration can be:
+
+- The list of supported subcommands of a toolkit;
+- The list of supported use cases and sets of parameters;
+- Versions of the tools that are supported or tested;
+- Required outputs file naming and redirection;
+- The way the sample name is found in the logs, if not obvious;
+- Configuration parameters that the tool can read from the user config;
+- Any post-processing needed to be done by the user before running the module;
+- Performance considerations;
+- Conflicts with other MultiC modules.
 
 ### Logging
 
@@ -1068,7 +1091,7 @@ with your module name is a good idea as in the example above. Keep all module co
 options under the same top-level name for clarity.
 
 Finally, don't forget to document the usage of your module-specific configuration
-in `docs/modules/mymodule.md` so that people know how to use it.
+in the `MultiqcModule` class docstring, so that people know how to use it.
 
 ### Profiling Performance
 

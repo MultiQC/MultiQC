@@ -1,24 +1,59 @@
-#!/usr/bin/env python
-
 import json
 import logging
 import os
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Hostile Module"""
+    """
+    Hostile write the log in JSON format. Which is being used to generate the report.
+
+    ```log
+    $ hostile clean --fastq1 human_1_1.fastq.gz --fastq2 human_1_2.fastq.gz >log.json
+    INFO: Hostile version 1.0.0. Mode: paired short read (Bowtie2)
+    INFO: Found cached standard index human-t2t-hla
+    INFO: Cleaning…
+    INFO: Cleaning complete
+    ```
+
+    ## JSON output
+
+    ```log.json
+    [
+        {
+            "version": "1.0.0",
+            "aligner": "bowtie2",
+            "index": "human-t2t-hla",
+            "options": [],
+            "fastq1_in_name": "human_1_1.fastq.gz",
+            "fastq1_in_path": "/path/to/human_1_1.fastq.gz",
+            "fastq1_out_name": "human_1_1.clean_1.fastq.gz",
+            "fastq1_out_path": "/path/to/human_1_1.clean_1.fastq.gz",
+            "reads_in": 2,
+            "reads_out": 0,
+            "reads_removed": 2,
+            "reads_removed_proportion": 1.0,
+            "fastq2_in_name": "human_1_2.fastq.gz",
+            "fastq2_in_path": "/path/to/human_1_2.fastq.gz",
+            "fastq2_out_name": "human_1_2.clean_2.fastq.gz",
+            "fastq2_out_path": "/path/to/human_1_2.clean_2.fastq.gz"
+        }
+    ]
+    ```
+
+    A barplot using the JSON reports from different samples. Plot will shows the number of reads classified
+    as host-reads vs cleaned-reads (non-host reads).
+    """
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Hostile",
             anchor="hostile",
             href="https://github.com/bede/hostile",
-            info="is a short and long host reads removal tool",
+            info="Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]",
             doi="10.1093/bioinformatics/btad728",
         )
 

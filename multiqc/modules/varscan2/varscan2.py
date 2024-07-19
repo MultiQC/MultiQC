@@ -1,5 +1,3 @@
-"""MultiQC module to parse output files from VarScan2"""
-
 import logging
 import re
 
@@ -7,18 +5,31 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The MultiQC module can read output from `mpileup2cns`, `mpileup2snp` and `mpileup2indel` logfiles.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="VarScan2",
             anchor="varscan",
             href="http://dkoboldt.github.io/varscan/",
-            info="variant detection in massively parallel sequencing data",
+            info="Variant detection in massively parallel sequencing data",
+            extra="""
+            VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome
+            resequencing data generated on Illumina, SOLiD, Life/PGM, Roche/454, and similar instruments.
+        
+            VarScan can be used to detect different types of variation:
+        
+            - Germline variants (SNPs an dindels) in individual samples or pools of samples.
+            - Multi-sample variants (shared or private) in multi-sample datasets (with mpileup).
+            - Somatic mutations, LOH events, and germline variants in tumor-normal pairs.
+            - Somatic copy number alterations (CNAs) in tumor-normal exome data.
+            """,
             doi=["10.1101/gr.129684.111", "10.1093/bioinformatics/btp373"],
         )
 
