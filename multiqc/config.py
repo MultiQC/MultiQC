@@ -7,7 +7,7 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union, Set, TextIO
+from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
 # Default logger will be replaced by caller
 import logging
@@ -574,3 +574,30 @@ nondefault_config: Dict = {}
 def update(u):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
+
+
+def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
+    """
+    Reads coverage thresholds from the config, otherwise sets sensible defaults. Useful for modules like mosdepth, qualimap (BamQC), ngsbits
+    """
+    covs = getattr(globals(), config_key, {}).get("general_stats_coverage", [])
+    if not covs:
+        covs = getattr(globals(), "general_stats_coverage", [])
+
+    if covs and isinstance(covs, list):
+        covs = [int(t) for t in covs]
+        logger.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in covs])}")
+    else:
+        covs = [1, 5, 10, 30, 50]
+        logger.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in covs])}")
+
+    hidden_covs = getattr(globals(), config_key, {}).get("general_stats_coverage_hidden", [])
+    if not hidden_covs:
+        hidden_covs = getattr(globals(), "general_stats_coverage_hidden", [])
+
+    if hidden_covs and isinstance(hidden_covs, list):
+        logger.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_covs])}")
+    else:
+        hidden_covs = [t for t in covs if t != 30]
+
+    return covs, hidden_covs

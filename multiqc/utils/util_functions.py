@@ -1,6 +1,5 @@
 """MultiQC Utility functions, used in a variety of places."""
 
-import datetime
 import json
 import logging
 import shutil
