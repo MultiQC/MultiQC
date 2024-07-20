@@ -1,6 +1,4 @@
 import logging
-import os
-from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -62,8 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
-        self.general_stats_headers = dict()
-        self.general_stats_data = defaultdict(lambda: dict())
         n = dict()
 
         # Call submodule functions
@@ -78,17 +74,3 @@ class MultiqcModule(BaseMultiqcModule):
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Remove filtered samples from general stats table
-        self.general_stats_data = self.ignore_samples(self.general_stats_data)
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-    # Helper functions
-    def get_s_name(self, f):
-        s_name = os.path.basename(os.path.dirname(f["root"]))
-        s_name = self.clean_s_name(s_name, f)
-        if s_name.endswith(".qc"):
-            s_name = s_name[:-3]
-        return s_name
