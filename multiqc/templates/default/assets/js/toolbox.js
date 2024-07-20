@@ -445,9 +445,7 @@ $(function () {
                 // Lots of plots - add to a zip file for download
                 zip.file(fname, blob);
               }
-            }
-            // Normal plot - use HighCharts plugin to get the data from the plot
-            else if (format === "tsv" || format === "csv") {
+            } else if (format === "tsv" || format === "csv") {
               let plot = mqc_plots[target];
               if (plot !== undefined) {
                 let text = plot.exportData(format);

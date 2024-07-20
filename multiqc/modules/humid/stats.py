@@ -110,7 +110,7 @@ def add_stats_section(self):
         "id": "humid-bargraph",
         "title": "HUMID: Deduplication results",
         "ylab": "Number of reads",
-        "hide_zero_cats": False,
+        "hide_empty": False,
     }
     self.add_section(
         name="Duplication Summary",

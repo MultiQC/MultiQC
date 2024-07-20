@@ -1,30 +1,25 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from ngs-bits MappingQC tool """
-
 import logging
+from typing import Dict
 
 from multiqc import config
 from multiqc.plots import table
 
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 def parse_reports(self):
     """Find ngs-bits MappingQC reports and parse their data"""
 
-    # Set up vars
-    mappingqc = dict()
-    mappingqc_keys = dict()
+    mappingqc: Dict = dict()
+    mappingqc_keys: Dict = dict()
 
     for f in self.find_log_files("ngsbits/mappingqc"):
         values, params = self.parse_qcml_by(f["f"], "qualityParameter")
 
         if len(values) > 0:
             if f["s_name"] in mappingqc:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
             self.add_data_source(f, section="mappingqc")
             mappingqc[f["s_name"]] = values
             mappingqc_keys.update(params)

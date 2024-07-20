@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard MarkIlluminaAdapters """
+"""MultiQC submodule to parse output from Picard MarkIlluminaAdapters"""
 
 import logging
 
@@ -26,7 +26,7 @@ def parse_reports(self):
     # Filter to strip out ignored sample names
     data_by_sample = self.ignore_samples(data_by_sample)
     if not data_by_sample:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -41,7 +41,7 @@ def parse_reports(self):
         "title": "Picard: Mark Illumina Adapters",
         "ylab": "Clipped Bases",
         "xlab": "Cycle Number",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>Cycle {point.x}</b>: {point.y:.2f}",
         "ymin": 0,
     }
@@ -61,4 +61,4 @@ def parse_reports(self):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

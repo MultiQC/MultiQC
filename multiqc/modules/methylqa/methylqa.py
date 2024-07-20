@@ -1,26 +1,21 @@
-""" MultiQC module to parse output from methylQA """
-
-
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="methylQA",
             anchor="methylqa",
             target="methylqa",
             href="http://methylqa.sourceforge.net/",
-            info=" - a methylation sequencing data quality assessment tool.",
+            info="Methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
         )
 
@@ -113,8 +108,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.methylqa_data, headers)
 
     def methylqa_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         if len(self.methylqa_coverage_counts) == 0:
             return '<div class="alert alert-danger">No histogram data found.</div>'
 

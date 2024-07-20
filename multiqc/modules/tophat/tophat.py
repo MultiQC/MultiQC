@@ -1,27 +1,21 @@
-""" MultiQC module to parse output from Tophat """
-
-
 import logging
 import os
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Tophat",
             anchor="tophat",
             href="https://ccb.jhu.edu/software/tophat/",
-            info="is a fast splice junction mapper for RNA-Seq reads. "
-            "It aligns RNA-Seq reads to mammalian-sized genomes.",
+            info="Splice junction RNA-Seq reads mapper for mammalian-sized genomes.",
             doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 
@@ -129,8 +123,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.tophat_data, headers)
 
     def tophat_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "aligned_not_multimapped_discordant": {"color": "#437bb1", "name": "Aligned"},

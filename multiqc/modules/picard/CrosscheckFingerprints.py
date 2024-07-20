@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard CrosscheckFingerprints """
+"""MultiQC submodule to parse output from Picard CrosscheckFingerprints"""
 
 import logging
 import re
@@ -38,9 +38,10 @@ def parse_reports(module):
     """
 
     row_by_number = dict()
-    n_found_reports = 0
+    found_reports = []
 
     # Go through logs and find Metrics
+    row_number = 0
     for f in module.find_log_files("picard/crosscheckfingerprints", filehandles=True):
         # Parse an individual CrosscheckFingerprints Report
         (metrics, comments) = _take_till(f["f"], lambda line: line.startswith("#") or line == "\n")
@@ -51,15 +52,15 @@ def parse_reports(module):
         # Parse out the tumor awareness option and the lod threshold setting if possible
         tumor_awareness, lod_threshold = _parse_cli(comments[1])
         reader: DictReader = DictReader(metrics, fieldnames=header, delimiter="\t")
-        lines = [
-            (i, row)
-            for i, row in enumerate(reader)
-            if not module.is_ignore_sample(row["LEFT_SAMPLE"]) and not module.is_ignore_sample(row["RIGHT_SAMPLE"])
-        ]
+        lines = []
+        for row in reader:
+            if not module.is_ignore_sample(row["LEFT_SAMPLE"]) and not module.is_ignore_sample(row["RIGHT_SAMPLE"]):
+                lines.append((row_number, row))
+            row_number += 1
         if not lines:
             continue
-        n_found_reports += 1
-        for i, row in lines:
+        found_reports.append(f["s_name"])
+        for row_number, row in lines:
             # Clean the sample names
             row["LEFT_SAMPLE"] = module.clean_s_name(row["LEFT_SAMPLE"], f)
             row["LEFT_GROUP_VALUE"] = module.clean_s_name(row["LEFT_GROUP_VALUE"], f)
@@ -71,7 +72,7 @@ def parse_reports(module):
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
-            row_by_number[i] = row
+            row_by_number[row_number] = row
 
             try:
                 row["LOD_SCORE"] = float(row["LOD_SCORE"])
@@ -91,13 +92,8 @@ def parse_reports(module):
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
-    if n_found_reports == 0:
-        return 0
-
-    # Sort the data by the left sample, then right sample
-    row_by_number = OrderedDict(
-        sorted(row_by_number.items(), key=lambda x: (x[1]["LEFT_SAMPLE"], x[1]["RIGHT_SAMPLE"]))
-    )
+    if not found_reports:
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -166,7 +162,7 @@ def parse_reports(module):
                 "id": f"{module.anchor}-crosscheckfingerprints-sample-table",
                 "title": f"{module.name}: Crosscheck Fingerprints: Samples",
                 "no_violin": True,
-                "sortRows": False,
+                "sort_rows": False,
             },
         ),
     )
@@ -200,7 +196,7 @@ def parse_reports(module):
                 "ycats_samples": True,
                 "square": True,
                 "legend": False,
-                "reverseColors": True,
+                "reverse_colors": True,
             },
         ),
     )
@@ -231,12 +227,12 @@ def parse_reports(module):
                 "save_file": True,
                 "col1_header": "ID",
                 "no_violin": True,
-                "sortRows": False,
+                "sort_rows": False,
             },
         ),
     )
 
-    return n_found_reports
+    return found_reports
 
 
 def _take_till(iterator, fn):

@@ -1,14 +1,13 @@
-""" MultiQC module to parse output from Space Ranger count """
+"""MultiQC module to parse output from Space Ranger count"""
 
 import json
 import logging
 import os
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.plots import linegraph, table
 
-from ._utils import set_hidden_cols, transform_data, update_dict
+from ._utils import set_hidden_cols, transform_data, update_data_and_headers
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -18,25 +17,25 @@ class SpaceRangerCountMixin:
     """Space Ranger count report parser"""
 
     def parse_count_html(self):
-        self.spacerangercount_data = dict()
-        self.spacerangercount_general_data = dict()
-        self.spacerangercount_warnings = dict()
-        self.spacerangercount_plots_conf = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
-        self.spacerangercount_plots_data = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
-        self.count_general_data_headers = dict()
-        self.count_data_headers = OrderedDict()
-        self.count_warnings_headers = OrderedDict()
+        self.generalstats_data = dict()
+        self.summary_data = dict()
+        self.warnings_data = dict()
+        self.generalstats_headers = dict()
+        self.summary_headers = dict()
+        self.warnings_headers = dict()
+        self.plots_conf = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
+        self.plots_data = {"saturation": dict(), "genes": dict(), "genomic_dna": dict()}
 
         for f in self.find_log_files("spaceranger/count_html", filehandles=True):
             self.parse_count_report(f)
 
-        self.spacerangercount_data = self.ignore_samples(self.spacerangercount_data)
-        self.spacerangercount_general_data = self.ignore_samples(self.spacerangercount_general_data)
-        self.spacerangercount_warnings = self.ignore_samples(self.spacerangercount_warnings)
-        for k in self.spacerangercount_plots_data.keys():
-            self.spacerangercount_plots_data[k] = self.ignore_samples(self.spacerangercount_plots_data[k])
+        self.summary_data = self.ignore_samples(self.summary_data)
+        self.generalstats_data = self.ignore_samples(self.generalstats_data)
+        self.warnings_data = self.ignore_samples(self.warnings_data)
+        for k in self.plots_data.keys():
+            self.plots_data[k] = self.ignore_samples(self.plots_data[k])
 
-        self.count_general_data_headers["reads"] = {
+        self.generalstats_headers["reads"] = {
             "rid": "count_genstats_reads",
             "title": "Reads",
             "description": f"Number of reads ({config.read_count_desc})",
@@ -44,14 +43,14 @@ class SpaceRangerCountMixin:
             "namespace": "Space Ranger Count",
         }
 
-        self.count_data_headers["reads"] = {
+        self.summary_headers["reads"] = {
             "rid": "count_data_reads",
             "title": "Reads",
             "description": f"Number of reads ({config.read_count_desc})",
             "shared_key": "read_count",
         }
-        self.count_data_headers = set_hidden_cols(
-            self.count_data_headers,
+        self.summary_headers = set_hidden_cols(
+            self.summary_headers,
             [
                 "Q30 bc",
                 "Q30 UMI",
@@ -66,84 +65,81 @@ class SpaceRangerCountMixin:
             ],
         )
 
-        if len(self.spacerangercount_general_data) == 0:
+        if len(self.generalstats_data) == 0:
             return 0
 
-        else:
-            self.general_stats_addcols(self.spacerangercount_general_data, self.count_general_data_headers)
+        self.general_stats_addcols(self.generalstats_data, self.generalstats_headers)
 
-            # Write parsed report data to a file
-            self.write_data_file(self.spacerangercount_data, "multiqc_spaceranger_count")
+        # Write parsed report data to a file
+        self.write_data_file(self.summary_data, "multiqc_spaceranger_count")
 
-            # Add sections to the report
-            if len(self.spacerangercount_warnings) > 0:
-                self.add_section(
-                    name="Count - Warnings",
-                    anchor="spaceranger-count-warnings-section",
-                    description="Warnings encountered during the analysis",
-                    plot=table.plot(
-                        self.spacerangercount_warnings,
-                        self.count_warnings_headers,
-                        {
-                            "namespace": "Space Ranger Count",
-                            "id": "spaceranger-count-warnings",
-                            "title": "Space Ranger Count: Warnings",
-                        },
-                    ),
-                )
-
+        # Add sections to the report
+        if len(self.warnings_data) > 0:
             self.add_section(
-                name="Count - Summary stats",
-                anchor="spaceranger-count-stats-section",
-                description="Summary QC metrics from Space Ranger count",
+                name="Count - Warnings",
+                anchor="spaceranger-count-warnings-section",
+                description="Warnings encountered during the analysis",
                 plot=table.plot(
-                    self.spacerangercount_data,
-                    self.count_data_headers,
+                    self.warnings_data,
+                    self.warnings_headers,
                     {
                         "namespace": "Space Ranger Count",
-                        "id": "spaceranger-count-stats",
-                        "title": "Space Ranger Count: Summary stats",
+                        "id": "spaceranger-count-warnings",
+                        "title": "Space Ranger: Count: Warnings",
                     },
                 ),
             )
 
-            # The gDNA plots are only contained for spaceranger workflows with probesets
-            if "genomic_dna" in self.spacerangercount_plots_data:
-                self.add_section(
-                    name="Count - UMIs from Genomic DNA",
-                    anchor="spaceranger-count-bcrank-plot-section",
-                    description=self.spacerangercount_plots_conf["genomic_dna"]["description"],
-                    helptext=self.spacerangercount_plots_conf["genomic_dna"]["helptext"],
-                    plot=linegraph.plot(
-                        self.spacerangercount_plots_data["genomic_dna"],
-                        self.spacerangercount_plots_conf["genomic_dna"]["config"],
-                    ),
-                )
+        self.add_section(
+            name="Count - Summary stats",
+            anchor="spaceranger-count-stats-section",
+            description="Summary QC metrics from Space Ranger count",
+            plot=table.plot(
+                self.summary_data,
+                self.summary_headers,
+                {
+                    "namespace": "Space Ranger Count",
+                    "id": "spaceranger-count-stats",
+                    "title": "Space Ranger: Count: Summary stats",
+                },
+            ),
+        )
 
-            if "genes" in self.spacerangercount_plots_data:
-                self.add_section(
-                    name="Count - Median genes",
-                    anchor="spaceranger-count-genes-plot-section",
-                    description=self.spacerangercount_plots_conf["genes"]["description"],
-                    helptext=self.spacerangercount_plots_conf["genes"]["helptext"],
-                    plot=linegraph.plot(
-                        self.spacerangercount_plots_data["genes"], self.spacerangercount_plots_conf["genes"]["config"]
-                    ),
-                )
+        # The gDNA plots are only contained for spaceranger workflows with probesets
+        if "genomic_dna" in self.plots_conf:
+            self.add_section(
+                name="Count - UMIs from Genomic DNA",
+                anchor="spaceranger-count-bcrank-plot-section",
+                description=self.plots_conf["genomic_dna"]["description"],
+                helptext=self.plots_conf["genomic_dna"]["helptext"],
+                plot=linegraph.plot(
+                    self.plots_data["genomic_dna"],
+                    self.plots_conf["genomic_dna"]["config"],
+                ),
+            )
 
-            if "saturation" in self.spacerangercount_plots_data:
-                self.add_section(
-                    name="Count - Saturation plot",
-                    anchor="spaceranger-count-saturation-plot-section",
-                    description=self.spacerangercount_plots_conf["saturation"]["description"],
-                    helptext=self.spacerangercount_plots_conf["saturation"]["helptext"],
-                    plot=linegraph.plot(
-                        self.spacerangercount_plots_data["saturation"],
-                        self.spacerangercount_plots_conf["saturation"]["config"],
-                    ),
-                )
+        if "genes" in self.plots_conf:
+            self.add_section(
+                name="Count - Median genes",
+                anchor="spaceranger-count-genes-plot-section",
+                description=self.plots_conf["genes"]["description"],
+                helptext=self.plots_conf["genes"]["helptext"],
+                plot=linegraph.plot(self.plots_data["genes"], self.plots_conf["genes"]["config"]),
+            )
 
-            return len(self.spacerangercount_general_data)
+        if "saturation" in self.plots_conf:
+            self.add_section(
+                name="Count - Saturation plot",
+                anchor="spaceranger-count-saturation-plot-section",
+                description=self.plots_conf["saturation"]["description"],
+                helptext=self.plots_conf["saturation"]["helptext"],
+                plot=linegraph.plot(
+                    self.plots_data["saturation"],
+                    self.plots_conf["saturation"]["config"],
+                ),
+            )
+
+        return len(self.generalstats_data)
 
     def parse_count_report(self, f):
         """Go through the html report of space ranger and extract the data in a dicts"""
@@ -191,7 +187,7 @@ class SpaceRangerCountMixin:
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
         }
-        colours = {
+        colors = {
             "spots under tissue": "RdPu",
             "avg reads/spot": "Blues",
             "reads in spots": "PiYG",
@@ -204,8 +200,14 @@ class SpaceRangerCountMixin:
             "avg reads/spot",
         ]
         data_general_stats = {}
-        update_dict(
-            data_general_stats, self.count_general_data_headers, data_rows, col_dict, colours, "Count", int_cols
+        update_data_and_headers(
+            data=data_general_stats,
+            headers=self.generalstats_headers,
+            new_data=data_rows,
+            new_headers=col_dict,
+            colors=colors,
+            prefix="Count",
+            int_cols=int_cols,
         )
 
         # Store full data from space ranger count report
@@ -229,7 +231,7 @@ class SpaceRangerCountMixin:
             "Estimated UMIs from Genomic DNA": "genomic umis",
             "Estimated UMIs from Genomic DNA per Unspliced Probe": "genomic umis/unspliced probe",
         }
-        colours = {
+        colors = {
             "reads": "YlGn",
             "spots under tissue": "RdPu",
             "avg reads/spot": "Blues",
@@ -252,7 +254,15 @@ class SpaceRangerCountMixin:
             "genomic umis/unspliced probe",
         ]
         data = {}
-        update_dict(data, self.count_data_headers, data_rows, col_dict, colours, "Count", int_cols)
+        update_data_and_headers(
+            data=data,
+            headers=self.summary_headers,
+            new_data=data_rows,
+            new_headers=col_dict,
+            colors=colors,
+            prefix="Count",
+            int_cols=int_cols,
+        )
 
         # Extract warnings if any
         warnings = {}
@@ -262,25 +272,25 @@ class SpaceRangerCountMixin:
             if "id" not in alarm:
                 continue
             warnings[alarm["id"]] = "FAIL"
-            self.count_warnings_headers[alarm["id"]] = {
+            self.warnings_headers[alarm["id"]] = {
                 "title": alarm["id"].replace("_", " ").title(),
                 "description": alarm["title"],
                 "bgcols": {"FAIL": "#f7dddc"},
             }
 
         # Extract data for plots
-        plots = {}
+        plots_conf = {}
         plots_data = {}
         # `analysis_tab` may not be present in the report if there are few reads
         try:
-            plots["saturation"] = {
+            plots_conf["saturation"] = {
                 "config": {
                     "id": "mqc_spaceranger_count_saturation",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "title": f"Space Ranger: count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
                     "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
+                    "ylog": False,
+                    "xlog": False,
                     "ymin": 0,
                     "ymax": 1,
                 },
@@ -292,21 +302,21 @@ class SpaceRangerCountMixin:
             }
         except KeyError as e:
             log.debug("No saturation plot found in the spaceranger report:", e)
-            if "saturation" in plots:
-                del plots["saturation"]
+            if "saturation" in plots_conf:
+                del plots_conf["saturation"]
             if "saturation" in plots_data:
                 del plots_data["saturation"]
 
         # `analysis_tab` may not be present in the report if there are few reads
         try:
-            plots["genes"] = {
+            plots_conf["genes"] = {
                 "config": {
                     "id": "mqc_spaceranger_count_genesXspot",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "title": f"Space Ranger: count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
                     "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
+                    "ylog": False,
+                    "xlog": False,
                 },
                 "description": "Median gene counts per spot",
                 "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
@@ -316,21 +326,21 @@ class SpaceRangerCountMixin:
             }
         except KeyError:
             log.debug("No median gene plot found in the spaceranger report")
-            if "genes" in plots:
-                del plots["genes"]
+            if "genes" in plots_conf:
+                del plots_conf["genes"]
             if "genes" in plots_data:
                 del plots_data["genes"]
 
         # The gDNA plots are only contained for spaceranger workflows with probesets
         try:
-            plots["genomic_dna"] = {
+            plots_conf["genomic_dna"] = {
                 "config": {
                     "id": "mqc_spaceranger_count_genomic_dna",
-                    "title": f"Space Ranger count: {summary['analysis_tab']['gdna']['gems']['help']['title']}",
+                    "title": f"Space Ranger: count: {summary['analysis_tab']['gdna']['gems']['help']['title']}",
                     "xlab": summary["analysis_tab"]["gdna"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["analysis_tab"]["gdna"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
+                    "ylog": False,
+                    "xlog": False,
                 },
                 "description": "Estimated UMIs from Genomic DNA per Unspliced Probe",
                 "helptext": summary["analysis_tab"]["gdna"]["gems"]["help"]["data"][2][1][0]
@@ -341,21 +351,21 @@ class SpaceRangerCountMixin:
             }
         except KeyError:
             log.debug("No genomic DNA plot found in the spaceranger report")
-            if "genomic_dna" in plots:
-                del plots["genomic_dna"]
+            if "genomic_dna" in plots_conf:
+                del plots_conf["genomic_dna"]
             if "genomic_dna" in plots_data:
                 del plots_data["genomic_dna"]
 
         if len(data) > 0:
-            if sample_name in self.spacerangercount_general_data:
+            if sample_name in self.generalstats_data:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {sample_name}")
             self.add_data_source(f, sample_name, module="spaceranger", section="count")
-            self.spacerangercount_data[sample_name] = data
-            self.spacerangercount_general_data[sample_name] = data_general_stats
+            self.summary_data[sample_name] = data
+            self.generalstats_data[sample_name] = data_general_stats
             if len(warnings) > 0:
-                self.spacerangercount_warnings[sample_name] = warnings
-            self.spacerangercount_plots_conf = plots
+                self.warnings_data[sample_name] = warnings
+            self.plots_conf = plots_conf
             for k in plots_data.keys():
-                if k not in self.spacerangercount_plots_data.keys():
-                    self.spacerangercount_plots_data[k] = dict()
-                self.spacerangercount_plots_data[k].update(plots_data[k])
+                if k not in self.plots_data.keys():
+                    self.plots_data[k] = dict()
+                self.plots_data[k].update(plots_data[k])

@@ -4,9 +4,10 @@
 =========
 
 This theme extends 'default'.  Unlike 'default', it organizes all sections
-under the 'Detailed Statistics' header, rather than grouping them by 
+under the 'Detailed Statistics' header, rather than grouping them by
 module.
 """
+
 import os
 
 template_dir = os.path.dirname(__file__)

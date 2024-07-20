@@ -3,7 +3,7 @@ import os
 import re
 from typing import Dict, List, Optional, Union
 
-from multiqc.utils import config
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
     """
     all_data = dict()
     assert len(formats) == len(headers)
-    sample_data = None
+    sample_data: Optional[Dict] = None
 
     # Go through logs and find Metrics
     for f in module.find_log_files(program_key, filehandles=True):
@@ -36,6 +36,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
                 picard_tool=picard_tool,
                 sentieon_algo=sentieon_algo,
             )
+
             if maybe_s_name:
                 s_name = maybe_s_name
                 sample_data = None
@@ -94,12 +95,14 @@ def is_line_right_before_table(
         picard_classes = []
     else:
         picard_classes = [picard_class]
+
     return (
         (line.startswith("## METRICS CLASS") or line.startswith("## HISTOGRAM"))
-        and (not picard_classes or any(c.upper() in line.upper() for c in picard_classes))
+        and (not picard_classes or any(c.upper() in line.upper() for c in picard_classes))  # picard
         or sentieon_algo
         and line.startswith("#SentieonCommandLine:")
-        and f" --algo {sentieon_algo}" in line
+        and f" --algo {sentieon_algo}" in line  # sentieon
+        or line.startswith("##METRICS")  # biobambam2
     )
 
 

@@ -1,7 +1,10 @@
-&nbsp;
-![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png#gh-light-mode-only)
-![MultiQC](https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png#gh-dark-mode-only)
-&nbsp;
+<h1>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo_darkbg.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png">
+  <img src="https://github.com/MultiQC/MultiQC/raw/main/docs/images/MultiQC_logo.png" alt="MultiQC">
+</picture>
+</h1>
 
 ### Aggregate bioinformatics results across many samples into a single report
 
@@ -67,7 +70,7 @@ and produce a report detailing whatever it finds.
 
 <!-- RICH-CODEX fake_command: "multiqc ." -->
 
-![`cd test_data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
+![`cd test-data/data/modules/fastqc/v0.10.1 && multiqc .`](https://github.com/MultiQC/MultiQC/raw/main/docs/images/screenshots/fastqc-run.svg)
 
 The report is created in `multiqc_report.html` by default. Tab-delimited data
 files are also created in `multiqc_data/`, containing extra information.

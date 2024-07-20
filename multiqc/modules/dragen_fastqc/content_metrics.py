@@ -4,9 +4,9 @@ import json
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
-from multiqc.utils import report
+from multiqc import report
 
 from .util import average_from_range, average_pos_from_metric
 
@@ -67,14 +67,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             "title": "DRAGEN-QC: Per-Position N Content",
             "ylab": "Percentage N-Count",
             "xlab": "Position in Read (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
-            # 'colors': self.get_status_cols('per_base_n_content'),
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},
@@ -240,13 +238,12 @@ class DragenContentMetrics(BaseMultiqcModule):
             "title": "FastQC: Adapter Content",
             "ylab": "% of Sequences",
             "xlab": "Position (bp)",
-            "yCeiling": 100,
-            "yMinRange": 5,
+            "y_clipmax": 100,
+            "y_minrange": 5,
             "ymin": 0,
-            "xDecimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
             "hide_empty": True,
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 20, "to": 100, "color": "#e6c3c3"},
                 {"from": 5, "to": 20, "color": "#e6dcc3"},
                 {"from": 0, "to": 5, "color": "#c3e6c3"},

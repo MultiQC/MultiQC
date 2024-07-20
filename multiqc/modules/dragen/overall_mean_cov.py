@@ -9,7 +9,7 @@ import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 from .utils import make_log_report
 
@@ -24,8 +24,6 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
 
     def collect_overall_mean_cov_data(self):
         """Collects raw data for coverage_metrics.py from overall_mean_cov.csv files."""
-        overall_mean_cov_data = defaultdict(lambda: defaultdict(dict))
-
         for file in self.find_log_files("dragen/overall_mean_cov_metrics"):
             out = parse_overall_mean_cov(file)
 
@@ -35,7 +33,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
                 # Data for the coverage_metrics.py module.
                 if out["phenotype"]:
                     sample, phenotype, data = out["sample"], out["phenotype"], out["data"]
-                    overall_mean_cov_data[file["root"]][sample][phenotype] = data
+                    self.overall_mean_cov_data[file["root"]][sample][phenotype] = data
                 # Currently there is no need to support other files. Pass for now.
                 else:
                     pass
@@ -50,12 +48,12 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         make_log_report(log_data, log, "overall_mean_cov_metrics")
 
         # No need to write the data.
-        self.write_data_file(overall_mean_cov_data, "dragen_overall_mean_cov_data")
+        self.write_data_file(self.overall_mean_cov_data, "dragen_overall_mean_cov_data")
 
         # Just to pass the pre-commit
         # doi=
 
-        return overall_mean_cov_data
+        return self.overall_mean_cov_data.keys()
 
 
 '''"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""

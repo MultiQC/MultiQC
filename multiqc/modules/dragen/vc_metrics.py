@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -435,13 +435,18 @@ def parse_vc_metrics_file(f):
     # we are not really interested in all the details of pre-filtered variants, however
     # it would be nice to report how much we filtered out
     if exist_and_number(data, "Total") and exist_and_number(prefilter_data, "Total"):
-        data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
+        # prefilter numbers can be zero (see https://github.com/MultiQC/MultiQC/issues/2611), so only reporting
+        # if they are non-zero, otherwise will get negative number for "Filtered vars"
+        if prefilter_data["Total"] > 0:
+            data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
 
     if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs"):
-        data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
+        if prefilter_data["SNPs"] > 0:
+            data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
 
     if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels"):
-        data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
+        if prefilter_data["Indels"] > 0:
+            data["Filtered indels"] = prefilter_data["Indels"] - data["Indels"]
 
     if (
         exist_and_number(prefilter_data, "Total")

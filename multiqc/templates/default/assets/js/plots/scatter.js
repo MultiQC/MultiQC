@@ -19,12 +19,6 @@ class ScatterPlot extends Plot {
       if (!sampleSettings[idx].hidden) return point;
     });
 
-    points = points.map((point) => {
-      if (dataset.categories && Number.isInteger(point.x) && point.x < dataset.categories.length)
-        point.x = dataset.categories[point.x];
-      return point;
-    });
-
     return [samples, points];
   }
 

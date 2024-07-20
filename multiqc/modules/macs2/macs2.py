@@ -1,24 +1,29 @@
-""" MultiQC module to parse output from MACS2 """
-
-
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module reads the `*_peaks.xls` results files and prints the redundancy rates and number of peaks
+    found in the General Statistics table. Numerous additional values are parsed and saved to
+    `multiqc_data/multiqc_macs2.txt`.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MACS2",
             anchor="macs",
             href="https://macs3-project.github.io/MACS/",
-            info="identifies transcription factor binding sites in ChIP-seq data.",
+            info="Identifies transcription factor binding sites in ChIP-seq data.",
+            extra="""
+            MACS2 _(Model-based Analysis of ChIP-Seq)_ is a tool for identifying transcript
+            factor binding sites. MACS captures the influence of genome complexity to
+            evaluate the significance of enriched ChIP regions.""",
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
         )
 
@@ -147,7 +152,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "MACS2: Filtered Fragments",
             "ylab": "# Fragments",
             "cpswitch_counts_label": "Number of Fragments",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(plot=bargraph.plot(data, keys, pconfig))

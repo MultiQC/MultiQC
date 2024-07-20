@@ -1,25 +1,23 @@
-#!/usr/bin/env python
-
-""" MultiQC code to export data to MegaQC / flat JSON files """
-
+"""MultiQC code to export data to MegaQC / flat JSON files"""
 
 import gzip
 import io
 import json
+import logging
 
 import requests
 
-from . import config
-from .util_functions import MQCJSONEncoder
+from multiqc import config
+from multiqc.utils.util_functions import dump_json
 
-log = config.logger
+log = logging.getLogger(__name__)
 
 
 def multiqc_api_post(exported_data):
     headers = {"Content-Type": "application/json", "content-encoding": "gzip"}
     if config.megaqc_access_token is not None:
         headers["access_token"] = config.megaqc_access_token
-    post_data = json.dumps({"data": exported_data}, cls=MQCJSONEncoder, ensure_ascii=False, indent=2)
+    post_data = dump_json({"data": exported_data}, ensure_ascii=False, indent=2)
     post_data = post_data.encode("utf-8", "ignore")
 
     # Gzip the JSON for massively decreased filesize

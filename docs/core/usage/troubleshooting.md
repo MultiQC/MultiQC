@@ -120,71 +120,9 @@ output formats that can confuse the parsing code.
 Please [open an issue](https://github.com/MultiQC/MultiQC/issues/new) with
 your log files and we can get it fixed.
 
-## Error messages about mkl trial mode / licences
-
-In this case you run MultiQC and get something like this:
-
-```
-$ multiqc .
-
-Vendor:  Continuum Analytics, Inc.
-Package: mkl
-Message: trial mode EXPIRED 2 days ago
-
-    You cannot run mkl without a license any longer.
-    A license can be purchased it at: http://continuum.io
-    We are sorry for any inconveniences.
-
-    SHUTTING DOWN PYTHON INTERPRETER
-```
-
-The `mkl` library provides optimisations for `numpy`, a requirement of
-`MatPlotLib`. Recent versions of Conda have a bundled version which should
-come with a licence and remove the warning. See
-[this page](https://docs.continuum.io/mkl-optimizations/index#dismissing-mkl-trial-warnings)
-for more info. If you already have Conda installed you can get the updated
-version by running:
-
-```bash
-conda remove mkl-rt
-conda install -f mkl
-```
-
-Another way around it is to uninstall `mkl`. It seems that `numpy` works
-without it fine:
-
-```bash
-conda remove --features mkl
-```
-
-Problem solved! See more
-[here](http://stackoverflow.com/questions/25204021/anaconda-running-python-cannot-run-mkl-without-a-license) and
-[here](https://www.continuum.io/blog/developer-blog/anaconda-25-release-now-mkl-optimizations).
-
-If you're not using Conda, try installing MultiQC with that instead. You
-can find instructions [here](../getting_started/installation.md#conda).
-
 ## Locale Error Messages
 
-Two MultiQC dependencies have been known to throw errors due to problems
-with the Python locale settings, or rather the lack of those settings.
-
-MatPlotLib can complain that some strings (such as `en_SE`) aren't allowed.
-Running MultiQC gives the following error:
-
-```bash
-multiqc --version
-```
-
-```python
-# ..long traceback.. #
- File "/sw/comp/python/2.7.6_milou/lib/python2.7/locale.py", line 443, in _parse_localename
-   raise ValueError, 'unknown locale: %s' % localename
-ValueError: unknown locale: UTF-8
-```
-
-Click can have a similar problem if the locale isn't set when using
-Python 3. That generates an error that looks like this:
+Click is know to throw this error when the locale isn't set:
 
 ```python
 # ..truncated traceback.. #
@@ -194,9 +132,9 @@ RuntimeError: Click will abort further execution because Python 3 was configured
 as encoding for the environment.  Consult http://click.pocoo.org/python3/for mitigation steps.
 ```
 
-You can fix both of these problems by changing your system locale
-to something that will be recognised. One way to do this is by adding
-these lines to your `.bashrc` in your home directory (or `.bash_profile`):
+You can fix this by setting your system locale to something that will be recognised.
+One way to do this is by adding these lines to your `.bashrc` in your home directory
+(or `.zshrc`/`.bash_profile`/etc.):
 
 ```bash
 export LC_ALL=en_US.UTF-8

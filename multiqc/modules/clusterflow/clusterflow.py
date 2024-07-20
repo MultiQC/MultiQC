@@ -1,31 +1,30 @@
-""" MultiQC module to parse output from Cluster Flow """
-
-
 import datetime
 import logging
 import os
 import re
 import time
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Cluster Flow module class, parses run logs.
+    The module for Cluster Flow parses `*_clusterflow.txt` logs
+    and finds consensus commands executed by modules in each pipeline run.
+
+    The Cluster Flow `*.run` files are also parsed and pipeline information
+    shown (some basic statistics plus the pipeline steps / params used).
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cluster Flow",
             anchor="clusterflow",
             href="http://clusterflow.io",
-            info="is a simple and flexible bioinformatics pipeline tool.",
+            info="Simple and flexible bioinformatics pipeline tool.",
             doi="10.12688/f1000research.10335.2",
         )
 
@@ -149,9 +148,9 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-commands-table",
-            "table_title": "Cluster Flow Commands",
+            "title": "Cluster Flow: Commands",
             "col1_header": "Tool",
-            "sortRows": False,
+            "sort_rows": False,
             "no_violin": True,
         }
         self.add_section(
@@ -334,7 +333,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Cluster Flow",
             "id": "clusterflow-pipelines-table",
-            "table_title": "Cluster Flow Pipelines",
+            "title": "Cluster Flow Pipelines",
             "col1_header": "Pipeline ID",
             "no_violin": True,
             "save_file": True,

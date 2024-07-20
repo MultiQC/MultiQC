@@ -1,27 +1,29 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from ngs-bits """
-
 import logging
 import xml.etree.ElementTree
 import re
+from typing import Dict, Union
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
+    * [ReadQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md) for statistics on FASTQ files,
+    * [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for statistics on BAM files
+    """
+
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngs-bits",
             anchor="ngsbits",
             href="https://github.com/imgag/ngs-bits",
-            info="is a collection of short-read sequencing tools.",
+            info="Calculating statistics from FASTQ, BAM, and VCF",
             doi="10.1093/bioinformatics/btx032",
         )
 
@@ -54,8 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_qcml_by(qcml_contents, tag):
         """Parse a qcML file and return key-value pairs from the quality parameter entries."""
         root = xml.etree.ElementTree.fromstring(qcml_contents)
-        values = dict()
-        params = dict()
+        values: Dict[str, Union[float, str]] = dict()
+        params: Dict = dict()
 
         for qp in root.findall(".//{http://www.prime-xs.eu/ms/qcml}%s" % tag):
             # skip n/a values

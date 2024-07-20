@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from ngs-bits ReadQC tool """
-
 import logging
 import xml.etree.cElementTree
+from typing import Dict
 
 from multiqc import config
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -31,9 +27,8 @@ def check_paired_end(qcml_contents):
 def parse_reports(self):
     """Find ngs-bits ReadQC reports and parse their data"""
 
-    # Set up vars
-    readqc = dict()
-    readqc_keys = dict()
+    readqc: Dict = dict()
+    readqc_keys: Dict = dict()
 
     for f in self.find_log_files("ngsbits/readqc"):
         d = self.parse_qcml_by(f["f"], "qualityParameter")
@@ -41,7 +36,7 @@ def parse_reports(self):
 
         if len(d[0]) > 0:
             if f["s_name"] in readqc:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
             self.add_data_source(f, section="readqc")
             readqc[f["s_name"]] = d[0]
             readqc_keys.update(d[1])

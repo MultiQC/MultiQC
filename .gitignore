@@ -1,10 +1,12 @@
 # MultiQC results
 multiqc_config.yaml
 multiqc_report.html
-multiqc_data
-examples/
-result/
-tmp/
+multiqc_data/
+multiqc_plots/
+/examples/
+/result
+/benchmarks
+/tmp/
 
 # CI tooling
 .ruff_cache
@@ -49,9 +51,10 @@ runTest.sh
 venv/
 
 # Related repos
-test_data/
-website/
-usage/
+/test-data/
+/website/
+/usage/
 
-multiqc/templates/plotly/assets/js/packages/plotly-2.27.0.js
-default_multiqc_report*
+node_modules/
+package-lock.json
+package.json

@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard QualityYieldMetrics """
+"""MultiQC submodule to parse output from Picard QualityYieldMetrics"""
 
 import logging
 from collections import OrderedDict
@@ -72,7 +72,7 @@ def parse_reports(module):
 
     data_by_sample = module.ignore_samples(data_by_sample)
     if not data_by_sample:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -93,4 +93,4 @@ def parse_reports(module):
     }
     module.general_stats_addcols(data_by_sample, headers, namespace="QualityYieldMetrics")
 
-    return len(data_by_sample)
+    return data_by_sample.keys()

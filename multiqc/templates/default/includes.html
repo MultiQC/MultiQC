@@ -36,7 +36,7 @@ it prints the contents of these files into the report.
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {% endfor %}
 {% set included_css = [] %}
-{%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
+{%- for m in report.modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
 {% if css_href not in included_css -%}
 {{ '' if included_css.append( css_href ) }}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
@@ -48,12 +48,12 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery-ui.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/bootstrap.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.tablesorter.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/clipboard.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/FileSaver.min.js') }}</script>
-<script type="text/javascript">{{ include_file('assets/js/packages/lz-string.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jquery.toast.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/jszip.min.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/packages/plotly-2.27.0.min.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/packages/pako_inflate.min.js') }}</script>
+<script type="text/javascript">{{ include_file('assets/js/decompress.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/multiqc.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/flat.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/plotting.js') }}</script>
@@ -66,9 +66,13 @@ it prints the contents of these files into the report.
 <script type="text/javascript">{{ include_file('assets/js/plots/heatmap.js') }}</script>
 <script type="text/javascript">{{ include_file('assets/js/plots/violin.js') }}</script>
 {% set included_js = [] %}
-{%- for m in report.modules_output %}{% if m.js and m.js|length > 0 -%}{% for js_href in m.js.values() %}
-{% if js_href not in included_js -%}
-{{ '' if included_js.append( js_href ) }}
+{%- for m in report.modules %}
+  {% if m.js and m.js|length > 0 -%}
+    {% for js_href in m.js.values() %}
+      {% if js_href not in included_js -%}{{ '' if included_js.append( js_href ) }}
 <script type="text/javascript">{{ include_file( js_href, None ) }}</script>
-{% endif %}
-{%- endfor %}{% endif %}{% endfor %}
+      {% endif %}
+    {%- endfor %}
+  {% endif %}
+{% endfor %}
+<script type="text/javascript">{{ include_file('assets/js/render.js') }}</script>

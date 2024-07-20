@@ -6,8 +6,8 @@ of common tools.
 
 These docs can be read in any of three ways:
 
-- On the MultiQC Website: <http://multiqc.info>
-- On GitHub: <https://github.com/MultiQC/MultiQC/>
+- [On the MultiQC Website](http://multiqc.info)
+- [On GitHub](https://github.com/MultiQC/MultiQC/)
 - As part of the distributed source code (in `/docs/`)
 
 If you're curious how the website works, check out the

@@ -1,27 +1,21 @@
-""" MultiQC module to parse output from MultiVCFAnalyzer """
-
-
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MultiVCFAnalyzer module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way,
-            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats",
+            extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
+            "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
         )
 
@@ -255,7 +249,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "MultiVCFAnalyzer",  # Name for grouping. Prepends desc and is in Config Columns modal
             "id": "mvcf-table",  # ID used for the table
-            "table_title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
+            "title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
         }
         tab = table.plot(self.mvcf_data, headers, table_config)
         return tab
@@ -283,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
         config = {
             # Building the plot
             "id": "mvcf_barplot",  # HTML ID used for plot
-            "hide_zero_cats": True,  # Hide categories where data for all samples is 0
+            "hide_empty": True,  # Hide categories where data for all samples is 0
             # Customising the plot
             "title": "MultiVCFAnalyzer: Call Categories",  # Plot title - should be in format "Module Name: Plot Title"
             "ylab": "Total # Positions",  # X axis label

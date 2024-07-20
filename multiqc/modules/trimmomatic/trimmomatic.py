@@ -1,25 +1,37 @@
-""" MultiQC module to parse output from Trimmomatic """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses the stderr output, that can be captured by directing it to a file e.g.:
+
+    ```sh
+    trimmomatic command 2> trim_out.log
+    ```
+
+    By default, the module generates the sample names based on the input FastQ file names in
+    the command line used by Trimmomatic. If you prefer, you can tell the module to use
+    the filenames as sample names instead. To do so, use the following config option:
+
+    ```yaml
+    trimmomatic:
+      s_name_filenames: true
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Trimmomatic",
             anchor="trimmomatic",
             href="http://www.usadellab.org/cms/?page=trimmomatic",
-            info="is a flexible read trimming tool for Illumina NGS data.",
+            info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
         )
 
@@ -117,8 +129,6 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = None
 
     def trimmomatic_barplot(self):
-        """Make the HighCharts HTML to plot the trimmomatic rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "surviving": {"color": "#437bb1", "name": "Surviving Reads"},

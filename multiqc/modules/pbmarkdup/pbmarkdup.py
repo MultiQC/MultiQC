@@ -1,17 +1,15 @@
-""" MultiQC module to parse output from pbmarkdup"""
-
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    pbmarkdup module class, parses pbmarkdup output.
+    The module adds the **% Unique Molecules** and **%Duplicate Reads** (hidden) to the General Statistics
+    table.
     """
 
     def __init__(self):
@@ -19,12 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             name="pbmarkdup",
             anchor="pbmarkdup",
             href="https://github.com/PacificBiosciences/pbmarkdup",
-            info=(
-                """
-                 takes one or multiple sequencing chips of an amplified libray
-                 as HiFi reads and marks or removes duplicates.
-                 """
-            ),
+            info="Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or "
+            "removes duplicates.",
             # Can't find a DOI // doi=
         )
 
@@ -110,7 +104,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         general_stats_headers = {
             "unique_molecules": {
-                "id": "unique_molecules",
                 "title": "% Unique Molecules",
                 "description": "Percentage of unique molecules",
                 "suffix": "%",
@@ -120,7 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
             },
             "duplicate_reads": {
-                "id": "duplicate_erads",
                 "title": "% Duplicate Reads",
                 "description": "Percentage of duplicate reads",
                 "suffix": "%",

@@ -1,8 +1,8 @@
-""" MultiQC module to parse output from ngs-disambiguate. """
+"""MultiQC module to parse output from ngs-disambiguate."""
 
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
@@ -10,12 +10,11 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Disambiguate",
             anchor="disambiguate",
             href="https://github.com/AstraZeneca-NGS/disambiguate",
-            info="is an algorithm for disambiguating reads aligned to two different species (e.g. human and mouse).",
+            info="Disambiguate reads aligned to two different species (e.g. human and mouse)",
             doi="10.12688/f1000research.10082.1",
         )
 

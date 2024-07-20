@@ -1,24 +1,40 @@
-""" MultiQC module to parse output from Prokka """
-
-
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The Prokka module accepts two configuration options:
+
+    - `prokka_table`: default `False`. Show a table in the report.
+    - `prokka_barplot`: default `True`. Show a barplot in the report.
+    - `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
+
+    Sample names are generated using the first line in the prokka reports:
+
+    ```
+    organism: Helicobacter pylori Sample1
+    ```
+
+    The module assumes that the first two words are the organism name and
+    the third is the sample name. So the above will give a sample name of
+    `Sample1`.
+
+    If you prefer, you can set `config.prokka_fn_snames` to `True` and MultiQC
+    will instead use the log filename as the sample name.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Prokka",
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
-            info="is a software tool for the rapid annotation of prokaryotic genomes.",
+            info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
         )
 
@@ -56,14 +72,12 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Bases",
                 "description": "Number of bases",
                 "min": 0,
-                "format": "{:i}%",
                 "hidden": True,
             },
             "CDS": {
                 "title": "CDS",
                 "description": "Number of CDS",
                 "min": 0,
-                "format": "{:i}%",
             },
         }
         self.general_stats_addcols(self.prokka, headers)
@@ -154,47 +168,38 @@ class MultiqcModule(BaseMultiqcModule):
             "contigs": {
                 "title": "# contigs",
                 "description": "Number of contigs in assembly",
-                "format": "{:i}",
             },
             "bases": {
                 "title": "# bases",
                 "description": "Number of nucleotide bases in assembly",
-                "format": "{:i}",
             },
             "CDS": {
                 "title": "# CDS",
                 "description": "Number of annotated CDS",
-                "format": "{:i}",
             },
             "rRNA": {
                 "title": "# rRNA",
                 "description": "Number of annotated rRNA",
-                "format": "{:i}",
             },
             "tRNA": {
                 "title": "# tRNA",
                 "description": "Number of annotated tRNA",
-                "format": "{:i}",
             },
             "tmRNA": {
                 "title": "# tmRNA",
                 "description": "Number of annotated tmRNA",
-                "format": "{:i}",
             },
             "misc_RNA": {
                 "title": "# misc RNA",
                 "description": "Number of annotated misc. RNA",
-                "format": "{:i}",
             },
             "sig_peptide": {
                 "title": "# sig_peptide",
                 "description": "Number of annotated sig_peptide",
-                "format": "{:i}",
             },
             "repeat_region": {
                 "title": "# CRISPR arrays",
                 "description": "Number of annotated CRSIPR arrays",
-                "format": "{:i}",
             },
         }
         table_config = {

@@ -15,7 +15,7 @@ import re
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
 from .utils import check_duplicate_samples, clean_headers, make_log_report, order_headers
@@ -41,10 +41,10 @@ SINGLE_HEADER = {
     "min": 0,  # Maximum value in range, for bar / colour coding
     "ceiling": None,  # Maximum value for automatic bar limit
     "floor": None,  # Minimum value for automatic bar limit
-    "minRange": None,  # Minimum range for automatic bar
+    "minrange": None,  # Minimum range for automatic bar
     "scale": "GnBu",  # Colour scale for colour coding. False to disable.
     "bgcols": None,  # Dict with values: background colours for categorical data.
-    "colour": "15, 150, 255",  # Colour for column grouping
+    "color": "15, 150, 255",  # Colour for column grouping
     "suffix": None,  # Suffix for value (eg. "%")
     "format": "{:,.2f}",  # Value format string - MultiQC default 1 decimal places
     "cond_formatting_rules": None,  # Rules for conditional formatting table cell values.
@@ -237,31 +237,31 @@ METRICS = {
     "aligned reads": {
         "order_priority": 0,
         "hidden_own": False,
-        "colour": "255, 0, 0",
+        "color": "255, 0, 0",
     },
     "aligned reads in region": {
         "order_priority": 0.1,
         "scale": "RdGy",
-        "colour": "255, 0, 0",
+        "color": "255, 0, 0",
     },
     "aligned reads in region" + V2: {
         "order_priority": 0.2,
         "max": 100,
         "suffix": "%",
         "scale": "Purples",
-        "colour": "255, 0, 0",
+        "color": "255, 0, 0",
         "exclude": False,
     },
     "aligned bases": {
         "order_priority": 0.3,
         "hidden_own": False,
         "scale": "Greens",
-        "colour": "0, 0, 255",
+        "color": "0, 0, 255",
     },
     "aligned bases in region": {
         "order_priority": 0.4,
         "scale": "Reds",
-        "colour": "0, 0, 255",
+        "color": "0, 0, 255",
         WGS: {
             "scale": "Purples",
         },
@@ -272,7 +272,7 @@ METRICS = {
     "aligned bases in region" + V2: {
         "order_priority": 0.5,
         "max": 100,
-        "colour": "0, 0, 255",
+        "color": "0, 0, 255",
         "scale": "Greens",
         "suffix": "%",
         "bgcols": {"NA": "#00FFFF"},
@@ -282,14 +282,14 @@ METRICS = {
         "order_priority": 1.0,
         "title": "X cov",
         "suffix": " x",
-        "colour": "179,179,50",  # Olive
+        "color": "179,179,50",  # Olive
     },
     "average chr y coverage over region": {
         "order_priority": 1.1,
         "title": "Y cov",
         "suffix": " x",
         "scale": "YlOrRd",
-        "colour": "179,179,50",  # Olive
+        "color": "179,179,50",  # Olive
     },
     "xavgcov/yavgcov ratio over region": {
         "order_priority": 1.2,
@@ -310,14 +310,14 @@ METRICS = {
         "hidden": False,
         "title": "Depth",
         "scale": "BrBG",
-        "colour": "55,126,184",  # Blue
+        "color": "55,126,184",  # Blue
     },
     "average mitochondrial coverage over region": {
         "order_priority": 4,
         "title": "MT cov",
         "scale": "Purples",
         "suffix": " x",
-        "colour": "152,78,163",  # Purple
+        "color": "152,78,163",  # Purple
     },
     "average autosomal coverage over region": {
         "order_priority": 6,
@@ -352,7 +352,7 @@ METRICS = {
     # add a float-string key with desired configs in the "extra".
     "uniformity of coverage (pct > d.d*mean) over region": {
         "suffix": "%",
-        "colour": "77,175,74",  # Green
+        "color": "77,175,74",  # Green
         "exclude": False,
         "extra": {
             # "Uniformity of coverage (PCT > 0.2*mean) over region" metric.
@@ -392,7 +392,7 @@ METRICS = {
         "max": 100,
         "scale": "Purples",
         "suffix": "%",
-        "colour": "228,26,28",  # Red
+        "color": "228,26,28",  # Red
         "exclude": False,
         WGS: {
             # "scale": "Reds",
@@ -464,10 +464,10 @@ METRICS = {
 TABLE_CONFIG = {
     "namespace": NAMESPACE,  # Name for grouping. Prepends desc and is in Config Columns modal
     "id": None,  # ID used for the table
-    "table_title": None,  # Title of the table. Used in the column config modal
+    "title": None,  # Title of the table. Used in the column config modal
     "save_file": False,  # Whether to save the table data to a file
     "raw_data_fn": None,  # File basename to use for raw data file
-    "sortRows": True,  # Whether to sort rows alphabetically
+    "sort_rows": True,  # Whether to sort rows alphabetically
     "only_defined_headers": True,  # Only show columns that are defined in the headers config
     "col1_header": None,  # The header used for the first column with sample names.
     "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)
@@ -475,16 +475,16 @@ TABLE_CONFIG = {
 # Below are region-specific configs with higher priority.
 REGION_TABLE_CONFIG = {
     WGS: {
-        "table_title": "WGS",
+        "title": "WGS",
         # "no_violin": True,
         # "save_file": True,
         # "raw_data_fn": "Genome_raw_file",
     },
     QC: {
-        "table_title": "QC Coverage Region",
+        "title": "QC Coverage Region",
     },
     BED: {
-        "table_title": "Target Bed",
+        "title": "Target Bed",
     },
 }
 
@@ -502,7 +502,7 @@ class DragenCoverageMetrics(BaseMultiqcModule):
     Other methods can be added as well to provide extra features (eg module interface, JSON).
     """
 
-    def add_coverage_metrics(self, overall_mean_cov_data):
+    def add_coverage_metrics(self):
         """The main function of the dragen coverage metrics module.
         The public members of the BaseMultiqcModule and dragen modules defined in
         MultiqcModule are available within it. Returns a set with sample names."""
@@ -562,17 +562,20 @@ class DragenCoverageMetrics(BaseMultiqcModule):
 
         # Extract coverage bed/target bed/wgs from _overall_mean_cov.csv files.
         # And prepare <coverage-region-prefix>-specific texts.
-        bed_texts = make_bed_texts(overall_mean_cov_data, match_overall_mean_cov)
-        coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
-
-        for cov_section in coverage_sections:
-            self.add_section(
-                name=cov_section["name"],
-                anchor=cov_section["anchor"],
-                description=cov_section["description"],
-                helptext=cov_section["helptext"],
-                plot=cov_section["plot"],
+        if self.overall_mean_cov_data:
+            bed_texts = make_bed_texts(
+                overall_mean_cov_data=self.overall_mean_cov_data,
+                coverage_data=match_overall_mean_cov,
             )
+            coverage_sections = make_cov_sections(cov_data, cov_headers, bed_texts)
+            for cov_section in coverage_sections:
+                self.add_section(
+                    name=cov_section["name"],
+                    anchor=cov_section["anchor"],
+                    description=cov_section["description"],
+                    helptext=cov_section["helptext"],
+                    plot=cov_section["plot"],
+                )
         return cov_data.keys()
 
 
@@ -602,7 +605,7 @@ def make_data_for_txt_reports(coverage_data, metrics):
     return data
 
 
-def make_bed_texts(overall_mean, coverage_data):
+def make_bed_texts(overall_mean_cov_data, coverage_data):
     """Matches _overall_mean_cov.csv to the corresponding _coverage_metrics.csv
     Extracts coverage bed/target bed/wgs/file names and creates a text for each
     section (phenotype)."""
@@ -620,13 +623,13 @@ def make_bed_texts(overall_mean, coverage_data):
             orig_sample, root = coverage_data[sample][phenotype]
             # Check if that file is present in the overall_mean_cov data.
             if (
-                overall_mean
-                and root in overall_mean
-                and orig_sample in overall_mean[root]
-                and phenotype in overall_mean[root][orig_sample]
+                overall_mean_cov_data
+                and root in overall_mean_cov_data
+                and orig_sample in overall_mean_cov_data[root]
+                and phenotype in overall_mean_cov_data[root][orig_sample]
             ):
                 # data has 2 keys: "source_file" and "value"
-                data = overall_mean[root][orig_sample][phenotype]
+                data = overall_mean_cov_data[root][orig_sample][phenotype]
                 sources_matched[phenotype].append((sample, data["source_file"]))
             else:
                 sources_not_matched[phenotype].append(sample)
@@ -760,7 +763,7 @@ def create_table_handlers():
                         m_id = re.sub(r"(\s|-|\.|_)+", " ", phenotype + "_" + metric)
                         gen_data[sample][m_id] = data[metric]
                         gen_headers[m_id] = coverage_headers[_metric].copy()
-                        del gen_headers[m_id]["colour"]
+                        del gen_headers[m_id]["color"]
                         """
                         Some modifications are necessary to improve informativeness
                         of the general table, because several/many familiar tables

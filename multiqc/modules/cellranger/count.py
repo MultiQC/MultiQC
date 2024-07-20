@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Cell Ranger count """
+"""MultiQC module to parse output from Cell Ranger count"""
 
 import json
 import logging
@@ -332,8 +332,8 @@ class CellRangerCountMixin:
                     "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
                     "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
-                    "yLog": True,
-                    "xLog": True,
+                    "ylog": True,
+                    "xlog": True,
                 },
                 "description": "Barcode knee plot",
                 "helptext": help_dict["Barcode Rank Plot"],
@@ -344,8 +344,8 @@ class CellRangerCountMixin:
                     "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
                     "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
+                    "ylog": False,
+                    "xlog": False,
                 },
                 "description": "Median gene counts per cell",
                 "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
@@ -358,8 +358,8 @@ class CellRangerCountMixin:
                     "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
                     "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
                     "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
+                    "ylog": False,
+                    "xlog": False,
                     "ymin": 0,
                     "ymax": 1,
                 },
@@ -424,49 +424,49 @@ class CellRangerCountMixin:
 
             # Extract labels and values for the bargraph data
             combined_data = {}
-            for label, value in zip(
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["values"],
-            ):
-                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
-                if label_match:
-                    label_value = label_match.group(1)
-                    value_ = round(value * 100, 2)
-                    combined_data[label_value] = value_
+            if "antibody_treemap_plot" in summary["antibody_tab"]:
+                for label, value in zip(
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["values"],
+                ):
+                    label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                    if label_match:
+                        label_value = label_match.group(1)
+                        value_ = round(value * 100, 2)
+                        combined_data[label_value] = value_
 
-            # Extract labels and number of cells for labelling the bargraph
-            combined_label = {}
-            for label, cells in zip(
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["text"],
-            ):
-                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
-                if label_match:
-                    label_value = label_match.group(1)
-                    combined_label[label_value] = label_value + ": " + cells
+                # Extract labels and number of cells for labelling the bargraph
+                combined_label = {}
+                for label, cells in zip(
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["text"],
+                ):
+                    label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                    if label_match:
+                        label_value = label_match.group(1)
+                        combined_label[label_value] = label_value + ": " + cells
 
-            # Use the label from `combined_label` for the plot
-            keys = dict()
-            for key, value in combined_label.items():
-                keys[key] = {"name": value}
+                # Use the label from `combined_label` for the plot
+                keys = dict()
+                for key, value in combined_label.items():
+                    keys[key] = {"name": value}
 
-            plots["antibody_counts"] = {
-                "config": {
-                    "id": "mqc_cellranger_antibody_counts",
-                    "title": "Cell Ranger: Distribution of Antibody Counts",
-                    "ylab": "% Total UMI",
-                    "ymax": 100,
-                    "cpswitch": False,
-                    "use_legend": False,
-                    "tt_decimals": 2,
-                    "tt_suffix": "%",
-                    "tt_percentages": False,
-                },
-                "keys": keys,
-                "description": "Antibody Counts Distribution Plot",
-                "helptext": "Relative composition of antibody counts for features with at least 1 UMI. Box size represents fraction of total UMIs from cell barcodes that are derived from this antibody. Hover over a box to view more information on a particular antibody, including number of associated barcodes.",
-            }
-            plots_data["antibody_counts"] = {s_name: combined_data}
+                plots["antibody_counts"] = {
+                    "config": {
+                        "id": "mqc_cellranger_antibody_counts",
+                        "title": "Cell Ranger: Distribution of Antibody Counts",
+                        "ylab": "% Total UMI",
+                        "ymax": 100,
+                        "cpswitch": False,
+                        "use_legend": False,
+                        "tt_decimals": 2,
+                        "tt_suffix": "%",
+                    },
+                    "keys": keys,
+                    "description": "Antibody Counts Distribution Plot",
+                    "helptext": "Relative composition of antibody counts for features with at least 1 UMI. Box size represents fraction of total UMIs from cell barcodes that are derived from this antibody. Hover over a box to view more information on a particular antibody, including number of associated barcodes.",
+                }
+                plots_data["antibody_counts"] = {s_name: combined_data}
 
         if s_name in self.cellrangercount_general_data:
             log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")

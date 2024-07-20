@@ -25,7 +25,7 @@ class BarPlot extends Plot {
       let data = this.pActive ? cat["data_pct"] : cat.data;
       return {
         data: data.filter((_, si) => !samplesSettings[si].hidden),
-        color: cat.color,
+        color: cat.color, // formatted as "r,g,b", to be wrapped with "rgb()" or "rgba()"
         name: cat.name,
       };
     });
@@ -82,7 +82,7 @@ class BarPlot extends Plot {
         // separate trace. Sacrificing dimming the de-highlighted bars to get rid of this gap.
         let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
         samples = this.filteredSettings.map((s) => s.name);
-        params.marker.color = "rgba(" + cat.color + ")";
+        params.marker.color = "rgb(" + cat.color + ")";
 
         return {
           type: "bar",

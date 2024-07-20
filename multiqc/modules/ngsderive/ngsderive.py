@@ -1,29 +1,24 @@
-""" MultiQC module to parse output from ngsderive """
-
-
 import csv
 import io
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    ngsderive module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="attempts to predict library information from next-generation sequencing data.",
+            info="Forensic tool for by backwards computing library information in sequencing data",
+            extra="""
+            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            should be considered with that understanding. Please see the documentation for more information.
+            """,
             # Can't find a DOI // doi=
         )
 
@@ -177,8 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ylab": "% Read Evidence",
             "ymin": 0,
             "ymax": 100,
-            "tt_percentages": True,
-            "ylab_format": "{value}%",
+            "ysuffix": "%",
             "cpswitch": False,
         }
 
@@ -322,8 +316,14 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "ngsderive: Read Length",
             "xlab": "Read Length",
             "ylab": "% Evidence for Read Length",
+            "xsuffix": " bp",
             "data_labels": [
-                {"name": "Percentages", "ylab": "% Evidence for Read Length"},
+                {
+                    "name": "Percentages",
+                    "ylab": "% Evidence for Read Length",
+                    "ymax": 100,
+                    "y_decimals": 2,
+                },
                 {"name": "Counts", "ylab": "Number of reads"},
             ],
         }
@@ -443,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ngsderive_junctions_plot",
             "title": "ngsderive: Junction Annotation",
             "cpswitch_counts_label": "Number",
-            "yDecimals": False,
+            "y_decimals": False,
             "ylab": "Number of junctions",
             "data_labels": [
                 {"name": "Junctions", "ylab": "Number of junctions"},

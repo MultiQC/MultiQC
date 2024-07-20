@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC read_duplication.py
-http://rseqc.sourceforge.net/#read-duplication-py """
+"""MultiQC submodule to parse output from RSeQC read_duplication.py
+http://rseqc.sourceforge.net/#read-duplication-py"""
 
 import logging
 
@@ -50,7 +50,7 @@ def parse_reports(self):
         "title": "RSeQC: Read Duplication",
         "ylab": "Number of Reads (log10)",
         "xlab": "Occurrence of read",
-        "yLog": True,
+        "ylog": True,
         "tt_label": "<strong>{point.x} occurrences</strong>: {point.y} reads",
     }
 

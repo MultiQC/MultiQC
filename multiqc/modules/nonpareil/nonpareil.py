@@ -1,33 +1,88 @@
-""" MultiQC module to parse output from nonpareil """
-
-
 import logging
+from typing import List
+
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots.plotly.line import Series
 from multiqc.utils import mqc_colour
 
 
-# Initialise the logger
 from multiqc.plots import table, linegraph
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Nonpareil analysis is split into two parts: the first (written in C++)
-    performs the subsampling, while the second (written in R) performs the
-    statistical analyses. As such, this model requires the user to post-process
-    the R object from the second part."""
+    """
+    Since Nonpareil main output has no model information, it is necessary to run its
+    auxiliary `R` plot functions and save the `curves` object as a `JSON` file. Briefly,
+    call function `export_curve()` on object `curves` (for an example, see [snakemake wrapper](https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/nonpareil/plot.html#code)):
+
+    ```r
+    base::library("jsonlite")
+    base::message("Exporting model as JSON")
+
+    export_curve <- function(object){
+      # Extract variables
+      n <- names(attributes(object))[c(1:12,21:29)]
+      x <- sapply(n, function(v) attr(object,v))
+      names(x) <- n
+      # Extract vectors
+      n <- names(attributes(object))[13:20]
+      y <- lapply(n, function(v) attr(object,v))
+      names(y) <- n
+      curve_json <- c(x, y)
+
+      # Add model
+      if (object$has.model) {
+        # https://github.com/lmrodriguezr/nonpareil/blob/162f1697ab1a21128e1857dd87fa93011e30c1ba/utils/Nonpareil/R/Nonpareil.R#L330-L332
+        x_min <- 1e3
+        x_max <- signif(tail(attr(object,"x.adj"), n=1)*10, 1)
+        x.model <- exp(seq(log(x_min), log(x_max), length.out=1e3))
+        y.model <- predict(object, lr=x.model)
+        curve_json <- append(curve_json, list(x.model=x.model))
+        curve_json <- append(curve_json, list(y.model=y.model))
+      }
+
+      base::print(curve_json)
+      curve_json
+    }
+
+    export_set <- function(object){
+      y <- lapply(object$np.curves, "export_curve")
+      names(y) <- sapply(object$np.curves, function(n) n$label)
+      jsonlite::prettify(toJSON(y, auto_unbox=TRUE))
+    }
+
+    y <- export_set(curves)
+    write(y, "output.json")
+    ```
+
+    #### Module config options
+
+    The module plots a line graph for each sample, with a tab panel to switch between only observed data, only models,
+    or both combined (model with a dashed line). It will use the colors specified in the JSON file by `nonpareil` and,
+    if some is missing use one from a MultiQC colour scheme (default: Paired) that can be defined with:
+
+    ```yaml
+    nonpareil:
+      plot_colours: Paired
+    ```
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="nonpareil",
+            name="Nonpareil",
             anchor="nonpareil",
             href="https://github.com/lmrodriguezr/nonpareil",
-            info="Estimate metagenomic coverage and sequence diversity ",
+            info="Estimates metagenomic coverage and sequence diversity ",
+            extra="""
+            Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
+            the average coverage and predict the amount of sequences that will be required
+            to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
+            """,
             doi="10.1093/bioinformatics/btt584",
         )
         # Config options
@@ -49,7 +104,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.data_by_sample) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.data_by_sample)} reports")
-        self.write_data_file(self.data_by_sample, "nonpareil")
+        self.write_data_file(self.data_by_sample, "multiqc_nonpareil")
 
         # Add versions
         for s_name, data in self.data_by_sample.items():
@@ -314,13 +369,11 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
-        esconfig = {
-            "dashStyle": "Dash",
-            "lineWidth": 2,
-            "marker": {"enabled": False},
-            "enableMouseTracking": True,
-            "showInLegend": False,
-        }
+        extra_series_config = dict(
+            dash="dash",
+            width=2,
+            showlegend=False,
+        )
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
@@ -334,10 +387,10 @@ class MultiqcModule(BaseMultiqcModule):
             {"name": "Model"},
         ]
         data_plot = list()
-        extra_series = list()
+        extra_series: List[List[Series]] = []
         for idx, dataset in enumerate(data_labels):
             data_plot.append(dict())
-            extra_series.append(list())
+            extra_series.append([])
             for s_name, data in self.data_by_sample.items():
                 if dataset["name"] == "Observed":
                     data_plot[idx][s_name] = data["nonpareil_observed"]
@@ -346,10 +399,14 @@ class MultiqcModule(BaseMultiqcModule):
                 elif dataset["name"] == "Combined":
                     data_plot[idx][s_name] = data["nonpareil_observed"]
                     if data["nonpareil_has.model"]:
-                        extra_series[idx].append(dict(esconfig))
-                        extra_series[idx][-1]["name"] = s_name
-                        extra_series[idx][-1]["data"] = [[x, y] for x, y in data["nonpareil_model"].items()]
-                        extra_series[idx][-1]["color"] = data_colors[s_name]
+                        extra_series[idx].append(
+                            Series(
+                                name=s_name,
+                                pairs=[(x, y) for x, y in data["nonpareil_model"].items()],
+                                color=data_colors[s_name],
+                                **extra_series_config,
+                            )
+                        )
 
         pconfig = {
             "id": "nonpareil-redundancy-plot",
@@ -360,9 +417,9 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 1e-3,
             "ymin": 0,
             "ymax": 100,
-            "xDecimals": True,
-            "yDecimals": True,
-            "xLog": True,
+            "x_decimals": True,
+            "y_decimals": True,
+            "xlog": True,
             "tt_label": "{point.x:.2f} Mbp: {point.y:.2f}",
             "extra_series": extra_series,
             "data_labels": data_labels,

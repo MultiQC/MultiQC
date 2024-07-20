@@ -1,6 +1,3 @@
-""" MultiQC module to parse output from Bamdst """
-
-
 import logging
 from collections import defaultdict
 from typing import Dict, Union
@@ -9,11 +6,10 @@ import math
 import os
 import fnmatch
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph, linegraph
-from multiqc.utils import config
+from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -66,12 +62,74 @@ def _read_config():
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module reads data from two types of Bamdst logs:
+
+    - `coverage.report`: used to build a table with coverage statistics. The sample name is read from this file.
+    - `chromosomes.report`: if this file is found in the same directory as the file above, additionally a per-contig coverage plot will be generated. This file must be named exactly this way, with the `.report` extension.
+
+    Note that for the sample names, the module will attempt to use the input BAM name
+    in the header in the `coverage.report` file:
+
+    ```
+    ## The file was created by bamdst
+    ## Version : 1.0.9
+    ## Files : ST0217_Lg.bam
+    ...
+    ```
+
+    However, if the tool was run in a piped manner, the file name will be just `-` or `/dev/stdin`,
+    and instead MultiQC will fall back to using the log file name `coverage.report`.
+    Make sure to run MultiQC with `--dirs` if use have multiple samples run in this way,
+    otherwise MultiQC will only report the first found sample under the name `coverage`.
+
+    For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
+
+    For example, you could add the following to your MultiQC config file:
+
+    ```yaml
+    bamdst:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "*_fix"
+        - "HLA*"
+        - "chrUn*"
+        - "chrEBV"
+        - "chrM"
+    ```
+
+    Note that exclusion supersedes inclusion for the contig filters.
+
+    To additionally avoid cluttering the plot, MultiQC can exclude contigs with a low relative coverage.
+
+    ```yaml
+    bamdst:
+      # Should be a fraction, e.g. 0.001 (exclude contigs with 0.1% coverage of sum of
+      # coverages across all contigs)
+      perchrom_fraction_cutoff: 0.001
+    ```
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    bamdst:
+      show_excluded_debug_logs: True
+    ```
+
+    This will then print a debug log message (use `multiqc -v`) for each excluded contig.
+    This is disabled by default as there can be very many in some cases.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",
-            info="""is a lightweight tool to stat the depth coverage of target regions of bam file(s)""",
+            info="Lightweight tool to stat the depth coverage of target regions of BAM file(s)",
             # doi="", # No DOI
         )
 
@@ -97,7 +155,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data_by_chromosome_by_sample, "multiqc_bamdst_chromosomes")
 
         self.build_tables(data_by_sample)
-        self._build_per_chrom_plot(data_by_chromosome_by_sample)
+        if data_by_chromosome_by_sample:
+            self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
     def _parse_coverage_report(self, f: Dict) -> Dict:
         """
@@ -352,8 +411,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter contigs
         filt_data_by_chrom_by_sample = self._filter_contigs(data_by_chrom_by_sample)
-        contigs = set.union(*[set(d.keys()) for d in data_by_chrom_by_sample.values()])
-        filt_contigs = set.union(*[set(d.keys()) for d in filt_data_by_chrom_by_sample.values()])
+        contigs = set()
+        for s_name, data_by_chrom in data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                contigs.add(chrom)
+        filt_contigs = set()
+        for s_name, data_by_chrom in filt_data_by_chrom_by_sample.items():
+            for chrom, d in data_by_chrom.items():
+                filt_contigs.add(chrom)
+
         if contigs == filt_contigs or len(filt_contigs) == 0:
             datasets = [data_by_chrom_by_sample]
             data_labels = None
@@ -372,42 +438,47 @@ class MultiqcModule(BaseMultiqcModule):
                     depth_datasets[-1][s_name][chrom] = d["Avg depth"]
                     cov_datasets[-1][s_name][chrom] = d["Coverage%"]
 
-        num_chroms = max([len(by_chrom.keys()) for by_chrom in depth_datasets[0].values()])
-        if num_chroms > 1:
+        if len(filt_contigs) > 1:
+            pconfig = {
+                "id": "bamdst-depth-per-contig-plot",
+                "title": "Bamdst: average depth per contig",
+                "xlab": "Region",
+                "ylab": "Average depth",
+                "categories": True,
+                "tt_decimals": 1,
+                "tt_suffix": "x",
+                "smooth_points": 500,
+                "logswitch": True,
+                "hide_empty": False,
+                "ymin": 0,
+            }
+            if data_labels:
+                pconfig["data_labels"] = data_labels
+
             perchrom_depth_plot = linegraph.plot(
                 depth_datasets,
-                pconfig={
-                    "id": "bamdst-depth-per-contig-plot",
-                    "title": "Bamdst: average depth per contig",
-                    "xlab": "Region",
-                    "ylab": "Average depth",
-                    "categories": True,
-                    "tt_decimals": 1,
-                    "tt_suffix": "x",
-                    "smooth_points": 500,
-                    "logswitch": True,
-                    "hide_zero_cats": False,
-                    "ymin": 0,
-                    "data_labels": data_labels,
-                },
+                pconfig,
             )
+            pconfig = {
+                "id": "bamdst-cov-per-contig-plot",
+                "title": "Bamdst: coverage percentage of each contig",
+                "xlab": "Region",
+                "ylab": "Coverage %",
+                "categories": True,
+                "tt_decimals": 1,
+                "tt_suffix": "%",
+                "smooth_points": 500,
+                "logswitch": True,
+                "hide_empty": False,
+                "ymax": 100,
+                "ymin": 0,
+            }
+            if data_labels:
+                pconfig["data_labels"] = data_labels
+
             perchrom_cov_plot = linegraph.plot(
                 cov_datasets,
-                pconfig={
-                    "id": "bamdst-cov-per-contig-plot",
-                    "title": "Bamdst: coverage percentage of each contig",
-                    "xlab": "Region",
-                    "ylab": "Coverage %",
-                    "categories": True,
-                    "tt_decimals": 1,
-                    "tt_suffix": "%",
-                    "smooth_points": 500,
-                    "logswitch": True,
-                    "hide_zero_cats": False,
-                    "ymax": 100,
-                    "ymin": 0,
-                    "data_labels": data_labels,
-                },
+                pconfig=pconfig,
             )
         else:
             perchrom_depth_plot = bargraph.plot(
@@ -418,7 +489,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Average depth",
                     "tt_suffix": "x",
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                     "ymin": 0,
                     "data_labels": data_labels,
                 },
@@ -431,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "xlab": "Sample",
                     "ylab": "Coverage %",
                     "tt_suffix": "%",
-                    "hide_zero_cats": False,
+                    "hide_empty": False,
                     "ymax": 100,
                     "ymin": 0,
                     "data_labels": data_labels,

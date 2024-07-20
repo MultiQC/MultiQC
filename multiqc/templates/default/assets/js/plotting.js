@@ -23,7 +23,6 @@ class Plot {
     this.pctAxisUpdate = dump["pct_axis_update"];
     this.axisControlledBySwitches = dump["axis_controlled_by_switches"];
     this.square = dump["square"];
-    this.static = dump["static"] ?? false;
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles
@@ -142,13 +141,14 @@ function initPlot(dump) {
   return null;
 }
 
-// Execute when page load has finished loading
+let loadingWarning;
+
 $(function () {
   // Show loading warning
-  let loading_warning = $(".mqc_loading_warning").show();
+  loadingWarning = $(".mqc_loading_warning").show();
+});
 
-  // Decompress the JSON plot data and init plot objects
-  let mqc_plotdata = JSON.parse(LZString.decompressFromBase64(mqc_compressed_plotdata));
+callAfterDecompressed.push(function (mqc_plotdata) {
   mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
   let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
@@ -166,7 +166,7 @@ $(function () {
   });
 
   // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
-  if (shouldRender.length === 0) loading_warning.hide();
+  if (shouldRender.length === 0) loadingWarning.hide();
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
   $("body").on("click", ".render_plot", function (e) {

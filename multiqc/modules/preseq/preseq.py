@@ -1,30 +1,92 @@
-""" MultiQC module to parse output from Preseq """
-
-
 import logging
+from typing import List
 
 import numpy as np
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
+from multiqc.plots.plotly.line import Series, Marker
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    When `preseq lc_extrap` is run with the default parameters, the extrapolation points
+    reach 10 billion molecules making the plot difficult to interpret in most scenarios.
+    It also includes a lot of data in the reports, which can unnecessarily inflate report
+    file sizes. To avoid this, MultiQC trims back the x-axis until each dataset
+    shows 80% of its maximum y-value (unique molecules).
+
+    To disable this feature and show all the data, add the following to your
+    [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+
+    ```yaml
+    preseq:
+      notrim: true
+    ```
+
+    #### Using coverage instead of read counts
+
+    Preseq reports its numbers as "Molecule counts". This isn't always very intuitive,
+    and it's often easier to talk about sequencing depth in terms of coverage.
+    You can plot the estimated coverage instead by specifying the reference genome or target size,
+    and the read length in your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+
+    ```yaml
+    preseq:
+      genome_size: 3049315783
+      read_length: 300
+    ```
+
+    These parameters make the script take every molecule count and divide it by
+    (genome_size / read_length).
+
+    MultiQC comes with effective genome size presets for Human and Mouse, so you can
+    provide the genome build name instead, like this: `genome_size: hg38_genome`. The
+    following values are supported: `hg19_genome`, `hg38_genome`, `mm10_genome`.
+
+    When the genome and read sizes are provided, MultiQC will plot the molecule counts
+    on the X axis ("total" data) and coverages on the Y axis ("unique" data).
+    However, you can customize what to plot on each axis (counts or coverage), e.g.:
+
+    ```yaml
+    preseq:
+      x_axis: counts
+      y_axis: coverage
+    ```
+
+    #### Plotting externally calculated read counts
+
+    To mark on the plot the read counts calculated externally from BAM or fastq files,
+    create a file with `preseq_real_counts` in the filename and place it with your analysis files.
+    It should be space or tab delimited with 2 or 3 columns (column 1 = preseq file name,
+    column 2 = real read count, optional column 3 = real unique read count). For example:
+
+    ```
+    Sample_1.preseq.txt 3638261 3638011
+    Sample_2.preseq.txt 1592394 1592133
+    [...]
+    ```
+
+    You can generate a line for such a file using samtools:
+
+    ```bash
+    echo "Sample_1.preseq.txt "$(samtools view -c -F 4 Sample_1.bam)" "$(samtools view -c -F 1028 Sample_1.bam)
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Preseq",
             anchor="preseq",
             href="http://smithlabresearch.org/software/preseq/",
-            info="""estimates the complexity of a library, showing how many additional
-                    unique reads are sequenced for increasing total read count.
-                    A shallow curve indicates complexity saturation. The dashed line
-                    shows a perfectly complex library where total reads = unique reads.""",
+            info="Estimates library complexity, showing how many additional unique reads are sequenced for "
+            "increasing total read count.",
+            extra="A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library "
+            "where total reads = unique reads.",
             doi="10.1038/nmeth.2375",
         )
 
@@ -159,15 +221,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Plot perfect library as dashed line
         pconfig["extra_series"].append(
-            {
-                "name": "a perfect library where each read is unique",
-                "data": [[0, 0], [max_yx, max_y]],
-                "dashStyle": "Dash",
-                "lineWidth": 1,
-                "color": "#000000",
-                "marker": {"enabled": False},
-                "showInLegend": False,
-            }
+            Series(
+                name="A perfect library where each read is unique",
+                pairs=[(0, 0), (max_yx, max_y)],
+                dash="dash",
+                width=1,
+                color="#000000",
+                showlegend=False,
+            )
         )
 
         self.add_section(name=name, description=description, anchor=section_id, plot=linegraph.plot(data, pconfig))
@@ -360,27 +421,35 @@ def _prep_real_counts(real_cnts_all, real_cnts_unq, is_basepairs, counts_in_1x, 
     return real_vals_all, real_vals_unq
 
 
-def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_suffix, y_tt_lbl):
+def _real_counts_to_plot_series(
+    data,
+    yx_by_sample,
+    xs_by_sample,
+    x_suffix,
+    y_suffix,
+    y_tt_lbl,
+) -> List[Series]:
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-
     series = []
     for si, sn in enumerate(sorted(data.keys())):
+        series_config = dict(
+            color=scale.get_colour(si),
+            showlegend=False,
+            marker=Marker(
+                symbol="diamond",
+                line_color="black",
+                width=1,
+            ),
+        )
         if sn in xs_by_sample:
             x = float(xs_by_sample[sn])
-            point = {
-                "color": scale.get_colour(si),
-                "showInLegend": False,
-                "marker": {
-                    "enabled": True,
-                    "symbol": "diamond",
-                    "lineColor": "black",
-                    "lineWidth": 1,
-                },
-            }
             if sn in yx_by_sample:
                 y = float(yx_by_sample[sn])
-                point["data"] = [[x, y]]
-                point["name"] = f"{sn}: actual read count vs. deduplicated read count (externally calculated)"
+                point = Series(
+                    pairs=[(x, y)],
+                    name=f"{sn}: actual read count vs. deduplicated read count (externally calculated)",
+                    **series_config,
+                )
                 series.append(point)
                 y = y_tt_lbl.replace("point.y", "y").format(y=y)
                 log.debug(f"Real counts for {sn}: {x}{x_suffix}, ({y}{y_suffix})")
@@ -394,8 +463,11 @@ def _real_counts_to_plot_series(data, yx_by_sample, xs_by_sample, x_suffix, y_su
                     )
                 else:
                     interp_y = np.interp(x, xs, ys)
-                    point["data"] = [[x, interp_y]]
-                    point["name"] = sn + ": actual read count (externally calculated)"
+                    point = Series(
+                        pairs=[(x, interp_y)],
+                        name=f"{sn}: actual read count (externally calculated)",
+                        **series_config,
+                    )
                     series.append(point)
                     y = y_tt_lbl.replace("point.y", "y").format(y=interp_y)
                     log.debug(f"Real count for {sn}: {x}{{x_suffix}} ({y}{{y_suffix}})")

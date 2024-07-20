@@ -1,26 +1,32 @@
-# -*- coding: utf-8 -*-
-
-""" MultiQC module to parse output files from miRTrace """
-
-
 import json
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="miRTrace",
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
-            info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            info="Quality control for small RNA sequencing data.",
+            extra="""
+            miRTrace performs adapter trimming and discards the reads that fail to pass
+            the QC filters. miRTrace specifically addresses sequencing quality, read length,
+            sequencing depth and miRNA complexity and also identifies the presence of both
+            miRNAs and undesirable sequences derived from tRNAs, rRNAs, or Illumina artifact
+            sequences.
+        
+            miRTrace also profiles clade-specific miRNAs based on a comprehensive catalog
+            of clade-specific miRNA families identified previously. With this information,
+            miRTrace can detect exogenous miRNAs, which could be contamination derived,
+            e.g. index mis-assignment on sample demultiplexing, or biologically derived,
+            e.g. parasitic RNAs.
+            """,
             doi="10.1186/s13059-018-1588-9",
         )
 
@@ -244,9 +250,9 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Read Lenth (bp)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Read Length (bp) {point.x}</b>: {point.y} Read Count",
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 40, "to": 50, "color": "#ffebd1"},
                 {"from": 26, "to": 40, "color": "#e2f5ff"},
                 {"from": 18, "to": 26, "color": "#e5fce0"},
@@ -354,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Number of Sequencing Reads",
             "ymin": 0,
             "xmin": 1,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Number of Sequencing Reads {point.x}</b>: {point.y} Distinct miRNA Count",
         }
 

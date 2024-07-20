@@ -1,16 +1,20 @@
-""" MultiQC module to parse output from sickle """
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The `stdout` can be captured by directing it to a file e.g. `sickle command 2> sickle_out.log`
+
+    The module generates the sample names based on the filenames.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Sickle",

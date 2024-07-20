@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard QualityScoreDistribution """
+"""MultiQC submodule to parse output from Picard QualityScoreDistribution"""
 
 import logging
 from collections import OrderedDict
@@ -26,7 +26,7 @@ def parse_reports(self):
     )
 
     if not all_data:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -41,7 +41,7 @@ def parse_reports(self):
         "title": f"{self.name}: Base Quality Distribution",
         "ylab": "Number of Bases",
         "xlab": "Base Quality Score",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>base quality{point.x}</b>: {point.y}",
         "ymin": 0,
     }
@@ -58,4 +58,4 @@ def parse_reports(self):
     )
 
     # Return the number of detected samples to the parent module
-    return len(all_data)
+    return all_data.keys()

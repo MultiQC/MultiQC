@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .util import average_from_range, percentage_from_content_metric
@@ -68,7 +68,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "ymin": 0,
             "xmax": 100,
             "xmin": 0,
-            "yDecimals": False,
+            "y_decimals": False,
             "tt_label": "<b>{point.x}% GC</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_sequence_gc_content'),
             "data_labels": [{"name": "Percentages", "ylab": "Percentage"}, {"name": "Counts", "ylab": "Count"}],
@@ -122,10 +122,10 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
             "ylab": "Phred Quality Score",
             "xlab": "% GC",
             "ymin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}",
             # 'colors': self.get_status_cols('per_base_sequence_quality'),
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 28, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},

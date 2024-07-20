@@ -27,7 +27,7 @@ def parse_log_files(self):
 
         # process the file content
         d = {}
-        for line in f["contents_lines"]:
+        for line in f["f"].splitlines():
             nr_reads, count = line.strip("\n").split(" ")
             d[int(nr_reads)] = int(count)
 
@@ -51,7 +51,7 @@ def add_to_humid_section(self):
         "xlab": "Number of identical reads in a node",
         "logswitch": True,
         "logswitch_active": True,
-        "hide_zero_cats": False,
+        "hide_empty": False,
     }
     self.add_section(
         name="Counts statistics",

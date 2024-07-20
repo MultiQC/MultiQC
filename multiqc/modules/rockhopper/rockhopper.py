@@ -1,15 +1,10 @@
-""" MultiQC submodule to parse output from Rockhopper summary files
-https://cs.wellesley.edu/~btjaden/Rockhopper/ """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -20,13 +15,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="Rockhopper",
             anchor="rockhopper",
             href="https://cs.wellesley.edu/~btjaden/Rockhopper/",
-            info="""
-            is a comprehensive and user-friendly system
-            for computational analysis of bacterial RNA-seq data.
-            It can align reads to genomes, assemble transcripts,
-            identify transcript boundaries, and discover novel
-            transcripts such as small RNAs.
-            """,
+            info="Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs",
+            extra="It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
+            "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 
@@ -185,7 +176,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "rockhopper_reads_counts_plot",
             "title": "Rockhopper: Alignment types",
             "ylab": "Number of reads",
-            "tt_percentage": False,
         }
 
         # Plot bar graph of groups

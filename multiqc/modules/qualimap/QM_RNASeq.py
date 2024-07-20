@@ -1,5 +1,4 @@
-""" MultiQC Submodule to parse output from Qualimap RNASeq """
-
+"""MultiQC Submodule to parse output from Qualimap RNASeq"""
 
 import logging
 import os
@@ -131,7 +130,7 @@ def parse_reports(self):
             }
             gorigin_pconfig = {
                 "id": "qualimap_genomic_origin",
-                "title": "Qualimap RNAseq: Genomic Origin",
+                "title": "QualiMap: RNAseq: Genomic Origin",
                 "ylab": "Number of reads",
                 "cpswitch_c_active": False,
             }
@@ -224,7 +223,7 @@ def parse_reports(self):
         """
         pconfig = {
             "id": "qualimap_gene_coverage_profile",
-            "title": "Qualimap RNAseq: Coverage Profile Along Genes (total)",
+            "title": "QualiMap: RNAseq: Coverage Profile Along Genes (total)",
             "ylab": "Cumulative mapped-read depth",
             "xlab": "Transcript Position (%)",
             "ymin": 0,

@@ -1,29 +1,32 @@
-""" MultiQC module to parse output from CCS """
-
 import json
 import logging
 import re
+from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="CCS",
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
-            info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
+            info="PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)",
+            extra="""
+            CCS takes multiple subreads of the same SMRTbell molecule and combines them
+            using a statistical model to produce one highly accurate consensus sequence,
+            also called HiFi read, with base quality values. This tool powers the Circular
+            Consensus Sequencing workflow in SMRT Link.
+            """,
             # Can't find a DOI // doi=
         )
 
         # To store the mod data
-        self.ccs_data = dict()
+        self.ccs_data: Dict = dict()
         self.parse_v4_log_files()
         self.parse_v5_log_files()
         self.ccs_data = self.ignore_samples(self.ccs_data)
@@ -83,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs PF",
                 "description": "ZMWs pass filters",
                 "scale": "BuGn",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
                 "hidden": True,
             },
@@ -91,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "ZMWs input",
                 "description": "ZMWs input",
                 "scale": "Purples",
-                "format": "{.0f}",
+                "format": "{:,d}",
                 "shared_key": "zmw_count",
             },
         }
