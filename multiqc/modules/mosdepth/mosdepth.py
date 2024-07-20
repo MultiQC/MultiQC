@@ -362,7 +362,7 @@ class MultiqcModule(BaseMultiqcModule):
                 )
 
             if cum_cov_dist_data:
-                threshs, hidden_threshs = get_cov_thresholds()
+                threshs, hidden_threshs = config.get_cov_thresholds("mosdepth_config")
                 self.genstats_cov_thresholds(genstats, genstats_headers, cum_cov_dist_data, threshs, hidden_threshs)
                 self.genstats_mediancov(genstats, genstats_headers, cum_cov_dist_data)
 
@@ -613,25 +613,3 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "X",
             "scale": "BuPu",
         }
-
-
-def get_cov_thresholds():
-    """Reads coverage thresholds from the config, otherwise sets sensible defaults"""
-    try:
-        threshs = config.mosdepth_config["general_stats_coverage"]
-        assert isinstance(threshs, list)
-        assert len(threshs) > 0
-        threshs = [int(t) for t in threshs]
-        log.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in threshs])}")
-    except (KeyError, AttributeError, TypeError, AssertionError):
-        threshs = [1, 5, 10, 30, 50]
-        log.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in threshs])}")
-
-    try:
-        hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
-        assert isinstance(hidden_threshs, list)
-        log.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_threshs])}")
-    except (KeyError, AttributeError, TypeError, AssertionError):
-        hidden_threshs = [t for t in threshs if t != 30]
-
-    return threshs, hidden_threshs
