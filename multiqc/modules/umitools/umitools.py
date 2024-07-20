@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             (str, "version", r"# UMI-tools version: ([\d\.]+)"),
         ]
 
-        data = {}
+        data: Dict[str, Union[str, int, float]] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
             re_matches = re.search(regex, f["f"])
