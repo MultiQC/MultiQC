@@ -76,9 +76,7 @@ def parse_reports(self):
     readqc_keys_table["read count"].update(
         {
             "title": "Reads",
-            "suffix": config.read_count_prefix,
             "format": "{:,.2f}",
-            "modify": lambda x: x * config.read_count_multiplier,
             "shared_key": "read_count",
             "scale": "Purples",
             "placement": 10,
@@ -87,9 +85,8 @@ def parse_reports(self):
     readqc_keys_table["cluster count"].update(
         {
             "title": "Clusters",
-            "suffix": config.read_count_prefix,
             "format": "{:,.2f}",
-            "modify": lambda x: x * config.read_count_multiplier,
+            "shared_key": "read_count",
             "scale": "Purples",
             "placement": 20,
         }
@@ -97,9 +94,7 @@ def parse_reports(self):
     readqc_keys_table["bases sequenced"].update(
         {
             "title": "Bases",
-            "suffix": config.base_count_prefix,
             "format": "{:,.2f}",
-            "modify": lambda x: x * config.base_count_multiplier,
             "shared_key": "base_count",
             "scale": "Blues",
             "placement": 30,

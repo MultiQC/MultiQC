@@ -44,14 +44,13 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         kv["bases usable"] = kv["bases usable (MB)"] * 1e6
         kv.pop("bases usable (MB)")
 
-    headers: Dict = {}
+    headers: Dict = dict()
     headers["bases usable"] = {
         "title": "Usable",
         "description": mappingqc_keys["bases usable"][0],
-        "suffix": config.base_count_prefix,
         "format": "{:,.2f}",
-        "modify": lambda x: x * config.base_count_multiplier,
         "scale": "Blues",
+        "shared_key": "base_count",
     }
     headers["mapped read %"] = {
         "title": "Mapped",
