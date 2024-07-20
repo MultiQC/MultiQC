@@ -3,6 +3,7 @@ import xml.etree.cElementTree
 from typing import Dict
 
 from multiqc import config
+from multiqc.modules.ngsbits.utils import parse_qcml_by
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -31,15 +32,15 @@ def parse_reports(self):
     readqc_keys: Dict = dict()
 
     for f in self.find_log_files("ngsbits/readqc"):
-        d = self.parse_qcml_by(f["f"], "qualityParameter")
+        values, params = parse_qcml_by(f["f"], "qualityParameter")
         is_pe = check_paired_end(f["f"])
 
-        if len(d[0]) > 0:
+        if len(values) > 0:
             if f["s_name"] in readqc:
                 log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
             self.add_data_source(f, section="readqc")
-            readqc[f["s_name"]] = d[0]
-            readqc_keys.update(d[1])
+            readqc[f["s_name"]] = values
+            readqc_keys.update(params)
             readqc[f["s_name"]].update(
                 {
                     "cluster count": readqc[f["s_name"]]["read count"] / (1 + is_pe),
@@ -71,10 +72,10 @@ def parse_reports(self):
     readqc_keys["paired-end"] = ("Whether input files were paired-end sequences.", "")
 
     # Improve table headers
-    readqc_keys_table = {key: {"title": key, "description": value[0]} for key, value in readqc_keys.items()}
-
+    readqc_keys_table = {key: {"description": value[0]} for key, value in readqc_keys.items()}
     readqc_keys_table["read count"].update(
         {
+            "title": "Reads",
             "suffix": config.read_count_prefix,
             "format": "{:,.2f}",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -85,6 +86,7 @@ def parse_reports(self):
     )
     readqc_keys_table["cluster count"].update(
         {
+            "title": "Clusters",
             "suffix": config.read_count_prefix,
             "format": "{:,.2f}",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -94,6 +96,7 @@ def parse_reports(self):
     )
     readqc_keys_table["bases sequenced"].update(
         {
+            "title": "Bases",
             "suffix": config.base_count_prefix,
             "format": "{:,.2f}",
             "modify": lambda x: x * config.base_count_multiplier,
@@ -103,17 +106,53 @@ def parse_reports(self):
         }
     )
     readqc_keys_table["gc content %"].update(
-        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Spectral", "placement": 40}
+        {
+            "title": "GC content",
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "max": 100,
+            "scale": "Spectral",
+            "placement": 40,
+        }
     )
     readqc_keys_table["Q20 read %"].update(
-        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Reds", "placement": 50}
+        {
+            "title": "Q20",
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "max": 100,
+            "scale": "Reds",
+            "placement": 50,
+        }
     )
     readqc_keys_table["Q30 base %"].update(
-        {"suffix": "%", "format": "{:,.2f}", "max": 100, "scale": "Oranges", "placement": 60}
+        {
+            "title": "Q30",
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "max": 100,
+            "scale": "Oranges",
+            "placement": 60,
+        }
     )
-    readqc_keys_table["read length"].update({"suffix": "bp", "format": "{:,.0f}", "scale": "Greens", "placement": 70})
+    readqc_keys_table["read length"].update(
+        {
+            "title": "Read length",
+            "suffix": "bp",
+            "format": "{:,.0f}",
+            "scale": "Greens",
+            "placement": 70,
+        },
+    )
     readqc_keys_table["no base call %"].update(
-        {"suffix": "%", "format": "{:,.2f}", "floor": 1, "scale": "BuGn", "placement": 80}
+        {
+            "title": "No base call",
+            "suffix": "%",
+            "format": "{:,.2f}",
+            "floor": 1,
+            "scale": "BuGn",
+            "placement": 80,
+        }
     )
 
     # overview table with all values
@@ -126,7 +165,7 @@ def parse_reports(self):
             readqc,
             readqc_keys_table,
             pconfig={
-                "namespace": "ngsbits_readqc",
+                "namespace": "ReadQC",
                 "id": "ngsbits_readqc_table",
                 "title": "ngs-bits: ReadQC Summary",
             },
