@@ -90,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             Technical differences arise due to the fact that pre-filtered read pairs still include artifacts:
             Short-range cis-pairs (<1kb) are typically enriched in ligation artifacts (self-circles, dangling-ends, etc).
             Elevated number of trans interactions typically suggests increased noise levels - e.g. random ligations etc.""",
-            plot=self.pairs_by_cisrange_trans(),
+            content=self.pairs_by_cisrange_trans(),
         )
 
         self.add_section(
@@ -146,7 +146,9 @@ class MultiqcModule(BaseMultiqcModule):
         _observed_ptypes = set()
         for _sample_name, _sample_data in self.pairtools_stats.items():
             if (_sample_data_dict := _sample_data["pair_types"]) is None:
-                return None  # if any of samples is None -> None
+                # if any of samples is None -> None
+                desc = "Skipping the plot as some samples are missing pair types data"
+                return f'<div class="alert alert-info">{desc}</div>'
             else:
                 data_dict[_sample_name] = _sample_data_dict
                 _observed_ptypes |= set(_sample_data_dict)
@@ -174,25 +176,26 @@ class MultiqcModule(BaseMultiqcModule):
 
     def pairs_by_cisrange_trans(self):
         """
-        cis-pairs split into several ranges
-        of genomic separation, and trans-category.
+        Cis-pairs split into several ranges of genomic separation, and trans-category.
 
-        Here we extract relevant sub-dict "cis_dist" for
-        each sample, make sure there are no None-s and
-        dist_names are the same across all samples.
+        Here we extract relevant sub-dict "cis_dist" for each sample, make sure there are
+        no None-s and dist_names are the same across all samples.
         """
 
         data_dict = {}
         _dist_category_set = set()
         for _sample_name, _sample_data in self.pairtools_stats.items():
             if (_sample_data_dict := _sample_data["cis_dist"]) is None:
-                return None  # if any of samples is None -> None
+                # if any of samples is None -> None
+                desc = "Skipping the plot as some samples are missing cis distance data"
+                return f'<div class="alert alert-info">{desc}</div>'
             else:
                 data_dict[_sample_name] = _sample_data_dict
                 # make sure all dist_categories are identical
                 _dist_category_set |= _sample_data_dict.keys()
                 if len(_dist_category_set) > 1:
-                    return None
+                    desc = "Skipping the plot as different samples have different distance categories"
+                    return f'<div class="alert alert-info">{desc}</div>'
 
         # extract uniq distance categories
         uniq_dist_categories = _dist_category_set
@@ -207,7 +210,6 @@ class MultiqcModule(BaseMultiqcModule):
                 if _cat_name == "trans":
                     key_dict[_cat_name]["color"] = "#1035AC"  # dark-ish blue
 
-        # multiqc interactive plotting call :
         return bargraph.plot(
             data_dict,
             key_dict,
@@ -228,14 +230,17 @@ class MultiqcModule(BaseMultiqcModule):
         _dist_categories = None
         for _sample_name, _sample_data in self.pairtools_stats.items():
             if (_sample_data_dict := _sample_data["pairs_by_strand"]) is None:
-                return None  # if any of samples is None -> None
+                # if any of samples is None -> None
+                desc = "Skipping the plot as some samples are missing distance frequencies data"
+                return f'<div class="alert alert-info">{desc}</div>'
             else:
                 # extract distance categories that should be identical across sample
                 _dist_categories = list(_sample_data_dict.keys())
 
         # initialize data_dict - with distance categories as the outter layer
         if _dist_categories is None:
-            return None
+            desc = "No pairs_by_strand data to plot"
+            return f'<div class="alert alert-info">{desc}</div>'
 
         data_dict: Dict[str, Dict] = {_cat: {} for _cat in _dist_categories}
 
@@ -277,7 +282,10 @@ class MultiqcModule(BaseMultiqcModule):
         # traverse sample_data to extract dist_categories
         for _sample_name, _sample_data in self.pairtools_stats.items():
             if (_sample_data_dict := _sample_data["dist_freq"]) is None:
-                return None  # if any of samples is None -> None
+                # if any of samples is None -> None
+                desc = "Skipping the plot as some samples are missing distance frequencies data"
+                return f'<div class="alert alert-info">{desc}</div>'
+
             # reorder data in _sample_data_dict to extract strand_category on top:
             for _cat in _strand_categories:
                 data_dict[_cat][_sample_name] = _sample_data_dict[_cat]
