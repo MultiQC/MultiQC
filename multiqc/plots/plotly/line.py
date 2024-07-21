@@ -42,14 +42,16 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
 
     def __init__(self, **data):
         if "dashStyle" in data:
-            add_validation_warning(self.__class__, "'dashStyle' field is deprecated. Please use 'dash' instead")
-            data["dash"] = convert_dash_style(data.pop("dashStyle"))
+            add_validation_warning(
+                [LinePlotConfig, Series], "'dashStyle' field is deprecated. Please use 'dash' instead"
+            )
+            data["dash"] = convert_dash_style(Series, data.pop("dashStyle"))
         elif "dash" in data:
-            data["dash"] = convert_dash_style(data["dash"])
+            data["dash"] = convert_dash_style(Series, data["dash"])
 
         tuples: List[Tuple[KeyT, ValueT]] = []
         if "data" in data:
-            add_validation_warning(self.__class__, "'data' field is deprecated. Please use 'pairs' instead")
+            add_validation_warning([LinePlotConfig, Series], "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
                 tuples.append(tuple(p))
@@ -57,7 +59,7 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
                 tuples.append(p)
         data["pairs"] = tuples
 
-        super().__init__(**data)
+        super().__init__(**data, _parent_class=LinePlotConfig)
 
 
 class FlatLine(ValidatedConfig):
@@ -66,6 +68,7 @@ class FlatLine(ValidatedConfig):
     """
 
     value: Union[float, int]
+    colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
@@ -76,7 +79,7 @@ class FlatLine(ValidatedConfig):
     def parse_label(cls, value):
         if isinstance(value, dict):
             add_validation_warning(
-                cls,
+                [LinePlotConfig, FlatLine],
                 "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
                 "Other fields other than 'text' are deprecated and will be ignored",
             )
@@ -85,10 +88,10 @@ class FlatLine(ValidatedConfig):
 
     def __init__(self, **data):
         if "dashStyle" in data:
-            data["dash"] = convert_dash_style(data.pop("dashStyle"))
+            data["dash"] = convert_dash_style(FlatLine, data.pop("dashStyle"))
         if "dash" in data:
-            data["dash"] = convert_dash_style(data["dash"])
-        super().__init__(**data)
+            data["dash"] = convert_dash_style(FlatLine, data["dash"])
+        super().__init__(**data, _parent_class=LinePlotConfig)
 
 
 class LineBand(ValidatedConfig):
@@ -99,6 +102,9 @@ class LineBand(ValidatedConfig):
     from_: Union[float, int]
     to: Union[float, int]
     color: Optional[str] = None
+
+    def __init__(self, **data):
+        super().__init__(**data, _parent_class=LinePlotConfig)
 
 
 SeriesConf = Union[Series, Dict]
@@ -447,7 +453,7 @@ def create(
     return LinePlot(**model.__dict__)
 
 
-def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:
+def convert_dash_style(cls: type, dash_style: Optional[str]) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
     if dash_style is None:
         return None
@@ -468,7 +474,7 @@ def convert_dash_style(dash_style: Optional[str]) -> Optional[str]:
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
         add_validation_warning(
-            LinePlotConfig, f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
+            [LinePlotConfig, cls], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
         )
         return mapping[dash_style]
     return "solid"

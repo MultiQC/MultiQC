@@ -376,7 +376,7 @@ def test_incorrect_fields(strict):
             plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
             errors = [call.args[0] for call in err.mock_calls if call.args]
             assert "• 'x_lines': failed to parse value 'wrong_type'" in errors
-            assert any(e for e in errors if e.startswith("Invalid LinePlot plot configuration"))
+            assert any(e for e in errors if e.startswith("Errors parsing LinePlotConfig"))
             warnings = [call.args[0] for call in warn.mock_calls if call.args]
             assert any(w for w in warnings if w.startswith("• unrecognized field 'unknown_field'"))
         assert isinstance(plot, Plot)
@@ -424,6 +424,7 @@ def test_incorrect_color():
         plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, pconfig=pconfig)
         errors = [call.args[0] for call in err.mock_calls if call.args]
         assert "• invalid color value 'invalid'" in errors
+
     assert isinstance(plot, Plot)
     report.reset()
     plot.add_to_report()
