@@ -66,6 +66,7 @@ dev = [
     "types-requests",
     "types-Markdown",
     "types-beautifulsoup4",
+    "types-Pillow",
 ]
 
 [project.urls]
