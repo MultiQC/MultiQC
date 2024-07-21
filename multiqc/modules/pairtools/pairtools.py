@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         # display common pairtypes first with pre-defined colors and order :
         ptypes_annotated: Dict = {}
         for _ptype, ptype_color in self.params["pairtypes_colors"].items():
-            if _ptype in _observed_ptypes:
+            if any(t.lower() == _ptype.lower() for t in _observed_ptypes):
                 ptypes_annotated[_ptype] = {"color": ptype_color, "name": _ptype}
             else:
                 # display remaining pairtypes second with automatic colors :
@@ -183,28 +183,29 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         data_dict = {}
-        _dist_categ_set = set()
+        _dist_category_set = set()
         for _sample_name, _sample_data in self.pairtools_stats.items():
             if (_sample_data_dict := _sample_data["cis_dist"]) is None:
                 return None  # if any of samples is None -> None
             else:
                 data_dict[_sample_name] = _sample_data_dict
                 # make sure all dist_categories are identical
-                _dist_categ_set |= {tuple(_sample_data_dict)}
-                if len(_dist_categ_set) > 1:
+                _dist_category_set |= _sample_data_dict.keys()
+                if len(_dist_category_set) > 1:
                     return None
 
         # extract uniq distance categories
-        uniq_dist_categories = _dist_categ_set
+        uniq_dist_categories = _dist_category_set
 
         # assign colors to distance ranges (as many as possible):
         key_dict: Dict = {}
-        for color, _cat_name in zip_longest(self.params["cis_range_colors"], uniq_dist_categories):
-            key_dict[_cat_name] = {"name": _cat_name}
-            if color:
-                key_dict[_cat_name]["color"] = color
-            if _cat_name == "trans":
-                key_dict[_cat_name]["color"] = "#1035AC"  # dark-ish blue
+        for color, _cat_names in zip_longest(self.params["cis_range_colors"], uniq_dist_categories):
+            for _cat_name in _cat_names:
+                key_dict[_cat_name] = {"name": _cat_name}
+                if color:
+                    key_dict[_cat_name]["color"] = color
+                if _cat_name == "trans":
+                    key_dict[_cat_name]["color"] = "#1035AC"  # dark-ish blue
 
         # multiqc interactive plotting call :
         return bargraph.plot(
@@ -288,8 +289,8 @@ class MultiqcModule(BaseMultiqcModule):
                 title="pairtools: Pairs by distance and orientation",
                 xlab="Genomic separation (bp)",
                 ylab="number of pairs",
-                xLog=True,
-                yLog=True,
+                xlog=True,
+                ylog=True,
                 data_labels=[
                     {"name": "P(s)", "ylab": "number of pairs"},
                     {"name": "FF", "ylab": "number of pairs"},
@@ -304,56 +305,44 @@ class MultiqcModule(BaseMultiqcModule):
         """Add columns to General Statistics table"""
         headers = {
             "total": {
-                "title": f"{config.read_count_prefix} read pairs",
-                "description": f"Total read pairs before mapping ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
+                "title": "Read pairs",
+                "description": "Total read pairs before mapping",
                 "scale": "Greys",
+                "shared_key": "read_count",
             },
             "frac_unmapped": {
-                "title": "% unmapped",
+                "title": "Unmapped",
                 "description": "% of pairs (w.r.t. total) with both sides unmapped",
-                "max": 50,
-                "min": 0,
                 "suffix": "%",
                 "scale": "PuRd",
             },
             "frac_single_sided_mapped": {
-                "title": "% one-sided",
+                "title": "One-sided",
                 "description": "% of pairs (w.r.t. total) with one side mapped",
-                "max": 50,
-                "min": 0,
                 "suffix": "%",
                 "scale": "Purples",
             },
             "frac_mapped": {
-                "title": "% two-sided",
+                "title": "Two-sided",
                 "description": "% of pairs (w.r.t. total) with both sides mapped",
-                "max": 100,
-                "min": 0,
                 "suffix": "%",
                 "scale": "RdYlGn",
             },
             "frac_dups": {
-                "title": "% duplicated",
+                "title": "Duplicated",
                 "description": "% of duplicated pairs (w.r.t. mapped)",
-                "max": 50,
-                "min": 0,
                 "suffix": "%",
                 "scale": "YlOrRd",
             },
             "total_nodups": {
-                "title": f"{config.read_count_prefix} unique pairs",
-                "description": f"Mapped pairs after deduplication ({config.read_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.read_count_multiplier,
+                "title": "Unique pairs",
+                "description": "Mapped pairs after deduplication",
                 "scale": "Greys",
+                "shared_key": "read_count",
             },
             "frac_cis": {
-                "title": "% cis",
+                "title": "Cis",
                 "description": "% of cis-pairs (w.r.t mapped)",
-                "max": 100,
-                "min": 0,
                 "suffix": "%",
                 "scale": "PuOr-rev",
             },
