@@ -611,6 +611,9 @@ odgi:
   - fn: "*.og.stats.yml"
   - fn: "*.odgi.stats.yaml"
   - fn: "*.odgi.stats.yml"
+pairtools:
+  contents: ["total_single_sided_mapped\t", "cis\t", "trans\t", "pair_types/"]
+  num_lines: 20
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:

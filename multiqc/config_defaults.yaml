@@ -408,9 +408,7 @@ module_order:
   - mirtrace
   - happy
   - mirtop
-  - sambamba
   - glimpse
-  - ngsbits
   # Post-alignment processing
   - gopeaks
   - homer
@@ -440,10 +438,13 @@ module_order:
   - nanostat
   - samblaster
   - samtools
+  - bamtools
+  - sambamba
+  - ngsbits
+  - pairtools
   - sexdeterrmine
   - seqera_cli
   - eigenstratdatabasetools
-  - bamtools
   - jellyfish
   - vcftools
   - longranger

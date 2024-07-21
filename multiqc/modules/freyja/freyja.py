@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -23,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the summary data
-        self.freyja_data = dict()
+        self.freyja_data: Dict = dict()
 
         # Parse the output files
         self.parse_summ_files()
