@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .util import average_pos_from_size
@@ -57,10 +57,10 @@ class DragenReadMetrics(BaseMultiqcModule):
             "xlab": "Mean Sequence Quality (Phred Quality Score)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             # 'colors': self.get_status_cols('per_sequence_quality_scores'),
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 28, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
@@ -126,8 +126,7 @@ class DragenReadMetrics(BaseMultiqcModule):
                 "ylab": "Read Count",
                 "xlab": "Sequence Length (bp)",
                 "ymin": 0,
-                "yMinTickInterval": 0.1,
-                "xDecimals": False,
+                "x_decimals": False,
                 # 'colors': self.get_status_cols('sequence_length_distribution'),
                 "tt_label": "<b>{point.x} bp</b>: {point.y}",
             }

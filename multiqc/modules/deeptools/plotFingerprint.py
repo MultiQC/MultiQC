@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotFingerprint """
+"""MultiQC submodule to parse output from deepTools plotFingerprint"""
 
 import logging
 
@@ -81,10 +81,9 @@ class PlotFingerprintMixin:
                     {
                         "id": "plotFingerprint_quality_metrics",
                         "title": "deepTools: Fingerprint quality metrics",
-                        "stacking": None,
                         "ymin": 0,
                         "ymax": 100,
-                        "yLabelFormat": "{value}%",
+                        "ylab_format": "{value}%",
                         "ylab": "Percentage of fragments",
                         "categories": True,
                         "tt_label": "<strong>{point.x}</strong>: {point.y:.2f}%",

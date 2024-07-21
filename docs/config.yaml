@@ -1,6 +1,6 @@
 nav:
   - Getting Started:
-      - index.md
+      - index.mdx
       - getting_started/quick_start.md
       - getting_started/installation.md
       - getting_started/running_multiqc.md
@@ -13,6 +13,7 @@ nav:
   - Usage:
       - usage/downstream.md
       - usage/pipelines.md
+      - usage/scripts.md
       - usage/troubleshooting.md
   - Development:
       - development/index.md

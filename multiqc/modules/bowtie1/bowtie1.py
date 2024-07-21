@@ -1,28 +1,21 @@
-""" MultiQC module to parse output from Bowtie 1 """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Bowtie 1 module, parses stderr logs."""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bowtie 1",
             anchor="bowtie1",
             target="Bowtie 1",
             href="http://bowtie-bio.sourceforge.net/",
-            info="is an ultrafast, memory-efficient short read aligner.",
+            info="Ultrafast, memory-efficient short read aligner.",
             doi="10.1186/gb-2009-10-3-r25",
         )
 
@@ -120,8 +113,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie_data, headers)
 
     def bowtie_alignment_plot(self):
-        """Make the HighCharts HTML to plot the alignment rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "reads_aligned": {"color": "#8bbc21", "name": "Aligned"},

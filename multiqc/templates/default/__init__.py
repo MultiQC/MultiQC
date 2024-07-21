@@ -16,6 +16,7 @@ For more information about creating child themes, see the docs:
 docs/templates.md
 
 """
+
 import os
 
 template_dir = os.path.dirname(__file__)

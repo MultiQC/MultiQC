@@ -1,5 +1,5 @@
-""" MultiQC submodule to parse output from RSeQC infer_experiment.py
-http://rseqc.sourceforge.net/#infer-experiment-py """
+"""MultiQC submodule to parse output from RSeQC infer_experiment.py
+http://rseqc.sourceforge.net/#infer-experiment-py"""
 
 import logging
 import re
@@ -73,8 +73,7 @@ def parse_reports(self):
         "ylab": "% Tags",
         "ymin": 0,
         "ymax": 100,
-        "tt_percentages": False,
-        "ylab_format": "{value}%",
+        "ysuffix": "%",
         "cpswitch": False,
     }
 

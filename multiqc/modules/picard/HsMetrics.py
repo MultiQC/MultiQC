@@ -1,7 +1,10 @@
-""" MultiQC submodule to parse output from Picard HsMetrics """
+"""MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
 from collections import defaultdict
+
+import re
+from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -22,12 +25,7 @@ FIELD_DESCRIPTIONS = {
     "HET_SNP_Q": "The Phred Scaled Q Score of the theoretical HET SNP sensitivity.",
     "HET_SNP_SENSITIVITY": "The theoretical HET SNP sensitivity.",
     "HS_LIBRARY_SIZE": "The estimated number of unique molecules in the selected part of the library.",
-    "HS_PENALTY_100X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 100X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 100X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_100X.",
-    "HS_PENALTY_10X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 10X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 10X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 10 * HS_PENALTY_10X.",
-    "HS_PENALTY_20X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 20X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 20X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 20 * HS_PENALTY_20X.",
-    "HS_PENALTY_30X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 30X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 30X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 30 * HS_PENALTY_30X.",
-    "HS_PENALTY_40X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 40X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 40X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 40 * HS_PENALTY_40X.",
-    "HS_PENALTY_50X": "The 'hybrid selection penalty' incurred to get 80% of target bases to 50X.  This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get 50X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 50 * HS_PENALTY_50X.",
+    "HS_PENALTY_{coverage}X": "The 'hybrid selection penalty' incurred to get 80% of target bases to {coverage}X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get {coverage}X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_{coverage}X.",
     "MAX_TARGET_COVERAGE": "The maximum coverage of reads that mapped to target regions of an experiment.",
     "MEAN_BAIT_COVERAGE": "The mean coverage of all baits in the experiment.",
     "MEAN_TARGET_COVERAGE": "The mean coverage of targets.",
@@ -48,16 +46,10 @@ FIELD_DESCRIPTIONS = {
     "PCT_PF_UQ_READS_ALIGNED": "PF Reads Aligned / PF Reads.",
     "PCT_PF_UQ_READS": "PF Unique Reads / Total Reads.",
     "PCT_SELECTED_BASES": "On+Near Bait Bases / PF Bases Aligned.",
-    "PCT_TARGET_BASES_100X": "The fraction of all target bases achieving 100X or greater coverage.",
-    "PCT_TARGET_BASES_10X": "The fraction of all target bases achieving 10X or greater coverage.",
-    "PCT_TARGET_BASES_1X": "The fraction of all target bases achieving 1X or greater coverage.",
-    "PCT_TARGET_BASES_20X": "The fraction of all target bases achieving 20X or greater coverage.",
-    "PCT_TARGET_BASES_2X": "The fraction of all target bases achieving 2X or greater coverage.",
-    "PCT_TARGET_BASES_30X": "The fraction of all target bases achieving 30X or greater coverage.",
-    "PCT_TARGET_BASES_40X": "The fraction of all target bases achieving 40X or greater coverage.",
-    "PCT_TARGET_BASES_50X": "The fraction of all target bases achieving 50X or greater coverage.",
+    "PCT_TARGET_BASES_{coverage}X": "The fraction of all target bases achieving {coverage}X or greater coverage.",
     "PCT_USABLE_BASES_ON_BAIT": "The number of aligned, de-duped, on-bait bases out of the PF bases available.",
     "PCT_USABLE_BASES_ON_TARGET": "The number of aligned, de-duped, on-target bases out of the PF bases available.",
+    "PF_BASES": "The number of bases in the PF reads.",
     "PF_BASES_ALIGNED": "The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.",
     "PF_READS": "The number of reads that pass the vendor's filter.",
     "PF_UNIQUE_READS": "The number of PF reads that are not marked as duplicates.",
@@ -72,7 +64,7 @@ FIELD_DESCRIPTIONS = {
 def parse_reports(module):
     """Find Picard HsMetrics reports and parse their data"""
 
-    data_by_bait_by_sample = dict()
+    data_by_bait_by_sample: Dict[str, Dict[str, Dict]] = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
@@ -152,14 +144,14 @@ def parse_reports(module):
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
     # Write parsed data to a file
-    module.write_data_file(data_by_sample, f"multiqc_{module.anchor}_HsMetrics")
+    module.write_data_file(data_by_sample, f"multiqc_{module.id}_HsMetrics")
 
     # Swap question marks with -1
     for s_name in data_by_sample:
@@ -172,15 +164,16 @@ def parse_reports(module):
     # Add report section
     module.add_section(
         name="HSMetrics",
-        anchor=f"{module.anchor}_hsmetrics",
+        anchor=f"{module.id}_hsmetrics",
         plot=table.plot(
             data_by_sample,
             _get_table_headers(),
             {
-                "id": f"{module.anchor}_hsmetrics_table",
+                "id": f"{module.id}_hsmetrics_table",
                 "namespace": "HsMetrics",
                 "scale": "RdYlGn",
                 "min": 0,
+                "title": "Picard HsMetrics",
             },
         ),
     )
@@ -195,7 +188,7 @@ def parse_reports(module):
     if hs_pen_plot is not None:
         module.add_section(
             name="HS Penalty",
-            anchor=f"{module.anchor}_hsmetrics_hs_penalty",
+            anchor=f"{module.id}_hsmetrics_hs_penalty",
             description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
             helptext="""
                 Can be used with the following formula:
@@ -208,7 +201,7 @@ def parse_reports(module):
         )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()
 
 
 def _general_stats_table(module, data):
@@ -253,15 +246,15 @@ def _general_stats_table(module, data):
             covs = ["30"]
         for c in covs:
             headers[f"PCT_TARGET_BASES_{c}X"] = {
-                "id": f"{module.anchor}_target_bases_{c}X",
-                "title": f"Target Bases &ge; {c}X",
-                "description": f"Percent of target bases with coverage &ge; {c}X",
+                "rid": f"{module.id}_target_bases_{c}X",
+                "title": f"Target Bases ≥ {c}X",
+                "description": f"Percent of target bases with coverage ≥ {c}X",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: util.multiply_hundred(x),
+                "modify": util.multiply_hundred,
             }
     module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
@@ -289,6 +282,7 @@ def _get_table_headers():
             "ON_TARGET_BASES",
             "PCT_USABLE_BASES_ON_BAIT",
             "PCT_USABLE_BASES_ON_TARGET",
+            "PF_BASES",
             "PF_BASES_ALIGNED",
             "PF_READS",
             "PCT_SELECTED_BASES",
@@ -345,24 +339,33 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
             for s, r in title_cleanup:
                 h_title = h_title.replace(s, r)
 
+            # Extract the coverage from the column name
+            m = re.match(r".+_(\d+)X", h)
+            if m:
+                h_tmpl = re.sub(r"_(\d+)X", "_{coverage}X", h)
+                descr = FIELD_DESCRIPTIONS.get(h_tmpl, "").replace("{coverage}", m.group(1))
+            else:
+                descr = FIELD_DESCRIPTIONS.get(h, "")
+            if not descr:
+                log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
+                descr = ""
+
             headers[h] = {
                 "title": h_title.strip().lower().capitalize(),
-                "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
+                "description": descr,
             }
             if h.find("PCT") > -1:
                 headers[h]["title"] = headers[h]["title"]
-                headers[h]["modify"] = lambda x: x * 100.0
+                headers[h]["modify"] = util.multiply_hundred
                 headers[h]["max"] = 100
                 headers[h]["suffix"] = "%"
 
             elif h.find("READS") > -1:
                 headers[h]["title"] = f"{config.read_count_prefix} {headers[h]['title']}"
-                headers[h]["modify"] = lambda x: x * config.read_count_multiplier
                 headers[h]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
                 headers[h]["title"] = f"{config.base_count_prefix} {headers[h]['title']}"
-                headers[h]["modify"] = lambda x: x * config.base_count_multiplier
                 headers[h]["shared_key"] = "base_count"
 
             # Manual capitilisation for some strings
@@ -375,7 +378,7 @@ def _generate_table_header_config(table_cols, hidden_table_cols):
 
 
 def _add_target_bases(self, data):
-    data_clean = defaultdict(dict)
+    data_clean: Dict[str, Dict] = defaultdict(dict)
     max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
@@ -406,7 +409,7 @@ def _add_target_bases(self, data):
 
 
 def hs_penalty_plot(self, data):
-    data_clean = defaultdict(dict)
+    data_clean: Dict[str, Dict] = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:
@@ -422,7 +425,7 @@ def hs_penalty_plot(self, data):
         "ylab": "Penalty",
         "ymin": 0,
         "xmin": 0,
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
 

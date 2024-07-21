@@ -35,11 +35,11 @@ of the report.
         <button id="mqc_cols_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
         Highlight Samples
       </h4>
-      {% if report.num_mpl_plots > 0 %}
+      {% if report.num_flat_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
         This report has flat image plots that won't be highlighted.<br/>
-        See the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">documentation</a>
+        See the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">documentation</a>
         for help.
       </p>
       {% endif %}
@@ -62,11 +62,11 @@ of the report.
         <button id="mqc_rename_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
         Rename Samples
       </h4>
-      {% if report.num_mpl_plots > 0 %}
+      {% if report.num_flat_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
         This report has flat image plots that won't be renamed.<br/>
-        See the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">documentation</a>
+        See the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">documentation</a>
         for help.
       </p>
       {% endif %}
@@ -98,11 +98,11 @@ of the report.
         <button id="mqc_hide_apply" class="btn btn-xs btn-default pull-right" disabled>Apply</button>
         Show / Hide Samples
       </h4>
-      {% if report.num_mpl_plots > 0 %}
+      {% if report.num_flat_plots > 0 %}
       <p>
         <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>
         This report has flat image plots that won't be hidden.<br/>
-        See the <a href="http://multiqc.info/docs/#flat--interactive-plots" target="_blank">documentation</a>
+        See the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">documentation</a>
         for help.
       </p>
       {% endif %}
@@ -158,7 +158,6 @@ of the report.
               <div class="form-group col-sm-6">
                 <select id="mqc_export_ft" class="form-control input-sm">
                   <option value="image/png">PNG</option>
-                  <option value="image/jpeg">JPEG</option>
                   <option value="image/svg+xml">SVG</option>
                 </select>
               </div>
@@ -169,7 +168,7 @@ of the report.
               </div>
               <div class="col-sm-6">
                 <div class="input-group input-group-sm">
-                  <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="2">
+                  <input type="text" class="form-control" id="mqc_export_scaling" placeholder="Scale" value="1.5">
                   <span class="input-group-addon">X</span>
                 </div>
               </div>

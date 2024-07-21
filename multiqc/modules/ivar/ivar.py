@@ -1,27 +1,25 @@
-# -*- coding: utf-8 -*-
-
-""" MultiQC module to parse output files from iVar """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module parses the output from the `ivar trim` command and creates a table view.
+    Both output from V1 and V2 of the tool are supported and parsed accordingly.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="iVar",
             anchor="iVar",
             href="https://github.com/andersen-lab/ivar",
-            info="is a computational package that contains functions broadly useful for viral amplicon-based sequencing.",
+            info="Functions for viral amplicon-based sequencing.",
             doi="10.1101/383513",
         )
 
@@ -140,23 +138,30 @@ class MultiqcModule(BaseMultiqcModule):
         """Heatmap showing information on each primer found for every sample"""
         # Top level dict contains sample IDs + dict(primer, counts)
 
-        final_data = list()
-        final_xcats = list()
-        final_ycats = list()
+        final_data = []
+        final_xcats = []
+        final_ycats = []
 
-        for k, v in self.ivar_primers.items():
+        for i, (k, v) in enumerate(self.ivar_primers.items()):
             final_ycats.append(k)
-            tmp_prim_val = list()
+            tmp_prim_val = []
             for prim, val in v.items():
-                final_xcats.append(prim)
+                if i == 0:
+                    final_xcats.append(prim)
                 tmp_prim_val.append(val)
             final_data.append(tmp_prim_val)
+
+        if len(final_xcats) != len(final_data[0]):
+            log.error(f"Number of primers do not match: {len(final_xcats)} vs {len(final_data[0])}")
+
+        if len(final_ycats) != len(final_data):
+            log.error(f"Number of samples and primers do not match: {len(final_ycats)} vs {len(final_data)}")
 
         if self.ivar_primers is not None:
             pconfig = {
                 "id": "ivar-primer-count-heatmap",
                 "title": "iVar: Number of primers found for each sample",
-                "decimalPlaces": 0,
+                "tt_decimals": 0,
                 "square": False,
                 "xcats_samples": False,
             }

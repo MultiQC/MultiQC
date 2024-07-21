@@ -1,23 +1,24 @@
-"""MultiQC module to parse output from OUS variant calling pipeline"""
-
-
 import csv
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Som.py output not currently supported.
+    """
+
     def __init__(self):
         """MultiQC module for processing hap.py output logs"""
         super(MultiqcModule, self).__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",
-            info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
+            info="Benchmarks variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
         )
 
@@ -56,7 +57,10 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_indel_data,
                 self.gen_headers("_indel"),
-                pconfig={"id": "happy_indel_plot"},
+                pconfig={
+                    "id": "happy_indel_plot",
+                    "title": "hap.py: INDEL",
+                },
             ),
         )
 
@@ -72,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 self.happy_snp_data,
                 self.gen_headers("_snp"),
-                pconfig={"id": "happy_snp_plot"},
+                pconfig={"id": "happy_snp_plot", "title": "hap.py: SNP"},
             ),
         )
 
@@ -85,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Duplicate sample name found in {f['root']}! Overwriting: {f['s_name']}")
         self.happy_raw_sample_names.add(f["s_name"])
 
-        rdr = csv.DictReader(f["f"])
+        rdr: csv.DictReader = csv.DictReader(f["f"])
         for row in rdr:
             row_id = f"{f['s_name']}_{row['Type']}_{row['Filter']}"
             if row["Type"] == "INDEL":
@@ -134,43 +138,43 @@ class MultiqcModule(BaseMultiqcModule):
             "TRUTH.TOTAL": {
                 "title": "Truth: Total",
                 "description": "Total number of truth variants",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "TRUTH.TP": {
                 "title": "Truth: True Positive",
                 "description": "Number of true-positive calls in truth representation (counted via the truth sample column)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "TRUTH.FN": {
                 "title": "Truth: False Negative",
                 "description": "Number of false-negative calls = calls in truth without matching query call",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.TOTAL": {
                 "title": "Query: Total",
                 "description": "Total number of query calls",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.TP": {
                 "title": "Query: True Positive",
                 "description": "Number of true positive calls in query representation (counted via the query sample column)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.FP": {
                 "title": "Query: False Positive",
                 "description": "Number of false-positive calls in the query file (mismatched query calls within the confident regions)",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "QUERY.UNK": {
                 "title": "Query: Unknown",
                 "description": "Number of query calls outside the confident regions",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "FP.gt": {
@@ -270,13 +274,13 @@ class MultiqcModule(BaseMultiqcModule):
             "Subset.Size": {
                 "title": "Subset Size",
                 "description": "the number of nucleotides contained in the current subset",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
             "Subset.IS_CONF.Size": {
                 "title": "Subset Confident Size",
                 "description": "This gives the number of confident bases (-f regions) in the current subset",
-                "format": None,
+                "format": "{:,d}",
                 "hidden": True,
             },
         }

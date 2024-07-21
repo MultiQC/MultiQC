@@ -108,7 +108,7 @@ extra_fn_clean_exts:
 #### `remove`
 
 The `remove` type allows you to remove an exact match from the filename.
-This includes removing a subtring within the middle of a sample name.
+This includes removing a substring within the middle of a sample name.
 
 :::info{title=Example}
 
@@ -127,7 +127,7 @@ extra_fn_clean_exts:
 #### `regex`
 
 You can also remove a substring with a regular expression.
-A useful website to work with writing regexes is <https://regex101.com>.
+A useful website to work with writing regexes is [regex101.com](https://regex101.com).
 
 :::info{title=Example}
 
@@ -259,7 +259,7 @@ they can be overwritten in `<installation_dir>/multiqc_config.yaml` or
 
 To see the default search patterns, check a given module in the MultiQC documentation.
 Each module has its search patterns listed beneath any free-text docs.
-Alternatively, see the [`search_patterns.yaml`](https://github.com/MultiQC/MultiQC/blob/main/multiqc/utils/search_patterns.yaml)
+Alternatively, see the [`search_patterns.yaml`](https://github.com/MultiQC/MultiQC/blob/main/multiqc/search_patterns.yaml)
 file in the MultiQC source code. Copy the section for the program that you want to modify and paste this
 into your config file. Make sure you make it part of a dictionary called `sp`
 as follows:
@@ -382,24 +382,31 @@ by changing the `num_datasets_plot_limit` config option.
 
 Reports with many samples start to need a lot of data for plots. This results in inconvenient
 report file sizes (can be 100s of megabytes) and worse, web browser crashes. To allow MultiQC
-to scale to these sample numbers, most plot types have two plotting functions in the code base -
-interactive (using HighCharts) and flat (rendered with MatPlotLib). Flat plots take up the
-same disk space irrespective of sample number and do not consume excessive resources to display.
+to scale to these sample numbers, most plot types have two plotting methods in the code base -
+interactive and flat. Flat plots take up the same disk space irrespective of sample number
+and do not consume excessive resources to display.
 
-By default, MultiQC generates flat plots when there are 100 or more samples. This cutoff
+By default, MultiQC generates flat plots when there are 1000 or more samples. This cutoff
 can be changed by changing the `plots_flat_numseries` config option. This behaviour can also
 be changed by running MultiQC with the `--flat` / `--interactive` command line options or by
 setting the `plots_force_flat` / `plots_force_interactive` config options to `True`.
 
-### Tables / Beeswarm plots
+### Tables / violin plots
 
 Report tables with thousands of samples (table rows) can quickly become impossible to use.
-To avoid this, tables with large numbers of rows are instead plotted as a Beeswarm plot
-(aka. a strip chart / jitter plot). These plots have fixed dimensions with any number
-of samples. Hovering on a dot will highlight the same sample in other rows.
+To avoid this, tables with large numbers of rows are instead plotted as a violin plot.
+These plots have fixed dimensions with any number of samples, and can be helpful
+to see the data distribution of each table column. By default, MultiQC starts using
+violin plots when a table has 500 rows or more. This can be changed by setting the
+`max_table_rows` config option.
 
-By default, MultiQC starts using beeswarm plots when a table has 500 rows or more. This
-can be changed by setting the `max_table_rows` config option.
+There are also interactive dots for separate samples that can be hovered to show
+sample name and highlight this sample in other rows. For efficiency, if the number
+of samples is above `violin_min_threshold_outliers` (default value 100), only dots
+for outliers within the distribution are shown, and for more than
+`violin_min_threshold_no_points` (1000) samples, only the violins without points are
+rendered. When the number of samples is above `violin_downsample_after` (2000),
+the underlying violin data itself is downsampled to keep the interactive reports efficient.
 
 ## Coloured log output
 
@@ -423,9 +430,12 @@ fail silently and add negligable run time.
 However, if you prefer you can explicitly disable the version check by adding
 `no_version_check: true` to your MultiQC config.
 
-The check is done with the main MultiQC website (<https://multiqc.info>).
-The only statistics that are collected are the number of checks and the version of MultiQC
-that is being run. No identifiable information (eg. IP address etc) is stored.
+The check is done with the main [MultiQC API](https://api.multiqc.info/)
+(see [source code](https://github.com/MultiQC/api.multiqc.info)).
+The only statistics that are collected are the number of checks and a handful of metrics about
+the running environment of MultiQC, such as the Python version and installation method
+(see [source code](https://github.com/MultiQC/MultiQC/blob/06faefd772ade811c3f9968d8db6106bd14eb57a/multiqc/core/version_check.py#L24-L34)).
+No identifiable information (such as IP address) is stored.
 
 ## Command-line config
 
@@ -607,8 +617,8 @@ Usually it's better to just [specify which modules you want to run](#be-picky-wi
 
 ### Force interactive plots
 
-One step that can take some time is running MatPlotLib to generate static-image plots
-(see [Flat / interactive plots](#flat--interactive-plots)).
+One step that can take some time is generating static-image plots
+(see [Flat / interactive plots](https://multiqc.info/docs/development/plots/#interactive--flat-image-plots)).
 You can force MultiQC to skip this and only use interactive plots by using the `--interactive`
 command line option (`config.plots_force_interactive`).
 

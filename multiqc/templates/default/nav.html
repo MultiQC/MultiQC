@@ -31,23 +31,25 @@ The side navigation for the report.
         <a href="#general_stats" class="nav-l1">General Stats</a>
       </li>
       {% endif -%}
-      {% for m in report.modules_output %}
-      {% if m.sections | length > 0 %}
-      <li>
-        <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
-        <ul>
-        {% if m.sections | length > 1 -%}
-          {% for s in m.sections -%}
-            {% if s['name'] is not none and s['name'] | length > 0 %}
-            <li>
-              <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
-            </li>
+      {% for m in report.modules %}
+        {% if not m.hidden %}
+          {% if m.sections | length > 0 %}
+          <li>
+            <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
+            <ul>
+            {% if m.sections | length > 1 -%}
+              {% for s in m.sections -%}
+                {% if s['name'] is not none and s['name'] | length > 0 %}
+                <li>
+                  <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+                </li>
+                {% endif %}
+              {%- endfor %}
             {% endif %}
-          {%- endfor %}
+            </ul>
+          </li>
+          {% endif %}
         {% endif %}
-        </ul>
-      </li>
-      {% endif %}
       {% endfor %}
     </ul>
   </div>

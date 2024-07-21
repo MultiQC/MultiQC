@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph
 
@@ -62,7 +62,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                     "ymin": 0,
                     "xmin": 0,
                     "xmax": depth_1pc,  # trim long flat tail
-                    "tt_label": "<b>{point.x}X</b>: {point.y} loci",
+                    "tt_label": "<b>{point.x}</b>: {point.y} loci",
                     "cpswitch": True,
                 },
             ),
@@ -84,7 +84,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                     "ymax": 100,
                     "xmin": 0,
                     "xmax": depth_1pc,  # trim long flat tail
-                    "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                    "tt_label": "<b>{point.x}</b>: {point.y:.2f}%",
                 },
             ),
         )

@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Cell Ranger count """
+"""MultiQC module to parse output from Cell Ranger count"""
 
 import json
 import logging
@@ -94,9 +94,9 @@ class CellRangerVdjMixin:
         else:
             for k in self.vdj_general_data_headers.keys():
                 self.vdj_general_data_headers[k]["title"] = f"{self.vdj_general_data_headers[k]['title']} (VDJ)"
-                self.vdj_general_data_headers[k][
-                    "description"
-                ] = f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+                self.vdj_general_data_headers[k]["description"] = (
+                    f"{self.vdj_general_data_headers[k]['description']} (VDJ)"
+                )
 
             self.general_stats_addcols(self.cellrangervdj_general_data, self.vdj_general_data_headers)
 
@@ -116,6 +116,7 @@ class CellRangerVdjMixin:
                         {
                             "namespace": "VDJ",
                             "id": "cellranger-vdj-warnings-table",
+                            "title": "Cellranger VDJ: Warnings",
                         },
                     ),
                 )
@@ -130,6 +131,7 @@ class CellRangerVdjMixin:
                     {
                         "namespace": "VDJ",
                         "id": "cellranger-vdj-stats-table",
+                        "title": "Cellranger VDJ: Summary stats",
                     },
                 ),
             )
@@ -144,6 +146,7 @@ class CellRangerVdjMixin:
                     {
                         "namespace": "VDJ",
                         "id": "cellranger-vdj-annot-table",
+                        "title": "Cellranger VDJ: Annotations",
                     },
                 ),
             )
@@ -161,6 +164,7 @@ class CellRangerVdjMixin:
     def parse_vdj_report(self, f):
         """Go through the html report of cell ranger and extract the data in a dicts"""
 
+        mydict = None
         for line in f["f"]:
             line = line.strip()
             if line.startswith("const data"):
@@ -168,6 +172,12 @@ class CellRangerVdjMixin:
                 mydict = json.loads(line)
                 mydict = mydict["summary"]
                 break
+        if mydict is None:
+            log.debug(f"Could not find VDJ data in {f['fn']}")
+            return
+        if "vdj_sequencing" not in mydict["summary_tab"] or "cells" not in mydict["summary_tab"]:
+            log.debug(f"Could not find VDJ sections in {f['fn']}")
+            return
 
         s_name = self.clean_s_name(mydict["sample"]["id"], f)
 
@@ -203,6 +213,7 @@ class CellRangerVdjMixin:
             "VDJ",
         )
 
+        # Store sequencing results data from vdj report
         col_dict = {
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
@@ -220,12 +231,11 @@ class CellRangerVdjMixin:
             "VDJ",
         )
 
-        # Store sequencing results data from vdj report
-        data_rows = (
-            mydict["summary_tab"]["vdj_sequencing"]["table"]["rows"]
-            + mydict["summary_tab"]["cells"]["table"]["rows"]
-            + mydict["summary_tab"]["vdj_enrichment"]["table"]["rows"]
-        )
+        data_rows = mydict["summary_tab"]["vdj_sequencing"]["table"]["rows"]
+        if "cells" in mydict["summary_tab"]:
+            data_rows += mydict["summary_tab"]["cells"]["table"]["rows"]
+        if "vdj_enrichment" in mydict["summary_tab"]:
+            data_rows += mydict["summary_tab"]["vdj_enrichment"]["table"]["rows"]
         col_dict = {
             "Number of Reads": "reads",
             "Valid Barcodes": "valid bc",
@@ -251,51 +261,36 @@ class CellRangerVdjMixin:
             "VDJ",
         )
 
-        # Store VDJ annotation and expression data from vdj report
-        col_dict = {
-            "Cells With Productive V-J Spanning Pair": "cells VJ span",
-            "Cells With Productive V-J Spanning (IGK, IGH) Pair": "cells IGK-IGH span",
-            "Cells With Productive V-J Spanning (IGL, IGH) Pair": "cells IGL-IGH span",
-            "Paired Clonotype Diversity": "clonotype diversity",
-            "Cells With IGH Contig": "cells IGH contig",
-            "Cells With IGK Contig": "cells IGK contig",
-            "Cells With IGL Contig": "cells IGL contig",
-            "Cells With CDR3-annotated IGH Contig": "cells IGH CDR3",
-            "Cells With CDR3-annotated IGK Contig": "cells IGK CDR3",
-            "Cells With CDR3-annotated IGL Contig": "cells IGL CDR3",
-            "Cells With V-J Spanning IGH Contig": "cells IGH VJ span",
-            "Cells With V-J Spanning IGK Contig": "cells IGK VJ span",
-            "Cells With V-J Spanning IGL Contig": "cells IGL VJ span",
-            "Cells With Productive IGH Contig": "cells IGH productive",
-            "Cells With Productive IGK Contig": "cells IGK productive",
-            "Cells With Productive IGL Contig": "cells IGL productive",
-        }
-        colours = {
-            # "cells VJ span": "",
-            # "cells IGK-IGH span": "",
-            # "cells IGL-IGH span": "",
-            # "clonotype diversity": "",
-            # "cells IGH contig": "",
-            # "cells IGK contig": "",
-            # "cells IGL contig": "",
-            # "cells IGH CDR3": "",
-            # "cells IGK CDR3": "",
-            # "cells IGL CDR3": "",
-            # "cells IGH VJ span": "",
-            # "cells IGK VJ span": "",
-            # "cells IGL VJ span": "",
-            # "cells IGH productive": "",
-            # "cells IGK productive": "",
-            # "cells IGL productive": "",
-        }
-        data_annotations, self.vdj_annotations_headers = update_dict(
-            data_general_stats,
-            self.vdj_annotations_headers,
-            mydict["summary_tab"]["vdj_annotation"]["table"]["rows"],
-            col_dict,
-            colours,
-            "VDJ",
-        )
+        if "vdj_annotation" in mydict["summary_tab"]:
+            # Store VDJ annotation and expression data from vdj report
+            col_dict = {
+                "Cells With Productive V-J Spanning Pair": "cells VJ span",
+                "Cells With Productive V-J Spanning (IGK, IGH) Pair": "cells IGK-IGH span",
+                "Cells With Productive V-J Spanning (IGL, IGH) Pair": "cells IGL-IGH span",
+                "Paired Clonotype Diversity": "clonotype diversity",
+                "Cells With IGH Contig": "cells IGH contig",
+                "Cells With IGK Contig": "cells IGK contig",
+                "Cells With IGL Contig": "cells IGL contig",
+                "Cells With CDR3-annotated IGH Contig": "cells IGH CDR3",
+                "Cells With CDR3-annotated IGK Contig": "cells IGK CDR3",
+                "Cells With CDR3-annotated IGL Contig": "cells IGL CDR3",
+                "Cells With V-J Spanning IGH Contig": "cells IGH VJ span",
+                "Cells With V-J Spanning IGK Contig": "cells IGK VJ span",
+                "Cells With V-J Spanning IGL Contig": "cells IGL VJ span",
+                "Cells With Productive IGH Contig": "cells IGH productive",
+                "Cells With Productive IGK Contig": "cells IGK productive",
+                "Cells With Productive IGL Contig": "cells IGL productive",
+            }
+            data_annotations, self.vdj_annotations_headers = update_dict(
+                data_general_stats,
+                self.vdj_annotations_headers,
+                mydict["summary_tab"]["vdj_annotation"]["table"]["rows"],
+                col_dict,
+                {},
+                "VDJ",
+            )
+        else:
+            data_annotations = None
 
         # Extract warnings if any
         warnings = dict()
@@ -317,8 +312,8 @@ class CellRangerVdjMixin:
                     "title": f"Cell Ranger VDJ: {mydict['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
                     "xlab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
                     "ylab": mydict["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
-                    "yLog": True,
-                    "xLog": True,
+                    "ylog": True,
+                    "xlog": True,
                 },
                 "description": "Barcode knee plot",
                 "helptext": help_dict["Barcode Rank Plot"],
@@ -332,7 +327,8 @@ class CellRangerVdjMixin:
             self.add_data_source(f, s_name, module="cellranger", section="count")
             self.cellrangervdj_mapping[s_name] = data
             self.cellrangervdj_general_data[s_name] = data_general_stats
-            self.cellrangervdj_annotations[s_name] = data_annotations
+            if data_annotations:
+                self.cellrangervdj_annotations[s_name] = data_annotations
             if len(warnings) > 0:
                 self.cellrangervdj_warnings[s_name] = warnings
             self.cellrangervdj_plots_conf = plots

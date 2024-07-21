@@ -1,14 +1,10 @@
-""" MultiQC module to parse output from mosdepth """
-
-
 import fnmatch
 import logging
 from collections import defaultdict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import bargraph, linegraph
 
@@ -28,21 +24,21 @@ def read_config():
     if not isinstance(cfg["exclude_contigs"], list):
         cfg["exclude_contigs"] = []
 
-    cfg["xchr"] = cfg.get("xchr", None)
-    if not isinstance(cfg["xchr"], str):
-        cfg["xchr"] = None
+    xchr = cfg.get("xchr")
+    if xchr and isinstance(cfg["xchr"], str):
+        cfg["xchr"] = xchr
 
-    cfg["ychr"] = cfg.get("ychr", None)
-    if not isinstance(cfg["ychr"], str):
-        cfg["ychr"] = None
+    ychr = cfg.get("ychr")
+    if ychr and isinstance(cfg["ychr"], str):
+        cfg["ychr"] = ychr
 
     if cfg["include_contigs"]:
         log.debug(f"Trying to include these contigs in mosdepth: {', '.join(cfg['include_contigs'])}")
     if cfg["exclude_contigs"]:
         log.debug(f"Excluding these contigs from mosdepth: {', '.join(cfg['exclude_contigs'])}")
-    if cfg["xchr"]:
+    if cfg.get("xchr"):
         log.debug(f"Using \"{cfg['xchr']}\" as X chromosome name")
-    if cfg["ychr"]:
+    if cfg.get("ychr"):
         log.debug(f"Using \"{cfg['ychr']}\" as Y chromosome name")
 
     cutoff = cfg.get("perchrom_fraction_cutoff", 0.0)
@@ -59,64 +55,108 @@ def read_config():
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Mosdepth can generate multiple outputs with a common prefix and different endings.
-    The module can use first 2 (preferring "region" if exists, otherwise "global"),
-    to build 2 plots: coverage distribution and per-contig average coverage.
+    Mosdepth can generate several output files all with a common prefix and different endings:
 
-    {prefix}.mosdepth.global.dist.txt
-    a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide
+    - per-base depth (`{prefix}.per-base.bed.gz`),
+    - mean per-window depth given a window size (`{prefix}.regions.bed.gz`, if a BED file provided with `--by`),
+    - mean per-region given a BED file of regions (`{prefix}.regions.bed.gz`, if a window size provided with `--by`),
+    - a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide (`{prefix}.mosdepth.global.dist.txt` and `{prefix}.mosdepth.region.dist.txt`),
+    - quantized output that merges adjacent bases as long as they fall in the same coverage bins (`{prefix}.quantized.bed.gz`),
+    - threshold output to indicate how many bases in each region are covered at the given thresholds (`{prefix}.thresholds.bed.gz`)
+    - summary output providing region length, coverage mean, min, and max for each region. (`{prefix}.mosdepth.summary.txt`)
 
-    1       2       0.00
-    1       1       0.00
-    1       0       1.00
-    total   2       0.00
-    total   1       0.00
-    total   0       1.00
+    The MultiQC module plots coverage distributions from 2 kinds of outputs:
 
-    {prefix}.mosdepth.region.dist.txt (if --by is specified)
-    same, but in regions
+    - `{prefix}.mosdepth.region.dist.txt`
+    - `{prefix}.mosdepth.global.dist.txt`
 
-    1       2       0.01
-    1       1       0.01
-    1       0       1.00
-    total   2       0.00
-    total   1       0.00
-    total   0       1.00
+    Using "region" if exists, otherwise "global". Plotting 3 figures:
 
-    {prefix}.per-base.bed.gz (unless -n/--no-per-base is specified)
+    - Proportion of bases in the reference genome with, at least, a given depth of coverage (cumulative coverage distribution).
+    - Proportion of bases in the reference genome with a given depth of coverage (absolute coverage distribution).
+    - Average coverage per contig/chromosome.
 
-    1       0       881481  0
-    1       881481  881482  2
-    1       881482  881485  4
+    Also plotting the percentage of the genome covered at a threshold in the General Stats section.
+    The default thresholds are 1, 5, 10, 30, 50, which can be customised in the config as follows:
 
-    {prefix}.regions.bed.gz (if --by is specified)
-    the mean per-region from either a BED file or windows of specified size
+    ```yaml
+    mosdepth_config:
+      general_stats_coverage:
+        - 10
+        - 20
+        - 40
+        - 200
+        - 30000
+    ```
 
-    1       2488047 2488227 TNFRSF14        0.00
-    1       2489098 2489338 TNFRSF14        0.00
+    You can also specify which columns would be hidden when the report loads (by default, all values are hidden except 30X):
 
-    {prefix}.quantized.bed.gz (if --quantize is specified)
-    quantized output that merges adjacent bases as long as they fall in the same coverage bins e.g. (10-20)
+    ```yaml
+    general_stats_coverage_hidden:
+      - 10
+      - 20
+      - 200
+    ```
 
-    1       0       881481  0:1
-    1       881481  881485  1:5
-    1       881485  881769  5:150
+    For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
 
-    {prefix}.thresholds.bed.gz (if --thresholds is specified) - how many bases in each region are covered at the given thresholds
+    For example, you could add the following to your MultiQC config file:
 
-    #chrom  start   end     region     1X      10X     20X     30X
-    1       2488047 2488227 TNFRSF14   0       0       0       0
-    1       2489098 2489338 TNFRSF14   0       0       0       0
+    ```yaml
+    mosdepth_config:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "chrUn*"
+        - "HLA*"
+        - "chrM"
+        - "chrEBV"
+    ```
 
+    Note that exclusion superseeds inclusion for the contig filters.
+
+    To additionally avoid cluttering the plot, mosdepth can exclude contigs with a low relative coverage.
+
+    ```yaml
+    mosdepth_config:
+      # Should be a fraction, e.g. 0.001 (exclude contigs with 0.1% coverage of sum of
+      # coverages across all contigs)
+      perchrom_fraction_cutoff: 0.001
+    ```
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    mosdepth_config:
+      show_excluded_debug_logs: True
+    ```
+
+    This will then print a debug log message (use `multiqc -v`) for each excluded contig.
+    This is disabled by default as there can be very many in some cases.
+
+    Besides the `{prefix}.mosdepth.global.dist.txt` and `{prefix}.mosdepth.region.dist.txt`
+    files, the `{prefix}.mosdepth.summary.txt` file is used for the General Stats table.
+
+    The module also plots an X/Y relative chromosome coverage per sample. By default, it finds chromosome named X/Y or chrX/chrY, but that can be customised:
+
+    ```yaml
+    mosdepth_config:
+      # Name of the X and Y chromosomes. If not specified, MultiQC will search for
+      # any chromosome names that look like x, y, chrx or chry (case-insensitive)
+      xchr: myXchr
+      ychr: myYchr
+    ```
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="mosdepth",
+            name="Mosdepth",
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
-            info="performs fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
+            info="Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
             doi="10.1093/bioinformatics/btx699",
         )
 
@@ -185,18 +225,18 @@ class MultiqcModule(BaseMultiqcModule):
             data = data_dicts_global
             for d, d_region in zip(data, data_dicts_region):
                 d.update(d_region)
-            cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov = data
+            cum_cov_dist_data, abs_cov_dist_data, perchrom_avg_data, xy_cov = data
 
-            if cumcov_dist_data:
+            if cum_cov_dist_data:
                 xmax = 0
-                for sample, data in cumcov_dist_data.items():
+                for sample, data in cum_cov_dist_data.items():
                     for x, cumcov in data.items():
                         if cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
 
                 # Write data to file, sort columns numerically and convert to strings
                 cumcov_dist_data_writeable = {
-                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cumcov_dist_data.items()
+                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cum_cov_dist_data.items()
                 }
                 self.write_data_file(cumcov_dist_data_writeable, "mosdepth_cumcov_dist")
 
@@ -209,13 +249,15 @@ class MultiqcModule(BaseMultiqcModule):
                     ),
                     helptext=genome_fraction_helptext,
                     plot=linegraph.plot(
-                        cumcov_dist_data,
+                        cum_cov_dist_data,
                         {
                             "id": "mosdepth-cumcoverage-dist-id",
                             "title": "Mosdepth: Cumulative coverage distribution",
                             "xlab": "Cumulative Coverage (X)",
                             "ylab": "% bases in genome/regions covered by at least X reads",
+                            "ymin": 0,
                             "ymax": 100,
+                            "xmin": 0,
                             "xmax": xmax,
                             "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
                             "smooth_points": 500,
@@ -223,16 +265,16 @@ class MultiqcModule(BaseMultiqcModule):
                     ),
                 )
 
-                assert cov_dist_data, "cov_dist_data is built from the same source and must exist here"
+                assert abs_cov_dist_data, "cov_dist_data is built from the same source and must exist here"
                 # Write data to file, sort columns numerically and convert to strings
                 cov_dist_data_writeable = {
-                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in cov_dist_data.items()
+                    sample: {str(k): v for k, v in sorted(data.items())} for sample, data in abs_cov_dist_data.items()
                 }
                 self.write_data_file(cov_dist_data_writeable, "mosdepth_cov_dist")
 
                 # Set ymax so that zero coverage values are ignored.
                 ymax = 0
-                for data in cov_dist_data.values():
+                for data in abs_cov_dist_data.values():
                     positive_cov = [percent for cov, percent in data.items() if cov > 0]
                     if positive_cov:
                         ymax = max(ymax, max(positive_cov))
@@ -245,14 +287,15 @@ class MultiqcModule(BaseMultiqcModule):
                     ),
                     helptext=coverage_histogram_helptext,
                     plot=linegraph.plot(
-                        cov_dist_data,
+                        abs_cov_dist_data,
                         {
                             "id": "mosdepth-coverage-dist-id",
                             "title": "Mosdepth: Coverage distribution",
                             "xlab": "Coverage (X)",
                             "ylab": "% bases in genome/regions covered by X reads",
-                            "ymax": ymax * 1.05,
-                            "yCeiling": 100,
+                            "ymin": 0,
+                            "y_clipmax": 100,
+                            "xmin": 0,
                             "xmax": xmax,
                             "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
                             "smooth_points": 500,
@@ -268,7 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_data,
                         {
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-multi",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Region",
                             "ylab": "Average Coverage",
@@ -277,40 +320,39 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
-                            "hide_zero_cats": False,
+                            "hide_empty": False,
                         },
                     )
                 else:
                     perchrom_plot = bargraph.plot(
                         perchrom_avg_data,
                         pconfig={
-                            "id": "mosdepth-coverage-per-contig",
+                            "id": "mosdepth-coverage-per-contig-single",
                             "title": "Mosdepth: Coverage per contig",
                             "xlab": "Sample",
                             "ylab": "Average Coverage",
                             "tt_suffix": "x",
-                            "hide_zero_cats": False,
+                            "hide_empty": False,
                         },
                     )
 
                 self.add_section(
                     name="Average coverage per contig",
-                    anchor="mosdepth-coverage-per-contig-id",
+                    anchor="mosdepth-coverage-per-contig-section",
                     description="Average coverage per contig or chromosome",
                     plot=perchrom_plot,
                 )
 
             if xy_cov:
                 xy_keys = {
-                    "x": {"name": self.cfg.get("xchr", "Chromosome X")},
-                    "y": {"name": self.cfg.get("xchr", "Chromosome Y")},
+                    "x": {"name": self.cfg.get("xchr") or "Chromosome X"},
+                    "y": {"name": self.cfg.get("xchr") or "Chromosome Y"},
                 }
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
                     "title": "Mosdepth: chrXY coverage",
-                    "ylab": "Percent of X+Y coverage",
-                    "cpswitch_counts_label": "Coverage",
-                    "cpswitch_percent_label": "Percent of X+Y coverage",
+                    "ylab": "Coverage",
+                    "ysuffix": "X",
                     "cpswitch_c_active": False,
                 }
                 self.add_section(
@@ -319,62 +361,90 @@ class MultiqcModule(BaseMultiqcModule):
                     plot=bargraph.plot(xy_cov, xy_keys, pconfig),
                 )
 
-            if cumcov_dist_data:
-                threshs, hidden_threshs = get_cov_thresholds()
-                self.genstats_cov_thresholds(genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs)
-                self.genstats_mediancov(genstats, genstats_headers, cumcov_dist_data)
+            if cum_cov_dist_data:
+                threshs, hidden_threshs = config.get_cov_thresholds("mosdepth_config")
+                self.genstats_cov_thresholds(genstats, genstats_headers, cum_cov_dist_data, threshs, hidden_threshs)
+                self.genstats_mediancov(genstats, genstats_headers, cum_cov_dist_data)
 
         # Add mosdepth summary to General Stats
-        genstats_headers = {
-            "mean_coverage": {
-                "title": "Mean Cov.",
-                "description": "Mean coverage",
-                "min": 0,
-                "scale": "BuPu",
+        genstats_headers.update(
+            {
+                "mean_coverage": {
+                    "title": "Mean Cov.",
+                    "description": "Mean coverage",
+                    "min": 0,
+                    "suffix": "X",
+                    "scale": "BuPu",
+                },
+                "min_coverage": {
+                    "title": "Min Cov.",
+                    "description": "Minimum coverage",
+                    "min": 0,
+                    "suffix": "X",
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "max_coverage": {
+                    "title": "Max Cov.",
+                    "description": "Maximum coverage",
+                    "min": 0,
+                    "suffix": "X",
+                    "scale": "BuPu",
+                    "hidden": True,
+                },
+                "coverage_bases": {
+                    "title": f"{config.base_count_prefix} Total Coverage Bases",
+                    "description": f"Total coverage of bases ({config.base_count_desc})",
+                    "min": 0,
+                    "shared_key": "base_count",
+                    "scale": "Greens",
+                    "hidden": True,
+                },
+                "length": {
+                    "title": "Genome length",
+                    "description": "Total length of the genome",
+                    "min": 0,
+                    "scale": "Greys",
+                    "format": "{:,d}",
+                    "hidden": True,
+                },
             },
-            "min_coverage": {
-                "title": "Min Cov.",
-                "description": "Minimum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "max_coverage": {
-                "title": "Max Cov.",
-                "description": "Maximum coverage",
-                "min": 0,
-                "scale": "BuPu",
-                "hidden": True,
-            },
-            "coverage_bases": {
-                "title": f"{config.base_count_prefix} Total Coverage Bases",
-                "description": f"Total coverage of bases ({config.base_count_desc})",
-                "min": 0,
-                "shared_key": "base_count",
-                "scale": "Greens",
-                "hidden": True,
-            },
-            "length": {
-                "title": "Genome length",
-                "description": "Total length of the genome",
-                "min": 0,
-                "scale": "Greys",
-                "format": "{:,d}",
-                "hidden": True,
-            },
-        }
+        )
         self.general_stats_addcols(genstats, genstats_headers)
 
     def parse_cov_dist(self, scope):
-        cumcov_dist_data = defaultdict(dict)  # cumulative distribution
-        cov_dist_data = defaultdict(dict)  # absolute (non-cumulative) coverage
+        """
+        Two types of coverage distributions are parsed: global and region.
+
+        {prefix}.mosdepth.global.dist.txt
+        a distribution of proportion of bases covered at or above a given threshhold for each chromosome and genome-wide
+
+        1       2       0.00
+        1       1       0.00
+        1       0       1.00
+        total   2       0.00
+        total   1       0.00
+        total   0       1.00
+
+        {prefix}.mosdepth.region.dist.txt (if --by is specified)
+        same, but in regions
+
+        1       2       0.01
+        1       1       0.01
+        1       0       1.00
+        total   2       0.00
+        total   1       0.00
+        """
+
+        cumulative_cov_dist_data = defaultdict(dict)  # cumulative distribution
+        abs_cov_dist_data = defaultdict(dict)  # absolute (non-cumulative) coverage
         perchrom_avg_data = defaultdict(dict)  # per chromosome average coverage
         xy_cov = dict()
 
         # Parse coverage distributions
         for f in self.find_log_files(f"mosdepth/{scope}_dist"):
             s_name = self.clean_s_name(f["fn"], f)
-            if s_name in cumcov_dist_data:  # both region and global might exist, prioritizing region
+            if s_name in cumulative_cov_dist_data:  # both region and global might exist, prioritizing region
                 continue
 
             for line in f["f"].split("\n"):
@@ -388,7 +458,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if contig == "total":
                     cumcov = 100.0 * float(bases_fraction)
                     x = int(cutoff_reads)
-                    cumcov_dist_data[s_name][x] = cumcov
+                    cumulative_cov_dist_data[s_name][x] = cumcov
 
                 # Calculate per-contig coverage
                 else:
@@ -412,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
                     avg = perchrom_avg_data[s_name].get(contig, 0) + float(bases_fraction)
                     perchrom_avg_data[s_name][contig] = avg
 
-            if s_name in cumcov_dist_data:
+            if s_name in cumulative_cov_dist_data:
                 self.add_data_source(f, s_name=s_name, section="genome_results")
 
         # Applying the contig coverage cutoff. First, count the total coverage for
@@ -481,28 +551,34 @@ class MultiqcModule(BaseMultiqcModule):
                 perchrom_avg_data[i][j] -= 1
 
         # Calculate absolute coverage distribution (global)
-        for s_name, s_cumcov_dist in cumcov_dist_data.items():
-            # Create sorted list of tuples (x, cumcov)
-            cumcov_dist = sorted(s_cumcov_dist.items())
-
+        for s_name, s_cumulative_cov_dist in cumulative_cov_dist_data.items():
             # Calculate absolute coverage for the given x by taking the difference between
-            # the current and previous cumulative coverage.
+            # the current and previous cumulative coverage. The cumulative coverage
+            # is the % of bases with at least x coverage, and the absolute coverage
+            # is the % of bases with exactly x coverage.
             #
             #   *example*              x:  cumcov:  abscov:
             #   3x                     3x  0      =               0
             #   2x     -               2x  0.10   = 0.10 - 0    = 0.10
             #   1x     --------        1x  0.80   = 0.80 - 0.10 = 0.70
             #   genome ..........      0x  1.00   = 1.00 - 0.80 = 0.20
-            prev_x, prev_cumcov = cumcov_dist.pop()
-            if not cumcov_dist:
-                cov_dist_data[s_name][prev_x] = 1.0
-            else:
-                while cumcov_dist:
-                    x, cumcov = cumcov_dist.pop()
-                    cov_dist_data[s_name][x] = cumcov - prev_cumcov
-                    prev_x, prev_cumcov = x, cumcov
 
-        return cumcov_dist_data, cov_dist_data, perchrom_avg_data, xy_cov
+            # Convert sorted keys to a list for easier indexing
+            s_absolute_cov_dist = {}
+            keys = sorted(s_cumulative_cov_dist.keys())
+            previous_value = s_cumulative_cov_dist[keys[0]]  # Start from the first key value
+
+            for i, key in enumerate(keys):
+                if i == 0:
+                    continue  # Skip the first key to initialize previous_value correctly
+                current_value = s_cumulative_cov_dist[key]
+                s_absolute_cov_dist[keys[i - 1]] = previous_value - current_value
+                previous_value = current_value
+            s_absolute_cov_dist[keys[-1]] = previous_value  # Assign the last key's absolute coverage
+
+            abs_cov_dist_data[s_name] = s_absolute_cov_dist
+
+        return cumulative_cov_dist_data, abs_cov_dist_data, perchrom_avg_data, xy_cov
 
     def genstats_cov_thresholds(self, genstats, genstats_headers, cumcov_dist_data, threshs, hidden_threshs):
         for s_name, d in cumcov_dist_data.items():
@@ -512,7 +588,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for t in threshs:
             genstats_headers[f"{t}_x_pc"] = {
-                "title": f"&ge; {t}X",
+                "title": f"≥ {t}X",
                 "description": f"Fraction of genome with at least {t}X coverage",
                 "max": 100,
                 "min": 0,
@@ -524,7 +600,7 @@ class MultiqcModule(BaseMultiqcModule):
     def genstats_mediancov(self, genstats, genstats_headers, cumcov_dist_data):
         for s_name, d in cumcov_dist_data.items():
             median_cov = None
-            for this_cov, cum_pct in d.items():
+            for this_cov, cum_pct in sorted(d.items(), reverse=True):
                 if cum_pct >= 50:
                     median_cov = this_cov
                     break
@@ -537,25 +613,3 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "X",
             "scale": "BuPu",
         }
-
-
-def get_cov_thresholds():
-    """Reads coverage thresholds from the config, otherwise sets sensible defaults"""
-    try:
-        threshs = config.mosdepth_config["general_stats_coverage"]
-        assert isinstance(threshs, list)
-        assert len(threshs) > 0
-        threshs = [int(t) for t in threshs]
-        log.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in threshs])}")
-    except (KeyError, AttributeError, TypeError, AssertionError):
-        threshs = [1, 5, 10, 30, 50]
-        log.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in threshs])}")
-
-    try:
-        hidden_threshs = config.mosdepth_config["general_stats_coverage_hidden"]
-        assert isinstance(hidden_threshs, list)
-        log.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_threshs])}")
-    except (KeyError, AttributeError, TypeError, AssertionError):
-        hidden_threshs = [t for t in threshs if t != 30]
-
-    return threshs, hidden_threshs

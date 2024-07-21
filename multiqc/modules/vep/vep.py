@@ -1,28 +1,36 @@
-""" MultiQC module to parse output from VEP """
-
-
 import ast
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """VEP"""
+    """
+    MultiQC parses the Ensembl VEP summary statistics stored in either HTML or plain text format.
+
+    Beside VEP's default naming convention, you can run VEP with one of the options below to use this module:
+
+    - `--stats_file [OUTPUT_FILENAME]_summary.html` _(VEP's default naming convention)_
+    - `--stats_file [SAMPLE_NAME].vep.html` _(without the `vep` or `summary` suffix, MultiQC will ignore the HTML files)_
+    - `--stats_file [SAMPLE_NAME]_vep.html`
+    - `--stats_text --stats_file [SAMPLE_NAME].vep.txt`
+    - `--stats_text --stats_file [SAMPLE_NAME]_vep.txt`
+
+    See the [VEP](https://www.ensembl.org/info/docs/tools/vep/vep_formats.html#stats)
+    documentation for more information.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="VEP",
             anchor="vep",
             href="https://www.ensembl.org/info/docs/tools/vep/index.html",
-            info="Ensembl VEP determines the effect of your variants on genes, transcripts and protein sequences, "
+            info="Determines the effect of variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
             doi="10.1186/s13059-016-0974-4",
         )
@@ -184,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "id": "vep-general-stats",
             "namespace": "VEP",
-            "table_title": "VEP General Statistics",
+            "title": "VEP General Statistics",
         }
         table_data = {s_name: self.vep_data[s_name]["General statistics"] for s_name in self.vep_data}
 
@@ -204,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
         color_list = ["Oranges", "Reds", "Blues", "Greens"]
         for order, header in enumerate(cat_names):
             table_cats[header] = {
-                "name": header,
+                "title": header,
                 "format": "{:,.0f}",
                 "scale": color_list[order % 4],
             }
@@ -218,7 +226,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="General Statistics",
             anchor="vep-general-statistics",
-            helptext="Table showing general statistics of VEP annotaion run",
+            helptext="Table showing general statistics of VEP annotation run",
             plot=table.plot(table_data, table_cats, table_config),
         )
 

@@ -1,10 +1,12 @@
-""" MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes """
+"""MultiQC submodule to parse output from Picard ExtractIlluminaBarcodes"""
 
 import logging
 from collections import defaultdict
+from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
+from multiqc.plots.bargraph import CatT
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -13,7 +15,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard ExtractIlluminaBarcodes reports and parse their data"""
 
-    data_by_lane = defaultdict(dict)
+    data_by_lane: Dict[str, Dict] = defaultdict(dict)
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/extractilluminabarcodes", filehandles=True):
@@ -46,7 +48,7 @@ def parse_reports(module):
 
     data_by_lane = module.ignore_samples(data_by_lane)
     if len(data_by_lane) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -59,7 +61,7 @@ def parse_reports(module):
 
     per_lane_plot_config = {
         "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperlane",
-        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per lane",
+        "title": f"{module.name}: ExtractIlluminaBarcodes: Reads per lane",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -69,7 +71,7 @@ def parse_reports(module):
     }
     per_barcode_plot_config = {
         "id": f"plot-{module.anchor}-illuminabarcodemetrics-readsperbarcode",
-        "title": f"{module.name} ExtractIlluminaBarcodes: Reads per barcode",
+        "title": f"{module.name}: ExtractIlluminaBarcodes: Reads per barcode",
         "ylab": "Lane",
         "data_labels": [
             {"name": "Reads", "ylab": "Number of Reads"},
@@ -78,7 +80,7 @@ def parse_reports(module):
         ],
     }
 
-    plot_cats = [dict(), dict(), dict()]
+    plot_cats: List = [dict(), dict(), dict()]
     plot_cats[0]["READS"] = {"name": "Reads"}
     plot_cats[1]["PERFECT_MATCHES"] = {"name": "Perfect Matching Reads"}
     plot_cats[1]["ONE_MISMATCH_MATCHES"] = {"name": "One Mismatch Reads"}
@@ -113,7 +115,7 @@ def parse_reports(module):
         ),
     )
     # Return the number of detected samples to the parent module
-    return len(data_by_lane)
+    return data_by_lane.keys()
 
 
 def reads_per_barcode(data):

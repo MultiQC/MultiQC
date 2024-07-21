@@ -1,6 +1,7 @@
-""" MultiQC submodule to parse output from Picard RnaSeqMetrics """
+"""MultiQC submodule to parse output from Picard RnaSeqMetrics"""
 
 import logging
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph, linegraph
@@ -12,8 +13,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard RnaSeqMetrics reports and parse their data"""
 
-    data_by_sample = dict()
-    histogram_by_sample = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/rnaseqmetrics", filehandles=True):
@@ -88,7 +89,7 @@ def parse_reports(module):
     data_by_sample = module.ignore_samples(data_by_sample)
     histogram_by_sample = module.ignore_samples(histogram_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -168,38 +169,43 @@ def parse_reports(module):
         if d["CORRECT_STRAND_READS"] > 0 and d["INCORRECT_STRAND_READS"] > 0:
             pdata[s_name] = d
     if len(pdata) > 0:
-        pconfig = {
-            "id": "picard_rnaseqmetrics_strand_plot",
-            "title": "Picard: RnaSeqMetrics Strand Mapping",
-            "ylab": "Number of reads",
-            "hide_zero_cats": False,
-        }
         module.add_section(
             name="RnaSeqMetrics Strand Mapping",
             anchor="picard-rna-strand",
             description="Number of aligned reads that map to the correct strand.",
-            plot=bargraph.plot(data_by_sample, bg_cats, pconfig),
+            plot=bargraph.plot(
+                data_by_sample,
+                bg_cats,
+                {
+                    "id": "picard_rnaseqmetrics_strand_plot",
+                    "title": "Picard: RnaSeqMetrics Strand Mapping",
+                    "ylab": "Number of reads",
+                    "hide_empty": False,
+                },
+            ),
         )
 
     # Section with histogram plot
     if len(histogram_by_sample) > 0:
         # Plot the data and add section
-        pconfig = {
-            "smooth_points": 500,
-            "smooth_points_sumcounts": [True, False],
-            "id": "picard_rna_coverage",
-            "title": "Picard: Normalized Gene Coverage",
-            "ylab": "Coverage",
-            "xlab": "Percent through gene",
-            "xDecimals": False,
-            "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
-            "ymin": 0,
-        }
         module.add_section(
             name="Gene Coverage",
             anchor="picard-rna-coverage",
-            plot=linegraph.plot(histogram_by_sample, pconfig),
+            plot=linegraph.plot(
+                histogram_by_sample,
+                {
+                    "smooth_points": 500,
+                    "smooth_points_sumcounts": [True, False],
+                    "id": "picard_rna_coverage",
+                    "title": "Picard: Normalized Gene Coverage",
+                    "ylab": "Coverage",
+                    "xlab": "Percent through gene",
+                    "x_decimals": False,
+                    "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
+                    "ymin": 0,
+                },
+            ),
         )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

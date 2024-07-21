@@ -1,10 +1,11 @@
-""" MultiQC submodule to parse output from RSeQC bam_stat.py
-http://rseqc.sourceforge.net/#bam-stat-py """
+"""MultiQC submodule to parse output from RSeQC bam_stat.py
+http://rseqc.sourceforge.net/#bam-stat-py"""
 
 import logging
 import re
 
-from multiqc.plots import beeswarm
+from multiqc.plots import violin
+from multiqc import config
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -96,12 +97,16 @@ def parse_reports(self):
                 self.general_stats_data[s_name].update(self.bam_stat_data[s_name])
 
     # Make dot plot of counts
-    pconfig = {"id": "rseqc_bam_stat"}
+    pconfig = {
+        "id": "rseqc_bam_stat",
+        "title": "RSeQC: Bam Stat",
+    }
     defaults = {
         "min": 0,
         "shared_key": "read_count",
-        "decimalPlaces": 2,
-        "modify": lambda x: float(x) / 1000000.0,
+        "tt_decimals": 2,
+        "modify": lambda x: x * config.read_count_multiplier,
+        "suffix": config.read_count_prefix,
     }
     keys = dict()
     keys["total_records"] = dict(defaults, **{"title": "Total records"})
@@ -132,7 +137,7 @@ def parse_reports(self):
         name="Bam Stat",
         anchor="rseqc-bam_stat",
         description="All numbers reported in millions.",
-        plot=beeswarm.plot(self.bam_stat_data, keys, pconfig),
+        plot=violin.plot(self.bam_stat_data, keys, pconfig),
     )
 
     # Return number of samples found

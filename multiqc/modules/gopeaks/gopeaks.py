@@ -1,29 +1,28 @@
-""" MultiQC module to parse output from gopeaks """
-
 import json
 import logging
 from pathlib import Path
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """gopeaks module"""
+    """
+    The module recognizes files with the `*_gopeaks.json` suffix (which is the default behavior), and will report
+    the number of peaks called per sample via the general table and the bar plot.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GoPeaks",
             anchor="gopeaks",
             href="https://github.com/maxsonBraunLab/gopeaks",
-            info="is designed to call peaks from aligned CUT&TAG sequencing reads.\
-                  Gopeaks uses a binomial distribution to model the read counts \
-                  in sliding windows across the genome and calculate peak regions \
-                  that are enriched over the background.",
+            info="Calls peaks in CUT&TAG/CUT&RUN datasets.",
+            extra="""
+            Gopeaks uses a binomial distribution to model the read counts in sliding windows across 
+            the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
         )
 

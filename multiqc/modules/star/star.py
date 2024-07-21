@@ -1,31 +1,37 @@
-""" MultiQC module to parse output from STAR """
-
-
 import logging
 import os
 import re
+from typing import Dict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module parses summary statistics from the `Log.final.out` log files.
+    Sample names are taken either from the filename prefix (`sampleNameLog.final.out`)
+    when set with `--outFileNamePrefix` in STAR. If there is no filename prefix,
+    the sample name is set as the name of the directory containing the file.
+
+    In addition to this summary log file, the module parses `ReadsPerGene.out.tab`
+    files generated with `--quantMode GeneCounts`, if found.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="STAR",
             anchor="star",
             href="https://github.com/alexdobin/STAR",
-            info="is an ultrafast universal RNA-seq aligner.",
+            info="Universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
         )
 
         # Find and load any STAR reports
-        self.star_data = dict()
+        self.star_data: Dict = dict()
         for f in self.find_log_files("star"):
             parsed_data = self.parse_star_report(f["f"])
             if parsed_data is not None:
@@ -270,4 +276,4 @@ class MultiqcModule(BaseMultiqcModule):
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand,
         ]
-        return bargraph.plot(datasets, [keys, keys, keys, keys], pconfig)
+        return bargraph.plot(datasets, [keys, keys, keys], pconfig)
