@@ -26,7 +26,7 @@ class ClConfig(BaseModel):
     report_comment: Optional[str] = None
     template: Optional[str] = None
     require_logs: Optional[bool] = None
-    output_dir: Optional[str] = None
+    output_dir: Optional[Union[str, Path]] = None
     use_filename_as_sample_name: Optional[bool] = None
     replace_names: Optional[str] = None
     sample_names: Optional[str] = None
@@ -76,6 +76,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
     # Reload from defaults
     config.load_defaults()
 
+    if cfg is None and analysis_dir and isinstance(analysis_dir[0], ClConfig):
+        cfg = analysis_dir[0]
     cfg = cfg or ClConfig()
 
     # Reset logger
