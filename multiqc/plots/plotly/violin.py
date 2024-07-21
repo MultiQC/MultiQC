@@ -485,11 +485,14 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons(flat=flat)
 
-    def show(self, table=None, violin=None, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat=False, table=None, violin=None, **kwargs):
         """
         Show the table or violin plot based on the input parameters.
         """
         if self.show_table_by_default and violin is not True or table is True:
+            # `dataset_id` and `flat` are derived from the parent class and ignored, as for this plot
+            # we only support one dataset, and the flat mode is not applicable.
+
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
@@ -505,7 +508,7 @@ class ViolinPlot(Plot):
             return df  # Jupyter knows how to display dataframes
 
         else:
-            return super().show(**kwargs)
+            return super().show(dataset_id, flat, **kwargs)
 
     def save(
         self,
