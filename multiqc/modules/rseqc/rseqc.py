@@ -56,11 +56,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi="10.1093/bioinformatics/bts356",
         )
 
-        # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-        n = dict()
-
         # Get the list of submodules (can be customised)
         rseqc_sections = getattr(config, "rseqc_sections", [])
         if len(rseqc_sections) == 0:
@@ -78,6 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         # Call submodule functions
+        n = dict()
         for sm in rseqc_sections:
             try:
                 # Import the submodule and call parse_reports()
@@ -92,7 +88,3 @@ class MultiqcModule(BaseMultiqcModule):
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        if max((len(vals) for vals in self.general_stats_data.values()), default=0) > 0:
-            self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

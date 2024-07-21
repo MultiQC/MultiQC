@@ -3,19 +3,19 @@ http://rseqc.sourceforge.net/#bam-stat-py"""
 
 import logging
 import re
+from typing import Dict
 
 from multiqc.plots import violin
-from multiqc import config
+from multiqc import config, BaseMultiqcModule
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC bam_stat reports and parse their data"""
 
     # Set up vars
-    self.bam_stat_data = dict()
+    bam_stat_data = dict()
     regexes = {
         "total_records": r"Total records:\s*(\d+)",
         "qc_failed": r"QC failed:\s*(\d+)",
@@ -34,12 +34,11 @@ def parse_reports(self):
         "proper-paired_reads_map_to_different_chrom": r"Proper-paired reads map to different chrom:\s*(\d+)",
     }
 
-    # intiate PE check
     is_paired_end = False
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files("rseqc/bam_stat"):
-        d = dict()
+    for f in module.find_log_files("rseqc/bam_stat"):
+        d: Dict = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -58,43 +57,40 @@ def parse_reports(self):
                 pass
 
         if len(d) > 0:
-            if f["s_name"] in self.bam_stat_data:
+            if f["s_name"] in bam_stat_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            self.add_data_source(f, section="bam_stat")
+            module.add_data_source(f, section="bam_stat")
             # Check if SE or PE
             if d["read_2"] != 0:
                 is_paired_end = True
-            self.bam_stat_data[f["s_name"]] = d
+            bam_stat_data[f["s_name"]] = d
 
     # Filter to strip out ignored sample names
-    self.bam_stat_data = self.ignore_samples(self.bam_stat_data)
-
-    if len(self.bam_stat_data) == 0:
+    bam_stat_data = module.ignore_samples(bam_stat_data)
+    if len(bam_stat_data) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Write to file
-    self.write_data_file(self.bam_stat_data, "multiqc_rseqc_bam_stat")
+    module.write_data_file(bam_stat_data, "multiqc_rseqc_bam_stat")
 
     # Add to general stats table
-    self.general_stats_headers["proper_pairs_percent"] = {
-        "title": "% Proper Pairs",
-        "description": "% Reads mapped in proper pairs",
-        "max": 100,
-        "min": 0,
-        "suffix": "%",
-        "scale": "RdYlGn",
-    }
-    for s_name in self.bam_stat_data:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-
-            # Only write if PE, i.e. there is something to write
-            if is_paired_end:
-                self.general_stats_data[s_name].update(self.bam_stat_data[s_name])
+    # Only write if PE, i.e. there is something to write
+    if is_paired_end:
+        headers = {
+            "proper_pairs_percent": {
+                "title": "% Proper Pairs",
+                "description": "% Reads mapped in proper pairs",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+            }
+        }
+        module.general_stats_addcols(bam_stat_data, headers, namespace="RSeQC: Bam Stat")
 
     # Make dot plot of counts
     pconfig = {
@@ -133,12 +129,12 @@ def parse_reports(self):
             defaults, **{"title": "Different chrom", "description": "Proper-paired reads map to different chrom"}
         )
 
-    self.add_section(
+    module.add_section(
         name="Bam Stat",
         anchor="rseqc-bam_stat",
         description="All numbers reported in millions.",
-        plot=violin.plot(self.bam_stat_data, keys, pconfig),
+        plot=violin.plot(bam_stat_data, keys, pconfig),
     )
 
     # Return number of samples found
-    return len(self.bam_stat_data)
+    return len(bam_stat_data)
