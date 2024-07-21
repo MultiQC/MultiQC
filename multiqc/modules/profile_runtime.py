@@ -105,11 +105,13 @@ class MultiqcModule(BaseMultiqcModule):
     def file_search_counts_section(self):
         """Count of all files iterated through by MultiQC, by category"""
 
+        file_search_counts: Dict[str, int] = {k: len(paths) for k, paths in report.file_search_stats.items()}
+
         pdata: Dict[str, Dict] = dict()
         pcats: Dict[str, Dict] = dict()
         for key in sorted(
-            report.file_search_stats.keys(),
-            key=lambda k: report.file_search_stats[k],
+            file_search_counts.keys(),
+            key=lambda k: file_search_counts[k],
             reverse=True,
         ):
             if "skipped_" in key:
@@ -118,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 s_name = key
                 pcats[key] = {"name": key, "color": "#7cb5ec"}
-            pdata[s_name] = {key: report.file_search_stats[key]}
+            pdata[s_name] = {key: file_search_counts[key]}
 
         self.add_section(
             name="Files searched counts",
@@ -126,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="""
                 Number of files searched by MultiQC, categorised by what happened to them.
                 **Total file searches: {}**.
-            """.format(sum(report.file_search_stats.values())),
+            """.format(sum(file_search_counts.values())),
             helptext="""
                 Note that only files are considered in this plot - skipped directories are not shown.
 

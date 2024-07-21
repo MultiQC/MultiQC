@@ -388,9 +388,13 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
-  num_lines: 1
-  shared: true
+  - contents_re: '^feature\tcount$'
+    num_lines: 1
+    shared: true
+  # can lack header and start with a GENE\tNUMBER line
+  - contents_re: '^\w+.*\t\d+$'
+    num_lines: 1
+    shared: true
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
