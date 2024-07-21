@@ -56,15 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(self.pairtools_stats, "multiqc_pairtools")
 
-        # Add to self.js to be included in template
-        self.js = {
-            "assets/js/multiqc_pairtools.js": os.path.join(
-                os.path.dirname(__file__), "assets", "js", "multiqc_pairtools.js"
-            )
-        }
-
         # load various parameters stored in a separate yml (e.g. color schemes)
-        with open(os.path.join(os.path.dirname(__file__), "assets", "params.yml"), "r") as fp:
+        with open(os.path.join(os.path.dirname(__file__), "params.yml"), "r") as fp:
             self.params = yaml.safe_load(fp)
 
         self.pairtools_general_stats()
