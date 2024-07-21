@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # load various parameters stored in a separate yml (e.g. color schemes)
-        with open(os.path.join(os.path.dirname(__file__), "assets", "params", "params.yml"), "r") as fp:
+        with open(os.path.join(os.path.dirname(__file__), "assets", "params.yml"), "r") as fp:
             self.params = yaml.safe_load(fp)
 
         self.pairtools_general_stats()
