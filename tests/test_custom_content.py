@@ -94,6 +94,8 @@ def test_deprecated_fields(tmp_path, capsys):
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
+    assert "'LongDash' is a deprecated dash style, use 'longdash'" in err
+    assert "Deprecated field 'colour'. Use 'color' instead" in err
     assert "Deprecated field 'xLog'. Use 'xlog' instead" in err
     assert "Deprecated field 'xPlotLines'. Use 'x_lines' instead" in err
 
