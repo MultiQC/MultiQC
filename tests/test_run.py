@@ -93,10 +93,6 @@ def test_filename(inp_file, tmp_path, options, expected_files):
     assert set(os.listdir(os.getcwd())) == expected_files
 
 
-# special_cases_dirs = [d for d in os.listdir(testing.data_dir()) if d != "modules" and (testing.data_dir() / d).is_dir()]
-
-
-# @pytest.mark.parametrize("special_cases_dir_name", special_cases_dirs)
 def test_special_cases(data_dir, tmp_path):
     multiqc.run(
         testing.data_dir() / "special_cases",
