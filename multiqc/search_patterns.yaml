@@ -565,6 +565,17 @@ disambiguate:
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
