@@ -495,7 +495,8 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
 
     if len(ignored_patterns) > 0:
         logger.debug(
-            f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules: {ignored_patterns}"
+            f"Ignored {len(ignored_patterns)} search patterns that didn't match running modules"
+            + (f": {ignored_patterns}" if len(ignored_patterns) < 10 else "")
         )
 
     if len(skipped_patterns) > 0:
