@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -36,14 +37,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.trimmomatic = dict()
+        self.trimmomatic: Dict = dict()
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
-
         if len(self.trimmomatic) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.trimmomatic)} logs")
