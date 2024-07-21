@@ -38,13 +38,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.pairtools_stats = {}
         for f in self.find_log_files("pairtools", filehandles=True):
             s_name = f["s_name"]
-            if (_sample_report := self.parse_pairtools_stats(f)) is None:
+            _sample_report = read_stats_from_file(f["f"])
+            if _sample_report is None:
                 log.warning(f"{s_name} is missing important metrics will not be reported !")
                 continue
-            else:
-                self.pairtools_stats[s_name] = _sample_report
-                # Add file to multiqc_sources.txt
-                self.add_data_source(f, s_name=s_name)
+            self.pairtools_stats[s_name] = _sample_report
+            # Add file to multiqc_sources.txt
+            self.add_data_source(f, s_name=s_name)
 
         # Filter to strip out ignored sample names
         self.pairtools_stats = self.ignore_samples(self.pairtools_stats)
@@ -119,15 +119,6 @@ class MultiqcModule(BaseMultiqcModule):
             of contamination.""",
             plot=self.pairs_by_strand_orientation(),
         )
-
-    @staticmethod
-    def parse_pairtools_stats(f):
-        """
-        Parse a pairtools summary stats
-        """
-        f_handle = f["f"]
-        log.info(f"parsing .stats file: {f_handle.name}")
-        return read_stats_from_file(f_handle)
 
     def pair_types_chart(self):
         """

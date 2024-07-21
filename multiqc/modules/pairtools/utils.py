@@ -1,14 +1,15 @@
 import re
 from operator import itemgetter
 from bisect import bisect
+from typing import Tuple, Union, Dict, List
+
 from math import sqrt
 from operator import add
 
 
-def humanize_genomic_dist(dist, units=1):
+def humanize_genomic_dist(dist, units=1) -> str:
     """
-    turn genomic distance (in basepairs) into
-    human readable string (supports Mb, Kb and bp)
+    Turn genomic distance (in base pairs) into human-readable string (supports Mb, Kb and bp)
     """
     _bp = int(dist) * units
     if _bp // 1_000_000:
@@ -19,19 +20,17 @@ def humanize_genomic_dist(dist, units=1):
         return f"{_bp}bp"
 
 
-def humanize_genomic_interval(start, end, units=1):
+def humanize_genomic_interval(start, end, units=1) -> str:
     """
-    turn genomic distance interval (basepairs) into
-    human readable string
-    assuming end > start
+    Turn genomic distance interval (base pairs) into human-readable string assuming end > start
     """
-    # translate into bp, given provided units
+    # Translate into bp, given provided units
     start_bp = start if start is None else int(start) * units
     end_bp = end if end is None else int(end) * units
-    # special case 1st and last intervals:
+    # Special case 1st and last intervals:
     if end_bp is None:  # last open-ended
         return f">{humanize_genomic_dist(start_bp)}"
-    elif start_bp <= 0:  # first one
+    elif start_bp is None or start_bp <= 0:  # first one
         return f"<{humanize_genomic_dist(end_bp)}"
     elif start_bp // 1_000_000:  # both are Mb
         return f"{start_bp // 1_000_000}-{end_bp // 1_000_000}Mb"
@@ -45,10 +44,9 @@ def humanize_genomic_interval(start, end, units=1):
         return f"{start_bp}-{end_bp}bp"
 
 
-def edges_to_intervals(edges):
+def edges_to_intervals(edges) -> List[Tuple[int, Union[int, None]]]:
     """
-    turn an array of internal edges into an array of
-    intervals, i.e.:
+    Turn an array of internal edges into an array of intervals, i.e.:
     [1,2,3] -> [(0,1),(1,2),(2,3),(3,None)]
     [0,1,2,3] -> [(0,1),(1,2),(2,3),(3,None)]
     """
@@ -56,41 +54,39 @@ def edges_to_intervals(edges):
     return list(zip(_edges[:-1], _edges[1:]))
 
 
-def cumsums_to_rangesums(cumsums, total):
+def cum_sums_to_range_sums(cum_sums, total) -> Tuple[int, ...]:
     """
-    transform cumulative counts to counts in the intervals
-    using the total counts information, e.g.:
+    Transform cumulative counts to counts in the intervals using the total counts information, e.g.:
     [a1,... aN] ->
     [total, a1,... aN, 0] ->
     [total-a1, a1-a2, ... aN-0]
     """
-    _cumcsums = [total, *cumsums, 0]
-    return [(_h - _l) for _h, _l in zip(_cumcsums[:-1], _cumcsums[1:])]
+    _cum_c_sums = [total, *cum_sums, 0]
+    return tuple((_h - _l) for _h, _l in zip(_cum_c_sums[:-1], _cum_c_sums[1:]))
 
 
-def parse_dist_range(dist_range):
+def parse_dist_range(dist_range) -> Tuple[int, Union[int, None]]:
     """
-    turn dist_range_str (as string) into a tuple (start, end).
-    Where, end is None for the last open interval.
+    Turn dist_range_str (as string) into a tuple (start, end).
+    Where end is None for the last open interval.
     """
     dist_range_str = str(dist_range)
     if dist_range_str.endswith("+"):  # last open-ended interval "10000+"
         _start = dist_range_str.strip("+")
-        return (int(_start), None)
+        return int(_start), None
     elif "-" in dist_range_str:  # other intervals, like "100-2000" and "0-10"
         _start, _end = dist_range_str.split("-")
-        return (int(_start), int(_end))
-    else:  # unparseable range
+        return int(_start), int(_end)
+    else:  # unparsable range
         raise ValueError(f"cannot parse distance range {dist_range_str}")
 
 
-def geometric_mean(start, end):
+def geometric_mean(start, end) -> float:
     """
-    return geometric mean for (start, end) interval
-    + special casing open ended interval (start, None)
+    Return geometric mean for (start, end) interval + special casing open-ended interval (start, None)
     """
     if start == 0:
-        return 0
+        return 0.0
     elif end is None:
         return start
     else:
@@ -98,10 +94,10 @@ def geometric_mean(start, end):
 
 
 def read_stats_from_file(
-    file_handle,
-    field_separator="\t",
-    key_separator="/",
-    flat_keys_required=[
+    stats_file_handle,
+    field_separator: str = "\t",
+    key_separator: str = "/",
+    flat_keys_required: Tuple[str, ...] = (
         "total",
         "total_unmapped",
         "total_single_sided_mapped",
@@ -110,35 +106,28 @@ def read_stats_from_file(
         "total_nodups",
         "cis",
         "trans",
-    ],
-    pair_orientations_required=["++", "+-", "-+", "--"],
-    dist_edges=[0, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000],
-):
+    ),
+    pair_orientations_required: Tuple[str, ...] = ("++", "+-", "-+", "--"),
+    dist_edges: Tuple[int, ...] = (0, 100, 500, 1000, 2000, 5000, 10000, 15000, 20000),
+) -> Union[Dict, None]:
     """
-    parse .stats file generated by pairtools into a dictionary.
-    Pairtools-generated .stats file are yaml/json-like, but
-    historically they have adopted a custom syntax using "/" to
+    Parses a `.stats` file generated by pairtools into a dictionary.
+    Pairtools-generated `.stats` file are yaml/json-like, but
+    historically, they have adopted a custom syntax using "/" to
     separate hierarchical keys of nested dictionaries.
 
     This function will attempt to parse .stats file, filling out
     output dictionary stat_from_file.
 
     It'll return None is one of the flat_keys_required is missing
-    And it'll has None as a value for some of the internal saections
+    And it'll have None as a value for some of the internal sections
     if there are some parsing issues or inconsistencies.
 
-    Parameters
-    ----------
-    file_handle: .stats file handle
-
-    Returns
-    -------
-    stat_from_file : dict | None
-        dictionary with stats valued parsed from .stats
+    Returns a dictionary with stats valued parsed from .stats
     """
 
     # instantiate an empty dict for stats
-    stat_from_file = {}
+    stat_from_file: Dict = {}
 
     # cis_1kb+, cis_2kb+, cis_4kb+, cis_10kb+, cis_20kb+, cis_40kb+
     cis_dist_pattern = r"cis_(\d+)kb\+"
@@ -147,14 +136,14 @@ def read_stats_from_file(
     stat_from_file["pair_types"] = {}
 
     # store all 4 possible orientations of dist_freq
-    dist_freq_orient = {}
-    pairs_by_dist_orient = {}
+    dist_freq_orient: Dict = {}
+    pairs_by_dist_orient: Dict = {}
     for _po in pair_orientations_required:
         dist_freq_orient[_po] = []
-        pairs_by_dist_orient[_po] = [0 for i in dist_edges]
+        pairs_by_dist_orient[_po] = [0 for _ in dist_edges]
 
     # line by line parsing
-    for _line in file_handle:
+    for _line in stats_file_handle:
         fields = _line.strip().split(field_separator)
         # skip anything but key[TAB]value-like lines:
         if len(fields) != 2:
@@ -198,23 +187,23 @@ def read_stats_from_file(
                     except ValueError:
                         continue
                     if pair_orientation in pair_orientations_required:
-                        dist = geometric_mean(start, end)
-                        _index = bisect(dist_edges, dist) - 1
+                        dist_mean = geometric_mean(start, end)
+                        _index = bisect(dist_edges, dist_mean) - 1
                         pairs_by_dist_orient[pair_orientation][_index] += _value
-                        if dist > 0:
-                            dist_freq_orient[pair_orientation].append((dist, _value))
+                        if dist_mean > 0:
+                            dist_freq_orient[pair_orientation].append((dist_mean, _value))
                     else:
                         continue
                 # (c) skip all other keys
                 else:
                     continue
-            # (C) empty or unparseable _nested_key
+            # (C) empty or unparsable _nested_key
             else:
                 continue
 
     # subsequent parsing and sanitation
 
-    # we have to have ALL of the required flat fields
+    # we have to have ALL the required flat fields
     for k in flat_keys_required:
         if k not in stat_from_file:
             return None  # complete failure - entire sample is broken
@@ -236,16 +225,16 @@ def read_stats_from_file(
 
     # 'cis_dist'
     if len(cis_dist_list) > 0:
-        sorted_dists, cumcounts = zip(*sorted(cis_dist_list, key=itemgetter(0)))
+        sorted_dists, cum_counts = zip(*sorted(cis_dist_list, key=itemgetter(0)))
         # cumulative counts -> per-interval counts before
-        counts = cumsums_to_rangesums(cumcounts, stat_from_file["cis"])
+        counts: Tuple[int, ...] = cum_sums_to_range_sums(cum_counts, stat_from_file["cis"])
         # sorted distance -> human readable intervals:
         interval_names = []
         for start_kb, end_kb in edges_to_intervals(sorted_dists):
             _int_name = humanize_genomic_interval(start_kb, end_kb, units=1_000)
             interval_names.append(f"cis: {_int_name}")
         # add trans counts and dist range at the end:
-        counts.append(stat_from_file["trans"])
+        counts += (stat_from_file["trans"],)
         interval_names.append("trans")
         # store as interval_name -> count dict, ready for plotting:
         stat_from_file["cis_dist"] = dict(zip(interval_names, counts))
@@ -253,18 +242,19 @@ def read_stats_from_file(
         stat_from_file["cis_dist"] = None
 
     # 'dist_freq'
-    # make sure we have identical number of dist/counts per orientation and it is > 0
+    # make sure we have identical number of dist/counts per orientation, and it is > 0
     _npo = len(dist_freq_orient[pair_orientations_required[0]])
     if (_npo > 0) and all(len(dist_freq_orient[_po]) == _npo for _po in pair_orientations_required):
         stat_from_file["dist_freq"] = {}
-        counts_all_orientations = [0 for i in range(_npo)]
+        counts_all_orientations = [0 for _ in range(_npo)]
+        dists: Tuple = ()  # will be set inside the loop
         for _po in pair_orientations_required:
             # parse distance ranges and orientations to store
             dists, counts = zip(*sorted(dist_freq_orient[_po], key=itemgetter(0)))
             stat_from_file["dist_freq"][_po] = dict(zip(dists, counts))
             # accumulate counts for different orientations
-            counts_all_orientations = map(add, counts_all_orientations, counts)
-        # sum all "pair_orientations_required"
+            counts_all_orientations = list(map(add, counts_all_orientations, counts))
+            # sum all "pair_orientations_required"
         stat_from_file["dist_freq"]["all"] = dict(zip(dists, counts_all_orientations))
     else:
         stat_from_file["dist_freq"] = None
