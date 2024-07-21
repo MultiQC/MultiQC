@@ -12,7 +12,7 @@ def base_module():
 
 
 @pytest.fixture
-def clean_config():
+def with_config_fn_clean_options():
     original_exts = copy(config.fn_clean_exts)
     original_trim = copy(config.fn_clean_trim)
 
@@ -24,23 +24,23 @@ def clean_config():
     config.fn_clean_trim = original_trim
 
 
-def test_noop(base_module, clean_config):
+def test_noop(base_module, with_config_fn_clean_options):
     # Assume no operation needed
     config.fn_clean_exts[:] = []
     config.fn_clean_trim[:] = []
     assert base_module.clean_s_name("foo.bar.fastq.gz") == "foo.bar.fastq.gz"
 
 
-def test_default_trim(base_module, clean_config):
+def test_default_trim(base_module, with_config_fn_clean_options):
     assert base_module.clean_s_name("foo.bar.fastq.gz") == "foo.bar"
 
 
-def test_custom_clean_ext(base_module, clean_config):
+def test_custom_clean_ext(base_module, with_config_fn_clean_options):
     config.fn_clean_exts = ["chop_this_off"]
     assert base_module.clean_s_name("foo.chop_this_off") == "foo"
 
 
-def test_regex_keep(base_module, clean_config):
+def test_regex_keep(base_module, with_config_fn_clean_options):
     config.fn_clean_exts = [{"type": "regex_keep", "pattern": "abc..X"}]
     assert base_module.clean_s_name("foo_abc12X_bar") == "abc12X"
     assert base_module.clean_s_name("foo_abc123_bar") == "foo_abc123_bar"

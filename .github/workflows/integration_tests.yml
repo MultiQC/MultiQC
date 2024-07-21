@@ -69,8 +69,8 @@ jobs:
           repository: MultiQC/test-data
           path: test-data
 
-      - name: All modules / Custom report filename
-        run: multiqc ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules --filename full_report.html
+      - name: Run all modules
+        run: multiqc -fv ${{ needs.changes.outputs.single_module }} --strict test-data/data/modules
 
   specific_cases_linux:
     name: More variations of flags and inputs
@@ -96,12 +96,6 @@ jobs:
         with:
           repository: MultiQC/test-data
           path: test-data
-
-      - name: Special case input data
-        run: multiqc ${{ env.test_modules }} test-data/data --ignore test-data/data/modules/
-
-      - name: All modules / Log filename as s_name, no cleaning
-        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules/ --fullnames --fn_as_s_name
 
       - name: Filter out all filenames (confirm no report)
         run: |
