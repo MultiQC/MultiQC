@@ -1,7 +1,49 @@
 import os
 
+import pytest
+
 import multiqc
 from multiqc import report
+from multiqc.core.update_config import ClConfig
+
+
+def test_multiqc_run(data_dir, tmp_path):
+    """
+    Verify HTML and data directory with default names are written to current dir
+    """
+    os.chdir(tmp_path)
+
+    files_before = set(os.listdir(os.getcwd()))
+
+    multiqc.run(
+        data_dir / "modules/fastp/SAMPLE.json",
+        cfg=ClConfig(run_modules=["fastp"]),
+    )
+
+    files_after = set(os.listdir(os.getcwd()))
+    assert files_after - files_before == {"multiqc_report.html", "multiqc_data"}
+
+
+@pytest.mark.parametrize("clean_up", [True, False])
+def test_multiqc_run_no_analysis_found(monkeypatch, tmp_path, clean_up):
+    """
+    Verify that an error is raised when a module is not found
+    """
+    import tempfile
+
+    report_tmp_dir = tmp_path / "report_tmp"
+    report_tmp_dir.mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: report_tmp_dir)
+
+    nonexistent_file = tmp_path / "nonexistent"
+    result = multiqc.run(nonexistent_file, clean_up=clean_up)
+
+    assert result.sys_exit_code == 1
+    assert result.message == "No analysis results found"
+    if clean_up:
+        assert not report_tmp_dir.exists()
+    else:
+        assert report_tmp_dir.exists()
 
 
 def test_parse_logs_fn_clean_exts(data_dir):

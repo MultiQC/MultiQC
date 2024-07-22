@@ -380,7 +380,7 @@ def write_report(
     title: Optional[str] = None,
     report_comment: Optional[str] = None,
     template: Optional[str] = None,
-    output_dir: Optional[str] = None,
+    output_dir: Optional[Union[str, Path]] = None,
     filename: Optional[str] = None,
     make_data_dir: Optional[bool] = None,
     data_format: Optional[str] = None,

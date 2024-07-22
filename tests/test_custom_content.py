@@ -1,10 +1,13 @@
 import tempfile
+from pathlib import Path
+
 import pytest
 
 import multiqc
 from multiqc import report, config
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.modules.custom_content import custom_module_classes
+from multiqc.utils import testing
 from multiqc.validation import ConfigValidationError
 from multiqc.core.file_search import file_search
 
@@ -390,3 +393,40 @@ def test_on_all_example_files(data_dir):
 
     file_search()
     custom_module_classes()
+
+
+@pytest.mark.parametrize(
+    "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
+)
+def test_custom_content_files(input_file, tmp_path):
+    """
+    Test other files in custom_content test-data dir that they don't fail and generate something
+    """
+
+    report.analysis_files = [input_file]
+    report.search_files(["custom_content"])
+    modules = custom_module_classes()
+
+    # Verify some sections added:
+    assert sum(len(m.sections) for m in modules) > 0
+
+
+# @pytest.mark.parametrize(
+#     "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
+# )
+# def test_custom_content_html(input_file, tmp_path, snapshot):
+#     """
+#     Test the custom content module with a snapshot of the output
+#     """
+#
+#     # Stubs for dynamic values to make the report snapshots identical
+#     config.creation_date = "CREATION_DATE"
+#     config.version = "VERSION"
+#
+#     report.analysis_files = [input_file]
+#     config.run_modules = ["custom_content"]
+#     file_search()
+#     custom_module_classes()
+#     multiqc.write_report(output_dir=str(tmp_path))
+#
+#     snapshot.assert_match((tmp_path / "multiqc_report.html").read_text())
