@@ -56,7 +56,7 @@ def test_write_stdout(inp_file, tmp_path, capsys):
 
 
 @pytest.mark.parametrize("clean_up", [True, False])
-def test_no_analysis_found(reset, monkeypatch, tmp_path, clean_up):
+def test_no_analysis_found(monkeypatch, tmp_path, clean_up):
     """
     Verify that an error is raised when a module is not found
     """

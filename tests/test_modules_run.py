@@ -7,14 +7,12 @@ e.g. if a file should be skipped, or cause a runtime error, or the raw data shou
 look in a specific way.
 """
 
-import os
 from typing import Callable, List, Union
 
 import pytest
 
 from multiqc import BaseMultiqcModule, config, report, reset, multiqc
 from multiqc.core.update_config import update_config
-from multiqc.utils import testing
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -25,7 +23,7 @@ def multiqc_reset():
 
 
 @pytest.mark.parametrize("module_id,entry_point", modules)
-def test_all_modules(module_id, entry_point, data_dir, multiqc_reset):
+def test_all_modules(module_id, entry_point, data_dir):
     """
     Verify that all modules do at least something
     """

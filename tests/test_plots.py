@@ -304,6 +304,7 @@ def test_box_plot():
         (True, False, None),  # link png + no export (should only export png)
     ],
 )
+@pytest.mark.filterwarnings("ignore:setDaemon")
 def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, export_plots):
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path)
     report.reset()

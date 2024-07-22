@@ -2,7 +2,7 @@ import tempfile
 import pytest
 
 import multiqc
-from multiqc import report
+from multiqc import report, config
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.modules.custom_content import custom_module_classes
 from multiqc.validation import ConfigValidationError
@@ -45,7 +45,6 @@ def test_custom_content(tmp_path):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     report.search_files(["custom_content"])
     custom_module_classes()
@@ -81,9 +80,8 @@ def test_deprecated_fields(tmp_path, capsys):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
-    update_config(cfg=ClConfig(verbose=True))
+    update_config(cfg=ClConfig(verbose=True))  # force re-creating logger
     report.search_files(["custom_content"])
     custom_module_classes()
 
@@ -123,9 +121,8 @@ def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
     )
     (tmp_path / "tmp").mkdir()
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path / "tmp")
-    multiqc.reset()
-    update_config(cfg=ClConfig(strict=strict))
 
+    config.strict = strict
     report.analysis_files = [file]
     report.search_files(["custom_content"])
 
@@ -168,7 +165,6 @@ def test_missing_id_and_title(tmp_path, capsys):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     report.search_files(["custom_content"])
 
@@ -202,7 +198,6 @@ sp:
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     update_config(cfg=ClConfig(config_files=[conf_file]))
 
@@ -286,7 +281,6 @@ sp:
     fn: "target__*tsv"
 """)
 
-    report.reset()
     report.analysis_files = [file1, file2]
     update_config(cfg=ClConfig(config_files=[conf], run_modules=["custom_content"]))
 
@@ -354,7 +348,6 @@ myfile.fasta	chr1	55312	56664	+	GENE""",
 def test_from_tsv(tmp_path, section_name, is_good, contents):
     tmp_path.joinpath("mysample_mqc.tsv").write_text(contents)
 
-    report.reset()
     report.analysis_files = [tmp_path]
     update_config(cfg=ClConfig(run_modules=["custom_content"]))
 
@@ -393,7 +386,7 @@ def test_on_all_example_files(data_dir):
     Deprecate this in the future in favour of more granular tests like those above.
     """
     report.analysis_files = [data_dir]
-    update_config(cfg=ClConfig(run_modules=["custom_content"]))
+    config.run_modules = ["custom_content"]
 
     file_search()
     custom_module_classes()
