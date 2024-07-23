@@ -6,7 +6,7 @@ import json
 
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, table
 
 log = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         refine_json_data_by_sample, refine_csv_data_by_sample = self._parse_refine()
 
         if not cnt_by_cluster_id_by_sample and not refine_json_data_by_sample and not refine_csv_data_by_sample:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
