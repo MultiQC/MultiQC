@@ -36,36 +36,40 @@ EXPECTED_COLUMNS = [
 def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
     """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
-    glimpse_err_grp = dict()
+    data_by_sample: Dict[str, Dict] = dict()
     for f in module.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
-            lines = [line.decode() for line in f_gz.readlines()]
+            lines = [line.decode().rstrip() for line in f_gz.readlines()]
 
-        parsed_data = parse_err_grp_report([line.rstrip() for line in lines])
-        if len(parsed_data) > 1:
-            if f["s_name"] in glimpse_err_grp:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            module.add_data_source(f, section="err_grp")
-            # Filter to strip out ignored sample names
-            glimpse_err_grp[f["s_name"]] = module.ignore_samples(parsed_data)
+        f_data_by_sample = parse_err_grp_report(lines)
+        if not f_data_by_sample:
+            continue
 
-    n_reports_found = len(glimpse_err_grp)
+        module.add_data_source(f, section="err_grp")
+
+        duplicated_samples = set(data_by_sample.keys()) & set(f_data_by_sample.keys())
+        if len(duplicated_samples) > 0:
+            log.debug(f"Duplicate sample name(s) found in {f['fn']}! Overwriting: {duplicated_samples}")
+        for sname, data in f_data_by_sample.items():
+            data_by_sample[sname] = f_data_by_sample
+
+    data_by_sample = module.ignore_samples(data_by_sample)
+    n_reports_found = len(data_by_sample)
     if n_reports_found == 0:
         return 0
-
-    log.info(f"Found {n_reports_found} report(s) by allele frequency bin.")
+    log.info(f"Found {n_reports_found} report(s) by samples")
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
     # Write parsed report data to a file (restructure first)
-    module.write_data_file(glimpse_err_grp, "multiqc_glimpse_err_grp")
+    module.write_data_file(data_by_sample, "multiqc_glimpse_err_grp")
 
     vtypes = ["GCsSAF", "GCsIAF", "GCsVAF"]
     data_best_gt_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
     data_imputed_ds_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
-    for sname, dataf in glimpse_err_grp.items():
+    for sname, dataf in data_by_sample.items():
         for vtype, data in dataf.items():
             data_best_gt_rsquared[vtype][sname] = {}
             data_imputed_ds_rsquared[vtype][sname] = {}
