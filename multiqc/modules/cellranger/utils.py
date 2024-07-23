@@ -65,7 +65,7 @@ def set_hidden_cols(headers, col_names):
 
 
 def parse_bcknee_data(data, s_name, max_idx=1000) -> Dict[str, Dict[str, Union[int, str, float]]]:
-    """parse data for bc knee plot from spaceranger dict"""
+    """parse data for bc knee plot from dict"""
 
     value_dict: Dict[str, Dict[str, Union[int, str, float]]] = dict()
     for idx, data_series in enumerate(data):
