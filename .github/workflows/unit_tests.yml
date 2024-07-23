@@ -68,10 +68,11 @@ jobs:
       - name: "Run unit tests"
         run: |
           if [ ! -z "${{ needs.changes.outputs.changed_module }}" ]; then
-              pytest -vv tests -k "${{ needs.changes.outputs.changed_module }}"
+              options="-k ${{ needs.changes.outputs.changed_module }}"
           else
-              pytest -vv tests --cov=multiqc --cov-report=xml
+              options="--cov=multiqc --cov-report=xml"
           fi
+          pytest -vv tests ${options}
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4
