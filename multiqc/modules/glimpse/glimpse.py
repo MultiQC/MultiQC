@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Call submodule functions
-        n_reports_found = 1
+        n_reports_found = 0
         n_reports_found += parse_glimpse_err_spl(self)
         n_reports_found += parse_glimpse_err_grp(self)
 
