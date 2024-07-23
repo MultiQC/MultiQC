@@ -15,7 +15,6 @@ jobs:
   unit_tests_linux:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
-    needs: changes
     strategy:
       matrix:
         python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
