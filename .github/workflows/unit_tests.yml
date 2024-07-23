@@ -12,35 +12,7 @@ on:
       - "*.md"
 
 jobs:
-  changes:
-    name: "Check for changes"
-    runs-on: ubuntu-latest
-    outputs:
-      changed_module: ${{ steps.changed_module.outputs.value }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            modules:
-              - "multiqc/modules/**"
-            base_module:
-              - "multiqc/modules/base_module.py"
-            all_files:
-              - "**"
-
-      - name: "Changed module"
-        uses: haya14busa/action-cond@v1
-        id: changed_module
-        with:
-          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }}
-          if_true: "${{ steps.filter.outputs.changes.modules[0] }}"
-          if_false: ""
-
-  linux:
+  unit_tests_linux:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
     needs: changes
@@ -65,13 +37,25 @@ jobs:
           repository: MultiQC/test-data
           path: test-data
 
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            modules:
+              - "multiqc/modules/**"
+            base_module:
+              - "multiqc/modules/base_module.py"
+            all_files:
+              - "**"
+
       - name: "Run unit tests"
         run: |
-          if [ ! -z "${{ needs.changes.outputs.changed_module }}" ]; then
-              options="-k ${{ needs.changes.outputs.changed_module }}"
+          if [ ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }} ]; then
+              options="-k ${{ steps.filter.outputs.changes.modules[0] }}"
           else
               options="--cov=multiqc --cov-report=xml"
           fi
+          echo "pytest -vv tests ${options}"
           pytest -vv tests ${options}
 
       - name: "Upload coverage to Codecov"
