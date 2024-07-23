@@ -12,6 +12,34 @@ on:
       - "*.md"
 
 jobs:
+  changes:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    outputs:
+      changed_module: ${{ steps.changed_module.outputs.value }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            modules:
+              - "multiqc/modules/**"
+            base_module:
+              - "multiqc/modules/base_module.py"
+            all_files:
+              - "**"
+
+      - name: "Changed module"
+        uses: haya14busa/action-cond@v1
+        id: changed_module
+        with:
+          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }}
+          if_true: ${{ steps.filter.outputs.changes.modules[0] }}
+          if_false: ""
+
   linux:
     name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-20.04
@@ -22,23 +50,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: "Set up Python ${{ matrix.python-version }}"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install MultiQC
+      - name: "Install MultiQC"
         run: pip install -e '.[dev]'
 
-      - name: Download test data
+      - name: "Download test data"
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
           path: test-data
 
-      - run: pytest -vv tests --cov=multiqc --cov-report=xml
+      - name: "Run unit tests"
+        run: |
+          if [ -n "${{ needs.changes.outputs.changed_module }}" ]; then
+              pytest -vv tests -k "${{ needs.changes.outputs.changed_module }}"
+          else
+              pytest -vv tests --cov=multiqc --cov-report=xml
+          fi
 
-      - name: Upload coverage to Codecov
+      - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
