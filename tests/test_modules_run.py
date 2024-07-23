@@ -12,6 +12,7 @@ from typing import Callable, List, Union
 import pytest
 
 from multiqc import BaseMultiqcModule, config, report, reset, multiqc
+from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import update_config
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
@@ -38,6 +39,22 @@ def test_all_modules(module_id, entry_point, data_dir):
     _module = module_cls()
     for m in _module if isinstance(_module, List) else [_module]:
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0
+
+
+@pytest.mark.parametrize("module_id,entry_point", modules)
+def test_ignore_samples(module_id, entry_point, data_dir):
+    """
+    Verify all modules call self.ignore_samples() correctly
+    """
+    mod_dir = data_dir / "modules" / module_id
+    assert mod_dir.exists() and mod_dir.is_dir()
+    report.analysis_files = [mod_dir]
+    report.search_files([module_id])
+    config.sample_names_ignore = ["*"]
+
+    module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
+    with pytest.raises(ModuleNoSamplesFound):
+        _module = module_cls()
 
 
 @pytest.mark.parametrize(
