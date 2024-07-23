@@ -13,7 +13,7 @@ on:
 
 jobs:
   changes:
-    name: Check for changes
+    name: "Check for changes"
     runs-on: ubuntu-latest
     outputs:
       changed_module: ${{ steps.changed_module.outputs.value }}
@@ -37,12 +37,13 @@ jobs:
         id: changed_module
         with:
           cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }}
-          if_true: ${{ steps.filter.outputs.changes.modules[0] }}
+          if_true: "${{ steps.filter.outputs.changes.modules[0] }}"
           if_false: ""
 
   linux:
-    name: Python ${{ matrix.python-version }}
+    name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
+    needs: changes
     strategy:
       matrix:
         python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
@@ -66,7 +67,7 @@ jobs:
 
       - name: "Run unit tests"
         run: |
-          if [ -n "${{ needs.changes.outputs.changed_module }}" ]; then
+          if [ "${{ needs.changes.outputs.changed_module }}" ]; then
               pytest -vv tests -k "${{ needs.changes.outputs.changed_module }}"
           else
               pytest -vv tests --cov=multiqc --cov-report=xml

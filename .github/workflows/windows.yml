@@ -10,7 +10,7 @@ on:
 
 jobs:
   unit_tests:
-    name: Windows
+    name: "Windows"
     runs-on: windows-latest
     timeout-minutes: 10
 

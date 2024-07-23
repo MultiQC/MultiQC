@@ -28,10 +28,11 @@ def test_all_modules(module_id, entry_point, data_dir):
     """
     Verify that all modules do at least something
     """
-    config.strict = True
-
     mod_dir = data_dir / "modules" / module_id
     assert mod_dir.exists() and mod_dir.is_dir()
+
+    config.strict = True
+
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
 
@@ -48,9 +49,11 @@ def test_ignore_samples(module_id, entry_point, data_dir):
     """
     mod_dir = data_dir / "modules" / module_id
     assert mod_dir.exists() and mod_dir.is_dir()
+
+    config.sample_names_ignore = ["*"]
+
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
-    config.sample_names_ignore = ["*"]
 
     module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
     with pytest.raises(ModuleNoSamplesFound):

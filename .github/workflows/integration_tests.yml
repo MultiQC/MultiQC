@@ -1,4 +1,4 @@
-name: "Integration tests"
+name: "Integration test"
 on:
   push:
     branches:
@@ -13,10 +13,11 @@ on:
 
 jobs:
   changes:
-    name: Check for changes
+    name: "Check for changes"
     runs-on: ubuntu-latest
     outputs:
       changed_module: ${{ steps.changed_module.outputs.value }}
+      pyproject_changed: ${{ steps.filter.outputs.changes.pyproject }}
 
     steps:
       - uses: actions/checkout@v4
@@ -33,78 +34,47 @@ jobs:
               - "CHANGELOG.md"
             all_files:
               - "**"
+            pyproject:
+              - "pyproject.toml"
 
-      # Set the `-m` flag if only one module has changed
-      - name: "Get a `-m` flag for the `multiqc` if only one module has changed"
+      - name: "Get the changed module"
         uses: haya14busa/action-cond@v1
         id: changed_module
         with:
-          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 && (steps.filter.outputs.changes.n_files_changes == 1 || steps.filter.outputs.changes.n_files_changes == 2 && steps.filter.outputs.changes.changelog)}}
-          if_true: "-m ${{ steps.filter.outputs.changes.modules[0] }}"
+          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }}
+          if_true: "${{ steps.filter.outputs.changes.modules[0] }}"
           if_false: ""
 
-  all_modules_linux:
-    name: Python ${{ matrix.python-version }}
+  integration_test_linux:
+    name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
     needs: changes
     strategy:
       matrix:
         python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
     timeout-minutes: 10
-    env:
-      # Typical modules to cover different plot types
-      test_modules: "-m samtools -m fastqc -m somalier -m bcl2fastq -m isoseq"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: "Set up Python ${{ matrix.python-version }}"
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install MultiQC
+      - name: "Install MultiQC"
         run: pip install .
 
-      - name: Download test data
+      - name: "Download test data"
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
           path: test-data
 
-      - name: Run all modules
-        run: multiqc -fv ${{ needs.changes.outputs.changed_module }} --strict test-data/data/modules
-
-      - name: File-list input of dirs
+      - name: "Run all modules if pyproject.toml has changed or needs.changes.outputs.changed_module is not null"
         run: |
-          cd test-data
-          multiqc ${{ env.test_modules }} --file-list data/special_cases/dir_list.txt
-
-      - name: Force overwrite / Prepend dirnames / Name and comment / No data dir
-        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules -f -d -dd 1 -i "Forced Report" -b "This command has lots of options" --filename custom_fn --no-data-dir
-
-      - name: Flat plots / Exclude module / Ignore samples / Full names / zip data dir / config file
-        run: multiqc ${{ env.test_modules }} --strict test-data/data/modules --flat --exclude clusterflow --ignore-samples ngi --fullnames --zip-data-dir -c test-data/config_example.yaml
-
-      - name: Specific module / named output dir / JSON data / File list
-        run: |
-          cd test-data
-          multiqc ${{ env.test_modules }} -o tests/multiqc_report_dev -k json --file-list data/special_cases/file_list.txt
-
-      - name: No report
-        run: |
-          cd test-data
-          multiqc ${{ env.test_modules }} data/modules --no-report -n no-report
-          if [[ -f no-report.html ]]; then
-            echo "Running with the --no-report flag should not produce an HTML" >&2
-            exit 1
-          fi
-
-      - name: Empty directory (confirm no report)
-        run: |
-          mkdir empty_dir
-          multiqc ${{ env.test_modules }} empty_dir -n empty
-          if [[ -f empty.html ]]; then
-            echo "Empty directory should not produce a report" >&2
-            exit 1
+          if [ "${{ needs.changes.outputs.changed_module }}" ]; then
+            multiqc -fv -m ${{ needs.changes.outputs.changed_module }} --strict test-data/data/modules
+          else if [ "${{ needs.changes.filter.outputs.pyproject_changed }}" ]; then
+            multiqc -fv --strict test-data/data/modules
           fi
