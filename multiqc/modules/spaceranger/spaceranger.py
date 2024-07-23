@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.spaceranger.count import parse_count_html
 
 log = logging.getLogger(__name__)
@@ -42,4 +42,4 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound

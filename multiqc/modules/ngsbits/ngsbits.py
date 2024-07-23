@@ -1,6 +1,6 @@
 import logging
 
-from multiqc.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.ngsbits.mappingqc import parse_reports as mappingqc_parse_reports
 from multiqc.modules.ngsbits.readqc import parse_reports as readqc_parse_reports
 
@@ -36,4 +36,4 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
