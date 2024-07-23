@@ -36,26 +36,8 @@ jobs:
           repository: MultiQC/test-data
           path: test-data
 
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            modules:
-              - "multiqc/modules/**"
-            base_module:
-              - "multiqc/modules/base_module.py"
-            all_files:
-              - "**"
-
       - name: "Run unit tests"
-        run: |
-          if [ ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules == 1 }} ]; then
-              options="-k ${{ steps.filter.outputs.changes.modules[0] }}"
-          else
-              options="--cov=multiqc --cov-report=xml"
-          fi
-          echo "pytest -vv tests ${options}"
-          pytest -vv tests ${options}
+        run: pytest -vv tests --cov=multiqc --cov-report=xml
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4

@@ -61,7 +61,7 @@ jobs:
           repository: MultiQC/test-data
           path: test-data
 
-      - name: "Run multiqc on the changed module"
+      - name: "Run multiqc on the changed modules"
         if: ${{ steps.module_changed_option.outputs.value != '' }}
         run: multiqc -fv --strict test-data/data/modules ${{ steps.module_changed_option.outputs.value }}
 
