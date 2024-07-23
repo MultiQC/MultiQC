@@ -73,7 +73,7 @@ jobs:
 
       - name: "Run all modules if pyproject.toml has changed or needs.changes.outputs.changed_module is not null"
         run: |
-          if [ "${{ needs.changes.outputs.changed_module }}" ]; then
+          if [ "${{ ! -z needs.changes.outputs.changed_module }}" ]; then
             multiqc -fv -m ${{ needs.changes.outputs.changed_module }} --strict test-data/data/modules
           else if [ "${{ needs.changes.filter.outputs.pyproject_changed }}" ]; then
             multiqc -fv --strict test-data/data/modules

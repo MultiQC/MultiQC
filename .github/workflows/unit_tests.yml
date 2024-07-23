@@ -67,7 +67,7 @@ jobs:
 
       - name: "Run unit tests"
         run: |
-          if [ "${{ needs.changes.outputs.changed_module }}" ]; then
+          if [ ! -z "${{ needs.changes.outputs.changed_module }}" ]; then
               pytest -vv tests -k "${{ needs.changes.outputs.changed_module }}"
           else
               pytest -vv tests --cov=multiqc --cov-report=xml
