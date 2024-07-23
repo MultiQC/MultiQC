@@ -21,6 +21,8 @@ def stub_modules():
         ({"filename": "NAME.html"}, {"NAME.html", "NAME_data"}),
         ({"title": "My Title"}, {"My-Title_multiqc_report.html", "My-Title_multiqc_report_data"}),
         ({"make_data_dir": False}, {"multiqc_report.html"}),
+        ({"make_report": False}, {"multiqc_data"}),
+        ({"make_report": False, "make_data_dir": False}, set()),
     ],
 )
 def test_filename(stub_modules, tmp_path, options, expected_files):
