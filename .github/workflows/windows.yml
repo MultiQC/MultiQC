@@ -52,4 +52,4 @@ jobs:
           7z x test-data.zip -y -o"test-data"
           dir test-data\test-data-main
 
-      - run: pytest -vv tests -n ${{ env.worker_cores }}
+      - run: pytest -vv tests
