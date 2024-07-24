@@ -1,4 +1,5 @@
 import asyncio
+import time
 from typing import Dict, Union
 
 import pytest
@@ -95,6 +96,7 @@ async def get_full_page_screenshot(html_path, out_png_path):
     page = await browser.newPage()
     await page.goto(f"file://{html_path}", waitUntil="domcontentloaded")
     await page.setViewport({"width": 1080, "height": 1080})
+    await asyncio.sleep(1)  # wait for JS to render
     await page.screenshot({"path": out_png_path, "fullPage": True})
     await browser.close()
 
@@ -122,6 +124,6 @@ async def test_custom_module_with_plot(tmp_path, snapshot, name, plot: Union[Plo
     screenshot_path = tmp_path / "screenshot.png"
     await get_full_page_screenshot(tmp_path / "multiqc_report.html", screenshot_path)
     assert screenshot_path.is_file()
-    print(screenshot_path)
 
-    assert screenshot_path.read_bytes() == snapshot
+    print(screenshot_path)
+    assert screenshot_path.read_bytes() == snapshot, screenshot_path

@@ -12,7 +12,6 @@ from multiqc import config
 from multiqc import report
 from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
-from multiqc.core.update_config import update_config
 
 
 def _test_search_files(
