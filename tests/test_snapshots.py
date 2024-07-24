@@ -94,9 +94,8 @@ def _add_module(plot: Union[Plot, None]):
 async def get_full_page_screenshot(html_path, out_png_path):
     browser = await launch(headless=True, args=["--no-sandbox"])
     page = await browser.newPage()
-    await page.goto(f"file://{html_path}", waitUntil="domcontentloaded")
+    await page.goto(f"file://{html_path}", waitUntil="networkidle0")
     await page.setViewport({"width": 1080, "height": 1080})
-    await asyncio.sleep(1)  # wait for JS to render
     await page.screenshot({"path": out_png_path, "fullPage": True})
     await browser.close()
 
