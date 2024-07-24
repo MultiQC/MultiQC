@@ -53,4 +53,4 @@ jobs:
 
       - run: |
           $Env:MULTIQC_TEST_DATA_DIR = "test-data\test-data-main"
-          pytest -vv tests
+          pytest -vv tests -n 4
