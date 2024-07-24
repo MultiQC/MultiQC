@@ -50,6 +50,7 @@ jobs:
         run: |
           curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
           7z x test-data.zip -y -o"test-data"
-          dir test-data\test-data-main
 
-      - run: pytest -vv tests
+      - run: |
+          set MULTIQC_TEST_DATA_DIR="test-data/test-data-main"
+          pytest -vv tests
