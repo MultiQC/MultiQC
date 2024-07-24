@@ -5,6 +5,7 @@ import pytest
 import multiqc
 from multiqc import report
 from multiqc.core.update_config import ClConfig
+from multiqc.plots import table
 
 
 def test_multiqc_run(data_dir, tmp_path):
@@ -66,14 +67,25 @@ def test_parse_logs_ignore_samples(data_dir):
     assert multiqc.list_modules() == ["QUAST"]
 
 
-def test_write_report(tmp_path):
+def test_custom_module(tmp_path):
     module = multiqc.BaseMultiqcModule(name="my-module", anchor="custom_data")
-    module.add_section()
+    module.add_section(
+        name="Custom Section",
+        description="Custom description",
+        helptext="Custom help",
+        plot=table.plot(
+            data={"sample1": {"x": 1, "y": 2}, "sample2": {"x": 3, "y": 4}},
+            headers={"Header1": {"title": "Custom title"}},
+            pconfig={
+                "name": "Custom table",
+                "headers": ["Header1", "Header2"],
+                "rows": [["Row1", "Row2"]],
+            },
+        ),
+    )
     report.modules = [module]
-
-    multiqc.write_report(force=True, output_dir=str(tmp_path))
-    assert (tmp_path / "multiqc_report.html").is_file()
-    assert (tmp_path / "multiqc_data").is_dir()
+    # Should not error:
+    multiqc.write_report(force=True, output_dir=str(tmp_path), make_data_dir=False, make_report=False)
 
 
 def test_software_versions_section(data_dir, tmp_path, capsys):

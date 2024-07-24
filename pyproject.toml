@@ -61,6 +61,8 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # parallel testing
+    "pytest-snapshot",
+    "selenium",  # to test HTML screenshots
     "mypy",
     "types-PyYAML",
     "types-tqdm",

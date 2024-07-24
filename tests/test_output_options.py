@@ -41,7 +41,6 @@ def test_write_stdout(stub_modules, tmp_path, capsys):
     files_before = set(os.listdir(tmp_path))
     os.chdir(tmp_path)
 
-    report.modules = [BaseMultiqcModule()]  # some stub module to make write_report work
     write_report(filename="stdout")
 
     captured = capsys.readouterr()

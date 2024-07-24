@@ -57,9 +57,9 @@ def write_results(clean_up=True) -> None:
 
     if config.make_report:
         # Render report HTML, write to file or stdout
-        _write_report()
+        _write_html_report()
         if config.filename != "stdout" and config.output_fn:
-            assert isinstance(config.output_fn, str)
+            assert isinstance(config.output_fn, (str, Path))
             if config.make_report and config.output_fn:
                 logger.info(
                     "Report      : {}{}".format(
@@ -172,12 +172,12 @@ def _create_or_override_dirs() -> Set[str]:
 
     # Check for existing reports and remove if -f was specified
     if (
-        (config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn))
+        (config.make_report and isinstance(config.output_fn, (str, Path)) and os.path.exists(config.output_fn))
         or (config.make_data_dir and config.data_dir and os.path.exists(config.data_dir))
         or (config.export_plots and config.plots_dir and os.path.exists(config.plots_dir))
     ):
         if config.force:
-            if config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn):
+            if config.make_report and isinstance(config.output_fn, (str, Path)) and os.path.exists(config.output_fn):
                 overwritten.add("report")
                 os.remove(config.output_fn)
             if config.make_data_dir and config.data_dir and os.path.exists(config.data_dir):
@@ -192,7 +192,7 @@ def _create_or_override_dirs() -> Set[str]:
 
             # Iterate through appended numbers until we find one that's free
             while (
-                (config.make_report and isinstance(config.output_fn, str) and os.path.exists(config.output_fn))
+                (config.make_report and isinstance(config.output_fn, (str, Path)) and os.path.exists(config.output_fn))
                 or (config.make_data_dir and config.data_dir and os.path.exists(config.data_dir))
                 or (config.export_plots and config.plots_dir and os.path.exists(config.plots_dir))
             ):
@@ -206,7 +206,7 @@ def _create_or_override_dirs() -> Set[str]:
                     plots_base = os.path.basename(config.plots_dir)
                     config.plots_dir = os.path.join(config.output_dir, f"{plots_base}_{report_num}")
                 report_num += 1
-            if config.make_report and isinstance(config.output_fn, str):
+            if config.make_report and isinstance(config.output_fn, (str, Path)):
                 config.output_fn_name = os.path.basename(config.output_fn)
             if config.data_dir:
                 config.data_dir_name = os.path.basename(config.data_dir)
@@ -214,7 +214,7 @@ def _create_or_override_dirs() -> Set[str]:
                 config.plots_dir_name = os.path.basename(config.plots_dir)
             logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
-    if config.make_report and isinstance(config.output_fn, str):
+    if config.make_report and isinstance(config.output_fn, (str, Path)):
         os.makedirs(os.path.dirname(config.output_fn), exist_ok=True)
 
     return overwritten
@@ -354,7 +354,7 @@ def _write_data_files() -> None:
             util_functions.dump_json(report.plot_data, f)
 
 
-def _write_report():
+def _write_html_report():
     """
     Render and write report HTML to disk
     """
@@ -458,7 +458,7 @@ def _write_report():
     if config.filename == "stdout":
         print(report_output, file=sys.stdout)
     else:
-        assert isinstance(config.output_fn, str)
+        assert isinstance(config.output_fn, (str, Path))
         try:
             with io.open(config.output_fn, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
@@ -476,7 +476,7 @@ def _write_report():
 
 
 def _write_pdf():
-    if not isinstance(config.output_fn, str):
+    if not isinstance(config.output_fn, (str, Path)):
         return
     try:
         pdf_fn_name = config.output_fn.replace(".html", ".pdf")

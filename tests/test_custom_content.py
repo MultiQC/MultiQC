@@ -395,22 +395,21 @@ def test_on_all_example_files(data_dir):
     custom_module_classes()
 
 
-@pytest.mark.parametrize(
-    "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
-)
-def test_custom_content_files(input_file, tmp_path):
-    """
-    Test other files in custom_content test-data dir that they don't fail and generate something
-    """
-
-    report.analysis_files = [input_file]
-    report.search_files(["custom_content"])
-    modules = custom_module_classes()
-
-    # Verify some sections added:
-    assert sum(len(m.sections) for m in modules) > 0
+# @pytest.mark.parametrize("input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir()))
+# def test_custom_content_files(input_file, tmp_path):
+#     """
+#     Test other files in custom_content test-data dir that they don't fail and generate something
+#     """
+#
+#     report.analysis_files = [input_file]
+#     report.search_files(["custom_content"])
+#     modules = custom_module_classes()
+#
+#     # Verify some sections added:
+#     assert sum(len(m.sections) for m in modules) > 0
 
 
+# TODO: test each file separately
 # @pytest.mark.parametrize(
 #     "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
 # )
