@@ -7,13 +7,15 @@ e.g. if a file should be skipped, or cause a runtime error, or the raw data shou
 look in a specific way.
 """
 
+from pathlib import Path
+from pprint import pprint
 from typing import Callable, List, Union
 
 import pytest
 
-from multiqc import BaseMultiqcModule, config, report, reset, multiqc
+from multiqc import BaseMultiqcModule, config, report, reset, parse_logs
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.core.update_config import update_config
+from multiqc.core.update_config import update_config, ClConfig
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -89,7 +91,7 @@ Input Reads: 39733090 Surviving: 32590558 (82.02%) Dropped: 7142532 (17.98%)
 TrimmomaticSE: Completed successfully""")
 
     update_config(
-        cfg=multiqc.ClConfig(
+        cfg=ClConfig(
             run_modules=[MODULE_NAME],
             use_filename_as_sample_name=use_filename_as_sample_name,
             fn_clean_sample_names=fn_clean_sample_names,
@@ -106,3 +108,54 @@ TrimmomaticSE: Completed successfully""")
     m = MultiqcModule()
 
     assert expected_sample_name in m.saved_raw_data[f"multiqc_{MODULE_NAME}"]
+
+
+def test_path_filters(multiqc_reset, tmp_path, data_dir):
+    search_path = data_dir / "modules" / "adapterremoval"
+    assert search_path.exists() and search_path.is_dir()
+
+    expected_pe_files = {
+        "paired_end_collapsed/pec1.settings",
+        "paired_end_collapsed/pec2.settings",
+        "paired_end_noncollapsed/penc1.settings",
+        "paired_end_noncollapsed/penc2.settings",
+    }
+    expected_se_files = {
+        "single_end/se.settings",
+    }
+
+    assert all((search_path / fn).exists() for fn in expected_pe_files)
+    assert all((search_path / fn).exists() for fn in expected_pe_files)
+
+    parse_logs(
+        search_path,
+        module_order=[
+            {
+                "adapterremoval": {
+                    "name": "adapterremoval (single end)",
+                    "anchor": "my_anchor_se",
+                    "path_filters": ["*/se.*"],
+                },
+            },
+            {
+                "adapterremoval": {
+                    "name": "adapterremoval (paired end)",
+                    "anchor": "my_anchor_pe",
+                    "path_filters": ["*/pec?.*", "*/penc?.*"],
+                },
+            },
+        ],
+    )
+
+    assert len(report.modules) == 2
+    assert len(report.general_stats_data) == 2
+    assert report.modules[0].name == "adapterremoval (single end)"
+    assert report.modules[1].name == "adapterremoval (paired end)"
+    assert report.modules[0].saved_raw_data["multiqc_adapter_removal_my_anchor_se"].keys() == {
+        Path(fn).name for fn in expected_se_files
+    }
+    assert report.modules[1].saved_raw_data["multiqc_adapter_removal_my_anchor_pe"].keys() == {
+        Path(fn).name for fn in expected_pe_files
+    }
+    assert report.general_stats_data[0].keys() == {Path(fn).name for fn in expected_se_files}
+    assert report.general_stats_data[1].keys() == {Path(fn).name for fn in expected_pe_files}

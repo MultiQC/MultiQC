@@ -57,7 +57,7 @@ class Runtimes:
 # Uninitialised global variables for static typing
 multiqc_command: str
 top_modules: List[Dict[str, Dict[str, str]]]
-module_order: List[Dict[str, Dict[str, str]]]
+module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_html: str

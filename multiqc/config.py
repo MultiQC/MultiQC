@@ -165,7 +165,7 @@ fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
-module_order: List[Union[str, Dict[str, Dict[str, str]]]]
+module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
 
 # Module filename search patterns

@@ -17,7 +17,7 @@ def test_multiqc_run(data_dir, tmp_path):
     files_before = set(os.listdir(os.getcwd()))
 
     multiqc.run(
-        data_dir / "modules/fastp/SAMPLE.json",
+        data_dir / "modules" / "fastp" / "SAMPLE.json",
         cfg=ClConfig(run_modules=["fastp"]),
     )
 
