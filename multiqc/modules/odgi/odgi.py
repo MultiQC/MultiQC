@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 import yaml
 
@@ -61,10 +62,10 @@ class MultiqcModule(BaseMultiqcModule):
     For the odgi module to discover the [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html)
     reports, the file must match one of the following patterns:
 
-    - "\*.og.stats.yaml"
-    - "\*.og.stats.yml"
-    - "\*.odgi.stats.yaml"
-    - "\*.odgi.stats.yml"
+    - "*.og.stats.yaml"
+    - "*.og.stats.yml"
+    - "*.odgi.stats.yaml"
+    - "*.odgi.stats.yml"
 
     A bar graph is generated, which shows the length, number of nodes, edges and paths for each sample. Additionally,
     a second bar graph is generated visualizing the `in_node_space` and `in_nucleotide_space` for every sample.
@@ -85,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse odgi stats data
-        self.odgi_stats_map = dict()
+        self.odgi_stats_map: Dict = dict()
         for f in self.find_log_files("odgi", filehandles=True):
             self.parse_odgi_stats_report(f)
 
@@ -159,7 +160,11 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Flatten the data structure
-        data_flat = self.compress_stats_data(data)
+        try:
+            data_flat = self.compress_stats_data(data)
+        except ValueError as e:
+            log.warning(f"Could not flatten data for '{f}': \n  {e}")
+            return
 
         # Calculate additional metrics
         try:
@@ -286,8 +291,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         # Some of the headers are quite general and can clash with other modules.
         # Prepend odgi_ to keep them unique
-        prefix_headers = dict()
-        prefix_data = {}
+        prefix_headers: Dict = dict()
+        prefix_data: Dict = dict()
         for h, v in headers.items():
             prefix_headers[f"odgi_{h}"] = v
         for s_name, d in self.odgi_stats_map.items():
@@ -414,16 +419,25 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Compress odgi stats into a single dictionary to visualize.
         """
+        length = None
+        distance = None
+
         mean_links_length = data["mean_links_length"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
         for line in mean_links_length:
             if line["length"]["path"] == "all_paths":
                 length = line["length"]
+        if length is None:
+            raise ValueError("Could not find 'all_paths' in mean_links_length")
+
         sum_of_path_nodes_distances = data["sum_of_path_node_distances"]
         # we have to find the entry with path: 'all_paths', because odgi stats could emit a list of path names
         for d in sum_of_path_nodes_distances:
             if d["distance"]["path"] == "all_paths":
                 distance = d["distance"]
+        if distance is None:
+            raise ValueError("Could not find 'all_paths' in sum_of_path_node_distances")
+
         return {
             "length": float(data["length"]),
             "nodes": float(data["nodes"]),
