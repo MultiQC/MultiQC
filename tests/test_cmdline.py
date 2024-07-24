@@ -9,18 +9,18 @@ import pytest
 
 
 @pytest.fixture()
-def inp_dir(data_dir):
+def single_module_dir(data_dir):
     inp_dir = data_dir / "modules" / "kallisto"
     assert inp_dir.exists() and inp_dir.is_dir()
     return inp_dir
 
 
-def test_commandline(inp_dir, tmp_path):
+def test_commandline(single_module_dir, tmp_path):
     """
     Verify that calling `multiqc .` in command line works, returns code 1 and generates the report and data folders.
     Also verify that passing a directory as an argument works.
     """
-    subprocess.run(["multiqc", inp_dir, "--filename", "report"], cwd=tmp_path, check=True)
+    subprocess.run(["multiqc", single_module_dir, "--filename", "report"], cwd=tmp_path, check=True)
 
     assert set(os.listdir(tmp_path)) == {"report.html", "report_data"}
     assert (tmp_path / "report.html").is_file()
@@ -29,7 +29,7 @@ def test_commandline(inp_dir, tmp_path):
 
 
 @pytest.mark.parametrize("clean_up", [True, False])
-def test_tmpdir_envvar(inp_dir, tmp_path, clean_up):
+def test_tmpdir_envvar(single_module_dir, tmp_path, clean_up):
     """
     Verify that the TMPDIR environment variable is respected
     """
@@ -41,7 +41,7 @@ def test_tmpdir_envvar(inp_dir, tmp_path, clean_up):
     cwd_dir = tmp_path / "cwd"
     cwd_dir.mkdir()
 
-    cmd = ["multiqc", inp_dir]
+    cmd = ["multiqc", single_module_dir]
     if not clean_up:
         cmd.append("--no-clean-up")
     subprocess.run(cmd, cwd=cwd_dir, check=True)
