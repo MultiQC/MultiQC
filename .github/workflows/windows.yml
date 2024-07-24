@@ -52,4 +52,4 @@ jobs:
           7z x test-data.zip -y -o"test-data"
 
       - run: |
-          multiqc --strict -v -s samtools test-data\test-data-main\data\modules\
+          multiqc --strict -v -m samtools test-data\test-data-main\data\modules\
