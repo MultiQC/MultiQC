@@ -52,5 +52,5 @@ jobs:
           7z x test-data.zip -y -o"test-data"
 
       - run: |
-          set MULTIQC_TEST_DATA_DIR="test-data/test-data-main"
+          $Env:MULTIQC_TEST_DATA_DIR = "test-data\test-data-main"
           pytest -vv tests
