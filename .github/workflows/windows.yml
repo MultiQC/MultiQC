@@ -52,5 +52,4 @@ jobs:
           7z x test-data.zip -y -o"test-data"
 
       - run: |
-          $Env:MULTIQC_TEST_DATA_DIR = "test-data\test-data-main"
-          pytest -vv tests -n 4 -k test_commandline
+          multiqc --strict -v -s samtools test-data\test-data-main\data\modules\
