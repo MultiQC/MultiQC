@@ -19,6 +19,11 @@ jobs:
       matrix:
         python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
 
+    env:
+      # GitHub currently has 4 cores available for Linux runners
+      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+      worker_cores: 4
+
     steps:
       - uses: actions/checkout@v4
 
@@ -37,7 +42,7 @@ jobs:
           path: test-data
 
       - name: "Run unit tests"
-        run: pytest -vv tests --cov=multiqc --cov-report=xml
+        run: pytest -vv tests -n ${{ env.worker_cores }} --cov=multiqc --cov-report=xml
 
       - name: "Upload coverage to Codecov"
         uses: codecov/codecov-action@v4

@@ -3,6 +3,7 @@ name: "Windows tests"
 on:
   push:
     paths:
+      # runs e.g. when version updated, module added, or dependency added
       - "pyproject.toml"
   pull_request:
     paths:
@@ -13,6 +14,11 @@ jobs:
     name: "Windows"
     runs-on: windows-latest
     timeout-minutes: 10
+
+    env:
+      # GitHub currently has 4 cores available for Windows runners
+      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+      worker_cores: 4
 
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +43,7 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: "Install MultiQC"
-        run: pip install .
+        run: pip install '.[dev]'
 
       # NB: Download zip file instead of git clone, as Windows complains about reserved filenames and certain characters
       - name: "Download test data"
@@ -46,4 +52,4 @@ jobs:
           7z x test-data.zip -y -o"test-data"
           dir test-data\test-data-main
 
-      - run: pytest -vv tests
+      - run: pytest -vv tests -n ${{ env.worker_cores }}

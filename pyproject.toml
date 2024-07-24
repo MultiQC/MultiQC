@@ -60,6 +60,7 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
+    "pytest-xdist",  # parallel testing
     "mypy",
     "types-PyYAML",
     "types-tqdm",
