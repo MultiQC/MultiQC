@@ -267,12 +267,14 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     else:
         assert f'<div class="mqc_mplplot" id="{plot_id}"><img src="multiqc_plots/png/{plot_id}.png' in html
         assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").is_file()
+        assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").stat().st_size > 0
         if not export_plots:
             for fmt in ["pdf", "svg"]:
                 assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
     if export_plots:
         for fmt in export_plot_formats or ["png", "pdf", "svg"]:
             assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
+            assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").stat().st_size > 0
 
 
 def test_missing_pconfig(capsys):
