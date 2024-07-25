@@ -255,7 +255,7 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     if export_plot_formats:
         config.export_plot_formats = export_plot_formats
 
-    html = plot.add_to_report()
+    html = plot.add_to_report(plots_dir_name=config.plots_dir_name)
 
     assert len(report.plot_data) == 0
     assert html is not None

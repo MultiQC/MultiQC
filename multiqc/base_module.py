@@ -666,7 +666,7 @@ class BaseMultiqcModule:
         to report.write_data_file() to create the file in the report directory"""
 
         # Append custom module anchor if set
-        if "anchor" in self.mod_cust_config:
+        if self.mod_cust_config.get("anchor"):
             fn = f"{fn}_{self.mod_cust_config['anchor']}"
 
         # Generate a unique filename if the file already exists (running module multiple times)

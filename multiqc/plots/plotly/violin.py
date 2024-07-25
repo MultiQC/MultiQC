@@ -563,7 +563,7 @@ class ViolinPlot(Plot):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, clean_html_id=True) -> str:
+    def add_to_report(self, plots_dir_name: Optional[str] = None, clean_html_id: bool = True) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -588,7 +588,7 @@ class ViolinPlot(Plot):
             # Show violin alone.
             # Note that "no_violin" will be ignored here as we need to render _something_. The only case it can
             # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
-            html = warning + super().add_to_report()
+            html = warning + super().add_to_report(plots_dir_name=plots_dir_name)
         elif self.no_violin:
             assert self.main_table_dt is not None
             # Show table alone
@@ -598,7 +598,7 @@ class ViolinPlot(Plot):
             assert self.main_table_dt is not None
             # Render both, add a switch between table and violin
             table_html, configuration_modal = make_table(self.main_table_dt, violin_id=self.id)
-            violin_html = super().add_to_report()
+            violin_html = super().add_to_report(plots_dir_name=plots_dir_name)
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
             html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"

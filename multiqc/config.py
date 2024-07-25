@@ -187,7 +187,7 @@ data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
 report_section_order: Dict
-output_fn: Optional[Union[str, TextIO]]
+output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 

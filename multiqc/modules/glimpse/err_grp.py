@@ -47,8 +47,8 @@ def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
 
         module.add_data_source(f, section="err_grp")
 
-        if f["s_name"] not in metrics_by_idn_by_var_by_sample:
-            log.debug(f"Duplicate sample name {f['s_name']} found ({f['fn']}. Overwriting")
+        if f["s_name"] in metrics_by_idn_by_var_by_sample:
+            log.debug(f"Duplicate sample name '{f['s_name']}' found from {f['fn']}. Overwriting")
         metrics_by_idn_by_var_by_sample[f["s_name"]] = file_data
 
     metrics_by_idn_by_var_by_sample = module.ignore_samples(metrics_by_idn_by_var_by_sample)
