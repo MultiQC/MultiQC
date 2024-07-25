@@ -1,10 +1,53 @@
 import os
 
+import pytest
+
 import multiqc
 from multiqc import report
+from multiqc.core.update_config import ClConfig
+from multiqc.plots import table
 
 
-def test_parse_logs_fn_clean_exts(reset, data_dir):
+def test_multiqc_run(data_dir, tmp_path):
+    """
+    Verify HTML and data directory with default names are written to current dir
+    """
+    os.chdir(tmp_path)
+
+    files_before = set(os.listdir(os.getcwd()))
+
+    multiqc.run(
+        data_dir / "modules" / "fastp" / "SAMPLE.json",
+        cfg=ClConfig(run_modules=["fastp"]),
+    )
+
+    files_after = set(os.listdir(os.getcwd()))
+    assert files_after - files_before == {"multiqc_report.html", "multiqc_data"}
+
+
+@pytest.mark.parametrize("clean_up", [True, False])
+def test_multiqc_run_no_analysis_found(monkeypatch, tmp_path, clean_up):
+    """
+    Verify that an error is raised when a module is not found
+    """
+    import tempfile
+
+    report_tmp_dir = tmp_path / "report_tmp"
+    report_tmp_dir.mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: report_tmp_dir)
+
+    nonexistent_file = tmp_path / "nonexistent"
+    result = multiqc.run(nonexistent_file, clean_up=clean_up)
+
+    assert result.sys_exit_code == 1
+    assert result.message == "No analysis results found"
+    if clean_up:
+        assert not report_tmp_dir.exists()
+    else:
+        assert report_tmp_dir.exists()
+
+
+def test_parse_logs_fn_clean_exts(data_dir):
     multiqc.parse_logs(
         data_dir / "modules/fastp/SAMPLE.json",
         data_dir / "modules/fastp/single_end",
@@ -14,7 +57,7 @@ def test_parse_logs_fn_clean_exts(reset, data_dir):
     assert multiqc.list_modules() == ["fastp"]
 
 
-def test_parse_logs_ignore_samples(reset, data_dir):
+def test_parse_logs_ignore_samples(data_dir):
     multiqc.parse_logs(
         data_dir / "modules/quast/full_metaquast_run",
         ignore_samples=["meta_contigs_2"],
@@ -24,27 +67,35 @@ def test_parse_logs_ignore_samples(reset, data_dir):
     assert multiqc.list_modules() == ["QUAST"]
 
 
-def test_write_report(reset, tmp_path):
+def test_custom_module(tmp_path):
     module = multiqc.BaseMultiqcModule(name="my-module", anchor="custom_data")
-    module.add_section()
+    module.add_section(
+        name="Custom Section",
+        description="Custom description",
+        helptext="Custom help",
+        plot=table.plot(
+            data={"sample1": {"x": 1, "y": 2}, "sample2": {"x": 3, "y": 4}},
+            headers={"Header1": {"title": "Custom title"}},
+            pconfig={
+                "name": "Custom table",
+                "headers": ["Header1", "Header2"],
+                "rows": [["Row1", "Row2"]],
+            },
+        ),
+    )
     report.modules = [module]
-
-    multiqc.write_report(force=True, output_dir=str(tmp_path))
-    assert (tmp_path / "multiqc_report.html").is_file()
-    assert (tmp_path / "multiqc_data").is_dir()
+    # Should not error:
+    multiqc.write_report(force=True, output_dir=str(tmp_path), make_data_dir=False, make_report=False)
 
 
-def test_software_versions_section(reset, data_dir, tmp_path, capsys):
-    multiqc.reset()
-
+def test_software_versions_section(data_dir, tmp_path, capsys):
     multiqc.parse_logs(data_dir / "modules/fastp")
     multiqc.parse_logs(data_dir / "modules/bcftools")
     multiqc.write_report(filename="stdout")  # triggers adding software_versions module
     assert multiqc.list_modules() == ["fastp", "Bcftools", "Software Versions"]
 
 
-def test_write_report_multiple_times(reset, data_dir, tmp_path):
-    multiqc.reset()
+def test_write_report_multiple_times(data_dir, tmp_path):
     multiqc.parse_logs(data_dir / "modules/fastp")
     multiqc.write_report(output_dir=str(tmp_path))
     assert multiqc.list_modules() == ["fastp", "Software Versions"]
@@ -54,7 +105,7 @@ def test_write_report_multiple_times(reset, data_dir, tmp_path):
     assert multiqc.list_modules() == ["fastp", "Bcftools", "Software Versions"]
 
 
-def test_run_twice(reset, data_dir, tmp_path):
+def test_run_twice(data_dir, tmp_path):
     from multiqc import multiqc
     from multiqc.core.update_config import ClConfig
 
@@ -83,7 +134,7 @@ def test_run_twice(reset, data_dir, tmp_path):
     assert (tmp_path / "multiqc_data").is_dir()
 
 
-def test_user_config(reset, tmp_path, capsys):
+def test_user_config(tmp_path, capsys):
     import multiqc
 
     config_yml = tmp_path / "custom_config.yml"

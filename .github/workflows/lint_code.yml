@@ -1,4 +1,4 @@
-name: Lint code
+name: "MultiQC lint"
 on:
   push:
     branches: [main]
@@ -18,8 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: "Install dependencies"
         run: pip install rich
 
-      - name: Run manual code style checks
+      - name: "Run manual code style checks"
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

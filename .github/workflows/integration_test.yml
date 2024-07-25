@@ -1,0 +1,70 @@
+name: "Integration test"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "multiqc/modules/**"
+      - "pyproject.toml"
+  pull_request:
+    paths-ignore:
+      - "multiqc/modules/**"
+      - "pyproject.toml"
+
+jobs:
+  integration_test_linux:
+    name: "Python ${{ matrix.python-version }}"
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.12"] # Oldest and newest supported Python versions
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            modules:
+              - "multiqc/modules/**"
+            base_module:
+              - "multiqc/modules/base_module.py"
+            all_files:
+              - "**"
+            pyproject:
+              - "pyproject.toml"
+
+      - name: "Get the changed modules -m options"
+        uses: haya14busa/action-cond@v1
+        id: module_changed_option
+        with:
+          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules > 0 }}
+          if_true: "-m ${{ join(steps.filter.outputs.changes.modules, ' -m ') }}"
+          if_false: ""
+
+      - name: "Set up Python ${{ matrix.python-version }}"
+        if: ${{ steps.module_changed_option.outputs.value != '' || steps.filter.outputs.changes.pyproject != ''}}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: "Install MultiQC"
+        if: ${{ steps.module_changed_option.outputs.value != '' || steps.filter.outputs.changes.pyproject != '' }}
+        run: pip install .
+
+      - name: "Download test data"
+        if: ${{ steps.module_changed_option.outputs.value != '' || steps.filter.outputs.changes.pyproject != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+
+      - name: "Run multiqc on the changed modules"
+        if: ${{ steps.module_changed_option.outputs.value != '' }}
+        run: multiqc -fv --strict test-data/data/modules ${{ steps.module_changed_option.outputs.value }}
+
+      - name: "Run multiqc on all modules"
+        if: ${{ steps.filter.outputs.changes.pyproject != '' }}
+        run: multiqc -fv --strict test-data/data/modules

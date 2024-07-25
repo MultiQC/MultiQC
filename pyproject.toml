@@ -60,6 +60,10 @@ dev = [
     "pdoc3",
     "pytest",
     "pytest-cov",
+    "pytest-xdist",  # for parallel testing with `pytest -n`
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    # does work better with parametrized tests
+    "pytest-asyncio",  # for async tests
     "mypy",
     "types-PyYAML",
     "types-tqdm",
