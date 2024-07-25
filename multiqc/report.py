@@ -903,8 +903,8 @@ def write_data_file(
 
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
-    fpath = os.path.join(data_tmp_dir(), fn)
-    assert data_tmp_dir() and os.path.exists(data_tmp_dir())
+    fpath = data_tmp_dir() / fn
+    assert data_tmp_dir() and data_tmp_dir().exists()
     with open(fpath, "w", encoding="utf-8", errors="ignore") as f:
         if data_format == "json":
             dump_json(data, f, indent=4, ensure_ascii=False)

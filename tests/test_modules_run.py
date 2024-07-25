@@ -1,14 +1,5 @@
-"""
-Generic test for each module: makes sure each file in test-data/data/modules
-is found by module and reflected in module.saved_raw_data
-
-Modules can override this test by providing more specific actions for specific files:
-e.g. if a file should be skipped, or cause a runtime error, or the raw data should
-look in a specific way.
-"""
-
+import tempfile
 from pathlib import Path
-from pprint import pprint
 from typing import Callable, List, Union
 
 import pytest
@@ -28,8 +19,13 @@ def multiqc_reset():
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_all_modules(module_id, entry_point, data_dir):
     """
-    Verify that all modules do at least something
+    Verify that all modules do at least something.
+
+    Modules can add to this test by providing more specific actions for specific files:
+    e.g. if a file should be skipped, or cause a runtime error, or the raw data should
+    look in a specific way.
     """
+
     mod_dir = data_dir / "modules" / module_id
     assert mod_dir.exists() and mod_dir.is_dir()
 
@@ -47,7 +43,7 @@ def test_all_modules(module_id, entry_point, data_dir):
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """
-    Verify all modules call self.ignore_samples() correctly
+    Verify all modules call self.ignore_samples() correctly.
     """
     mod_dir = data_dir / "modules" / module_id
     assert mod_dir.exists() and mod_dir.is_dir()
@@ -60,6 +56,32 @@ def test_ignore_samples(module_id, entry_point, data_dir):
     module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
     with pytest.raises(ModuleNoSamplesFound):
         _module = module_cls()
+
+
+@pytest.mark.parametrize(
+    ["config_options", "expected_to_write"],
+    [
+        (dict(), True),
+        ({"make_data_dir": False}, False),
+        ({"filename": "stdout"}, False),
+    ],
+)
+def test_write_data_file(monkeypatch, tmp_path, config_options, expected_to_write):
+    """
+    Test module.write_data_file() write something
+    """
+    (tmp_path / "multiqc_tmp").mkdir()
+    monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path / "multiqc_tmp")
+    config.update(config_options)
+    module = BaseMultiqcModule()
+    module.write_data_file({"Sample": {"key": "value"}}, "multiqc_mymodule")
+
+    expected_path = tmp_path / "multiqc_tmp" / "multiqc_data" / "multiqc_mymodule.txt"
+    if expected_to_write:
+        assert expected_path.exists()
+        assert expected_path.open().read().strip() == """Sample\tkey\nSample\tvalue""".strip()
+    else:
+        assert not expected_path.exists()
 
 
 @pytest.mark.parametrize(
@@ -82,7 +104,6 @@ def test_use_filename_as_sample_name(
     report.reset()
 
     MODULE_NAME = "trimmomatic"
-
     (tmp_path / "subdir").mkdir()
     input_file = tmp_path / "subdir" / "SAMPLE_FROM_FILENAME.stderr"
     input_file.write_text("""\
