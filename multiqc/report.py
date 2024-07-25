@@ -705,9 +705,9 @@ def exclude_file(sp, f: SearchFile):
     return False
 
 
-def data_sources_tofile(data_dir: str):
+def data_sources_tofile(data_dir: Path):
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
-    with io.open(os.path.join(data_dir, fn), "w", encoding="utf-8") as f:
+    with io.open(data_dir / fn, "w", encoding="utf-8") as f:
         if config.data_format == "json":
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -724,7 +724,7 @@ def data_sources_tofile(data_dir: str):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile(data_dir, module_list: List["BaseMultiqcModule"]):
+def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
@@ -733,7 +733,7 @@ def dois_tofile(data_dir, module_list: List["BaseMultiqcModule"]):
             dois[mod.id] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
-    with open(os.path.join(data_dir, fn), "w") as f:
+    with open(data_dir / fn, "w") as f:
         if config.data_format == "json":
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -835,7 +835,6 @@ def write_data_file(
 ):
     """
     Write a data file to the report directory. Will do nothing
-    if config.data_dir is not set (i.e. when config.make_data_dir == False or config.filename == "stdout")
     :param: data - either: a 2D dict, first key sample name (row header),
         second key field (column header); a list of dicts; or a list of lists
     :param: fn - Desired filename. Directory will be prepended automatically.
@@ -844,7 +843,7 @@ def write_data_file(
     :return: None
     """
 
-    if config.data_dir is None:
+    if not config.make_data_dir or config.filename == "stdout":
         return
 
     # Get data format from config

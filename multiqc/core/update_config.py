@@ -156,6 +156,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         if cfg.development:
             if "png" not in config.export_plot_formats:
                 config.export_plot_formats.append("png")
+        # TODO: check this works when set though the config file alone
     if cfg.make_pdf:
         config.template = "simple"
     if config.template == "simple":
