@@ -35,7 +35,7 @@ logger = logging.getLogger()  # root logger
 DEBUG_TEMPLATE = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
 
 
-def init_log():
+def init_log(log_to_file: bool = False):
     """
     Initializes logging.
     Prints logs to console with level defined by loglevel
@@ -97,10 +97,11 @@ def init_log():
         else:
             _print_intro_with_rich()
 
-    add_file_handler()
+    if log_to_file:
+        _add_file_handler()
 
 
-def add_file_handler() -> logging.Handler:
+def _add_file_handler() -> logging.Handler:
     """
     Set up the file logging stream if we have a data directory
     """

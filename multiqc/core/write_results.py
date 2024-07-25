@@ -56,7 +56,7 @@ class OutputPaths:
     report_overwritten: bool = False
 
 
-def write_results(clean_up=True) -> None:
+def write_results() -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -94,7 +94,6 @@ def write_results(clean_up=True) -> None:
                         "   (overwritten)" if paths.report_overwritten else "",
                     )
                 )
-                logger.debug(f"Full report path: {paths.report_path.resolve()}")
             else:
                 logger.info("Report      : None")
         # Try to create a PDF if requested
@@ -110,10 +109,6 @@ def write_results(clean_up=True) -> None:
                 "   (overwritten)" if paths.plots_dir_overwritten else "",
             )
         )
-
-    # Clean up temporary directory, reset logger file handler
-    if clean_up:
-        report.reset_tmp_dir()
 
     # Zip the data directory if requested
     if config.zip_data_dir and paths.data_dir is not None:

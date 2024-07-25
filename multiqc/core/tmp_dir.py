@@ -21,7 +21,7 @@ def get_tmp_dir() -> Path:
     global _tmp_dir
     if _tmp_dir is None:
         _tmp_dir = Path(tempfile.mkdtemp())
-        logger.debug(f"Using temporary directory: {_tmp_dir}")
+        logger.debug(f"Using new temporary directory: {_tmp_dir}")
 
     return _tmp_dir
 
