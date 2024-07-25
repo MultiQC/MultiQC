@@ -61,10 +61,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html screenshots, alternative to pytest-snapshot that 
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
     # does work better with parametrized tests
     "pytest-asyncio",  # for async tests
-    "pyppeteer",  # headless browser to compare html screenshots as images
     "mypy",
     "types-PyYAML",
     "types-tqdm",
