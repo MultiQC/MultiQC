@@ -65,7 +65,7 @@ class ClConfig(BaseModel):
     unknown_options: Optional[Dict] = None
 
 
-def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
+def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False):
     """
     Update config and re-initialize logger.
 
@@ -87,7 +87,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None):
         config.no_ansi = cfg.no_ansi
     if cfg.verbose is not None:
         config.verbose = cfg.verbose > 0
-    log_and_rich.init_log()
+    log_and_rich.init_log(log_to_file=log_to_file)
 
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug("Running Python " + sys.version.replace("\n", " "))

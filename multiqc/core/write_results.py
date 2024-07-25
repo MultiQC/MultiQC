@@ -28,7 +28,7 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 logger = logging.getLogger(__name__)
 
 
-def write_results(clean_up=True) -> None:
+def write_results() -> None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -67,7 +67,6 @@ def write_results(clean_up=True) -> None:
                         "   (overwritten)" if "report" in overwritten else "",
                     )
                 )
-                logger.debug(f"Full report path: {os.path.realpath(Path(config.output_fn))}")
             else:
                 logger.info("Report      : None")
         # Try to create a PDF if requested
@@ -83,10 +82,6 @@ def write_results(clean_up=True) -> None:
                 "   (overwritten)" if "export_plots" in overwritten else "",
             )
         )
-
-    # Clean up temporary directory, reset logger file handler
-    if clean_up:
-        report.reset_tmp_dir()
 
     # Zip the data directory if requested
     if config.zip_data_dir and config.data_dir is not None:

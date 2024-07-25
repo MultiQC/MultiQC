@@ -997,4 +997,3 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
-    log_and_rich.add_file_handler()
