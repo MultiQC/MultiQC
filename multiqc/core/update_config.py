@@ -153,9 +153,6 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.lint = cfg.strict  # Deprecated since v1.17
     if cfg.development is not None:
         config.development = cfg.development
-        if cfg.development:
-            if "png" not in config.export_plot_formats:
-                config.export_plot_formats.append("png")
     if cfg.make_pdf:
         config.template = "simple"
     if config.template == "simple":
@@ -195,6 +192,9 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.fn_clean_trim = list(cfg.extra_fn_clean_trim) + config.fn_clean_trim
     if cfg.preserve_module_raw_data is not None:
         config.preserve_module_raw_data = cfg.preserve_module_raw_data
+
+    if config.development and "png" not in config.export_plot_formats:
+        config.export_plot_formats.append("png")
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:
