@@ -488,6 +488,8 @@ The v1.20 release is also the first release we've had since we moved the MultiQC
   - MEGAHIT is an ultra-fast and memory-efficient NGS assembler
 - [**Nonpareil**](https://github.com/lmrodriguezr/nonpareil) ([#2215](https://github.com/MultiQC/MultiQC/pull/2215))
   - Estimate metagenomic coverage and sequence diversity.
+- [**nanoq**](https://github.com/esteinig/nanoq) ([#2723](https://github.com/MultiQC/MultiQC/pull/2723/))
+  - Report various statistics from a nanopore sequencing datasets.
 
 ### Module updates
 
