@@ -435,6 +435,7 @@ module_order:
   - bakta
   - prokka
   - qc3C
+  - nanoq
   - nanostat
   - samblaster
   - samtools

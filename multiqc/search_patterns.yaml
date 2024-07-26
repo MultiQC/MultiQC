@@ -566,6 +566,9 @@ multivcfanalyzer:
 disambiguate:
   contents: "unique species A pairs"
   num_lines: 2
+nanoq:
+  contents: "Nanoq Read Summary"
+  num_lines: 3
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
