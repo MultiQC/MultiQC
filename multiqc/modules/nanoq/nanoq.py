@@ -1,11 +1,11 @@
-import re
 import logging
+import re
 from collections import defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
 from typing import Dict, List, Any
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, table, linegraph
+from multiqc.plots import table, linegraph
 from multiqc.plots.table_object import TableConfig
 
 log = logging.getLogger(__name__)
@@ -26,18 +26,17 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and load any nanoq reports
         data_by_sample: Dict[str, Dict[str, float]] = {}
         for f in self.find_log_files("nanoq", filehandles=True):
-            sample_data = self.parse_nanoq_log(f)
+            sample_data = parse_nanoq_log(f)
             if sample_data:
                 data_by_sample[f["s_name"]] = sample_data
-
                 if f["s_name"] in data_by_sample:
                     log.debug(f"Duplicate sample data found! Overwriting: {f['s_name']}")
 
                 self.add_data_source(f)
 
-            # Superfluous function call to confirm that it is used in this module
-            # Replace None with actual version if it is available
-            self.add_software_version(None, f["s_name"])
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names
         data_by_sample = self.ignore_samples(data_by_sample)
@@ -58,67 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Read length distribution Plot
         self.reads_by_length_plot(data_by_sample)
 
-    def parse_nanoq_log(self, f) -> Dict[str, float]:
-        """Parse output from nanoq"""
-        stats: Dict[str, float] = dict()
-
-        # Parse the file content
-        segment = None
-        summary_lines = []
-        length_threshold_lines = []
-        quality_threshold_lines = []
-
-        for line in f["f"]:
-            line = line.strip()
-            if line.startswith("Nanoq Read Summary"):
-                segment = "summary"
-                continue
-            elif line.startswith("Read length thresholds"):
-                segment = "length_thresholds"
-                continue
-            elif line.startswith("Read quality thresholds"):
-                segment = "quality_thresholds"
-                continue
-
-            if segment == "summary":
-                summary_lines.append(line)
-            elif segment == "length_thresholds":
-                length_threshold_lines.append(line)
-            elif segment == "quality_thresholds":
-                quality_threshold_lines.append(line)
-
-        for line in summary_lines:
-            if ":" in line:
-                metric, value = line.split(":", 1)
-                stats[metric.strip()] = float(value.strip())
-
-        # Helper function to parse thresholds part
-        def parse_thresholds(lines: List[str], threshold_type: str) -> Dict[str, List[Any]]:
-            _thresholds: Dict[str, List[Any]] = {"Threshold": [], "Number of Reads": [], "Percentage": []}
-            for _line in lines:
-                match = re.match(r">\s*(\d+)\s+(\d+)\s+(\d+\.\d+)%", _line)
-                if match:
-                    _threshold, _num_reads, _percentage = match.groups()
-                    _thresholds["Threshold"].append(_threshold + (threshold_type if threshold_type == "bp" else ""))
-                    _thresholds["Number of Reads"].append(int(_num_reads))
-                    _thresholds["Percentage"].append(float(_percentage))
-            return _thresholds
-
-        read_length_thresholds = parse_thresholds(length_threshold_lines, "bp")
-        read_quality_thresholds = parse_thresholds(quality_threshold_lines, "")
-
-        for threshold, num_reads in zip(read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]):
-            stats[f"Reads > {threshold}"] = num_reads
-
-        for threshold, num_reads in zip(
-            read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]
-        ):
-            stats[f"Reads > Q{threshold}"] = num_reads
-
-        return stats
-
     def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
-        """Nanoq General Stats Table"""
         headers: Dict[str, Dict] = {
             "Number of reads": {
                 "title": "Reads",
@@ -258,3 +197,61 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
             ),
         )
+
+
+def parse_nanoq_log(f) -> Dict[str, float]:
+    """Parse output from nanoq"""
+    stats: Dict[str, float] = dict()
+
+    # Parse the file content
+    segment = None
+    summary_lines = []
+    length_threshold_lines = []
+    quality_threshold_lines = []
+
+    for line in f["f"]:
+        line = line.strip()
+        if line.startswith("Nanoq Read Summary"):
+            segment = "summary"
+            continue
+        elif line.startswith("Read length thresholds"):
+            segment = "length_thresholds"
+            continue
+        elif line.startswith("Read quality thresholds"):
+            segment = "quality_thresholds"
+            continue
+
+        if segment == "summary":
+            summary_lines.append(line)
+        elif segment == "length_thresholds":
+            length_threshold_lines.append(line)
+        elif segment == "quality_thresholds":
+            quality_threshold_lines.append(line)
+
+    for line in summary_lines:
+        if ":" in line:
+            metric, value = line.split(":", 1)
+            stats[metric.strip()] = float(value.strip())
+
+    # Helper function to parse thresholds part
+    def parse_thresholds(lines: List[str], threshold_type: str) -> Dict[str, List[Any]]:
+        _thresholds: Dict[str, List[Any]] = {"Threshold": [], "Number of Reads": [], "Percentage": []}
+        for _line in lines:
+            match = re.match(r">\s*(\d+)\s+(\d+)\s+(\d+\.\d+)%", _line)
+            if match:
+                _threshold, _num_reads, _percentage = match.groups()
+                _thresholds["Threshold"].append(_threshold + (threshold_type if threshold_type == "bp" else ""))
+                _thresholds["Number of Reads"].append(int(_num_reads))
+                _thresholds["Percentage"].append(float(_percentage))
+        return _thresholds
+
+    read_length_thresholds = parse_thresholds(length_threshold_lines, "bp")
+    read_quality_thresholds = parse_thresholds(quality_threshold_lines, "")
+
+    for threshold, num_reads in zip(read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]):
+        stats[f"Reads > {threshold}"] = num_reads
+
+    for threshold, num_reads in zip(read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]):
+        stats[f"Reads > Q{threshold}"] = num_reads
+
+    return stats
