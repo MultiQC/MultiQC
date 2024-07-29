@@ -6,7 +6,6 @@ on:
 
 jobs:
   deploy:
-    name: "Deploy preview"
     runs-on: ubuntu-latest
     if: github.repository == 'MultiQC/MultiQC'
     permissions:
@@ -48,7 +47,6 @@ jobs:
         with:
           repository: MultiQC/website
           path: website
-          ref: "module-extra"
 
       - name: Install npm deps
         run: |
