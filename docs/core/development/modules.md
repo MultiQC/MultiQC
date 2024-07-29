@@ -211,7 +211,7 @@ to think about them again.
 
 The source code for MultiQC is separated into different folders.
 Most of the files you won't have to touch - the relevant files that
-you will need to edit or create are as follows:
+you will need to edit or create follow the structure below:
 
 ```
 ├── docs
@@ -235,11 +235,10 @@ MultiQC modules are Python submodules - as such, they need their own
 directory in `multiqc/` with an `__init__.py` file. The directory should
 share its name with the module. To follow common practice, the module
 code itself usually then goes in a separate python file (also with the same
-name, i.e. `multiqc/modname/modname.py`) which is then imported by the
-`__init__.py` file with:
+name, i.e. `multiqc/bismark/bismark.py`) which is then imported by the `__init__.py` file with:
 
 ```python
-from .modname import MultiqcModule
+from .mymodule import MultiqcModule
 
 __all__ = ["MultiqcModule"]
 ```
@@ -253,8 +252,7 @@ In `pyproject.toml` you will see some code that looks like this:
 
 ```toml
 [project.entry-points."multiqc.modules.v1"]
-bismark = "multiqc.modules.bismark:MultiqcModule"
-[...]
+mymodule = "multiqc.modules.mymodule:MultiqcModule"
 ```
 
 Copy one of the existing module lines and change it to use your module name.
@@ -302,14 +300,14 @@ module code file (i.e. `multiqc/modname/modname.py`). This will give
 you access to a number of functions on the `self` namespace. For example:
 
 ```python
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
           name='My Module',
-          anchor='mymod',
-          href="https://www.awesome_bioinfo.com/my_module",
+          anchor='mymodule',
+          href="https://www.awesome_bioinfo.com/mymodule",
           info="Example analysis module used for writing documentation.",
           doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
         )
@@ -341,6 +339,8 @@ If there are any specific considerations for the users before running the module
 add them into the module docstring, e.g.:
 
 ````py
+from multiqc.base_module import BaseMultiqcModule
+
 class MultiqcModule(BaseMultiqcModule):
     """
     The tool provides multiple subcommands, and the MultiQC module currently only
@@ -376,6 +376,8 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             ...
+        )
+        ...
 ````
 
 The consideration can be:
@@ -498,9 +500,9 @@ a `fn` pattern to limit which files are loaded _(as done with AfterQC)_.
 For example, two typical modules could specify search patterns as follows:
 
 ```yaml
-mymod:
+mymodule:
   fn: "_myprogram.txt"
-myothermod:
+myother_module:
   contents: "This is myprogram v1.3"
 ```
 
@@ -508,7 +510,7 @@ You can also supply a list of different patterns for a single log file type if n
 If any of the patterns are matched, the file will be returned:
 
 ```yaml
-mymod:
+mymodule:
   - fn: "mylog.txt"
   - fn: "different_fn.out"
 ```
@@ -516,10 +518,10 @@ mymod:
 You can use _AND_ logic by specifying keys within a single list item. For example:
 
 ```yaml
-mymod:
+mymodule:
   fn: "mylog.txt"
   contents: "mystring"
-myothermod:
+myother_module:
   - fn: "different_fn.out"
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
@@ -531,10 +533,10 @@ Here, a file must have the filename `mylog.txt` _and_ contain the string `mystri
 You can match subsets of files by using `exclude_` keys as follows:
 
 ```yaml
-mymod:
+mymodule:
   fn: "*.myprog.txt"
   exclude_fn: "not_these_*"
-myothermod:
+myother_module:
   fn: "mylog.txt"
   exclude_contents:
     - "trimmed"
@@ -552,7 +554,7 @@ Once your strings are added, you can find files in your module with the
 base function `self.find_log_files()`, using the key you set in the YAML:
 
 ```python
-self.find_log_files('mymod')
+self.find_log_files('mymodule')
 ```
 
 This function yields a dictionary with various information about each matching
@@ -560,18 +562,18 @@ file. The `f` key contains the contents of the matching file:
 
 ```python
 # Find all files for mymod
-for myfile in self.find_log_files('mymod'):
-    print( myfile['f'] )       # File contents
-    print( myfile['s_name'] )  # Sample name (from cleaned filename)
-    print( myfile['fn'] )      # Filename
-    print( myfile['root'] )    # Directory file was in
+for f in self.find_log_files('mymodule'):
+    print(f['f'])  # File contents
+    print(f['s_name'])  # Sample name (from cleaned filename)
+    print(f['fn'])  # Filename
+    print(f['root'])  # Directory file was in
 ```
 
 If `filehandles=True` is specified, the `f` key contains a file handle
 instead:
 
 ```python
-for f in self.find_log_files('mymod', filehandles=True):
+for f in self.find_log_files('mymodule', filehandles=True):
     # f['f'] is now a filehandle instead of contents
     for line in f['f']:
         print(line)
@@ -589,19 +591,26 @@ on the format of the log file and the type of data being read. See below
 for a basic example, based loosely on the preseq module:
 
 ```python
+from multiqc.base_module import BaseMultiqcModule
+from typing import Dict, Union
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # [...]
-        self.mod_data = dict()
+        ...
+        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
         for f in self.find_log_files('mymod'):
-            self.mod_data[f['s_name']] = self.parse_logs(f['f'])
+            s_name = f['s_name']
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            data_by_sample[s_name] = parse_file(f['f'])
 
-    def parse_logs(self, f):
-        data = {}
-        for line in f.splitlines():
-            s = line.split()
-            data[s[0]] = s[1]
-        return data
+
+def parse_file(f) -> Dict[str, Union[float, int]]:
+    data = {}
+    for line in f.splitlines():
+        s = line.strip().split()
+        data[s[0]] = float(s[1])
+    return data
 ```
 
 ### Filtering by parsed sample names
@@ -615,7 +624,8 @@ in a dictionary with the first key as sample name, pass it through the
 `self.ignore_samples` function as follows:
 
 ```python
-self.yourdata = self.ignore_samples(self.yourdata)
+data_by_sample = ...
+data_by_sample = self.ignore_samples(data_by_sample)
 ```
 
 This will remove any dictionary keys where the sample name matches
@@ -640,9 +650,9 @@ exception of type `ModuleNoSamplesFound`. This tells the core MultiQC program
 that no modules were found. For example:
 
 ```python
-from multiqc.modules.base_module import ModuleNoSamplesFound
+from multiqc.base_module import ModuleNoSamplesFound
 
-if len(self.mod_data) == 0:
+if len(data_by_sample) == 0:
     raise ModuleNoSamplesFound
 ```
 
@@ -653,15 +663,18 @@ should not create any files or try to do any computation.
 ### Custom sample names
 
 Typically, sample names are taken from cleaned log filenames (the default
-`f['s_name']` value returned). However, if possible, it's better to use
-the name of the input file (allowing for concatenated log files).
-To do this, you should use the `self.clean_s_name()` function, as
-this will prepend the directory name if requested on the command line:
+`f['s_name']` value returned). However, if the underlying tool records the sample
+name in the logs somewhere, it's better to use that instead. Alternatively, it could
+also record the name of the input file somewhere (e.g. adapter cleaning tools typically
+save the input FASTQ file name in the log), in which case it's better to clean the
+sample name from the input file name. For that, you should use the `self.clean_s_name()`
+method, as this will prepend the directory name if requested on the command line:
 
 ```python
-for f in self.find_log_files('mymod'):
-    input_fname, data = self.my_custom_parsing(f) # Or parsed however
+for f in self.find_log_files('mymodule'):
+    input_fname, data = parse_file(f)
     s_name = self.clean_s_name(input_fname, f)
+    ...
 ```
 
 This function has already been applied to the contents of `f['s_name']`,
@@ -681,10 +694,10 @@ If you are using non-standard values for the logfile root, filename or search pa
 key, these can be specified. The function def looks like this:
 
 ```python
-def clean_s_name(self, s_name, f=None, root=None, filename=None, seach_pattern_key=None):
+def clean_s_name(self, s_name, f=None, root=None, filename=None, search_pattern_key=None):
 ```
 
-A tyical example is when the sample name is the log file directory.
+A typical example is when the sample name is the log file directory.
 In this case, the root should be the dirname of that directory.
 This is non-standard, and would be specified as follows:
 
@@ -700,7 +713,7 @@ for debugging. However, most of the time it makes sense - programs often
 create log files _and_ print to `stdout` for example.
 
 ```python
-if f['s_name'] in self.bowtie_data:
+if f['s_name'] in data_by_sample:
     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
 ```
 
@@ -716,7 +729,7 @@ If you've used the `self.find_log_files` function, writing to the sources file
 is as simple as passing the log file variable to the `self.add_data_source` function:
 
 ```python
-for f in self.find_log_files('mymod'):
+for f in self.find_log_files('mymodule'):
     self.add_data_source(f)
 ```
 
@@ -752,10 +765,12 @@ Note that we pass the sample name (`f["s_name"]` in this case) so that we don't
 add versions for samples that are later ignored.
 
 ```python
+import re
+
 for line in f.splitlines():
     version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
     if version is not None:
-        self.add_software_version(version.group(1), f["s_name"])
+        self.add_software_version(version.group(1), sample=f["s_name"])
 
     # ..rest of file parsing
 ```
@@ -783,13 +798,13 @@ Example:
 for line in f.splitlines():
     version = re.search(r"# This file was produced by samtools stats \(([\d\.]+)", line)
     if version is not None:
-        self.add_software_version(version.group(1), f["s_name"])
+        self.add_software_version(version.group(1), sample=f["s_name"])
 
     htslib_version = re.search(r"\+htslib-([\d\.]+)", line)
     if htslib_version is not None:
-        self.add_software_version(htslib_version.group(1), f["s_name"], software_name="htslib")
+        self.add_software_version(htslib_version.group(1), sample=f["s_name"], software_name="htslib")
 
-    # ..rest of file parsing
+    ...  # rest of file parsing
 ```
 
 Even if the logs does not contain any version information, you should still
@@ -801,7 +816,7 @@ a dummy call. Example:
 ```python
 for f in self.find_log_files("mymodule/submodule"):
     sample = f["s_name"]
-    data[sample] = parse_file(f)
+    data_by_sample[sample] = parse_file(f)
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -820,17 +835,17 @@ a lot of configuration options, but most have sensible defaults. At
 it's simplest, it works as follows:
 
 ```python
-data = {
+data_by_sample: Dict[str, Dict[str, float]] = {
     'sample_1': {
         'first_col': 91.4,
-        'second_col': '78.2%'
+        'second_col': 78.2,
     },
     'sample_2': {
         'first_col': 138.3,
-        'second_col': '66.3%'
+        'second_col': 66.3,
     }
 }
-self.general_stats_addcols(data)
+self.general_stats_addcols(data_by_sample)
 ```
 
 To give more informative table headers and configure things like
@@ -853,7 +868,7 @@ headers = {
         suffix='%'
     )
 }
-self.general_stats_addcols(data, headers)
+self.general_stats_addcols(data_by_sample, headers)
 ```
 
 Here are all options for headers, with defaults:
@@ -971,7 +986,7 @@ Again, there is a base class function to help you with this - just supply it
 with a dictionary and a filename:
 
 ```python
-data = {
+data_by_sample = {
     "sample_1": {
         "first_col": 91.4,
         "second_col": "78.2%",
@@ -981,7 +996,7 @@ data = {
         "second_col": "66.3%",
     },
 }
-self.write_data_file(data, "multiqc_mymod")
+self.write_data_file(data_by_sample, "multiqc_mymodule")
 ```
 
 If your output has a lot of columns, you can supply the additional
@@ -1019,15 +1034,15 @@ from multiqc.plots.bargraph import BarPlotConfig
 
 self.add_section(
     name="Second Module Section",
-    anchor="mymod-second",
-    plot=linegraph.plot(data2, pconfig=LinePlotConfig(
-        id="mymod-second",
+    anchor="mymodule-second",
+    plot=linegraph.plot(data_by_sample2, pconfig=LinePlotConfig(
+        id="mymodule-second",
         title="My Module: Duplication Rate"
     )),
 )
 self.add_section(
     name='First Module Section',
-    anchor='mymod-first',
+    anchor='mymodule-first',
     description='My amazing module output, from the first section',
     helptext="""
         If you're not sure _how_ to interpret the data, we can help!
@@ -1039,8 +1054,8 @@ self.add_section(
         * Are
         * `Great`
     """,
-    plot = bargraph.plot(data, pconfig=BarPlotConfig(
-        id="mymod-first",
+    plot = bargraph.plot(data_by_sample, pconfig=BarPlotConfig(
+        id="mymodule-first",
         title="My Module: Read Counts"
     ))
 )
