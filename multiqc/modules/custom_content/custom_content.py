@@ -296,9 +296,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        item = list(cust_mod_by_id.values())[0]["config"]
-        assert isinstance(item, dict)
-        if len(cust_mod_by_id) == 1 and item.get("plot_type") == "generalstats":
+        if len(cust_mod_by_id) >= 1 and all(cv["config"].get("plot_type") == "generalstats" for cv in cust_mod_by_id.values()):
             sorted_modules = [bm]
         else:
             raise ModuleNoSamplesFound
