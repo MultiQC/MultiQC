@@ -29,32 +29,30 @@ jobs:
           filters: |
             modules:
               - "multiqc/modules/**"
-            all_files:
-              - "**"
             pyproject:
               - "pyproject.toml"
 
       - name: "Set up Python ${{ matrix.python-version }}"
-        if: ${{ steps.filter.outputs.changes.modules || steps.filter.outputs.changes.pyproject }}
+        if: steps.filter.outputs.changes.modules == 'true' || steps.filter.outputs.changes.pyproject == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: "Install MultiQC"
-        if: ${{ steps.filter.outputs.changes.modules || steps.filter.outputs.changes.pyproject }}
+        if: steps.filter.outputs.changes.modules == 'true' || steps.filter.outputs.changes.pyproject == 'true'
         run: pip install .
 
       - name: "Download test data"
-        if: ${{ steps.filter.outputs.changes.modules || steps.filter.outputs.changes.pyproject }}
+        if: steps.filter.outputs.changes.modules == 'true' || steps.filter.outputs.changes.pyproject == 'true'
         uses: actions/checkout@v4
         with:
           repository: MultiQC/test-data
           path: test-data
 
       - name: "Run multiqc on the changed modules"
-        if: ${{ steps.filter.outputs.changes.modules }}
+        if: steps.filter.outputs.changes.modules == 'true'
         run: multiqc -fv --strict test-data/data/modules -m ${{ join(steps.filter.outputs.changes.modules_files, ' -m ') }}
 
       - name: "Run multiqc on all modules"
-        if: ${{ steps.filter.outputs.changes.pyproject }}
+        if: steps.filter.outputs.changes.pyproject == 'true'
         run: multiqc -fv --strict test-data/data/modules
