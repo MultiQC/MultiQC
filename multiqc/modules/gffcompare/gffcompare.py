@@ -1,28 +1,39 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from gffcompare """
-
-
 import logging
-import os
-from collections import OrderedDict
+import re
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
 
-# Initialise the logger
 log = logging.getLogger(__name__)
+
+VERSION_REGEX = r"# gffcompare v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    """
+    The program `gffcompare` can be used to compare, merge, annotate and estimate accuracy
+    of one or more GFF files (the "query" files), when compared with a reference annotation (also provided as GFF).
 
-        # Initialise the parent object
+    The _Sensitivity / Precision_ values are displayed in a single plot,
+    different loci levels can be switched by choosing a different dataset.
+
+    :::warning
+    Please use `gffcompare` only with single samples.
+    Multi-Sample comparisons are not correctly rendered by this MultiQC module.
+    :::
+
+    Note that exported data in `multiqc_data/multiqc_gffcompare.{tsv,yaml,json}` only works when
+    exporting with YAML or JSON - the default `.tsv` output will not contain any data.
+    Please use `-k yaml` or `-k json` to export in a structured format.
+    It is hoped to refactor this code in a future release - please submit a PR if you are interested.
+    """
+
+    def __init__(self):
         super(MultiqcModule, self).__init__(
             name="GffCompare",
             anchor="gffcompare",
             href="https://ccb.jhu.edu/software/stringtie/gffcompare.shtml",
-            info="is a tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.",
+            info="Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.",
             doi="10.12688/f1000research.23297.1",
         )
 
@@ -41,6 +52,11 @@ class MultiqcModule(BaseMultiqcModule):
             sample = f["s_name"]
             self.gffcompare_data[sample] = {}
             lines = f["f"].splitlines()
+
+            # Version info
+            version_match = re.search(VERSION_REGEX, lines[0])
+            if version_match:
+                self.add_software_version(version_match.group(1), sample)
 
             ## Transcript and loci numbers:
             # Query
@@ -108,9 +124,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise user warning if no data found
         if len(self.gffcompare_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.gffcompare_data)))
+        log.info(f"Found {len(self.gffcompare_data)} reports")
 
         # Add nothing to general statistics table
 
@@ -208,7 +224,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_novel_plot",
             "title": "Gffcompare: Novel features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 
@@ -243,7 +258,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "gffcompare_missing_plot",
             "title": "Gffcompare: Missing features",
             "ylab": "Reads",
-            "ymin": 0,
             "data_labels": datasets,
         }
 

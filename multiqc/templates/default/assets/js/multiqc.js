@@ -2,13 +2,17 @@
 // Base JS for MultiQC Reports
 ////////////////////////////////////////////////
 
+// Collect functions to be called after plot data is decompressed.
+// Includes functions in plotting.js, and any module-specific JS like multiqc_fastqc.js
+let callAfterDecompressed = [];
+
 // Helper config - is defined and object length > 0?
 function notEmptyObj(obj) {
   try {
     if (obj === undefined) {
       return false;
     }
-    if (obj.length == 0) {
+    if (obj.length === 0) {
       return false;
     }
   } catch (e) {
@@ -35,8 +39,8 @@ $(function () {
   try {
     var hide_welcome = localStorage.getItem("mqc_hide_welcome");
     if (hide_welcome !== "true") {
-      $("#mqc_header_hr").slideUp();
-      $("#mqc_welcome").slideDown();
+      $("#mqc_header_hr").show();
+      $("#mqc_welcome").show();
     }
     $("#mqc_hide_welcome_btn").click(function (e) {
       localStorage.setItem("mqc_hide_welcome", "true");
@@ -45,7 +49,7 @@ $(function () {
     console.log(
       "Could not access localStorage: " +
         e +
-        "\nPlease disable 'Block third-party cookies and site data' or browser equivalent."
+        "\nPlease disable 'Block third-party cookies and site data' or browser equivalent.",
     );
   }
   $("#mqc_hide_welcome_btn, #mqc_welcome .close").click(function (e) {

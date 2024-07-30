@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-
-
 import logging
 import re
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import linegraph
 
@@ -16,14 +13,17 @@ log = logging.getLogger(__name__)
 class DragenCoverageHist(BaseMultiqcModule):
     def add_coverage_hist(self):
         data_by_phenotype_by_sample = defaultdict(dict)
-
-        for f in self.find_log_files("dragen/fine_hist"):
-            s_name, data_by_phenotype = parse_fine_hist(f)
-            s_name = self.clean_s_name(s_name, f)
+        for f in self.find_log_files("dragen/wgs_fine_hist"):
+            data_by_phenotype = parse_wgs_fine_hist(f)
+            s_name = f["s_name"]
             if s_name in data_by_phenotype_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.add_data_source(f, section="stats")
+            self.add_data_source(f, section="wgs_fine_hist")
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
         data_by_phenotype_by_sample = self.ignore_samples(data_by_phenotype_by_sample)
@@ -36,11 +36,11 @@ class DragenCoverageHist(BaseMultiqcModule):
                 if phenotype == "normal":
                     new_sn = sn + "_normal"
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
-
         if not data_by_sample:
             return set()
 
-        # Data is in wrong format for writing to file
+        # Only plot data, don't want to write this to a file
+        # (can do so with --export-plots already)
         # self.write_data_file(data_by_sample, "dragen_cov_hist")
 
         dist_data = {sn: dist for sn, (dist, cum, depth_1pc) in data_by_sample.items()}
@@ -62,7 +62,7 @@ class DragenCoverageHist(BaseMultiqcModule):
                     "ymin": 0,
                     "xmin": 0,
                     "xmax": depth_1pc,  # trim long flat tail
-                    "tt_label": "<b>{point.x}X</b>: {point.y} loci",
+                    "tt_label": "<b>{point.x}</b>: {point.y} loci",
                     "cpswitch": True,
                 },
             ),
@@ -84,18 +84,17 @@ class DragenCoverageHist(BaseMultiqcModule):
                     "ymax": 100,
                     "xmin": 0,
                     "xmax": depth_1pc,  # trim long flat tail
-                    "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
+                    "tt_label": "<b>{point.x}</b>: {point.y:.2f}%",
                 },
             ),
         )
         return data_by_sample.keys()
 
 
-def parse_fine_hist(f):
+def parse_wgs_fine_hist(f):
     """
     T_SRR7890936_50pc.wgs_fine_hist_normal.csv
     T_SRR7890936_50pc.wgs_fine_hist_tumor.csv
-    T_SRR7890936_50pc.target_bed_fine_hist.csv
 
     Depth,Overall
     0,104231614
@@ -137,12 +136,18 @@ def parse_fine_hist(f):
         except ValueError:
             continue
         cum_cnt += cnt
-        cum_pct = cum_cnt / total_cnt * 100.0
+        if total_cnt > 0:
+            cum_pct = cum_cnt / total_cnt * 100.0
+        else:
+            cum_pct = 0
         if cum_pct < 1:  # to trim long flat tail
             depth_1pc = depth
         data[depth] = cnt
         cum_data[depth] = cum_pct
 
-    m = re.search(r"(.*)\.(\S*)_fine_hist_?(\S*)?.csv", f["fn"])
-    sample, phenotype = m.group(1), m.group(2)
-    return sample, {phenotype: (data, cum_data, depth_1pc)}
+    m = re.search(r"(tumor|normal).csv", f["fn"])
+    if m:
+        phenotype = m.group(1)
+    else:
+        phenotype = "unknown"
+    return {phenotype: (data, cum_data, depth_1pc)}

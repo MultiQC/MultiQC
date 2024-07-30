@@ -1,205 +1,211 @@
-#!/usr/bin/env python
-
-""" MultiQC submodule to parse output from Picard RnaSeqMetrics """
+"""MultiQC submodule to parse output from Picard RnaSeqMetrics"""
 
 import logging
-import os
-import re
-from collections import OrderedDict
+from typing import Dict
 
+from multiqc.modules.picard import util
 from multiqc.plots import bargraph, linegraph
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard RnaSeqMetrics reports and parse their data"""
 
-    # Set up vars
-    self.picard_RnaSeqMetrics_data = dict()
-    self.picard_RnaSeqMetrics_histogram = dict()
+    data_by_sample: Dict = dict()
+    histogram_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/rnaseqmetrics", filehandles=True):
-        s_name = None
+    for f in module.find_log_files("picard/rnaseqmetrics", filehandles=True):
+        # Sample name from input file name by default.
+        s_name = f["s_name"]
         in_hist = False
-        for l in f["f"]:
+
+        for line in f["f"]:
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="RnaSeqMetrics",
+            )
+            if maybe_s_name:
+                s_name = maybe_s_name
+
+            if s_name is None:
+                continue
+
             # Catch the histogram values
-            if s_name is not None and in_hist is True:
+            if in_hist:
                 try:
-                    sections = l.split("\t")
+                    sections = line.split("\t")
                     pos = int(sections[0])
                     coverage = float(sections[1])
-                    self.picard_RnaSeqMetrics_histogram[s_name][pos] = coverage
+                    histogram_by_sample[s_name][pos] = coverage
                 except ValueError:
                     # Reset in case we have more in this log file
                     s_name = None
                     in_hist = False
 
-            # New log starting
-            if "rnaseqmetrics" in l.lower() and "INPUT" in l:
-                s_name = None
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
+            if util.is_line_right_before_table(line, picard_class="RnaSeqMetrics"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                vals = f["f"].readline().strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    continue
 
-            if s_name is not None:
-                if "rnaseqmetrics" in l.lower() and "## METRICS CLASS" in l:
-                    if s_name in self.picard_RnaSeqMetrics_data:
-                        log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], s_name))
-                    self.picard_RnaSeqMetrics_data[s_name] = dict()
-                    self.picard_RnaSeqMetrics_histogram[s_name] = dict()
-                    self.add_data_source(f, s_name, section="RnaSeqMetrics")
-                    keys = f["f"].readline().strip("\n").split("\t")
-                    vals = f["f"].readline().strip("\n").split("\t")
-                    for i, k in enumerate(keys):
-                        # Multiply percentages by 100
-                        if k.startswith("PCT_"):
-                            try:
-                                vals[i] = float(vals[i]) * 100.0
-                            except (ValueError, IndexError):
-                                pass
-                        # Save the key:value pairs
+                if s_name in data_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+
+                module.add_data_source(f, s_name, section="RnaSeqMetrics")
+                data_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = dict()
+
+                for k, v in zip(keys, vals):
+                    if not v:
+                        v = "NA"
+                    else:
                         try:
-                            self.picard_RnaSeqMetrics_data[s_name][k] = float(vals[i])
+                            v = float(v)
                         except ValueError:
-                            self.picard_RnaSeqMetrics_data[s_name][k] = vals[i]
-                        except IndexError:
-                            pass  # missing data
-                    # Calculate some extra numbers
-                    if "PF_BASES" in keys and "PF_ALIGNED_BASES" in keys:
-                        self.picard_RnaSeqMetrics_data[s_name]["PF_NOT_ALIGNED_BASES"] = (
-                            self.picard_RnaSeqMetrics_data[s_name]["PF_BASES"]
-                            - self.picard_RnaSeqMetrics_data[s_name]["PF_ALIGNED_BASES"]
-                        )
+                            pass
+                        else:
+                            # Multiply percentages by 100
+                            if k.startswith("PCT_"):
+                                v = v * 100.0
+                    data_by_sample[s_name][k] = v
+                # Calculate some extra numbers
+                if "PF_BASES" in keys and "PF_ALIGNED_BASES" in keys:
+                    data_by_sample[s_name]["PF_NOT_ALIGNED_BASES"] = (
+                        data_by_sample[s_name]["PF_BASES"] - data_by_sample[s_name]["PF_ALIGNED_BASES"]
+                    )
 
-            if s_name is not None and "normalized_position	All_Reads.normalized_coverage" in l:
-                self.picard_RnaSeqMetrics_histogram[s_name] = dict()
+            elif line.startswith("## HISTOGRAM"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                assert len(keys) >= 2, (keys, f)
                 in_hist = True
-
-        for key in list(self.picard_RnaSeqMetrics_data.keys()):
-            if len(self.picard_RnaSeqMetrics_data[key]) == 0:
-                self.picard_RnaSeqMetrics_data.pop(key, None)
-        for s_name in list(self.picard_RnaSeqMetrics_histogram.keys()):
-            if len(self.picard_RnaSeqMetrics_histogram[s_name]) == 0:
-                self.picard_RnaSeqMetrics_histogram.pop(s_name, None)
-                log.debug("Ignoring '{}' histogram as no data parsed".format(s_name))
+                histogram_by_sample[s_name] = dict()
 
     # Filter to strip out ignored sample names
-    self.picard_RnaSeqMetrics_data = self.ignore_samples(self.picard_RnaSeqMetrics_data)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    histogram_by_sample = module.ignore_samples(histogram_by_sample)
+    if len(data_by_sample) == 0:
+        return set()
 
-    if len(self.picard_RnaSeqMetrics_data) > 0:
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-        # Write parsed data to a file
-        self.write_data_file(self.picard_RnaSeqMetrics_data, "multiqc_picard_RnaSeqMetrics")
+    # Write parsed data to a file
+    module.write_data_file(data_by_sample, "multiqc_picard_RnaSeqMetrics")
 
-        # Add to general stats table
-        GenStatsHeaders = OrderedDict()
-        GenStatsHeaders["PCT_RIBOSOMAL_BASES"] = {
-            "title": "% rRNA",
+    # Add to general stats table
+    headers = {
+        "PCT_RIBOSOMAL_BASES": {
+            "title": "rRNA",
             "description": "Percent of aligned bases overlapping ribosomal RNA regions",
             "max": 100,
             "min": 0,
             "suffix": "%",
             "scale": "Reds",
-        }
-        GenStatsHeaders["PCT_MRNA_BASES"] = {
-            "title": "% mRNA",
+        },
+        "PCT_MRNA_BASES": {
+            "title": "mRNA",
             "description": "Percent of aligned bases overlapping UTRs and coding regions of mRNA transcripts",
             "max": 100,
             "min": 0,
             "suffix": "%",
             "scale": "Greens",
-        }
-        self.general_stats_addcols(self.picard_RnaSeqMetrics_data, GenStatsHeaders)
+        },
+    }
+    module.general_stats_addcols(data_by_sample, headers, namespace="RnaSeqMetrics")
 
-        # Bar plot of bases assignment
-        bg_cats = OrderedDict()
-        bg_cats["CODING_BASES"] = {"name": "Coding"}
-        bg_cats["UTR_BASES"] = {"name": "UTR"}
-        bg_cats["INTRONIC_BASES"] = {"name": "Intronic"}
-        bg_cats["INTERGENIC_BASES"] = {"name": "Intergenic"}
-        bg_cats["RIBOSOMAL_BASES"] = {"name": "Ribosomal"}
-        bg_cats["PF_NOT_ALIGNED_BASES"] = {"name": "PF not aligned"}
+    # Bar plot of bases assignment
+    bg_cats = {
+        "CODING_BASES": {"name": "Coding"},
+        "UTR_BASES": {"name": "UTR"},
+        "INTRONIC_BASES": {"name": "Intronic"},
+        "INTERGENIC_BASES": {"name": "Intergenic"},
+        "RIBOSOMAL_BASES": {"name": "Ribosomal"},
+        "PF_NOT_ALIGNED_BASES": {"name": "PF not aligned"},
+    }
 
-        # Warn user if any samples are missing 'RIBOSOMAL_BASES' data; ie picard was run without an rRNA interval file.
-        warn_rrna = ""
-        rrna_missing = []
-        for s_name, metrics in self.picard_RnaSeqMetrics_data.items():
-            if metrics["RIBOSOMAL_BASES"] == "":
-                rrna_missing.append(s_name)
-        if len(rrna_missing):
-            if len(rrna_missing) < 5:
-                missing_samples = "for samples <code>{}</code>".format("</code>, <code>".join(rrna_missing))
-            else:
-                missing_samples = "<strong>{} samples</strong>".format(len(rrna_missing))
-            warn_rrna = """
-            <div class="alert alert-warning">
-              <span class="glyphicon glyphicon-warning-sign"></span>
-              Picard was run without an rRNA annotation file {}, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
-            </div>
-            """.format(
-                missing_samples
-            )
+    # Warn user if any samples are missing 'RIBOSOMAL_BASES' data; ie picard was run without an rRNA interval file.
+    warn_rrna = ""
+    rrna_missing = []
+    for s_name, metrics in data_by_sample.items():
+        if metrics["RIBOSOMAL_BASES"] == "NA":
+            rrna_missing.append(s_name)
+    if rrna_missing:
+        if len(rrna_missing) < 5:
+            missing_samples = f"for samples <code>{'</code>, <code>'.join(rrna_missing)}</code>"
+        else:
+            missing_samples = f"<strong>{len(rrna_missing)} samples</strong>"
+        warn_rrna = f"""
+        <div class="alert alert-warning">
+          <span class="glyphicon glyphicon-warning-sign"></span>
+          Picard was run without an rRNA annotation file {missing_samples}, therefore the ribosomal assignment is not available. To correct, rerun with the <code>RIBOSOMAL_INTERVALS</code> parameter, as documented <a href="https://broadinstitute.github.io/picard/command-line-overview.html#CollectRnaSeqMetrics" target="_blank">here</a>.
+        </div>
+        """
 
-        pconfig = {
-            "id": "picard_rnaseqmetrics_assignment_plot",
-            "title": "Picard: RnaSeqMetrics Base Assignments",
-            "ylab": "Number of bases",
-        }
-        self.add_section(
-            name="RnaSeqMetrics Assignment",
-            anchor="picard-rna-assignment",
-            description="Number of bases in primary alignments that align to regions in the reference genome."
-            + warn_rrna,
-            plot=bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
+    pconfig = {
+        "id": "picard_rnaseqmetrics_assignment_plot",
+        "title": "Picard: RnaSeqMetrics Base Assignments",
+        "ylab": "Number of bases",
+    }
+    module.add_section(
+        name="RnaSeqMetrics Assignment",
+        anchor="picard-rna-assignment",
+        description="Number of bases in primary alignments that align to regions in the reference genome." + warn_rrna,
+        plot=bargraph.plot(data_by_sample, bg_cats, pconfig),
+    )
+
+    # Bar plot of strand mapping
+    bg_cats = dict()
+    bg_cats["CORRECT_STRAND_READS"] = {"name": "Correct"}
+    bg_cats["INCORRECT_STRAND_READS"] = {"name": "Incorrect", "color": "#8e123c"}
+
+    pdata = dict()
+    for s_name, d in data_by_sample.items():
+        if d["CORRECT_STRAND_READS"] > 0 and d["INCORRECT_STRAND_READS"] > 0:
+            pdata[s_name] = d
+    if len(pdata) > 0:
+        module.add_section(
+            name="RnaSeqMetrics Strand Mapping",
+            anchor="picard-rna-strand",
+            description="Number of aligned reads that map to the correct strand.",
+            plot=bargraph.plot(
+                data_by_sample,
+                bg_cats,
+                {
+                    "id": "picard_rnaseqmetrics_strand_plot",
+                    "title": "Picard: RnaSeqMetrics Strand Mapping",
+                    "ylab": "Number of reads",
+                    "hide_empty": False,
+                },
+            ),
         )
 
-        # Bar plot of strand mapping
-        bg_cats = OrderedDict()
-        bg_cats["CORRECT_STRAND_READS"] = {"name": "Correct"}
-        bg_cats["INCORRECT_STRAND_READS"] = {"name": "Incorrect", "color": "#8e123c"}
-
-        pdata = dict()
-        for s_name, d in self.picard_RnaSeqMetrics_data.items():
-            if d["CORRECT_STRAND_READS"] > 0 and d["INCORRECT_STRAND_READS"] > 0:
-                pdata[s_name] = d
-        if len(pdata) > 0:
-            pconfig = {
-                "id": "picard_rnaseqmetrics_strand_plot",
-                "title": "Picard: RnaSeqMetrics Strand Mapping",
-                "ylab": "Number of reads",
-                "hide_zero_cats": False,
-            }
-            self.add_section(
-                name="RnaSeqMetrics Strand Mapping",
-                anchor="picard-rna-strand",
-                description="Number of aligned reads that map to the correct strand.",
-                plot=bargraph.plot(self.picard_RnaSeqMetrics_data, bg_cats, pconfig),
-            )
-
-        # Section with histogram plot
-        if len(self.picard_RnaSeqMetrics_histogram) > 0:
-            # Plot the data and add section
-            pconfig = {
-                "smooth_points": 500,
-                "smooth_points_sumcounts": [True, False],
-                "id": "picard_rna_coverage",
-                "title": "Picard: Normalized Gene Coverage",
-                "ylab": "Coverage",
-                "xlab": "Percent through gene",
-                "xDecimals": False,
-                "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
-                "ymin": 0,
-            }
-            self.add_section(
-                name="Gene Coverage",
-                anchor="picard-rna-coverage",
-                plot=linegraph.plot(self.picard_RnaSeqMetrics_histogram, pconfig),
-            )
+    # Section with histogram plot
+    if len(histogram_by_sample) > 0:
+        # Plot the data and add section
+        module.add_section(
+            name="Gene Coverage",
+            anchor="picard-rna-coverage",
+            plot=linegraph.plot(
+                histogram_by_sample,
+                {
+                    "smooth_points": 500,
+                    "smooth_points_sumcounts": [True, False],
+                    "id": "picard_rna_coverage",
+                    "title": "Picard: Normalized Gene Coverage",
+                    "ylab": "Coverage",
+                    "xlab": "Percent through gene",
+                    "x_decimals": False,
+                    "tt_label": "<b>{point.x}%</b>: {point.y:.0f}",
+                    "ymin": 0,
+                },
+            ),
+        )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_RnaSeqMetrics_data)
+    return data_by_sample.keys()

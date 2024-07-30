@@ -1,35 +1,37 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from STAR """
-
-
 import logging
 import os
 import re
-from collections import OrderedDict
+from typing import Dict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    """
+    This module parses summary statistics from the `Log.final.out` log files.
+    Sample names are taken either from the filename prefix (`sampleNameLog.final.out`)
+    when set with `--outFileNamePrefix` in STAR. If there is no filename prefix,
+    the sample name is set as the name of the directory containing the file.
 
-        # Initialise the parent object
+    In addition to this summary log file, the module parses `ReadsPerGene.out.tab`
+    files generated with `--quantMode GeneCounts`, if found.
+    """
+
+    def __init__(self):
         super(MultiqcModule, self).__init__(
             name="STAR",
             anchor="star",
             href="https://github.com/alexdobin/STAR",
-            info="is an ultrafast universal RNA-seq aligner.",
+            info="Universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
         )
 
         # Find and load any STAR reports
-        self.star_data = dict()
+        self.star_data: Dict = dict()
         for f in self.find_log_files("star"):
             parsed_data = self.parse_star_report(f["f"])
             if parsed_data is not None:
@@ -37,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name == "" or s_name == "Log.final.out":
                     s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, section="SummaryLog")
                 self.star_data[s_name] = parsed_data
 
@@ -52,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name == "" or s_name == "ReadsPerGene.out.tab":
                     s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
                 if s_name in self.star_data:
-                    log.debug("Duplicate ReadsPerGene sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate ReadsPerGene sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, section="ReadsPerGene")
                 self.star_genecounts_unstranded[s_name] = parsed_data["unstranded"]
                 self.star_genecounts_first_strand[s_name] = parsed_data["first_strand"]
@@ -65,7 +67,11 @@ class MultiqcModule(BaseMultiqcModule):
         self.star_genecounts_second_strand = self.ignore_samples(self.star_genecounts_second_strand)
 
         if len(self.star_data) == 0 and len(self.star_genecounts_unstranded) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         if len(self.star_data) > 0:
             if len(self.star_genecounts_unstranded) > 0:
@@ -75,12 +81,11 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                 )
             else:
-                log.info("Found {} reports".format(len(self.star_data)))
+                log.info(f"Found {len(self.star_data)} reports")
         else:
-            log.info("Found {} gene count files".format(len(self.star_genecounts_unstranded)))
+            log.info(f"Found {len(self.star_genecounts_unstranded)} gene count files")
 
         if len(self.star_data) > 0:
-
             # Write parsed report data to a file
             self.write_data_file(self.star_data, "multiqc_star")
 
@@ -178,8 +183,8 @@ class MultiqcModule(BaseMultiqcModule):
         second_strand = {"N_genes": 0}
         num_errors = 0
         num_genes = 0
-        for l in f["f"]:
-            s = l.split("\t")
+        for line in f["f"]:
+            s = line.split("\t")
             try:
                 for i in [1, 2, 3]:
                     s[i] = float(s[i])
@@ -196,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Tolerate a few errors in case there is something random added at the top of the file
                 num_errors += 1
                 if num_errors > 10 and num_genes == 0:
-                    log.warning("Error parsing {}".format(f["fn"]))
+                    log.warning(f"Error parsing {f['fn']}")
                     return None
         if num_genes > 0:
             return {"unstranded": unstranded, "first_strand": first_strand, "second_strand": second_strand}
@@ -207,47 +212,40 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report"""
 
-        headers = OrderedDict()
-        headers["uniquely_mapped_percent"] = {
-            "title": "% Aligned",
-            "description": "% Uniquely mapped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-        headers["mapped_percent"] = {
-            "title": "% Aligned",
-            "description": "% Uniquely mapped reads",
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        headers["uniquely_mapped"] = {
-            "title": "{} Unique Aligned".format(config.read_count_prefix),
-            "description": "Uniquely mapped reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["multimapped"] = {
-            "title": "{} Multi Aligned".format(config.read_count_prefix),
-            "description": "Multiple mapped reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["mapped"] = {
-            "title": "{} Aligned".format(config.read_count_prefix),
-            "description": "Mapped reads ({})".format(config.read_count_desc),
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+        headers = {
+            "uniquely_mapped_percent": {
+                "title": "% Aligned",
+                "description": "% Uniquely mapped reads",
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "mapped_percent": {
+                "title": "% Aligned",
+                "description": "% Uniquely mapped reads",
+                "suffix": "%",
+                "scale": "PuRd",
+            },
+            "uniquely_mapped": {
+                "title": "Aligned",
+                "description": "Uniquely mapped reads",
+                "scale": "YlGn",
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "multimapped": {
+                "title": "Multi Aligned",
+                "description": "Multiple mapped reads",
+                "scale": "PuRd",
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "mapped": {
+                "title": "Aligned",
+                "description": "Mapped reads",
+                "scale": "PuRd",
+                "shared_key": "read_count",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(self.star_data, headers)
 
@@ -255,13 +253,14 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the plot showing alignment rates"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["uniquely_mapped"] = {"color": "#437bb1", "name": "Uniquely mapped"}
-        keys["multimapped"] = {"color": "#7cb5ec", "name": "Mapped to multiple loci"}
-        keys["multimapped_toomany"] = {"color": "#f7a35c", "name": "Mapped to too many loci"}
-        keys["unmapped_mismatches"] = {"color": "#e63491", "name": "Unmapped: too many mismatches"}
-        keys["unmapped_tooshort"] = {"color": "#b1084c", "name": "Unmapped: too short"}
-        keys["unmapped_other"] = {"color": "#7f0000", "name": "Unmapped: other"}
+        keys = {
+            "uniquely_mapped": {"color": "#437bb1", "name": "Uniquely mapped"},
+            "multimapped": {"color": "#7cb5ec", "name": "Mapped to multiple loci"},
+            "multimapped_toomany": {"color": "#f7a35c", "name": "Mapped to too many loci"},
+            "unmapped_mismatches": {"color": "#e63491", "name": "Unmapped: too many mismatches"},
+            "unmapped_tooshort": {"color": "#b1084c", "name": "Unmapped: too short"},
+            "unmapped_other": {"color": "#7f0000", "name": "Unmapped: other"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -277,12 +276,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Make a plot for the ReadsPerGene output"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["N_genes"] = {"color": "#2f7ed8", "name": "Overlapping Genes"}
-        keys["N_noFeature"] = {"color": "#0d233a", "name": "No Feature"}
-        keys["N_ambiguous"] = {"color": "#492970", "name": "Ambiguous Features"}
-        keys["N_multimapping"] = {"color": "#f28f43", "name": "Multimapping"}
-        keys["N_unmapped"] = {"color": "#7f0000", "name": "Unmapped"}
+        keys = {
+            "N_genes": {"color": "#2f7ed8", "name": "Overlapping Genes"},
+            "N_noFeature": {"color": "#0d233a", "name": "No Feature"},
+            "N_ambiguous": {"color": "#492970", "name": "Ambiguous Features"},
+            "N_multimapping": {"color": "#f28f43", "name": "Multimapping"},
+            "N_unmapped": {"color": "#7f0000", "name": "Unmapped"},
+        }
 
         # Config for the plot
         pconfig = {
@@ -297,4 +297,4 @@ class MultiqcModule(BaseMultiqcModule):
             self.star_genecounts_first_strand,
             self.star_genecounts_second_strand,
         ]
-        return bargraph.plot(datasets, [keys, keys, keys, keys], pconfig)
+        return bargraph.plot(datasets, [keys, keys, keys], pconfig)

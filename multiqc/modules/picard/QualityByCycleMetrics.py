@@ -1,10 +1,6 @@
-#!/usr/bin/env python
-
-""" MultiQC submodule to parse output from Picard MeanQualityByCycle"""
+"""MultiQC submodule to parse output from Picard MeanQualityByCycle"""
 
 import logging
-import os
-import re
 
 from multiqc.plots import linegraph
 
@@ -19,21 +15,32 @@ def parse_reports(self):
 
     headers = ["CYCLE", "MEAN_QUALITY"]
     formats = [int, float]
-    all_data = read_histogram(self, "picard/quality_by_cycle", "MeanQualityByCycle", headers, formats)
+    all_data = read_histogram(
+        self,
+        "picard/quality_by_cycle",
+        headers,
+        formats,
+        picard_tool="MeanQualityByCycle",
+        sentieon_algo="MeanQualityByCycle",
+    )
 
     if not all_data:
-        return 0
+        return set()
+
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    self.add_software_version(None)
 
     # Write parsed data to a file
-    self.write_data_file(all_data, "multiqc_picard_quality_by_cycle")
+    self.write_data_file(all_data, f"multiqc_{self.anchor}_quality_by_cycle")
 
     # Plot the data and add section
     pconfig = {
-        "id": "picard_quality_by_cycle",
-        "title": "Picard: Mean Base Quality by Cycle",
+        "id": f"{self.anchor}_quality_by_cycle",
+        "title": f"{self.name}: Mean Base Quality by Cycle",
         "ylab": "Mean Base Quality",
         "xlab": "Cycle Number",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f}",
         "ymin": 0,
     }
@@ -44,7 +51,7 @@ def parse_reports(self):
 
     self.add_section(
         name="Mean Base Quality by Cycle",
-        anchor="picard-quality-by-cycle",
+        anchor=f"{self.anchor}-quality-by-cycle",
         description="Plot shows the mean base quality by cycle.",
         helptext="""
         This metric gives an overall snapshot of sequencing machine performance.
@@ -58,4 +65,4 @@ def parse_reports(self):
     )
 
     # Return the number of detected samples to the parent module
-    return len(all_data)
+    return all_data.keys()

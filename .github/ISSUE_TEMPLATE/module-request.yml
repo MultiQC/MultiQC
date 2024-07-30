@@ -62,3 +62,14 @@ body:
     attributes:
       label: Most interesting data for the General Stats table
       description: Is there 1-3 values that would be helpful to have in the _General Statistics_ table, alongside results from other tools?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      description: >-
+        Please ensure your module request fulfills all of the following requirements.
+      options:
+        - label: >-
+            I have included example data (zipped, not pasted) that can be used to write the module.
+          required: true

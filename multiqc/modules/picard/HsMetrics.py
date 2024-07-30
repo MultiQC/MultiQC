@@ -1,13 +1,13 @@
-#!/usr/bin/env python
-
-""" MultiQC submodule to parse output from Picard HsMetrics """
+"""MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
-import os
+from collections import defaultdict
+
 import re
-from collections import OrderedDict, defaultdict
+from typing import Dict
 
 from multiqc import config
+from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
 
 # Initialise the logger
@@ -21,8 +21,11 @@ FIELD_DESCRIPTIONS = {
     "FOLD_80_BASE_PENALTY": 'The fold over-coverage necessary to raise 80% of bases in "non-zero-cvg" targets to the mean coverage level in those targets.',
     "FOLD_ENRICHMENT": "The fold by which the baited region has been amplified above genomic background.",
     "GC_DROPOUT": "A measure of how undercovered >= 50% GC regions are relative to the mean.",
+    "GENOME_SIZE": "The number of bases in the reference genome used for alignment.",
     "HET_SNP_Q": "The Phred Scaled Q Score of the theoretical HET SNP sensitivity.",
     "HET_SNP_SENSITIVITY": "The theoretical HET SNP sensitivity.",
+    "HS_LIBRARY_SIZE": "The estimated number of unique molecules in the selected part of the library.",
+    "HS_PENALTY_{coverage}X": "The 'hybrid selection penalty' incurred to get 80% of target bases to {coverage}X. This metric should be interpreted as: if I have a design with 10 megabases of target, and want to get {coverage}X coverage I need to sequence until PF_ALIGNED_BASES = 10^7 * 100 * HS_PENALTY_{coverage}X.",
     "MAX_TARGET_COVERAGE": "The maximum coverage of reads that mapped to target regions of an experiment.",
     "MEAN_BAIT_COVERAGE": "The mean coverage of all baits in the experiment.",
     "MEAN_TARGET_COVERAGE": "The mean coverage of targets.",
@@ -43,8 +46,10 @@ FIELD_DESCRIPTIONS = {
     "PCT_PF_UQ_READS_ALIGNED": "PF Reads Aligned / PF Reads.",
     "PCT_PF_UQ_READS": "PF Unique Reads / Total Reads.",
     "PCT_SELECTED_BASES": "On+Near Bait Bases / PF Bases Aligned.",
+    "PCT_TARGET_BASES_{coverage}X": "The fraction of all target bases achieving {coverage}X or greater coverage.",
     "PCT_USABLE_BASES_ON_BAIT": "The number of aligned, de-duped, on-bait bases out of the PF bases available.",
     "PCT_USABLE_BASES_ON_TARGET": "The number of aligned, de-duped, on-target bases out of the PF bases available.",
+    "PF_BASES": "The number of bases in the PF reads.",
     "PF_BASES_ALIGNED": "The number of PF unique bases that are aligned with mapping score > 0 to the reference genome.",
     "PF_READS": "The number of reads that pass the vendor's filter.",
     "PF_UNIQUE_READS": "The number of PF reads that are not marked as duplicates.",
@@ -56,188 +61,202 @@ FIELD_DESCRIPTIONS = {
 }
 
 
-def parse_reports(self):
+def parse_reports(module):
     """Find Picard HsMetrics reports and parse their data"""
 
-    # Set up vars
-    self.picard_HsMetrics_data = dict()
+    data_by_bait_by_sample: Dict[str, Dict[str, Dict]] = dict()
 
     # Go through logs and find Metrics
-    for f in self.find_log_files("picard/hsmetrics", filehandles=True):
-        parsed_data = dict()
-        s_name = None
+    for f in module.find_log_files("picard/hsmetrics", filehandles=True):
+        s_name = f["s_name"]
         keys = None
         commadecimal = None
-        for l in f["f"]:
-            # New log starting
-            if "CalculateHsMetrics" in l or "CollectHsMetrics" in l and "INPUT" in l:
-                s_name = None
+
+        for line in f["f"]:
+            maybe_s_name = util.extract_sample_name(
+                module,
+                line,
+                f,
+                picard_tool="CollectHsMetrics",
+                sentieon_algo="HsMetricAlgo",
+            )
+            if maybe_s_name:
+                s_name = maybe_s_name
                 keys = None
 
-                # Pull sample name from input
-                fn_search = re.search(r"INPUT(?:=|\s+)(\[?[^\s]+\]?)", l, flags=re.IGNORECASE)
-                if fn_search:
-                    s_name = os.path.basename(fn_search.group(1).strip("[]"))
-                    s_name = self.clean_s_name(s_name, f)
-                    parsed_data[s_name] = dict()
+            if s_name is None:
+                continue
 
-            if s_name is not None:
-                if "HsMetrics" in l and "## METRICS CLASS" in l:
-                    keys = f["f"].readline().strip("\n").split("\t")
-                elif keys:
-                    vals = l.strip("\n").split("\t")
-                    if len(vals) == len(keys):
-                        j = "NA"
-                        if keys[0] == "BAIT_SET":
-                            j = vals[0]
-                        parsed_data[s_name][j] = dict()
-                        # Check that we're not using commas for decimal places
-                        if commadecimal is None:
-                            commadecimal = False
-                            for i, k in enumerate(keys):
-                                if "PCT" in k or "BAIT" in k or "MEAN" in k:
-                                    if "," in vals[i]:
-                                        commadecimal = True
-                                        break
-                        for i, k in enumerate(keys):
-                            try:
-                                if commadecimal:
-                                    vals[i] = vals[i].replace(".", "")
-                                    vals[i] = vals[i].replace(",", ".")
-                                parsed_data[s_name][j][k] = float(vals[i])
-                            except ValueError:
-                                parsed_data[s_name][j][k] = vals[i]
-                    else:
-                        s_name = None
-                        keys = None
+            if util.is_line_right_before_table(line, picard_class="HsMetrics", sentieon_algo="HsMetricAlgo"):
+                keys = f["f"].readline().strip("\n").split("\t")
+                if s_name in data_by_bait_by_sample:
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
+                data_by_bait_by_sample[s_name] = dict()
 
-        # Remove empty dictionaries
-        for s_name in list(parsed_data.keys()):
-            for j in parsed_data[s_name].keys():
-                if len(parsed_data[s_name][j]) == 0:
-                    parsed_data[s_name].pop(j, None)
-            if len(parsed_data[s_name]) == 0:
-                parsed_data.pop(s_name, None)
+            elif keys:
+                vals = line.strip("\n").split("\t")
+                if len(vals) != len(keys):
+                    keys = None
+                    continue
 
-        # Manipulate sample names if multiple baits found
-        for s_name in parsed_data.keys():
-            for j in parsed_data[s_name].keys():
-                this_s_name = s_name
-                if len(parsed_data[s_name]) > 1:
-                    this_s_name = "{}: {}".format(s_name, j)
-                if this_s_name in self.picard_HsMetrics_data:
-                    log.debug("Duplicate sample name found in {}! Overwriting: {}".format(f["fn"], this_s_name))
-                self.add_data_source(f, this_s_name, section="HsMetrics")
-                self.picard_HsMetrics_data[this_s_name] = parsed_data[s_name][j]
+                bait = "NA"
+                if keys[0] == "BAIT_SET":
+                    bait = vals[0]
+                data_by_bait_by_sample[s_name][bait] = dict()
+                # Check that we're not using commas for decimal places
+                if commadecimal is None:
+                    commadecimal = False
+                    for i, k in enumerate(keys):
+                        if "PCT" in k or "BAIT" in k or "MEAN" in k:
+                            if "," in vals[i]:
+                                commadecimal = True
+                                break
+                for i, k in enumerate(keys):
+                    try:
+                        if commadecimal:
+                            vals[i] = vals[i].replace(".", "")
+                            vals[i] = vals[i].replace(",", ".")
+                        data_by_bait_by_sample[s_name][bait][k] = float(vals[i])
+                    except ValueError:
+                        data_by_bait_by_sample[s_name][bait][k] = vals[i]
+
+    # Remove empty dictionaries
+    for s_name in data_by_bait_by_sample:
+        for bait in data_by_bait_by_sample[s_name]:
+            if len(data_by_bait_by_sample[s_name][bait]) == 0:
+                data_by_bait_by_sample[s_name].pop(bait, None)
+        if len(data_by_bait_by_sample[s_name]) == 0:
+            data_by_bait_by_sample.pop(s_name, None)
+
+    data_by_sample = dict()
+    # Manipulate sample names if multiple baits found
+    for s_name in data_by_bait_by_sample:
+        for bait in data_by_bait_by_sample[s_name]:
+            s_bait_name = s_name
+            # If there are multiple baits, append the bait name to the sample name
+            if len(data_by_bait_by_sample[s_name]) > 1:
+                s_bait_name = f"{s_name}: {bait}"
+            if s_bait_name in data_by_sample:
+                log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_bait_name}")
+            data_by_sample[s_bait_name] = data_by_bait_by_sample[s_name][bait]
+            module.add_data_source(f, s_bait_name, section="HsMetrics")
 
     # Filter to strip out ignored sample names
-    self.picard_HsMetrics_data = self.ignore_samples(self.picard_HsMetrics_data)
+    data_by_sample = module.ignore_samples(data_by_sample)
+    if len(data_by_sample) == 0:
+        return set()
 
-    if len(self.picard_HsMetrics_data) > 0:
+    # Superfluous function call to confirm that it is used in this module
+    # Replace None with actual version if it is available
+    module.add_software_version(None)
 
-        # Write parsed data to a file
-        self.write_data_file(self.picard_HsMetrics_data, "multiqc_picard_HsMetrics")
+    # Write parsed data to a file
+    module.write_data_file(data_by_sample, f"multiqc_{module.id}_HsMetrics")
 
-        # Swap question marks with -1
-        data = self.picard_HsMetrics_data
-        for s_name in data:
-            if data[s_name]["FOLD_ENRICHMENT"] == "?":
-                data[s_name]["FOLD_ENRICHMENT"] = -1
+    # Swap question marks with -1
+    for s_name in data_by_sample:
+        if data_by_sample[s_name]["FOLD_ENRICHMENT"] == "?":
+            data_by_sample[s_name]["FOLD_ENRICHMENT"] = -1
 
-        # Add to general stats table
-        general_stats_table(self, data)
+    # Add to general stats table
+    _general_stats_table(module, data_by_sample)
 
-        # Add report section
-        self.add_section(
-            name="HSMetrics",
-            anchor="picard_hsmetrics",
-            plot=table.plot(
-                data,
-                _get_table_headers(),
-                {
-                    "id": "picard_hsmetrics_table",
-                    "namespace": "HsMetrics",
-                    "scale": "RdYlGn",
-                    "min": 0,
-                },
-            ),
+    # Add report section
+    module.add_section(
+        name="HSMetrics",
+        anchor=f"{module.id}_hsmetrics",
+        plot=table.plot(
+            data_by_sample,
+            _get_table_headers(),
+            {
+                "id": f"{module.id}_hsmetrics_table",
+                "namespace": "HsMetrics",
+                "scale": "RdYlGn",
+                "min": 0,
+                "title": "Picard HsMetrics",
+            },
+        ),
+    )
+    tbases = _add_target_bases(module, data_by_sample)
+    module.add_section(
+        name=tbases["name"],
+        anchor=tbases["anchor"],
+        description=tbases["description"],
+        plot=tbases["plot"],
+    )
+    hs_pen_plot = hs_penalty_plot(module, data_by_sample)
+    if hs_pen_plot is not None:
+        module.add_section(
+            name="HS Penalty",
+            anchor=f"{module.id}_hsmetrics_hs_penalty",
+            description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
+            helptext="""
+                Can be used with the following formula:
+
+                ```
+                required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
+                ```
+            """,
+            plot=hs_pen_plot,
         )
-        tbases = _add_target_bases(data)
-        self.add_section(
-            name=tbases["name"], anchor=tbases["anchor"], description=tbases["description"], plot=tbases["plot"]
-        )
-        hs_pen_plot = hs_penalty_plot(data)
-        if hs_pen_plot is not None:
-            self.add_section(
-                name="HS Penalty",
-                anchor="picard_hsmetrics_hs_penalty",
-                description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
-                helptext="""
-                    Can be used with the following formula:
-
-                    ```
-                    required_aligned_bases = bait_size_bp * desired_coverage * hs_penalty
-                    ```
-                """,
-                plot=hs_pen_plot,
-            )
 
     # Return the number of detected samples to the parent module
-    return len(self.picard_HsMetrics_data)
+    return data_by_sample.keys()
 
 
-def general_stats_table(self, data):
+def _general_stats_table(module, data):
     """
     Generate table header configs for the General Stats table,
     add config and data to the base module.
     """
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
-    HsMetrics_genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
-    HsMetrics_genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
+    genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
+    genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
 
+    headers = {}
     # Custom general stats columns
-    if len(HsMetrics_genstats_table_cols) or len(HsMetrics_genstats_table_cols_hidden):
-        for k, v in _generate_table_header_config(
-            HsMetrics_genstats_table_cols, HsMetrics_genstats_table_cols_hidden
-        ).items():
-            self.general_stats_headers[k] = v
+    if len(genstats_table_cols) or len(genstats_table_cols_hidden):
+        for k, v in _generate_table_header_config(genstats_table_cols, genstats_table_cols_hidden).items():
+            headers[k] = v
 
     # Default General Stats headers
     else:
-        self.general_stats_headers["FOLD_ENRICHMENT"] = {
+        headers["FOLD_ENRICHMENT"] = {
             "title": "Fold Enrichment",
             "min": 0,
             "format": "{:,.0f}",
             "scale": "Blues",
             "suffix": " X",
         }
+        headers["MEDIAN_TARGET_COVERAGE"] = {
+            "title": "Median Target Coverage",
+            "description": "The median coverage of reads that mapped to target regions of an experiment.",
+            "min": 0,
+            "suffix": "X",
+            "scale": "GnBu",
+        }
         try:
             covs = picard_config["general_stats_target_coverage"]
-            assert type(covs) == list
+            assert isinstance(covs, list)
             assert len(covs) > 0
             covs = [str(i) for i in covs]
-            log.debug("Custom Picard coverage thresholds: {}".format(", ".join([i for i in covs])))
+            log.debug(f"Custom picad coverage thresholds: {', '.join([i for i in covs])}")
         except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
-            self.general_stats_headers["PCT_TARGET_BASES_{}X".format(c)] = {
-                "id": "picard_target_bases_{}X".format(c),
-                "title": "% Target Bases {}X".format(c),
-                "description": "Percent of target bases with coverage &ge; {}X".format(c),
+            headers[f"PCT_TARGET_BASES_{c}X"] = {
+                "rid": f"{module.id}_target_bases_{c}X",
+                "title": f"Target Bases ≥ {c}X",
+                "description": f"Percent of target bases with coverage ≥ {c}X",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
                 "format": "{:,.0f}",
                 "scale": "RdYlGn",
-                "modify": lambda x: self.multiply_hundred(x),
+                "modify": util.multiply_hundred,
             }
-
-    # Add data to general stats table
-    for s_name in data:
-        if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
-        self.general_stats_data[s_name].update(data[s_name])
+    module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
 
 def _get_table_headers():
@@ -263,6 +282,7 @@ def _get_table_headers():
             "ON_TARGET_BASES",
             "PCT_USABLE_BASES_ON_BAIT",
             "PCT_USABLE_BASES_ON_TARGET",
+            "PF_BASES",
             "PF_BASES_ALIGNED",
             "PF_READS",
             "PCT_SELECTED_BASES",
@@ -279,12 +299,18 @@ def _get_table_headers():
             "ZERO_CVG_TARGETS_PCT",
         ]
     if not HsMetrics_table_cols_hidden:
-        HsMetrics_table_cols_hidden = ["BAIT_TERRITORY", "TOTAL_READS", "TARGET_TERRITORY", "AT_DROPOUT", "GC_DROPOUT"]
+        HsMetrics_table_cols_hidden = [
+            "BAIT_TERRITORY",
+            "TOTAL_READS",
+            "TARGET_TERRITORY",
+            "AT_DROPOUT",
+            "GC_DROPOUT",
+        ]
 
     return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
 
 
-def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
+def _generate_table_header_config(table_cols, hidden_table_cols):
     """
     Automatically generate some nice table header configs based on what we know about
     the different types of Picard data fields.
@@ -304,35 +330,42 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
         if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
             log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
 
-    headers = OrderedDict()
+    headers = dict()
     for h in table_cols + hidden_table_cols:
-
         # Set up the configuration for each column
         if h not in headers:
-
             # Generate a nice string for the column title
             h_title = h
             for s, r in title_cleanup:
                 h_title = h_title.replace(s, r)
 
+            # Extract the coverage from the column name
+            m = re.match(r".+_(\d+)X", h)
+            if m:
+                h_tmpl = re.sub(r"_(\d+)X", "_{coverage}X", h)
+                descr = FIELD_DESCRIPTIONS.get(h_tmpl, "").replace("{coverage}", m.group(1))
+            else:
+                descr = FIELD_DESCRIPTIONS.get(h, "")
+            if not descr:
+                log.warning(f"Field '{h}' not found in FIELD_DESCRIPTIONS, no column description available.")
+                descr = ""
+
             headers[h] = {
                 "title": h_title.strip().lower().capitalize(),
-                "description": FIELD_DESCRIPTIONS[h] if h in FIELD_DESCRIPTIONS else None,
+                "description": descr,
             }
             if h.find("PCT") > -1:
-                headers[h]["title"] = "% {}".format(headers[h]["title"])
-                headers[h]["modify"] = lambda x: x * 100.0
+                headers[h]["title"] = headers[h]["title"]
+                headers[h]["modify"] = util.multiply_hundred
                 headers[h]["max"] = 100
                 headers[h]["suffix"] = "%"
 
             elif h.find("READS") > -1:
-                headers[h]["title"] = "{} {}".format(config.read_count_prefix, headers[h]["title"])
-                headers[h]["modify"] = lambda x: x * config.read_count_multiplier
+                headers[h]["title"] = f"{config.read_count_prefix} {headers[h]['title']}"
                 headers[h]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
-                headers[h]["title"] = "{} {}".format(config.base_count_prefix, headers[h]["title"])
-                headers[h]["modify"] = lambda x: x * config.base_count_multiplier
+                headers[h]["title"] = f"{config.base_count_prefix} {headers[h]['title']}"
                 headers[h]["shared_key"] = "base_count"
 
             # Manual capitilisation for some strings
@@ -344,33 +377,39 @@ def _generate_table_header_config(table_cols=[], hidden_table_cols=[]):
     return headers
 
 
-def _add_target_bases(data):
-    data_clean = defaultdict(dict)
+def _add_target_bases(self, data):
+    data_clean: Dict[str, Dict] = defaultdict(dict)
+    max_non_zero_cov = 0
     for s in data:
         for h in data[s]:
             if h.startswith("PCT_TARGET"):
-                data_clean[s][int(h.replace("PCT_TARGET_BASES_", "")[:-1])] = data[s][h] * 100.0
+                cov = int(h.replace("PCT_TARGET_BASES_", "")[:-1])
+                bases_pct = data[s][h]
+                data_clean[s][cov] = bases_pct * 100.0
+                if bases_pct > 0 and cov > max_non_zero_cov:
+                    max_non_zero_cov = cov
 
     pconfig = {
-        "id": "picard_percentage_target_bases",
-        "title": "Picard: Percentage of target bases",
+        "id": f"{self.anchor}_percentage_target_bases",
+        "title": f"{self.name}: Percentage of target bases",
         "xlab": "Fold Coverage",
         "ylab": "Pct of bases",
         "ymax": 100,
         "ymin": 0,
         "xmin": 0,
+        "xmax": max_non_zero_cov,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
     return {
         "name": "Target Region Coverage",
-        "anchor": "picard_hsmetrics_target_bases",
+        "anchor": f"{self.anchor}_hsmetrics_target_bases",
         "description": "The percentage of all target bases with at least <code>x</code> fold coverage.",
         "plot": linegraph.plot(data_clean, pconfig),
     }
 
 
-def hs_penalty_plot(data):
-    data_clean = defaultdict(dict)
+def hs_penalty_plot(self, data):
+    data_clean: Dict[str, Dict] = defaultdict(dict)
     any_non_zero = False
     for s in data:
         for h in data[s]:
@@ -380,13 +419,13 @@ def hs_penalty_plot(data):
                     any_non_zero = True
 
     pconfig = {
-        "id": "picard_hybrid_selection_penalty",
-        "title": "Picard: Hybrid Selection Penalty",
+        "id": f"{self.anchor}_hybrid_selection_penalty",
+        "title": f"{self.name}: Hybrid Selection Penalty",
         "xlab": "Fold Coverage",
         "ylab": "Penalty",
         "ymin": 0,
         "xmin": 0,
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
 

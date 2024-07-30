@@ -23,8 +23,6 @@ def plot_qhist(samples, file_type, **plot_args):
     else:
         xmax = max(all_x)
 
-    # The columns_to_plot dictionary should be replaced with an OrderedDict,
-    # not to rely on the ordered-by-default implementation details on Python 3.6
     columns_to_plot = {
         "Linear": {0: "Read1", 3: "Read2"},
         "Logarithmic": {1: "Read1", 4: "Read2"},
@@ -35,9 +33,7 @@ def plot_qhist(samples, file_type, **plot_args):
     for column_type in columns_to_plot:
         plot_data.append(
             {
-                sample
-                + "."
-                + column_name: {
+                sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples
@@ -50,6 +46,7 @@ def plot_qhist(samples, file_type, **plot_args):
         "title": "BBTools: " + plot_args["plot_title"],
         "xmax": xmax,
         "xlab": "Position in read",
+        "xsuffix": " bp",
         "ylab": "Quality score",
         "data_labels": [
             {"name": "Linear", "ylab": "Quality score"},

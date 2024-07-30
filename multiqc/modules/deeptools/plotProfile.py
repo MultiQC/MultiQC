@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-""" MultiQC submodule to parse output from deepTools plotProfile """
+"""MultiQC submodule to parse output from deepTools plotProfile"""
 
 import logging
 
@@ -18,10 +16,14 @@ class plotProfileMixin:
             parsed_data, bin_labels, converted_bin_labels = self.parsePlotProfileData(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotProfile:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotProfile[k] = v
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotProfile")
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
         self.deeptools_plotProfile = self.ignore_samples(self.deeptools_plotProfile)
 
@@ -30,44 +32,44 @@ class plotProfileMixin:
             self.write_data_file(self.deeptools_plotProfile, "deeptools_plot_profile")
 
             # Try to do plot bands but don't crash if the labels aren't as we expect
-            xPlotBands = []
-            xPlotLines = []
+            x_bands = []
+            x_lines = []
             plotBandHelp = ""
             try:
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[bin_labels.index("TES")],
                         "to": converted_bin_labels[-1],
                         "color": "#f7cfcf",
                     }
                 )
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[bin_labels.index("TSS")],
                         "to": converted_bin_labels[bin_labels.index("TES")],
                         "color": "#ffffe2",
                     }
                 )
-                xPlotBands.append(
+                x_bands.append(
                     {
                         "from": converted_bin_labels[0],
                         "to": converted_bin_labels[bin_labels.index("TSS")],
                         "color": "#e5fce0",
                     }
                 )
-                xPlotLines.append(
+                x_lines.append(
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TES")],
-                        "dashStyle": "Dash",
+                        "dash": "dash",
                         "color": "#000000",
                     }
                 )
-                xPlotLines.append(
+                x_lines.append(
                     {
                         "width": 1,
                         "value": converted_bin_labels[bin_labels.index("TSS")],
-                        "dashStyle": "Dash",
+                        "dash": "dash",
                         "color": "#000000",
                     }
                 )
@@ -92,8 +94,8 @@ class plotProfileMixin:
                 "ylab": "Occurrence",
                 "xlab": None,
                 "smooth_points": 100,
-                "xPlotBands": xPlotBands,
-                "xPlotLines": xPlotLines,
+                "x_bands": x_bands,
+                "x_lines": x_lines,
             }
 
             self.add_section(
@@ -103,9 +105,7 @@ class plotProfileMixin:
                     Accumulated view of the distribution of sequence reads related to the closest annotated gene.
                     All annotated genes have been normalized to the same size.
 
-                    {}""".format(
-                    plotBandHelp
-                ),
+                    {}""".format(plotBandHelp),
                 plot=linegraph.plot(self.deeptools_plotProfile, config),
             )
 
@@ -115,6 +115,7 @@ class plotProfileMixin:
         d = dict()
         bin_labels = []
         bins = []
+        converted_bin_labels = []
         for line in f["f"].splitlines():
             cols = line.rstrip().split("\t")
             if cols[0] == "bin labels":
@@ -148,6 +149,11 @@ class plotProfileMixin:
                     converted_bin_labels = bins
 
                 for i in bins:
-                    d[s_name].update({converted_bin_labels[i - 1]: float(cols[i + 1])})
+                    v = cols[i + 1]
+                    try:
+                        v = float(v)
+                    except ValueError:
+                        v = None
+                    d[s_name].update({converted_bin_labels[i - 1]: v})
 
         return d, bin_labels, converted_bin_labels

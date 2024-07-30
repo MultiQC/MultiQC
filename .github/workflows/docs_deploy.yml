@@ -1,0 +1,21 @@
+name: Docs - Netlify deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs_deploy.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: "Request deployment"
+    runs-on: ubuntu-latest
+    if: github.repository == 'MultiQC/MultiQC'
+    steps:
+      - name: Curl request
+        run: curl -X POST -d {} ${{ secrets.NETLIFY_BUILD_HOOK }}

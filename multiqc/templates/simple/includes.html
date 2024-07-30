@@ -13,7 +13,7 @@ Also Glyphicons and the favicon images.
 {% for css_href in config.custom_css_files %}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {% endfor %}
-{%- for m in report.modules_output %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
+{%- for m in report.modules %}{% if m.css and m.css|length > 0 -%}{% for css_href in m.css.values() %}
 <style type="text/css">{{ include_file(css_href, None) }}</style>
 {%- endfor %}{% endif %}{% endfor %}
 

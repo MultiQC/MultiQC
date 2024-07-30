@@ -1,30 +1,19 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from eigenstrat_snp_coverage """
-
-
 import json
 import logging
-from collections import OrderedDict
 
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, scatter
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """eigenstratdatabasetools module"""
-
     def __init__(self):
-
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="eigenstratdatabasetools",
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
-            info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
+            info="Tools to compare and manipulate the contents of EingenStrat databases, and to calculate "
+            "SNP coverage statistics in such databases.",
             # No publication / DOI // doi=
         )
 
@@ -40,9 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.snp_cov_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.snp_cov_data)))
+        log.info(f"Found {len(self.snp_cov_data)} reports")
 
         # Save data output file
         self.write_data_file(self.snp_cov_data, "multiqc_snp_cov_metrics")
@@ -55,24 +44,29 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse eigenstrat_snp_coverage JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse eigenstrat_snp_coverage JSON: '{f['fn']}'")
             return
 
         # Parse JSON data to a dict
+        version = None
         for s_name in data:
             if s_name == "Metadata":
+                version = data["Metadata"]["version"]
                 continue
 
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.snp_cov_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.snp_cov_data[s_clean] = dict()
 
             for k, v in data[s_name].items():
                 try:
-                    ## number of covered and total SNPs are integer values
+                    # number of covered and total SNPs are integer values
                     self.snp_cov_data[s_clean][k] = int(v)
                 except ValueError:
                     self.snp_cov_data[s_clean][k] = v
@@ -80,21 +74,22 @@ class MultiqcModule(BaseMultiqcModule):
     def addSummaryMetrics(self):
         """Take the parsed stats from eigenstrat_snp_coverage and add it to the main plot"""
 
-        headers = OrderedDict()
-        headers["Covered_Snps"] = {
-            "title": "Covered SNPs",
-            "description": "The number of SNPs for which a genotype has been called.",
-            "scale": "PuBuGn",
-            "format": "{:,.0f}",
-            "shared_key": "snp_call",
-        }
-        headers["Total_Snps"] = {
-            "title": "Total SNPs",
-            "description": "The total number of SNPs in the genotype dataset.",
-            "scale": "PuBuGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-            "shared_key": "snp_call",
+        headers = {
+            "Covered_Snps": {
+                "title": "Covered SNPs",
+                "description": "The number of SNPs for which a genotype has been called.",
+                "scale": "PuBuGn",
+                "format": "{:,.0f}",
+                "shared_key": "snp_call",
+            },
+            "Total_Snps": {
+                "title": "Total SNPs",
+                "description": "The total number of SNPs in the genotype dataset.",
+                "scale": "PuBuGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+                "shared_key": "snp_call",
+            },
         }
 
         self.general_stats_addcols(self.snp_cov_data, headers)
