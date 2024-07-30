@@ -1,11 +1,11 @@
 import logging
 import os
 import re
+from copy import deepcopy
 from typing import Dict, Optional
 
-from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(data_by_sample, "multiqc_star")
 
             # Basic Stats Table
-            self.star_stats_table(data_by_sample)
+            self.stats_tables(data_by_sample)
 
             # Alignment bar plot
             self.add_section(
@@ -104,34 +104,15 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=star_genecounts_chart(genecounts_unstranded, genecounts_first_strand, genecounts_second_strand),
             )
 
-    def star_stats_table(self, data_by_sample):
+    def stats_tables(self, data_by_sample):
         """Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report"""
 
-        headers = {
-            "uniquely_mapped_percent": {
-                "title": "% Aligned",
-                "description": "% Uniquely mapped reads",
-                "suffix": "%",
-                "scale": "YlGn",
-            },
-            "mapped_percent": {
-                "title": "% Aligned",
-                "description": "% Uniquely mapped reads",
-                "suffix": "%",
-                "scale": "PuRd",
-            },
-            "uniquely_mapped": {
-                "title": "Aligned",
-                "description": "Uniquely mapped reads",
-                "scale": "YlGn",
-                "shared_key": "read_count",
-                "hidden": True,
-            },
-            "multimapped": {
-                "title": "Multi Aligned",
-                "description": "Multiple mapped reads",
-                "scale": "PuRd",
+        headers: Dict[str, Dict] = {
+            "total_reads": {
+                "title": "Total Reads",
+                "description": "Number of input reads",
+                "scale": "Blues",
                 "shared_key": "read_count",
                 "hidden": True,
             },
@@ -142,8 +123,137 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
                 "hidden": True,
             },
+            "mapped_percent": {
+                "title": "Aligned",
+                "description": "% Mapped reads",
+                "suffix": "%",
+                "scale": "PuRd",
+            },
+            "uniquely_mapped": {
+                "title": "Uniq aligned",
+                "description": "Uniquely mapped reads",
+                "scale": "YlGn",
+                "shared_key": "read_count",
+                "hidden": True,
+            },
+            "uniquely_mapped_percent": {
+                "title": "Uniq aligned",
+                "description": "% Uniquely mapped reads",
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "multimapped": {
+                "title": "Multimapped",
+                "description": "Multiple mapped reads",
+                "scale": "PuRd",
+                "shared_key": "read_count",
+                "hidden": True,
+            },
         }
         self.general_stats_addcols(data_by_sample, headers)
+
+        all_headers: Dict[str, Dict] = deepcopy(headers)
+        all_headers["total_reads"]["hidden"] = False
+
+        all_headers.update(
+            {
+                "avg_input_read_length": {
+                    "title": "Avg. read len",
+                    "description": "Average input read length",
+                    "suffix": "bp",
+                    "scale": "Blues",
+                    "hidden": True,
+                },
+                "avg_mapped_read_length": {
+                    "title": "Avg. mapped len",
+                    "description": "Average mapped length",
+                    "suffix": "bp",
+                    "scale": "Blues",
+                },
+                "num_splices": {
+                    "title": "Splices",
+                    "description": "Number of splices: Total",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                "num_annotated_splices": {
+                    "title": "Annotated splices",
+                    "description": "Number of splices: Annotated (sjdb)",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                },
+                "num_GTAG_splices": {
+                    "title": "GT/AG splices",
+                    "description": "Number of splices: GT/AG",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                "num_GCAG_splices": {
+                    "title": "GC/AG splices",
+                    "description": "Number of splices: GC/AG",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                "num_ATAC_splices": {
+                    "title": "AT/AC splices",
+                    "description": "Number of splices: AT/AC",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                "num_noncanonical_splices": {
+                    "title": "Non-canonical splices",
+                    "description": "Number of splices: Non-canonical",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                "mismatch_rate": {
+                    "title": "Mismatch rate",
+                    "description": "Mismatch rate per base",
+                    "suffix": "%",
+                    "scale": "Blues",
+                },
+                "deletion_rate": {
+                    "title": "Del rate",
+                    "description": "Deletion rate per base",
+                    "suffix": "%",
+                    "scale": "Blues",
+                },
+                "deletion_length": {
+                    "title": "Del len",
+                    "description": "Deletion average length",
+                    "suffix": "bp",
+                    "scale": "Blues",
+                },
+                "insertion_rate": {
+                    "title": "Ins rate",
+                    "description": "Insertion rate per base",
+                    "suffix": "%",
+                    "scale": "Blues",
+                },
+                "insertion_length": {
+                    "title": "Ins len",
+                    "description": "Insertion average length",
+                    "suffix": "bp",
+                    "scale": "Blues",
+                },
+            }
+        )
+
+        self.add_section(
+            name="Summary Statistics",
+            anchor="star_summary",
+            description="Summary statistics from the STAR alignment",
+            plot=table.plot(
+                data_by_sample,
+                all_headers,
+                pconfig={"id": "star_summary_table", "title": "STAR: Summary Statistics", "namespace": "STAR"},
+            ),
+        )
 
 
 def parse_star_genecounts_report(f) -> Optional[Dict[str, Dict[str, int]]]:
