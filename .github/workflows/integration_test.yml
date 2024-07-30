@@ -40,8 +40,8 @@ jobs:
         uses: haya14busa/action-cond@v1
         id: module_changed_option
         with:
-          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.n_modules > 0 }}
-          if_true: "-m ${{ join(steps.filter.outputs.changes.modules, ' -m ') }}"
+          cond: ${{ ! steps.filter.outputs.changes.base_module && steps.filter.outputs.changes.modules }}
+          if_true: "-m ${{ join(steps.filter.outputs.changes.modules_files, ' -m ') }}"
           if_false: ""
 
       - name: "Set up Python ${{ matrix.python-version }}"
