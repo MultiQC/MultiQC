@@ -274,7 +274,8 @@ target___test2	2
     )
 
     conf = tmp_path / "multiqc_config.yaml"
-    conf.write_text("""
+    conf.write_text(
+        """
 custom_data:
   last_o2o:
     plot_type: "table"
@@ -282,7 +283,8 @@ custom_data:
 sp:
   last_o2o:
     fn: "target__*tsv"
-""")
+"""
+    )
 
     report.analysis_files = [file1, file2]
     update_config(cfg=ClConfig(config_files=[conf], run_modules=["custom_content"]))

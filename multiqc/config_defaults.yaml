@@ -454,6 +454,7 @@ module_order:
   - umitools
   - truvari
   - megahit
+  - sincei
   # Alignment tool stats
   - bbmap
   - bismark
