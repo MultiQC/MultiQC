@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from NanoStat"""
-
 import logging
 from typing import List
 
@@ -8,13 +6,10 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """NanoStat module"""
-
     _KEYS_MAPPING = {
         "number_of_reads": "Number of reads",
         "number_of_bases": "Total bases",
@@ -34,12 +29,14 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("aligned", "seq summary", "fastq", "fasta", "unrecognized")
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="NanoStat",
             anchor="nanostat",
-            href="https://github.com/wdecoster/nanostat/",
-            info="reports various statistics from a long read sequencing dataset in FASTQ, BAM or sequencing summary format.",
+            href=["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"],
+            info="Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary "
+            "format (supports NanoPack; NanoPlot, NanoComp).",
+            extra="Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore "
+            "methods (MinION, PromethION etc.)",
             doi="10.1093/bioinformatics/bty149",
         )
 

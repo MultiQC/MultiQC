@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Tophat"""
-
 import logging
 import os
 import re
@@ -8,19 +6,16 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Tophat",
             anchor="tophat",
             href="https://ccb.jhu.edu/software/tophat/",
-            info="is a fast splice junction mapper for RNA-Seq reads. "
-            "It aligns RNA-Seq reads to mammalian-sized genomes.",
+            info="Splice junction RNA-Seq reads mapper for mammalian-sized genomes.",
             doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
         )
 

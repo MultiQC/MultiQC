@@ -7,18 +7,45 @@ import numpy as np
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The JCVI module parses the output of `python -m jcvi.annotation.stats genestats <input.gff>`.
+    The file name is used as the sample name.
+    If the output from the `python -m jcvi.annotation.stats stats <input.gff>` is present in the same directory,
+    it is used to draw complementary plots.
+
+    A typical result directory will contain:
+
+    ```
+    ├── Exon_Count
+    │   ├── sample1.txt
+    │   └── sample2.txt
+    ├── Exon_Length
+    │   ├── sample1.txt
+    │   └── sample2.txt
+    ├── Gene_Length
+    │   ├── sample1.txt
+    │   └── sample2.txt
+    ├── Intron_Length
+    │   ├── sample1.txt
+    │   └── sample2.txt
+    ├── sample1_genestats.txt
+    └── sample2_genestats.txt
+
+    ```
+
+    The JCVI module has been tested with output from JCVI v1.0.9.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="JCVI Genome Annotation",
             anchor="jcvi",
             href="https://pypi.org/project/jcvi/",
-            info="computes statistics on genome annotation.",
+            info="Computes statistics on genome annotation.",
             doi="10.5281/zenodo.31631",
         )
 

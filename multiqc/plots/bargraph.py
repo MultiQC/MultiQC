@@ -32,6 +32,7 @@ class Category(ValidatedConfig):
     color: Optional[str] = None
 
 
+InputDatasetT = Mapping[str, Mapping[str, Union[int, float]]]
 DatasetT = Dict[str, Dict[str, Union[int, float]]]
 
 # Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
@@ -39,7 +40,7 @@ CatT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], Category]]]
 
 
 def plot(
-    data: Union[DatasetT, Sequence[DatasetT]],
+    data: Union[InputDatasetT, Sequence[InputDatasetT]],
     cats: Optional[Union[CatT, Sequence[CatT]]] = None,
     pconfig: Optional[Union[Dict, BarPlotConfig]] = None,
 ) -> Union[bar.BarPlot, str]:
@@ -57,9 +58,9 @@ def plot(
     # Given one dataset - turn it into a list
     raw_datasets: List[DatasetT]
     if isinstance(data, Sequence):
-        raw_datasets = list(data)
+        raw_datasets = list(data)  # type: ignore
     else:
-        raw_datasets = [data]
+        raw_datasets = [data]  # type: ignore
     del data
 
     # Make list of cats from different inputs
@@ -105,7 +106,7 @@ def plot(
                 else:
                     if "name" not in cat_props:
                         cat_props["name"] = cat_name
-                    ds_categories[cat_name] = Category(**cat_props)
+                    ds_categories[cat_name] = Category(**cat_props, _parent_class=bar.BarPlot)
         else:
             raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
         categories_per_ds.append(ds_categories)

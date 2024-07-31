@@ -7,7 +7,7 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 from pathlib import Path
-from typing import List, Dict, Optional, Union, Set, TextIO
+from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
 # Default logger will be replaced by caller
 import logging
@@ -165,7 +165,7 @@ fn_clean_exts: List
 fn_clean_trim: List
 fn_ignore_files: List
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
-module_order: List[Union[str, Dict[str, Dict[str, str]]]]
+module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
 
 # Module filename search patterns
@@ -187,7 +187,7 @@ data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
 report_section_order: Dict
-output_fn: Optional[Union[str, TextIO]]
+output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 
@@ -282,8 +282,8 @@ def load_defaults():
 
 load_defaults()
 
-# Keeping track to avoid loading twice
-_loaded_found_config_files: Set[Path] = set()
+# To restore after load_defaults()
+explicit_user_config_files: Set[Path] = set()
 
 
 def reset():
@@ -291,13 +291,11 @@ def reset():
     Reset the interactive session
     """
 
-    global _loaded_found_config_files
-    _loaded_found_config_files = set()
-
+    explicit_user_config_files.clear()
     load_defaults()
 
 
-def load_user_files():
+def find_user_files():
     """
     Overwrite config defaults with user config files.
 
@@ -306,32 +304,45 @@ def load_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
+    _loaded = set()
+
+    def _load_found_file(path: Union[Path, str, None]):
+        if not path:
+            return
+        if Path(path).absolute() in _loaded:
+            return
+        load_config_file(path, is_explicit_config=False)
+        _loaded.add(Path(path).absolute())
+
     # Load and parse installation config file if we find it
-    load_config_file(REPO_DIR / "multiqc_config.yaml")
+    _load_found_file(REPO_DIR / "multiqc_config.yaml")
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    load_config_file(
+    _load_found_file(
         os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
     )
 
     # Load and parse a user config file if we find it
-    load_config_file(os.path.expanduser("~/.multiqc_config.yaml"))
+    _load_found_file(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        load_config_file(os.environ.get("MULTIQC_CONFIG_PATH"))
+        _load_found_file(os.environ.get("MULTIQC_CONFIG_PATH"))
 
     # Load separate config entries from MULTIQC_* environment variables
     _add_config(_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
-    load_config_file("multiqc_config.yaml")
+    _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None]):
+def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True):
     """
-    Load and parse a config file if we find it
+    Load and parse a config file if we find it.
+
+    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults.
     """
     if not yaml_config_path:
         return
@@ -340,11 +351,10 @@ def load_config_file(yaml_config_path: Union[str, Path, None]):
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
 
-    if path.absolute() in _loaded_found_config_files:
-        return
-    _loaded_found_config_files.add(path.absolute())
-
     if path.is_file():
+        if is_explicit_config:
+            explicit_user_config_files.add(path)
+
         try:
             # pyaml_env allows referencing environment variables in YAML for default values
             # new_config can be None if the file is empty
@@ -564,3 +574,30 @@ nondefault_config: Dict = {}
 def update(u):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
+
+
+def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
+    """
+    Reads coverage thresholds from the config, otherwise sets sensible defaults. Useful for modules like mosdepth, qualimap (BamQC), ngsbits
+    """
+    covs = getattr(globals(), config_key, {}).get("general_stats_coverage", [])
+    if not covs:
+        covs = getattr(globals(), "general_stats_coverage", [])
+
+    if covs and isinstance(covs, list):
+        covs = [int(t) for t in covs]
+        logger.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in covs])}")
+    else:
+        covs = [1, 5, 10, 30, 50]
+        logger.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in covs])}")
+
+    hidden_covs = getattr(globals(), config_key, {}).get("general_stats_coverage_hidden", [])
+    if not hidden_covs:
+        hidden_covs = getattr(globals(), "general_stats_coverage_hidden", [])
+
+    if hidden_covs and isinstance(hidden_covs, list):
+        logger.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_covs])}")
+    else:
+        hidden_covs = [t for t in covs if t != 30]
+
+    return covs, hidden_covs

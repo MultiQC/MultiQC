@@ -39,8 +39,8 @@ $(function () {
   try {
     var hide_welcome = localStorage.getItem("mqc_hide_welcome");
     if (hide_welcome !== "true") {
-      $("#mqc_header_hr").slideUp();
-      $("#mqc_welcome").slideDown();
+      $("#mqc_header_hr").show();
+      $("#mqc_welcome").show();
     }
     $("#mqc_hide_welcome_btn").click(function (e) {
       localStorage.setItem("mqc_hide_welcome", "true");

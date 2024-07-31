@@ -388,9 +388,13 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
-  num_lines: 1
-  shared: true
+  - contents_re: '^feature\tcount$'
+    num_lines: 1
+    shared: true
+  # can lack header and start with a GENE\tNUMBER line
+  - contents_re: '^\w+.*\t\d+$'
+    num_lines: 1
+    shared: true
 hicexplorer:
   contents: "Min rest. site distance"
   max_filesize: 4096
@@ -565,6 +569,17 @@ disambiguate:
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
@@ -596,6 +611,9 @@ odgi:
   - fn: "*.og.stats.yml"
   - fn: "*.odgi.stats.yaml"
   - fn: "*.odgi.stats.yml"
+pairtools:
+  contents: ["total_single_sided_mapped\t", "cis\t", "trans\t", "pair_types/"]
+  num_lines: 20
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:

@@ -1,36 +1,49 @@
-"""MultiQC module to parse output from Trimmomatic"""
-
 import logging
 import re
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses the stderr output, that can be captured by directing it to a file e.g.:
+
+    ```sh
+    trimmomatic command 2> trim_out.log
+    ```
+
+    By default, the module generates the sample names based on the input FastQ file names in
+    the command line used by Trimmomatic. If you prefer, you can tell the module to use
+    the filenames as sample names instead. To do so, use the following config option:
+
+    ```yaml
+    trimmomatic:
+      s_name_filenames: true
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Trimmomatic",
             anchor="trimmomatic",
             href="http://www.usadellab.org/cms/?page=trimmomatic",
-            info="is a flexible read trimming tool for Illumina NGS data.",
+            info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
         )
 
         # Parse logs
-        self.trimmomatic = dict()
+        self.trimmomatic: Dict = dict()
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
             self.add_data_source(f)
 
         # Filter to strip out ignored sample names
         self.trimmomatic = self.ignore_samples(self.trimmomatic)
-
         if len(self.trimmomatic) == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.trimmomatic)} logs")

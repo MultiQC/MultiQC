@@ -1,5 +1,3 @@
-"""MultiQC submodule to parse output from Samtools flagstat"""
-
 import logging
 import re
 from typing import Dict

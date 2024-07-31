@@ -1,29 +1,43 @@
-"""MultiQC module to parse output from UMI-tools"""
-
 import logging
 import re
-from typing import Dict, Optional
+from typing import Dict, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    umitools module class, parses dedup logs
+    Currently, `dedup` and `extract` commands are supported.
+
+    Sample names are extracted from log files if possible. In logs, input and output file paths are printed.
+    However, either can be redirected from stdin/stdout:
+
+    ```
+    $ umi_tools extract -I input.fastq > result.fastq
+    stdin : <_io.TextIOWrapper name='input.fastq' mode='r' encoding='UTF-8'>
+    stdout : <_io.TextIOWrapper name='<stdout>' encoding='ascii'>
+    ```
+
+    $ cat input.fastq | umi_tools extract -S output.fastq
+    stdin : <_io.TextIOWrapper name='<stdin>' mode='r' encoding='UTF-8'>
+    stdout : <_io.TextIOWrapper name='result.fastq' encoding='ascii'>
+    ```
+
+    `umi_tools` requires at least one of the -I or -S options to be specified, so we can expect either
+    one of those to be present in the log file, and we guess prioritizing the output file name. If this
+    assumption fails, we extract the sample name from the log file name.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="UMI-tools",
             anchor="umitools",
             href="https://github.com/CGATOxford/UMI-tools",
-            info="contains tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
+            info="Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
             doi="10.1101/gr.209601.116",
         )
 
@@ -32,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Parse the log file for sample name and statistics
             data = self.parse_dedup_logs(f)
             if data:
-                f["s_name"] = self._parse_s_name(f) or f["s_name"]
+                f["s_name"] = self._parse_s_name(f)
                 if f["s_name"] in dedup_data_by_sample:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 dedup_data_by_sample[f["s_name"]] = data
@@ -45,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Parse the log file for sample name and statistics
             data = self.parse_extract_logs(f)
             if data:
-                f["s_name"] = self._parse_s_name(f) or f["s_name"]
+                f["s_name"] = self._parse_s_name(f)
                 if f["s_name"] in extract_data_by_sample:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 extract_data_by_sample[f["s_name"]] = data
@@ -81,14 +95,39 @@ class MultiqcModule(BaseMultiqcModule):
             ):
                 self.umitools_extract_barplot_regex(extract_data_by_sample)
 
-    def _parse_s_name(self, f) -> Optional[str]:
-        # Get the s_name from the input file if possible
-        # stdin : <_io.TextIOWrapper name='M18-39155_T1.Aligned.sortedByCoord.out.bam' mode='r' encoding='UTF-8'>
-        s_name_re = r"stdin\s+:\s+<_io\.TextIOWrapper name='([^\']+)'"
-        s_name_match = re.search(s_name_re, f["f"])
-        if s_name_match:
-            return self.clean_s_name(s_name_match.group(1))
-        return None
+    def _parse_s_name(self, f) -> str:
+        """
+        Sample name is extracted from log file if possible. In log, input and output file paths are printed.
+        However, either can be a stdin or stdout:
+
+        ```
+        umi_tools extract -I input.fastq > result.fastq
+        stdin : <_io.TextIOWrapper name='input.fastq' mode='r' encoding='UTF-8'>
+        stdout : <_io.TextIOWrapper name='<stdout>' encoding='ascii'>
+        ```
+
+        cat input.fastq | umi_tools extract -S output.fastq
+        stdin : <_io.TextIOWrapper name='<stdin>' mode='r' encoding='UTF-8'>
+        stdout : <_io.TextIOWrapper name='result.fastq' encoding='ascii'>
+        ```
+
+        `umi_tools` requires at least one of the -I or -S options to be specified, so we can expect either
+        one of those to be present in the log file, so we guess, prioritizing the output file name.
+        """
+
+        out_m = re.search(r"stdout\s+:\s+<_io\.TextIOWrapper name='([^\']+)'", f["f"])
+        if out_m:
+            out_name = out_m.group(1)
+            if out_name != "<stdout>":
+                return self.clean_s_name(out_name)
+
+        in_m = re.search(r"stdin\s+:\s+<_io\.TextIOWrapper name='([^\']+)'", f["f"])
+        if in_m:
+            in_name = in_m.group(1)
+            if in_name != "<stdin>":
+                return self.clean_s_name(in_name)
+
+        return f["s_name"]
 
     @staticmethod
     def parse_dedup_logs(f) -> Dict:
@@ -103,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             (str, "version", r"# UMI-tools version: ([\d\.]+)"),
         ]
 
-        data = {}
+        data: Dict[str, Union[str, int, float]] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
             re_matches = re.search(regex, f["f"])

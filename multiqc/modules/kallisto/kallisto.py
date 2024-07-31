@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Kallisto"""
-
 import logging
 import os
 import re
@@ -10,20 +8,22 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 from multiqc.plots.plotly.bar import BarPlotConfig
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Kallisto module"""
+    """
+    **Note** - MultiQC parses the standard out from Kallisto, _not_ any of its output files
+    (`abundance.h5`, `abundance.tsv`, and `run_info.json`). As such, you must capture the
+    Kallisto stdout to a file when running to use the MultiQC module.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Kallisto",
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
-            info="is a program for quantifying abundances of transcripts from RNA-Seq data.",
+            info="Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data",
             doi="10.1038/nbt.3519",
         )
 

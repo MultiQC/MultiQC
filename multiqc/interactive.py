@@ -380,7 +380,7 @@ def write_report(
     title: Optional[str] = None,
     report_comment: Optional[str] = None,
     template: Optional[str] = None,
-    output_dir: Optional[str] = None,
+    output_dir: Optional[Union[str, Path]] = None,
     filename: Optional[str] = None,
     make_data_dir: Optional[bool] = None,
     data_format: Optional[str] = None,
@@ -453,7 +453,7 @@ def write_report(
     try:
         order_modules_and_sections()
 
-        write_results(clean_up=clean_up)
+        write_results()
 
     except NoAnalysisFound:
         logger.warning("No analysis results found to make a report")
@@ -461,6 +461,11 @@ def write_report(
     except RunError as e:
         if e.message:
             logger.critical(e.message)
+
+    finally:
+        # Clean up temporary directory, reset logger file handler
+        if clean_up:
+            report.reset_tmp_dir()
 
 
 def load_config(config_file: Union[str, Path]):
@@ -476,4 +481,4 @@ def load_config(config_file: Union[str, Path]):
     if not path.exists():
         raise ValueError(f"Config file '{config_file}' not found")
 
-    config.load_config_file(config_file)
+    config.load_config_file(config_file, is_explicit_config=True)

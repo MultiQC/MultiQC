@@ -1,7 +1,6 @@
-"""Module to parse output from BBDuk"""
-
 import logging
 import re
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -13,7 +12,26 @@ VERSION_REGEX = r"Version ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """BBDuk Module"""
+    """
+    The module produces summary statistics from the stdout logging information from the BBDuk tool of the
+    [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.
+
+    "Duk" stands for Decontamination Using Kmers. BBDuk was developed to combine
+    most common data-quality-related trimming, filtering, and masking operations
+    into a single high-performance tool.
+
+    The module can summarise data from the following BBDuk funtionality
+    (descriptions from command line help output):
+
+    - `entropy` - entropy filtering
+    - `ktrim` - kmer trimming
+    - `qtrim` - quality trimming
+    - `maq` - read quality filtering
+    - `ref` contaminant filtering
+
+    Additional information on the BBMap tools is available on
+    [SeqAnswers](http://seqanswers.com/forums/showthread.php?t=41057).
+    """
 
     def __init__(self):
         # Initialise the parent object
@@ -21,14 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
             name="BBDuk",
             anchor="bbduk",
             href="https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/",
-            info="""is a tool performing common data-quality-related trimming,
-            filtering, and masking operations with a kmer based approach""",
+            info="Common data-quality-related trimming, filtering, and masking operations with a kmer based approach",
             # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
         )
 
         # Define the main bbduk multiqc data object
-        self.bbduk_data = dict()
+        self.bbduk_data: Dict = dict()
 
         for f in self.find_log_files("bbduk", filehandles=True):
             self.parse_logs(f)

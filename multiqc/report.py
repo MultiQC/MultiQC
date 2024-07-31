@@ -57,7 +57,7 @@ class Runtimes:
 # Uninitialised global variables for static typing
 multiqc_command: str
 top_modules: List[Dict[str, Dict[str, str]]]
-module_order: List[Dict[str, Dict[str, str]]]
+module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_html: str
@@ -68,7 +68,7 @@ last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
-file_search_stats: Dict[str, int]
+file_search_stats: Dict[str, Set[Path]]
 files: Dict
 
 # Fields below is kept between interactive runs
@@ -147,14 +147,14 @@ def reset_file_search():
     analysis_files = []
     files = dict()  # Discovered files for each search key
     file_search_stats = {
-        "skipped_symlinks": 0,
-        "skipped_not_a_file": 0,
-        "skipped_ignore_pattern": 0,
-        "skipped_filesize_limit": 0,
-        "skipped_module_specific_max_filesize": 0,
-        "skipped_no_match": 0,
-        "skipped_directory_fn_ignore_dirs": 0,
-        "skipped_file_contents_search_errors": 0,
+        "skipped_symlinks": set(),
+        "skipped_not_a_file": set(),
+        "skipped_ignore_pattern": set(),
+        "skipped_filesize_limit": set(),
+        "skipped_module_specific_max_filesize": set(),
+        "skipped_no_match": set(),
+        "skipped_directory_fn_ignore_dirs": set(),
+        "skipped_file_contents_search_errors": set(),
     }
 
 
@@ -411,7 +411,7 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
         Guaranteed to work correctly with symlinks even on non-POSIX compliant filesystems.
         """
         if item.is_symlink() and config.ignore_symlinks:
-            file_search_stats["skipped_symlinks"] += 1
+            file_search_stats["skipped_symlinks"].add(item)
             return
         elif item.is_file():
             searchfiles.append(item)
@@ -420,7 +420,7 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
             d_matches = any(d for d in config.fn_ignore_dirs if item.match(d.rstrip(os.sep)))
             p_matches = any(p for p in config.fn_ignore_paths if item.match(p.rstrip(os.sep)))
             if d_matches or p_matches:
-                file_search_stats["skipped_directory_fn_ignore_dirs"] += 1
+                file_search_stats["skipped_directory_fn_ignore_dirs"].add(item)
                 return
 
             # Check not running in install directory
@@ -494,7 +494,10 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
     spatterns = sorted_spatterns
 
     if len(ignored_patterns) > 0:
-        logger.debug(f"Ignored {len(ignored_patterns)} search patterns as didn't match running modules.")
+        logger.debug(
+            f"Ignored {len(ignored_patterns)} search patterns that didn't match running modules"
+            + (f": {ignored_patterns}" if len(ignored_patterns) < 10 else "")
+        )
 
     if len(skipped_patterns) > 0:
         logger.info(f"Skipping {len(skipped_patterns)} file search patterns")
@@ -521,11 +524,11 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
 
         # Check that this is a file and not a pipe or anything weird
         if not path.is_file():
-            file_search_stats["skipped_not_a_file"] += 1
+            file_search_stats["skipped_not_a_file"].add(path)
             return False
 
         if search_f.filesize is not None and search_f.filesize > config.log_filesize_limit:
-            file_search_stats["skipped_filesize_limit"] += 1
+            file_search_stats["skipped_filesize_limit"].add(path)
             return False
 
         # Use mimetypes to exclude binary files where possible
@@ -550,7 +553,7 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
                                 if key not in files:
                                     files[key] = []
                                 files[key].append(search_f.to_dict())
-                                file_search_stats[key] = file_search_stats.get(key, 0) + 1
+                                file_search_stats[key] = file_search_stats.get(key, set()) | {path}
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {key}")
                             # Don't keep searching this file for other modules
@@ -564,7 +567,7 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
 
     def update_fn(_, sf: Path):
         if not add_file(sf):
-            file_search_stats["skipped_no_match"] += 1
+            file_search_stats["skipped_no_match"].add(sf)
 
     iterate_using_progress_bar(
         items=searchfiles,
@@ -579,8 +582,8 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
     # Debug log summary about what we skipped
     summaries = []
     for key in sorted(file_search_stats, key=lambda x: file_search_stats[x], reverse=True):
-        if "skipped_" in key and file_search_stats[key] > 0:
-            summaries.append(f"{key}: {file_search_stats[key]}")
+        if "skipped_" in key and file_search_stats[key]:
+            summaries.append(f"{key}: {len(file_search_stats[key])}")
     if summaries:
         logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
@@ -608,7 +611,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
     # Search pattern specific filesize limit
     if pattern.max_filesize is not None and f.filesize:
         if f.filesize > pattern.max_filesize:
-            file_search_stats["skipped_module_specific_max_filesize"] += 1
+            file_search_stats["skipped_module_specific_max_filesize"].add(f.path)
             return False
 
     # Search by file name (glob)
@@ -626,10 +629,10 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
         return True
 
     # Before parsing file content, check that we don't want to ignore this file to avoid parsing large files
-    ignore_matches = [ignore_pat for ignore_pat in config.fn_ignore_files if fnmatch.fnmatch(f.filename, ignore_pat)]
-    if len(ignore_matches) > 0:
-        file_search_stats["skipped_ignore_pattern"] += 1
-        return False
+    for ignore_pat in config.fn_ignore_files:
+        if fnmatch.fnmatch(f.filename, ignore_pat):
+            file_search_stats["skipped_ignore_pattern"].add(f.path)
+            return False
 
     # Search by file contents
     num_lines = pattern.num_lines or config.filesearch_lines_limit
@@ -651,7 +654,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
             if line_count >= num_lines:
                 break
     except Exception:
-        file_search_stats["skipped_file_contents_search_errors"] += 1
+        file_search_stats["skipped_file_contents_search_errors"].add(f.path)
         return False
 
     return (
@@ -702,9 +705,9 @@ def exclude_file(sp, f: SearchFile):
     return False
 
 
-def data_sources_tofile(data_dir: str):
+def data_sources_tofile(data_dir: Path):
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
-    with io.open(os.path.join(data_dir, fn), "w", encoding="utf-8") as f:
+    with io.open(data_dir / fn, "w", encoding="utf-8") as f:
         if config.data_format == "json":
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -721,7 +724,7 @@ def data_sources_tofile(data_dir: str):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def dois_tofile(data_dir, module_list: List["BaseMultiqcModule"]):
+def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
     """Find all DOIs listed in report sections and write to a file"""
     # Collect DOIs
     dois = {"MultiQC": ["10.1093/bioinformatics/btw354"]}
@@ -730,7 +733,7 @@ def dois_tofile(data_dir, module_list: List["BaseMultiqcModule"]):
             dois[mod.id] = mod.doi
     # Write to a file
     fn = f"multiqc_citations.{config.data_format_extensions[config.data_format]}"
-    with open(os.path.join(data_dir, fn), "w") as f:
+    with open(data_dir / fn, "w") as f:
         if config.data_format == "json":
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
@@ -832,7 +835,6 @@ def write_data_file(
 ):
     """
     Write a data file to the report directory. Will do nothing
-    if config.data_dir is not set (i.e. when config.make_data_dir == False or config.filename == "stdout")
     :param: data - either: a 2D dict, first key sample name (row header),
         second key field (column header); a list of dicts; or a list of lists
     :param: fn - Desired filename. Directory will be prepended automatically.
@@ -841,7 +843,7 @@ def write_data_file(
     :return: None
     """
 
-    if config.data_dir is None:
+    if not config.make_data_dir or config.filename == "stdout":
         return
 
     # Get data format from config
@@ -901,8 +903,8 @@ def write_data_file(
 
     # Add relevant file extension to filename, save file.
     fn = f"{fn}.{config.data_format_extensions[data_format]}"
-    fpath = os.path.join(data_tmp_dir(), fn)
-    assert data_tmp_dir() and os.path.exists(data_tmp_dir())
+    fpath = data_tmp_dir() / fn
+    assert data_tmp_dir() and data_tmp_dir().exists()
     with open(fpath, "w", encoding="utf-8", errors="ignore") as f:
         if data_format == "json":
             dump_json(data, f, indent=4, ensure_ascii=False)
@@ -994,4 +996,3 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
-    log_and_rich.add_file_handler()

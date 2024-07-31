@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from somalier"""
-
 import csv
 import logging
 import random
@@ -12,22 +10,26 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    somalier module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Somalier",
             anchor="somalier",
             href="https://github.com/brentp/somalier",
-            info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            info="Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            extra="""
+            Somalier can be used to find sample swaps or duplicates in cancer
+            projects, where there is often no jointly-called VCF across samples.
+        
+            It is also extremely efficient and so can be used to find all-vs-all
+            relatedness estimates for thousands of samples.
+        
+            It also outputs information on sex, depth, heterozgyosity, and ancestry
+            to be used for general QC.
+            """,
             doi="10.1186/s13073-020-00761-2",
         )
 

@@ -55,7 +55,7 @@ class BaseMultiqcModule:
         name="base",
         anchor="base",
         target=None,
-        href=None,
+        href: Union[str, List[str], None] = None,
         info=None,
         comment=None,
         extra=None,
@@ -67,12 +67,11 @@ class BaseMultiqcModule:
         self.name = self.mod_cust_config.get("name", name)
         self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
         self.anchor = self.mod_cust_config.get("anchor", anchor)
-        target = self.mod_cust_config.get("target", target)
-        self.href = self.mod_cust_config.get("href", href)
+        self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
         self.comment = self.mod_cust_config.get("comment", comment)
         self.extra = self.mod_cust_config.get("extra", extra)
-        self.doi = self.mod_cust_config.get("doi", (doi or []))
+        self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
@@ -89,34 +88,19 @@ class BaseMultiqcModule:
 
         if self.info is None:
             self.info = ""
-        # Always finish with a ".", as we may add a DOI after the intro.
-        if len(self.info) > 0 and self.info[-1] != ".":
-            self.info += "."
+        self.info = self.info.strip().strip(".")
+        # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
+        if self.info and self.info[0].islower():
+            self.info = f"{self.name} {self.info}"
+
         if self.extra is None:
             self.extra = ""
-        self.doi_link = ""
+
         if isinstance(self.doi, str):
             self.doi = [self.doi]
         self.doi = [i for i in self.doi if i != ""]
-        if len(self.doi) > 0:
-            doi_links = []
-            for doi in self.doi:
-                # Build the HTML link for the DOI
-                doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
-                )
-            self.doi_link = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}.</em>'.format(
-                "; ".join(doi_links)
-            )
 
-        if target is None:
-            target = self.name
-        if self.href is not None:
-            self.mname = f'<a href="{self.href}" target="_blank">{target}</a>'
-        else:
-            self.mname = target
-        if self.href or self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.mname} {self.info}{self.doi_link}</p>{self.extra}"
+        self.intro = self._get_intro()
 
         # Format the markdown strings
         if autoformat:
@@ -136,6 +120,31 @@ class BaseMultiqcModule:
 
         # Get list of all base attributes, so we clean up any added by child modules
         self._base_attributes = [k for k in dir(self)]
+
+    def _get_intro(self):
+        doi_html = ""
+        if len(self.doi) > 0:
+            doi_links = []
+            for doi in self.doi:
+                # Build the HTML link for the DOI
+                doi_links.append(
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                )
+            doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
+                "; ".join(doi_links)
+            )
+
+        url_link = ""
+        if len(self.href) > 0:
+            url_links = []
+            for url in self.href:
+                url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
+            url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
+                "; ".join(url_links)
+            )
+
+        info = (self.info + ".") if self.info else ""
+        return f"<p>{info}{url_link}{doi_html}</p>{self.extra}"
 
     def clean_child_attributes(self):
         """
@@ -657,7 +666,7 @@ class BaseMultiqcModule:
         to report.write_data_file() to create the file in the report directory"""
 
         # Append custom module anchor if set
-        if "anchor" in self.mod_cust_config:
+        if self.mod_cust_config.get("anchor"):
             fn = f"{fn}_{self.mod_cust_config['anchor']}"
 
         # Generate a unique filename if the file already exists (running module multiple times)

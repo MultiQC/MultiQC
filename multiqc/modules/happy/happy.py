@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from OUS variant calling pipeline"""
-
 import csv
 import logging
 
@@ -10,13 +8,17 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Som.py output not currently supported.
+    """
+
     def __init__(self):
         """MultiQC module for processing hap.py output logs"""
         super(MultiqcModule, self).__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",
-            info="is a set of programs based on htslib to benchmark variant calls against gold standard truth datasets.",
+            info="Benchmarks variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
         )
 

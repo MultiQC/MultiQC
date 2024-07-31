@@ -34,13 +34,20 @@ class LinePlot extends Plot {
     lines = nonHighlighted.concat(highlighted);
 
     return lines.map((line) => {
+      let color = line.color;
+      if (highlighted.length > 0) {
+        color = line.highlight ?? "#cccccc";
+      }
+
       let params = {
         line: {
-          color: line.color,
+          color: color,
           dash: line.dash,
           width: line.width,
         },
-        marker: {},
+        marker: {
+          color: color,
+        },
         showlegend: line["showlegend"] ?? null,
         mode: line["mode"] ?? null,
       };
@@ -50,18 +57,15 @@ class LinePlot extends Plot {
         params.mode = "lines+markers";
         params.marker = {
           symbol: marker["symbol"],
-          color: marker["fill_color"] ?? marker["color"] ?? line.color,
+          color: marker["fill_color"] ?? marker["color"] ?? color,
           line: {
             width: marker["width"],
-            color: marker["line_color"] ?? marker["color"] ?? line.color,
+            color: marker["line_color"] ?? marker["color"] ?? color,
           },
         };
       }
 
       updateObject(params, dataset["trace_params"], true);
-
-      if (highlighted.length > 0) params.marker.color = line.highlight ?? "#cccccc";
-      else params.marker.color = line.color;
 
       return {
         type: "scatter",

@@ -17,7 +17,7 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
 from multiqc.utils import mqc_colour
-from multiqc.validation import ValidatedConfig, ConfigValidationError
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -471,7 +471,7 @@ class Plot(BaseModel, Generic[T]):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self) -> str:
+    def add_to_report(self, plots_dir_name: Optional[str] = None) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
@@ -481,11 +481,11 @@ class Plot(BaseModel, Generic[T]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot()
+            html = self.flat_plot(plots_dir_name=plots_dir_name)
         else:
             html = self.interactive_plot()
             if config.export_plots:
-                self.flat_plot(embed_in_html=False)
+                self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
 
         return html
 
@@ -516,8 +516,10 @@ class Plot(BaseModel, Generic[T]):
         report.plot_data[self.id] = self.model_dump(warnings=False)
         return html
 
-    def flat_plot(self, embed_in_html: Optional[bool] = None) -> str:
+    def flat_plot(self, embed_in_html: Optional[bool] = None, plots_dir_name: Optional[str] = None) -> str:
         embed_in_html = embed_in_html if embed_in_html is not None else not config.development
+        if not embed_in_html and plots_dir_name is None:
+            raise ValueError("plots_dir_name is required for non-embedded plots")
 
         html = "".join(
             [
@@ -540,6 +542,7 @@ class Plot(BaseModel, Generic[T]):
                 self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                plots_dir_name=plots_dir_name,
                 embed_in_html=embed_in_html,
             )
             if self.add_pct_tab:
@@ -547,6 +550,7 @@ class Plot(BaseModel, Generic[T]):
                     self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
                     file_name=f"{dataset.uid}-pct",
+                    plots_dir_name=plots_dir_name,
                     embed_in_html=embed_in_html,
                 )
             if self.add_log_tab:
@@ -554,6 +558,7 @@ class Plot(BaseModel, Generic[T]):
                     self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
                     file_name=f"{dataset.uid}-log",
+                    plots_dir_name=plots_dir_name,
                     embed_in_html=embed_in_html,
                 )
             if self.add_pct_tab and self.add_log_tab:
@@ -561,6 +566,7 @@ class Plot(BaseModel, Generic[T]):
                     self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     file_name=f"{dataset.uid}-pct-log",
+                    plots_dir_name=plots_dir_name,
                     embed_in_html=embed_in_html,
                 )
 
@@ -633,6 +639,7 @@ def fig_to_static_html(
     active: bool = True,
     export_plots: Optional[bool] = None,
     embed_in_html: Optional[bool] = None,
+    plots_dir_name: Optional[str] = None,
     file_name: Optional[str] = None,
 ) -> str:
     """
@@ -678,8 +685,10 @@ def fig_to_static_html(
     if not embed_in_html:
         if file_name is None:
             raise ValueError("file_name is required for non-embedded plots")
+        if plots_dir_name is None:
+            raise ValueError("plots_dir_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = str(Path(config.plots_dir_name) / "png" / f"{file_name}.png")
+        img_src = str(Path(plots_dir_name) / "png" / f"{file_name}.png")
     else:
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)

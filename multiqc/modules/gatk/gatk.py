@@ -1,33 +1,51 @@
-"""MultiQC module to parse output from GATK"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Import the GATK submodules
-# import varianteval
 from .analyze_saturation_mutagenesis import AnalyzeSaturationMutagenesisMixin
 from .base_recalibrator import BaseRecalibratorMixin
 from .varianteval import VariantEvalMixin
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule, AnalyzeSaturationMutagenesisMixin, BaseRecalibratorMixin, VariantEvalMixin):
-    """GATK has a number of different commands and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found."""
+    """
+    Supported tools:
+
+    - `AnalyzeSaturationMutagenesis`
+    - `BaseRecalibrator`
+    - `VariantEval`
+
+    #### AnalyzeSaturationMutagenesis
+
+    [AnalyzeSaturationMutagenesis](https://gatk.broadinstitute.org/hc/en-us/articles/4404604903451-AnalyzeSaturationMutagenesis-BETA-)
+    is a (beta!) tool for counting variants in saturation mutagenesis experiments. It accepts mapped reads and a reference sequence and outputs
+    a number of files for further analysis.
+
+    #### BaseRecalibrator
+
+    [BaseRecalibrator](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_bqsr_BaseRecalibrator.php)
+    is a tool for detecting systematic errors in read base quality scores of aligned high-throughput
+    sequencing reads. It outputs a base quality score recalibration table that can be used in
+    conjunction with the
+    [PrintReads](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_readutils_PrintReads.php)
+    tool to recalibrate base quality scores.
+
+    #### VariantEval
+
+    [VariantEval](https://software.broadinstitute.org/gatk/gatkdocs/current/org_broadinstitute_gatk_tools_walkers_varianteval_VariantEval.php)
+    is a general-purpose tool for variant evaluation. It gives information about percentage of
+    variants in dbSNP, genotype concordance, Ti/Tv ratios and a lot more.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="GATK",
             anchor="gatk",
             target="GATK",
             href="https://www.broadinstitute.org/gatk/",
-            info=" is a toolkit offering a wide variety of tools with a primary focus on variant discovery and genotyping.",
+            info="Wide variety of tools with a primary focus on variant discovery and genotyping.",
             doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
         )
 

@@ -3,6 +3,7 @@
 import gzip
 import logging
 import os
+from collections import defaultdict
 from typing import Dict, Union
 
 from multiqc import BaseMultiqcModule
@@ -35,31 +36,31 @@ EXPECTED_COLUMNS = [
 
 
 def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
-    """Find Glimpse concordance by samples logs and parse their data"""
+    """
+    Find Glimpse concordance by samples logs and parse their data
+    """
 
-    glimpse_err_spl: Dict = dict()
-    allfiles: Dict = dict()
+    metrics_by_var_by_sample: Dict[str, Dict[str, Dict[str, Union[int, float]]]] = dict()
     for f in module.find_log_files("glimpse/err_spl", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
             lines = [line.decode() for line in f_gz.readlines()]
 
-        parsed_data = parse_err_spl_report(lines)
-        if len(parsed_data) > 1:
-            if f["s_name"] in allfiles:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            module.add_data_source(f, section="err_spl")
-            # Filter to strip out ignored sample names
-            allfiles[f["s_name"]] = f
+        file_data_by_sample = parse_err_spl_report(lines)
+        if not file_data_by_sample:
+            continue
 
-            shared_keys = set(glimpse_err_spl.keys()) & set(parsed_data.keys())
-            if len(shared_keys) > 0:
-                log.debug(f"Duplicate sample name found! Overwriting: {shared_keys}")
-            glimpse_err_spl.update(module.ignore_samples(parsed_data))
+        module.add_data_source(f, section="err_spl")
 
-    n_reports_found = len(glimpse_err_spl)
+        duplicated_samples = set(metrics_by_var_by_sample.keys()) & set(file_data_by_sample.keys())
+        if len(duplicated_samples) > 0:
+            log.debug(f"Duplicate sample name(s) found in {f['fn']}! Overwriting: {duplicated_samples}")
+        for sname, metrics_by_var in file_data_by_sample.items():
+            metrics_by_var_by_sample[sname] = metrics_by_var
+
+    metrics_by_var_by_sample = module.ignore_samples(metrics_by_var_by_sample)
+    n_reports_found = len(metrics_by_var_by_sample)
     if n_reports_found == 0:
         return 0
-
     log.info(f"Found {n_reports_found} report(s) by samples")
 
     # Superfluous function call to confirm that it is used in this module
@@ -67,7 +68,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     module.add_software_version(None)
 
     # Write parsed report data to a file (restructure first)
-    module.write_data_file(glimpse_err_spl, "multiqc_glimpse_err_spl")
+    module.write_data_file(metrics_by_var_by_sample, "multiqc_glimpse_err_spl")
 
     headers = {
         "val_gt_RR": {
@@ -185,26 +186,19 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     }
 
     # Keep only items from all variants (SNPs + indels)
-    data = {sample: val for sample, vtype in glimpse_err_spl.items() for key, val in vtype.items() if key == "GCsV"}
+    gcsv_by_sample: Dict[str, Dict[str, Union[int, float]]] = defaultdict(dict)
+    for sample, metrics_by_var in metrics_by_var_by_sample.items():
+        for var, metrics in metrics_by_var.items():
+            if var == "GCsV":
+                gcsv_by_sample[sample] = metrics
 
     # Make a table summarising the stats across all samples
-    summary_table(module, data, headers)
-
-    # Add to the general stats table
-    general_headers = ["best_gt_rsquared", "imputed_ds_rsquared"]
-    module.general_stats_addcols(filter_err_spl_data(data, general_headers), headers)
-
-    # Return the number of logs that were found
-    return n_reports_found
-
-
-def summary_table(module, data, headers):
     module.add_section(
         name="Genotype concordance by samples",
         anchor="glimpse-err-spl-table-section",
-        description=("Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across all samples."),
+        description="Stats parsed from <code>GLIMPSE2_concordance</code> output, and summarized across all samples.",
         plot=table.plot(
-            data,
+            gcsv_by_sample,
             headers,
             pconfig={
                 "id": "glimpse-err-spl-table",
@@ -213,13 +207,15 @@ def summary_table(module, data, headers):
         ),
     )
 
+    # Add to the general stats table
+    general_stats_headers = {k: v for k, v in headers.items() if k in ["best_gt_rsquared", "imputed_ds_rsquared"]}
+    module.general_stats_addcols(gcsv_by_sample, general_stats_headers)
 
-def filter_err_spl_data(data, keys):
-    """Filter out unwanted keys from the parsed data"""
-    return {sample: {k: v for k, v in datas.items() if k in keys} for sample, datas in data.items()}
+    # Return the number of logs that were found
+    return n_reports_found
 
 
-def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
+def parse_err_spl_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, float]]]]:
     """
     Example:
     #Genotype concordance by sample (SNPs)
@@ -234,7 +230,7 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Union[int, float]]]:
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data = {}
+    parsed_data: Dict[str, Dict[str, Dict[str, Union[int, float]]]] = {}
     expected_header = "#Genotype concordance by sample (SNPs)\n"
     if lines[0] != expected_header:
         logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")

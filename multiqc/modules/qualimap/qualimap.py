@@ -1,29 +1,58 @@
-"""MultiQC module to parse output from QualiMap"""
-
 import logging
-import os
-from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Qualimap is really a collection of separate programs:
-    BamQC, RNASeq and Counts.. This module is split into separate
-    files to reflect this and help with code organisation."""
+    """
+    The module supports the Qualimap commands `BamQC` and `RNASeq`.
+    Note that Qualimap must be run with the `-outdir` option as well as
+    `-outformat HTML` (which is on by default). MultiQC uses files
+    found within the `raw_data_qualimapReport` folder (as well as `genome_results.txt`).
+
+    Qualimap adds lots of columns to the General Statistics table. To avoid making the table
+    too wide and bloated, some of these are hidden by default (`Error Rate`, `M Aligned`, `M Total reads`).
+    You can override these defaults in your MultiQC config file - for example, to show
+    `Error Rate` by default and hide `Ins. size` by default, add the following:
+
+    ```yaml
+    table_columns_visible:
+      QualiMap:
+        general_error_rate: True
+        median_insert_size: False
+    ```
+
+    See the [relevant section of the documentation](http://multiqc.info/docs/#hiding-columns) for more detail.
+
+    In addition to this, it's possible to customise which coverage thresholds calculated
+    by the Qualimap BamQC module _(default: 1, 5, 10, 30, 50)_ and which of these are hidden in the
+    General Statistics tablewhen the report loads _(default: all hidden except 30X)_.
+
+    To do this, add something like the following to your MultiQC config file:
+
+    ```yaml
+    qualimap_config:
+      general_stats_coverage:
+        - 10
+        - 20
+        - 40
+        - 200
+        - 30000
+      general_stats_coverage_hidden:
+        - 10
+        - 20
+        - 200
+    ```
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="QualiMap",
             anchor="qualimap",
             href="http://qualimap.bioinfo.cipf.es/",
-            info="is a platform-independent application to facilitate the quality"
-            " control of alignment sequencing data and its derivatives like"
-            " feature counts.",
+            info="Quality control of alignment data and its derivatives like feature counts.",
             doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
         )
 
@@ -31,8 +60,6 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
-        self.general_stats_headers = dict()
-        self.general_stats_data = defaultdict(lambda: dict())
         n = dict()
 
         # Call submodule functions
@@ -47,17 +74,3 @@ class MultiqcModule(BaseMultiqcModule):
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
             raise ModuleNoSamplesFound
-
-        # Remove filtered samples from general stats table
-        self.general_stats_data = self.ignore_samples(self.general_stats_data)
-
-        # Add to the General Stats table (has to be called once per MultiQC module)
-        self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)
-
-    # Helper functions
-    def get_s_name(self, f):
-        s_name = os.path.basename(os.path.dirname(f["root"]))
-        s_name = self.clean_s_name(s_name, f)
-        if s_name.endswith(".qc"):
-            s_name = s_name[:-3]
-        return s_name

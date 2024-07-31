@@ -1,24 +1,19 @@
-"""MultiQC module to parse output from eigenstrat_snp_coverage"""
-
 import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """eigenstratdatabasetools module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="eigenstratdatabasetools",
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
-            info="A set of tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases.",
+            info="Tools to compare and manipulate the contents of EingenStrat databases, and to calculate "
+            "SNP coverage statistics in such databases.",
             # No publication / DOI // doi=
         )
 

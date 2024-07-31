@@ -1,5 +1,3 @@
-"""MultiQC submodule to parse output from MinIONQC summary stats"""
-
 import copy
 import logging
 import os
@@ -10,18 +8,25 @@ import yaml
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses data in the `summary.yaml` MinIONQC output files.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MinIONQC",
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
-            info=" is a QC tool for Oxford Nanopore sequencing data",
+            info="Quality control for ONT (Oxford Nanopore) long reads",
+            extra="""
+            It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies) 
+            long-read base-callers to perform QC on the reads. It allows quick-and-easy comparison of data from 
+            multiple flowcells
+            """,
             doi="10.1093/bioinformatics/bty654",
         )
 

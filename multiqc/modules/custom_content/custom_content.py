@@ -6,7 +6,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any, Sequence
+from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
 
 import yaml
 
@@ -296,9 +296,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        item = list(cust_mod_by_id.values())[0]["config"]
-        assert isinstance(item, dict)
-        if len(cust_mod_by_id) == 1 and item.get("plot_type") == "generalstats":
+        cfgs: List[Dict] = []
+        for cust_mod_v in cust_mod_by_id.values():
+            assert isinstance(cust_mod_v["config"], dict)
+            cfgs.append(cust_mod_v["config"])
+        if len(cust_mod_by_id) >= 1 and all(cfg.get("plot_type") == "generalstats" for cfg in cfgs):
             sorted_modules = [bm]
         else:
             raise ModuleNoSamplesFound
@@ -332,10 +334,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi=mod["config"].get("doi"),
         )
 
-        # Don't repeat the Custom Content name in the subtext
-        if self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
-
         if "custom_content" in config.run_modules:
             # To allow file_search.include_or_exclude_modules() correctly filter these modules
             config.custom_content_modules.append(anchor)
@@ -355,15 +353,12 @@ class MultiqcModule(BaseMultiqcModule):
         if self.extra is None or self.info == "":
             self.extra = mod["config"].get("extra", None)
         # This needs overwriting again as it has already run on init
-        if self.info or self.extra or self.doi_link:
-            self.intro = f"<p>{self.info}{self.doi_link}</p>{self.extra}"
+        self.intro = self._get_intro()
 
     def add_cc_section(self, c_id, mod):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
-
-        section_description = mod["config"].get("description", "")
 
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
@@ -464,10 +459,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Don't use exactly the same title / description text as the main module
         if section_name == self.name:
             section_name = None
-        if self.info and section_description.strip(".") == self.info.strip("."):
-            section_description = ""
 
-        self.add_section(name=section_name, anchor=c_id, description=section_description, plot=plot, content=content)
+        self.add_section(name=section_name, anchor=c_id, plot=plot, content=content)
 
 
 def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
@@ -650,11 +643,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
         data_ddict = dict()
         for s in matrix[1:]:
-            assert isinstance(s[0], str)
-            data_ddict[s[0]] = dict()
+            sname = str(s[0])
+            data_ddict[sname] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(matrix[0][i + 1])
-                data_ddict[s[0]][cat] = v
+                data_ddict[sname][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True

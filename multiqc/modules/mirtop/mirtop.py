@@ -7,18 +7,24 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mirtop",
             anchor="mirtop",
             href="https://github.com/miRTop/mirtop/",
-            info="is a command line tool to annotate miRNAs and isomiRs and compute general statistics using the mirGFF3 format.",
+            info="Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.",
+            extra="""
+            This tool is dedicated to the creation and management of miRNA alignment output using the standardized 
+            GFF3 format (see [miRTop/mirGFF3](https://github.com/miRTop/mirGFF3)).
+            A unified miRNA alignment format allows to easily compare the output of different alignment tools.
+        
+            Currently, mirtop can convert into mirGFF3 the outputs of commonly used pipelines, such as seqbuster, 
+            isomiR-SEA, sRNAbench, Prost! as well as BAM files.
+            """,
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
         )
 

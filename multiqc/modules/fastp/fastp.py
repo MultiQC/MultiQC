@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Fastp"""
-
 import json
 import logging
 import re
@@ -9,18 +7,33 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    By default, the module generates the sample names based on the input FastQ file names in
+    the command line used by fastp. If you prefer, you can tell the module to use
+    the filenames as sample names instead. To do so, use the following config option:
+
+    ```yaml
+    fastp:
+      s_name_filenames: true
+    ```
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fastp",
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
-            info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            info="All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            extra="""
+            Fastp goes through fastq files in a folder and perform a series of quality control and filtering. 
+            Quality control and reporting are displayed both before and after filtering, allowing for a clear 
+            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a 
+            variety of parameters including quality scores, length, as well as the presence of adapters, polyG, 
+            or polyX tailing.""",
             doi="10.1093/bioinformatics/bty560",
         )
 

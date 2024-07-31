@@ -1,25 +1,23 @@
-"""MultiQC module to parse base misincorporation output from mapdamage2"""
-
 import logging
 import os
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """mapDamage module"""
+    """
+    This module parses the base `misincorporation` output.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mapDamage",
             anchor="mapdamage",
             href="https://github.com/ginolhac/mapDamage",
-            info="mapDamage: tracking and quantifying damage patterns in ancient DNA sequences.",
+            info="Tracks and quantifies damage patterns in ancient DNA sequences.",
             doi="https://doi.org/10.1093/bioinformatics/btt193",
         )
 

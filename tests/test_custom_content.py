@@ -1,10 +1,13 @@
 import tempfile
+from pathlib import Path
+
 import pytest
 
 import multiqc
-from multiqc import report
+from multiqc import report, config
 from multiqc.core.update_config import update_config, ClConfig
 from multiqc.modules.custom_content import custom_module_classes
+from multiqc.utils import testing
 from multiqc.validation import ConfigValidationError
 from multiqc.core.file_search import file_search
 
@@ -45,7 +48,6 @@ def test_custom_content(tmp_path):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     report.search_files(["custom_content"])
     custom_module_classes()
@@ -81,9 +83,8 @@ def test_deprecated_fields(tmp_path, capsys):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
-    update_config(cfg=ClConfig(verbose=True))
+    update_config(cfg=ClConfig(verbose=True))  # force re-creating logger
     report.search_files(["custom_content"])
     custom_module_classes()
 
@@ -94,6 +95,8 @@ def test_deprecated_fields(tmp_path, capsys):
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
+    assert "'LongDash' is a deprecated dash style, use 'longdash'" in err
+    assert "Deprecated field 'colour'. Use 'color' instead" in err
     assert "Deprecated field 'xLog'. Use 'xlog' instead" in err
     assert "Deprecated field 'xPlotLines'. Use 'x_lines' instead" in err
 
@@ -121,9 +124,8 @@ def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
     )
     (tmp_path / "tmp").mkdir()
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path / "tmp")
-    multiqc.reset()
-    update_config(cfg=ClConfig(strict=strict))
 
+    config.strict = strict
     report.analysis_files = [file]
     report.search_files(["custom_content"])
 
@@ -166,7 +168,6 @@ def test_missing_id_and_title(tmp_path, capsys):
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     report.search_files(["custom_content"])
 
@@ -200,7 +201,6 @@ sp:
 """
     )
 
-    report.reset()
     report.analysis_files = [file]
     update_config(cfg=ClConfig(config_files=[conf_file]))
 
@@ -286,7 +286,6 @@ sp:
 """
     )
 
-    report.reset()
     report.analysis_files = [file1, file2]
     update_config(cfg=ClConfig(config_files=[conf], run_modules=["custom_content"]))
 
@@ -354,7 +353,6 @@ myfile.fasta	chr1	55312	56664	+	GENE""",
 def test_from_tsv(tmp_path, section_name, is_good, contents):
     tmp_path.joinpath("mysample_mqc.tsv").write_text(contents)
 
-    report.reset()
     report.analysis_files = [tmp_path]
     update_config(cfg=ClConfig(run_modules=["custom_content"]))
 
@@ -385,3 +383,51 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE": {"myfile.fasta": "GENE"},
     }
     assert report.plot_by_id["mysample-plot"].layout.title.text == "My section" if section_name else "mysample"
+
+
+def test_on_all_example_files(data_dir):
+    """
+    Run on all example in data/custom_content, verify it didn't fail.
+    Deprecate this in the future in favour of more granular tests like those above.
+    """
+    report.analysis_files = [data_dir]
+    config.run_modules = ["custom_content"]
+
+    file_search()
+    custom_module_classes()
+
+
+# @pytest.mark.parametrize("input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir()))
+# def test_custom_content_files(input_file, tmp_path):
+#     """
+#     Test other files in custom_content test-data dir that they don't fail and generate something
+#     """
+#
+#     report.analysis_files = [input_file]
+#     report.search_files(["custom_content"])
+#     modules = custom_module_classes()
+#
+#     # Verify some sections added:
+#     assert sum(len(m.sections) for m in modules) > 0
+
+
+# TODO: test each file separately
+# @pytest.mark.parametrize(
+#     "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
+# )
+# def test_custom_content_html(input_file, tmp_path, snapshot):
+#     """
+#     Test the custom content module with a snapshot of the output
+#     """
+#
+#     # Stubs for dynamic values to make the report snapshots identical
+#     config.creation_date = "CREATION_DATE"
+#     config.version = "VERSION"
+#
+#     report.analysis_files = [input_file]
+#     config.run_modules = ["custom_content"]
+#     file_search()
+#     custom_module_classes()
+#     multiqc.write_report(output_dir=str(tmp_path))
+#
+#     snapshot.assert_match((tmp_path / "multiqc_report.html").read_text())

@@ -1,6 +1,7 @@
 import logging
 import re
 from collections import defaultdict
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -11,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
-        perchrom_data_by_phenotype_by_sample = defaultdict(dict)
+        perchrom_data_by_phenotype_by_sample: Dict[str, Dict] = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
             perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
@@ -29,7 +30,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         perchrom_data_by_phenotype_by_sample = self.ignore_samples(perchrom_data_by_phenotype_by_sample)
 
         # Merge tumor and normal data:
-        perchrom_data_by_sample = defaultdict(dict)
+        perchrom_data_by_sample: Dict[str, Dict] = defaultdict(dict)
         for sn in perchrom_data_by_phenotype_by_sample:
             for phenotype in perchrom_data_by_phenotype_by_sample[sn]:
                 new_sn = sn

@@ -3,6 +3,7 @@ import logging
 import os
 from collections import defaultdict
 from itertools import islice
+from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -12,26 +13,33 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    There are two versions of this software: `bcl2fastq` for MiSeq and HiSeq
+    sequencing systems running RTA versions earlier than 1.8, and `bcl2fastq2` for
+    Illumina sequencing systems running RTA version 1.18.54 and above. This module
+    currently only covers output from the latter.
+    """
+
     def __init__(self):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
-            info="can be used to both demultiplex data and convert BCL files to FASTQ file formats for downstream analysis.",
+            info="Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
         )
 
         # Gather data from all json files
-        self.bcl2fastq_data = dict()
+        self.bcl2fastq_data: Dict[str, Dict[str, Dict]] = dict()
         for f in self.find_log_files("bcl2fastq"):
             self.parse_file_as_json(f)
 
         # Collect counts by lane and sample (+source_files)
-        self.bcl2fastq_bylane = dict()
-        self.bcl2fastq_bysample = dict()
-        self.bcl2fastq_bysample_lane = dict()
-        self.source_files = dict()
+        self.bcl2fastq_bylane: Dict = dict()
+        self.bcl2fastq_bysample: Dict = dict()
+        self.bcl2fastq_bysample_lane: Dict = dict()
+        self.source_files: Dict = dict()
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
@@ -93,10 +101,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add section for counts by sample
         # get cats for per-lane tab
-        lcats = set()
+        lcats_set = set()
         for s_name in self.bcl2fastq_bysample_lane:
-            lcats.update(self.bcl2fastq_bysample_lane[s_name].keys())
-        lcats = sorted(list(lcats))
+            lcats_set.update(self.bcl2fastq_bysample_lane[s_name].keys())
+        lcats = sorted(list(lcats_set))
         self.add_section(
             name="Clusters by sample",
             anchor="bcl2fastq-bysample",
@@ -150,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if runId not in self.bcl2fastq_data:
             self.bcl2fastq_data[runId] = dict()
-        run_data = self.bcl2fastq_data[runId]
+        run_data: Dict[str, Dict] = self.bcl2fastq_data[runId]
         for conversionResult in content.get("ConversionResults", []):
             lane_num = conversionResult["LaneNumber"]
             lane = f"L{conversionResult['LaneNumber']}"
@@ -241,21 +249,23 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
         # Calculate Percents and averages
-        for lane_id, lane in run_data.items():
+        for lane_id, lane_data in run_data.items():
             try:
-                lane["percent_Q30"] = (float(lane["yieldQ30"]) / float(lane["total_yield"])) * 100.0
+                lane_data["percent_Q30"] = (float(lane_data["yieldQ30"]) / float(lane_data["total_yield"])) * 100.0
             except ZeroDivisionError:
-                lane["percent_Q30"] = "NA"
+                lane_data["percent_Q30"] = "NA"
             try:
-                lane["percent_perfectIndex"] = (float(lane["perfectIndex"]) / float(lane["total"])) * 100.0
+                lane_data["percent_perfectIndex"] = (
+                    float(lane_data["perfectIndex"]) / float(lane_data["total"])
+                ) * 100.0
             except ZeroDivisionError:
-                lane["percent_perfectIndex"] = "NA"
+                lane_data["percent_perfectIndex"] = "NA"
             try:
-                lane["mean_qscore"] = float(lane["qscore_sum"]) / float(lane["total_yield"])
+                lane_data["mean_qscore"] = float(lane_data["qscore_sum"]) / float(lane_data["total_yield"])
             except ZeroDivisionError:
-                lane["mean_qscore"] = "NA"
+                lane_data["mean_qscore"] = "NA"
 
-            for sample_id, sample in lane["samples"].items():
+            for sample_id, sample in lane_data["samples"].items():
                 try:
                     sample["percent_Q30"] = (float(sample["yieldQ30"]) / float(sample["total_yield"])) * 100.0
                 except ZeroDivisionError:

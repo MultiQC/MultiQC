@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from SeqWho"""
-
 import json
 import logging
 from collections import OrderedDict
@@ -9,7 +7,6 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, bargraph
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -18,15 +15,13 @@ SPECIES = ["human", "mouse"]
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """SeqWho module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SeqWho",
             anchor="seqwho",
             href="https://daehwankimlab.github.io/seqwho/",
-            info="is a tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.",
+            info="Determines FASTQ(A) sequencing file source protocol and the species of origin, "
+            "to check that the composition of the library is expected.",
             # doi=""
         )
 

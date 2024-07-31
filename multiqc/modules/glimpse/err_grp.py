@@ -36,42 +36,46 @@ EXPECTED_COLUMNS = [
 def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
     """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
-    glimpse_err_grp = dict()
+    metrics_by_idn_by_var_by_sample: Dict[str, Dict[str, Dict[str, Dict[str, Union[int, float, str]]]]] = dict()
     for f in module.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
-            lines = [line.decode() for line in f_gz.readlines()]
+            lines = [line.decode().rstrip() for line in f_gz.readlines()]
 
-        parsed_data = parse_err_grp_report([line.rstrip() for line in lines])
-        if len(parsed_data) > 1:
-            if f["s_name"] in glimpse_err_grp:
-                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            module.add_data_source(f, section="err_grp")
-            # Filter to strip out ignored sample names
-            glimpse_err_grp[f["s_name"]] = module.ignore_samples(parsed_data)
+        file_data = parse_err_grp_report(lines)
+        if not file_data:
+            continue
 
-    n_reports_found = len(glimpse_err_grp)
+        module.add_data_source(f, section="err_grp")
+
+        if f["s_name"] in metrics_by_idn_by_var_by_sample:
+            log.debug(f"Duplicate sample name '{f['s_name']}' found from {f['fn']}. Overwriting")
+        metrics_by_idn_by_var_by_sample[f["s_name"]] = file_data
+
+    metrics_by_idn_by_var_by_sample = module.ignore_samples(metrics_by_idn_by_var_by_sample)
+    n_reports_found = len(metrics_by_idn_by_var_by_sample)
     if n_reports_found == 0:
         return 0
-
-    log.info(f"Found {n_reports_found} report(s) by allele frequency bin.")
+    log.info(f"Found {n_reports_found} report(s) by samples")
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
     module.add_software_version(None)
 
     # Write parsed report data to a file (restructure first)
-    module.write_data_file(glimpse_err_grp, "multiqc_glimpse_err_grp")
+    module.write_data_file(metrics_by_idn_by_var_by_sample, "multiqc_glimpse_err_grp")
 
-    vtypes = ["GCsSAF", "GCsIAF", "GCsVAF"]
-    data_best_gt_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
-    data_imputed_ds_rsquared: Dict[str, Dict[str, Dict]] = {v: {} for v in vtypes}
-    for sname, dataf in glimpse_err_grp.items():
-        for vtype, data in dataf.items():
-            data_best_gt_rsquared[vtype][sname] = {}
-            data_imputed_ds_rsquared[vtype][sname] = {}
-            for idn, datav in data.items():
-                data_best_gt_rsquared[vtype][sname].update({datav["mean_af"]: datav["best_gt_rsquared"]})
-                data_imputed_ds_rsquared[vtype][sname].update({datav["mean_af"]: datav["imputed_ds_rsquared"]})
+    GCsSAF = "GCsSAF"
+    GCsIAF = "GCsIAF"
+    GCsVAF = "GCsVAF"
+    vtypes = [GCsSAF, GCsIAF, GCsVAF]
+    samples = metrics_by_idn_by_var_by_sample.keys()
+    data_best_gt_rsquared: Dict[str, Dict[str, Dict]] = {v: {s: {} for s in samples} for v in vtypes}
+    data_imputed_ds_rsquared: Dict[str, Dict[str, Dict]] = {v: {s: {} for s in samples} for v in vtypes}
+    for sname, metrics_by_idn_by_var in metrics_by_idn_by_var_by_sample.items():
+        for var_type, metrics_by_idn in metrics_by_idn_by_var.items():
+            for idn, metrics in metrics_by_idn.items():
+                data_best_gt_rsquared[var_type][sname].update({metrics["mean_af"]: metrics["best_gt_rsquared"]})
+                data_imputed_ds_rsquared[var_type][sname].update({metrics["mean_af"]: metrics["imputed_ds_rsquared"]})
 
     # Make a table summarising the stats across all samples
     accuracy_plot(

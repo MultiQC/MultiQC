@@ -1,8 +1,3 @@
-"""MultiQC module to plot output from goleft indexcov
-
-https://github.com/brentp/goleft/tree/master/indexcov
-"""
-
 from collections import defaultdict
 import logging
 from typing import Optional, Dict
@@ -11,17 +6,41 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module uses the PED and ROC data files to create diagnostic plots of coverage per
+    sample, helping to identify sample gender and coverage issues.
+
+    By default, we attempt to only plot chromosomes using standard human-like naming
+    (chr1, chr2... chrX or 1, 2 ... X) but you can specify chromosomes for detailed
+    ROC plots for alternative naming schemes in your configuration with:
+
+    ```yaml
+    goleft_indexcov_config:
+      chromosomes:
+        - I
+        - II
+        - III
+    ```
+
+    The number of plotted chromosomes is limited to 50 by default, you can customise this with the following:
+
+    ```yaml
+    goleft_indexcov_config:
+      max_chroms: 80
+    ```
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="goleft indexcov",
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",
-            info="quickly estimates coverage from a whole-genome bam index.",
+            info="Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution",
+            extra="This is useful as a quick QC to get coverage values across the genome.",
             doi="10.1093/gigascience/gix090",
         )
 

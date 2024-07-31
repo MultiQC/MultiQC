@@ -446,7 +446,7 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
 
     # Pass on to a regular function that can be used easily without click
-    result = run(*analysis_dir, clean_up=clean_up, cfg=cfg)
+    result = run(*analysis_dir, clean_up=clean_up, cfg=cfg, interactive=False)
 
     # End execution using the exit code returned from MultiQC
     sys.exit(result.sys_exit_code)
@@ -465,7 +465,7 @@ class RunResult:
         self.message = message
 
 
-def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) -> RunResult:
+def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, interactive: bool = True) -> RunResult:
     """
     MultiQC aggregates results from bioinformatics analyses across many samples into a single report.
 
@@ -482,7 +482,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None) ->
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-    update_config(*analysis_dir, cfg=cfg)
+    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive)
 
     check_version()
 

@@ -1,25 +1,27 @@
-"""MultiQC module to parse output from HTSeq Count"""
-
 import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    HTSeq is a general purpose Python package that provides infrastructure to
+    process data from high-throughput sequencing assays. `htseq-count` is a tool
+    that is part of the main HTSeq package - it takes a file with aligned sequencing
+    reads, plus a list of genomic features and counts how many reads map to each feature.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HTSeq Count",
             anchor="htseq",
             target="HTSeq Count",
             href="https://htseq.readthedocs.io/en/master/htseqcount.html",
-            info=" is part of the HTSeq Python package - it takes a file with aligned sequencing "
-            "reads, plus a list of genomic features and counts how many reads map to each feature.",
+            info="Part of the HTSeq package: counts reads covering specified genomic features",
             doi="10.1093/bioinformatics/btu638",
         )
 
