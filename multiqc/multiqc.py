@@ -6,6 +6,7 @@ Imported by __init__.py so available as multiqc.run()
 
 import logging
 import os
+import subprocess
 import sys
 import time
 import traceback
@@ -488,7 +489,8 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 
     logger.debug(f"Working dir : {os.getcwd()}")
     if config.make_pdf:
-        logger.info("--pdf specified. Using non-interactive HTML template.")
+        _check_pdf_export_possible()
+
     logger.debug(f"Template    : {config.template}")
     if config.strict:
         logger.info(
@@ -559,3 +561,24 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
     finally:
         if clean_up:
             report.remove_tmp_dir()
+
+
+def _check_pdf_export_possible():
+    if subprocess.call(["which", "pandoc"]) != 0:
+        logger.error(
+            "`pandoc` and `pdflatex` tools are required to create a PDF report. Please install those and try "
+            "again. See http://pandoc.org/installing.html for the `pandoc` installation instructions "
+            "(e.g. `brew install pandoc` on macOS), and install LaTeX for `pdflatex` (e.g. `brew install basictex`"
+            "on macOS). Alternatively, omit the `--pdf` option or unset `make_pdf: true` in the MultiQC config."
+        )
+        return RunResult(message="Pandoc is required to create PDF reports", sys_exit_code=1)
+
+    if subprocess.call(["which", "pdflatex"]) != 0:
+        logger.error(
+            "The `pdflatex` tool is required to create a PDF report. Please install LaTeX and try again, "
+            "e.g. `brew install basictex` on macOS. Alternatively, omit the `--pdf` option"
+            "or unset `make_pdf: true` in the MultiQC config."
+        )
+        return RunResult(message="LaTeX is required to create PDF reports", sys_exit_code=1)
+
+    logger.info("--pdf specified. Using non-interactive HTML template.")

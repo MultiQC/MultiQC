@@ -154,6 +154,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.development is not None:
         config.development = cfg.development
     if cfg.make_pdf:
+        config.make_pdf = cfg.make_pdf
         config.template = "simple"
     if config.template == "simple":
         config.plots_force_flat = True

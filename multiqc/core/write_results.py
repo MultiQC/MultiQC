@@ -86,19 +86,18 @@ def write_results() -> None:
     if config.make_report:
         # Render report HTML, write to file or stdout
         _write_html_report(paths.to_stdout, paths.report_path)
-        if not paths.to_stdout and paths.report_path:
-            if config.make_report and paths.report_path:
-                logger.info(
-                    "Report      : {}{}".format(
-                        paths.report_path,
-                        "   (overwritten)" if paths.report_overwritten else "",
-                    )
+
+        if paths.report_path and not config.make_pdf:
+            logger.info(
+                "Report      : {}{}".format(
+                    paths.report_path,
+                    "   (overwritten)" if paths.report_overwritten else "",
                 )
-            else:
-                logger.info("Report      : None")
-        # Try to create a PDF if requested
-        if config.make_pdf:
-            _write_pdf()
+            )
+        elif paths.report_path and config.make_pdf:
+            pdf_path = _write_pdf(paths.report_path)
+            if pdf_path:
+                logger.info(f"Report      : {pdf_path}")
 
     if config.export_plots and paths.plots_dir:
         # Copy across the static plot images if requested
@@ -505,18 +504,16 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
             pass  # No files to copy
 
 
-def _write_pdf():
-    if not isinstance(config.output_fn, (str, Path)):
-        return
+def _write_pdf(report_path: Path) -> Optional[Path]:
     try:
-        pdf_fn_name = config.output_fn.replace(".html", ".pdf")
+        pdf_path = report_path.with_suffix(".pdf")
         pandoc_call = [
             "pandoc",
             "--standalone",
-            config.output_fn,
+            str(report_path),
             "--output",
-            pdf_fn_name,
-            "--pdf-engine=xelatex",
+            str(pdf_path),
+            "--pdf-engine=pdflatex",
             "-V",
             "documentclass=article",
             "-V",
@@ -530,11 +527,9 @@ def _write_pdf():
         pdf_exit_code = subprocess.call(pandoc_call)
         if pdf_exit_code != 0:
             logger.error("Error creating PDF! Pandoc returned a non-zero exit code.")
-        else:
-            logger.info(f"PDF Report  : {pdf_fn_name}")
     except OSError as e:
         if e.errno == errno.ENOENT:
-            logger.error("Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/")
+            logger.error("Error creating PDF - `pandoc` not found. Is it installed? http://pandoc.org/")
         else:
             logger.error(
                 "Error creating PDF! Something went wrong when creating the PDF\n"
@@ -542,3 +537,7 @@ def _write_pdf():
                 + f"\n{traceback.format_exc()}\n"
                 + ("=" * 60)
             )
+    else:
+        # Remove the HTML report
+        os.remove(report_path)
+        return pdf_path
