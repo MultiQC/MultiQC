@@ -505,28 +505,27 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path]):
 
 
 def _write_pdf(report_path: Path) -> Optional[Path]:
+    pdf_path = report_path.with_suffix(".pdf")
+    pandoc_call = [
+        "pandoc",
+        "--standalone",
+        str(report_path),
+        "--output",
+        str(pdf_path),
+        "--pdf-engine=pdflatex",
+        "-V",
+        "documentclass=article",
+        "-V",
+        "geometry=margin=1in",
+        "-V",
+        "title=",
+    ]
+    if config.pandoc_template is not None:
+        pandoc_call.append(f"--template={config.pandoc_template}")
+    logger.debug(f"Attempting Pandoc conversion to PDF with following command:\n{' '.join(pandoc_call)}")
+
     try:
-        pdf_path = report_path.with_suffix(".pdf")
-        pandoc_call = [
-            "pandoc",
-            "--standalone",
-            str(report_path),
-            "--output",
-            str(pdf_path),
-            "--pdf-engine=pdflatex",
-            "-V",
-            "documentclass=article",
-            "-V",
-            "geometry=margin=1in",
-            "-V",
-            "title=",
-        ]
-        if config.pandoc_template is not None:
-            pandoc_call.append(f"--template={config.pandoc_template}")
-        logger.debug(f"Attempting Pandoc conversion to PDF with following command:\n{' '.join(pandoc_call)}")
         pdf_exit_code = subprocess.call(pandoc_call)
-        if pdf_exit_code != 0:
-            logger.error("Error creating PDF! Pandoc returned a non-zero exit code.")
     except OSError as e:
         if e.errno == errno.ENOENT:
             logger.error("Error creating PDF - `pandoc` not found. Is it installed? http://pandoc.org/")
@@ -537,7 +536,12 @@ def _write_pdf(report_path: Path) -> Optional[Path]:
                 + f"\n{traceback.format_exc()}\n"
                 + ("=" * 60)
             )
-    else:
-        # Remove the HTML report
-        os.remove(report_path)
-        return pdf_path
+        return None
+
+    if pdf_exit_code != 0:
+        logger.error("Error creating PDF! Pandoc returned a non-zero exit code.")
+        return None
+
+    # Remove the HTML report
+    os.remove(report_path)
+    return pdf_path
