@@ -450,7 +450,10 @@ class Plot(BaseModel, Generic[T]):
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:
-            layout.width = FLAT_PLOT_WIDTH
+            if config.simple_output:
+                layout.width = 600
+            else:
+                layout.width = 1100
         for axis in self.axis_controlled_by_switches:
             layout[axis].type = "linear"
             minval = layout[axis].autorangeoptions["minallowed"]
@@ -744,10 +747,6 @@ def add_logo(
         output_buffer = img_buffer
 
     return output_buffer
-
-
-# Default width for flat plots
-FLAT_PLOT_WIDTH = 1100
 
 
 def _set_axis_log_scale(axis):
