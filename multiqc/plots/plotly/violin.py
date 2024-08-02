@@ -514,7 +514,7 @@ class ViolinPlot(Plot):
         self,
         filename: str,
         dataset_id: Union[int, str] = 0,
-        flat=False,
+        flat=None,
         table=None,
         violin=None,
         **kwargs,
@@ -538,6 +538,11 @@ class ViolinPlot(Plot):
                 rid = header.rid
                 values.append([data[s].get(rid, "") for s in data.keys()])
 
+            keys = list(data.keys())
+            if not keys:
+                logger.error("No plot data found to save")
+                return
+
             fig = go.Figure(
                 data=[
                     go.Table(
@@ -547,6 +552,7 @@ class ViolinPlot(Plot):
                 ],
                 layout=self.layout,
             )
+            filename, flat = self._proc_save_args(filename, flat)
             if flat:
                 fig.write_image(
                     filename,
