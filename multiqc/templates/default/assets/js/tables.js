@@ -27,7 +27,12 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val, cancelSelection: false });
+    $(".mqc_table").tablesorter({
+      sortInitialOrder: "desc",
+      textExtraction: get_sort_val,
+      cancelSelection: false,
+      headers: null // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
+    });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
