@@ -273,10 +273,18 @@ def make_table(
 
         # Configure Columns Button
         if len(t_headers) > 1:
+            # performance degrades substantially when configuring thousands of columns
+            # it is effectively unusable.
+            disabled_class = ""
+            disabled_attrs = ""
+            if _is_configure_columns_disabled(len(t_headers)):
+                disabled_class = "mqc_table_tooltip"
+                disabled_attrs = 'disabled title="Table is too large to configure columns"'
+
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal"
-                data-target="#{dt.id}_configModal">
+            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
+                data-target="#{dt.id}_configModal" {disabled_attrs}>
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
@@ -385,7 +393,7 @@ def make_table(
 
     # Build the bootstrap modal to customise columns and order
     modal = ""
-    if not config.simple_output and add_control_panel:
+    if not config.simple_output and add_control_panel and not _is_configure_columns_disabled(len(t_headers)):
         modal = _configuration_modal(
             tid=dt.id,
             title=table_title,
@@ -483,3 +491,7 @@ def _get_sortlist(dt: DataTable) -> str:
         sortlist.append([idx, direction])
 
     return str(sortlist)
+
+
+def _is_configure_columns_disabled(num_columns: int) -> bool:
+    return num_columns > 50
