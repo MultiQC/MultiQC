@@ -160,15 +160,17 @@ $(function () {
       }
     }
 
-    // Make rows in MultiQC tables sortable
-    $(".mqc_table.mqc_sortable tbody").sortable({
-      handle: ".sorthandle",
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function () {
-          $(this).width($(this).width());
-        });
-        return ui;
-      },
+    // Make rows in MultiQC "Configure Columns" tables sortable
+    $(".mqc_configModal").on("show.bs.modal", function (e) {
+      $(e.target).find(".mqc_table.mqc_sortable tbody").sortable({
+        handle: ".sorthandle",
+        helper: function fixWidthHelper(e, ui) {
+          ui.children().each(function () {
+            $(this).width($(this).width());
+          });
+          return ui;
+        },
+      });
     });
 
     // Change order of columns

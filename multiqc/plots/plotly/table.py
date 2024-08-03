@@ -275,7 +275,7 @@ def make_table(
         if len(t_headers) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal" 
+            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm" data-toggle="modal"
                 data-target="#{dt.id}_configModal">
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
@@ -285,7 +285,7 @@ def make_table(
         # Sort By Highlight button
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm" 
+        <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
             data-target="#{dt.id}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
@@ -296,7 +296,7 @@ def make_table(
         if len(t_headers) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm" 
+            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm"
                 data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
@@ -306,7 +306,7 @@ def make_table(
         if violin_id is not None:
             buttons.append(
                 f"""
-            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm" 
+            <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
                 data-table-id="{dt.id}" data-violin-id="{violin_id}">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
@@ -315,7 +315,7 @@ def make_table(
 
         buttons.append(
             f"""
-        <button type="button" class="export-plot btn btn-default btn-sm" 
+        <button type="button" class="export-plot btn btn-default btn-sm"
             data-pid="{violin_id or dt.id}" data-type="table"
         >Export as CSV</button>
         """
@@ -402,7 +402,7 @@ def _configuration_modal(tid: str, title: str, trows: str, violin_id: Optional[s
         data += f" data-violin-id='{violin_id}'"
     return f"""
     <!-- MultiQC Table Columns Modal -->
-    <div class="modal fade" id="{tid}_configModal" tabindex="-1">
+    <div class="modal fade mqc_configModal" id="{tid}_configModal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
