@@ -63,7 +63,7 @@ def make_table(
         )
 
         ns = f"{header.namespace}: " if header.namespace else ""
-        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header.description}">{header.title}</span>'
+        cell_contents = f'<span class="mqc_table_tooltip" title="{ns}{header.description}" data-html="true">{header.title}</span>'
 
         t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>'.format(
             rid=rid, h=hide, da=data_attr, c=cell_contents
