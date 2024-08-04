@@ -1,6 +1,7 @@
 import logging
 
 from multiqc.modules.kraken import MultiqcModule as KrakenModule
+from multiqc.base_module import ModuleNoSamplesFound
 
 log = logging.getLogger(__name__)
 
@@ -45,4 +46,4 @@ class MultiqcModule(KrakenModule):
         # Check that we had some counts for some samples, exit if not
         if total_all_samples == 0:
             log.warning("No samples had any reads")
-            raise super.ModuleNoSamplesFound
+            raise ModuleNoSamplesFound
