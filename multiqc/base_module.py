@@ -96,6 +96,10 @@ class BaseMultiqcModule:
         if self.extra is None:
             self.extra = ""
 
+        if isinstance(self.href, str):
+            self.href = [self.href]
+        self.href = [i for i in self.href if i != ""]
+
         if isinstance(self.doi, str):
             self.doi = [self.doi]
         self.doi = [i for i in self.doi if i != ""]
