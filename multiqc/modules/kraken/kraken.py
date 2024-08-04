@@ -6,8 +6,7 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
 
 
-
-class MultiqcModule(BaseMultiqcModule): 
+class MultiqcModule(BaseMultiqcModule):
     """
     The MultiQC module supports outputs from both Kraken and Kraken 2.
 
@@ -42,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         "(LCA) of a given sequence.",
         doi="10.1186/gb-2014-15-3-r46",
         sp_key="kraken",
-        log_name="kraken", 
+        log_name="kraken",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -526,10 +525,11 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
         )
-    
-    class __logger_filter():
+
+    class __logger_filter:
         def __init__(self, log_name):
             self.log_name = log_name
+
         def filter(self, record):
             record.module = self.log_name
             return True
