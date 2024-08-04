@@ -396,6 +396,19 @@ class Plot(BaseModel, Generic[T]):
         else:
             return fig
 
+    @staticmethod
+    def _proc_save_args(filename: str, flat: bool) -> Tuple[str, bool]:
+        if isinstance(filename, (Path, str)):
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
+        return filename, flat
+
     def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
         """
         Save the plot to a file. Will write an HTML with an interactive plot -
@@ -407,15 +420,7 @@ class Plot(BaseModel, Generic[T]):
         @param dataset_id: index of the dataset to plot
         @param flat: whether to save a static image instead of an interactive HTML.
         """
-        if isinstance(filename, (Path, str)):
-            if Path(filename).suffix.lower() == ".html":
-                if flat is not None and flat is True:
-                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
-                flat = False
-            else:
-                if flat is not None and flat is False:
-                    raise ValueError("Set flat=True to save a static plot as an image file")
-                flat = True
+        filename, flat = self._proc_save_args(filename, flat)
 
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
@@ -450,7 +455,10 @@ class Plot(BaseModel, Generic[T]):
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:
-            layout.width = FLAT_PLOT_WIDTH
+            if config.simple_output:
+                layout.width = 600
+            else:
+                layout.width = 1100
         for axis in self.axis_controlled_by_switches:
             layout[axis].type = "linear"
             minval = layout[axis].autorangeoptions["minallowed"]
@@ -744,10 +752,6 @@ def add_logo(
         output_buffer = img_buffer
 
     return output_buffer
-
-
-# Default width for flat plots
-FLAT_PLOT_WIDTH = 1100
 
 
 def _set_axis_log_scale(axis):
