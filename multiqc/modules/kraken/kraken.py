@@ -5,9 +5,10 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
 
+log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule): 
+class MultiqcModule(BaseMultiqcModule):
     """
     The MultiQC module supports outputs from both Kraken and Kraken 2.
 
@@ -42,7 +43,6 @@ class MultiqcModule(BaseMultiqcModule):
         "(LCA) of a given sequence.",
         doi="10.1186/gb-2014-15-3-r46",
         sp_key="kraken",
-        log_name="kraken", 
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -64,9 +64,6 @@ class MultiqcModule(BaseMultiqcModule):
             "U": "Unclassified",
         }
 
-        self.logger_filter = self.__logger_filter(log_name)
-        self.log = logging.getLogger(log_name)
-        self.log.addFilter(self.logger_filter)
         self.top_n = getattr(config, "kraken", {}).get("top_n", 5)
 
         # Find and load any kraken reports
@@ -83,9 +80,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
         self.kraken_raw_data = self.ignore_samples(self.kraken_raw_data)
+
         if len(self.kraken_raw_data) == 0:
             raise ModuleNoSamplesFound
-        self.log.info(f"Found {len(self.kraken_raw_data)} reports")
+
+        log.info(f"Found {len(self.kraken_raw_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
@@ -231,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
                 data.append(row)
             else:
-                self.log.debug(f"{f['s_name']}: Could not parse line: {line}")
+                log.debug(f"{f['s_name']}: Could not parse line: {line}")
 
         self.kraken_raw_data[f["s_name"]] = data
 
@@ -247,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Check that we had some counts for some samples, exit if not
         if total_all_samples == 0:
-            self.log.warning("No samples had any reads")
+            log.warning("No samples had any reads")
             raise ModuleNoSamplesFound
 
     def sum_sample_counts(self):
@@ -409,7 +408,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
                 if rank_data[s_name]["other"] < 0:
-                    self.log.debug(
+                    log.debug(
                         "Found negative 'other' count for {} ({}): {}".format(
                             s_name, self.t_ranks[rank_code], rank_data[s_name]["other"]
                         )
@@ -468,7 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             sorted_pct = sorted(self.kraken_total_pct[rank_code].items(), key=lambda x: x[1], reverse=True)
         except KeyError:
-            self.log.debug("Taxa rank not found, skipping Taxa duplication heatmap")
+            log.debug("Taxa rank not found, skipping Taxa duplication heatmap")
             return
 
         i = 0
@@ -499,7 +498,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     del rank_data[s_name]
                     if not showed_warning:
-                        self.log.warning("Kraken2 reports of different versions were found")
+                        log.warning("Kraken2 reports of different versions were found")
                         showed_warning = True
 
         # Strip empty samples
@@ -526,10 +525,3 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
         )
-    
-    class __logger_filter():
-        def __init__(self, log_name):
-            self.log_name = log_name
-        def filter(self, record):
-            record.module = self.log_name
-            return True
