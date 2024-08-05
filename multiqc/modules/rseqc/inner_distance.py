@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC inner_distance frequency reports and parse their data"""
 
-    # Set up vars
     inner_distance: Dict = dict()
     inner_distance_pct: Dict = dict()
 
