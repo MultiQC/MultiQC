@@ -275,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, readlen in self.readlen.items():
             data[sample] = {
                 "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
+                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected").strip("%")) * 100.0, 2),
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
 
