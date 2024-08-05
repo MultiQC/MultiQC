@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Take the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
         for s_name, data in self.kraken_raw_data.items():
             unassigned_counts = data[0]["counts_rooted"]
-            assigned_counts = data[1]["counts_rooted"]
+            assigned_counts = data[1]["counts_rooted"] if len(data) > 0 else 0 
             self.kraken_sample_total_readcounts[s_name] = unassigned_counts + assigned_counts
             total_all_samples += self.kraken_sample_total_readcounts[s_name]
 
@@ -250,7 +250,6 @@ class MultiqcModule(BaseMultiqcModule):
         if total_all_samples == 0:
             log.warning("No samples had any reads")
             raise ModuleNoSamplesFound
-
 
     def sum_sample_counts(self):
         """Sum counts across all samples for kraken data"""
