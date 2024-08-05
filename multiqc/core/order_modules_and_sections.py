@@ -16,6 +16,7 @@ def order_modules_and_sections():
 
     # First, remove the special-case modules that we want to re-add at the end, in case if they were
     # already added by a previous call of multiqc.write_report in an interactive session.
+    report.html_ids = [x for x in report.html_ids if x not in ["multiqc_software_versions", "multiqc_runtime"]]
     report.modules = [
         m
         for m in report.modules

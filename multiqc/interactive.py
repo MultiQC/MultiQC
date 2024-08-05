@@ -159,7 +159,7 @@ def list_modules() -> List[str]:
 
     @return: List of loaded module names
     """
-    return [m.name for m in report.modules]
+    return [m.anchor for m in report.modules]
 
 
 def list_samples() -> List[str]:
@@ -187,7 +187,7 @@ def list_plots() -> Dict:
 
     result: Dict = {}
     for module in report.modules:
-        result[module.name] = list()
+        result[module.anchor] = list()
         for section in module.sections:
             if not section.plot_id:
                 continue
@@ -197,9 +197,9 @@ def list_plots() -> Dict:
                 raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
             plot = report.plot_by_id[plot_id]
             if len(plot.datasets) == 1:
-                result[module.name].append(section_id)
+                result[module.anchor].append(section_id)
             if len(plot.datasets) > 1:
-                result[module.name].append({section_id: [d.label for d in plot.datasets]})
+                result[module.anchor].append({section_id: [d.label for d in plot.datasets]})
 
     return result
 
@@ -214,11 +214,11 @@ def get_plot(
     @param module: Module name or anchor
     @param section: Section name or anchor
     """
-    mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
+    mod = next((m for m in report.modules if m.name.lower() == module.lower() or m.anchor == module), None)
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    sec = next((s for s in mod.sections if (s.name and s.name == section) or s.anchor == section), None)
+    sec = next((s for s in mod.sections if (s.name and s.name.lower() == section.lower()) or s.anchor == section), None)
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
@@ -297,30 +297,32 @@ def get_module_data(
 
     if sample and sample not in list_samples():
         raise ValueError(f"Sample '{sample}' is not found. Use multiqc.list_samples() to list available samples")
-    if module and module not in list_modules():
-        raise ValueError(f"Module '{module}' is not found. Use multiqc.list_modules() to list available modules")
 
-    data_by_module = {}
+    if module:
+        mod = next((m for m in report.modules if m.name.lower() == module.lower() or m.anchor == module), None)
+        if not mod:
+            raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
+
+    data_by_module: Dict[str, Dict] = {}
     for m in report.modules:
-        if module and (m.name != module and m.anchor != module):
+        if module and (m.name.lower() != module and m.anchor != module):
             continue
 
-        module_data = m.saved_raw_data
+        data_by_key: Dict[str, Dict] = m.saved_raw_data
         if sample:
-            module_data = {k: v.get(sample, {}) for k, v in module_data.items()}
+            data_by_key = {data_key: data_by_sample.get(sample, {}) for data_key, data_by_sample in data_by_key.items()}
         if key:
             if module and key not in m.saved_raw_data:
                 raise ValueError(f"Key '{key}' is not found in module '{module}'")
-            module_data = module_data.get(key, {})
-        elif len(module_data) == 1:  # only one key, flatten
-            module_data = module_data[list(module_data.keys())[0]]
+        elif len(data_by_key) == 1:  # only one key, flatten
+            data_by_key = data_by_key[list(data_by_key.keys())[0]]
 
-        data_by_module[m.name] = module_data
+        data_by_module[m.anchor] = data_by_key
 
     if module:
         if not data_by_module:
             return {}
-        return data_by_module[module]
+        return data_by_module[module.lower()]
 
     return data_by_module
 
