@@ -27,7 +27,12 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val, cancelSelection: false });
+    $(".mqc_table").tablesorter({
+      sortInitialOrder: "desc",
+      textExtraction: get_sort_val,
+      cancelSelection: false,
+      headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
+    });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
@@ -160,15 +165,19 @@ $(function () {
       }
     }
 
-    // Make rows in MultiQC tables sortable
-    $(".mqc_table.mqc_sortable tbody").sortable({
-      handle: ".sorthandle",
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function () {
-          $(this).width($(this).width());
+    // Make rows in MultiQC "Configure Columns" tables sortable
+    $(".mqc_configModal").on("show.bs.modal", function (e) {
+      $(e.target)
+        .find(".mqc_table.mqc_sortable tbody")
+        .sortable({
+          handle: ".sorthandle",
+          helper: function fixWidthHelper(e, ui) {
+            ui.children().each(function () {
+              $(this).width($(this).width());
+            });
+            return ui;
+          },
         });
-        return ui;
-      },
     });
 
     // Change order of columns
