@@ -286,6 +286,9 @@ deeptools/plotProfile:
   num_lines: 1
 diamond:
   fn: "diamond.log"
+disambiguate:
+  contents: "unique species A pairs"
+  num_lines: 2
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/gvcf_metrics:
@@ -486,14 +489,6 @@ kaiju:
   num_lines: 1
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
-nanostat:
-  max_filesize: 4096
-  contents_re: "Metrics\\s+dataset\\s*"
-  num_lines: 1
-nanostat/legacy:
-  max_filesize: 4096
-  contents_re: "General summary:\\s*"
-  num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:
@@ -563,9 +558,17 @@ motus:
   num_lines: 2
 multivcfanalyzer:
   fn: "MultiVCFAnalyzer.json"
-disambiguate:
-  contents: "unique species A pairs"
-  num_lines: 2
+nanostat:
+  max_filesize: 4096
+  contents_re: "Metrics\\s+dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: "General summary:\\s*"
+  num_lines: 1
+nanoq:
+  contents: "Nanoq Read Summary"
+  num_lines: 3
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
