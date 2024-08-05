@@ -4,6 +4,7 @@ from multiqc.modules.kraken import MultiqcModule as KrakenModule
 from multiqc.base_module import ModuleNoSamplesFound
 
 
+
 class MultiqcModule(KrakenModule):
     """
     This module works with Bracken output files that resemble Kraken reports. They look like the following:
@@ -39,9 +40,9 @@ class MultiqcModule(KrakenModule):
         # Get the total read counts for each sample, using the fact that all reads are assigned to root
         total_all_samples = 0
         for s_name, data in self.kraken_raw_data.items():
-            self.kraken_sample_total_readcounts[s_name] = data[0]["counts_rooted"]
+            self.kraken_sample_total_readcounts[s_name] = data[0]['counts_rooted']
             total_all_samples += self.kraken_sample_total_readcounts[s_name]
-
+        
         # Check that we had some counts for some samples, exit if not
         if total_all_samples == 0:
             self.log.warning("No samples had any reads")
