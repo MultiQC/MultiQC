@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(self.kraken_raw_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.kraken_raw_data)} reports")
+        log.info(f"{name + ': ' if name != 'Kraken' else ''}Found {len(self.kraken_raw_data)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
