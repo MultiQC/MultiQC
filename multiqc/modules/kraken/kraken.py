@@ -109,11 +109,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         _total_all_samples = 0
         # Take the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
-        for s_name, row in rows_by_sample.items():
+        for s_name, rows in rows_by_sample.items():
             # The 2nd column here just contains the number of unassigned reads
-            unassigned_counts = int(row[0]["counts_rooted"])
+            unassigned_counts = int(rows[0]["counts_rooted"])
             # the 2nd column in other rows contains the number of reads mapped to this taxa
-            assigned_counts = int(row[1]["counts_rooted"]) if len(row) > 1 else 0
+            assigned_counts = int(rows[1]["counts_rooted"]) if len(rows) > 1 else 0
             total_cnt_by_sample[s_name] = unassigned_counts + assigned_counts
             _total_all_samples += total_cnt_by_sample[s_name]
 
@@ -395,9 +395,11 @@ def log_is_new(f) -> bool:
 
     result = False
     for line in f["f"]:
-        if len(line.split()) > 6:
+        if len(line.strip().split()) > 6:
             result = True
-            break
+        else:
+            result = False
+        break
     f["f"].seek(0)
     return result
 
