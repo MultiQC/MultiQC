@@ -1,4 +1,5 @@
 import logging
+from typing import Dict, List, Union
 
 from multiqc.modules.kraken import MultiqcModule as KrakenModule
 from multiqc.base_module import ModuleNoSamplesFound
@@ -36,16 +37,22 @@ class MultiqcModule(KrakenModule):
             sp_key="bracken",
         )
 
-    def sample_total_readcounts(self):
+    def sample_total_readcounts(
+        self, rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]]
+    ) -> Dict[str, int]:
         """
         Get the total read counts for each sample, using the fact that all reads are assigned to root
         """
-        total_all_samples = 0
-        for s_name, data in self.kraken_raw_data.items():
-            self.kraken_sample_total_readcounts[s_name] = data[0]["counts_rooted"]
-            total_all_samples += self.kraken_sample_total_readcounts[s_name]
+        total_cnt_by_sample: Dict[str, int] = dict()
+
+        _total_all_samples = 0
+        for s_name, rows in rows_by_sample.items():
+            total_cnt_by_sample[s_name] = int(rows[0]["counts_rooted"])
+            _total_all_samples += total_cnt_by_sample[s_name]
 
         # Check that we had some counts for some samples, exit if not
-        if total_all_samples == 0:
+        if _total_all_samples == 0:
             log.warning("No samples had any reads")
             raise ModuleNoSamplesFound
+
+        return total_cnt_by_sample
