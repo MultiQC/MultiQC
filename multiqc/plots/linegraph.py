@@ -1,7 +1,7 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence
+from typing import List, Dict, Union, Tuple, Sequence, Any, Iterable, TypeVar, Generator
 
 from multiqc import config
 from multiqc.plots.plotly import line
@@ -205,14 +205,27 @@ def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
     """
     smoothed_data = dict()
     for s_name, d in data_by_sample.items():
-        # Check that we need to smooth this data
-        if len(d) <= numpoints or len(d) == 0:
-            smoothed_data[s_name] = d
-            continue
-
-        binsize = (len(d) - 1) / (numpoints - 1)
-        first_element_indices = {round(binsize * i) for i in range(numpoints)}
-        smoothed_d = {x: y for i, (x, y) in enumerate(d.items()) if i in first_element_indices}
-        smoothed_data[s_name] = smoothed_d
+        smoothed_data[s_name] = dict(smooth_array(list(d.items()), numpoints))
 
     return smoothed_data
+
+
+T = TypeVar("T")
+
+
+def smooth_array(items: List[T], numpoints: int) -> List[T]:
+    """
+    Function to take an array and use binning to smooth to a maximum number of datapoints.
+    Each datapoint in a smoothed dataset corresponds to the first point in a bin.
+    """
+    # Check that we need to smooth this data
+    if len(items) <= numpoints or len(items) == 0:
+        return items
+
+    result = []
+    binsize = (len(items) - 1) / (numpoints - 1)
+    first_element_indices = {round(binsize * i) for i in range(numpoints)}
+    for i, y in enumerate(items):
+        if i in first_element_indices:
+            result.append(y)
+    return result

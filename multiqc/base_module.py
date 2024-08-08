@@ -173,7 +173,8 @@ class BaseMultiqcModule:
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
-        :param filehandles: Set to true to return a file handle instead of slurped file contents
+        :param filecontents: f["f"] will contain raw file contents
+        :param filehandles: f["f"] will be the file handle
         :return: Yields a dict with filename (fn), root directory (root), cleaned sample name
                  generated from the filename (s_name) and either the file contents or file handle
                  for the current matched file (f).
