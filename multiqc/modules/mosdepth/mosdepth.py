@@ -3,8 +3,6 @@ import logging
 from collections import defaultdict
 from typing import Dict, Union, Optional, Tuple, List, Mapping
 
-import line_profiler
-
 from multiqc import config, Plot
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -430,7 +428,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
         self.general_stats_addcols(genstats_by_sample, genstats_headers)
 
-    @line_profiler.profile
     def parse_cov_dist(
         self, scope: str
     ) -> Tuple[
