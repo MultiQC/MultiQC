@@ -484,17 +484,13 @@ class MultiqcModule(BaseMultiqcModule):
             cum_fraction_by_cov: Dict[int, float] = dict()
 
             for line in f["f"]:
-                if "\t" not in line:
-                    continue
                 contig, cutoff_reads, bases_fraction = line.split("\t")
-                bases_fraction = float(bases_fraction)
-                cutoff_reads = int(cutoff_reads)
-                if bases_fraction == 0:
+                if bases_fraction == "0.00\n":
                     continue
 
                 # Parse cumulative coverage
                 if contig == "total":
-                    cum_fraction_by_cov[cutoff_reads] = bases_fraction
+                    cum_fraction_by_cov[int(cutoff_reads)] = float(bases_fraction)
 
                 # Calculate per-contig coverage
                 else:
@@ -519,9 +515,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                         included_contigs.add(contig)
 
-                    bases_fraction_sum_per_contig[contig] += bases_fraction
-                    # avg = perchrom_avg_by_sample[s_name].get(contig, 0) + float(bases_fraction)
-                    # perchrom_avg_by_sample[s_name][contig] = avg
+                    bases_fraction_sum_per_contig[contig] += float(bases_fraction)
 
             genstats_by_sample[s_name] = {}
             for k, v in genstats_cov_thresholds(cum_fraction_by_cov, threshs).items():
