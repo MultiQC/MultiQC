@@ -1,7 +1,8 @@
 import logging
-import re
 from collections import defaultdict
-from typing import Dict, Union, List
+from typing import Dict, Union, List, Tuple
+
+import line_profiler
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -70,36 +71,51 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any kraken reports
-        raw_rows_by_sample: Dict[str, List[Dict[str, Union[int, str, float]]]] = dict()
+        # raw_rows_by_sample: Dict[str, List[Dict[str, Union[int, str, float]]]] = dict()
         new_report_present = False
 
-        for f in self.find_log_files(sp_key, filehandles=True):
-            if not log_is_new(f):
-                raw_rows_by_sample[f["s_name"]] = parse_logs(f)
-            else:
-                new_report_present = True
-                raw_rows_by_sample[f["s_name"]] = parse_logs_minimizer(f)
-            self.add_data_source(f)
+        total_cnt_by_sample: Dict[str, int] = dict()
+        cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]] = dict()
+        minimizer_dup_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, float]]] = dict()
 
-        raw_rows_by_sample = self.ignore_samples(raw_rows_by_sample)
-        if len(raw_rows_by_sample) == 0:
+        for f in self.find_log_files(sp_key, filehandles=True):
+            sample_cnt_by_taxon_by_rank, minimizer_dup_by_top_taxon_by_rank = parse_logs(f)
+
+            # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
+            total_cnt = sample_cnt_by_taxon_by_rank["U"]["unclassified"] + sample_cnt_by_taxon_by_rank["R"]["root"]
+            if total_cnt == 0:
+                log.warning(f"No reads found in {f['fn']}")
+                continue
+
+            self.add_data_source(f)
+            if f["s_name"] in total_cnt_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
+
+            total_cnt_by_sample[f["s_name"]] = total_cnt
+            cnt_by_top_taxon_by_rank_by_sample[f["s_name"]] = sample_cnt_by_taxon_by_rank
+            if minimizer_dup_by_top_taxon_by_rank:
+                minimizer_dup_by_top_taxon_by_rank_by_sample[f["s_name"]] = minimizer_dup_by_top_taxon_by_rank
+
+        if len(total_cnt_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"{name + ': ' if name != 'Kraken' else ''}Found {len(raw_rows_by_sample)} reports")
+        log.info(f"{name + ': ' if name != 'Kraken' else ''}Found {len(total_cnt_by_sample)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        self.write_data_file(raw_rows_by_sample, f"multiqc_{self.anchor}")
+        self.write_data_file(cnt_by_top_taxon_by_rank_by_sample, f"multiqc_{self.anchor}")
 
-        # Sum counts across all samples, so that we can pick top species
-        total_cnt_by_sample = self.sample_total_readcounts(raw_rows_by_sample)
-        cnt_by_classif_by_rank, pct_by_classif_by_rank = sum_sample_counts(raw_rows_by_sample, total_cnt_by_sample)
+        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]] = defaultdict(dict)
+        for s_name, cnt_by_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+            for rank_code, cnt_by_taxon in cnt_by_taxon_by_rank.items():
+                for taxon, count in cnt_by_taxon.items():
+                    pct_by_top_taxon_by_rank[rank_code][taxon] = count / total_cnt_by_sample[s_name]
 
-        self.general_stats_cols(raw_rows_by_sample, total_cnt_by_sample, pct_by_classif_by_rank)
-        self.top_taxa_barplot(raw_rows_by_sample, total_cnt_by_sample, pct_by_classif_by_rank)
+        self.general_stats_cols(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
+        self.top_taxa_barplot(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
         if new_report_present:
-            self.top_taxa_duplication_heatmap(raw_rows_by_sample, pct_by_classif_by_rank)
+            self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, minimizer_dup_by_top_taxon_by_rank_by_sample)
 
     def sample_total_readcounts(
         self, rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]]
@@ -126,9 +142,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def general_stats_cols(
         self,
-        rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]],
-        total_cnt_by_sample: Dict[str, int],
-        total_pct_by_rank_by_classif: Dict[str, Dict[str, float]],
+        cnt_by_sample: Dict[str, int],
+        pct_by_taxon_by_rank: Dict[str, Dict[str, float]],
+        cnt_by_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]],
     ):
         """Add a couple of columns to the General Statistics table"""
 
@@ -137,22 +153,22 @@ class MultiqcModule(BaseMultiqcModule):
         top_rank_code = None
         top_rank_name = None
         for rank_code, rank_name in MultiqcModule.T_RANKS.items():
-            if rank_code in total_pct_by_rank_by_classif:
-                sorted_pct = sorted(total_pct_by_rank_by_classif[rank_code].items(), key=lambda x: x[1], reverse=True)
-                for classif, pct_sum in sorted_pct[: MultiqcModule.TOP_N]:
-                    top_taxa.append(classif)
-                top_rank_code = rank_code
-                top_rank_name = rank_name
-                break
+            if rank_code not in pct_by_taxon_by_rank:
+                continue
 
-        if not top_taxa:
+            sorted_items = sorted(pct_by_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True)
+            for taxon, pct_sum in sorted_items[: MultiqcModule.TOP_N]:
+                top_taxa.append(taxon)
+            top_rank_code = rank_code
+            top_rank_name = rank_name
+            break
+
+        if not top_taxa or not top_rank_code or not top_rank_name:
             log.error("No taxa found")
             return
 
         # Column headers
         headers = dict()
-
-        top_one = None
 
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
@@ -184,98 +200,85 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Get table data
-        table_data_by_sample: Dict[str, Dict[str, float]] = {}
-        for s_name, d in rows_by_sample.items():
-            table_data_by_sample[s_name] = {}
-            for row in d:
-                if total_cnt_by_sample[s_name] != 0:
-                    percent = (int(row["counts_rooted"]) / total_cnt_by_sample[s_name]) * 100.0
-                else:
-                    percent = 0
-                if row["rank_code"] == "U":
-                    table_data_by_sample[s_name]["pct_unclassified"] = percent
-                if row["rank_code"] == top_rank_code and row["classif"] in top_taxa:
-                    table_data_by_sample[s_name]["pct_top_n"] = percent + table_data_by_sample[s_name].get(
-                        "pct_top_n", 0
-                    )
-                if row["rank_code"] == top_rank_code and row["classif"] == top_taxa[0]:
-                    table_data_by_sample[s_name]["pct_top_one"] = percent
+        table_pct_by_sample: Dict[str, Dict[str, float]] = {}
+        for s_name, cnt_by_taxon_by_rank in cnt_by_taxon_by_rank_by_sample.items():
+            _counts = {
+                "pct_unclassified": cnt_by_taxon_by_rank["U"].get("unclassified", 0),
+                "pct_top_one": cnt_by_taxon_by_rank[top_rank_code].get(top_taxa[0], 0),
+                "pct_top_n": sum(cnt_by_taxon_by_rank[top_rank_code].get(t, 0) for t in top_taxa),
+            }
+            # Convert to percentages
+            table_pct_by_sample[s_name] = {k: v / cnt_by_sample[s_name] * 100 for k, v in _counts.items()}
 
-            if top_one is not None and "pct_top_one" not in table_data_by_sample[s_name]:
-                table_data_by_sample[s_name]["pct_top_one"] = 0
+        self.general_stats_addcols(table_pct_by_sample, headers)
 
-        self.general_stats_addcols(table_data_by_sample, headers)
-
+    @line_profiler.profile
     def top_taxa_barplot(
         self,
-        rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]],
         total_cnt_by_sample: Dict[str, int],
-        total_pct_by_rank_by_classif: Dict[str, Dict[str, float]],
+        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]],
+        cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]],
     ):
         """Add a bar plot showing the top-N from each taxa rank"""
 
-        pd = []
+        rank_datasets = []
         cats = list()
         # Keeping track of encountered codes to display only tabs with available data
         found_rank_codes = set()
 
-        for rank_code in MultiqcModule.T_RANKS:
-            rank_cats = dict()
-            data_by_classif_by_sample: Dict[str, Dict[str, int]] = dict()
-
-            # Loop through the summed tax percentages to get the top-N across all samples
-            if rank_code not in total_pct_by_rank_by_classif:
-                # Taxa rank not found in this sample
+        for rank_code in [r for r in MultiqcModule.T_RANKS if r not in ["U", "R"]]:
+            if rank_code not in pct_by_top_taxon_by_rank:
+                # Taxa rank not found in this dataset
                 continue
 
-            sorted_pct = sorted(total_pct_by_rank_by_classif[rank_code].items(), key=lambda x: x[1], reverse=True)
+            rank_cats = dict()
+            rank_cnt_data_by_taxon_by_sample: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+            rank_counts_shown: Dict[str, int] = defaultdict(int)
             i = 0
-            counts_shown: Dict[str, int] = dict()
-            for classif, pct_sum in sorted_pct:
+            # Loop through the summed tax percentages to get the top-N across all samples
+            for taxon, pct_sum in sorted(pct_by_top_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True):
                 i += 1
                 if i > MultiqcModule.TOP_N:
                     break
-                rank_cats[classif] = {"name": classif}
+                rank_cats[taxon] = {"name": taxon}
                 # Pull out counts for this rank + classif from each sample
-                for s_name, rows in rows_by_sample.items():
-                    if s_name not in data_by_classif_by_sample:
-                        data_by_classif_by_sample[s_name] = dict()
-                    if s_name not in counts_shown:
-                        counts_shown[s_name] = 0
+                for s_name, cnt_by_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+                    if rank_code not in cnt_by_taxon_by_rank:
+                        # Taxa rank not found in this sample
+                        continue
 
-                    for row in rows:
-                        if row["rank_code"] == rank_code:
-                            found_rank_codes.add(rank_code)
-                            # unclassified are handled separately
-                            if row["rank_code"] != "U":
-                                if row["classif"] == classif:
-                                    if classif not in data_by_classif_by_sample[s_name]:
-                                        data_by_classif_by_sample[s_name][classif] = 0
-                                    data_by_classif_by_sample[s_name][classif] += int(row["counts_rooted"])
-                                    counts_shown[s_name] += int(row["counts_rooted"])
+                    found_rank_codes.add(rank_code)
+
+                    cnt = cnt_by_taxon_by_rank[rank_code].get(taxon, 0)
+                    rank_cnt_data_by_taxon_by_sample[s_name][taxon] += cnt
+                    rank_counts_shown[s_name] += cnt
+
+            # Add unclassified count to each rank-level dataset
+            for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+                cnt = cnt_by_top_taxon_by_rank_by_sample[s_name]["U"]["unclassified"]
+                rank_cnt_data_by_taxon_by_sample[s_name]["U"] = cnt
+                rank_counts_shown[s_name] += cnt
 
             # Add in unclassified reads and "other" - we presume from other species etc.
-            for s_name, rows in rows_by_sample.items():
-                for row in rows:
-                    if row["rank_code"] == "U":
-                        data_by_classif_by_sample[s_name]["U"] = int(row["counts_rooted"])
-                        counts_shown[s_name] += int(row["counts_rooted"])
-                data_by_classif_by_sample[s_name]["other"] = total_cnt_by_sample[s_name] - counts_shown[s_name]
+            for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+                rank_cnt_data_by_taxon_by_sample[s_name]["other"] = (
+                    total_cnt_by_sample[s_name] - rank_counts_shown[s_name]
+                )
 
                 # This should never happen... But it does sometimes if the total read count is a bit off
-                if data_by_classif_by_sample[s_name]["other"] < 0:
+                if rank_cnt_data_by_taxon_by_sample[s_name]["other"] < 0:
                     log.debug(
                         "Found negative 'other' count for {} ({}): {}".format(
-                            s_name, MultiqcModule.T_RANKS[rank_code], data_by_classif_by_sample[s_name]["other"]
+                            s_name, MultiqcModule.T_RANKS[rank_code], rank_cnt_data_by_taxon_by_sample[s_name]["other"]
                         )
                     )
-                    data_by_classif_by_sample[s_name]["other"] = 0
+                    rank_cnt_data_by_taxon_by_sample[s_name]["other"] = 0
 
             rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
             rank_cats["U"] = {"name": "Unclassified", "color": "#d4949c"}
 
             cats.append(rank_cats)
-            pd.append(data_by_classif_by_sample)
+            rank_datasets.append(rank_cnt_data_by_taxon_by_sample)
 
         pconfig = {
             "id": f"{self.anchor}-top-n-plot",
@@ -302,13 +305,13 @@ class MultiqcModule(BaseMultiqcModule):
 
                 Note that any taxon that does not exactly fit a taxon rank (eg. `-` or `G2`) is ignored.
             """,
-            plot=bargraph.plot(pd, cats, pconfig),
+            plot=bargraph.plot(rank_datasets, cats, pconfig),
         )
 
     def top_taxa_duplication_heatmap(
         self,
-        rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]],
-        total_pct_by_rank_by_classif: Dict[str, Dict[str, float]],
+        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]],
+        minimizer_dup_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, float]]],
     ):
         """Add a heatmap showing the minimizer duplication of the top taxa"""
 
@@ -321,55 +324,42 @@ class MultiqcModule(BaseMultiqcModule):
             "angled_xticks": False,
         }
 
-        rank_code = "S"
-        rank_data_by_classif_by_sample: Dict[str, Dict[str, Union[int, None]]] = dict()
+        SPECIES_CODE = "S"
         # Loop through the summed tax percentages to get the top taxa across all samples
-        if rank_code not in total_pct_by_rank_by_classif:
-            log.debug(f"Taxa rank {rank_code} not found, skipping taxa duplication heatmap")
+        if SPECIES_CODE not in pct_by_top_taxon_by_rank:
+            log.debug(f"Taxa rank {SPECIES_CODE} not found, skipping taxa duplication heatmap")
             return
 
-        sorted_pct = sorted(total_pct_by_rank_by_classif[rank_code].items(), key=lambda x: x[1], reverse=True)
         i = 0
-        counts_shown = {}
-        showed_warning = False
-        for classif, pct_sum in sorted_pct:
+        dup_by_taxon_by_sample: Dict[str, Dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
+        pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
+        for taxon, pct_sum in sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True):
             i += 1
             if i > MultiqcModule.TOP_N:
                 break
             # Pull out counts for this rank + classif from each sample
-            for s_name, rows in rows_by_sample.items():
-                if s_name not in rank_data_by_classif_by_sample:
-                    rank_data_by_classif_by_sample[s_name] = dict()
-                if s_name not in counts_shown:
-                    counts_shown[s_name] = 0
-
-                if classif not in rank_data_by_classif_by_sample[s_name]:
-                    rank_data_by_classif_by_sample[s_name][classif] = None
-
-                try:
-                    row = next(row for row in rows if row["rank_code"] == rank_code and row["classif"] == classif)
-                except StopIteration:
-                    # if nothing is found at the rank + classification, leave as 0
+            for s_name, dup_by_taxon_by_rank in minimizer_dup_by_top_taxon_by_rank_by_sample.items():
+                if SPECIES_CODE not in dup_by_taxon_by_rank:
+                    # Taxa rank not found in this sample
                     continue
 
-                try:
-                    rank_data_by_classif_by_sample[s_name][classif] = int(row["minimizer_duplication"])
-                except KeyError:
-                    del rank_data_by_classif_by_sample[s_name]
-                    if not showed_warning:
-                        log.warning("Kraken2 reports of different versions were found")
-                        showed_warning = True
+                minimizer_duplication = dup_by_taxon_by_rank[SPECIES_CODE].get(taxon, None)
+                if minimizer_duplication:
+                    dup_by_taxon_by_sample[s_name][taxon] = int(minimizer_duplication)
 
         # Strip empty samples
-        for sample, vals in dict(rank_data_by_classif_by_sample).items():
+        for sample, vals in dict(dup_by_taxon_by_sample).items():
             if len(vals) == 0:
-                del rank_data_by_classif_by_sample[sample]
+                del dup_by_taxon_by_sample[sample]
+
+        if not dup_by_taxon_by_sample:
+            return
 
         # Build data structures for heatmap
-        ylabels = list(rank_data_by_classif_by_sample.keys())
-        xlabels = list(rank_data_by_classif_by_sample[ylabels[0]].keys())
-        for sample in rank_data_by_classif_by_sample:
-            duplication.append(list(rank_data_by_classif_by_sample[sample].values()))
+        ylabels = list(dup_by_taxon_by_sample.keys())
+        xlabels = list(dup_by_taxon_by_sample[ylabels[0]].keys())
+        for sample in dup_by_taxon_by_sample:
+            duplication.append(list(dup_by_taxon_by_sample[sample].values()))
 
         self.add_section(
             name="Duplication rate of top species",
@@ -386,74 +376,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def log_is_new(f) -> bool:
-    """Check which version of Kraken report file is used
-
-    If 6 fields are used, it's the 'old' log (without distinct minimizer)
-    if 8 fields, the new log experimental log (with distinct minimizer)
+def parse_logs(
+    f,
+) -> Tuple[
+    Dict[str, Dict[str, Union[int]]],
+    Dict[str, Dict[str, Union[float]]],
+]:
     """
-
-    result = False
-    for line in f["f"]:
-        if len(line.strip().split()) > 6:
-            result = True
-        else:
-            result = False
-        break
-    f["f"].seek(0)
-    return result
-
-
-def parse_logs(f) -> List[Dict[str, Union[str, float, int]]]:
-    """
-    Parses a kraken report output file
-
-    1. Percentage of fragments covered by the clade rooted at this taxon
-    2. Number of fragments covered by the clade rooted at this taxon
-    3. Number of fragments assigned directly to this taxon
-    4. A rank code, indicating:
-        * (U)nclassified
-        * (R)oot
-        * (D)omain
-        * (K)ingdom
-        * (P)hylum
-        * (C)lass
-        * (O)rder
-        * (F)amily
-        * (G)enus
-        * (S)pecies
-       Taxa that are not at any of these 10 ranks have a rank code that is
-       formed by using the rank code of the closest ancestor rank with
-       a number indicating the distance from that rank.  E.g., "G2" is a
-       rank code indicating a taxon is between genus and species and the
-       grandparent taxon is at the genus rank.
-    5. NCBI taxonomic ID number
-    6. Indented scientific name
-    """
-
-    # Search regexes for stats
-    k2_regex = re.compile(r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t([\dUDKRPCOFGS-]{1,3})\t(\d+)(\s+)(.+)")
-    data = []
-    for line in f["f"]:
-        match = k2_regex.search(line)
-        if match:
-            row = {
-                "percent": float(match.group(1)),
-                "counts_rooted": int(match.group(2)),
-                "counts_direct": int(match.group(3)),
-                "rank_code": match.group(4),
-                "tax_id": int(match.group(5)),
-                "num_spaces": len(match.group(6)),
-                "classif": match.group(7),
-            }
-            data.append(row)
-
-    return data
-
-
-def parse_logs_minimizer(f) -> List[Dict[str, Union[str, int, float]]]:
-    """
-    Parses a kraken report output file
+    Parse a kraken report output file. Only take the top ranks.
 
     1. Percentage of fragments covered by the clade rooted at this taxon
     2. Number of fragments covered by the clade rooted at this taxon
@@ -477,73 +407,60 @@ def parse_logs_minimizer(f) -> List[Dict[str, Union[str, int, float]]]:
        a number indicating the distance from that rank.  E.g., "G2" is a
        rank code indicating a taxon is between genus and species and the
        grandparent taxon is at the genus rank.
-    7. NCBI taxonomic ID number
-    8. Indented scientific name
+    (optional, only in new version with minimizers) 7. NCBI taxonomic ID number
+    (optional, only in new version with minimizers) 8. Indented scientific name
     """
 
-    def duplication(total: int, distinct: int) -> float:
-        """Get duplication factor
+    cnt_by_rank_by_taxon: Dict[str, Dict[str, int]] = defaultdict(dict)
+    minimizer_duplication_by_rank_by_taxon: Dict[str, Dict[str, float]] = defaultdict(dict)
 
-        Args:
-            total (int): Total number of elements
-            distinct (int): Number of distinct elements
-        """
-        try:
-            res = float(total) / distinct
-        except ZeroDivisionError:
-            res = 0.0
-        return res
+    for i, line in enumerate(f["f"]):
+        fields = line.split("\t")
+        if len(fields) < 6:
+            log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
+            return {}, {}
 
-    # Search regexes for stats
-    k2_regex = re.compile(
-        r"^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)(.+)"
-    )
-    data: List[Dict[str, Union[str, int, float]]] = []
-    for line in f["f"]:
-        match = k2_regex.search(line)
-        if match:
-            row = {
-                "percent": float(match.group(1)),
-                "counts_rooted": int(match.group(2)),
-                "counts_direct": int(match.group(3)),
-                "minimizer": int(match.group(4)),
-                "minimizer_distinct": int(match.group(5)),
-                "minimizer_duplication": duplication(int(match.group(4)), int(match.group(5))),
-                "rank_code": match.group(6),
-                "tax_id": int(match.group(7)),
-                "num_spaces": len(match.group(8)),
-                "classif": match.group(9),
-            }
-            data.append(row)
+        if len(fields) == 8:
+            # if 8 fields, the new log experimental log (with distinct minimizer)
+            (
+                percent,
+                counts_rooted,
+                counts_direct,
+                minimizer,
+                minimizer_distinct,
+                rank_code,
+                tax_id,
+                taxon,
+            ) = fields
         else:
-            log.debug(f"{f['s_name']}: Could not parse line: {line}")
+            # If 6 fields are used, it's the 'old' log (without distinct minimizer)
+            percent, counts_rooted, counts_direct, rank_code, tax_id, taxon = fields[:6]
+            minimizer = 0
+            minimizer_distinct = 0
 
-    return data
+        taxon = taxon.strip()
+        if taxon == "root":
+            rank_code = "R"  # can be "-" sometimes
 
+        # This check will skip a lot of lines on the real-life data!
+        if rank_code not in MultiqcModule.T_RANKS:
+            continue
 
-def sum_sample_counts(
-    rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]], total_cnt_by_sample: Dict[str, int]
-):
-    """Sum counts across all samples for kraken data"""
+        counts_rooted = int(counts_rooted)
 
-    cnt_by_classif_by_rank: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-    pct_by_classif_by_rank: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        # percent = float(percent)
+        # counts_direct = int(counts_direct)
+        # tax_id = int(tax_id)
+        # num_spaces = len(classif) - len(classif_stripped)
+        minimizer = int(minimizer)
+        minimizer_distinct = int(minimizer_distinct)
+        minimizer_duplication = minimizer / minimizer_distinct if minimizer_distinct != 0 else 0.0
 
-    # Sum the percentages for each taxon across all samples
-    # Allows us to pick the top taxa for each rank
-    # Use percentages instead of counts so that deeply-sequences samples
-    # are not unfairly over-represented
-    for s_name, rows in rows_by_sample.items():
-        for row in rows:
-            # Convenience vars that are easier to read
-            rank_code = str(row["rank_code"])
-            classif = str(row["classif"])
+        cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
+        minimizer_duplication_by_rank_by_taxon[rank_code][taxon] = minimizer_duplication
 
-            # Skip anything that doesn't exactly fit a tax rank level
-            if rank_code == "-" or any(c.isdigit() for c in rank_code):
-                continue
+    if "R" not in cnt_by_rank_by_taxon:
+        # Can be missing in case if all reads are unassigned
+        cnt_by_rank_by_taxon["R"] = {"root": 0}
 
-            cnt_by_classif_by_rank[rank_code][classif] += int(row["counts_rooted"])
-            if total_cnt_by_sample[s_name] != 0:
-                pct_by_classif_by_rank[rank_code][classif] += int(row["counts_rooted"]) / total_cnt_by_sample[s_name]
-    return cnt_by_classif_by_rank, pct_by_classif_by_rank
+    return cnt_by_rank_by_taxon, minimizer_duplication_by_rank_by_taxon
