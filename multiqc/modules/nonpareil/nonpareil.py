@@ -339,8 +339,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
-            s_name: data.get("nonpareil_col", data_colors_default.pop(0))
-            for s_name, data in self.data_by_sample.items()
+            s_name: data.get("nonpareil_col", data_colors_default[i % len(data_colors_default)])
+            for i, (s_name, data) in enumerate(self.data_by_sample.items())
         }
 
         data_labels = [
