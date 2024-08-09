@@ -83,7 +83,6 @@ def test_software_versions_from_config(tmp_path, data_dir, capsys):
     """
     Verify finding versions from the config section.
     """
-    mod_dir = data_dir / "software_versions"
     conf_path = tmp_path / "multiqc_config.yaml"
     with open(conf_path, "w") as f:
         yaml.dump(
@@ -97,7 +96,8 @@ def test_software_versions_from_config(tmp_path, data_dir, capsys):
             f,
         )
 
-    multiqc.parse_logs(mod_dir, config_files=[conf_path])
+    # Need some data to be passed besides the bare config
+    multiqc.parse_logs(data_dir / "software_versions", config_files=[conf_path])
     multiqc.write_report(filename="stdout")
     captured = capsys.readouterr()
     assert "<td>example_tool</td><td><samp>1.4.2</samp></td>" in captured.out
@@ -106,7 +106,6 @@ def test_software_versions_from_config(tmp_path, data_dir, capsys):
 def test_software_versions_from_mqc_files(tmp_path, data_dir, capsys):
     """
     Verify finding versions from '*_mqc_versions.yaml' files.
-    Verify finding versions from the config section.
     """
     mod_dir = data_dir / "software_versions"
     assert mod_dir.exists() and mod_dir.is_dir()
