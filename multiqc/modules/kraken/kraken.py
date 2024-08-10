@@ -70,10 +70,6 @@ class MultiqcModule(BaseMultiqcModule):
             doi=doi,
         )
 
-        # Find and load any kraken reports
-        # raw_rows_by_sample: Dict[str, List[Dict[str, Union[int, str, float]]]] = dict()
-        new_report_present = False
-
         total_cnt_by_sample: Dict[str, int] = dict()
         cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]] = dict()
         minimizer_dup_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, float]]] = dict()
@@ -114,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_cols(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
         self.top_taxa_barplot(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
-        if new_report_present:
+        if minimizer_dup_by_top_taxon_by_rank_by_sample:
             self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, minimizer_dup_by_top_taxon_by_rank_by_sample)
 
     def sample_total_readcounts(
