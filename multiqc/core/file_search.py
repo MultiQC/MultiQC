@@ -60,7 +60,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     """
     Apply config.run_modules and config.exclude_modules filters
     """
-    avail_modules = set(config.avail_modules.keys())
+    avail_modules = set(config.avail_modules.keys()) | {"software_versions"}
     if len(config.run_modules) > 0:
         unknown_modules = [m for m in config.run_modules if m not in avail_modules]
         if unknown_modules:
@@ -81,7 +81,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
             config.skip_generalstats = True
             config.exclude_modules = [x for x in config.exclude_modules if x != "general_stats"]
         module_names = [m for m in module_names if m not in config.exclude_modules]
-    return module_names + ["software_versions"]  # always include software_versions
+    return module_names
 
 
 def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
@@ -126,6 +126,10 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
             sp_keys = list(config.custom_data.keys()) + sp_keys
     except AttributeError:
         pass  # custom_data not in config
+
+    # Always add software_versions
+    if "software_versions" not in sp_keys:
+        sp_keys.append("software_versions")
 
     logger.debug(f"Analysing modules: {', '.join(mod_ids)}")
     if sp_keys != mod_ids:
