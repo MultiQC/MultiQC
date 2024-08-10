@@ -580,7 +580,7 @@ def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
     """
     Reads coverage thresholds from the config, otherwise sets sensible defaults. Useful for modules like mosdepth, qualimap (BamQC), ngsbits
     """
-    covs = getattr(globals(), config_key, {}).get("general_stats_coverage", [])
+    covs = globals().get(config_key, {}).get("general_stats_coverage", [])
     if not covs:
         covs = getattr(globals(), "general_stats_coverage", [])
 
@@ -591,7 +591,7 @@ def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
         covs = [1, 5, 10, 30, 50]
         logger.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in covs])}")
 
-    hidden_covs = getattr(globals(), config_key, {}).get("general_stats_coverage_hidden", [])
+    hidden_covs = globals().get(config_key, {}).get("general_stats_coverage_hidden", [])
     if not hidden_covs:
         hidden_covs = getattr(globals(), "general_stats_coverage_hidden", [])
 
