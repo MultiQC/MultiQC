@@ -204,10 +204,11 @@ class MultiqcModule(BaseMultiqcModule):
         table_pct_by_sample: Dict[str, Dict[str, float]] = {}
         for s_name, cnt_by_taxon_by_rank in cnt_by_taxon_by_rank_by_sample.items():
             _counts = {
-                "pct_unclassified": cnt_by_taxon_by_rank["U"].get("unclassified", 0),
                 "pct_top_one": cnt_by_taxon_by_rank[top_rank_code].get(top_taxa[0], 0),
                 "pct_top_n": sum(cnt_by_taxon_by_rank[top_rank_code].get(t, 0) for t in top_taxa),
             }
+            if cnt_by_taxon_by_rank["U"].get("unclassified", 0) != 0:
+                _counts["pct_unclassified"] = cnt_by_taxon_by_rank["U"].get("unclassified", 0)
             # Convert to percentages
             table_pct_by_sample[s_name] = {k: v / cnt_by_sample[s_name] * 100 for k, v in _counts.items()}
 
