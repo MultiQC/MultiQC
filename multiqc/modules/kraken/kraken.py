@@ -72,10 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         total_cnt_by_sample: Dict[str, int] = dict()
         cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]] = dict()
-        minimizer_dup_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, float]]] = dict()
+        species_minimizer_dup_by_top_taxon_by_sample: Dict[str, Dict[str, float]] = dict()
 
         for f in self.find_log_files(sp_key, filehandles=True):
-            sample_cnt_by_taxon_by_rank, minimizer_dup_by_top_taxon_by_rank = parse_logs(f)
+            sample_cnt_by_taxon_by_rank, min_dup_by_by_rank = parse_logs(f)
 
             # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
             total_cnt = sample_cnt_by_taxon_by_rank["U"]["unclassified"] + sample_cnt_by_taxon_by_rank["R"]["root"]
@@ -89,8 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             total_cnt_by_sample[f["s_name"]] = total_cnt
             cnt_by_top_taxon_by_rank_by_sample[f["s_name"]] = sample_cnt_by_taxon_by_rank
-            if minimizer_dup_by_top_taxon_by_rank:
-                minimizer_dup_by_top_taxon_by_rank_by_sample[f["s_name"]] = minimizer_dup_by_top_taxon_by_rank
+            if min_dup_by_by_rank:
+                species_minimizer_dup_by_top_taxon_by_sample[f["s_name"]] = min_dup_by_by_rank
 
         if len(total_cnt_by_sample) == 0:
             raise ModuleNoSamplesFound
@@ -102,16 +102,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(cnt_by_top_taxon_by_rank_by_sample, f"multiqc_{self.anchor}")
 
-        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]] = defaultdict(dict)
+        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
         for s_name, cnt_by_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
             for rank_code, cnt_by_taxon in cnt_by_taxon_by_rank.items():
                 for taxon, count in cnt_by_taxon.items():
-                    pct_by_top_taxon_by_rank[rank_code][taxon] = count / total_cnt_by_sample[s_name]
+                    pct_by_top_taxon_by_rank[rank_code][taxon] += count / total_cnt_by_sample[s_name]
 
         self.general_stats_cols(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
         self.top_taxa_barplot(total_cnt_by_sample, pct_by_top_taxon_by_rank, cnt_by_top_taxon_by_rank_by_sample)
-        if minimizer_dup_by_top_taxon_by_rank_by_sample:
-            self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, minimizer_dup_by_top_taxon_by_rank_by_sample)
+        if species_minimizer_dup_by_top_taxon_by_sample:
+            self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, species_minimizer_dup_by_top_taxon_by_sample)
 
     def sample_total_readcounts(
         self, rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]]
@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
     def top_taxa_duplication_heatmap(
         self,
         pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]],
-        minimizer_dup_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, float]]],
+        species_minimizer_duplication_by_top_taxon_by_sample: Dict[str, Dict[str, float]],
     ):
         """Add a heatmap showing the minimizer duplication of the top taxa"""
 
@@ -326,20 +326,14 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Taxa rank {SPECIES_CODE} not found, skipping taxa duplication heatmap")
             return
 
-        i = 0
         dup_by_taxon_by_sample: Dict[str, Dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
-        for taxon, pct_sum in sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True):
-            i += 1
-            if i > MultiqcModule.TOP_N:
-                break
+        sorted_items = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
+        top_sorted_items = sorted_items[: MultiqcModule.TOP_N]
+        for taxon, pct_sum in top_sorted_items:
             # Pull out counts for this rank + classif from each sample
-            for s_name, dup_by_taxon_by_rank in minimizer_dup_by_top_taxon_by_rank_by_sample.items():
-                if SPECIES_CODE not in dup_by_taxon_by_rank:
-                    # Taxa rank not found in this sample
-                    continue
-
-                minimizer_duplication = dup_by_taxon_by_rank[SPECIES_CODE].get(taxon, None)
+            for s_name, dup_by_taxon in species_minimizer_duplication_by_top_taxon_by_sample.items():
+                minimizer_duplication = dup_by_taxon.get(taxon, None)
                 if minimizer_duplication:
                     dup_by_taxon_by_sample[s_name][taxon] = int(minimizer_duplication)
 
@@ -352,8 +346,8 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Build data structures for heatmap
-        ylabels = list(dup_by_taxon_by_sample.keys())
-        xlabels = list(dup_by_taxon_by_sample[ylabels[0]].keys())
+        samples = list(dup_by_taxon_by_sample.keys())
+        top_taxa = list(dict(top_sorted_items).keys())
         for sample in dup_by_taxon_by_sample:
             duplication.append(list(dup_by_taxon_by_sample[sample].values()))
 
@@ -368,7 +362,12 @@ class MultiqcModule(BaseMultiqcModule):
 
                 A low coverage and high duplication rate (`>> 1`) is often sign of read stacking, which probably indicates of false positive hit.
             """,
-            plot=heatmap.plot(duplication, xlabels, ylabels, pconfig),
+            plot=heatmap.plot(
+                duplication,
+                xcats=samples,
+                ycats=top_taxa,
+                pconfig=pconfig,
+            ),
         )
 
 
@@ -376,7 +375,7 @@ def parse_logs(
     f,
 ) -> Tuple[
     Dict[str, Dict[str, Union[int]]],
-    Dict[str, Dict[str, Union[float]]],
+    Dict[str, float],
 ]:
     """
     Parse a kraken report output file. Only take the top ranks.
@@ -408,7 +407,7 @@ def parse_logs(
     """
 
     cnt_by_rank_by_taxon: Dict[str, Dict[str, int]] = defaultdict(dict)
-    minimizer_duplication_by_rank_by_taxon: Dict[str, Dict[str, float]] = defaultdict(dict)
+    min_dup_by_taxon: Dict[str, float] = dict()
 
     for i, line in enumerate(f["f"]):
         fields = line.split("\t")
@@ -431,8 +430,8 @@ def parse_logs(
         else:
             # If 6 fields are used, it's the 'old' log (without distinct minimizer)
             percent, counts_rooted, counts_direct, rank_code, tax_id, taxon = fields[:6]
-            minimizer = 0
-            minimizer_distinct = 0
+            minimizer = None
+            minimizer_distinct = None
 
         taxon = taxon.strip()
         if taxon == "root":
@@ -448,15 +447,14 @@ def parse_logs(
         # counts_direct = int(counts_direct)
         # tax_id = int(tax_id)
         # num_spaces = len(classif) - len(classif_stripped)
-        minimizer = int(minimizer)
-        minimizer_distinct = int(minimizer_distinct)
-        minimizer_duplication = minimizer / minimizer_distinct if minimizer_distinct != 0 else 0.0
 
         cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
-        minimizer_duplication_by_rank_by_taxon[rank_code][taxon] = minimizer_duplication
+        if minimizer_distinct is not None and rank_code == "S":
+            minimizer_duplication = int(minimizer) / int(minimizer_distinct) if minimizer_distinct != 0 else 0.0
+            min_dup_by_taxon[taxon] = minimizer_duplication
 
     if "R" not in cnt_by_rank_by_taxon:
         # Can be missing in case if all reads are unassigned
         cnt_by_rank_by_taxon["R"] = {"root": 0}
 
-    return cnt_by_rank_by_taxon, minimizer_duplication_by_rank_by_taxon
+    return cnt_by_rank_by_taxon, min_dup_by_taxon
