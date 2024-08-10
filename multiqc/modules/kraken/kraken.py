@@ -90,9 +90,13 @@ class MultiqcModule(BaseMultiqcModule):
             if min_dup_by_by_rank:
                 species_minimizer_dup_by_top_taxon_by_sample[f["s_name"]] = min_dup_by_by_rank
 
+        total_cnt_by_sample = self.ignore_samples(total_cnt_by_sample)
         if len(total_cnt_by_sample) == 0:
             raise ModuleNoSamplesFound
         log.info(f"{name + ': ' if name != 'Kraken' else ''}Found {len(total_cnt_by_sample)} reports")
+
+        cnt_by_top_taxon_by_rank_by_sample = self.ignore_samples(cnt_by_top_taxon_by_rank_by_sample)
+        species_minimizer_dup_by_top_taxon_by_sample = self.ignore_samples(species_minimizer_dup_by_top_taxon_by_sample)
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
