@@ -76,7 +76,10 @@ class MultiqcModule(BaseMultiqcModule):
             sample_cnt_by_taxon_by_rank, min_dup_by_by_rank = parse_logs(f)
 
             # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
-            total_cnt = sample_cnt_by_taxon_by_rank["U"]["unclassified"] + sample_cnt_by_taxon_by_rank["R"]["root"]
+            total_cnt = (
+                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # bracken doesn't have unclassified
+                + sample_cnt_by_taxon_by_rank["R"]["root"]
+            )
             if total_cnt == 0:
                 log.warning(f"No reads found in {f['fn']}")
                 continue
@@ -252,7 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Add unclassified count to each rank-level dataset
             for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
-                cnt = cnt_by_top_taxon_by_rank_by_sample[s_name]["U"]["unclassified"]
+                cnt = cnt_by_top_taxon_by_rank_by_sample[s_name].get("U", {}).get("unclassified", 0)
                 rank_cnt_data_by_taxon_by_sample[s_name]["U"] = cnt
                 rank_counts_shown[s_name] += cnt
 
