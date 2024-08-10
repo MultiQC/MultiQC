@@ -60,8 +60,9 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     """
     Apply config.run_modules and config.exclude_modules filters
     """
+    avail_modules = set(config.avail_modules.keys())
     if len(config.run_modules) > 0:
-        unknown_modules = [m for m in config.run_modules if m not in config.avail_modules.keys()]
+        unknown_modules = [m for m in config.run_modules if m not in avail_modules]
         if unknown_modules:
             logger.error(
                 f"Module(s) in config.run_modules are unknown: {', '.join(unknown_modules)}. "
@@ -69,7 +70,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
             )
         if len(unknown_modules) == len(config.run_modules):
             raise RunError("No available modules to run!")
-        module_names = [m for m in module_names if m in config.run_modules and m in config.avail_modules.keys()]
+        module_names = [m for m in module_names if m in config.run_modules and m in avail_modules]
         if "custom_content" in config.run_modules:
             module_names.extend(config.custom_content_modules)
         logger.info(f"Only using modules: {', '.join(module_names)}")
@@ -80,7 +81,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
             config.skip_generalstats = True
             config.exclude_modules = [x for x in config.exclude_modules if x != "general_stats"]
         module_names = [m for m in module_names if m not in config.exclude_modules]
-    return module_names
+    return module_names + ["software_versions"]  # always include software_versions
 
 
 def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
@@ -112,13 +113,13 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     if "software_versions" not in mod_keys:
         mod_dicts_in_order.append({"software_versions": {}})
 
-    mod_names = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
-    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_names]
+    mod_ids = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_ids]
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
-    assert len(mod_dicts_in_order) == len(mod_names)
+    assert len(mod_dicts_in_order) == len(mod_ids)
 
-    sp_keys = list(mod_names)  # make a copy
+    sp_keys = list(mod_ids)  # make a copy
     # Add custom content section names
     try:
         if "custom_content" in sp_keys:
@@ -126,7 +127,7 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     except AttributeError:
         pass  # custom_data not in config
 
-    logger.debug(f"Analysing modules: {', '.join(mod_names)}")
-    if sp_keys != mod_names:
+    logger.debug(f"Analysing modules: {', '.join(mod_ids)}")
+    if sp_keys != mod_ids:
         logger.debug(f"Search keys: {', '.join(sorted(sp_keys))}")
     return mod_dicts_in_order, sp_keys
