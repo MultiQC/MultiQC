@@ -2,8 +2,6 @@ import logging
 from collections import defaultdict
 from typing import Dict, Union, List, Tuple
 
-import line_profiler
-
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
@@ -208,7 +206,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(table_pct_by_sample, headers)
 
-    @line_profiler.profile
     def top_taxa_barplot(
         self,
         total_cnt_by_sample: Dict[str, int],
