@@ -121,9 +121,4 @@ was generated and the button that launches the welcome tour.
   Because this report contains a lot of samples, you may need to click 'Show plot' to see some graphs.
   <button id="mqc-render-all-plots" class="btn btn-default btn-sm">Render all plots</button>
 </div>
-{% else %}
-  <p class="glyphicon glyphicon-warning-sign" aria-hidden="true"></p>
-  <p>config.plots_num_samples_do_not_automatically_load={{config.plots_num_samples_do_not_automatically_load}}</p>
-  <p>report.general_stats_data | length={{report.general_stats_data | length}}</p>
-  <p>report.plot_data | length={{report.plot_data | length}}</p>
 {% endif %}
