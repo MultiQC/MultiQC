@@ -63,6 +63,7 @@ modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
+some_plots_are_deferred: bool
 saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
@@ -94,6 +95,7 @@ def reset():
     global general_stats_html
     global lint_errors
     global num_flat_plots
+    global some_plots_are_deferred
     global saved_raw_data
     global last_found_file
     global runtimes
@@ -118,6 +120,7 @@ def reset():
     general_stats_html = ""
     lint_errors = []
     num_flat_plots = 0
+    some_plots_are_deferred = False
     saved_raw_data = dict()
     last_found_file = None
     runtimes = Runtimes()

@@ -304,18 +304,16 @@ def create(
     pconfig: LinePlotConfig,
     lists_of_lines: List[List[Series]],
 ) -> "LinePlot":
-    max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
-
     model = Plot.initialize(
         plot_type=PlotType.LINE,
         pconfig=pconfig,
-        n_datasets=len(lists_of_lines),
-        n_samples=max_n_samples,
+        n_samples_per_dataset=[len(x) for x in lists_of_lines],
         axis_controlled_by_switches=["yaxis"],
         default_tt_label="<br>%{x}: %{y}",
     )
 
     # Very large legend for automatically enabled flat plot mode is not very helpful
+    max_n_samples = max(len(x) for x in lists_of_lines) if len(lists_of_lines) > 0 else 0
     if pconfig.showlegend is None and max_n_samples > 250:
         model.layout.showlegend = False
 

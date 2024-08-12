@@ -376,7 +376,7 @@ large reports may show plots as grey boxes with a _"Show Plot"_ button. Clicking
 render the plot as normal and prevents the browser from trying to do everything at once.
 
 By default this behaviour kicks in when a plot has 50 samples or more. This can be customised
-by changing the `num_datasets_plot_limit` config option.
+by changing the `plots_num_samples_do_not_automatically_load` config option.
 
 ### Flat / interactive plots
 

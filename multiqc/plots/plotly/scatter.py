@@ -203,8 +203,7 @@ class ScatterPlot(Plot):
         model = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
-            n_datasets=len(points_lists),
-            n_samples=len(points_lists[0]) if len(points_lists) > 0 else 0,
+            n_samples_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
         )
 

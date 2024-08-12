@@ -109,7 +109,7 @@ plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
-num_datasets_plot_limit: int
+plots_num_samples_do_not_automatically_load: int
 lineplot_style: str
 barplot_legend_on_bottom: bool
 violin_downsample_after: int

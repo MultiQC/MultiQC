@@ -156,13 +156,10 @@ class BarPlot(Plot[Dataset]):
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        max_n_samples = max(len(x) for x in samples_lists) if len(samples_lists) > 0 else 0
-
         model = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
-            n_datasets=len(cats_lists),
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[len(x) for x in samples_lists],
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
         )
@@ -185,6 +182,7 @@ class BarPlot(Plot[Dataset]):
         HEIGHT_PER_LEGEND_ITEM = 19
         legend_height = HEIGHT_PER_LEGEND_ITEM * max_n_cats
 
+        max_n_samples = max(len(x) for x in samples_lists) if len(samples_lists) > 0 else 0
         height = determine_barplot_height(
             max_n_samples=max_n_samples,
             # Group mode puts each category in a separate bar, so need to multiply by the number of categories
