@@ -130,6 +130,7 @@ class BaseDataset(BaseModel):
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict
     pct_range: Dict
+    n_samples: int
 
     def create_figure(
         self,
@@ -171,6 +172,7 @@ class Plot(BaseModel, Generic[T]):
     axis_controlled_by_switches: List[str] = []
     square: bool = False
     flat: bool = False
+    do_not_automatically_load: bool = False
 
     model_config = dict(
         arbitrary_types_allowed=True,
@@ -193,8 +195,7 @@ class Plot(BaseModel, Generic[T]):
     def initialize(
         plot_type: PlotType,
         pconfig: PConfig,
-        n_datasets: int,
-        n_samples: int,
+        n_samples_per_dataset: List[int],
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
@@ -204,15 +205,14 @@ class Plot(BaseModel, Generic[T]):
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_datasets: number of datasets to pre-initialize dataset models
-        :param n_samples: maximum number of samples in a dataset
+        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
         :param flat_threshold: threshold for the number of samples to switch to flat plots
         """
-        if n_datasets == 0:
+        if n_samples_per_dataset == 0:
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
@@ -232,11 +232,20 @@ class Plot(BaseModel, Generic[T]):
         if pconfig.square:
             width = height
 
+        # Render static image if the number of samples is above the threshold
         flat = False
         if config.plots_force_flat:
             flat = True
-        elif flat_threshold is not None and not config.plots_force_interactive and n_samples > flat_threshold:
+        elif (
+            flat_threshold is not None
+            and not config.plots_force_interactive
+            and max(x for x in n_samples_per_dataset) > flat_threshold
+        ):
             flat = True
+
+        do_not_automatically_load = False
+        if n_samples_per_dataset[0] > config.plots_num_samples_do_not_automatically_load:
+            do_not_automatically_load = True
 
         showlegend = pconfig.showlegend
         if showlegend is None:
@@ -317,7 +326,7 @@ class Plot(BaseModel, Generic[T]):
 
         dconfigs: List[Union[str, Dict[str, str]]] = pconfig.data_labels
         datasets = []
-        for idx in range(n_datasets):
+        for idx, n_samples in enumerate(n_samples_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -329,8 +338,9 @@ class Plot(BaseModel, Generic[T]):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
+                n_samples=n_samples,
             )
-            if n_datasets > 1:
+            if len(n_samples_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             if idx < len(dconfigs):
@@ -344,7 +354,7 @@ class Plot(BaseModel, Generic[T]):
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
-            if n_datasets > 1 and "title" not in dconfig:
+            if len(n_samples_per_dataset) > 1 and "title" not in dconfig:
                 dconfig["title"] = f"{pconfig.title} ({dataset.label})"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
@@ -365,6 +375,7 @@ class Plot(BaseModel, Generic[T]):
             axis_controlled_by_switches=axis_controlled_by_switches,
             square=pconfig.square,
             flat=flat,
+            do_not_automatically_load=do_not_automatically_load,
         )
 
     def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
@@ -512,9 +523,10 @@ class Plot(BaseModel, Generic[T]):
         # re-calculate the wrapper size after rendering.
         height = self.layout.height
         height_style = f'style="height:{height + 7}px"' if height else ""
+        cls = f"hc-plot hc-{self.plot_type}-plot not_rendered"
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.id}-wrapper" {height_style}>
-            <div id="{self.id}" class="hc-plot hc-{self.plot_type}-plot not_rendered"></div>
+            <div id="{self.id}" class="{cls}"></div>
             <div class="created-with-multiqc">Created with MultiQC</div>
         </div>"""
 

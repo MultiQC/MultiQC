@@ -107,8 +107,8 @@ $(function () {
   // Listener to re-plot graphs if config loaded
   $(document).on("mqc_config_loaded", function (e) {
     $(".hc-plot").each(function () {
-      var target = $(this).attr("id");
-      plot_graph(target, undefined, mqc_config["num_datasets_plot_limit"]);
+      let target = $(this).attr("id");
+      maybeRenderPlot(target);
     });
   });
 

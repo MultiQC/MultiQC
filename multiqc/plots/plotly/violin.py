@@ -382,21 +382,21 @@ class ViolinPlot(Plot):
         dts: List[DataTable],
         show_table_by_default: bool = False,
     ) -> "ViolinPlot":
-        all_samples: Set[str] = set()
-        for dt in dts:
+        assert len(dts) > 0, "No datasets to plot"
+
+        samples_per_dataset: List[Set[str]] = []
+        for dt_idx, dt in enumerate(dts):
+            ds_samples: Set[str] = set()
             for rd in dt.raw_data:
-                all_samples.update(rd.keys())
+                ds_samples.update(rd.keys())
+            samples_per_dataset.append(ds_samples)
 
-        max_n_samples = len(all_samples)
-
-        assert len(dts) > 0
         main_table_dt: DataTable = dts[0]  # used for the table
 
         model = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=main_table_dt.pconfig,
-            n_datasets=len(dts),
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[len(x) for x in samples_per_dataset],
             id=main_table_dt.id,
             default_tt_label=": %{x}",
             flat_threshold=None,  # we can make violins always interactive!
@@ -446,6 +446,7 @@ class ViolinPlot(Plot):
         # - do not add a table
         # - plot a Violin in Python, and serialise the figure instead of the datasets
         show_table = True
+        max_n_samples = max(len(x) for x in samples_per_dataset)
         if max_n_samples > config.max_table_rows and not no_violin:
             show_table = False
             if show_table_by_default:

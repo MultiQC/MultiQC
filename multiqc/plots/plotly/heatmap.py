@@ -147,8 +147,7 @@ class HeatmapPlot(Plot):
         model = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
-            n_datasets=1,
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[max_n_samples],
         )
 
         if isinstance(rows, list):

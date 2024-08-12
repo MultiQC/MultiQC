@@ -29,6 +29,7 @@ class Plot {
     this.activeDatasetIdx = 0;
     this.lActive = dump["l_active"];
     this.pActive = dump["p_active"];
+    this.do_not_automatically_load = dump["do_not_automatically_load"];
   }
 
   activeDatasetSize() {
@@ -151,32 +152,35 @@ $(function () {
 callAfterDecompressed.push(function (mqc_plotdata) {
   mqc_plots = Object.fromEntries(Object.values(mqc_plotdata).map((data) => [data.id, initPlot(data)]));
 
-  let shouldRender = $(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)");
+  let shouldRender = $(".hc-plot.not_rendered:visible:not(.hide_by_default)");
 
   // Render plots on page load
   shouldRender.each(function () {
     let target = $(this).attr("id");
     // Deferring each plot call prevents browser from locking up
     setTimeout(function () {
-      renderPlot(target);
-      if ($(".hc-plot.not_rendered:visible:not(.gt_max_num_ds)").length === 0)
-        // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+      maybeRenderPlot(target);
+      if ($(".hc-plot.not_rendered:visible:not(.hide_by_default)").length === 0)
+        // All plots rendered successfully (or hidden with hide_by_default), so hiding the warning
         $(".mqc_loading_warning").hide();
     }, 50);
   });
 
-  // All plots rendered successfully (or hidden with gt_max_num_ds), so hiding the warning
+  // All plots rendered successfully (or hidden with hide_by_default), so hiding the warning
   if (shouldRender.length === 0) loadingWarning.hide();
 
   // Render a plot when clicked (heavy plots are not automatically rendered by default)
   $("body").on("click", ".render_plot", function (e) {
-    renderPlot($(this).parent().attr("id"));
+    let target = $(this).parent().attr("id");
+    let plot = mqc_plots[target];
+    plot.do_not_automatically_load = false;
+    _renderPlot(target);
   });
 
   // Render all plots from header, even those that are hidden
   $("#mqc-render-all-plots").click(function () {
     $(".hc-plot.not_rendered").each(function () {
-      renderPlot($(this).attr("id"));
+      _renderPlot($(this).attr("id"));
     });
   });
 
@@ -184,7 +188,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
   $(document).on("mqc_highlights mqc_renamesamples mqc_hidesamples", function () {
     // Replot graphs
     $(".hc-plot:not(.not_rendered)").each(function () {
-      renderPlot($(this).attr("id"));
+      maybeRenderPlot($(this).attr("id"));
     });
   });
 
@@ -197,7 +201,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
     mqc_plots[target].pActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    renderPlot(target);
+    maybeRenderPlot(target);
   });
 
   // A "Log" button above a plot is clicked
@@ -209,7 +213,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
     mqc_plots[target].lActive = !$(this).hasClass("active");
     $(this).toggleClass("active");
 
-    renderPlot(target);
+    maybeRenderPlot(target);
   });
 
   // Switch data source
@@ -224,7 +228,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
     mqc_plots[target].activeDatasetIdx = newDatasetIdx;
     if (activeDatasetIdx === newDatasetIdx) return;
 
-    renderPlot(target);
+    maybeRenderPlot(target);
   });
 
   // Make divs height-draggable
@@ -273,7 +277,7 @@ callAfterDecompressed.push(function (mqc_plotdata) {
       $(this).addClass("active");
     }
     $(this).blur();
-    renderPlot(target);
+    maybeRenderPlot(target);
   });
 });
 
@@ -355,15 +359,29 @@ function applyToolboxSettings(samples, target) {
   return objects;
 }
 
+function maybeRenderPlot(target) {
+  let plot = mqc_plots[target];
+  if (plot === undefined) return false;
+  if (plot.datasets.length === 0) return false;
+
+  if (plot.do_not_automatically_load) {
+    $("#" + target)
+      .addClass("not_rendered hide_by_default")
+      .html('<button class="btn btn-default btn-lg render_plot">Show plot</button>');
+  } else {
+    _renderPlot(target);
+  }
+}
+
 // Call to render any plot
-function renderPlot(target) {
+function _renderPlot(target) {
   let plot = mqc_plots[target];
   if (plot === undefined) return false;
   if (plot.datasets.length === 0) return false;
 
   let container = $("#" + target);
 
-  // When the plot was already rendered, it's faster to call react, using the same signature
+  // When the plot was already rendered, it's faster to call Plotly.react, using the same signature
   // https://plotly.com/javascript/plotlyjs-function-reference/#plotlyreact
   let func;
   if (!plot.rendered) {

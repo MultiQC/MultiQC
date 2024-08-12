@@ -106,19 +106,17 @@ class BoxPlot(Plot[Dataset]):
         pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
     ) -> "BoxPlot":
-        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
-
         model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
-            n_datasets=len(list_of_data_by_sample),
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 
         model.datasets = [
             Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
+        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
         height = determine_barplot_height(max_n_samples)
 
         model.layout.update(

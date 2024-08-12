@@ -37,7 +37,7 @@ $(function () {
 
   // Hide welcome alert if setting saved
   try {
-    var hide_welcome = localStorage.getItem("mqc_hide_welcome");
+    let hide_welcome = localStorage.getItem("mqc_hide_welcome");
     if (hide_welcome !== "true") {
       $("#mqc_header_hr").show();
       $("#mqc_welcome").show();
@@ -60,7 +60,7 @@ $(function () {
   $(".module-doi").click(function (e) {
     // Don't follow the link
     e.preventDefault();
-    var el = $(this);
+    let el = $(this);
 
     // Check if we already have a popover
     if (el.data("bs.popover")) {

@@ -109,8 +109,8 @@ plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
-num_datasets_plot_limit: int
-lineplot_style: str
+plots_num_samples_do_not_automatically_load: int
+lineplot_number_of_samples_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
