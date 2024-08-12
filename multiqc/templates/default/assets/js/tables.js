@@ -45,7 +45,7 @@ $(function () {
       let violinId = $(this).data("violin-id");
       $("#mqc_violintable_wrapper_" + tableId).hide();
       $("#mqc_violintable_wrapper_" + violinId).show();
-      _renderPlot(violinId);
+      renderPlot(violinId);
     });
 
     $(".mqc-violin-to-table").click(function (e) {
@@ -161,7 +161,7 @@ $(function () {
             dataset["header_by_metric"][metric]["hidden"] = metricsHidden[metric];
           });
         });
-        _renderPlot(violinId);
+        renderPlot(violinId);
       }
     }
 

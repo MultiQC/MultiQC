@@ -268,6 +268,12 @@ def render_and_export_plots(plots_dir_name: str):
         disable_progress=not show_progress,
     )
 
+    report.some_plots_are_deferred = any(
+        isinstance(report.plot_by_id[s.plot_id], Plot) and report.plot_by_id[s.plot_id].defer_render
+        for s in sections
+        if s.plot_id
+    )
+
 
 def _render_general_stats_table(plots_dir_name: str) -> None:
     """

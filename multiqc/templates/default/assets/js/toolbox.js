@@ -106,9 +106,9 @@ $(function () {
 
   // Listener to re-plot graphs if config loaded
   $(document).on("mqc_config_loaded", function (e) {
-    $(".hc-plot").each(function () {
+    $(".hc-plot:not(.not_rendered)").each(function () {
       let target = $(this).attr("id");
-      maybeRenderPlot(target);
+      renderPlot(target);
     });
   });
 

@@ -172,7 +172,7 @@ class Plot(BaseModel, Generic[T]):
     axis_controlled_by_switches: List[str] = []
     square: bool = False
     flat: bool = False
-    do_not_automatically_load: bool = False
+    defer_render: bool = False
 
     model_config = dict(
         arbitrary_types_allowed=True,
@@ -243,9 +243,9 @@ class Plot(BaseModel, Generic[T]):
         ):
             flat = True
 
-        do_not_automatically_load = False
+        defer_render = False
         if n_samples_per_dataset[0] > config.plots_num_samples_do_not_automatically_load:
-            do_not_automatically_load = True
+            defer_render = True
 
         showlegend = pconfig.showlegend
         if showlegend is None:
@@ -375,7 +375,7 @@ class Plot(BaseModel, Generic[T]):
             axis_controlled_by_switches=axis_controlled_by_switches,
             square=pconfig.square,
             flat=flat,
-            do_not_automatically_load=do_not_automatically_load,
+            defer_render=defer_render,
         )
 
     def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
@@ -523,7 +523,9 @@ class Plot(BaseModel, Generic[T]):
         # re-calculate the wrapper size after rendering.
         height = self.layout.height
         height_style = f'style="height:{height + 7}px"' if height else ""
-        cls = f"hc-plot hc-{self.plot_type}-plot not_rendered"
+        cls = f"hc-plot hc-{self.plot_type}-plot not_loaded not_rendered"
+        if self.defer_render:
+            cls += " defer_render"
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.id}-wrapper" {height_style}>
             <div id="{self.id}" class="{cls}"></div>
