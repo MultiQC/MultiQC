@@ -250,6 +250,8 @@ class Dataset(BaseDataset):
                     },
                 }
             params = update_dict(params, self.trace_params, none_only=True)
+            if len(series.pairs) == 1:
+                params["mode"] = "lines+markers"  # otherwise it's invisible
 
             fig.add_trace(
                 go.Scatter(
