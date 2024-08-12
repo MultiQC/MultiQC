@@ -657,11 +657,13 @@ def fig_to_static_html(
     export_plots = export_plots if export_plots is not None else config.export_plots
 
     assert fig.layout.width
+    scale = 2.0  # higher detail (to look sharp on the retina display)
+    scale *= config.plots_export_font_scale  # bigger font if configured in the settings
     write_kwargs = dict(
-        width=fig.layout.width,  # While interactive plots take full width of screen,
+        width=fig.layout.width / config.plots_export_font_scale,  # While interactive plots take full width of screen,
         # for the flat plots we explicitly set width
-        height=fig.layout.height,
-        scale=2,  # higher detail (retina display)
+        height=fig.layout.height / config.plots_export_font_scale,
+        scale=scale,  # higher detail (retina display)
     )
 
     formats = set(config.export_plot_formats) if export_plots else set()

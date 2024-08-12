@@ -106,6 +106,7 @@ export_plots: bool
 make_report: bool
 make_pdf: bool
 plots_force_flat: bool
+plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 num_datasets_plot_limit: int
