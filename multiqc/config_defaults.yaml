@@ -62,8 +62,8 @@ make_pdf: false
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
-plots_flat_numseries: 10000
-plots_num_samples_do_not_automatically_load: 1000
+plots_flat_numseries: 2000
+plots_num_samples_do_not_automatically_load: 500
 lineplot_style: lines # "lines+markers"
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
