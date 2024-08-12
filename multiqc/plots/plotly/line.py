@@ -129,7 +129,7 @@ class LinePlotConfig(PConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
-    style: Literal["lines", "lines+markers"] = "lines"
+    style: Optional[Literal["lines", "lines+markers"]] = None
     hide_zero_cats: Optional[bool] = Field(False, deprecated="hide_empty")
     hide_empty: bool = False
     colors: Dict[str, str] = {}
@@ -191,9 +191,14 @@ class Dataset(BaseDataset):
         if pconfig.categories or dataset.dconfig.get("categories"):
             dataset.layout["xaxis"]["type"] = "category"
 
-        mode = pconfig.style
-        if config.lineplot_style == "lines+markers":
-            mode = "lines+markers"
+        if pconfig.style is not None:
+            mode = pconfig.style
+        else:
+            num_data_points = sum(len(x.pairs) for x in lines)
+            if num_data_points < config.lineplot_number_of_points_to_hide_markers:
+                mode = "lines+markers"
+            else:
+                mode = "lines"
 
         dataset.trace_params.update(
             mode=mode,

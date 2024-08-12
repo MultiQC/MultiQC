@@ -110,7 +110,7 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_num_samples_do_not_automatically_load: int
-lineplot_style: str
+lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
