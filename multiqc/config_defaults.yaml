@@ -60,6 +60,7 @@ export_plots: false
 make_report: true
 make_pdf: false
 plots_force_flat: false
+plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 1000
 num_datasets_plot_limit: 50

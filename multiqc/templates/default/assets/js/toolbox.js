@@ -367,23 +367,23 @@ $(function () {
         let format = mime.replace("image/", "").split("+")[0];
         let f_width = parseInt($("#mqc_exp_width").val());
         let f_height = parseInt($("#mqc_exp_height").val());
-        const f_scale = parseFloat($("#mqc_export_scaling").val());
+        const font_scale = parseFloat($("#mqc_export_scaling").val());
         checked_plots.each(function () {
           const target = $(this).val();
 
           promises.push(
             Plotly.toImage(target, {
               format: format,
-              width: f_width / f_scale,
-              height: f_height / f_scale,
-              scale: f_scale,
+              width: f_width / font_scale,
+              height: f_height / font_scale,
+              scale: font_scale,
             }).then(function (img) {
               if (format === "svg") {
                 Plotly.Snapshot.downloadImage(target, {
                   format: format,
-                  width: f_width / f_scale,
-                  height: f_height / f_scale,
-                  scale: f_scale,
+                  width: f_width / font_scale,
+                  height: f_height / font_scale,
+                  scale: font_scale,
                   filename: target,
                 });
                 // if (checked_plots.length <= zip_threshold) {
