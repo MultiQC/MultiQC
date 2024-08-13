@@ -1490,12 +1490,15 @@ class MultiqcModule(BaseMultiqcModule):
         return gdata, pconfig
 
 
-def _avg_bp_from_range(bp: str) -> Union[float, int]:
+def _avg_bp_from_range(bp: Union[str, float]) -> Union[float, int]:
     """
     Helper function - FastQC often gives base pair ranges (e.g. 10-15)
     which are not helpful when plotting. This returns the average from such
     ranges as an int, which is helpful. If not a range, just returns the int
     """
+
+    if isinstance(bp, float):
+        return bp
 
     if "-" in bp:
         try:
