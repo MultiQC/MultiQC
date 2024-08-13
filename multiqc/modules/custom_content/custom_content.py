@@ -10,7 +10,7 @@ from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
 
 import yaml
 
-from multiqc import config, report
+from multiqc import config, report, Plot
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
 from multiqc.plots.plotly.line import LinePlotConfig
@@ -366,7 +366,7 @@ class MultiqcModule(BaseMultiqcModule):
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
-        plot = None
+        plot: Optional[Union[Plot, str]] = None
         content = None
 
         plot_type = mod["config"].get("plot_type")
