@@ -542,6 +542,12 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
             if ftype is not None and ftype.startswith("image"):
                 return False
 
+        # Check if file is in ignore files
+        is_ignore_file = False
+        for ignore_pat in config.fn_ignore_files:
+            if fnmatch.fnmatch(search_f.filename, ignore_pat):
+                is_ignore_file = True
+
         # Test file for each search pattern
         file_matched = False
         with search_f:  # Ensure any open filehandles are closed.
@@ -549,7 +555,7 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
                 for key, sps in patterns.items():
                     start = time.time()
                     for sp in sps:
-                        if search_file(sp, search_f, key):
+                        if search_file(sp, search_f, key, is_ignore_file):
                             # Check that we shouldn't exclude this file
                             if not exclude_file(sp, search_f):
                                 # Looks good! Remember this file
@@ -604,7 +610,7 @@ def search_files(sp_keys):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key, is_ignore_file: bool = False):
     """
     Function to search a single file for a single search pattern.
     """
@@ -631,11 +637,10 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
     if not pattern.contents and not pattern.contents_re:
         return True
 
-    # Before parsing file content, check that we don't want to ignore this file to avoid parsing large files
-    for ignore_pat in config.fn_ignore_files:
-        if fnmatch.fnmatch(f.filename, ignore_pat):
-            file_search_stats["skipped_ignore_pattern"].add(f.path)
-            return False
+    if is_ignore_file:
+        # Ignore filenames are never searched for content.
+        file_search_stats["skipped_ignore_pattern"].add(f.path)
+        return False
 
     # Search by file contents
     num_lines = pattern.num_lines or config.filesearch_lines_limit
