@@ -25,7 +25,7 @@ class BarPlot extends Plot {
       let data = this.pActive ? cat["data_pct"] : cat.data;
       return {
         data: data.filter((_, si) => !samplesSettings[si].hidden),
-        color: cat.color,
+        color: cat.color, // formatted as "r,g,b", to be wrapped with "rgb()" or "rgba()"
         name: cat.name,
       };
     });
@@ -55,24 +55,44 @@ class BarPlot extends Plot {
     let traceParams = this.datasets[this.activeDatasetIdx]["trace_params"];
 
     return cats.map((cat) => {
-      return this.filteredSettings.map((sample, sampleIdx) => {
-        let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
+      if (this.layout.barmode !== "group") {
+        // Plotting each sample as a separate trace to be able to set alpha for each
+        // sample color separately, so we can dim the de-highlighted samples.
+        return this.filteredSettings.map((sample, sampleIdx) => {
+          let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
 
-        let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
-        params.marker.color = "rgba(" + cat.color + "," + alpha + ")";
+          let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
+          params.marker.color = "rgba(" + cat.color + "," + alpha + ")";
+
+          return {
+            type: "bar",
+            x: [cat.data[sampleIdx]],
+            y: [sample.name],
+            name: cat.name,
+            meta: cat.name,
+            // To make sure the legend uses bright category colors and not the dim ones:
+            showlegend: sampleIdx === firstHighlightedSample,
+            legendgroup: cat.name,
+            ...params,
+          };
+        });
+      } else {
+        // "group"
+        // Plotly adds giant gaps between bars in the group mode when adding each sample as a
+        // separate trace. Sacrificing dimming the de-highlighted bars to get rid of this gap.
+        let params = JSON.parse(JSON.stringify(traceParams)); // deep copy
+        samples = this.filteredSettings.map((s) => s.name);
+        params.marker.color = "rgb(" + cat.color + ")";
 
         return {
           type: "bar",
-          x: [cat.data[sampleIdx]],
-          y: [sample.name],
+          x: cat.data,
+          y: samples,
           name: cat.name,
           meta: cat.name,
-          // To make sure the legend uses bright category colors and not the deemed ones.
-          showlegend: sampleIdx === firstHighlightedSample,
-          legendgroup: cat.name,
           ...params,
         };
-      });
+      }
     });
   }
 

@@ -904,7 +904,7 @@ table_cond_formatting_colours:
   - fail: "#d9534f"
 ```
 
-These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example <http://htmlcolorcodes.com/>
+These can be overridden or added to with any string / CSS hex colour combinations you like. You can generate hex colour codes with lots of tools, for example [htmlcolorcodes.com](http://htmlcolorcodes.com/)
 
 Note that the different sets of rules are formatted in order. So if a value matches both `pass` and `fail` then it will be formatted as a `fail`
 
@@ -950,7 +950,7 @@ long_read_count_desc: "thousands"
 
 ## Number formatting
 
-By default, the interactive HighCharts plots in MultiQC reports use spaces for thousand
+By default, the interactive plots in MultiQC reports use spaces for thousands
 separators and points for decimal places (_e.g._ `1 234 567.89`). Different countries
 have different preferences for this, so you can customise the two using a couple of
 configuration parameters - `decimalPoint_format` and `thousandsSep_format`.
@@ -965,6 +965,19 @@ thousandsSep_format: ""
 
 This formatting currently only applies to the interactive charts. It may be extended
 to apply elsewhere in the future (submit a new issue if you spot somewhere where you'd like it).
+
+## Bar plot legend positioning
+
+By default, the legend for bar plots is placed on the right hand side of the plot.
+If you'd like to move it to the bottom, you can use the following config option:
+
+```yaml
+barplot_legend_on_bottom: true
+```
+
+This is not recommended to set up globally though, as it would look well only
+for medium-sized plot, but would start overlapping with the tick labels on shorter
+plots, or create a large gap on taller plots.
 
 ## Troubleshooting
 

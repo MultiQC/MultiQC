@@ -13,6 +13,7 @@ nav:
   - Usage:
       - usage/downstream.md
       - usage/pipelines.md
+      - usage/scripts.md
       - usage/troubleshooting.md
   - Development:
       - development/index.md

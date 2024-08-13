@@ -1,20 +1,20 @@
-""" MultiQC submodule to parse output from RSeQC junction_annotation.py
-http://rseqc.sourceforge.net/#junction-annotation-py """
+"""MultiQC submodule to parse output from RSeQC junction_annotation.py
+http://rseqc.sourceforge.net/#junction-annotation-py"""
 
 import logging
 import re
+from typing import Dict
 
+from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC junction_annotation reports and parse their data"""
 
-    # Set up vars
-    self.junction_annotation_data = dict()
+    junction_annotation_data: Dict = dict()
     regexes = {
         "total_splicing_events": r"^Total splicing  Events:\s*(\d+)$",
         "known_splicing_events": r"^Known Splicing Events:\s*(\d+)$",
@@ -27,7 +27,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files("rseqc/junction_annotation"):
+    for f in module.find_log_files("rseqc/junction_annotation"):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
@@ -53,23 +53,23 @@ def parse_reports(self):
                 d["novel_splicing_junctions_pct"] = (float(d["novel_splicing_junctions"]) / t) * 100.0
 
         if len(d) > 0:
-            if f["s_name"] in self.junction_annotation_data:
+            if f["s_name"] in junction_annotation_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            self.add_data_source(f, section="junction_annotation")
-            self.junction_annotation_data[f["s_name"]] = d
+            module.add_data_source(f, section="junction_annotation")
+            junction_annotation_data[f["s_name"]] = d
 
     # Filter to strip out ignored sample names
-    self.junction_annotation_data = self.ignore_samples(self.junction_annotation_data)
+    junction_annotation_data = module.ignore_samples(junction_annotation_data)
 
-    if len(self.junction_annotation_data) == 0:
+    if len(junction_annotation_data) == 0:
         return 0
 
     # Write to file
-    self.write_data_file(self.junction_annotation_data, "multiqc_rseqc_junction_annotation")
+    module.write_data_file(junction_annotation_data, "multiqc_rseqc_junction_annotation")
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Plot junction annotations
     keys = [
@@ -91,15 +91,15 @@ def parse_reports(self):
         "cpswitch_c_active": False,
         "data_labels": ["Junctions", "Events"],
     }
-    self.add_section(
+    module.add_section(
         name="Junction Annotation",
         anchor="rseqc_junction_annotation",
         description='<a href="http://rseqc.sourceforge.net/#junction-annotation-py" target="_blank">Junction annotation</a>'
         " compares detected splice junctions to"
         " a reference gene model. An RNA read can be spliced 2"
         " or more times, each time is called a splicing event.",
-        plot=bargraph.plot([self.junction_annotation_data, self.junction_annotation_data], keys, pconfig),
+        plot=bargraph.plot([junction_annotation_data, junction_annotation_data], keys, pconfig),
     )
 
     # Return number of samples found
-    return len(self.junction_annotation_data)
+    return len(junction_annotation_data)

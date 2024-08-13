@@ -1,0 +1,998 @@
+# MultiQC search patterns.
+# Default configurations for how modules can find their log files.
+# Loaded by the config module so that these patterns can be overwritten in user config files.
+
+adapterremoval:
+  fn: "*.settings"
+  contents: "AdapterRemoval"
+  num_lines: 1
+afterqc:
+  fn: "*.json"
+  contents: "allow_mismatch_in_poly"
+  num_lines: 10000
+anglerfish:
+  fn: "*.json"
+  contents: "anglerfish_version"
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
+bamdst/coverage:
+  contents: "## The file was created by bamdst"
+  num_lines: 5
+bamtools/stats:
+  contents: "Stats for BAM file(s):"
+  num_lines: 10
+bbduk:
+  contents: "Executing jgi.BBDuk"
+  num_lines: 2
+bbmap/stats:
+  contents: "#Name	Reads	ReadsPct"
+  num_lines: 4
+bbmap/aqhist:
+  contents: "#Quality	count1	fraction1	count2	fraction2"
+  num_lines: 1
+bbmap/bhist:
+  contents: "#Pos	A	C	G	T	N"
+  num_lines: 1
+bbmap/bincov:
+  # 3rd line (1st is #Mean)
+  contents: "#RefName	Cov	Pos	RunningPos"
+  num_lines: 3
+bbmap/bqhist:
+  contents: "#BaseNum	count_1	min_1	max_1	mean_1	Q1_1	med_1	Q3_1	LW_1	RW_1	count_2	min_2	max_2	mean_2	Q1_2	med_2	Q3_2	LW_2	RW_2"
+  num_lines: 1
+bbmap/covhist:
+  contents: "#Coverage	numBases"
+  num_lines: 1
+bbmap/covstats:
+  contents: "#ID	Avg_fold"
+  num_lines: 1
+bbmap/ehist:
+  contents: "#Errors	Count"
+  num_lines: 1
+bbmap/gchist:
+  # 5th line (1st is #Mean)
+  contents: "#GC	Count"
+  num_lines: 5
+bbmap/idhist:
+  contents: "#Mean_reads"
+  num_lines: 1
+bbmap/ihist:
+  # 6th line (first is #Mean)
+  contents: "#InsertSize	Count"
+  num_lines: 6
+bbmap/indelhist:
+  contents: "#Length	Deletions	Insertions"
+  num_lines: 1
+bbmap/lhist:
+  contents: "#Length	Count"
+  num_lines: 1
+bbmap/mhist:
+  contents: "#BaseNum	Match1	Sub1	Del1	Ins1	N1	Other1	Match2	Sub2	Del2	Ins2	N2	Other2"
+  num_lines: 1
+bbmap/qahist:
+  contents: "#Deviation"
+  num_lines: 1
+bbmap/qchist:
+  contents_re: "#Quality	count1	fraction1$"
+  num_lines: 1
+bbmap/qhist:
+  contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
+  num_lines: 1
+bbmap/rpkm:
+  contents: "#File	"
+  num_lines: 1
+bbmap/statsfile_machine:
+  contents: "Reads Used="
+  num_lines: 1
+bbmap/statsfile:
+  contents: "Reads Used:"
+  num_lines: 1
+bcftools/stats:
+  contents: "This file was produced by bcftools stats"
+bcl2fastq:
+  fn: "Stats.json"
+  contents: "DemuxResults"
+  num_lines: 300
+bclconvert/runinfo:
+  fn: "RunInfo.xml"
+bclconvert/demux:
+  fn: "Demultiplex_Stats.csv"
+bclconvert/quality_metrics:
+  fn: "Quality_Metrics.csv"
+bclconvert/adaptermetrics:
+  fn: "Adapter_Metrics.csv"
+bclconvert/unknown_barcodes:
+  fn: "Top_Unknown_Barcodes.csv"
+biobambam2/bamsormadup:
+  contents: "# bamsormadup"
+  num_lines: 2
+biobloomtools:
+  contents: "filter_id	hits	misses	shared	rate_hit	rate_miss	rate_shared"
+  num_lines: 2
+biscuit/align_mapq:
+  fn: "*_mapq_table.txt"
+  contents: "BISCUITqc Mapping Quality Table"
+  num_lines: 3
+biscuit/align_strand:
+  fn: "*_strand_table.txt"
+  contents: "BISCUITqc Strand Table"
+  num_lines: 3
+biscuit/align_isize:
+  fn: "*_isize_table.txt"
+  contents: "BISCUITqc Insert Size Table"
+  num_lines: 3
+biscuit/dup_report:
+  fn: "*_dup_report.txt"
+  contents: "BISCUITqc Read Duplication Table"
+  num_lines: 3
+biscuit/qc_cv:
+  fn: "*_cv_table.txt"
+  contents: "BISCUITqc Uniformity Table"
+  num_lines: 3
+biscuit/covdist_all_base_botgc:
+  fn: "*_covdist_all_base_botgc_table.txt"
+biscuit/covdist_all_base:
+  fn: "*_covdist_all_base_table.txt"
+biscuit/covdist_all_base_topgc:
+  fn: "*_covdist_all_base_topgc_table.txt"
+biscuit/covdist_q40_base_botgc:
+  fn: "*_covdist_q40_base_botgc_table.txt"
+biscuit/covdist_q40_base:
+  fn: "*_covdist_q40_base_table.txt"
+biscuit/covdist_q40_base_topgc:
+  fn: "*_covdist_q40_base_topgc_table.txt"
+biscuit/covdist_all_cpg_botgc:
+  fn: "*_covdist_all_cpg_botgc_table.txt"
+biscuit/covdist_all_cpg:
+  fn: "*_covdist_all_cpg_table.txt"
+biscuit/covdist_all_cpg_topgc:
+  fn: "*_covdist_all_cpg_topgc_table.txt"
+biscuit/covdist_q40_cpg_botgc:
+  fn: "*_covdist_q40_cpg_botgc_table.txt"
+biscuit/covdist_q40_cpg:
+  fn: "*_covdist_q40_cpg_table.txt"
+biscuit/covdist_q40_cpg_topgc:
+  fn: "*_covdist_q40_cpg_topgc_table.txt"
+biscuit/cpg_retention_readpos:
+  fn: "*_CpGRetentionByReadPos.txt"
+biscuit/cph_retention_readpos:
+  fn: "*_CpHRetentionByReadPos.txt"
+biscuit/base_avg_retention_rate:
+  fn: "*_totalBaseConversionRate.txt"
+biscuit/read_avg_retention_rate:
+  fn: "*_totalReadConversionRate.txt"
+bismark/align:
+  fn: "*_[SP]E_report.txt"
+bismark/dedup:
+  fn: "*.deduplication_report.txt"
+bismark/meth_extract:
+  fn: "*_splitting_report.txt"
+bismark/m_bias:
+  fn: "*M-bias.txt"
+bismark/bam2nuc:
+  fn: "*.nucleotide_stats.txt"
+bowtie1:
+  contents: "# reads processed:"
+  exclude_fn:
+    # Tophat log files
+    - "bowtie.left_kept_reads.log"
+    - "bowtie.left_kept_reads.m2g_um.log"
+    - "bowtie.left_kept_reads.m2g_um_seg1.log"
+    - "bowtie.left_kept_reads.m2g_um_seg2.log"
+    - "bowtie.right_kept_reads.log"
+    - "bowtie.right_kept_reads.m2g_um.log"
+    - "bowtie.right_kept_reads.m2g_um_seg1.log"
+    - "bowtie.right_kept_reads.m2g_um_seg2.log"
+  shared: true
+bowtie2:
+  contents: "reads; of these:"
+  exclude_contents:
+    - "bisulfite"
+    - "HiC-Pro"
+  shared: true
+bracken:
+  contents_re: '^(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)root'
+  num_lines: 1
+busco:
+  fn: "short_summary*"
+  contents: "BUSCO version is:"
+  num_lines: 1
+bustools:
+  fn: "*inspect.json"
+ccs/v4:
+  contents: "ZMWs generating CCS"
+  num_lines: 2
+  max_filesize: 1024
+ccs/v5:
+  contents: '"id": "ccs_processing"'
+  fn: "*.json"
+cellranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "count"'
+    num_lines: 20
+cellranger/vdj_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+    num_lines: 20
+checkqc:
+  contents: "instrument_and_reagent_type"
+  fn: "*.json"
+custom_content:
+  fn_re: '.+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)'
+clipandmerge:
+  contents: "ClipAndMerge ("
+  num_lines: 5
+clusterflow/logs:
+  fn: "*_clusterFlow.txt"
+  shared: true
+clusterflow/runfiles:
+  fn: "*.run"
+  contents: "Cluster Flow Run File"
+  num_lines: 2
+conpair/concordance:
+  contents: "markers (coverage per marker threshold"
+  num_lines: 3
+conpair/contamination:
+  contents: "Tumor sample contamination level: "
+  num_lines: 3
+cutadapt:
+  - contents: "This is cutadapt"
+    num_lines: 100
+  - fn: "*.json"
+    contents: "Cutadapt report"
+damageprofiler:
+  fn: "*dmgprof.json"
+dedup:
+  fn: "*dedup.json"
+deeptools/bamPEFragmentSizeTable:
+  contents: "	Frag. Sampled	Frag. Len. Min.	Frag. Len. 1st. Qu.	Frag. Len. Mean	Frag. Len. Median	Frag. Len. 3rd Qu."
+  num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+  contents: "#bamPEFragmentSize"
+  num_lines: 1
+deeptools/estimateReadFiltering:
+  contents: "Sample	Total Reads	Mapped Reads	Alignments in blacklisted regions	Estimated mapped reads"
+  num_lines: 1
+deeptools/plotCorrelationData:
+  contents: "#plotCorrelation --outFileCorMatrix"
+  num_lines: 1
+deeptools/plotCoverageStdout:
+  contents: "sample	mean	std	min	25%	50%	75%	max"
+  num_lines: 1
+deeptools/plotCoverageOutRawCounts:
+  contents: "#plotCoverage --outRawCounts"
+  num_lines: 1
+deeptools/plotEnrichment:
+  contents: "file	featureType	percent	featureReadCount	totalReadCount"
+  num_lines: 1
+deeptools/plotFingerprintOutRawCounts:
+  contents: "#plotFingerprint --outRawCounts"
+  num_lines: 1
+deeptools/plotFingerprintOutQualityMetrics:
+  contents: "Sample	AUC	Synthetic AUC	X-intercept	Synthetic X-intercept	Elbow Point	Synthetic Elbow Point"
+  num_lines: 1
+deeptools/plotPCAData:
+  contents: "#plotPCA --outFileNameData"
+  num_lines: 1
+deeptools/plotProfile:
+  contents: "bin labels"
+  num_lines: 1
+diamond:
+  fn: "diamond.log"
+disambiguate:
+  contents: "unique species A pairs"
+  num_lines: 2
+dragen/vc_metrics:
+  fn: "*.vc_metrics.csv"
+dragen/gvcf_metrics:
+  fn: "*.gvcf_metrics.csv"
+dragen/ploidy_estimation_metrics:
+  fn: "*.ploidy_estimation_metrics.csv"
+dragen/wgs_contig_mean_cov:
+  fn_re: '.*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv'
+dragen/overall_mean_cov_metrics:
+  fn_re: '.*_overall_mean_cov.*\.csv'
+dragen/coverage_metrics:
+  fn_re: '.*_coverage_metrics.*\.csv'
+dragen/wgs_fine_hist:
+  fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
+dragen/fragment_length_hist:
+  fn: "*.fragment_length_hist.csv"
+dragen/mapping_metrics:
+  fn: "*.mapping_metrics.csv"
+  contents: "Number of unique reads (excl. duplicate marked reads)"
+  num_lines: 50
+dragen/gc_metrics:
+  fn: "*.gc_metrics.csv"
+dragen/trimmer_metrics:
+  fn: "*.trimmer_metrics.csv"
+dragen/time_metrics:
+  fn: "*.time_metrics.csv"
+dragen/rna_quant_metrics:
+  fn: "*.quant[._]metrics.csv"
+dragen/rna_transcript_cov:
+  fn: "*.quant.transcript_coverage.txt"
+dragen/sc_rna_metrics:
+  fn: "*.scRNA[._]metrics.csv"
+dragen/sc_atac_metrics:
+  fn: "*.scATAC[._]metrics.csv"
+dragen_fastqc:
+  fn: "*.fastqc_metrics.csv"
+eigenstratdatabasetools:
+  fn: "*_eigenstrat_coverage.json"
+fastp:
+  fn: "*.json"
+  contents: '"before_filtering": {'
+  num_lines: 50
+fastq_screen:
+  fn: "*_screen.txt"
+fastqc/data:
+  fn: "fastqc_data.txt"
+fastqc/zip:
+  fn: "*_fastqc.zip"
+fastqc/theoretical_gc:
+  fn: "*fastqc_theoretical_gc*"
+featurecounts:
+  fn: "*.summary"
+  shared: true
+fgbio/groupreadsbyumi:
+  contents: "fraction_gt_or_eq_family_size"
+  num_lines: 3
+fgbio/errorratebyreadposition:
+  contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
+  num_lines: 3
+filtlong:
+  contents: Scoring long reads
+  contents_re: ".*Filtering long reads.*"
+  num_lines: 5
+flash/log:
+  contents: "[FLASH]"
+flash/hist:
+  fn: "*flash*.hist"
+flexbar:
+  contents: "Flexbar - flexible barcode and adapter removal"
+freyja:
+  fn: "*.tsv"
+  contents: "summarized\t["
+  num_lines: 6
+gatk/varianteval:
+  contents: "#:GATKTable:TiTvVariantEvaluator"
+gatk/base_recalibrator:
+  contents: "#:GATKTable:Arguments:Recalibration"
+  num_lines: 3
+gatk/analyze_saturation_mutagenesis:
+  fn: "*.readCounts"
+  contents: ">>Reads in disjoint pairs evaluated separately:"
+  num_lines: 10
+gffcompare:
+  fn: "*.stats"
+  contents: "# gffcompare"
+  num_lines: 2
+glimpse/err_spl:
+  fn: "*.error.spl.txt.gz"
+  num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt.gz"
+  num_lines: 1
+goleft_indexcov/roc:
+  fn: "*-indexcov.roc"
+goleft_indexcov/ped:
+  fn: "*-indexcov.ped"
+gopeaks:
+  fn: "*_gopeaks.json"
+happy:
+  fn: "*.summary.csv"
+  contents: "Type,Filter,TRUTH"
+htseq:
+  - contents_re: '^feature\tcount$'
+    num_lines: 1
+    shared: true
+  # can lack header and start with a GENE\tNUMBER line
+  - contents_re: '^\w+.*\t\d+$'
+    num_lines: 1
+    shared: true
+hicexplorer:
+  contents: "Min rest. site distance"
+  max_filesize: 4096
+  num_lines: 26
+hicup:
+  fn: "HiCUP_summary_report*"
+hicpro/mmapstat:
+  fn: "*mapstat"
+  contents: "total_R"
+  num_lines: 10
+hicpro/mpairstat:
+  fn: "*pairstat"
+  contents: "Total_pairs_processed"
+  num_lines: 10
+hicpro/mergestat:
+  fn: "*.mergestat"
+  contents: "valid_interaction"
+  num_lines: 10
+hicpro/mRSstat:
+  fn: "*RSstat"
+  contents: "Valid_interaction_pairs"
+hicpro/assplit:
+  fn: "*assplit.stat"
+hifiasm:
+  contents: "[M::ha_analyze_count]"
+  num_lines: 1
+hisat2:
+  contents: "HISAT2 summary stats:"
+homer/findpeaks:
+  contents: "# HOMER Peaks"
+  num_lines: 3
+homer/GCcontent:
+  fn: "tagGCcontent.txt"
+homer/genomeGCcontent:
+  fn: "genomeGCcontent.txt"
+homer/RestrictionDistribution:
+  fn: "petagRestrictionDistribution.*.txt"
+homer/LengthDistribution:
+  fn: "tagLengthDistribution.txt"
+homer/tagInfo:
+  fn: "tagInfo.txt"
+homer/FreqDistribution:
+  fn: "petag.FreqDistribution_1000.txt"
+hops:
+  fn: "heatmap_overview_Wevid.json"
+hostile:
+  fn: "*.json"
+  contents: '"reads_removed_proportion"'
+  num_lines: 100
+humid/stats:
+  fn: "stats.dat"
+  contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: "neigh.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: "counts.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: "clusters.dat"
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+interop/summary:
+  contents: "Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30"
+interop/index-summary:
+  contents: "Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max"
+isoseq/refine-json:
+  contents: '"num_reads_fl"'
+  fn: "*.json"
+isoseq/refine-csv:
+  contents: "id,strand,fivelen,threelen,polyAlen,insertlen,primer"
+  fn: "*.csv"
+isoseq/cluster-csv:
+  contents: "cluster_id"
+  fn: "*cluster_report.csv"
+  num_lines: 1
+ivar/trim:
+  contents: "Number of references"
+  num_lines: 8
+jcvi:
+  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total length (Mb)"
+jellyfish:
+  fn: "*_jf.hist"
+kaiju:
+  contents_re: 'file\tpercent\treads\ttaxon_id\ttaxon_name'
+  num_lines: 1
+kallisto:
+  contents: "[quant] finding pseudoalignments for the reads"
+kat:
+  fn: "*.dist_analysis.json"
+kraken:
+  contents_re: '^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified'
+  num_lines: 1
+librarian:
+  fn: "librarian_heatmap.txt"
+leehom:
+  contents: "Adapter dimers/chimeras"
+  num_lines: 100
+lima/summary:
+  contents: "ZMWs above all thresholds"
+  num_lines: 2
+  max_filesize: 1024
+lima/counts:
+  contents: "IdxFirst	IdxCombined	IdxFirstNamed	IdxCombinedNamed	Counts	MeanScore"
+  num_lines: 1
+longranger/summary:
+  fn: "*summary.csv"
+  contents: "longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule"
+  num_lines: 2
+longranger/invocation:
+  fn: "_invocation"
+  contents: "call PHASER_SVCALLER_CS("
+  max_filesize: 2048
+macs2:
+  fn: "*_peaks.xls"
+malt:
+  contents: "MaltRun - Aligns sequences using MALT (MEGAN alignment tool)"
+  num_lines: 2
+mapdamage:
+  - fn: "3p*_freq.txt"
+  - fn: "5p*_freq.txt"
+  - fn: "lgdistribution.txt"
+megahit:
+  contents: " - MEGAHIT v"
+  num_lines: 5
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methylqa:
+  fn: "*.report"
+  shared: true
+minionqc:
+  fn: "summary.yaml"
+  contents: "total.gigabases"
+mirtop:
+  fn: "*_mirtop_stats.log"
+mirtrace/summary:
+  fn: "mirtrace-results.json"
+mirtrace/length:
+  fn: "mirtrace-stats-length.tsv"
+mirtrace/contaminationbasic:
+  fn: "mirtrace-stats-contamination_basic.tsv"
+mirtrace/mirnacomplexity:
+  fn: "mirtrace-stats-mirna-complexity.tsv"
+mtnucratio:
+  fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
+mosdepth/global_dist:
+  fn: "*.mosdepth.global.dist.txt"
+mosdepth/region_dist:
+  fn: "*.mosdepth.region.dist.txt"
+motus:
+  contents: "Reads are aligned (by BWA) to marker gene sequences in the reference database"
+  num_lines: 2
+multivcfanalyzer:
+  fn: "MultiVCFAnalyzer.json"
+nanostat:
+  max_filesize: 4096
+  contents_re: "Metrics\\s+dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: "General summary:\\s*"
+  num_lines: 1
+nanoq:
+  contents: "Nanoq Read Summary"
+  num_lines: 3
+nextclade:
+  contents: "seqName;clade;"
+  num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
+ngsderive/strandedness:
+  contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
+  num_lines: 1
+ngsderive/instrument:
+  contents: "File	Instrument	Confidence	Basis"
+  num_lines: 1
+ngsderive/readlen:
+  contents: "File	Evidence	MajorityPctDetected	ConsensusReadLength"
+  num_lines: 1
+ngsderive/encoding:
+  contents: "File	Evidence	ProbableEncoding"
+  num_lines: 1
+ngsderive/junction_annotation:
+  contents: "File	total_junctions	total_splice_events	known_junctions	partial_novel_junctions	complete_novel_junctions	known_spliced_reads	partial_novel_spliced_reads	complete_novel_spliced_reads"
+  num_lines: 1
+nonpareil:
+  - fn: "*.json"
+    contents: "LRstar"
+    num_lines: 50
+    max_filesize: 1048576
+optitype:
+  contents: "	A1	A2	B1	B2	C1	C2	Reads	Objective"
+  num_lines: 1
+pangolin:
+  contents: "pangolin_version"
+  num_lines: 1
+odgi:
+  - fn: "*.og.stats.yaml"
+  - fn: "*.og.stats.yml"
+  - fn: "*.odgi.stats.yaml"
+  - fn: "*.odgi.stats.yml"
+pairtools:
+  contents: ["total_single_sided_mapped\t", "cis\t", "trans\t", "pair_types/"]
+  num_lines: 20
+peddy/summary_table:
+  fn: "*.peddy.ped"
+peddy/het_check:
+  fn: "*.het_check.csv"
+peddy/ped_check:
+  fn: "*.ped_check.csv"
+peddy/sex_check:
+  fn: "*.sex_check.csv"
+peddy/background_pca:
+  fn: "*.background_pca.json"
+seqera_cli/run_dump:
+  fn: "runs_*.tar.gz"
+seqera_cli/json:
+  fn: "workflow.json"
+sequali:
+  fn: "*.json"
+  contents: '"sequali_version"'
+  num_lines: 10
+somalier/somalier-ancestry:
+  fn: "*.somalier-ancestry.tsv"
+somalier/samples:
+  fn: "*.samples.tsv"
+  contents: "#family_id"
+  num_lines: 5
+somalier/pairs:
+  fn: "*.pairs.tsv"
+  contents: "hom_concordance"
+  num_lines: 5
+sourmash/compare:
+  fn: "*.labels.txt"
+sourmash/gather:
+  contents: "intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,"
+  num_lines: 1
+pbmarkdup:
+  contents_re: "LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS"
+  num_lines: 5
+phantompeakqualtools/out:
+  fn: "*.spp.out"
+picard/alignment_metrics:
+  - contents: "picard.analysis.AlignmentSummaryMetrics"
+  - contents: "--algo AlignmentStat"
+picard/basedistributionbycycle:
+  contents: "BaseDistributionByCycleMetrics"
+picard/crosscheckfingerprints:
+  contents: "CrosscheckFingerprints"
+picard/gcbias:
+  - contents: "GcBiasDetailMetrics"
+  - contents: "GcBiasSummaryMetrics"
+  - contents: "--algo GCBias"
+picard/hsmetrics:
+  - contents: "HsMetrics"
+  - contents: "--algo HsMetricAlgo"
+picard/insertsize:
+  - contents: "picard.analysis.InsertSizeMetrics"
+  - contents: "--algo InsertSizeMetricAlgo"
+picard/markdups:
+  - contents: "picard.sam.MarkDuplicates"
+  - contents: "picard.sam.DuplicationMetrics"
+  - contents: "picard.sam.markduplicates.MarkDuplicates"
+  - contents: "markduplicates.DuplicationMetrics"
+  - contents: "MarkDuplicatesSpark"
+  - contents: "markduplicates.GATKDuplicationMetrics"
+  - contents: "--algo Dedup"
+picard/oxogmetrics:
+  - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
+    shared: true
+picard/pcr_metrics:
+  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
+  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
+    shared: true
+picard/quality_by_cycle:
+  - contents: "# MeanQualityByCycle"
+  - contents: "--algo MeanQualityByCycle"
+  - contents_re: ".*CollectMultipleMetrics.*MeanQualityByCycle"
+    shared: true
+picard/quality_score_distribution:
+  - contents: "# QualityScoreDistribution"
+  - contents: "--algo QualDistribution"
+  - contents_re: ".*CollectMultipleMetrics.*QualityScoreDistribution"
+    shared: true
+picard/quality_yield_metrics:
+  - contents: "# CollectQualityYieldMetrics"
+  - contents_re: ".*CollectMultipleMetrics.*QualityYieldMetrics"
+    shared: true
+picard/rnaseqmetrics:
+  - contents: "# picard.analysis.Collectrnaseqmetrics"
+  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
+    shared: true
+picard/rrbs_metrics:
+  - contents: "# picard.analysis.CollectRrbsMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
+    shared: true
+picard/sam_file_validation:
+  fn: "*[Vv]alidate[Ss]am[Ff]ile*"
+picard/variant_calling_metrics:
+  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
+picard/wgs_metrics:
+  contents_re: "## METRICS CLASS.*WgsMetrics"
+picard/collectilluminabasecallingmetrics:
+  contents: "CollectIlluminaBasecallingMetrics"
+picard/collectilluminalanemetrics:
+  contents: "CollectIlluminaLaneMetrics"
+picard/extractilluminabarcodes:
+  contents: "ExtractIlluminaBarcodes"
+picard/markilluminaadapters:
+  contents: "MarkIlluminaAdapters"
+porechop:
+  contents: "Looking for known adapter sets"
+  num_lines: 10
+preseq:
+  - contents: "EXPECTED_DISTINCT"
+    num_lines: 2
+  - contents: "distinct_reads"
+    num_lines: 2
+preseq/real_counts:
+  fn: "*preseq_real_counts*"
+prinseqplusplus:
+  - contents: "reads removed by -"
+    num_lines: 2
+prokka:
+  contents: "contigs:"
+  num_lines: 2
+purple/qc:
+  fn: "*.purple.qc"
+purple/purity:
+  fn: "*.purple.purity.tsv"
+pycoqc:
+  contents: '"pycoqc":'
+  num_lines: 2
+pychopper:
+  contents: "Classification	Rescue"
+  num_lines: 6
+qc3C:
+  fn: "*.qc3C.json"
+qorts:
+  contents: "BENCHMARK_MinutesOnSamIteration"
+  num_lines: 100
+qualimap/bamqc/genome_results:
+  fn: "genome_results.txt"
+qualimap/bamqc/coverage:
+  fn: "coverage_histogram.txt"
+qualimap/bamqc/insert_size:
+  fn: "insert_size_histogram.txt"
+qualimap/bamqc/genome_fraction:
+  fn: "genome_fraction_coverage.txt"
+qualimap/bamqc/gc_dist:
+  fn: "mapped_reads_gc-content_distribution.txt"
+qualimap/rnaseq/rnaseq_results:
+  fn: "rnaseq_qc_results.txt"
+qualimap/rnaseq/coverage:
+  fn: "coverage_profile_along_genes_(total).txt"
+quast:
+  fn: "report.tsv"
+  contents: "Assembly	"
+  num_lines: 2
+rna_seqc/metrics_v1:
+  fn: "*metrics.tsv"
+  contents: "Sample	Note	"
+rna_seqc/metrics_v2:
+  fn: "*metrics.tsv"
+  contents: "High Quality Ambiguous Alignment Rate"
+rna_seqc/coverage:
+  fn_re: 'meanCoverageNorm_(high|medium|low)\.txt'
+rna_seqc/correlation:
+  fn_re: 'corrMatrix(Pearson|Spearman)\.txt'
+rockhopper:
+  fn: "summary.txt"
+  contents: "Number of gene-pairs predicted to be part of the same operon"
+  max_filesize: 500000
+rsem:
+  fn: "*.cnt"
+rseqc/bam_stat:
+  contents: "Proper-paired reads map to different chrom:"
+  max_filesize: 500000
+rseqc/gene_body_coverage:
+  fn: "*.geneBodyCoverage.txt"
+rseqc/inner_distance:
+  fn: "*.inner_distance_freq.txt"
+rseqc/junction_annotation:
+  contents: "Partial Novel Splicing Junctions:"
+  max_filesize: 500000
+rseqc/junction_saturation:
+  fn: "*.junctionSaturation_plot.r"
+rseqc/read_gc:
+  fn: "*.GC.xls"
+rseqc/read_distribution:
+  contents: "Group               Total_bases         Tag_count           Tags/Kb"
+  max_filesize: 500000
+rseqc/read_duplication_pos:
+  fn: "*.pos.DupRate.xls"
+rseqc/infer_experiment:
+  - fn: "*infer_experiment.txt"
+  - contents: "Fraction of reads explained by"
+    max_filesize: 500000
+rseqc/tin:
+  fn: "*.summary.txt"
+  contents: "TIN(median)"
+  num_lines: 1
+salmon/meta:
+  fn: "meta_info.json"
+  contents: "salmon_version"
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: "lib_format_counts.json"
+salmon/fld:
+  fn: "flenDist.txt"
+sambamba/markdup:
+  contents: "finding positions of the duplicate reads in the file"
+  num_lines: 50
+samblaster:
+  contents: "samblaster: Version"
+samtools/stats:
+  contents: "This file was produced by samtools stats"
+samtools/flagstat:
+  contents: "in total (QC-passed reads + QC-failed reads)"
+samtools/idxstats:
+  fn: "*idxstat*"
+samtools/rmdup:
+  contents: "[bam_rmdup"
+samtools/coverage:
+  contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
+  num_lines: 10
+samtools/markdup_txt:
+  contents: "COMMAND: samtools markdup"
+  num_lines: 2
+samtools/markdup_json:
+  contents: '"COMMAND": "samtools markdup'
+  num_lines: 10
+sargasso:
+  fn: "overall_filtering_summary.txt"
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
+seqyclean:
+  fn: "*_SummaryStatistics.tsv"
+sexdeterrmine:
+  fn: "sexdeterrmine.json"
+sickle:
+  contents_re: 'FastQ \w*\s?records kept: .*'
+  num_lines: 2
+skewer:
+  contents: "maximum error ratio allowed (-r):"
+slamdunk/summary:
+  contents: "# slamdunk summary"
+  num_lines: 1
+slamdunk/PCA:
+  contents: "# slamdunk PCA"
+  num_lines: 1
+slamdunk/rates:
+  contents: "# slamdunk rates"
+  num_lines: 1
+slamdunk/utrrates:
+  contents: "# slamdunk utrrates"
+  num_lines: 1
+slamdunk/tcperreadpos:
+  contents: "# slamdunk tcperreadpos"
+  num_lines: 1
+slamdunk/tcperutrpos:
+  contents: "# slamdunk tcperutr"
+  num_lines: 1
+snippy/snippy:
+  contents: "snippy"
+  num_lines: 20
+snippy/snippy-core:
+  contents_re: 'ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV'
+  num_lines: 1
+snpeff:
+  contents: "SnpEff_version"
+  max_filesize: 5000000
+snpsplit/old:
+  contents: "Writing allele-flagged output file to:"
+  num_lines: 2
+snpsplit/new:
+  fn: "*SNPsplit_report.yaml"
+software_versions:
+  fn_re: ".+_mqc_versions\\.(yaml|yml)"
+sortmerna:
+  contents: "Minimal SW score based on E-value"
+spaceranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Space Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Space Ranger", "subcommand": "count"'
+    num_lines: 20
+stacks/gstacks:
+  fn: "gstacks.log.distribs"
+  contents: "BEGIN effective_coverages_per_sample"
+stacks/populations:
+  fn: "populations.log.distribs"
+  contents: "BEGIN missing_samples_per_loc_prefilters"
+stacks/sumstats:
+  fn: "*.sumstats_summary.tsv"
+  contents: "# Pop ID	Private	Num_Indv	Var	StdErr	P	Var"
+  max_filesize: 1000000
+star:
+  fn: "*Log.final.out"
+star/genecounts:
+  fn: "*ReadsPerGene.out.tab"
+supernova/report:
+  fn: "*report*.txt"
+  num_lines: 100
+  contents: "- assembly checksum ="
+supernova/summary:
+  fn: "summary.json"
+  num_lines: 120
+  contents: '"lw_mean_mol_len":'
+supernova/molecules:
+  fn: "histogram_molecules.json"
+  num_lines: 10
+  contents: '"description": "molecules",'
+supernova/kmers:
+  fn: "histogram_kmer_count.json"
+  num_lines: 10
+  contents: '"description": "kmer_count",'
+theta2:
+  fn: "*.BEST.results"
+tophat:
+  fn: "*align_summary.txt"
+  shared: true
+trimmomatic:
+  contents: "Trimmomatic"
+truvari/bench:
+  contents_re: ".*truvari.* bench.*"
+  fn: "log.txt"
+  num_lines: 2
+umitools/extract:
+  contents: "# output generated by extract"
+  num_lines: 3
+umitools/dedup:
+  contents: "# output generated by dedup"
+  num_lines: 3
+varscan2/mpileup2snp:
+  contents: "Only SNPs will be reported"
+  num_lines: 3
+varscan2/mpileup2indel:
+  contents: "Only indels will be reported"
+  num_lines: 3
+varscan2/mpileup2cns:
+  contents: "Only variants will be reported"
+  num_lines: 3
+vcftools/relatedness2:
+  fn: "*.relatedness2"
+vcftools/tstv_by_count:
+  fn: "*.TsTv.count"
+vcftools/tstv_by_qual:
+  fn: "*.TsTv.qual"
+vcftools/tstv_summary:
+  fn: "*.TsTv.summary"
+vep/vep_html:
+  fn: "*.html"
+  contents: "VEP summary"
+  num_lines: 10
+  max_filesize: 1000000
+vep/vep_txt:
+  contents: "[VEP run statistics]"
+  num_lines: 1
+  max_filesize: 100000
+verifybamid/selfsm:
+  fn: "*.selfSM"
+vg/stats:
+  contents:
+    - "Total perfect:"
+    - "Total gapless (softclips allowed):"
+    - "Total time:"
+    - "Speed:"
+  num_lines: 30
+whatshap/stats:
+  contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
+  num_lines: 1
+xenome:
+  contents: "B	G	H	M	count	percent	class"
+  num_lines: 2
+xengsort:
+  contents: "# Xengsort classify"
+  num_lines: 2

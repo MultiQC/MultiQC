@@ -1,28 +1,32 @@
-""" MultiQC module to parse output from BUSCO """
-
-
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """BUSCO module"""
+    """
+    The module parses the `short_summary_[samplename].txt` files and
+    plots the proportion of BUSCO types found. MultiQC has been tested with
+    output from BUSCO v1.22 - v2.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BUSCO",
             anchor="busco",
             href="http://busco.ezlab.org/",
-            info="assesses genome assembly and annotation completeness with Benchmarking Universal Single-Copy Orthologs.",
+            info="Assesses genome assembly and annotation completeness",
+            extra="""
+            BUSCO v2 provides quantitative measures for the assessment of genome
+            assembly, gene set, and transcriptome completeness, based on
+            evolutionarily-informed expectations of gene content from near-universal
+            single-copy orthologs selected from OrthoDB v9.""",
             doi="10.1093/bioinformatics/btv351",
         )
 
@@ -82,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f)
 
     def busco_plot(self, lin):
-        """Make the HighCharts HTML for the BUSCO plot for a particular lineage"""
+        """Make the HTML for the BUSCO plot for a particular lineage"""
 
         data = {}
         for s_name in self.busco_data:

@@ -1,7 +1,8 @@
-""" MultiQC submodule to parse output from Picard OxoGMetrics """
+"""MultiQC submodule to parse output from Picard OxoGMetrics"""
 
 import logging
 from collections import defaultdict
+from typing import Dict
 
 from multiqc.modules.picard import util
 
@@ -13,7 +14,7 @@ def parse_reports(module):
     """Find Picard OxoGMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample = dict()
+    data_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/oxogmetrics", filehandles=True):
@@ -66,7 +67,7 @@ def parse_reports(module):
 
     data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -78,7 +79,7 @@ def parse_reports(module):
     module.write_data_file(print_data, "multiqc_picard_OxoGMetrics")
 
     # Add to general stats table
-    general_stats_data = dict()
+    general_stats_data: Dict = dict()
     for s_name in data_by_sample:
         general_stats_data[s_name] = dict()
         try:
@@ -101,4 +102,4 @@ def parse_reports(module):
     module.general_stats_addcols(general_stats_data, headers, namespace="OxoGMetrics")
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

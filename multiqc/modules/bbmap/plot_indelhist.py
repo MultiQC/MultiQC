@@ -39,6 +39,7 @@ def plot_indelhist(samples, file_type, **plot_args):
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Indel size",
+        "xsuffix": " bp",
         "ylab": "Insertion count",
         "data_labels": [
             {"name": "Insertions", "ylab": "Insertion count"},

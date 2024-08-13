@@ -1,20 +1,19 @@
-""" MultiQC submodule to parse output from RSeQC read_distribution.py
-http://rseqc.sourceforge.net/#read-distribution-py """
+"""MultiQC submodule to parse output from RSeQC read_distribution.py
+http://rseqc.sourceforge.net/#read-distribution-py"""
 
 import logging
 import re
 
+from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC read_distribution reports and parse their data"""
 
-    # Set up vars
-    self.read_dist = dict()
+    read_dist = dict()
     first_regexes = {
         "total_reads": r"Total Reads\s+(\d+)\s*",
         "total_tags": r"Total Tags\s+(\d+)\s*",
@@ -34,7 +33,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files("rseqc/read_distribution"):
+    for f in module.find_log_files("rseqc/read_distribution"):
         d = dict()
         for k, r in first_regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
@@ -63,20 +62,20 @@ def parse_reports(self):
             d.update(pcts)
 
         if len(d) > 0:
-            if f["s_name"] in self.read_dist:
+            if f["s_name"] in read_dist:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            self.add_data_source(f, section="read_distribution")
-            self.read_dist[f["s_name"]] = d
+            module.add_data_source(f, section="read_distribution")
+            read_dist[f["s_name"]] = d
 
     # Filter to strip out ignored sample names
-    self.read_dist = self.ignore_samples(self.read_dist)
+    read_dist = module.ignore_samples(read_dist)
 
-    if len(self.read_dist) == 0:
+    if len(read_dist) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Fix double counting of TSS_up and TES_down
     prefixes = ("tss_up", "tes_down")
@@ -89,7 +88,7 @@ def parse_reports(self):
         for big, small in zip(sizes, sizes[1:])
     ]
 
-    for sample_name, sample in self.read_dist.items():
+    for sample_name, sample in read_dist.items():
         for prefix, big, small, suffix in combinations:
             try:
                 big_val = sample.pop(f"{prefix}_{big}_{suffix}")
@@ -99,7 +98,7 @@ def parse_reports(self):
                 log.debug(f"Field {e} is missing from {sample_name}")
 
     # Write to file
-    self.write_data_file(self.read_dist, "multiqc_rseqc_read_distribution")
+    module.write_data_file(read_dist, "multiqc_rseqc_read_distribution")
 
     # Plot bar graph of groups
     keys = {
@@ -125,16 +124,16 @@ def parse_reports(self):
         "cpswitch_c_active": False,
     }
 
-    if max([d["total_tags"] for d in self.read_dist.values()]) > 0:
-        self.add_section(
+    if max([d["total_tags"] for d in read_dist.values()]) > 0:
+        module.add_section(
             name="Read Distribution",
             anchor="rseqc-read_distribution",
             description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
             " calculates how mapped reads are distributed over genome features.",
-            plot=bargraph.plot(self.read_dist, keys, pconfig),
+            plot=bargraph.plot(read_dist, keys, pconfig),
         )
     else:
-        self.add_section(
+        module.add_section(
             name="Read Distribution",
             anchor="rseqc-read_distribution",
             description='<a href="http://rseqc.sourceforge.net/#read-distribution-py" target="_blank">Read Distribution</a>'
@@ -143,4 +142,4 @@ def parse_reports(self):
         )
 
     # Return number of samples found
-    return len(self.read_dist)
+    return len(read_dist)

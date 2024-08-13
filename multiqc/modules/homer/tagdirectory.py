@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from HOMER tagdirectory """
+"""MultiQC module to parse output from HOMER tagdirectory"""
 
 import logging
 import math
@@ -393,6 +393,7 @@ class TagDirReportMixin:
             "title": "HOMER: Restriction Distribution",
             "ylab": "Reads",
             "xlab": "Distance from cut site (bp)",
+            "tt_label": "<b>{point.x} bp</b>: {point.y} reads",
             "data_labels": [{"name": "Number of Tags"}, {"name": "Percenatge"}],
         }
         datasets = [self.tagdir_data["restriction"], self.tagdir_data["restriction_norm"]]
@@ -408,6 +409,7 @@ class TagDirReportMixin:
             "title": "HOMER: Tag Length Distribution",
             "ylab": "Fraction of Tags",
             "xlab": "Tag Length (bp)",
+            "tt_label": "<b>{point.x} bp</b>: {point.y}",
         }
         return linegraph.plot(self.tagdir_data["length"], pconfig)
 
@@ -424,7 +426,7 @@ class TagDirReportMixin:
             "ymin": 0,
             "xmax": 1,
             "xmin": 0,
-            "yDecimals": True,
+            "y_decimals": True,
             "tt_label": "<b>{point.x}% GC</b>: {point.y}",
         }
         return linegraph.plot(self.tagdir_data["GCcontent"], pconfig)
@@ -471,9 +473,8 @@ class TagDirReportMixin:
             "title": "HOMER: Frequency Distribution",
             "ylab": "Fraction of Reads",
             "xlab": "Log10(Distance between regions)",
-            "data_labels": ["Reads", "Percent"],
             "smooth_points": 500,
             "smooth_points_sumcounts": False,
-            "yLog": True,
+            "ylog": True,
         }
         return linegraph.plot(pdata, pconfig)

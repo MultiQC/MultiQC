@@ -21,13 +21,13 @@ class ViolinPlot extends Plot {
       return header["hidden"] !== true;
     });
 
-    let violinValuesBySampleByMetric = dataset["violin_values_by_sample_by_metric"];
+    let violinValuesBySampleByMetric = dataset["violin_value_by_sample_by_metric"];
     let scatterValuesBySampleByMetric = {};
     metrics.forEach((metric) => {
       let header = headerByMetric[metric];
       let scatterValuesBySample = {};
       if (header["show_points"]) {
-        if (header["show_only_outliers"]) scatterValuesBySample = dataset["scatter_values_by_sample_by_metric"][metric];
+        if (header["show_only_outliers"]) scatterValuesBySample = dataset["scatter_value_by_sample_by_metric"][metric];
         else scatterValuesBySample = violinValuesBySampleByMetric[metric];
       }
       scatterValuesBySampleByMetric[metric] = scatterValuesBySample;
@@ -134,7 +134,7 @@ class ViolinPlot extends Plot {
           color: layout["xaxis"]["tickfont"]["color"],
         },
       };
-      if (header["xaxis"] !== undefined) {
+      if (header["xaxis"] !== undefined && header["xaxis"] !== null) {
         layout["xaxis" + (metricIdx + 1)] = Object.assign(layout["xaxis" + (metricIdx + 1)], header["xaxis"]);
       }
       let title = header.title + "  ";
@@ -143,12 +143,12 @@ class ViolinPlot extends Plot {
       layout["yaxis" + (metricIdx + 1)]["tickvals"] = [metricIdx];
       layout["yaxis" + (metricIdx + 1)]["ticktext"] = [title];
 
-      if (header["hoverformat"] !== undefined) {
+      if (header["hoverformat"] !== undefined && header["hoverformat"] !== null) {
         layout["xaxis" + (metricIdx + 1)]["hoverformat"] = header["hoverformat"];
       }
 
       // Set color for each violin individually
-      if (header["color"] !== undefined) {
+      if (header["color"] !== undefined && header["color"] !== null) {
         layout["yaxis" + (metricIdx + 1)]["tickfont"] = { color: "rgb(" + header["color"] + ")" };
       }
     });
@@ -162,7 +162,7 @@ class ViolinPlot extends Plot {
       let params = JSON.parse(JSON.stringify(dataset["trace_params"])); // deep copy
 
       // Set color for each violin individually
-      if (header["color"] !== undefined) {
+      if (header["color"]) {
         params["fillcolor"] = "rgb(" + header["color"] + ")";
         params["line"]["color"] = "rgb(" + header["color"] + ")";
       }
@@ -236,11 +236,11 @@ class ViolinPlot extends Plot {
         let state = sampleSettings[allSamples.indexOf(sample)];
         let params = JSON.parse(JSON.stringify(dataset["scatter_trace_params"])); // deep copy
 
-        let color = "black"; // trace_params["marker"]["color"];
+        let color = params.marker.color;
         let size = params.marker.size;
         if (highlightingEnabled) {
-          color = state.highlight ?? "#cccccc";
-          size = state.highlight !== null ? 10 : size;
+          color = state.highlight ?? "#ddd";
+          size = state.highlight !== null ? 8 : size;
         }
 
         let customData = {
@@ -281,7 +281,8 @@ class ViolinPlot extends Plot {
 
     let sep = format === "tsv" ? "\t" : ",";
     // Export all data points as a table, samples are rows, metrics are columns
-    let csv = "Sample" + sep + metrics.join(sep) + "\n";
+    let titles = metrics.map((metric) => headerByMetric[metric].title);
+    let csv = "Sample" + sep + titles.join(sep) + "\n";
     for (let i = 0; i < allSamples.length; i++) {
       let sample = allSamples[i];
       if (sampleSettings[i].hidden) continue;

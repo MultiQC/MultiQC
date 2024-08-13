@@ -1,27 +1,32 @@
-""" MultiQC module to parse output from DeDup """
-
 import json
 import logging
 from json import JSONDecodeError
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """DeDup module"""
+    """
+    By default, tables show read counts in thousands.
+    To customise this, you can set the following MultiQC config variables:
+
+    ```yaml
+    ancient_read_count_prefix: "K"
+    ancient_read_count_desc: "thousands"
+    ancient_read_count_multiplier: 0.001
+    ```
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="DeDup",
             anchor="dedup",
             href="http://www.github.com/apeltzer/DeDup",
-            info="is a tool for duplicate removal for merged/collapsed reads in ancient DNA analysis.",
+            info="Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis",
             doi="10.1186/s13059-016-0918-z",
         )
 
@@ -150,8 +155,6 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.dedup_data, headers)
 
     def dedup_alignment_plot(self):
-        """Make the HighCharts HTML to plot the duplication rates"""
-
         # Specify the order of the different possible categories
         keys = {
             "mapped_after_dedup": {"name": "Unique Retained"},

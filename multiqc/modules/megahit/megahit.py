@@ -1,28 +1,26 @@
-""" MultiQC module to parse output from MEGAHIT """
-
-
 import logging
 import re
 
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MEGAHIT module"""
+    """
+    MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
+    name (e.g. `sample1.log` will yield a sample name of `sample1`).
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MEGAHIT",
             anchor="megahit",
             href="https://github.com/voutcn/megahit",
-            info="is an ultra-fast and memory-efficient NGS assembler",
+            info="NGS read assembler",
             doi="10.1093/bioinformatics/btv033",
         )
 
@@ -87,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Minimum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_max_contig": {
@@ -95,7 +93,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Maximum contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_avg_contig": {
@@ -103,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Average contig length",
                 "min": 0,
                 "scale": "YlGn",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_n50": {
@@ -111,21 +109,21 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "N50 contig length",
                 "min": 0,
                 "scale": "YlGnBu",
-                "suffix": "&nbsp;bp",
+                "suffix": " bp",
                 "format": "{:,d}",
             },
             "megahit_mem": {
                 "title": "Memory",
                 "description": "Memory used, MB",
                 "min": 0,
-                "suffix": "&nbsp;MB",
+                "suffix": " MB",
                 "scale": "Reds",
             },
             "megahit_time": {
                 "title": "Time",
                 "description": "Time elapsed",
                 "min": 0,
-                "suffix": "&nbsp;s",
+                "suffix": " s",
                 "scale": "Greys",
             },
         }
@@ -142,6 +140,6 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data,
                 headers,
-                pconfig={"id": "megahit-stats-table", "title": "Run statistics"},
+                pconfig={"id": "megahit-stats-table", "title": "MEGAHIT: Run statistics"},
             ),
         )

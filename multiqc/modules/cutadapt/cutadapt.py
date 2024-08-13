@@ -1,45 +1,54 @@
-""" MultiQC module to parse output from Cutadapt """
-
-
+import functools
 import logging
 import os
 import re
 import shlex
 import json
+from typing import Dict
 
 from packaging import version
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Cutadapt module class, parses stderr logs.
-    Also understands logs saved by Trim Galore!
-    (which contain cutadapt logs)
+    This module should be able to parse logs from a wide range of versions of Cutadapt.
+    It works with both the regular Cutadapt report output and also with
+    [JSON reports (`--json`)](https://cutadapt.readthedocs.io/en/latest/guide.html#json-report).
+
+    Although the module parsing code works with very old log files, if you are working with
+    ancient versions (such as v1.2) you may need to change the search pattern to the following:
+
+    ```yaml
+    sp:
+      cutadapt:
+        contents: "cutadapt version"
+    ```
+
+    See the [module search patterns](http://multiqc.info/docs/#module-search-patterns)
+    section of the MultiQC documentation for more information.
+
+    The module also understands logs saved by Trim Galore, which contain cutadapt logs.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
             anchor="cutadapt",
             href="https://cutadapt.readthedocs.io/",
-            info="""is a tool to find and remove adapter sequences, primers, poly-A
-                    tails and other types of unwanted sequence from your high-throughput
-                    sequencing reads.""",
+            info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data = dict()
-        self.cutadapt_length_counts = {"default": dict()}
-        self.cutadapt_length_exp = {"default": dict()}
-        self.cutadapt_length_obsexp = {"default": dict()}
+        self.cutadapt_data: Dict = dict()
+        self.cutadapt_length_counts: Dict[str, Dict] = {"default": dict()}
+        self.cutadapt_length_exp: Dict[str, Dict] = {"default": dict()}
+        self.cutadapt_length_obsexp: Dict[str, Dict] = {"default": dict()}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -73,6 +82,12 @@ class MultiqcModule(BaseMultiqcModule):
         else:
             self.parse_log(f)
 
+        # Since all reports are most likely the same version, cache the result.
+        # version.parse is **very** expensive
+        @functools.lru_cache()
+        def version_parse(v):
+            return version.parse(v)
+
         # Calculate a few extra numbers of our own
         for s_name, d in self.cutadapt_data.items():
             # Percent trimmed
@@ -86,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
                         (float(d.get("bp_trimmed", 0)) + float(d.get("quality_trimmed", 0))) / d["bp_processed"]
                     ) * 100
             # Add missing filtering categories for pre-1.7 logs
-            if version.parse(d["cutadapt_version"]) > version.parse("1.6"):
+            if version_parse(d["cutadapt_version"]) > version_parse("1.6"):
                 if d.get("r_processed") is not None:
                     r_filtered_unexplained = (
                         d["r_processed"]
@@ -264,14 +279,15 @@ class MultiqcModule(BaseMultiqcModule):
                     log_section = line.strip().strip("=").strip()
 
                 # Detect whether 3' or 5'
-                end_regex = re.search(r"Type: regular (\d)'", line)
-                if end_regex:
-                    end = end_regex.group(1)
+                end_match = re.search(r"Type: regular (\d)'", line)
+                if end_match:
+                    end = end_match.group(1)
 
                 if "Overview of removed sequences" in line:
                     if "' end" in line:
-                        res = re.search(r"(\d)' end", line)
-                        end = res.group(1)
+                        end_match = re.search(r"(\d)' end", line)
+                        if end_match:
+                            end = end_match.group(1)
 
                     # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
@@ -378,9 +394,9 @@ class MultiqcModule(BaseMultiqcModule):
                 ),
                 "ylab": "Counts",
                 "xlab": "Length Trimmed (bp)",
-                "xDecimals": False,
                 "ymin": 0,
                 "tt_label": "<b>{point.x} bp trimmed</b>: {point.y:.0f}",
+                "xsuffix": " bp",
                 "data_labels": [
                     {"name": "Counts", "ylab": "Count"},
                     {"name": "Obs/Exp", "ylab": "Observed / Expected"},

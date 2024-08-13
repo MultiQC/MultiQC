@@ -1,26 +1,27 @@
-""" MultiQC module to parse output from HTSeq Count """
-
-
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    HTSeq is a general purpose Python package that provides infrastructure to
+    process data from high-throughput sequencing assays. `htseq-count` is a tool
+    that is part of the main HTSeq package - it takes a file with aligned sequencing
+    reads, plus a list of genomic features and counts how many reads map to each feature.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HTSeq Count",
             anchor="htseq",
             target="HTSeq Count",
             href="https://htseq.readthedocs.io/en/master/htseqcount.html",
-            info=" is part of the HTSeq Python package - it takes a file with aligned sequencing "
-            "reads, plus a list of genomic features and counts how many reads map to each feature.",
+            info="Part of the HTSeq package: counts reads covering specified genomic features",
             doi="10.1093/bioinformatics/btu638",
         )
 
@@ -60,15 +61,23 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
         parsed_data = dict()
         assigned_counts = 0
-        for line in f["f"]:
-            s = line.split("\t")
-            if s[0] in keys:
-                parsed_data[s[0][2:]] = int(s[-1])
-            else:
-                try:
-                    assigned_counts += int(s[-1])
-                except (ValueError, IndexError):
-                    pass
+
+        # HtSeq search pattern is just two tab-separated columns, which is not very specific.
+        # Need to wrap in try-catch to catch potential weird files like parquet being matched.
+        try:
+            for line in f["f"]:
+                s = line.split("\t")
+                if s[0] in keys:
+                    parsed_data[s[0][2:]] = int(s[-1])
+                else:
+                    try:
+                        assigned_counts += int(s[-1])
+                    except (ValueError, IndexError):
+                        pass
+        except UnicodeDecodeError:
+            log.debug(f"Could not parse potential HTSeq Count file {f['fn']}")
+            return None
+
         if len(parsed_data) > 0:
             parsed_data["assigned"] = assigned_counts
             parsed_data["total_count"] = sum([v for v in parsed_data.values()])
@@ -119,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "htseq_assignment_plot",
             "title": "HTSeq: Count Assignments",
             "ylab": "# Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "cpswitch_counts_label": "Number of Reads",
         }
         return bargraph.plot(self.htseq_data, cats, config)

@@ -27,7 +27,12 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({ sortInitialOrder: "desc", textExtraction: get_sort_val });
+    $(".mqc_table").tablesorter({
+      sortInitialOrder: "desc",
+      textExtraction: get_sort_val,
+      cancelSelection: false,
+      headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
+    });
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
@@ -51,17 +56,26 @@ $(function () {
       $("#mqc_violintable_wrapper_" + violinId).hide();
     });
 
-    // Copy table contents to clipboard
-    let clipboard = new Clipboard(".mqc_table_copy_btn");
-    clipboard.on("success", function (e) {
-      e.clearSelection();
-    });
     $(".mqc_table_copy_btn").click(function () {
-      var btn = $(this);
-      btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
-      setTimeout(function () {
-        btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copy table');
-      }, 2000);
+      let btn = $(this);
+      let table = $(btn.data("clipboard-target"))[0];
+
+      const range = document.createRange();
+      range.selectNode(table);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand("copy");
+        window.getSelection().removeAllRanges();
+
+        btn.addClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+        setTimeout(() => {
+          btn.removeClass("active").html('<span class="glyphicon glyphicon-copy"></span> Copied!');
+        }, 2000);
+      } catch (err) {
+        console.error("Failed to copy table: ", err);
+      }
     });
 
     // Make table headers fixed when table body scrolls (use CSS transforms)
@@ -151,15 +165,19 @@ $(function () {
       }
     }
 
-    // Make rows in MultiQC tables sortable
-    $(".mqc_table.mqc_sortable tbody").sortable({
-      handle: ".sorthandle",
-      helper: function fixWidthHelper(e, ui) {
-        ui.children().each(function () {
-          $(this).width($(this).width());
+    // Make rows in MultiQC "Configure Columns" tables sortable
+    $(".mqc_configModal").on("show.bs.modal", function (e) {
+      $(e.target)
+        .find(".mqc_table.mqc_sortable tbody")
+        .sortable({
+          handle: ".sorthandle",
+          helper: function fixWidthHelper(e, ui) {
+            ui.children().each(function () {
+              $(this).width($(this).width());
+            });
+            return ui;
+          },
         });
-        return ui;
-      },
     });
 
     // Change order of columns

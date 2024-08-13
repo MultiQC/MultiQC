@@ -1,6 +1,3 @@
-""" MultiQC module to parse output from somalier """
-
-
 import csv
 import logging
 import random
@@ -9,26 +6,30 @@ from math import isinf, isnan
 
 import spectra
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, scatter, table
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    somalier module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Somalier",
             anchor="somalier",
             href="https://github.com/brentp/somalier",
-            info="calculates genotype :: pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            info="Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF",
+            extra="""
+            Somalier can be used to find sample swaps or duplicates in cancer
+            projects, where there is often no jointly-called VCF across samples.
+        
+            It is also extremely efficient and so can be used to find all-vs-all
+            relatedness estimates for thousands of samples.
+        
+            It also outputs information on sex, depth, heterozgyosity, and ancestry
+            to be used for general QC.
+            """,
             doi="10.1186/s13073-020-00761-2",
         )
 
@@ -391,7 +392,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "somalier_stats",
             "namespace": "Somalier",
             "title": "Somalier: Statistics",
-            "no_beeswarm": True,
+            "no_violin": True,
             "raw_data_fn": "multiqc_somalier_stats",
         }
 
@@ -540,6 +541,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "somalier_het_check_plot",
                 "title": "Somalier: Sample Observed Heterozygosity",
                 "xlab": "Mean depth",
+                "xsuffix": "x",
                 "ylab": "Standard deviation of allele-balance",
             }
 
@@ -614,7 +616,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "somalier_ancestry_barplot",
                 "title": "Somalier: Sample Predicted Ancestry Proportions",
                 "cpswitch": False,
-                "hide_zero_cats": False,
+                "hide_empty": False,
                 "ylab": "Predicted Ancestry",
                 "tt_suffix": "%",
             }

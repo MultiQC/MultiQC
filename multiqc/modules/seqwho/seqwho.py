@@ -1,15 +1,12 @@
-""" MultiQC module to parse output from SeqWho """
-
 import json
 import logging
 from collections import OrderedDict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, bargraph
 from multiqc.utils import mqc_colour
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
@@ -18,15 +15,13 @@ SPECIES = ["human", "mouse"]
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """SeqWho module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SeqWho",
             anchor="seqwho",
             href="https://daehwankimlab.github.io/seqwho/",
-            info="is a tool to determine a FASTQ(A) sequencing file identity, both source protocol and species of origin.",
+            info="Determines FASTQ(A) sequencing file source protocol and the species of origin, "
+            "to check that the composition of the library is expected.",
             # doi=""
         )
 
@@ -215,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Per Sequence Quality Scores",
             "ylab": "Reads",
             "xlab": "Sequence Quality (Phred)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Phred {point.x}</b>: {point.y:.0f} reads",
         }
@@ -234,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Quality Score",
             "ylab": "Sequence Quality (Phred)",
             "xlab": "Position (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Base {point.x} </b>: {point.y}",
         }
@@ -253,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "SeqWho: Read Distribution",
             "ylab": "Reads",
             "xlab": "Length (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Base {point.x} bp</b>: {point.y} reads",
         }

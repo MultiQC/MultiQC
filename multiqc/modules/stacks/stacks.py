@@ -1,24 +1,28 @@
-""" MultiQC module to parse Stacks 2 denovo output"""
-
-
 import logging
 import os
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module is designed to only parse some of the output from the Stacks `denovo_map` pipeline.
+
+    The module works with Stacks version 2.1 or greater.
+
+    If you are missing some functionality, please submit an issue on the [MultiQC github page](https://github.com/MultiQC/MultiQC)
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Stacks",
             anchor="stacks",
             href="http://catchenlab.life.illinois.edu/stacks/",
-            info="A software for analyzing restriction enzyme-based data (e.g. RAD-seq).",
+            info="Analyzes restriction enzyme-based data (e.g. RAD-seq).",
             doi="10.1111/mec.12354",
         )
 
@@ -26,7 +30,6 @@ class MultiqcModule(BaseMultiqcModule):
             "n_loci": {
                 "title": "# loci",
                 "description": "Number of loci built",
-                "format": "{:,.i}",
                 "scale": "RdYlGn",
             },
             "n_used_fw_reads": {
@@ -54,7 +57,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "PopID",
                 "description": "Population ID as defined in the Population Map file.",
                 "scale": False,
-                "format": "{:,.s}",
             },
             "Private": {
                 "title": "Private",
@@ -213,7 +215,6 @@ class MultiqcModule(BaseMultiqcModule):
         config_distribs = {
             "id": "distribs_plot",
             "title": "Stacks: Population plots",
-            "namespace": "stacks",
             "tt_label": "{point.y} loci, {point.x} samples/SNPs",
             "ylab": "# loci",
             "data_labels": [

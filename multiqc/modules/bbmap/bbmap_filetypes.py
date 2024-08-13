@@ -1,4 +1,6 @@
-from multiqc.utils import config
+from typing import Dict
+
+from multiqc import config
 
 from .plot_aqhist import plot_aqhist
 from .plot_basic_hist import plot_basic_hist
@@ -36,7 +38,7 @@ section_order = [
     "statsfile_machine",
     "statsfile",
 ]
-file_types = {
+file_types: Dict = {
     "stats": {
         "title": "BBDuk filtering statistics",
         "descr": "Proportion of reads that matched adapters/contaminants.",
@@ -88,12 +90,12 @@ file_types = {
         "cols": {"Quality": int, "count1": int, "fraction1": float, "count2": int, "fraction2": float},
         "plot_func": plot_aqhist,
         "plot_params": {
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 28, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 28, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
-            "yLog": True,
+            "ylog": True,
         },
     },
     # basecov
@@ -158,7 +160,7 @@ file_types = {
         "cols": {"Coverage": int, "numBases": int},
         "plot_func": plot_covhist,
         "plot_params": {
-            "yLog": True,
+            "ylog": True,
         },
     },
     "covstats": {
@@ -202,7 +204,13 @@ file_types = {
         },
         "cols": {"GC": float, "Count": int},
         "plot_func": plot_basic_hist,
-        "plot_params": {"xlab": "Proportion GC", "ylab": "# Reads"},
+        "plot_params": {
+            "xlab": "Proportion GC",
+            "ylab": "# Reads",
+            "xsuffix": "%",
+            "xmin": 0,
+            "xmax": 100,
+        },
     },
     "idhist": {
         "title": "Identity histogram",
@@ -282,7 +290,7 @@ file_types = {
         "help_text": "",
         "cols": {"Length": int, "Count": int},
         "plot_func": plot_basic_hist,
-        "plot_params": {"xlab": "Read length (base pairs)", "ylab": "# Reads"},
+        "plot_params": {"xlab": "Read length (base pairs)", "xsuffix": "bp", "ylab": "# Reads"},
     },
     "mhist": {
         "title": "Match, substitution, deletion, and insertion rates",
@@ -336,12 +344,12 @@ file_types = {
         "cols": {"Quality": int, "count1": int, "fraction1": float},
         "plot_func": plot_qchist,
         "plot_params": {
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 30, "to": 100, "color": "#c3e6c3"},
                 {"from": 20, "to": 30, "color": "#e6dcc3"},
                 {"from": 0, "to": 20, "color": "#e6c3c3"},
             ],
-            "yLog": True,
+            "ylog": True,
             "xlab": "Phred Score",
             "ylab": "Counts",
         },

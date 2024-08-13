@@ -434,7 +434,7 @@ To help with this, you can run MultiQC with the `--strict` flag, which will give
 explicit warnings about anything that is not optimally configured. For example:
 
 ```bash
-multiqc --strict test_data
+multiqc --strict test-data
 ```
 
 You can alternatively enable the strict mode by setting the environment variable
@@ -443,10 +443,9 @@ You can alternatively enable the strict mode by setting the environment variable
 # Examples
 
 Probably the best way to get to grips with Custom Content is to see some examples.
-The MultiQC automated testing runs with a bunch of different files, and I try to add to
-these all the time.
-
-You can see these examples here: <https://github.com/MultiQC/test-data/tree/main/data/custom_content>
+The MultiQC automated testing runs with a
+[number of different files](https://github.com/MultiQC/test-data/tree/main/data/custom_content)
+which you can look through for inspiration.
 
 For example, to see a file which generates a table in a report by itself, you can
 have a look at `embedded_config/table_headers_mqc.txt` ([link](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/table_headers_mqc.txt)).

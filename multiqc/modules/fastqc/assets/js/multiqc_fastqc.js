@@ -1,4 +1,6 @@
-// Javascript for the FastQC MultiQC Mod
+////////////////////////////////////////////////
+// Javascript for the FastQC MultiQC module
+////////////////////////////////////////////////
 
 ///////////////
 // Per Base Sequence Content
@@ -23,7 +25,7 @@ function load_fastqc_seq_content() {
 }
 
 // Set up listeners etc on page load
-$(function () {
+callAfterDecompressed.push(function (mqc_plotdata) {
   load_fastqc_seq_content();
 
   // Go through each FastQC module in case there are multiple
@@ -69,7 +71,6 @@ function fastqc_module(module_element, module_key) {
     $.each(fastqc_seq_content[module_key], function (s_name, data) {
       // rename sample names
       var orig_s_name = s_name;
-      var t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
       $.each(window.mqc_rename_f_texts, function (idx, f_text) {
         if (window.mqc_rename_regex_mode) {
           var re = new RegExp(f_text, "g");
@@ -79,7 +80,10 @@ function fastqc_module(module_element, module_key) {
         }
       });
       orig_s_names[s_name] = orig_s_name;
-      sample_statuses[s_name] = t_status;
+      if (fastqc_passfails[module_key] !== undefined) {
+        let t_status = fastqc_passfails[module_key]["per_base_sequence_content"][s_name];
+        sample_statuses[s_name] = t_status;
+      }
       p_data[s_name] = JSON.parse(JSON.stringify(data)); // clone data
 
       var hide_sample = false;
@@ -95,7 +99,7 @@ function fastqc_module(module_element, module_key) {
           }
         }
       }
-      if (window.mqc_hide_mode == "show") {
+      if (window.mqc_hide_mode === "show") {
         hide_sample = !hide_sample;
       }
       if (!hide_sample) {
@@ -169,16 +173,18 @@ function fastqc_module(module_element, module_key) {
       ypos = 0;
       $.each(sample_names, function (idx, s_name) {
         // Add a 5px wide bar indicating either status or Highlight
-        var status = sample_statuses[s_name];
-        var s_col = "#999999";
-        if (status == "pass") {
-          s_col = "#5cb85c";
-        }
-        if (status == "warn") {
-          s_col = "#f0ad4e";
-        }
-        if (status == "fail") {
-          s_col = "#d9534f";
+        let s_col = "#999999";
+        if (sample_statuses[s_name] !== undefined) {
+          let status = sample_statuses[s_name];
+          if (status === "pass") {
+            s_col = "#5cb85c";
+          }
+          if (status === "warn") {
+            s_col = "#f0ad4e";
+          }
+          if (status === "fail") {
+            s_col = "#d9534f";
+          }
         }
         // Override status colour with highlights
         $.each(window.mqc_highlight_f_texts, function (idx, f_text) {
@@ -193,24 +199,24 @@ function fastqc_module(module_element, module_key) {
         ctx.fillRect(0, ypos + 1, 5, s_height - 2);
 
         // Plot the squares for the heatmap
-        var s = p_data[s_name];
-        var xpos = 6;
-        var last_bp = 0;
+        let s = p_data[s_name];
+        let xpos = 6;
+        let last_bp = 0;
         $.each(s, function (bp, v) {
           bp = parseInt(bp);
-          var this_width = (bp - last_bp) * (c_width / max_bp);
+          let this_width = (bp - last_bp) * (c_width / max_bp);
           last_bp = bp;
           // Very old versions of FastQC give counts instead of percentages
           if (v["t"] > 100) {
-            var t = v["t"] + v["a"] + v["c"] + v["g"];
+            let t = v["t"] + v["a"] + v["c"] + v["g"];
             v["t"] = (v["t"] / t) * 100;
             v["a"] = (v["a"] / t) * 100;
             v["c"] = (v["c"] / t) * 100;
             v["g"] = (v["g"] / t) * 100;
           }
-          var r = Math.round((v["t"] / 100) * 255);
-          var g = Math.round((v["a"] / 100) * 255);
-          var b = Math.round((v["c"] / 100) * 255);
+          let r = Math.round((v["t"] / 100) * 255);
+          let g = Math.round((v["a"] / 100) * 255);
+          let b = Math.round((v["c"] / 100) * 255);
           ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
           // width+1 to avoid vertical white line gaps.
           ctx.fillRect(xpos, ypos, this_width + 1, s_height);
@@ -287,16 +293,16 @@ function fastqc_module(module_element, module_key) {
       return false;
     }
     // Create it
-    var pid = $(this).closest("h3").attr("id");
-    var k = pid.substr(7);
+    let pid = $(this).closest("h3").attr("id");
+    let k = pid.substr(7);
     // Remove suffix when there are multiple fastqc sections
-    var n = k.indexOf("-");
-    k = k.substring(0, n != -1 ? n : k.length);
-    var vals = fastqc_passfails[module_key][k];
-    var passes = $(this).hasClass("progress-bar-success") ? true : false;
-    var warns = $(this).hasClass("progress-bar-warning") ? true : false;
-    var fails = $(this).hasClass("progress-bar-danger") ? true : false;
-    var pclass = "";
+    let n = k.indexOf("-");
+    k = k.substring(0, n !== -1 ? n : k.length);
+    let vals = fastqc_passfails[module_key][k];
+    let passes = $(this).hasClass("progress-bar-success") ? true : false;
+    let warns = $(this).hasClass("progress-bar-warning") ? true : false;
+    let fails = $(this).hasClass("progress-bar-danger") ? true : false;
+    let pclass = "";
     if (passes) {
       pclass = "success";
     }
@@ -306,13 +312,13 @@ function fastqc_module(module_element, module_key) {
     if (fails) {
       pclass = "danger";
     }
-    var samples = Array();
+    let samples = Array();
     $.each(vals, function (s_name, status) {
-      if (status == "pass" && passes) {
+      if (status === "pass" && passes) {
         samples.push(s_name);
-      } else if (status == "warn" && warns) {
+      } else if (status === "warn" && warns) {
         samples.push(s_name);
-      } else if (status == "fail" && fails) {
+      } else if (status === "fail" && fails) {
         samples.push(s_name);
       }
     });
@@ -344,11 +350,11 @@ function fastqc_module(module_element, module_key) {
   module_element.find(".fastqc_passfail_progress").on("click", ".fastqc-status-highlight", function (e) {
     e.preventDefault();
     // Get sample names and highlight colour
-    var samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
-    var f_col = $("#mqc_colour_filter_color").val();
+    let samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
+    let f_col = $("#mqc_colour_filter_color").val();
     // Add sample names to the toolbox
-    for (i = 0; i < samples.length; i++) {
-      var f_text = samples[i];
+    for (let i = 0; i < samples.length; i++) {
+      let f_text = samples[i];
       $("#mqc_col_filters").append(
         '<li style="color:' +
           f_col +
@@ -374,7 +380,7 @@ function fastqc_module(module_element, module_key) {
   module_element.find(".fastqc_passfail_progress").on("click", ".fastqc-status-hideothers", function (e) {
     e.preventDefault();
     // Get sample names
-    var samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
+    let samples = $(this).parent().parent().find(".popover-content").html().split("<br>");
     // Check if we're already hiding anything, remove after confirm if so
     if ($("#mqc_hidesamples_filters li").length > 0) {
       if (!confirm($("#mqc_hidesamples_filters li").length + " Hide filters already exist - discard?")) {
@@ -387,8 +393,8 @@ function fastqc_module(module_element, module_key) {
     $('.mqc_hidesamples_showhide[value="show"]').prop("checked", true);
     $("#mqc_hidesamples .mqc_regex_mode .re_mode").removeClass("on").addClass("off").text("off");
     // Add sample names to the toolbox
-    for (i = 0; i < samples.length; i++) {
-      var f_text = samples[i];
+    for (let i = 0; i < samples.length; i++) {
+      let f_text = samples[i];
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
           f_text +
@@ -410,7 +416,7 @@ function fastqc_module(module_element, module_key) {
   module_element.find("#fastqc_per_base_sequence_content_export_btn").click(function (e) {
     e.preventDefault();
     // In case of repeated modules: #fastqc_per_base_sequence_content_plot, #fastqc_per_base_sequence_content_plot-1, ..
-    var plot_id = module_element.find(".fastqc_per_base_sequence_content_plot").attr("id");
+    let plot_id = module_element.find(".fastqc_per_base_sequence_content_plot").attr("id");
     // Tick only this plot in the toolbox and slide out
     $("#mqc_export_selectplots input").prop("checked", false);
     $('#mqc_export_selectplots input[value="' + plot_id + '"]').prop("checked", true);
@@ -436,48 +442,42 @@ function fastqc_module(module_element, module_key) {
   // Seq Content heatmap mouse rollover
   module_element.find("#fastqc_seq_heatmap").mousemove(function (e) {
     // Replace the heading above the heatmap
-    var pos = findPos(this);
-    var x = e.pageX - pos.x + 3;
-    var y = e.pageY - pos.y;
+    let pos = findPos(this);
+    let x = e.pageX - pos.x + 3;
+    let y = e.pageY - pos.y;
 
     // Get label from y position
-    var idx = Math.floor(y / s_height);
-    var s_name = sample_names[idx];
-    var orig_s_name = orig_s_names[sample_names[idx]];
+    let idx = Math.floor(y / s_height);
+    let s_name = sample_names[idx];
+    let orig_s_name = orig_s_names[sample_names[idx]];
     if (s_name === undefined) {
       return false;
     }
 
     // Show the pass/warn/fail status heading for this sample
-    var s_status = sample_statuses[s_name];
-    var s_status_class = "label-default";
-    if (s_status == "pass") {
+    let s_status = sample_statuses[s_name];
+    let s_status_class = "label-default";
+    if (s_status === "pass") {
       s_status_class = "label-success";
     }
-    if (s_status == "warn") {
+    if (s_status === "warn") {
       s_status_class = "label-warning";
     }
-    if (s_status == "fail") {
+    if (s_status === "fail") {
       s_status_class = "label-danger";
     }
-    module_element
-      .find("#fastqc_per_base_sequence_content_plot_div .s_name")
-      .html(
-        '<span class="glyphicon glyphicon-info-sign"></span> ' +
-          s_name +
-          ' <span class="label s_status ' +
-          s_status_class +
-          '">' +
-          s_status +
-          "</span>",
-      );
+    let sampleLabel = '<span class="glyphicon glyphicon-info-sign"></span> ' + s_name;
+    if (s_status !== undefined) {
+      sampleLabel += ' <span class="label s_status ' + s_status_class + '">' + s_status + "</span>";
+    }
+    module_element.find("#fastqc_per_base_sequence_content_plot_div .s_name").html(sampleLabel);
 
     // Update the key with the raw data for this position
-    var hover_bp = Math.max(1, Math.floor((x / c_width) * max_bp));
-    var thispoint = fastqc_seq_content[module_key][orig_s_name][hover_bp];
+    let hover_bp = Math.max(1, Math.floor((x / c_width) * max_bp));
+    let thispoint = fastqc_seq_content[module_key][orig_s_name][hover_bp];
     if (!thispoint) {
-      var nearestkey = 0;
-      var guessdata = null;
+      let nearestkey = 0;
+      let guessdata = null;
       $.each(fastqc_seq_content[module_key][orig_s_name], function (bp, v) {
         bp = parseInt(bp);
         if (bp < hover_bp && bp > nearestkey) {
@@ -515,12 +515,12 @@ function fastqc_module(module_element, module_key) {
   module_element.find("#fastqc_seq_heatmap").click(function (e) {
     e.preventDefault();
     // Get label from y position
-    var pos = findPos(this);
-    var x = e.pageX - pos.x;
-    var y = e.pageY - pos.y;
-    var idx = Math.floor(y / s_height);
-    var s_name = sample_names[idx];
-    var orig_s_name = orig_s_names[sample_names[idx]];
+    let pos = findPos(this);
+    let x = e.pageX - pos.x;
+    let y = e.pageY - pos.y;
+    let idx = Math.floor(y / s_height);
+    let s_name = sample_names[idx];
+    let orig_s_name = orig_s_names[sample_names[idx]];
     if (orig_s_name !== undefined) {
       plot_single_seqcontent(s_name);
     }
@@ -528,7 +528,7 @@ function fastqc_module(module_element, module_key) {
   module_element.on("click", ".fastqc_seqcontent_single_prevnext", function (e) {
     e.preventDefault();
     // Find next / prev sample name
-    var idx = sample_names.indexOf(current_single_plot);
+    let idx = sample_names.indexOf(current_single_plot);
     if ($(this).data("action") === "next") {
       idx++;
     } else {
@@ -540,16 +540,16 @@ function fastqc_module(module_element, module_key) {
     if (idx >= sample_names.length) {
       idx = 0;
     }
-    var s_name = sample_names[idx];
-    var orig_s_name = orig_s_names[sample_names[idx]];
+    let s_name = sample_names[idx];
+    let orig_s_name = orig_s_names[sample_names[idx]];
     current_single_plot = s_name;
     // Prep the new plot data
-    var plot_data = [[], [], [], []];
-    var bases = Object.keys(fastqc_seq_content[module_key][orig_s_name]).sort(function (a, b) {
+    let plot_data = [[], [], [], []];
+    let bases = Object.keys(fastqc_seq_content[module_key][orig_s_name]).sort(function (a, b) {
       return a - b;
     });
-    for (i = 0; i < bases.length; i++) {
-      var base = fastqc_seq_content[module_key][orig_s_name][bases[i]]["base"].toString().split("-");
+    for (let i = 0; i < bases.length; i++) {
+      let base = fastqc_seq_content[module_key][orig_s_name][bases[i]]["base"].toString().split("-");
       base = parseFloat(base[0]);
       plot_data[0].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["t"]]);
       plot_data[1].push([base, fastqc_seq_content[module_key][orig_s_name][bases[i]]["c"]]);
@@ -578,20 +578,20 @@ function fastqc_module(module_element, module_key) {
 
   function plot_single_seqcontent(s_name) {
     current_single_plot = s_name;
-    var orig_s_name = orig_s_names[s_name];
-    var data = fastqc_seq_content[module_key][orig_s_name];
-    var plot_data = [
+    let orig_s_name = orig_s_names[s_name];
+    let data = fastqc_seq_content[module_key][orig_s_name];
+    let plot_data = [
       { name: "% T", data: [] },
       { name: "% C", data: [] },
       { name: "% A", data: [] },
       { name: "% G", data: [] },
     ];
-    var bases = Object.keys(data).sort(function (a, b) {
+    let bases = Object.keys(data).sort(function (a, b) {
       return a - b;
     });
-    for (i = 0; i < bases.length; i++) {
-      var d = bases[i];
-      var base = data[d]["base"].toString().split("-");
+    for (let i = 0; i < bases.length; i++) {
+      let d = bases[i];
+      let base = data[d]["base"].toString().split("-");
       base = parseFloat(base[0]);
       plot_data[0]["data"].push({ x: base, y: data[d]["t"], name: data[d]["base"] });
       plot_data[1]["data"].push({ x: base, y: data[d]["c"], name: data[d]["base"] });
@@ -601,9 +601,9 @@ function fastqc_module(module_element, module_key) {
 
     // Create plot div if it doesn't exist, and hide overview
     if (module_element.find("#fastqc_sequence_content_single_wrapper").length === 0) {
-      var plot_div = module_element.find("#fastqc_per_base_sequence_content_plot_div");
+      let plot_div = module_element.find("#fastqc_per_base_sequence_content_plot_div");
       plot_div.slideUp();
-      var newplot =
+      let newplot =
         '<div id="fastqc_sequence_content_single_wrapper"> \
             <div id="fastqc_sequence_content_single_controls">\
                 <button class="btn btn-primary btn-sm" id="fastqc_sequence_content_single_back">Back to overview heatmap</button> \
@@ -665,7 +665,7 @@ function fastqc_module(module_element, module_key) {
 // Find the position of the mouse cursor over the canvas
 // http://stackoverflow.com/questions/6735470/get-pixel-color-from-canvas-on-mouseover
 function findPos(obj) {
-  var curleft = 0,
+  let curleft = 0,
     curtop = 0;
   if (obj.offsetParent) {
     do {
