@@ -10,7 +10,7 @@ from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
 
 import yaml
 
-from multiqc import config, report
+from multiqc import config, report, Plot
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
 from multiqc.plots.plotly.line import LinePlotConfig
@@ -366,13 +366,19 @@ class MultiqcModule(BaseMultiqcModule):
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
-        plot = None
+        plot: Optional[Union[Plot, str]] = None
         content = None
+
+        plot_type = mod["config"].get("plot_type")
+
+        # Heatmap
+        if plot_type == "heatmap":
+            plot = heatmap.plot(
+                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
+            )
 
         if not isinstance(mod["data"], list):
             mod["data"] = [mod["data"]]
-
-        plot_type = mod["config"].get("plot_type")
 
         # Try to coerce x-axis to numeric
         if plot_type in ["linegraph", "scatter"]:
@@ -411,12 +417,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Box plot
         elif plot_type == "box":
             plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
-
-        # Heatmap
-        elif plot_type == "heatmap":
-            plot = heatmap.plot(
-                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
-            )
 
         # Violin plot
         elif plot_type in ["violin", "beeswarm"]:
