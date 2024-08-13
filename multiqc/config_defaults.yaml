@@ -164,11 +164,6 @@ custom_content:
 # Search patterns for grouping samples within a report.
 # Listed in order to handle cases like SAMPLE_R1.trimmed.fq.gz
 sample_merge_groups:
-  trimming:
-    Trimmed:
-      - "_trimmed"
-      - ".trimmed"
-    Raw:
   read_pairs:
     Read 1:
       - type: regex

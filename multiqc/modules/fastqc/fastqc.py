@@ -188,11 +188,12 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.fastqc_data: Dict = dict()
+        order_of_duplication_keys_by_sample: Dict[str, List[float]] = dict()
 
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files("fastqc/data"):
             s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
-            self.parse_fastqc_report(f["f"], s_name, f)
+            order_of_duplication_keys_by_sample[s_name] = self.parse_fastqc_report(f["f"], s_name, f)
 
         # Find and parse zipped FastQC reports
         for f in self.find_log_files("fastqc/zip", filecontents=False):
@@ -224,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
                         except Exception as e:
                             log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
                             continue
-                    self.parse_fastqc_report(r_data, s_name, f)
+                    order_of_duplication_keys_by_sample[s_name] = self.parse_fastqc_report(r_data, s_name, f)
             except KeyError:
                 log.warning(f"Error - can't find fastqc_raw_data.txt in {f}")
 
@@ -283,16 +284,16 @@ class MultiqcModule(BaseMultiqcModule):
         self.gc_content_plot(status_checks)
         self.n_content_plot(status_checks)
         self.seq_length_dist_plot(status_checks)
-        self.seq_dup_levels_plot(status_checks)
+        self.seq_dup_levels_plot(status_checks, order_of_duplication_keys_by_sample)
         self.overrepresented_sequences()
         self.adapter_content_plot(status_checks)
         if status_checks:
             self.status_heatmap()
         # Delete FastQC data as it is not used any more after generating the
-        # reports and it uses a lot of memory.
+        # reports, and it uses a lot of memory.
         del self.fastqc_data
 
-    def parse_fastqc_report(self, file_contents, s_name=None, f=None):
+    def parse_fastqc_report(self, file_contents, s_name=None, f=None) -> List[float]:
         """Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table."""
@@ -310,7 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the report
         section = None
         s_headers = None
-        self.dup_keys = []
+        order_of_duplication_keys = []
         for line in file_contents.splitlines():
             if line.startswith("##FastQC"):
                 version_match = re.search(VERSION_REGEX, line)
@@ -355,9 +356,9 @@ class MultiqcModule(BaseMultiqcModule):
                     # Special case - need to remember order of duplication keys
                     if section == "sequence_duplication_levels":
                         try:
-                            self.dup_keys.append(float(s[0]))
+                            order_of_duplication_keys.append(float(s[0]))
                         except ValueError:
-                            self.dup_keys.append(s[0])
+                            order_of_duplication_keys.append(s[0])
 
         # Tidy up the Basic Stats
         self.fastqc_data[s_name]["basic_statistics"] = {
@@ -389,6 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
         if median is not None:
             self.fastqc_data[s_name]["basic_statistics"]["median_sequence_length"] = median
+        return order_of_duplication_keys
 
     def fastqc_general_stats(self):
         """Add some single-number stats to the basic statistics
@@ -1074,19 +1076,19 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=linegraph.plot(data_by_sample, pconfig),
             )
 
-    def seq_dup_levels_plot(self, status_checks):
+    def seq_dup_levels_plot(self, status_checks, order_of_duplication_keys_by_sample):
         """Create the HTML for the Sequence Duplication Levels plot"""
 
         data: Dict = dict()
-        max_dupval = 0
+        max_dup_val = 0
         for s_name in self.fastqc_data:
             try:
                 thisdata = {}
                 for d in self.fastqc_data[s_name]["sequence_duplication_levels"]:
                     thisdata[d["duplication_level"]] = d["percentage_of_total"]
-                    max_dupval = max(max_dupval, d["percentage_of_total"])
+                    max_dup_val = max(max_dup_val, d["percentage_of_total"])
                 data[s_name] = {}
-                for k in self.dup_keys:
+                for k in order_of_duplication_keys_by_sample[s_name]:
                     try:
                         data[s_name][k] = thisdata[k]
                     except KeyError:
@@ -1102,7 +1104,7 @@ class MultiqcModule(BaseMultiqcModule):
             "categories": True,
             "ylab": "% of Library",
             "xlab": "Sequence Duplication Level",
-            "ymax": 100 if max_dupval <= 100.0 else None,
+            "ymax": 100 if max_dup_val <= 100.0 else None,
             "ymin": 0,
             "tt_decimals": 2,
             "tt_suffix": "%",

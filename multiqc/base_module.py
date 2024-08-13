@@ -403,7 +403,7 @@ class BaseMultiqcModule:
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
-        fn_clean_exts: Optional[List[Dict[str, Union[str, List[str]]]]] = None,
+        fn_clean_exts: Optional[List[Union[str, Dict[str, str]]]] = None,
         fn_clean_trim: Optional[List[str]] = None,
         prepend_dirs: Optional[bool] = None,
     ) -> str:
@@ -609,12 +609,12 @@ class BaseMultiqcModule:
             grouping_criteria = [grouping_criteria]
 
         skipped_suffixes = []
-        label_by_grouping = dict()
-        groupings = getattr(config, "sample_merge_groups", {})
+        label_by_grouping: Dict[str, str] = dict()
+        groupings: Dict[str, Dict[str, List[Union[str, Dict[str, str]]]]] = config.sample_merge_groups
         for grouping, groups in groupings.items():
             if grouping not in grouping_criteria:
                 # Just trimming all found patterns and recording them to add them back after
-                all_exts = []
+                all_exts: List[Union[str, Dict[str, str]]] = []
                 for label, fn_clean_exts in groups.items():
                     all_exts += fn_clean_exts or []
                 trimmed_name = self.clean_s_name(s_name, fn_clean_exts=all_exts, fn_clean_trim=[], prepend_dirs=False)
@@ -632,10 +632,11 @@ class BaseMultiqcModule:
                             matched_label = label
                             s_name = trimmed_name
                             break
-                label_by_grouping[grouping] = matched_label
+                if matched_label:
+                    label_by_grouping[grouping] = matched_label
 
         if all([label is None for label in label_by_grouping.values()]):
-            # Sample didn't match any group, so using the default labels from each groupping to represent the
+            # Sample didn't match any group, so using the default labels from each grouping to represent the
             # sample somehow.
             for grouping in label_by_grouping.keys():
                 _dls = [label for label, fn_clean_exts in groupings[grouping].items() if not fn_clean_exts]
@@ -644,7 +645,7 @@ class BaseMultiqcModule:
                         logger.error(f"Multiple default labels found for '{grouping}': {_dls}, taking the first one")
                     label_by_grouping[grouping] = _dls[0]
 
-        labels = [label for label in label_by_grouping.values() if label is not None]
+        labels: List[str] = [label for label in label_by_grouping.values() if label is not None]
         label = " ".join(labels) if labels else None
 
         return s_name + "".join(skipped_suffixes), label
@@ -654,7 +655,7 @@ class BaseMultiqcModule:
         samples: Iterable[str],
         grouping_criteria: str,
         key_by: Literal["label", "merged_name"] = "label",
-    ) -> Dict[str, List[str]]:
+    ) -> Dict[str, List[Union[str, None]]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
@@ -693,7 +694,7 @@ class BaseMultiqcModule:
             merged_name, label = self.groups_for_sample(original_name, grouping_criteria)
             groups[label].append((merged_name, original_name))
 
-        regrouped = defaultdict(list)
+        regrouped: Dict[str, List[Union[str, None]]] = defaultdict(list)
         if key_by == "label":
             for label, merged_name_original_name in groups.items():
                 for merged_name, original_name in merged_name_original_name:
