@@ -369,10 +369,16 @@ class MultiqcModule(BaseMultiqcModule):
         plot = None
         content = None
 
+        plot_type = mod["config"].get("plot_type")
+
+        # Heatmap
+        if plot_type == "heatmap":
+            plot = heatmap.plot(
+                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
+            )
+
         if not isinstance(mod["data"], list):
             mod["data"] = [mod["data"]]
-
-        plot_type = mod["config"].get("plot_type")
 
         # Try to coerce x-axis to numeric
         if plot_type in ["linegraph", "scatter"]:
@@ -411,12 +417,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Box plot
         elif plot_type == "box":
             plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
-
-        # Heatmap
-        elif plot_type == "heatmap":
-            plot = heatmap.plot(
-                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
-            )
 
         # Violin plot
         elif plot_type in ["violin", "beeswarm"]:
