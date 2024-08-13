@@ -642,19 +642,33 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
 
     match_strs: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+    total_lines = 0
     try:
-        for line_count, line in f.line_iterator():
+        for line_count, block in f.line_block_iterator():
             for s in pattern.contents:
-                if s in line:
-                    match_strs.add(s)
+                if s in block:
+                    if total_lines + line_count > num_lines:
+                        # We read more lines than requested and the match may
+                        # be in a part of the file that shouldn't be read.
+                        # Test how many lines preceed the match to see if there
+                        # was overshoot.
+                        s_index = block.index(s)
+                        lines_including_match = block[:s_index].count("\n") + 1
+                        if total_lines + lines_including_match <= num_lines:
+                            match_strs.add(s)
+                    else:
+                        match_strs.add(s)
                     if len(match_strs) == len(pattern.contents):  # all strings matched
                         break
             for p in pattern.contents_re:
-                if p.match(line):
-                    match_re_patterns.add(p)
-                    if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
-                        break
-            if line_count >= num_lines:
+                # Use zip with range to limit the number of lines read to num_lines.
+                for _, line in zip(range(num_lines - total_lines), block.splitlines(keepends=True)):
+                    if p.match(line):
+                        match_re_patterns.add(p)
+                        if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
+                            break
+            total_lines += line_count
+            if total_lines >= num_lines:
                 break
     except Exception:
         file_search_stats["skipped_file_contents_search_errors"].add(f.path)
