@@ -6,7 +6,6 @@ on:
 
 jobs:
   pre_commit:
-    if: ${{ !startsWith(github.event.head_commit.message, '[automated]') }}
     name: "pre-commit"
     runs-on: ubuntu-latest
     steps:
@@ -15,7 +14,6 @@ jobs:
       - uses: pre-commit/action@v2.0.3
 
   code_checks:
-    if: ${{ !startsWith(github.event.head_commit.message, '[automated]') }}
     name: "code_checks.py"
     runs-on: ubuntu-latest
     steps:

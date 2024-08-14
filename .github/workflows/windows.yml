@@ -11,7 +11,6 @@ on:
 
 jobs:
   unit_tests:
-    if: ${{ !startsWith(github.event.head_commit.message, '[automated]') }}
     runs-on: windows-latest
     timeout-minutes: 10
 
