@@ -1,8 +1,6 @@
 name: "Generate module docs"
 on:
   push:
-    branches:
-      - main
     paths:
       - "multiqc/modules/**"
       - "pyproject.toml"
