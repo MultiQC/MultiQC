@@ -18,7 +18,7 @@ jobs:
       - name: Checkout Pull Request
         env:
           GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
-        run: gh pr checkout ${{ github.event.issue.number }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
 
       - uses: actions/setup-python@v5
 
