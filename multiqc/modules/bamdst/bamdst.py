@@ -212,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def _parse_chromosomes_report(self, path: str, s_name: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        data_by_contig = defaultdict(dict)
+        data_by_contig: Dict[str, Dict[str, Union[float, str]]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:
