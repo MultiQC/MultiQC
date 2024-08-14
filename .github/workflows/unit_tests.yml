@@ -27,6 +27,9 @@ jobs:
       worker_cores: 4
 
     steps:
+      - run: echo {{ github.event.head_commit.message }}
+      - run: echo {{ github.actor }}
+
       - uses: actions/checkout@v4
 
       - name: "Set up Python ${{ matrix.python-version }}"
