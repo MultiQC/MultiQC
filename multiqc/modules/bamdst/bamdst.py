@@ -134,16 +134,16 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = _read_config()
-        data_by_sample = dict()
-        data_by_chromosome_by_sample = dict()
+        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
+        data_by_chromosome_by_sample: Dict[str, Dict[str, Dict[str, Union[float, str]]]] = dict()
         for f in self.find_log_files("bamdst/coverage"):
             if data := self._parse_coverage_report(f):
                 data_by_sample[f["s_name"]] = data
 
                 # Parse "chromosomes.report" sitting next to the "coverage.report" file:
                 if os.path.exists(chroms_path := os.path.join(f["root"], "chromosomes.report")):
-                    if data := self._parse_chromosomes_report(chroms_path, f["s_name"]):
-                        data_by_chromosome_by_sample[f["s_name"]] = data
+                    if data_by_chrom := self._parse_chromosomes_report(chroms_path, f["s_name"]):
+                        data_by_chromosome_by_sample[f["s_name"]] = data_by_chrom
 
         data_by_sample = self.ignore_samples(data_by_sample)
         data_by_chromosome_by_sample = self.ignore_samples(data_by_chromosome_by_sample)
@@ -158,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: Dict) -> Dict:
+    def _parse_coverage_report(self, f: Dict) -> Dict[str, Union[float, int]]:
         """
         Parse one coverage report.
         """
@@ -212,7 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     def _parse_chromosomes_report(self, path: str, s_name: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        data_by_contig = defaultdict(dict)
+        data_by_contig: Dict[str, Dict[str, Union[float, str]]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:
