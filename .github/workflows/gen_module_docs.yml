@@ -15,12 +15,14 @@ jobs:
 
       # Action runs on the issue comment, so we don't get the PR by default.
       # Use the GitHub CLI to check out the PR:
-      - name: Checkout Pull Request
+      - name: "Checkout Pull Request"
         env:
           GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
 
       - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
 
       - name: "Install MultiQC"
         run: pip install -e '.[dev]'
