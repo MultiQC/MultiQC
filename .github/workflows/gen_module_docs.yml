@@ -1,9 +1,5 @@
 name: "Generate module docs"
 on:
-  push:
-    paths:
-      - "multiqc/modules/**"
-      - "pyproject.toml"
   pull_request:
     paths:
       - "multiqc/modules/**"
@@ -12,12 +8,6 @@ on:
 jobs:
   gen_module_docs:
     runs-on: ubuntu-latest
-    # Only run if comment is on a PR with the main repo, and if it contains the magic keywords
-    if: >
-      github.repository_owner == 'MultiQC' &&
-      github.event.issue.pull_request &&
-      startsWith(github.event.comment.body, '@multiqc-bot fix linting')
-
     steps:
       - uses: actions/checkout@v4
         with:
