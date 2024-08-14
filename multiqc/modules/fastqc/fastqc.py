@@ -4,17 +4,17 @@
 #### Stop! This is one of the most complicated modules. ####
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
-
+import dataclasses
 import io
 import json
 import logging
-from typing import Dict, Set, List, Union
+from typing import Dict, Set, List, Union, Tuple
 
 import math
 import os
 import re
 import zipfile
-from collections import Counter
+from collections import Counter, defaultdict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -27,9 +27,21 @@ log = logging.getLogger(__name__)
 VERSION_REGEX = r"FastQC\t([\d\.]+)"
 
 
+@dataclasses.dataclass
+class Metrics:
+    """Dataclass for storing FastQC metrics"""
+
+    total_sequences: float = 0
+    percent_gc: float = 0
+    avg_sequence_length: float = 0
+    median_sequence_length: float = 0
+    percent_duplicates: float = 0
+    percent_fails: float = 0
+
+
 class MultiqcModule(BaseMultiqcModule):
     """
-    FastQC generates a HTML report which is what most people use when
+    FastQC generates an HTML report which is what most people use when
     they run the program. However, it also helpfully generates a file
     called `fastqc_data.txt` which is relatively easy to parse.
 
@@ -396,23 +408,24 @@ class MultiqcModule(BaseMultiqcModule):
         table at the top of the report"""
 
         # Prep the data
-        data: Dict = dict()
+        data_by_sample: Dict[str, Metrics] = dict()
         for s_name in self.fastqc_data:
-            data[s_name] = dict()
             bs = self.fastqc_data[s_name]["basic_statistics"]
             # Samples with 0 reads and reports with some skipped sections might be missing things here
-            data[s_name]["percent_gc"] = bs.get("%GC", 0)
-            data[s_name]["avg_sequence_length"] = bs.get("avg_sequence_length", 0)
-            data[s_name]["median_sequence_length"] = bs.get("median_sequence_length", 0)
-            data[s_name]["total_sequences"] = bs.get("Total Sequences", 0)
+            data_by_sample[s_name] = Metrics(
+                total_sequences=bs.get("Total Sequences", 0),
+                percent_gc=bs.get("%GC", 0),
+                avg_sequence_length=bs.get("avg_sequence_length", 0),
+                median_sequence_length=bs.get("median_sequence_length", 0),
+            )
 
             # Log warning about zero-read samples as a courtesy
-            if data[s_name]["total_sequences"] == 0:
+            if data_by_sample[s_name].total_sequences == 0:
                 log.warning(f"Sample had zero reads: '{s_name}'")
 
             if "total_deduplicated_percentage" in bs:
                 # Older versions of FastQC don't have this
-                data[s_name]["percent_duplicates"] = 100 - bs["total_deduplicated_percentage"]
+                data_by_sample[s_name].percent_duplicates = 100 - bs["total_deduplicated_percentage"]
 
             # Add count of fail statuses
             num_statuses = 0
@@ -423,10 +436,10 @@ class MultiqcModule(BaseMultiqcModule):
                     num_fails += 1
             if num_statuses > 0:
                 # Make sure we have reads, otherwise there are no sample in data
-                data[s_name]["percent_fails"] = (float(num_fails) / float(num_statuses)) * 100.0
+                data_by_sample[s_name].percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
 
         # Are sequence lengths interesting?
-        median_seq_lengths = [x["median_sequence_length"] for x in data.values()]
+        median_seq_lengths = [x.median_sequence_length for x in data_by_sample.values()]
         try:
             hide_seq_length = max(median_seq_lengths) - min(median_seq_lengths) <= 10
         except ValueError:
@@ -488,7 +501,97 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": "read_count",
             },
         }
-        self.general_stats_addcols(data, headers)
+
+        # Merge Read 1 + Read 2 data
+        data_by_grouped_samples: Dict[str, List[Tuple[str, Metrics]]] = defaultdict(list)
+        for g_name, s_names in self.group_samples(
+            list(data_by_sample.keys()),
+            grouping_criteria="read_pairs",
+            key_by="merged_name",
+        ).items():
+            if len(s_names) == 0:
+                continue
+            if g_name is None:
+                # Ungrouped samples, adding them separately
+                for s_name in s_names:
+                    data_by_grouped_samples[s_name] = [(s_name, data_by_sample[s_name])]
+                continue
+            if len(s_names) == 1:
+                # Single sample in group, no need to merge
+                data_by_grouped_samples[g_name] = [(s_names[0], data_by_sample[s_names[0]])]
+                continue
+
+            merged_sample = Metrics()
+            data_by_grouped_samples[g_name] = [(g_name, merged_sample)] + [
+                (s_name, data_by_sample[s_name]) for s_name in s_names
+            ]
+
+            total_n_seqs: float = 0
+            for s_name in s_names:
+                total_n_seqs += data_by_sample[s_name].total_sequences
+            merged_sample.total_sequences = float(total_n_seqs) / len(s_names)
+            if total_n_seqs > 0:
+                merged_sample.avg_sequence_length = sum(
+                    [
+                        float(data_by_sample[s_name].avg_sequence_length)
+                        * float(data_by_sample[s_name].total_sequences)
+                        for s_name in s_names
+                    ]
+                ) / float(total_n_seqs)
+                merged_sample.percent_gc = sum(
+                    [
+                        float(data_by_sample[s_name].percent_gc) * float(data_by_sample[s_name].total_sequences)
+                        for s_name in s_names
+                    ]
+                ) / float(total_n_seqs)
+                if all(data_by_sample[s_name].percent_duplicates for s_name in s_names):
+                    merged_sample.percent_duplicates = sum(
+                        [
+                            float(data_by_sample[s_name].percent_duplicates)
+                            * float(data_by_sample[s_name].total_sequences)
+                            for s_name in s_names
+                        ]
+                    ) / float(total_n_seqs)
+            # Add count of fail statuses
+            num_statuses = 0
+            num_fails = 0
+            for s_name in s_names:
+                for s in self.fastqc_data[s_name]["statuses"].values():
+                    num_statuses += 1
+                    if s == "fail":
+                        num_fails += 1
+            if num_statuses > 0:
+                merged_sample.percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
+
+        gen_stats_data_by_sample: Dict[str, List[Tuple[str, Dict[str, float]]]] = {
+            g_name: [(s_name, metrics.__dict__) for s_name, metrics in samples]
+            for g_name, samples in data_by_grouped_samples.items()
+        }
+
+        # # Take only the trimmed data for the General Stats Table
+        # trimmed_samples = False
+        # for merged_name, s_names in self.group_samples(
+        #     list(data_by_grouped_sample.keys()),
+        #     grouping_criteria="trimming",
+        #     key_by="merged_name",
+        # ).items():
+        #     if len(s_names) > 1:
+        #         # We expect these groups to contain trimmed and not trimmed.
+        #         # The non-trimmed sample names will be the same as the group,
+        #         # so we keep the one that's different.
+        #         s_names_trimmed = [s for s in s_names if s != merged_name]
+        #         # Only continue if we have one result as expected
+        #         if len(s_names_trimmed) == 1:
+        #             trimmed_samples = True
+        #             # Save this data temporarily
+        #             tmp_data = data_by_grouped_sample[s_names_trimmed[0]]
+        #             # Remove the whole group from general stats
+        #             for s_name in s_names:
+        #                 del data_by_grouped_sample[s_name]
+        #             # Add our chosen row back again
+        #             data_by_grouped_sample[merged_name] = tmp_data
+
+        self.general_stats_addcols(gen_stats_data_by_sample, headers)
 
     def read_count_plot(self):
         """Stacked bar plot showing counts of reads"""

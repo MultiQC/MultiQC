@@ -161,6 +161,21 @@ export_plot_formats:
 custom_content:
   order: []
 
+# Search patterns for grouping paired samples within a report (e.g. FastQ R1/R2)
+sample_merge_groups:
+  read_pairs:
+    Read 1:
+      - type: regex
+        pattern: "_R1"
+      - type: regex
+        pattern: "[_.-][rR]?1$"
+    Read 2:
+      - type: regex
+        pattern: "_R2"
+      - type: regex
+        pattern: "[_.-][rR]?2$"
+    Unpaired:
+
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
 

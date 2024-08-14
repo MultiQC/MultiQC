@@ -77,8 +77,8 @@ data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
 plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict]
-general_stats_headers: List[Dict]
+general_stats_data: List[Dict[str, Union[Dict[str, float], List[Tuple[str, Dict[str, float]]]]]]
+general_stats_headers: List[Dict[str, Dict[str, Union[str, int, float, None]]]]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
 

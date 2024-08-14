@@ -55,6 +55,8 @@ try:
 except:  # noqa: E722
     pass
 
+CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
+
 
 title: str
 subtitle: str
@@ -162,9 +164,10 @@ filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
-fn_clean_exts: List
-fn_clean_trim: List
-fn_ignore_files: List
+fn_clean_exts: List[CleanPatternT]
+fn_clean_trim: List[str]
+fn_ignore_files: List[str]
+sample_merge_groups: Dict[str, Dict[str, List[CleanPatternT]]]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]

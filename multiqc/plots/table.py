@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Union, Optional, Sequence
+from typing import List, Dict, Union, Optional, Sequence, Tuple
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot

@@ -66,7 +66,7 @@ class TableColumn(ValidatedConfig):
 
 ValueT = Union[int, float, str, bool]
 
-DatasetT = Mapping[str, Mapping[str, Optional[ValueT]]]
+DatasetT = Mapping[str, Union[Mapping[str, Optional[ValueT]], List[Tuple[str, Mapping[str, Optional[ValueT]]]]]]
 
 
 class DataTable(BaseModel):
@@ -93,7 +93,7 @@ class DataTable(BaseModel):
             headers = []
 
         # Given one dataset - turn it into a list
-        nullable_datasets = data if isinstance(data, list) else [data]
+        datasets__with_nulls = data if isinstance(data, list) else [data]
         list_of_headers = headers if isinstance(headers, list) else [headers]
         del data
         del headers
@@ -114,7 +114,7 @@ class DataTable(BaseModel):
         formatted_data: List[Dict[str, Dict[str, str]]] = []
 
         # Go through each table section
-        for d_idx, nullable_dataset in enumerate(nullable_datasets):
+        for d_idx, ds__with_nulls in enumerate(datasets__with_nulls):
             # Get the header keys
             try:
                 keys = list(list_of_headers[d_idx].keys())
@@ -127,8 +127,8 @@ class DataTable(BaseModel):
             if not pconfig.only_defined_headers:
                 # Get the keys from the data
                 keys = list()
-                for nullable_v_by_metric in nullable_dataset.values():
-                    for k in nullable_v_by_metric.keys():
+                for v_by_metric__with_nulls in ds__with_nulls.values():
+                    for k in v_by_metric__with_nulls.keys():
                         if k not in keys:
                             keys.append(k)
 
@@ -152,23 +152,30 @@ class DataTable(BaseModel):
             for k in list(list_of_headers[d_idx].keys()):
                 list_of_headers[d_idx][str(k)] = list_of_headers[d_idx].pop(k)
 
+            # TODO: ensure this works with groups
             # Ensure that all sample names are strings as well
             cdata = dict()
-            for s_name, d in nullable_dataset.items():
+            for s_name, d in ds__with_nulls.items():
                 cdata[str(s_name)] = d
-            nullable_datasets[d_idx] = cdata
+            datasets__with_nulls[d_idx] = cdata
 
             # Ensure metric names are strings
-            for s_name in nullable_datasets[d_idx].keys():
-                for metric in list(nullable_datasets[d_idx][s_name].keys()):
-                    nullable_datasets[d_idx][s_name][str(metric)] = nullable_datasets[d_idx][s_name].pop(metric)
+            for s_name in datasets__with_nulls[d_idx].keys():
+                group_d = datasets__with_nulls[d_idx][s_name]
+                if isinstance(group_d, dict):
+                    for metric in list(group_d.keys()):
+                        group_d[str(metric)] = group_d.pop(metric)
+                elif isinstance(group_d, list):
+                    for _, dd in group_d:
+                        for metric in list(dd.keys()):
+                            dd[str(metric)] = dd.pop(metric)
 
             # Check that we have some data in each column
             empties = list()
             for k in keys:
                 n = 0
-                for nullable_v_by_metric in nullable_dataset.values():
-                    if k in nullable_v_by_metric:
+                for v_by_metric__with_nulls in ds__with_nulls.values():
+                    if k in v_by_metric__with_nulls:
                         n += 1
                 if n == 0:
                     empties.append(k)
@@ -312,7 +319,7 @@ class DataTable(BaseModel):
                     list_of_headers[d_idx][k][custom_k] = custom_v
 
                 # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
-                for s_name, v_nullable_by_metric in nullable_datasets[d_idx].items():
+                for s_name, v_nullable_by_metric in datasets__with_nulls[d_idx].items():
                     if k in v_nullable_by_metric:
                         val_nullable = v_nullable_by_metric[k]
                         if val_nullable is None or str(val_nullable).strip() == "":

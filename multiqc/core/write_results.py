@@ -288,15 +288,15 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         del report.general_stats_headers[i]
 
     # Add general-stats IDs to table row headers
-    for idx, h in enumerate(report.general_stats_headers):
-        for k in h.keys():
-            unclean_rid = h[k].get("rid", k)
+    for idx, headers in enumerate(report.general_stats_headers):
+        for k in headers.keys():
+            unclean_rid = str(headers[k].get("rid", k))
             rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-            h[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+            headers[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
 
-            ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
+            ns_html = re.sub(r"\W+", "_", headers[k]["namespace"]).strip().strip("_").lower()
             report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
-                f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
+                f"mqc-generalstats-{ns_html}-{headers[k]['rid']}"
             )
 
     all_hidden = True
