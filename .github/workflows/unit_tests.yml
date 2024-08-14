@@ -13,7 +13,8 @@ on:
 
 jobs:
   unit_tests_linux:
-    if: ${{ github.actor != 'MultiQC Bot' }}
+    # check that commit name does not start with [automated]
+    if: "!startsWith(github.event.head_commit.message, '[automated]')"
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
     strategy:
