@@ -1,0 +1,21 @@
+---
+name: NanoStat
+urls: ["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"]
+summary: >
+  Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+extra_description: >
+  Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore methods (MinION, PromethION etc.)
+---
+
+### File search patterns
+
+```yaml
+nanostat:
+  contents_re: Metrics\s+dataset\s*
+  max_filesize: 4096
+  num_lines: 1
+nanostat/legacy:
+  contents_re: General summary:\s*
+  max_filesize: 4096
+  num_lines: 1
+```
