@@ -34,7 +34,7 @@ jobs:
           path: test-data
 
       - name: "Generate docs"
-        run: python gen_module_docs.py
+        run: python .github/workflows/gen_module_docs.py
 
       - name: "Check if any files changed"
         run: |
