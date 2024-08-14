@@ -116,21 +116,21 @@ class DataTable(BaseModel):
         # Go through each table section
         for d_idx, ds__with_nulls in enumerate(datasets__with_nulls):
             # Get the header keys
-            try:
-                keys = list(list_of_headers[d_idx].keys())
-                assert len(keys) > 0
-            except (IndexError, AttributeError, AssertionError):
+            if d_idx < len(list_of_headers):
+                col_ids = list(list_of_headers[d_idx].keys())
+                assert len(col_ids) > 0
+            else:
                 pconfig.only_defined_headers = False
-                keys = list()
+                col_ids = list()
 
             # Add header keys from the data
             if not pconfig.only_defined_headers:
                 # Get the keys from the data
-                keys = list()
+                col_ids = list()
                 for v_by_metric__with_nulls in ds__with_nulls.values():
-                    for k in v_by_metric__with_nulls.keys():
-                        if k not in keys:
-                            keys.append(k)
+                    for col_id in v_by_metric__with_nulls.keys():
+                        if col_id not in col_ids:
+                            col_ids.append(col_id)
 
                 # If we don't have a headers dict for this data set yet, create one
                 try:
@@ -143,59 +143,41 @@ class DataTable(BaseModel):
                     list_of_headers[d_idx] = dict(od_tuples)
 
                 # Create empty header configs for each new data key
-                for k in keys:
-                    if k not in list_of_headers[d_idx]:
-                        list_of_headers[d_idx][k] = {}
-
-            # Ensure that keys are strings, not numeric
-            keys = [str(k) for k in keys]
-            for k in list(list_of_headers[d_idx].keys()):
-                list_of_headers[d_idx][str(k)] = list_of_headers[d_idx].pop(k)
-
-            # TODO: ensure this works with groups
-            # Ensure that all sample names are strings as well
-            cdata = dict()
-            for s_name, d in ds__with_nulls.items():
-                cdata[str(s_name)] = d
-            datasets__with_nulls[d_idx] = cdata
-
-            # Ensure metric names are strings
-            for s_name in datasets__with_nulls[d_idx].keys():
-                group_d = datasets__with_nulls[d_idx][s_name]
-                if isinstance(group_d, dict):
-                    for metric in list(group_d.keys()):
-                        group_d[str(metric)] = group_d.pop(metric)
-                elif isinstance(group_d, list):
-                    for _, dd in group_d:
-                        for metric in list(dd.keys()):
-                            dd[str(metric)] = dd.pop(metric)
+                for col_id in col_ids:
+                    if col_id not in list_of_headers[d_idx]:
+                        list_of_headers[d_idx][col_id] = {}
 
             # Check that we have some data in each column
             empties = list()
-            for k in keys:
+            for col_id in col_ids:
                 n = 0
                 for v_by_metric__with_nulls in ds__with_nulls.values():
-                    if k in v_by_metric__with_nulls:
-                        n += 1
+                    if isinstance(v_by_metric__with_nulls, dict):
+                        if col_id in v_by_metric__with_nulls:
+                            n += 1
+                    elif isinstance(v_by_metric__with_nulls, list):
+                        for _, v_by_metric in v_by_metric__with_nulls:
+                            if col_id in v_by_metric:
+                                n += 1
                 if n == 0:
-                    empties.append(k)
-            for k in empties:
-                keys = [j for j in keys if j != k]
+                    empties.append(col_id)
+            for col_id in empties:
+                col_ids = [j for j in col_ids if j != col_id]
                 logger.debug(
-                    f"Table key '{k}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
+                    f"Table key '{col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
                 )
-                del list_of_headers[d_idx][k]
+                del list_of_headers[d_idx][col_id]
 
             raw_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
             formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
-            for k in keys:
+            for col_id in col_ids:
                 # Unique id to avoid overwriting by other datasets
-                unclean_rid = list_of_headers[d_idx][k].get("rid", k)
+                unclean_rid = list_of_headers[d_idx][col_id].get("rid", col_id)
                 rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-                list_of_headers[d_idx][k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+                list_of_headers[d_idx][col_id]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
 
                 # Applying defaults presets for data keys if shared_key is set to base_count or read_count
-                shared_key = list_of_headers[d_idx][k].get("shared_key", None)
+                shared_key = list_of_headers[d_idx][col_id].get("shared_key", None)
                 shared_key_suffix = None
                 if shared_key in ["read_count", "long_read_count", "base_count"]:
                     if shared_key == "read_count" and config.read_count_prefix:
@@ -209,122 +191,130 @@ class DataTable(BaseModel):
                         shared_key_suffix = config.base_count_prefix
                     else:
                         multiplier = 1
-                    if "modify" not in list_of_headers[d_idx][k]:
-                        list_of_headers[d_idx][k]["modify"] = lambda x: x * multiplier
-                    if "min" not in list_of_headers[d_idx][k] is None:
-                        list_of_headers[d_idx][k]["min"] = 0
-                    if "format" not in list_of_headers[d_idx][k] is None:
+                    if "modify" not in list_of_headers[d_idx][col_id]:
+                        list_of_headers[d_idx][col_id]["modify"] = lambda x: x * multiplier
+                    if "min" not in list_of_headers[d_idx][col_id] is None:
+                        list_of_headers[d_idx][col_id]["min"] = 0
+                    if "format" not in list_of_headers[d_idx][col_id] is None:
                         if multiplier == 1:
-                            list_of_headers[d_idx][k]["format"] = "{:,d}"
-                if "suffix" not in list_of_headers[d_idx][k] and shared_key_suffix is not None:
-                    list_of_headers[d_idx][k]["suffix"] = " " + shared_key_suffix
+                            list_of_headers[d_idx][col_id]["format"] = "{:,d}"
+                if "suffix" not in list_of_headers[d_idx][col_id] and shared_key_suffix is not None:
+                    list_of_headers[d_idx][col_id]["suffix"] = " " + shared_key_suffix
 
                 # Use defaults / data keys if headers not given
-                list_of_headers[d_idx][k]["namespace"] = list_of_headers[d_idx][k].get("namespace", pconfig.namespace)
-                list_of_headers[d_idx][k]["title"] = list_of_headers[d_idx][k].get("title", k)
-                list_of_headers[d_idx][k]["description"] = list_of_headers[d_idx][k].get(
-                    "description", list_of_headers[d_idx][k]["title"]
+                list_of_headers[d_idx][col_id]["namespace"] = list_of_headers[d_idx][col_id].get(
+                    "namespace", pconfig.namespace
                 )
-                list_of_headers[d_idx][k]["scale"] = list_of_headers[d_idx][k].get("scale", pconfig.scale)
-                list_of_headers[d_idx][k]["format"] = list_of_headers[d_idx][k].get("format")
-                list_of_headers[d_idx][k]["color"] = list_of_headers[d_idx][k].get(
-                    "colour", list_of_headers[d_idx][k].get("color")
+                list_of_headers[d_idx][col_id]["title"] = list_of_headers[d_idx][col_id].get("title", col_id)
+                list_of_headers[d_idx][col_id]["description"] = list_of_headers[d_idx][col_id].get(
+                    "description", list_of_headers[d_idx][col_id]["title"]
                 )
-                list_of_headers[d_idx][k]["hidden"] = list_of_headers[d_idx][k].get("hidden", False)
-                list_of_headers[d_idx][k]["max"] = list_of_headers[d_idx][k].get("max")
-                list_of_headers[d_idx][k]["min"] = list_of_headers[d_idx][k].get("min", pconfig.min)
-                list_of_headers[d_idx][k]["ceiling"] = list_of_headers[d_idx][k].get("ceiling")
-                list_of_headers[d_idx][k]["floor"] = list_of_headers[d_idx][k].get("floor")
-                list_of_headers[d_idx][k]["minrange"] = list_of_headers[d_idx][k].get(
-                    "minrange", list_of_headers[d_idx][k].get("minRange")
+                list_of_headers[d_idx][col_id]["scale"] = list_of_headers[d_idx][col_id].get("scale", pconfig.scale)
+                list_of_headers[d_idx][col_id]["format"] = list_of_headers[d_idx][col_id].get("format")
+                list_of_headers[d_idx][col_id]["color"] = list_of_headers[d_idx][col_id].get(
+                    "colour", list_of_headers[d_idx][col_id].get("color")
                 )
-                list_of_headers[d_idx][k]["shared_key"] = list_of_headers[d_idx][k].get("shared_key")
-                list_of_headers[d_idx][k]["modify"] = list_of_headers[d_idx][k].get("modify")
-                list_of_headers[d_idx][k]["placement"] = float(list_of_headers[d_idx][k].get("placement", 1000))
+                list_of_headers[d_idx][col_id]["hidden"] = list_of_headers[d_idx][col_id].get("hidden", False)
+                list_of_headers[d_idx][col_id]["max"] = list_of_headers[d_idx][col_id].get("max")
+                list_of_headers[d_idx][col_id]["min"] = list_of_headers[d_idx][col_id].get("min", pconfig.min)
+                list_of_headers[d_idx][col_id]["ceiling"] = list_of_headers[d_idx][col_id].get("ceiling")
+                list_of_headers[d_idx][col_id]["floor"] = list_of_headers[d_idx][col_id].get("floor")
+                list_of_headers[d_idx][col_id]["minrange"] = list_of_headers[d_idx][col_id].get(
+                    "minrange", list_of_headers[d_idx][col_id].get("minRange")
+                )
+                list_of_headers[d_idx][col_id]["shared_key"] = list_of_headers[d_idx][col_id].get("shared_key")
+                list_of_headers[d_idx][col_id]["modify"] = list_of_headers[d_idx][col_id].get("modify")
+                list_of_headers[d_idx][col_id]["placement"] = float(
+                    list_of_headers[d_idx][col_id].get("placement", 1000)
+                )
 
-                if list_of_headers[d_idx][k]["color"] is None:
+                if list_of_headers[d_idx][col_id]["color"] is None:
                     cidx = d_idx
                     while cidx >= len(SECTION_COLORS):
                         cidx -= len(SECTION_COLORS)
-                    list_of_headers[d_idx][k]["color"] = SECTION_COLORS[cidx]
+                    list_of_headers[d_idx][col_id]["color"] = SECTION_COLORS[cidx]
 
                 # Overwrite (2nd time) any given config with table-level user config
                 # This is to override column-specific values set by modules
                 if pconfig.id in config.custom_plot_config:
                     for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
                         if cpc_k in TableColumn.model_fields.keys():
-                            list_of_headers[d_idx][k][cpc_k] = cpc_v
+                            list_of_headers[d_idx][col_id][cpc_k] = cpc_v
 
                 # Overwrite "name" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
                 for item_id, new_title_val in config.table_columns_name.items():
                     item_id = item_id.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if item_id in [pconfig.id.lower(), list_of_headers[d_idx][k]["namespace"].lower()] and isinstance(
-                        new_title_val, dict
-                    ):
+                    if item_id in [
+                        pconfig.id.lower(),
+                        list_of_headers[d_idx][col_id]["namespace"].lower(),
+                    ] and isinstance(new_title_val, dict):
                         # Assume a dict of specific column IDs
                         for item_id2, new_title in new_title_val.items():
                             item_id2 = item_id2.lower()
-                            if item_id2 in [k.lower(), list_of_headers[d_idx][k]["title"].lower()]:
-                                list_of_headers[d_idx][k]["title"] = new_title
+                            if item_id2 in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()]:
+                                list_of_headers[d_idx][col_id]["title"] = new_title
 
                     # Case-insensitive check if the outer key is a column ID
-                    elif item_id in [k.lower(), list_of_headers[d_idx][k]["title"].lower()] and isinstance(
+                    elif item_id in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()] and isinstance(
                         new_title_val, str
                     ):
-                        list_of_headers[d_idx][k]["title"] = new_title_val
+                        list_of_headers[d_idx][col_id]["title"] = new_title_val
 
                 # Overwrite "hidden" if set in user config
                 # Key can be a column ID, a table ID, or a namespace in the general stats table.
                 for item_id, visibility in config.table_columns_visible.items():
                     item_id = item_id.lower()
                     # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if item_id in [pconfig.id.lower(), list_of_headers[d_idx][k]["namespace"].lower()]:
+                    if item_id in [pconfig.id.lower(), list_of_headers[d_idx][col_id]["namespace"].lower()]:
                         # First - if config value is a bool, set all module columns to that value
                         if isinstance(visibility, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            list_of_headers[d_idx][k]["hidden"] = not visibility
+                            list_of_headers[d_idx][col_id]["hidden"] = not visibility
 
                         # Not a bool, assume a dict of specific column IDs
                         elif isinstance(visibility, dict):
                             for item_id2, visible in visibility.items():
                                 item_id2 = item_id2.lower()
-                                if item_id2 in [k.lower(), list_of_headers[d_idx][k]["title"].lower()] and isinstance(
-                                    visible, bool
-                                ):
+                                if item_id2 in [
+                                    col_id.lower(),
+                                    list_of_headers[d_idx][col_id]["title"].lower(),
+                                ] and isinstance(visible, bool):
                                     # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                                    list_of_headers[d_idx][k]["hidden"] = not visible
+                                    list_of_headers[d_idx][col_id]["hidden"] = not visible
 
                     # Case-insensitive check if the outer key is a column ID
-                    elif visibility in [k.lower(), list_of_headers[d_idx][k]["title"].lower()] and isinstance(
+                    elif visibility in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()] and isinstance(
                         visibility, bool
                     ):
                         # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                        list_of_headers[d_idx][k]["hidden"] = not visibility
+                        list_of_headers[d_idx][col_id]["hidden"] = not visibility
 
                 # Also overwrite placement if set in config
                 try:
-                    list_of_headers[d_idx][k]["placement"] = float(
-                        config.table_columns_placement[list_of_headers[d_idx][k]["namespace"]][k]
+                    list_of_headers[d_idx][col_id]["placement"] = float(
+                        config.table_columns_placement[list_of_headers[d_idx][col_id]["namespace"]][col_id]
                     )
                 except (KeyError, ValueError):
                     try:
-                        list_of_headers[d_idx][k]["placement"] = float(config.table_columns_placement[pconfig.id][k])
+                        list_of_headers[d_idx][col_id]["placement"] = float(
+                            config.table_columns_placement[pconfig.id][col_id]
+                        )
                     except (KeyError, ValueError):
                         pass
 
                 # Overwrite any header config if set in config
-                for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(k, {}).items():
-                    list_of_headers[d_idx][k][custom_k] = custom_v
+                for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_id, {}).items():
+                    list_of_headers[d_idx][col_id][custom_k] = custom_v
 
                 # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
-                for s_name, v_nullable_by_metric in datasets__with_nulls[d_idx].items():
-                    if k in v_nullable_by_metric:
-                        val_nullable = v_nullable_by_metric[k]
-                        if val_nullable is None or str(val_nullable).strip() == "":
+                for s_name, v_by_metric__with_nulls in datasets__with_nulls[d_idx].items():
+                    if col_id in v_by_metric__with_nulls:
+                        val__with_nulls = v_by_metric__with_nulls[col_id]
+                        if val__with_nulls is None or str(val__with_nulls).strip() == "":
                             continue
-                        val: ValueT = val_nullable
+                        val: ValueT = val__with_nulls
 
                         # Try parse as a number
                         if str(val).isdigit():
@@ -336,17 +326,19 @@ class DataTable(BaseModel):
                                 pass
 
                         # Apply modify
-                        if "modify" in list_of_headers[d_idx][k] and callable(list_of_headers[d_idx][k]["modify"]):
+                        if "modify" in list_of_headers[d_idx][col_id] and callable(
+                            list_of_headers[d_idx][col_id]["modify"]
+                        ):
                             # noinspection PyBroadException
                             try:
-                                val = list_of_headers[d_idx][k]["modify"](val)
+                                val = list_of_headers[d_idx][col_id]["modify"](val)
                             except Exception as e:  # User-provided modify function can raise any exception
-                                logger.error(f"Error modifying table value '{k}': '{val}'. {e}")
-                        raw_dataset[s_name][k] = val
+                                logger.error(f"Error modifying table value '{col_id}': '{val}'. {e}")
+                        raw_dataset[s_name][col_id] = val
 
                         # Now also calculate formatted values
                         valstr = str(val)
-                        fmt: Union[None, str, Callable] = list_of_headers[d_idx][k].get("format")
+                        fmt: Union[None, str, Callable] = list_of_headers[d_idx][col_id].get("format")
                         if fmt is None:
                             if isinstance(val, float):
                                 fmt = "{:,.1f}"
@@ -358,60 +350,70 @@ class DataTable(BaseModel):
                                     # noinspection PyCallingNonCallable
                                     valstr = fmt(val)
                                 except Exception as e:
-                                    logger.error(f"Error applying format to table value '{k}': '{val}'. {e}")
+                                    logger.error(f"Error applying format to table value '{col_id}': '{val}'. {e}")
                             elif isinstance(val, (int, float)):
                                 try:
                                     valstr = fmt.format(val)
                                 except Exception as e:
                                     logger.error(
-                                        f"Error applying format string '{fmt}' to table value '{k}': '{val}'. {e}. "
+                                        f"Error applying format string '{fmt}' to table value '{col_id}': '{val}'. {e}. "
                                         f"Check if your format string is correct."
                                     )
-                        formatted_dataset[s_name][k] = valstr
+                        formatted_dataset[s_name][col_id] = valstr
 
                 # Work out max and min value if not given
                 set_dmax = False
                 set_dmin = False
                 try:
-                    list_of_headers[d_idx][k]["dmax"] = float(list_of_headers[d_idx][k]["max"])
+                    list_of_headers[d_idx][col_id]["dmax"] = float(list_of_headers[d_idx][col_id]["max"])
                 except Exception:
-                    list_of_headers[d_idx][k]["dmax"] = 0
+                    list_of_headers[d_idx][col_id]["dmax"] = 0
                     set_dmax = True
 
                 try:
-                    list_of_headers[d_idx][k]["dmin"] = float(list_of_headers[d_idx][k]["min"])
+                    list_of_headers[d_idx][col_id]["dmin"] = float(list_of_headers[d_idx][col_id]["min"])
                 except Exception:
-                    list_of_headers[d_idx][k]["dmin"] = 0
+                    list_of_headers[d_idx][col_id]["dmin"] = 0
                     set_dmin = True
 
                 # Figure out the min / max if not supplied
                 if set_dmax or set_dmin:
                     for s_name, v_by_metric in raw_dataset.items():
                         try:
-                            val = float(v_by_metric[k])
+                            val = float(v_by_metric[col_id])
                             if math.isfinite(val) and not math.isnan(val):
                                 if set_dmax:
-                                    list_of_headers[d_idx][k]["dmax"] = max(list_of_headers[d_idx][k]["dmax"], val)
+                                    list_of_headers[d_idx][col_id]["dmax"] = max(
+                                        list_of_headers[d_idx][col_id]["dmax"], val
+                                    )
                                 if set_dmin:
-                                    list_of_headers[d_idx][k]["dmin"] = min(list_of_headers[d_idx][k]["dmin"], val)
+                                    list_of_headers[d_idx][col_id]["dmin"] = min(
+                                        list_of_headers[d_idx][col_id]["dmin"], val
+                                    )
                         except (ValueError, TypeError):
-                            val = v_by_metric[k]  # couldn't convert to float - keep as a string
+                            val = v_by_metric[col_id]  # couldn't convert to float - keep as a string
                         except KeyError:
                             pass  # missing data - skip
                     # Limit auto-generated scales with floor, ceiling and minrange.
-                    if list_of_headers[d_idx][k]["ceiling"] is not None and list_of_headers[d_idx][k]["max"] is None:
-                        list_of_headers[d_idx][k]["dmax"] = min(
-                            list_of_headers[d_idx][k]["dmax"], float(list_of_headers[d_idx][k]["ceiling"])
+                    if (
+                        list_of_headers[d_idx][col_id]["ceiling"] is not None
+                        and list_of_headers[d_idx][col_id]["max"] is None
+                    ):
+                        list_of_headers[d_idx][col_id]["dmax"] = min(
+                            list_of_headers[d_idx][col_id]["dmax"], float(list_of_headers[d_idx][col_id]["ceiling"])
                         )
-                    if list_of_headers[d_idx][k]["floor"] is not None and list_of_headers[d_idx][k]["min"] is None:
-                        list_of_headers[d_idx][k]["dmin"] = max(
-                            list_of_headers[d_idx][k]["dmin"], float(list_of_headers[d_idx][k]["floor"])
+                    if (
+                        list_of_headers[d_idx][col_id]["floor"] is not None
+                        and list_of_headers[d_idx][col_id]["min"] is None
+                    ):
+                        list_of_headers[d_idx][col_id]["dmin"] = max(
+                            list_of_headers[d_idx][col_id]["dmin"], float(list_of_headers[d_idx][col_id]["floor"])
                         )
-                    if list_of_headers[d_idx][k]["minrange"] is not None:
-                        drange = list_of_headers[d_idx][k]["dmax"] - list_of_headers[d_idx][k]["dmin"]
-                        if drange < float(list_of_headers[d_idx][k]["minrange"]):
-                            list_of_headers[d_idx][k]["dmax"] = list_of_headers[d_idx][k]["dmin"] + float(
-                                list_of_headers[d_idx][k]["minrange"]
+                    if list_of_headers[d_idx][col_id]["minrange"] is not None:
+                        drange = list_of_headers[d_idx][col_id]["dmax"] - list_of_headers[d_idx][col_id]["dmin"]
+                        if drange < float(list_of_headers[d_idx][col_id]["minrange"]):
+                            list_of_headers[d_idx][col_id]["dmax"] = list_of_headers[d_idx][col_id]["dmin"] + float(
+                                list_of_headers[d_idx][col_id]["minrange"]
                             )
 
             raw_data.append(raw_dataset)
@@ -420,16 +422,16 @@ class DataTable(BaseModel):
         # Collect settings for shared keys
         shared_keys: Dict[str, Dict[str, Union[int, float]]] = defaultdict(lambda: dict())
         for d_idx, hs in enumerate(list_of_headers):
-            for k in hs.keys():
-                sk: str = list_of_headers[d_idx][k]["shared_key"]
+            for col_id in hs.keys():
+                sk: str = list_of_headers[d_idx][col_id]["shared_key"]
                 if sk is not None:
                     shared_keys[sk]["dmax"] = max(
-                        list_of_headers[d_idx][k]["dmax"],
-                        shared_keys[sk].get("dmax", list_of_headers[d_idx][k]["dmax"]),
+                        list_of_headers[d_idx][col_id]["dmax"],
+                        shared_keys[sk].get("dmax", list_of_headers[d_idx][col_id]["dmax"]),
                     )
                     shared_keys[sk]["dmin"] = min(
-                        list_of_headers[d_idx][k]["dmin"],
-                        shared_keys[sk].get("dmin", list_of_headers[d_idx][k]["dmin"]),
+                        list_of_headers[d_idx][col_id]["dmin"],
+                        shared_keys[sk].get("dmin", list_of_headers[d_idx][col_id]["dmin"]),
                     )
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
@@ -438,13 +440,13 @@ class DataTable(BaseModel):
         # Of course, the user can shuffle these manually.
         headers_in_order = defaultdict(list)
         for d_idx, hs in enumerate(list_of_headers):
-            for k in hs.keys():
-                sk = list_of_headers[d_idx][k]["shared_key"]
+            for col_id in hs.keys():
+                sk = list_of_headers[d_idx][col_id]["shared_key"]
                 if sk is not None:
-                    list_of_headers[d_idx][k]["dmax"] = shared_keys[sk]["dmax"]
-                    list_of_headers[d_idx][k]["dmin"] = shared_keys[sk]["dmin"]
+                    list_of_headers[d_idx][col_id]["dmax"] = shared_keys[sk]["dmax"]
+                    list_of_headers[d_idx][col_id]["dmin"] = shared_keys[sk]["dmin"]
 
-                headers_in_order[list_of_headers[d_idx][k]["placement"]].append((d_idx, k))
+                headers_in_order[list_of_headers[d_idx][col_id]["placement"]].append((d_idx, col_id))
 
         # # Skip any data that is not used in the table
         # # Would be ignored for making the table anyway, but can affect whether a violin plot is used
@@ -474,7 +476,7 @@ class DataTable(BaseModel):
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)
         """
-        res = list()
+        res: List[Tuple[int, str, TableColumn]] = list()
         # Scan through self.headers_in_order and just bolt on the actual header info
         for bucket in sorted(self.headers_in_order):
             for bucket_idx, k in self.headers_in_order[bucket]:

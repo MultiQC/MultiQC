@@ -2,9 +2,10 @@
 MultiQC modules base class, contains helper functions
 """
 
+import copy
 import dataclasses
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Any, cast, Tuple, Iterable, Literal, Set
+from typing import List, Union, Optional, Dict, Any, cast, Tuple, Iterable, Literal, Set, Mapping, Sequence, Callable
 
 import fnmatch
 import io
@@ -23,6 +24,7 @@ from multiqc.config import CleanPatternT
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
 from multiqc.core import software_versions
+from multiqc.plots.table_object import TableColumn
 
 logger = logging.getLogger(__name__)
 
@@ -735,8 +737,8 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data: Dict[str, Union[Dict[str, float], List[Tuple[str, Dict[str, float]]]]],
-        headers: Optional[Dict[str, Dict[str, Union[str, int, float, None]]]] = None,
+        data: Mapping[str, Union[Mapping[str, float], Sequence[Tuple[str, Mapping[str, float]]]]],
+        headers: Optional[Mapping[str, Mapping[str, Union[str, int, float, None, Callable]]]] = None,
         namespace=None,
     ):
         """Helper function to add to the General Statistics variable.
@@ -752,38 +754,36 @@ class BaseMultiqcModule:
                           Can be e.g. a submodule name.
         :return: None
         """
-        if headers is None:
-            headers = {}
-        # Deepish copy of headers so that we can modify it in place
-        headers = {k: v.copy() for k, v in headers.items()}
+        _headers: Dict[str, Dict[str, Union[str, int, float, None, Callable]]] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
-            hs: Set[str] = set()
+            column_ids: Set[str] = set()
             for d in data.values():
                 if isinstance(d, dict):
-                    hs.update(d.keys())
+                    column_ids.update(d.keys())
                 elif isinstance(d, list):
                     for _, dd in d:
-                        hs.update(dd.keys())
-            headers = dict()
-            for k in sorted(hs):
-                headers[k] = dict()
+                        column_ids.update(dd.keys())
+            for col_id in sorted(column_ids):
+                _headers[col_id] = {}
+        else:
+            # Make a copy
+            _headers = {col_id: {k: v for k, v in col.items()} for col_id, col in headers.items()}
 
         # Add the module name to the description if not already done
-        keys = headers.keys()
-        for k in keys:
+        for col_id in _headers.keys():
             # Prepend the namespace displayed in the table with the module name
-            namespace = headers[k].get("namespace", namespace)
-            headers[k]["namespace"] = self.name
+            namespace = _headers[col_id].get("namespace", namespace)
+            _headers[col_id]["namespace"] = self.name
             if namespace:
-                headers[k]["namespace"] = self.name + ": " + namespace
-            if "description" not in headers[k]:
-                headers[k]["description"] = headers[k].get("title", k)
+                _headers[col_id]["namespace"] = self.name + ": " + namespace
+            if "description" not in _headers[col_id]:
+                _headers[col_id]["description"] = _headers[col_id].get("title", col_id)
 
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(data)
-        report.general_stats_headers.append(headers)
+        report.general_stats_headers.append(_headers)
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         if s_name is not None and self.is_ignore_sample(s_name):

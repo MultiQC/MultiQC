@@ -8,7 +8,7 @@ import dataclasses
 import io
 import json
 import logging
-from typing import Dict, Set, List, Union, Tuple
+from typing import Dict, Set, List, Union, Tuple, Mapping, Sequence, Any, Callable
 
 import math
 import os
@@ -271,6 +271,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the general statistics table
         self.fastqc_general_stats()
 
+        return
+
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
@@ -446,7 +448,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        headers = {
+        headers: Mapping[str, Mapping[str, Union[float, int, str, None, Callable]]] = {
             "percent_duplicates": {
                 "title": "% Dups",
                 "description": "% Duplicate Reads",
@@ -563,7 +565,7 @@ class MultiqcModule(BaseMultiqcModule):
             if num_statuses > 0:
                 merged_sample.percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
 
-        gen_stats_data_by_sample: Dict[str, List[Tuple[str, Dict[str, float]]]] = {
+        gen_stats_data_by_sample: Mapping[str, Sequence[Tuple[str, Mapping[str, float]]]] = {
             g_name: [(s_name, metrics.__dict__) for s_name, metrics in samples]
             for g_name, samples in data_by_grouped_samples.items()
         }
