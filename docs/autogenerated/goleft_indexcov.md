@@ -3,9 +3,9 @@ name: goleft indexcov
 urls: ["https://github.com/brentp/goleft/tree/master/indexcov"]
 summary: >
   Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution
-extra_description: >
-  This is useful as a quick QC to get coverage values across the genome.
 ---
+
+This is useful as a quick QC to get coverage values across the genome.
 
 The module uses the PED and ROC data files to create diagnostic plots of coverage per
 sample, helping to identify sample gender and coverage issues.

@@ -3,12 +3,12 @@ name: BUSCO
 urls: ["http://busco.ezlab.org/"]
 summary: >
   Assesses genome assembly and annotation completeness
-extra_description: >
-  BUSCO v2 provides quantitative measures for the assessment of genome
-  assembly, gene set, and transcriptome completeness, based on
-  evolutionarily-informed expectations of gene content from near-universal
-  single-copy orthologs selected from OrthoDB v9.
 ---
+
+BUSCO v2 provides quantitative measures for the assessment of genome
+assembly, gene set, and transcriptome completeness, based on
+evolutionarily-informed expectations of gene content from near-universal
+single-copy orthologs selected from OrthoDB v9.
 
 The module parses the `short_summary_[samplename].txt` files and
 plots the proportion of BUSCO types found. MultiQC has been tested with

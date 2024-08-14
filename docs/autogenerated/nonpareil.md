@@ -3,11 +3,11 @@ name: Nonpareil
 urls: ["https://github.com/lmrodriguezr/nonpareil"]
 summary: >
   Estimates metagenomic coverage and sequence diversity
-extra_description: >
-  Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
-  the average coverage and predict the amount of sequences that will be required
-  to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
 ---
+
+Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
+the average coverage and predict the amount of sequences that will be required
+to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
 
 Since Nonpareil main output has no model information, it is necessary extract the `curves` object as a `JSON` file.
 From version `v3.5.5` this can be done with an auxiliary `R` script, briefly:

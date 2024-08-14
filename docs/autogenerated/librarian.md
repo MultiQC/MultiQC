@@ -3,13 +3,13 @@ name: Librarian
 urls: ["https://github.com/DesmondWillowbrook/Librarian"]
 summary: >
   Predicts the sequencing library type from the base composition of a FastQ file
-extra_description: >
-  Librarian reads from high throughput sequencing experiments show base compositions that are
-  characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly
-  different distributions of G, A, C and T across the reads.
-  Librarian makes use of different composition signatures for library quality control: Test library
-  compositions are extracted and compared against previously published data sets from mouse and human.
 ---
+
+Librarian reads from high throughput sequencing experiments show base compositions that are
+characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly
+different distributions of G, A, C and T across the reads.
+Librarian makes use of different composition signatures for library quality control: Test library
+compositions are extracted and compared against previously published data sets from mouse and human.
 
 This module generates the _Prediction Plot_ showing the likelihood that samples are a given library type.
 

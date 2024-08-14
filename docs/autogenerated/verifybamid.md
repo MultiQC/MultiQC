@@ -3,17 +3,17 @@ name: VerifyBAMID
 urls: ["https://genome.sph.umich.edu/wiki/VerifyBamID"]
 summary: >
   Detects sample contamination and/or sample swaps
-extra_description: >
-  VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
-  A key step in any genetic analysis is to verify whether data being generated matches expectations.
-  verifyBamID checks whether reads in a BAM file match previous genotypes for a specific sample.
-  In addition, it detects possible sample mixture from population allele frequency only, which can be
-  particularly useful when the genotype data is not available.
-  Using a mathematical model that relates observed sequence reads to an hypothetical true genotype,
-  verifyBamID tries to decide whether sequence reads match a particular individual or are more likely
-  to be contaminated (including a small proportion of foreign DNA), derived from a closely related
-  individual, or derived from a completely different individual.
 ---
+
+VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
+A key step in any genetic analysis is to verify whether data being generated matches expectations.
+verifyBamID checks whether reads in a BAM file match previous genotypes for a specific sample.
+In addition, it detects possible sample mixture from population allele frequency only, which can be
+particularly useful when the genotype data is not available.
+Using a mathematical model that relates observed sequence reads to an hypothetical true genotype,
+verifyBamID tries to decide whether sequence reads match a particular individual or are more likely
+to be contaminated (including a small proportion of foreign DNA), derived from a closely related
+individual, or derived from a completely different individual.
 
 This module currently only imports data from the `.selfSM` output.
 The chipmix and freemix columns are imported into the general statistics table.

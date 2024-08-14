@@ -3,9 +3,9 @@ name: Preseq
 urls: ["http://smithlabresearch.org/software/preseq/"]
 summary: >
   Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
-extra_description: >
-  A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library where total reads = unique reads.
 ---
+
+A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library where total reads = unique reads.
 
 When `preseq lc_extrap` is run with the default parameters, the extrapolation points
 reach 10 billion molecules making the plot difficult to interpret in most scenarios.

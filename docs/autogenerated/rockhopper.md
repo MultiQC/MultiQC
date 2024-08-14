@@ -3,9 +3,9 @@ name: Rockhopper
 urls: ["https://cs.wellesley.edu/~btjaden/Rockhopper/"]
 summary: >
   Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs
-extra_description: >
-  It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript boundaries, discover novel transcripts such as small RNAs
 ---
+
+It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript boundaries, discover novel transcripts such as small RNAs
 
 ### File search patterns
 

@@ -50,7 +50,7 @@ for mod_id, entry_point in config.avail_modules.items():
 
     if module.extra:
         extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
-        extra = "\nextra_description: >\n" + indent(extra, "  ")
+        extra += "\n\n"
     else:
         extra = ""
 
@@ -59,10 +59,10 @@ for mod_id, entry_point in config.avail_modules.items():
 name: {module.name}
 urls: {module.href}
 summary: >
-  {module.info}{extra}
+  {module.info}
 ---
 
-{dedent(docstring)}
+{extra}{dedent(docstring)}
 
 ### File search patterns
 
