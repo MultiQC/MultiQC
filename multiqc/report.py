@@ -666,8 +666,8 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key, is_ignore_fil
                     if len(match_strs) == len(pattern.contents):  # all strings matched
                         break
             for p in pattern.contents_re:
-                # Use zip with range to limit the number of lines read to num_lines.
-                for _, line in zip(range(num_lines - total_lines), block.splitlines(keepends=True)):
+                # Limit the number of lines to the amount of lines that should remain
+                for line in block.splitlines(keepends=True)[: num_lines - total_lines]:
                     if p.match(line):
                         match_re_patterns.add(p)
                         if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
