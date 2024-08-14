@@ -11,7 +11,7 @@ on:
 
 jobs:
   unit_tests:
-    name: "Windows"
+    if: ${{ github.actor != 'MultiQC Bot' }}
     runs-on: windows-latest
     timeout-minutes: 10
 

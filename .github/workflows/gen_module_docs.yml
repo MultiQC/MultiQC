@@ -8,6 +8,7 @@ on:
 jobs:
   gen_module_docs:
     runs-on: ubuntu-latest
+    if: ${{ github.actor != 'MultiQC Bot' }}
     steps:
       - uses: actions/checkout@v4
         with:

@@ -12,7 +12,8 @@ on:
       - "*.md"
 
 jobs:
-  linux:
+  mypy:
+    if: ${{ github.actor != 'MultiQC Bot' }}
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-20.04
     strategy:
