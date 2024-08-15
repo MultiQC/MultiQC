@@ -53,9 +53,9 @@ def test_custom_content(tmp_path):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    assert f"{id}-plot" in report.plot_by_id
-    assert report.plot_by_id[f"{id}-plot"].id == f"{id}-plot"
-    assert report.plot_by_id[f"{id}-plot"].plot_type == "xy_line"
+    assert f"{id}-section-plot" in report.plot_by_id
+    assert report.plot_by_id[f"{id}-section-plot"].id == f"{id}-section-plot"
+    assert report.plot_by_id[f"{id}-section-plot"].plot_type == "xy_line"
 
 
 def test_deprecated_fields(tmp_path, capsys):
@@ -89,9 +89,9 @@ def test_deprecated_fields(tmp_path, capsys):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    assert f"{id}-plot" in report.plot_by_id
-    assert report.plot_by_id[f"{id}-plot"].id == f"{id}-plot"
-    assert report.plot_by_id[f"{id}-plot"].plot_type == "xy_line"
+    assert f"{id}-section-plot" in report.plot_by_id
+    assert report.plot_by_id[f"{id}-section-plot"].id == f"{id}-section-plot"
+    assert report.plot_by_id[f"{id}-section-plot"].plot_type == "xy_line"
 
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
@@ -249,8 +249,8 @@ sp:
     )
 
     out = capsys.readouterr().out
-    assert '<h2 class="mqc-module-title" id="concordance-module">Concordance Rates</h2>' in out
-    assert '<div class="mqc-section mqc-section-concordance-module">' in out
+    assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
+    assert '<div class="mqc-section mqc-section-concordance">' in out
     assert 'value="0.378"' in out
 
 
