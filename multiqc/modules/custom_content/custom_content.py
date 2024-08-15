@@ -626,8 +626,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
         data_ddict: Dict[str, Dict] = defaultdict(dict)
         for i, section in enumerate(matrix[1:], 1):
             for j, v in enumerate(section[1:], 1):
-                assert isinstance(section[0], str)
-                data_ddict[section[0]][matrix[0][j]] = v
+                s_name = str(section[0])
+                data_ddict[s_name][matrix[0][j]] = v
         return data_ddict, conf
 
     # Heatmap: Number of headers == number of lines
@@ -643,11 +643,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
         data_ddict = dict()
         for s in matrix[1:]:
-            sname = str(s[0])
-            data_ddict[sname] = dict()
+            s_name = str(s[0])
+            data_ddict[s_name] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(matrix[0][i + 1])
-                data_ddict[sname][cat] = v
+                data_ddict[s_name][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True
@@ -659,11 +659,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
             else:
                 conf["plot_type"] = "table"
         # Set table col_1 header
-        assert isinstance(matrix[0][0], str)
-        if conf.get("plot_type") == "table" and matrix[0][0].strip() != "":
+        col_name = str(matrix[0][0])
+        if conf.get("plot_type") == "table" and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
-                conf["pconfig"]["col1_header"] = matrix[0][0].strip()
+                conf["pconfig"]["col1_header"] = col_name.strip()
         # Return parsed data
         if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
             return data_ddict, conf
@@ -683,9 +683,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if conf.get("plot_type") == "scatter":
         dicts: Dict[str, Dict[str, float]] = dict()
         for s in matrix:
-            assert isinstance(s[0], str)
             try:
-                dicts[s[0]] = {"x": float(s[1]), "y": float(s[2])}
+                dicts[str(s[0])] = {"x": float(s[1]), "y": float(s[2])}
             except (IndexError, ValueError):
                 pass
         return dicts, conf
@@ -717,13 +716,13 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
-        assert isinstance(matrix[0][0], str)
-        if matrix[0][0].strip() == "":
+        s_name = str(matrix[0][0])
+        if s_name.strip() == "":
             x_labels = matrix.pop(0)[1:]
         # Use 1..n range for x values
         for s in matrix:
-            assert isinstance(s[0], str)
-            data_ddict[s[0]] = dict()
+            name = str(s[0])
+            data_ddict[name] = dict()
             for i, v in enumerate(s[1:]):
                 try:
                     x_val = x_labels[i]
@@ -733,7 +732,7 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
                         pass
                 except IndexError:
                     x_val = i + 1
-                data_ddict[s[0]][x_val] = v
+                data_ddict[name][x_val] = v
         return data_ddict, conf
 
     # Got to the end and haven't returned. It's a mystery, capn'!
