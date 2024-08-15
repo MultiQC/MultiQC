@@ -128,25 +128,29 @@ class CellRangerCountMixin:
             ),
         )
 
-        self.add_section(
-            name="Count - BC rank plot",
-            anchor="cellranger-count-bcrank-plot",
-            description=self.cellrangercount_plots_conf["bc"].get("description"),
-            helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
-            plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
-        )
+        if self.cellrangercount_plots_conf.get("bc"):
+            self.add_section(
+                name="Count - BC rank plot",
+                anchor="cellranger-count-bcrank-plot",
+                description=self.cellrangercount_plots_conf["bc"].get("description"),
+                helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
+                ),
+            )
 
-        self.add_section(
-            name="Count - Median genes",
-            anchor="cellranger-count-genes-plot",
-            description=self.cellrangercount_plots_conf["genes"]["description"],
-            helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
-            plot=linegraph.plot(
-                self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
-            ),
-        )
+        if self.cellrangercount_plots_conf.get("genes"):
+            self.add_section(
+                name="Count - Median genes",
+                anchor="cellranger-count-genes-plot",
+                description=self.cellrangercount_plots_conf["genes"]["description"],
+                helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+                ),
+            )
 
-        if "saturation" in self.cellrangercount_plots_data:
+        if self.cellrangercount_plots_conf.get("saturation"):
             self.add_section(
                 name="Count - Saturation plot",
                 anchor="cellranger-count-saturation-plot",
@@ -174,7 +178,7 @@ class CellRangerCountMixin:
                 ),
             )
 
-        if "antibody_counts" in self.cellrangercount_plots_conf:
+        if self.cellrangercount_plots_conf.get("antibody_counts"):
             self.add_section(
                 name="Antibody - Counts Distribution Bargraph",
                 anchor="cellranger-antibody-counts",
