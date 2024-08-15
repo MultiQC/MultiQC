@@ -131,7 +131,7 @@ class CellRangerCountMixin:
         self.add_section(
             name="Count - BC rank plot",
             anchor="cellranger-count-bcrank-plot",
-            description=self.cellrangercount_plots_conf["bc"].get("description"),
+            description=self.cellrangercount_plots_conf["bc"]["description"],
             helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
             plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
         )
@@ -325,65 +325,58 @@ class CellRangerCountMixin:
 
         # Extract data for plots
         help_dict = {x[0]: x[1][0] for x in summary["summary_tab"]["cells"]["help"]["data"]}
-        plots = {}
-        plots_data = {}
-        if "analysis_tab" in summary:
-            plots.update(
-                {
-                    "bc": {
-                        "config": {
-                            "id": "mqc_cellranger_count_bc_knee",
-                            "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
-                            "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
-                            "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
-                            "ylog": True,
-                            "xlog": True,
-                        },
-                        "description": "Barcode knee plot",
-                        "helptext": help_dict["Barcode Rank Plot"],
-                    },
-                    "genes": {
-                        "config": {
-                            "id": "mqc_cellranger_count_genesXcell",
-                            "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
-                            "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                            "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                            "ylog": False,
-                            "xlog": False,
-                        },
-                        "description": "Median gene counts per cell",
-                        "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
-                    },
-                }
-            )
-            try:
-                plots["saturation"] = {
-                    "config": {
-                        "id": "mqc_cellranger_count_saturation",
-                        "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
-                        "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
-                        "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                        "ylog": False,
-                        "xlog": False,
-                        "ymin": 0,
-                        "ymax": 1,
-                    },
-                    "description": "Sequencing saturation",
-                    "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
-                }
-            except KeyError:
-                pass
+        plots = {
+            "bc": {
+                "config": {
+                    "id": "mqc_cellranger_count_bc_knee",
+                    "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                    "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
+                    "ylog": True,
+                    "xlog": True,
+                },
+                "description": "Barcode knee plot",
+                "helptext": help_dict["Barcode Rank Plot"],
+            },
+            "genes": {
+                "config": {
+                    "id": "mqc_cellranger_count_genesXcell",
+                    "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "ylog": False,
+                    "xlog": False,
+                },
+                "description": "Median gene counts per cell",
+                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+            },
+        }
+        try:
+            plots["saturation"] = {
+                "config": {
+                    "id": "mqc_cellranger_count_saturation",
+                    "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                    "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                    "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                    "ylog": False,
+                    "xlog": False,
+                    "ymin": 0,
+                    "ymax": 1,
+                },
+                "description": "Sequencing saturation",
+                "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+            }
+        except KeyError:
+            pass
 
-            plots_data.update(
-                {
-                    "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
-                    "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
-                }
-            )
-            if "seq_saturation_plot" in summary["analysis_tab"]:
-                plots_data["saturation"] = {
-                    s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
-                }
+        plots_data = {
+            "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
+            "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
+        }
+        if "seq_saturation_plot" in summary["analysis_tab"]:
+            plots_data["saturation"] = {
+                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+            }
 
         # Store full data for ANTIBODY capture
         antibody_data = dict()
