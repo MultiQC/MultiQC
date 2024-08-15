@@ -269,8 +269,6 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             mod_id = mod_dict["config"].get("parent_id", mod_dict["config"].get("anchor"))
             if mod_id is None:
                 mod_id = c_id
-            if mod_id == c_id:  # make sure the anchors are unique
-                c_id = c_id + "-section"
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
@@ -280,7 +278,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 parsed_modules[mod_id] = MultiqcModule(mod_id, mod_dict)
             else:
                 # New sub-section
-                parsed_modules[mod_id].update_init(c_id, mod_dict)
+                parsed_modules[mod_id].update_init(mod_id, mod_dict)
             parsed_modules[mod_id].add_cc_section(c_id, mod_dict)
             if mod_dict["config"].get("plot_type") == "html":
                 log.info(f"{c_id}: Found 1 sample (html)")
@@ -368,6 +366,9 @@ class MultiqcModule(BaseMultiqcModule):
         section_name = mod["config"].get("section_name", c_id.replace("_", " ").title())
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
+
+        if self.id == c_id:  # make sure the anchors are unique
+            c_id = c_id + "-section"
 
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
