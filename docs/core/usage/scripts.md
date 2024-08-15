@@ -57,21 +57,21 @@ Parameters:
 Parse logs found in the `data` directory.
 
 ```python
-multiqc.parse_log('data')
+multiqc.parse_logs('data')
 ```
 
 Parse logs found in the `data/fastp` directory, the `data/SAMPLE1.cutadapt.log` file,
 and a `data_mqc.tsv` MultiQC [custom content](../custom_content/index.md) file.
 
 ```python
-multiqc.parse_log('data/fastp', 'data/SAMPLE1.cutadapt.log', "data_mqc.tsv")
+multiqc.parse_logs('data/fastp', 'data/SAMPLE1.cutadapt.log', "data_mqc.tsv")
 ```
 
 Parse logs found in the `data` directory for only the specified modules, and use
 and [additional pattern](../getting_started/config.md#cleaning-extensions) to clean sample names.
 
 ```python
-multiqc.parse_log(
+multiqc.parse_logs(
     'data',
     run_modules=["fastp", "spades", "quast", "pangolin"],
     extra_fn_clean_exts=[".unclassified"],
@@ -81,7 +81,7 @@ multiqc.parse_log(
 Parse logs found in the `data` directory and run FastQC module twice for two sets of files - raw and trimmed reads - according to the provided path pattern (see [Order of modules](../reports/customisation.md#order-of-modules) for details).
 
 ```python
-multiqc.parse_log(
+multiqc.parse_logs(
     'data',
     module_order=[
         dict(
@@ -99,7 +99,7 @@ multiqc.parse_log(
             )
         ),
     ],
-    )
+)
 ```
 
 ## Load JSON dump data
