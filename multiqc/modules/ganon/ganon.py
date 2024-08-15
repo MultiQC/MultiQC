@@ -6,7 +6,7 @@ from collections import OrderedDict
 from typing import Union, Dict, Tuple, Optional
 
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, violin
+from multiqc.plots import bargraph, violin, table
 from multiqc import config
 
 log = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name="ganon",
+            name="Ganon",
             anchor="ganon",
             href="https://pirovc.github.io/ganon/",
             info="Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.",
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(data_by_sample)} reports")
         self.write_data_file(data_by_sample, "ganon")
 
-        self.ganon_general_stats(data_by_sample)
+        self.stats_table(data_by_sample)
 
         self.barplot_reads_classified(data_by_sample)
         self.barplot_reads_match_type(data_by_sample)
@@ -117,115 +117,131 @@ class MultiqcModule(BaseMultiqcModule):
                 + data_by_sample[s_name]["taxonomic_entries_removed_mincount_filter"]
             )
 
-    def ganon_general_stats(self, data_by_sample):
+    def stats_table(self, data_by_sample):
         """Ganon general stats table"""
-        headers = {
+        headers: Dict[str, Dict] = {
             "reads_processed": {
-                "title": "Reads Processed ({})".format(config.read_count_prefix),
-                "description": "Number of reads processed by ganon ({})".format(config.read_count_prefix),
+                "title": "Processed",
+                "description": "Number of reads processed by ganon",
                 "scale": "Greens",
                 "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
             },
             "mbp_processed": {
-                "title": "Reads Processed (Mbp)",
-                "description": "Number of reads processed by ganon in Mbp",
+                "title": "Bases processed",
+                "description": "Number of bases processed by ganon in Mbp",
                 "scale": "Purples",
+                "hidden": True,
             },
             "reads_classified": {
-                "title": "Reads Classified ({})".format(config.read_count_prefix),
-                "description": "Number of processed reads taxonomically classified ({})".format(
-                    config.read_count_prefix
-                ),
+                "title": "Classified",
+                "description": "Number of processed reads taxonomically classified",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
             },
             "reads_classified_pc": {
-                "title": "Reads Classified Percent",
+                "title": "Classified",
                 "description": "Percent of processed reads taxonomically classified",
                 "scale": "RdYlGn",
                 "suffix": "%",
-                "min": 0,
-                "max": 100,
             },
             "unique_matches": {
-                "title": "Unique Matches ({})".format(config.read_count_prefix),
-                "description": "Number of reads with unique matches ({})".format(config.read_count_prefix),
+                "title": "Unique matches",
+                "description": "Number of reads with unique matches",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
             },
             "unique_matches_pc": {
-                "title": "Unique Matches Percent",
+                "title": "Unique matches",
                 "description": "Percent of reads with unique matches",
                 "scale": "RdYlGn",
                 "suffix": "%",
-                "min": 0,
-                "max": 100,
             },
             "multiple_matches": {
-                "title": "Multiple Matches ({})".format(config.read_count_prefix),
-                "description": "Number of reads with multiple matches ({})".format(config.read_count_prefix),
+                "title": "Multiple matches",
+                "description": "Number of reads with multiple matches",
                 "scale": "Blues",
                 "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
             },
             "multiple_matches_pc": {
-                "title": "Multiple Matches Percent",
+                "title": "Multiple matches",
                 "description": "Percent of reads with multiple matches",
                 "scale": "RdYlGn",
                 "suffix": "%",
-                "min": 0,
-                "max": 100,
             },
             "overall_matches": {
-                "title": "Overall Matches",
+                "title": "Overall matches",
                 "description": "Number of matches overall",
                 "scale": "Greens",
+                "hidden": True,
             },
             "match_to_read": {
-                "title": "Avg Matches Per Read",
+                "title": "Avg matches per read",
                 "description": "Average number matches for each read",
                 "scale": "Blues",
             },
             "reads_unclassified": {
-                "title": "Reads Unclassified ({})".format(config.read_count_prefix),
-                "description": "Number of reads processed reads without taxonomic classification ({})".format(
-                    config.read_count_prefix
-                ),
+                "title": "Unclassified",
+                "description": "Number of reads processed reads without taxonomic classification",
                 "scale": "Reds",
                 "shared_key": "read_count",
-                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
             },
             "reads_unclassified_pc": {
-                "title": "Reads Unclassified Percent",
+                "title": "Unclassified",
                 "description": "Percent of processed reads without any taxonomic classification",
                 "scale": "RdYlGn",
                 "suffix": "%",
-                "min": 0,
-                "max": 100,
             },
-            # I think it is relatively unlikely to get millions of taxonomic entries,
-            # so not using multiplier here
             "taxonomic_entries_reported": {
-                "title": "Nr. Taxa Identified",
+                "title": "Taxa identified",
                 "description": "Number of taxonomic entries in ganon report",
                 "scale": "Greens",
             },
             "taxonomic_entries_removed_rank_filter": {
-                "title": "Nr. Taxa Rank Removed",
+                "title": "Taxa rank removed",
                 "description": "Number of taxonomic entries removed due to rank filter",
                 "scale": "Purples",
+                "hidden": True,
             },
             "taxonomic_entries_removed_mincount_filter": {
-                "title": "Nr. Taxa Min Count Removed",
+                "title": "Taxa min count removed",
                 "description": "Number of taxonomic entries removed due to minimum count filter",
                 "scale": "Reds",
+                "hidden": True,
             },
         }
 
-        self.general_stats_addcols(data_by_sample, headers)
+        self.add_section(
+            name="Classify stats",
+            anchor="ganon-stats-section",
+            description="Summary of Ganon (classify) statistics",
+            plot=table.plot(
+                data_by_sample,
+                headers,
+                pconfig={
+                    "id": "ganon-stats-table",
+                    "title": "Ganon (classify) stats",
+                },
+            ),
+        )
+
+        general_stats_headers: Dict[str, Dict] = {}
+        for k in [
+            "reads_processed",
+            "reads_classified_pc",
+            "unique_matches_pc",
+            "multiple_matches_pc",
+            "match_to_read",
+            "reads_unclassified_pc",
+            "taxonomic_entries_reported",
+        ]:
+            general_stats_headers[k] = headers[k]
+            general_stats_headers[k]["hidden"] = k not in ["reads_classified_pc", "unique_matches_pc"]
+
+        self.general_stats_addcols(data_by_sample, general_stats_headers)
 
     def barplot_reads_classified(self, data_by_sample):
         """Barplot of total number of reads classified"""
