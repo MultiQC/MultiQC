@@ -95,9 +95,10 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     mod_dicts_in_order: List[Dict[str, Dict]] = [
         m for m in report.top_modules if list(m.keys())[0] in config.avail_modules.keys()
     ]
-    mod_keys = set(list(m.keys())[0] for m in report.module_order)
+
+    mod_order_keys = set(list(m.keys())[0] for m in report.module_order)
     mod_dicts_in_order.extend(
-        [{m: {}} for m in config.avail_modules.keys() if m not in mod_keys and m not in mod_dicts_in_order]
+        [{m: {}} for m in config.avail_modules.keys() if m not in mod_order_keys and m not in mod_dicts_in_order]
     )
     mod_dicts_in_order.extend(
         [
@@ -110,7 +111,7 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
 
     # Always run software_versions module to collect version YAML files
     # Use config.skip_versions_section to exclude from report
-    if "software_versions" not in mod_keys:
+    if "software_versions" not in mod_order_keys:
         mod_dicts_in_order.append({"software_versions": {}})
 
     mod_ids = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
