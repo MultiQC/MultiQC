@@ -1,7 +1,8 @@
-""" MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
+"""MultiQC submodule to parse output from Picard BaseDistributionByCycleMetrics"""
 
 import logging
 from collections import defaultdict
+from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph
@@ -24,7 +25,7 @@ def parse_reports(module):
         # A file can be concatenated from multiple samples, so we need to keep track of
         # the current sample name and header.
         keys = None
-        data_by_read_end = defaultdict(dict)
+        data_by_read_end: Dict[str, Dict] = defaultdict(dict)
         max_cycle_r1 = 0
 
         def _finalize_sample(data_by_read_end, s_name: str):
@@ -114,7 +115,7 @@ def parse_reports(module):
     data_by_sample = module.ignore_samples(data_by_sample)
     samplestats_by_sample = module.ignore_samples(samplestats_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Calculate summed mean values for all read orientations
     for s_name, v in samplestats_by_sample.items():
@@ -136,7 +137,7 @@ def parse_reports(module):
         "title": "Picard: Base Distribution",
         "ylab": "%",
         "xlab": "Cycle #",
-        "xDecimals": False,
+        "x_decimals": False,
         "tt_label": "<b>cycle {point.x}</b>: {point.y:.2f} %",
         "ymax": 100,
         "ymin": 0,
@@ -149,8 +150,8 @@ def parse_reports(module):
         ],
     }
 
-    # build list of linegraphs
-    linegraph_data = [{}, {}, {}, {}, {}]
+    # build list of line graphs
+    linegraph_data: List[Dict] = [{}, {}, {}, {}, {}]
     for s_name, cycles in data_by_sample.items():
         for lg, index in zip(linegraph_data, range(5)):
             lg[s_name] = {cycle: tup[index] for cycle, tup in cycles.items()}
@@ -163,4 +164,4 @@ def parse_reports(module):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

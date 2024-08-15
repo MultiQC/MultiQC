@@ -1,3 +1,6 @@
+from typing import Dict, Union, List
+
+
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
     for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
@@ -61,10 +64,10 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
-def parse_bcknee_data(data, s_name, max_idx=1000):
-    """parse data for bc knee plot from cellranger dict"""
+def parse_bcknee_data(data, s_name, max_idx=1000) -> Dict[str, Dict[str, Union[int, str, float]]]:
+    """parse data for bc knee plot from dict"""
 
-    value_dict = dict()
+    value_dict: Dict[str, Dict[str, Union[int, str, float]]] = dict()
     for idx, data_series in enumerate(data):
         if idx > max_idx:
             break
@@ -78,7 +81,7 @@ def parse_bcknee_data(data, s_name, max_idx=1000):
     return value_dict
 
 
-def transform_data(data):
+def transform_data(data: Dict[str, List]) -> Dict[str, Union[int, str, float]]:
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
     value_dict = dict()

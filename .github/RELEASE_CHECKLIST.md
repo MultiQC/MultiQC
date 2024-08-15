@@ -2,10 +2,10 @@
 
 This checklist is for my own reference, as I forget the steps every time.
 
-1. Check that everything is up to date and ready to go
-2. Figure out what this release should be called
-3. Update version numbers in code: `setup.py`, `CHANGELOG.md`
-4. Link the changelog subheading to the as yet non-existant release URL. Add date.
+1. Check that everything is up-to-date and ready to go
+2. Update version numbers in `pyproject.toml`
+3. Run `python scripts/print_changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
+4. Run `python scripts/make_module_dics.py` to update markdown files for module
 5. Install the package again in `install` mode:
 
    ```bash
@@ -24,12 +24,6 @@ This checklist is for my own reference, as I forget the steps every time.
 
      ```bash
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
-     ```
-
-   - Install `NationalGenomicsInfrastructure/MultiQC_NGI` - **NEEDS Python 3.11**:
-
-     ```bash
-     pip install git+https://github.com/NationalGenomicsInfrastructure/MultiQC_NGI@0.7.1
      ```
 
    - Generate reports in the multiqc/website repo.
@@ -57,13 +51,14 @@ This checklist is for my own reference, as I forget the steps every time.
 10. Make sure that all tests are passing
 11. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
 12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-13. Update version numbers to new dev version in `setup.py` + a new section in the changelog for the development version
+13. Update version numbers to new dev version in `pyproject.toml`
 14. Commit and push version bump
-15. Look for the automated release PR on `bioconda` and approve / merge
+15. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
+16. Look for the automated release PR on `bioconda` and approve / merge
     - IMPORTANT: If any new dependencies added, need a manual PR to add them.
     - Do this quickly, as other people merge the automated PRs really quickly
-16. Tweet that new version is released
-17. Continue making more awesome :metal:
+17. Tweet that new version is released
+18. Continue making more awesome :metal:
 
 ## Appendix
 

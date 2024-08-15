@@ -1,19 +1,27 @@
-#!/usr/bin/env python
 """
 Helper functions to manipulate colours and colour scales
 """
+
+import functools
 import hashlib
 
 # Default logger will be replaced by caller
 import logging
 import re
+from typing import Tuple
 
 import numpy as np
-import spectra
+import spectra  # type: ignore
 
-from multiqc.utils import config, report
+from multiqc import config, report
 
 logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(128)  # 34 unique colourmaps found using multiqc-test-data
+def cached_spectra_colour_scale(colours: Tuple[str]):
+    """Caches spectra color scale calls as these are expensive"""
+    return spectra.scale(list(colours))
 
 
 class mqc_colour_scale(object):
@@ -396,21 +404,14 @@ class mqc_colour_scale(object):
                     try:
                         val_float = float(val_stripped)
                     except ValueError:
-                        if config.strict:
-                            msg = (
-                                f'{source}: Cannot interpret a value "{val}" as `float` '
-                                f'when getting color from a sequential scale "{self.name}".\nConsider changing '
-                                f'the scale, setting background colors directly with `"bgcols"`, setting '
-                                f'`"cond_formatting_rules"`, or disabling the scale with `"scale": False`.'
-                            )
-                            logger.error(msg)
-                            report.lint_errors.append(msg)
+                        # No color formatting for non-numeric values
                         return ""
                     val_float = max(val_float, self.minval)
                     val_float = min(val_float, self.maxval)
 
                 domain_nums = list(np.linspace(self.minval, self.maxval, len(self.colours)))
-                my_scale = spectra.scale(self.colours).domain(domain_nums)
+                my_spectra_scale = cached_spectra_colour_scale(tuple(self.colours))
+                my_scale = my_spectra_scale.domain(domain_nums)
 
                 # Lighten colours
                 thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val_float).rgb])

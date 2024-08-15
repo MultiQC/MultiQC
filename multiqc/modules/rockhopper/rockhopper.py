@@ -1,32 +1,22 @@
-""" MultiQC submodule to parse output from Rockhopper summary files
-https://cs.wellesley.edu/~btjaden/Rockhopper/ """
-
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialize the parent object
         super(MultiqcModule, self).__init__(
             name="Rockhopper",
             anchor="rockhopper",
             href="https://cs.wellesley.edu/~btjaden/Rockhopper/",
-            info="""
-            is a comprehensive and user-friendly system
-            for computational analysis of bacterial RNA-seq data.
-            It can align reads to genomes, assemble transcripts,
-            identify transcript boundaries, and discover novel
-            transcripts such as small RNAs.
-            """,
+            info="Bacterial RNA-seq analysis: align reads to coding sequences, rRNAs, tRNAs, and miscellaneous RNAs",
+            extra="It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
+            "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
         )
 
@@ -116,15 +106,15 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Get total number of reads read by rockhopper
             if line.startswith("Total reads:"):
-                results["total-reads"] = int(re.search("Total reads:\s*(\d*)", line).group(1))
+                results["total-reads"] = int(re.search(r"Total reads:\s*(\d*)", line).group(1))
 
             # Get number of reads aligned to each genome
             elif line.startswith("Successfully aligned reads"):
                 # Get number of aligned reads
-                genome_reads = int(re.search("Successfully aligned reads:\s*(\d*)", line).group(1))
+                genome_reads = int(re.search(r"Successfully aligned reads:\s*(\d*)", line).group(1))
 
                 # Get percent of reads in each category
-                stats = [int(re.search("(\d+)\%", subline).group(1)) for subline in lines[i + 1 : i + 10]]
+                stats = [int(re.search(r"(\d+)\%", subline).group(1)) for subline in lines[i + 1 : i + 10]]
                 for name, val in zip(stats_index, stats):
                     # Convert percentages to true number of reads in each category
                     results[name] += int(round(val * genome_reads / 100))
@@ -185,7 +175,6 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "rockhopper_reads_counts_plot",
             "title": "Rockhopper: Alignment types",
             "ylab": "Number of reads",
-            "tt_percentage": False,
         }
 
         # Plot bar graph of groups

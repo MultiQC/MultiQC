@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools plotCoverage """
+"""MultiQC submodule to parse output from deepTools plotCoverage"""
 
 import logging
 
@@ -75,6 +75,7 @@ class plotCoverageMixin:
             config = {
                 "namespace": "deepTools plotCoverage",
                 "id": "deeptools_coverage_metrics_table",
+                "title": "deepTools: Coverage metrics",
             }
             self.add_section(
                 name="Coverage metrics",

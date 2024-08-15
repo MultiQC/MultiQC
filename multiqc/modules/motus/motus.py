@@ -1,22 +1,23 @@
-""" Module to parse output from mOTUs """
-
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.utils import config
+from multiqc import config
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module takes as input in the stdout of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="motus",
+            name="Motus",
             anchor="motus",
             href="https://motu-tool.org/",
-            info="is a tool performing microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
+            info="Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
             doi="10.1038/s41467-019-08844-4",
         )
 
@@ -160,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": f"{config.read_count_prefix} reads",
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
             "shared_key": "read_count",
         }
         cats = {
@@ -177,7 +178,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-filtering-reads",
-                    "title": "mOTUs: Read filtering information",
+                    "title": "Motus: Read filtering information",
                     "ylab": "Reads",
                 },
             ),
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
             "suffix": f"{config.read_count_prefix} reads",
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
             "shared_key": "read_count",
         }
         cats = {
@@ -201,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="mOTUs: Insert mapping information",
+            name="Motus: Insert mapping information",
             anchor="motus-mapping",
             description="How inserts was classified after alignment to MGCs.",
             plot=bargraph.plot(
@@ -209,7 +210,7 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-mapping-inserts",
-                    "title": "mOTUs: Insert mapping information",
+                    "title": "Motus: Insert mapping information",
                     "ylab": "Inserts",
                 },
             ),
@@ -219,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
         """mOTUs bar chart of mOTU types"""
         common = {
             "min": 0,
-            "decimalPlaces": 0,
+            "tt_decimals": 0,
         }
         cats = {
             "Number of ref-mOTUs": dict(common, **{"name": "Known mOTUs"}),
@@ -228,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="mOTUs: mOTU identification information",
+            name="Motus: mOTU identification information",
             anchor="motus-identification",
             description="Distribution of the types of mOTUs found.",
             plot=bargraph.plot(
@@ -236,8 +237,8 @@ class MultiqcModule(BaseMultiqcModule):
                 cats,
                 {
                     "id": "motus-identification-types",
-                    "title": "mOTUs: mOTU identification information",
-                    "ylab": "mOTUs",
+                    "title": "Motus: mOTU identification information",
+                    "ylab": "Motus",
                 },
             ),
         )

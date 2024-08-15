@@ -1,7 +1,8 @@
-""" MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics """
+"""MultiQC submodule to parse output from Picard CollectIlluminaLaneMetrics"""
 
 import logging
 from collections import defaultdict
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import table
@@ -41,7 +42,7 @@ def lane_metrics_table(module, data):
     table_config = {
         "id": f"{module.anchor}-illumina-lane-metrics-table",
         "namespace": module.name,
-        "table_title": f"{module.name} Illumina Lane Metrics",
+        "title": f"{module.name} Illumina Lane Metrics",
     }
     tdata = {}
     for run_name, run in data.items():
@@ -56,7 +57,7 @@ def parse_reports(module):
     # There can be two types of these files for the same sample: one with IlluminaLaneMetrics,
     # and one with IlluminaPhasingMetrics. We want to collect both, thus using default dicts
     # and calling .update() on them when any metrics are found.
-    data_by_lane_by_run = defaultdict(lambda: defaultdict(dict))
+    data_by_lane_by_run: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(dict))
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/collectilluminalanemetrics", filehandles=True):
@@ -97,7 +98,7 @@ def parse_reports(module):
 
     data_by_lane_by_run = module.ignore_samples(data_by_lane_by_run)
     if len(data_by_lane_by_run) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -118,4 +119,4 @@ def parse_reports(module):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_lane_by_run)
+    return data_by_lane_by_run.keys()

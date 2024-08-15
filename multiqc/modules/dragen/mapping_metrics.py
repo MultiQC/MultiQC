@@ -5,7 +5,7 @@ import itertools
 import logging
 from collections import defaultdict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 
 from .utils import Metric, exist_and_number, make_headers
@@ -115,6 +115,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 pconfig={
                     "id": "dragen-mapping-metrics-table",
                     "namespace": NAMESPACE,
+                    "title": "DRAGEN: Mapping metrics",
                 },
             ),
         )

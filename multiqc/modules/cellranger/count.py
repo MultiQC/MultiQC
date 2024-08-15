@@ -1,4 +1,4 @@
-""" MultiQC module to parse output from Cell Ranger count """
+"""MultiQC module to parse output from Cell Ranger count"""
 
 import json
 import logging
@@ -108,6 +108,7 @@ class CellRangerCountMixin:
                     {
                         "namespace": "Count",
                         "id": "cellranger-count-warnings-table",
+                        "title": "Cellranger Count: Warnings",
                     },
                 ),
             )
@@ -122,29 +123,34 @@ class CellRangerCountMixin:
                 {
                     "namespace": "Count",
                     "id": "cellranger-count-stats-table",
+                    "title": "Cellranger Count: Summary Stats",
                 },
             ),
         )
 
-        self.add_section(
-            name="Count - BC rank plot",
-            anchor="cellranger-count-bcrank-plot",
-            description=self.cellrangercount_plots_conf["bc"]["description"],
-            helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
-            plot=linegraph.plot(self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]),
-        )
+        if self.cellrangercount_plots_conf.get("bc"):
+            self.add_section(
+                name="Count - BC rank plot",
+                anchor="cellranger-count-bcrank-plot",
+                description=self.cellrangercount_plots_conf["bc"].get("description"),
+                helptext=self.cellrangercount_plots_conf["bc"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["bc"], self.cellrangercount_plots_conf["bc"]["config"]
+                ),
+            )
 
-        self.add_section(
-            name="Count - Median genes",
-            anchor="cellranger-count-genes-plot",
-            description=self.cellrangercount_plots_conf["genes"]["description"],
-            helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
-            plot=linegraph.plot(
-                self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
-            ),
-        )
+        if self.cellrangercount_plots_conf.get("genes"):
+            self.add_section(
+                name="Count - Median genes",
+                anchor="cellranger-count-genes-plot",
+                description=self.cellrangercount_plots_conf["genes"]["description"],
+                helptext=self.cellrangercount_plots_conf["genes"]["helptext"],
+                plot=linegraph.plot(
+                    self.cellrangercount_plots_data["genes"], self.cellrangercount_plots_conf["genes"]["config"]
+                ),
+            )
 
-        if "saturation" in self.cellrangercount_plots_data:
+        if self.cellrangercount_plots_conf.get("saturation"):
             self.add_section(
                 name="Count - Saturation plot",
                 anchor="cellranger-count-saturation-plot",
@@ -167,11 +173,12 @@ class CellRangerCountMixin:
                     {
                         "namespace": "Antibody",
                         "id": "cellranger-antibody-stats-table",
+                        "title": "Cellranger Antibody: Summary Stats",
                     },
                 ),
             )
 
-        if "antibody_counts" in self.cellrangercount_plots_conf:
+        if self.cellrangercount_plots_conf.get("antibody_counts"):
             self.add_section(
                 name="Antibody - Counts Distribution Bargraph",
                 anchor="cellranger-antibody-counts",
@@ -322,58 +329,65 @@ class CellRangerCountMixin:
 
         # Extract data for plots
         help_dict = {x[0]: x[1][0] for x in summary["summary_tab"]["cells"]["help"]["data"]}
-        plots = {
-            "bc": {
-                "config": {
-                    "id": "mqc_cellranger_count_bc_knee",
-                    "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
-                    "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
-                    "yLog": True,
-                    "xLog": True,
-                },
-                "description": "Barcode knee plot",
-                "helptext": help_dict["Barcode Rank Plot"],
-            },
-            "genes": {
-                "config": {
-                    "id": "mqc_cellranger_count_genesXcell",
-                    "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
-                    "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
-                },
-                "description": "Median gene counts per cell",
-                "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
-            },
-        }
-        try:
-            plots["saturation"] = {
-                "config": {
-                    "id": "mqc_cellranger_count_saturation",
-                    "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
-                    "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
-                    "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
-                    "yLog": False,
-                    "xLog": False,
-                    "ymin": 0,
-                    "ymax": 1,
-                },
-                "description": "Sequencing saturation",
-                "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
-            }
-        except KeyError:
-            pass
+        plots = {}
+        plots_data = {}
+        if "analysis_tab" in summary:
+            plots.update(
+                {
+                    "bc": {
+                        "config": {
+                            "id": "mqc_cellranger_count_bc_knee",
+                            "title": f"Cell Ranger count: {summary['summary_tab']['cells']['barcode_knee_plot']['layout']['title']}",
+                            "xlab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["xaxis"]["title"],
+                            "ylab": summary["summary_tab"]["cells"]["barcode_knee_plot"]["layout"]["yaxis"]["title"],
+                            "ylog": True,
+                            "xlog": True,
+                        },
+                        "description": "Barcode knee plot",
+                        "helptext": help_dict["Barcode Rank Plot"],
+                    },
+                    "genes": {
+                        "config": {
+                            "id": "mqc_cellranger_count_genesXcell",
+                            "title": f"Cell Ranger count: {summary['analysis_tab']['median_gene_plot']['help']['title']}",
+                            "xlab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["xaxis"]["title"],
+                            "ylab": summary["analysis_tab"]["median_gene_plot"]["plot"]["layout"]["yaxis"]["title"],
+                            "ylog": False,
+                            "xlog": False,
+                        },
+                        "description": "Median gene counts per cell",
+                        "helptext": summary["analysis_tab"]["median_gene_plot"]["help"]["helpText"],
+                    },
+                }
+            )
+            try:
+                plots["saturation"] = {
+                    "config": {
+                        "id": "mqc_cellranger_count_saturation",
+                        "title": f"Cell Ranger count: {summary['analysis_tab']['seq_saturation_plot']['help']['title']}",
+                        "xlab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["xaxis"]["title"],
+                        "ylab": summary["analysis_tab"]["seq_saturation_plot"]["plot"]["layout"]["yaxis"]["title"],
+                        "ylog": False,
+                        "xlog": False,
+                        "ymin": 0,
+                        "ymax": 1,
+                    },
+                    "description": "Sequencing saturation",
+                    "helptext": summary["analysis_tab"]["seq_saturation_plot"]["help"]["helpText"],
+                }
+            except KeyError:
+                pass
 
-        plots_data = {
-            "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
-            "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
-        }
-        if "seq_saturation_plot" in summary["analysis_tab"]:
-            plots_data["saturation"] = {
-                s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
-            }
+            plots_data.update(
+                {
+                    "bc": parse_bcknee_data(summary["summary_tab"]["cells"]["barcode_knee_plot"]["data"], s_name),
+                    "genes": {s_name: transform_data(summary["analysis_tab"]["median_gene_plot"]["plot"]["data"][0])},
+                }
+            )
+            if "seq_saturation_plot" in summary["analysis_tab"]:
+                plots_data["saturation"] = {
+                    s_name: transform_data(summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0])
+                }
 
         # Store full data for ANTIBODY capture
         antibody_data = dict()
@@ -421,49 +435,49 @@ class CellRangerCountMixin:
 
             # Extract labels and values for the bargraph data
             combined_data = {}
-            for label, value in zip(
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["values"],
-            ):
-                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
-                if label_match:
-                    label_value = label_match.group(1)
-                    value_ = round(value * 100, 2)
-                    combined_data[label_value] = value_
+            if "antibody_treemap_plot" in summary["antibody_tab"]:
+                for label, value in zip(
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["values"],
+                ):
+                    label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                    if label_match:
+                        label_value = label_match.group(1)
+                        value_ = round(value * 100, 2)
+                        combined_data[label_value] = value_
 
-            # Extract labels and number of cells for labelling the bargraph
-            combined_label = {}
-            for label, cells in zip(
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
-                summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["text"],
-            ):
-                label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
-                if label_match:
-                    label_value = label_match.group(1)
-                    combined_label[label_value] = label_value + ": " + cells
+                # Extract labels and number of cells for labelling the bargraph
+                combined_label = {}
+                for label, cells in zip(
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["labels"],
+                    summary["antibody_tab"]["antibody_treemap_plot"]["plot"]["data"][0]["text"],
+                ):
+                    label_match = re.search(r"<b>(.*?)\s+\((.*?)%\)</b>", label)
+                    if label_match:
+                        label_value = label_match.group(1)
+                        combined_label[label_value] = label_value + ": " + cells
 
-            # Use the label from `combined_label` for the plot
-            keys = dict()
-            for key, value in combined_label.items():
-                keys[key] = {"name": value}
+                # Use the label from `combined_label` for the plot
+                keys = dict()
+                for key, value in combined_label.items():
+                    keys[key] = {"name": value}
 
-            plots["antibody_counts"] = {
-                "config": {
-                    "id": "mqc_cellranger_antibody_counts",
-                    "title": "Cell Ranger: Distribution of Antibody Counts",
-                    "ylab": "% Total UMI",
-                    "ymax": 100,
-                    "cpswitch": False,
-                    "use_legend": False,
-                    "tt_decimals": 2,
-                    "tt_suffix": "%",
-                    "tt_percentages": False,
-                },
-                "keys": keys,
-                "description": "Antibody Counts Distribution Plot",
-                "helptext": "Relative composition of antibody counts for features with at least 1 UMI. Box size represents fraction of total UMIs from cell barcodes that are derived from this antibody. Hover over a box to view more information on a particular antibody, including number of associated barcodes.",
-            }
-            plots_data["antibody_counts"] = {s_name: combined_data}
+                plots["antibody_counts"] = {
+                    "config": {
+                        "id": "mqc_cellranger_antibody_counts",
+                        "title": "Cell Ranger: Distribution of Antibody Counts",
+                        "ylab": "% Total UMI",
+                        "ymax": 100,
+                        "cpswitch": False,
+                        "use_legend": False,
+                        "tt_decimals": 2,
+                        "tt_suffix": "%",
+                    },
+                    "keys": keys,
+                    "description": "Antibody Counts Distribution Plot",
+                    "helptext": "Relative composition of antibody counts for features with at least 1 UMI. Box size represents fraction of total UMIs from cell barcodes that are derived from this antibody. Hover over a box to view more information on a particular antibody, including number of associated barcodes.",
+                }
+                plots_data["antibody_counts"] = {s_name: combined_data}
 
         if s_name in self.cellrangercount_general_data:
             log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")

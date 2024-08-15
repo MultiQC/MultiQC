@@ -1,36 +1,38 @@
-#!/usr/bin/env python
+"""MultiQC Utility functions, used in a variety of places."""
 
-""" MultiQC Utility functions, used in a variety of places. """
-
-
-import io
 import json
-import os
+import logging
 import shutil
 import sys
 import time
-import datetime
+from collections import defaultdict, OrderedDict
+from pathlib import Path
+from typing import Dict
 
-import yaml
+import array
+import math
 
-from . import config
+logger = logging.getLogger(__name__)
 
 
-def robust_rmtree(path, logger=None, max_retries=10):
-    """Robustly tries to delete paths.
+def rmtree_with_retries(path, _logger=None, max_retries=10):
+    """
+    Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
     occurs.  If the final attempt fails, the Exception is propagated
     to the caller.
     """
+    if path is None or not Path(path).exists():
+        return
 
     for i in range(max_retries):
         try:
             shutil.rmtree(path)
             return
         except OSError:
-            if logger:
-                logger.info(f"Unable to remove path: {path}")
-                logger.info(f"Retrying after {i**2} seconds")
+            if _logger:
+                _logger.info(f"Unable to remove path: {path}")
+                _logger.info(f"Retrying after {i**2} seconds")
             else:
                 print(f"Unable to remove path: {path}", file=sys.stderr)
                 print(f"Retrying after {i**2} seconds", file=sys.stderr)
@@ -38,108 +40,6 @@ def robust_rmtree(path, logger=None, max_retries=10):
 
     # Final attempt, pass any Exceptions up to caller.
     shutil.rmtree(path)
-
-
-def write_data_file(data, fn, sort_cols=False, data_format=None):
-    """Write a data file to the report directory. Will not do anything
-    if config.data_dir is not set.
-    :param: data - a 2D dict, first key sample name (row header),
-            second key field (column header).
-    :param: fn - Desired filename. Directory will be prepended automatically.
-    :param: sort_cols - Sort columns alphabetically
-    :param: data_format - Output format. Defaults to config.data_format (usually tsv)
-    :return: None"""
-
-    if config.data_dir is not None:
-        # Get data format from config
-        if data_format is None:
-            data_format = config.data_format
-
-        # JSON encoder class to handle lambda functions
-        class MQCJSONEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if callable(obj):
-                    try:
-                        return obj(1)
-                    except Exception:
-                        return None
-                return json.JSONEncoder.default(self, obj)
-
-        # Some metrics can't be coerced to tab-separated output, test and handle exceptions
-        if data_format not in ["json", "yaml"]:
-            # attempt to reshape data to tsv
-            try:
-                # Get all headers from the data, except if data is a dictionary (i.e. has >1 dimensions)
-                headers = []
-                for d in data.values():
-                    if not d or (isinstance(d, list) and isinstance(d[0], dict)):
-                        continue
-                    for h in d.keys():
-                        if h not in headers:
-                            headers.append(h)
-                if sort_cols:
-                    headers = sorted(headers)
-
-                headers_str = [str(item) for item in headers]
-                # Add Sample header in to first element
-                headers_str.insert(0, "Sample")
-
-                # Get the rows
-                rows = ["\t".join(headers_str)]
-                for sn in sorted(data.keys()):
-                    # Make a list starting with the sample name, then each field in order of the header cols
-                    line = [str(sn)] + [str(data[sn].get(h, "")) for h in headers]
-                    rows.append("\t".join(line))
-
-                body = "\n".join(rows)
-
-            except Exception:
-                data_format = "yaml"
-                config.logger.debug(f"{fn} could not be saved as tsv/csv. Falling back to YAML.")
-
-        # Add relevant file extension to filename, save file.
-        fn = f"{fn}.{config.data_format_extensions[data_format]}"
-        with io.open(os.path.join(config.data_dir, fn), "w", encoding="utf-8") as f:
-            if data_format == "json":
-                jsonstr = json.dumps(data, indent=4, cls=MQCJSONEncoder, ensure_ascii=False)
-                print(jsonstr.encode("utf-8", "ignore").decode("utf-8"), file=f)
-            elif data_format == "yaml":
-                yaml.dump(data, f, default_flow_style=False)
-            else:
-                # Default - tab separated output
-                print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
-
-
-def view_all_tags(ctx, param, value):
-    """List available tags and associated modules
-    Called by eager click option: --view-tags
-    """
-    # To make sure this function executed only when the flag was called
-    if not value or ctx.resilient_parsing:
-        return
-    avail_tags = dict()
-    print("\nMultiQC Available module tag groups:\n")
-    for mod_dict in filter(lambda mod: isinstance(mod, dict), config.module_order):
-        mod_key, mod_val = list(mod_dict.items())[0]
-        tags = list(mod_val.get("module_tag", []))
-        for t in tags:
-            if t not in avail_tags:
-                avail_tags[t] = []
-            avail_tags[t].append(mod_key)
-    for t in sorted(avail_tags.keys(), key=lambda s: s.lower()):
-        print(f" - {t}:")
-        for ttgs in avail_tags[t]:
-            print(f"   - {ttgs}")
-    ctx.exit()
-
-
-def force_term_colors():
-    """
-    Check if any environment variables are set to force Rich to use coloured output
-    """
-    if os.getenv("GITHUB_ACTIONS") or os.getenv("FORCE_COLOR") or os.getenv("PY_COLORS"):
-        return True
-    return None
 
 
 def strtobool(val) -> bool:
@@ -155,32 +55,179 @@ def strtobool(val) -> bool:
     are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
     'val' is anything else.
     """
-    val = val.lower()
-    if val in ("y", "yes", "t", "true", "on", "1"):
+    val_str = str(val).lower()
+    if val_str in ("y", "yes", "t", "true", "on", "1"):
         return True
-    elif val in ("n", "no", "f", "false", "off", "0"):
+    elif val_str in ("n", "no", "f", "false", "off", "0"):
         return False
     else:
         raise ValueError(f"invalid truth value {val!r}")
 
 
-def choose_emoji():
-    """Choose an emoji to use in the report header."""
-    # NB: We haven't parsed the config yet, so can't disable via config
-    today = datetime.date.today()
-    emojis = {
-        "bottle_with_popping_cork": (1, 1, 1, 5),  # New Year's Day
-        "rose": (2, 14, 0, 0),  # Valentine's Day
-        "four_leaf_clover": (3, 17, 0, 0),  # St Patrick's Day
-        "globe_showing_asia-australia": (4, 22, 0, 0),  # Earth Day
-        "jack-o-lantern": (10, 31, 5, 0),  # Halloween
-        "santa": (12, 25, 0, 0),  # Christmas Day
-        "christmas_tree": (12, 25, 7, 7),  # Christmas
+def replace_defaultdicts(data):
+    """
+    Recursively replace dict-likes as dicts for nice yaml representation.
+    """
+
+    def _replace(obj):
+        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+            return {k: _replace(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_replace(v) for v in obj]
+        elif isinstance(obj, set):
+            return {_replace(v) for v in obj}
+        elif isinstance(obj, tuple):
+            return tuple(_replace(v) for v in obj)
+        return obj
+
+    return _replace(data)
+
+
+def dump_json(data, filehandle=None, **kwargs):
+    """
+    Recursively replace non-JSON-conforming NaNs and lambdas with None.
+    Note that a custom JSONEncoder would not work for NaNs:
+    https://stackoverflow.com/a/28640141
+    """
+
+    def replace_nan(obj):
+        """
+        Recursively replace NaNs and Infinities with None
+        """
+        # Do checking in order of likelihood of occurrence
+        if isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
+        if isinstance(obj, (tuple, set)):
+            # JSON only knows list so convert tuples and sets to list.
+            obj = list(obj)
+        if isinstance(obj, list):
+            for i, item in enumerate(obj):
+                if isinstance(item, float) and (math.isnan(item) or math.isinf(item)):
+                    obj[i] = None
+                elif isinstance(item, (dict, list, tuple, set)):
+                    obj[i] = replace_nan(item)
+            return obj
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                    obj[key] = None
+                elif isinstance(value, (dict, list, tuple, set)):
+                    obj[key] = replace_nan(value)
+            return obj
+        return obj
+
+    class JsonEncoderWithArraySupport(json.JSONEncoder):
+        """
+        Encode array.array instances to list. Use the default method
+        for this as it gets called only when an array instance is encountered
+        and is then immediately serialized into a string. This saves memory
+        compared to unpacking all arrays to list at once.
+        """
+
+        def default(self, o):
+            if isinstance(o, array.array):
+                return replace_nan(o.tolist())
+            if callable(o):
+                return None
+            return super().default(o)
+
+    if filehandle:
+        json.dump(replace_nan(data), filehandle, cls=JsonEncoderWithArraySupport, **kwargs)
+    else:
+        return json.dumps(replace_nan(data), cls=JsonEncoderWithArraySupport, **kwargs)
+
+
+def is_running_in_notebook() -> bool:
+    try:
+        from IPython import get_ipython  # type: ignore
+
+        if "IPKernelApp" in get_ipython().config:
+            return True
+    except (ImportError, AttributeError):
+        pass
+    return False
+
+
+def compress_number_lists_for_json(obj):
+    """
+    Take an object that should be JSON and compress all the lists of integer
+    and lists of float as array.array. This saves space and the arrays can
+    easily be converted back again, using the dump_json function above.
+
+    The technical explanation:
+    A python list is an array of pointers to python objects:
+    {
+        list metadata including length
+        a pointer to an array of pointers: [
+            PyObject *
+            PyObject *
+            etc.
+        ]
     }
-    for emoji, (month, day, days_before, days_after) in emojis.items():
-        special_date = datetime.date(today.year, month, day)
-        date_range_start = special_date - datetime.timedelta(days=days_before)
-        date_range_end = special_date + datetime.timedelta(days=days_after)
-        if date_range_start <= today <= date_range_end:
-            return emoji
-    return "mag"
+    A python float is very simple and takes 24 bytes.
+    {
+        PyTypeObject *type
+        Py_ssize_t refcount
+        double the actual floating point.
+    }
+    A python integer is slightly more complicated, but similar to the float. It
+    takes 28 bytes for 32-bit data, 32 bytes for 64-bit, 36 bytes for 96-bit etc.
+
+    An array.array is more simple.
+    {
+        array metadata including length
+        a pointer to an array of machine values: [
+            double,
+            double,
+            double,
+            etc.
+        ]
+        more metadata
+    }
+    Using 8-byte machine values rather than Python objects saves thus
+    24 bytes per float.
+    """
+    if isinstance(obj, (list, tuple)):
+        try:
+            # Try integer list first, because it does not accept floats.
+            return array.array("q", obj)
+        except TypeError:
+            pass
+        try:
+            return array.array("d", obj)
+        except TypeError:
+            return [compress_number_lists_for_json(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: compress_number_lists_for_json(v) for k, v in obj.items()}
+    return obj
+
+
+def update_dict(target: Dict, source: Dict, none_only=False, add_in_the_beginning=False):
+    """
+    Recursively updates nested dict d from nested dict u
+
+    >>> update_dict({"cutadapt": {"fn": "old", "fn2": "old2"}}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new', 'fn2': 'old2'}}
+    >>> update_dict({"cutadapt": [{"fn": "old"}]}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new'}}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"})
+    {'existing': 'v1', 'new': 'v2'}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"}, add_in_the_beginning=True)
+    {'new': 'v2', 'existing': 'v1'}
+    """
+    assert target is not None, source is not None
+    for key, src_val in source.items():
+        if isinstance(src_val, dict) and key in target and isinstance(target[key], dict):
+            target[key] = update_dict(target[key], src_val, none_only=none_only)
+        else:
+            if not none_only or target.get(key) is None:
+                if isinstance(src_val, list):
+                    target[key] = src_val.copy()
+                else:
+                    if add_in_the_beginning:
+                        target = {key: src_val, **target}
+                    else:
+                        target[key] = src_val
+    return target

@@ -39,6 +39,7 @@ def plot_idhist(samples, file_type, **plot_args):
         "id": "bbmap-" + file_type + "_plot",
         "title": "BBTools: " + plot_args["plot_title"],
         "xlab": "Percent identity",
+        "xsuffix": "%",
         "ylab": "Read count",
         "data_labels": [
             {"name": "Reads", "ylab": "Read count"},

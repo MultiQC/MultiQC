@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools estimateReadFiltering """
+"""MultiQC submodule to parse output from deepTools estimateReadFiltering"""
 
 import logging
 
@@ -127,6 +127,7 @@ class EstimateReadFilteringMixin:
         config = {
             "namespace": "deepTools bamPEFragmentSize",
             "id": "deeptools_estimate_read_filtering_table",
+            "title": "deepTools: Estimate read filtering",
         }
         self.add_section(
             name="Filtering metrics",

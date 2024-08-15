@@ -1,23 +1,26 @@
-name: Lint Code Base
+name: "MultiQC lint"
 on:
   push:
     branches: [main]
   pull_request:
 
 jobs:
-  pre-commit:
+  pre_commit:
+    name: "pre-commit"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
       - uses: pre-commit/action@v2.0.3
-  CodeChecks:
+
+  code_checks:
+    name: "code_checks.py"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: "Install dependencies"
         run: pip install rich
 
-      - name: Run manual code style checks
+      - name: "Run manual code style checks"
         run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py

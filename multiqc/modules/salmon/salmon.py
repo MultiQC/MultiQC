@@ -1,24 +1,30 @@
-""" MultiQC module to parse output from Salmon """
-
 import json
 import logging
 import os
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
+from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The Salmon module parses `meta_info.json`, `lib_format_counts.json` and `flenDist.txt` files, if found.
+
+    :::note
+    Note that `meta_info.json` must be within a directory called either `aux_info` or `aux` and will be ignored
+    otherwise.
+    :::
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Salmon",
             anchor="salmon",
             href="https://combine-lab.github.io/salmon/",
-            info="is a tool for quantifying the expression of transcripts using RNA-seq data.",
+            info="Quantifies expression of transcripts using RNA-seq data.",
             doi="10.1038/nmeth.4197",
         )
 
@@ -29,7 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
             if os.path.basename(f["root"]) in ["aux_info", "aux"]:
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
-                self.salmon_meta[s_name] = json.loads(f["f"])
+                self.salmon_meta[s_name] = {
+                    metric: val
+                    for metric, val in json.loads(f["f"]).items()
+                    if isinstance(val, (int, float, str, list))
+                }
                 self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs
@@ -92,7 +102,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Mapped reads (millions)",
                     "min": 0,
                     "scale": "PuRd",
-                    "modify": lambda x: float(x) / 1000000,
+                    "modify": lambda x: float(x) * config.read_count_multiplier,
+                    "suffix": config.read_count_prefix,
                     "shared_key": "read_count",
                 },
                 "library_types": {

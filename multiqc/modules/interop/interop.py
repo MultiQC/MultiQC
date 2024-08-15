@@ -2,7 +2,7 @@ import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
@@ -11,13 +11,28 @@ VERSION_REGEX = r"# Version: v([\d\.]+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module parses the output from the InterOp Summary executable and creates a table view. The aim is to
+    replicate the `Run & Lane Metrics` table from the [Illumina Basespace](https://basespace.illumina.com) interface.
+    The executable used can easily be installed from the BioConda channel using
+    `conda install -c bioconda illumina-interop`.
+
+    The MultiQC interop module can parse the outputs of the `interop_summary` and `interop_index-summary` executables.
+    Note that these must be run with the `--csv=1` option.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Illumina InterOp Statistics",
             anchor="interop",
             href="http://illumina.github.io/interop/index.html",
-            info=" - a set of common routines used for reading and writing InterOp metric files.",
+            info="Reading and writing InterOp metric files.",
+            extra="""
+            The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.
+            These metric files are binary files produced during a run providing detailed statistics about a run. In a few
+            cases, the metric files are produced after a run during secondary analysis (index metrics) or for faster display
+            of a subset of the original data (collapsed quality scores).
+            """,
             # No publication / DOI // doi=
         )
 
@@ -140,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
                 linedata = {}
                 # Check if "surface" is total (-) else skip
                 if data[1] == "-":
-                    metrics["details"][f"{read} - Lane {data[0]}"] = {}
+                    metrics["details"][f"Lane {data[0]} - {read}"] = {}
                 else:
                     continue
                 for idx in range(2, len(data)):
@@ -268,7 +283,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-runmetrics-summary-table",
-            "table_title": "Read metrics summary",
+            "title": "Illumina InterOp Statistics: Read metrics summary",
             "col1_header": "Run - Read",
         }
 
@@ -310,7 +325,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Prephased": {
                 "title": "Prephased (%)",
                 "description": "The value used by RTA for the percentage of molecules in a cluster for which sequencing falls behind (phasing) or jumps ahead (prephasing) the current cycle within a read.",
-                "format": "{:.,2f}",
+                "format": "{:,.2f}",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -327,7 +342,6 @@ class MultiqcModule(BaseMultiqcModule):
             "Cycles Error": {
                 "title": "Cycles Error",
                 "description": "The number of cycles that have been error-rated using PhiX, starting at cycle 1.",
-                "format": "{:.,0f}",
                 "scale": "OrRd",
             },
             "Yield": {
@@ -399,9 +413,8 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-runmetrics-detail-table",
-            "table_title": "Sequencing Lane Statistics",
+            "title": "Illumina InterOp Statistics: Sequencing Lane Statistics",
             "col1_header": "Run - Lane - Read",
-            "scale": False,
         }
 
         tdata = {}
@@ -440,7 +453,7 @@ class MultiqcModule(BaseMultiqcModule):
             "CV": {
                 "title": "CV",
                 "description": "The coefficient of variation for the number of counts across all indexes.",
-                "format": "{:.,2f}",
+                "format": "{:,.2f}",
             },
             "Min": {"title": "Min", "description": "The lowest representation for any index."},
             "Max": {"title": "Max", "description": "The highest representation for any index."},
@@ -448,7 +461,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-indexmetrics-summary-table",
-            "table_title": "Index Read Statistics Summary",
+            "title": "Illumina InterOp Statistics: Index Read Statistics Summary",
             "col1_header": "Run - Lane",
         }
 
@@ -474,7 +487,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "interop",
             "id": "interop-indexmetrics-details-table",
-            "table_title": "Index Read Statistics Details",
+            "title": "Illumina InterOp Statistics: Index Read Statistics Details",
             "col1_header": "Run - Sample - Lane",
         }
 

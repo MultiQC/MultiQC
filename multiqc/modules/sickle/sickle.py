@@ -1,16 +1,20 @@
-""" MultiQC module to parse output from sickle """
-
 import logging
 import re
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The `stdout` can be captured by directing it to a file e.g. `sickle command 2> sickle_out.log`
+
+    The module generates the sample names based on the filenames.
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Sickle",
@@ -50,13 +54,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the Sickle standard output"""
         regexes = [
             # Paired-end
-            ["reads_paired_kept", re.compile("FastQ paired records kept: ([\d,]+) .*")],
-            ["reads_single_kept", re.compile("FastQ single records kept: ([\d,]+).*")],
-            ["reads_paired_discarded", re.compile("FastQ paired records discarded: ([\d,]+) .*")],
-            ["reads_single_discarded", re.compile("FastQ single records discarded: ([\d,]+) .*")],
+            ["reads_paired_kept", re.compile(r"FastQ paired records kept: ([\d,]+) .*")],
+            ["reads_single_kept", re.compile(r"FastQ single records kept: ([\d,]+).*")],
+            ["reads_paired_discarded", re.compile(r"FastQ paired records discarded: ([\d,]+) .*")],
+            ["reads_single_discarded", re.compile(r"FastQ single records discarded: ([\d,]+) .*")],
             # Single-end
-            ["reads_single_kept", re.compile("FastQ records kept: ([\d,]+)")],
-            ["reads_single_discarded", re.compile("FastQ records discarded: ([\d,]+)")],
+            ["reads_single_kept", re.compile(r"FastQ records kept: ([\d,]+)")],
+            ["reads_single_discarded", re.compile(r"FastQ records discarded: ([\d,]+)")],
         ]
         data = {}
         for line in f.splitlines():

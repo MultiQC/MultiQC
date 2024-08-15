@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table """
+"""MultiQC submodule to parse output from deepTools bamPEFragmentSize for summary table"""
 
 import logging
 
@@ -89,6 +89,7 @@ class bamPEFragmentSizeTableMixin:
         config = {
             "namespace": "deepTools bamPEFragmentSize",
             "id": "deeptools_readlengths_table",
+            "title": "deepTools: Read length metrics",
         }
         self.add_section(
             name="Read length metrics",
@@ -160,6 +161,7 @@ class bamPEFragmentSizeTableMixin:
             config = {
                 "namespace": "deepTools bamPEFragmentSize",
                 "id": "deeptools_fragmentlengths_table",
+                "title": "deepTools: Fragment length metrics",
             }
             self.add_section(
                 name="Fragment length metrics",
@@ -183,7 +185,6 @@ class bamPEFragmentSizeTableMixin:
             ],
             "id": "deeptools_readlengthsPlot",
             "title": "deepTools: Read/Fragment length distribution",
-            "namespace": "deepTools bamPEFragmentSize",
             "ylab": "Read length (bases)",
             "xlab": "Percentile",
         }

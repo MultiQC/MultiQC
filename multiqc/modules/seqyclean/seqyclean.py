@@ -1,21 +1,26 @@
 import logging
 import re
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    SeqyClean is a comprehensive preprocessing software application for NGS reads, that removes noise from FastQ
+    files to improve de-novo genome assembly and genome mapping.
+
+    The module parses the `*SummaryStatistics.tsv` files that results from a SeqyClean cleaning.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="SeqyClean",
             anchor="seqyclean",
             href="https://github.com/ibest/seqyclean",
-            info="is a pre-processing tool for NGS data that filters adapters, vectors, and contaminants while quality trimming.",
+            info="Filters adapters, vectors, and contaminants while quality trimming.",
             doi="10.1145/3107411.3107446",
         )
 
@@ -159,9 +164,9 @@ class MultiqcModule(BaseMultiqcModule):
         """Given a list of keys, make them easier to read for plot labels"""
         cats = {}
         for k in keys:
-            nice_name = re.sub("([a-z])([A-Z])", "\g<1> \g<2>", k)  # CamelCase > Camel Case
-            nice_name = re.sub("([PS]E\d?)", "\g<1> ", nice_name)  # PE1Label > PE1 Label
-            nice_name = re.sub("W([A-Z])", "W \g<1>", nice_name)  # WContam > W Contam
+            nice_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>", k)  # CamelCase > Camel Case
+            nice_name = re.sub(r"([PS]E\d?)", r"\g<1> ", nice_name)  # PE1Label > PE1 Label
+            nice_name = re.sub(r"W([A-Z])", r"W \g<1>", nice_name)  # WContam > W Contam
             nice_name = nice_name.replace("_", " ")  # tags_found > tags found
             nice_name = nice_name.title()  # Title Case
             nice_name = nice_name.replace("Pe", "PE").replace("Se", "SE")

@@ -1,35 +1,35 @@
-## Nicolas Servant
-## April 2018
-
-""" MultiQC module to parse output from HiC-Pro """
-
-
 import logging
 import os.path
+from typing import Dict
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    **Note** - because this module shares sample identifiers across multiple files,
+    the `--fn_as_s_name` / `config.use_filename_as_sample_name` functionality has been disabled and has no effect.
+
+    The MultiQC module is supported since HiC-Pro v2.11.0.
+    """
+
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HiC-Pro",
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
-            info="is an efficient and flexible pipeline for Hi-C data processing. The MultiQC module is supported since HiC-Pro v2.11.0.",
+            info="Pipeline for Hi-C data processing",
             doi="10.1186/s13059-015-0831-x",
         )
 
         # Find and load any HiC-Pro summary reports
-        self.hicpro_data = dict()
+        self.hicpro_data: Dict = dict()
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
             for f in self.find_log_files(f"hicpro/{k}"):
                 self.parse_hicpro_stats(f, k)
@@ -243,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Total number of read pairs ({}) passing the mapping filters".format(
                     config.read_count_desc
                 ),
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
             "mapped_R2": {
                 "title": "Aligned [R2]",
                 "description": f"Total number of aligned reads [R2] ({config.read_count_desc})",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -278,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
             "mapped_R1": {
                 "title": "Aligned [R1]",
                 "description": f"Total number of aligned reads [R1] ({config.read_count_desc})",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
@@ -287,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
             "total_R1": {
                 "title": "Total",
                 "description": "Total Number of Read Pairs",
-                "min": "0",
+                "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",

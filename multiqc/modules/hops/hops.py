@@ -1,24 +1,26 @@
-""" MultiQC module to parse output from HOPS postprocessing script """
-
-
 import json
 import logging
 from json import JSONDecodeError
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import heatmap
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module takes the JSON output of the HOPS postprocessing R script (version >= 0.34) to recreate the
+    possible positives heatmap, with the heat intensity representing the number of 'ancient DNA characteristics'
+    categories (small edit distance, damage, both edit distance and aDNA damage) that a particular taxon has.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="HOPS",
             anchor="hops",
             href="https://github.com/rhuebler/HOPS/",
-            info="is an ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
+            info="Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
             doi="10.1186/s13059-019-1903-0",
         )
 
@@ -82,17 +84,21 @@ class MultiqcModule(BaseMultiqcModule):
             taxa.append(t.replace("_", " "))
 
         # Get values from named list into a list of lists required for heatmap
-        levels = []
-        for s in samples:
-            levels.append(self.hops_data[s].values())
+        data = []
+        for s, d in self.hops_data.items():
+            row = []
+            for val in d.values():
+                # Values can be lists of 1 element, so flattening to single value
+                if isinstance(val, list):
+                    val = val[0]
+                row.append(val)
+            data.append(row)
 
         pconfig = {
             "id": "hops-heatmap",
             "title": "HOPS: Potential Candidates",
-            "xTitle": "Node",
-            "yTitle": "Sample",
-            "min": 0,
-            "max": 1,
+            "xlab": "Node",
+            "ylab": "Sample",
             "square": False,
             "colstops": [
                 [1, "#ededed"],
@@ -100,9 +106,9 @@ class MultiqcModule(BaseMultiqcModule):
                 [3, "#F2B26C"],
                 [4, "#AD2A2B"],
             ],
-            "decimalPlaces": 0,
-            "legend": False,
-            "datalabels": False,
+            "tt_decimals": 0,
+            "legend": True,
+            "display_values": False,
             "xcats_samples": False,
         }
 
@@ -138,5 +144,5 @@ class MultiqcModule(BaseMultiqcModule):
             A red category typically indicates a good candidate for further investigation
             in downstream analysis.
             """,
-            plot=heatmap.plot(levels, xcats=taxa, ycats=samples, pconfig=pconfig),
+            plot=heatmap.plot(data, xcats=taxa, ycats=samples, pconfig=pconfig),
         )

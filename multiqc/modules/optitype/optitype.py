@@ -1,27 +1,22 @@
-""" MultiQC module to parse output from optitype """
-
-
 import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    optitype module class, parses TSV output from optitype.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="OptiType",
             anchor="optitype",
             href="https://github.com/FRED-2/OptiType",
             info="Precision HLA typing from next-generation sequencing data.",
+            extra="""
+            Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit 
+            HLA genotyping predictions from NGS data by simultaneously selecting all major and minor HLA Class I alleles.
+            """,
             doi="10.1093/bioinformatics/btu548",
         )
 
@@ -128,10 +123,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         pconfig = {
             "id": "optitype_summary_plot",
-            "title": "Optitype: Summary of alleles",
+            "title": "OptiType: Summary of alleles",
             "cpswitch": False,
             "ylab": "# Samples",
-            "yDecimals": False,
+            "y_decimals": False,
             "use_legend": False,
         }
 

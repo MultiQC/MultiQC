@@ -1,20 +1,26 @@
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import beeswarm
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import violin
 
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    This module requires that PRINSEQ++ has been run with the flag `-VERBOSE 1`.
+
+    It uses the log file name as the sample name.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",
-            info="PRINSEQ++ is a C++ implementation of the prinseq-lite.pl program. It can be used to filter, reformat or trim genomic and metagenomic sequence data.",
+            info="C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and "
+            "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
         )
 
@@ -40,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.prinseqplusplus_data, "prinseqplusplus")
 
         self.prinseqplusplus_general_stats()
-        self.prinseqplusplus_beeswarm_plot()
+        self.prinseqplusplus_violin_plot()
 
     def parse_logs(self, f):
         """Parsing Logs."""
@@ -95,16 +101,15 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    def prinseqplusplus_beeswarm_plot(self):
-        """Beeswarm plot of all possible filtering results"""
+    def prinseqplusplus_violin_plot(self):
+        """Violin plot of all possible filtering results"""
         # This would be nicer as a stacked-bar plot, but as we don't have
         # the total read count it doesn't really make sense.
 
         reads = {
             "min": 0,
             "modify": lambda x: float(x) * config.read_count_multiplier,
-            "suffix": f"{config.read_count_prefix} reads",
-            "decimalPlaces": 0,
+            "suffix": config.read_count_prefix,
             "shared_key": "read_count",
         }
         headers = {
@@ -125,11 +130,12 @@ class MultiqcModule(BaseMultiqcModule):
             name="Filtered Reads",
             anchor="prinseqplusplus-filtered-reads",
             description="Shows the number of reads removed by the various PRINSEQ++ filter options",
-            plot=beeswarm.plot(
+            plot=violin.plot(
                 self.prinseqplusplus_data,
                 headers,
                 {
-                    "id": "prinseplusplus-filtered-reads-beeswarm",
+                    "id": "prinseplusplus-filtered-reads-violin",
+                    "title": "PRINSEQ++: Filtered Reads",
                 },
             ),
         )
