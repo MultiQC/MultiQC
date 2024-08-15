@@ -146,14 +146,14 @@ def test_wrong_fields(tmp_path, capsys, strict, monkeypatch):
     if not strict:
         # Still should produce output unless strict mode:
         assert len(report.plot_by_id) == 1
-        assert f"{id}-plot" in report.plot_by_id
-        assert report.plot_by_id[f"{id}-plot"].id == f"{id}-plot"
-        assert report.plot_by_id[f"{id}-plot"].plot_type == "xy_line"
-        assert report.plot_by_id[f"{id}-plot"].pconfig.title == "DupRadar General Linear Model"
-        assert report.plot_by_id[f"{id}-plot"].pconfig.xlog is True
-        assert report.plot_by_id[f"{id}-plot"].pconfig.xlab is None  # wrong type
-        assert report.plot_by_id[f"{id}-plot"].pconfig.ymax == 100
-        assert report.plot_by_id[f"{id}-plot"].pconfig.ymin is None  # wrong type
+        assert f"{id}-section-plot" in report.plot_by_id
+        assert report.plot_by_id[f"{id}-section-plot"].id == f"{id}-section-plot"
+        assert report.plot_by_id[f"{id}-section-plot"].plot_type == "xy_line"
+        assert report.plot_by_id[f"{id}-section-plot"].pconfig.title == "DupRadar General Linear Model"
+        assert report.plot_by_id[f"{id}-section-plot"].pconfig.xlog is True
+        assert report.plot_by_id[f"{id}-section-plot"].pconfig.xlab is None  # wrong type
+        assert report.plot_by_id[f"{id}-section-plot"].pconfig.ymax == 100
+        assert report.plot_by_id[f"{id}-section-plot"].pconfig.ymin is None  # wrong type
 
 
 def test_missing_id_and_title(tmp_path, capsys):
@@ -174,10 +174,10 @@ def test_missing_id_and_title(tmp_path, capsys):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    assert f"{id}-plot" in report.plot_by_id
-    assert report.plot_by_id[f"{id}-plot"].id == f"{id}-plot"
-    assert report.plot_by_id[f"{id}-plot"].plot_type == "xy_line"
-    assert report.plot_by_id[f"{id}-plot"].pconfig.xlab == "expression"
+    assert f"{id}-section-plot" in report.plot_by_id
+    assert report.plot_by_id[f"{id}-section-plot"].id == f"{id}-section-plot"
+    assert report.plot_by_id[f"{id}-section-plot"].plot_type == "xy_line"
+    assert report.plot_by_id[f"{id}-section-plot"].pconfig.xlab == "expression"
 
 
 def test_with_separate_config(tmp_path, capsys):
@@ -292,9 +292,9 @@ sp:
 
     # Expecting to see only one table, and no bar plot from the _mqc file
     assert len(report.plot_by_id) == 1
-    assert "last_o2o-plot" in report.plot_by_id
-    assert report.plot_by_id["last_o2o-plot"].id == "last_o2o-plot"
-    assert report.plot_by_id["last_o2o-plot"].plot_type == "violin"
+    assert "last_o2o-section-plot" in report.plot_by_id
+    assert report.plot_by_id["last_o2o-section-plot"].id == "last_o2o-section-plot"
+    assert report.plot_by_id["last_o2o-section-plot"].plot_type == "violin"
 
 
 @pytest.mark.parametrize(
@@ -362,10 +362,10 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
 
     custom_module_classes()
     assert len(report.plot_by_id) == 1
-    assert "mysample-plot" in report.plot_by_id
-    assert report.plot_by_id["mysample-plot"].plot_type == "violin"
-    assert len(report.plot_by_id["mysample-plot"].datasets) == 1
-    assert report.plot_by_id["mysample-plot"].datasets[0].header_by_metric.keys() == {
+    assert "mysample-section-plot" in report.plot_by_id
+    assert report.plot_by_id["mysample-section-plot"].plot_type == "violin"
+    assert len(report.plot_by_id["mysample-section-plot"].datasets) == 1
+    assert report.plot_by_id["mysample-section-plot"].datasets[0].header_by_metric.keys() == {
         "SEQUENCE",
         "START",
         "END",
@@ -373,14 +373,14 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE",
     }
 
-    assert report.plot_by_id["mysample-plot"].datasets[0].violin_value_by_sample_by_metric == {
+    assert report.plot_by_id["mysample-section-plot"].datasets[0].violin_value_by_sample_by_metric == {
         "SEQUENCE": {"myfile.fasta": "chr1"},
         "START": {"myfile.fasta": 55312.0},
         "END": {"myfile.fasta": 56664.0},
         "STRAND": {"myfile.fasta": "+"},
         "GENE": {"myfile.fasta": "GENE"},
     }
-    assert report.plot_by_id["mysample-plot"].layout.title.text == "My section" if section_name else "mysample"
+    assert report.plot_by_id["mysample-section-plot"].layout.title.text == "My section" if section_name else "mysample"
 
 
 def test_on_all_example_files(data_dir):
