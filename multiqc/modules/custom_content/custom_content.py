@@ -231,16 +231,16 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         raise ModuleNoSamplesFound
 
     # Go through each data type
-    parsed_modules = dict()
-    for c_id, mod in cust_mod_by_id.items():
+    parsed_modules: Dict[str, MultiqcModule] = dict()
+    for c_id, mod_dict in cust_mod_by_id.items():
         # General Stats
-        assert isinstance(mod["config"], dict)
-        if mod["config"].get("plot_type") == "generalstats":
-            assert isinstance(mod["data"], dict), mod["data"]
-            gsheaders = mod["config"].get("pconfig")
+        assert isinstance(mod_dict["config"], dict)
+        if mod_dict["config"].get("plot_type") == "generalstats":
+            assert isinstance(mod_dict["data"], dict), mod_dict["data"]
+            gsheaders = mod_dict["config"].get("pconfig")
             if gsheaders is None:
                 headers_set: Set[str] = set()
-                for _hd in mod["data"].values():
+                for _hd in mod_dict["data"].values():
                     headers_set.update(_hd.keys())
                 headers = list(headers_set)
                 headers.sort()
@@ -259,40 +259,47 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # Add namespace and description if not specified
             for m_id in gsheaders:
                 if "namespace" not in gsheaders[m_id]:
-                    gsheaders[m_id]["namespace"] = mod["config"].get("namespace", c_id)
-            log.info(f"{c_id}: Found {len(mod['data'])} General Statistics columns")
-            bm.general_stats_addcols(mod["data"], gsheaders)
+                    gsheaders[m_id]["namespace"] = mod_dict["config"].get("namespace", c_id)
+            log.info(f"{c_id}: Found {len(mod_dict['data'])} General Statistics columns")
+            bm.general_stats_addcols(mod_dict["data"], gsheaders)
 
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = mod["config"].get("parent_id", mod["config"].get("anchor", c_id + "-module"))
+            mod_id = mod_dict["config"].get("parent_id", mod_dict["config"].get("anchor"))
+            if mod_id is None:
+                mod_id = c_id
+            if mod_id == c_id:  # make sure the anchors are unique
+                c_id = c_id + "-section"
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
-                mod["config"].update(mod_cust_config[mod_id])
+                mod_dict["config"].update(mod_cust_config[mod_id])
             # We've not seen this module section before (normal for most custom content)
             if mod_id not in parsed_modules:
-                parsed_modules[mod_id] = MultiqcModule(mod_id, mod)
+                parsed_modules[mod_id] = MultiqcModule(mod_id, mod_dict)
             else:
                 # New sub-section
-                parsed_modules[mod_id].update_init(c_id, mod)
-            parsed_modules[mod_id].add_cc_section(c_id, mod)
-            if mod["config"].get("plot_type") == "html":
+                parsed_modules[mod_id].update_init(c_id, mod_dict)
+            parsed_modules[mod_id].add_cc_section(c_id, mod_dict)
+            if mod_dict["config"].get("plot_type") == "html":
                 log.info(f"{c_id}: Found 1 sample (html)")
-            elif mod["config"].get("plot_type") == "image":
+            elif mod_dict["config"].get("plot_type") == "image":
                 log.info(f"{c_id}: Found 1 sample (image)")
             else:
-                log.info(f"{c_id}: Found {len(mod['data'])} samples ({mod['config'].get('plot_type')})")
+                log.info(f"{c_id}: Found {len(mod_dict['data'])} samples ({mod_dict['config'].get('plot_type')})")
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, "custom_content", {}).get("order", [])
-    sorted_modules: List[BaseMultiqcModule] = [
+    # after each element, also add a version with a "-module" next to it for back-compat with < 1.24
+    mod_order = [x for x in mod_order for x in [x, re.sub("-module$", "", x), f"{x}-module"]]
+    modules__not_in_order: List[BaseMultiqcModule] = [
         parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order
     ]
-    sorted_modules.extend(
-        [parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id]
-    )
+    modules_in_order = [
+        parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id
+    ]
+    sorted_modules = modules_in_order + modules__not_in_order
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
@@ -311,20 +318,22 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
-    def __init__(self, c_id, mod):
+    def __init__(self, c_id: str, mod: Dict[str, Union[Dict, List, str]]):
         modname = c_id.replace("_", " ").title()
+        assert isinstance(mod["config"], dict)
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
+            assert isinstance(mod["config"]["parent_name"], str)
             modname = mod["config"]["parent_name"]
             mod_info = mod["config"].get("parent_description")
         elif "section_name" in mod["config"]:
+            assert isinstance(mod["config"]["section_name"], str)
             modname = mod["config"]["section_name"]
         if modname == "" or modname is None:
             modname = "Custom Content"
 
         anchor = mod["config"].get("section_anchor", c_id)
 
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name=modname,
             anchor=anchor,
@@ -363,6 +372,8 @@ class MultiqcModule(BaseMultiqcModule):
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
             pconfig["id"] = f"{c_id}-plot"
+        if pconfig["id"] == c_id or pconfig["id"] == mod["config"].get("id"):
+            pconfig["id"] += "-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 

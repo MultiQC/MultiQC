@@ -43,6 +43,8 @@ def order_modules_and_sections():
         idx = 10
         for mod in reversed(report.modules):
             section_id_order[mod.anchor] = idx
+            if not mod.anchor.endswith("-module"):  # back-compat with < 1.24
+                section_id_order[mod.anchor + "-module"] = idx
             idx += 10
         for anchor, ss in config.report_section_order.items():
             if anchor not in section_id_order.keys():
