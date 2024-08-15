@@ -456,6 +456,7 @@ module_order:
   - umitools
   - truvari
   - megahit
+  - ganon
   # Alignment tool stats
   - bbmap
   - bismark
