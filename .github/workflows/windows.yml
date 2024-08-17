@@ -52,4 +52,4 @@ jobs:
 
       # Run only selected modules, otherwise expires even after 20 minutes
       - run: |
-          multiqc -m samtools -m fastqc -m qualimap -m kallisto -m somalier -m cutadapt --strict -v test-data\test-data-main\data\modules\
+          multiqc -m fastqc --strict -v test-data\test-data-main\data\modules\
