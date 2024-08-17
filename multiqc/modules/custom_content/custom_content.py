@@ -388,75 +388,75 @@ class MultiqcModule(BaseMultiqcModule):
             plot = heatmap.plot(
                 mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
             )
-
-        if not isinstance(mod["data"], list):
-            mod["data"] = [mod["data"]]
-
-        # Try to coerce x-axis to numeric
-        if plot_type in ["linegraph", "scatter"]:
-            try:
-                mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
-            except ValueError:
-                pass
-
-        # Table
-        if plot_type == "table":
-            headers = mod["config"].get("headers")
-
-            # handle some legacy fields for backwards compat
-            sort_rows = pconfig.pop("sortRows", None)
-            if sort_rows is not None:
-                pconfig["sort_rows"] = sort_rows
-            no_violin = pconfig.pop("no_beeswarm", None)
-            if no_violin is not None:
-                pconfig["no_violin"] = no_violin
-
-            plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
-
-        # Bar plot
-        elif plot_type == "bargraph":
-            mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
-
-        # Line plot
-        elif plot_type == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
-
-        # Scatter plot
-        elif plot_type == "scatter":
-            plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
-
-        # Box plot
-        elif plot_type == "box":
-            plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
-
-        # Violin plot
-        elif plot_type in ["violin", "beeswarm"]:
-            plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
-
-        # Raw HTML
-        elif plot_type == "html":
-            if len(mod["data"]) > 1:
-                log.warning(f"HTML plot type found with more than one dataset in {c_id}")
-            content = mod["data"][0]
-
-        # Raw image file as html
-        elif plot_type == "image":
-            if len(mod["data"]) > 1:
-                log.warning(f"Image plot type found with more than one dataset in {c_id}")
-            content = mod["data"][0]
-
-        # Not supplied
-        elif plot_type is None:
-            log.warning(f"Plot type not found for content ID '{c_id}'")
-
-        # Not recognised
         else:
-            log.warning(
-                "Error - custom content plot type '{}' not recognised for content ID {}".format(
-                    mod["config"].get("plot_type"), c_id
+            if not isinstance(mod["data"], list):
+                mod["data"] = [mod["data"]]
+
+            # Try to coerce x-axis to numeric
+            if plot_type in ["linegraph", "scatter"]:
+                try:
+                    mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
+                except ValueError:
+                    pass
+
+            # Table
+            if plot_type == "table":
+                headers = mod["config"].get("headers")
+
+                # handle some legacy fields for backwards compat
+                sort_rows = pconfig.pop("sortRows", None)
+                if sort_rows is not None:
+                    pconfig["sort_rows"] = sort_rows
+                no_violin = pconfig.pop("no_beeswarm", None)
+                if no_violin is not None:
+                    pconfig["no_violin"] = no_violin
+
+                plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
+
+            # Bar plot
+            elif plot_type == "bargraph":
+                mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
+                plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
+
+            # Line plot
+            elif plot_type == "linegraph":
+                plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
+
+            # Scatter plot
+            elif plot_type == "scatter":
+                plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
+
+            # Box plot
+            elif plot_type == "box":
+                plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
+
+            # Violin plot
+            elif plot_type in ["violin", "beeswarm"]:
+                plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
+
+            # Raw HTML
+            elif plot_type == "html":
+                if len(mod["data"]) > 1:
+                    log.warning(f"HTML plot type found with more than one dataset in {c_id}")
+                content = mod["data"][0]
+
+            # Raw image file as html
+            elif plot_type == "image":
+                if len(mod["data"]) > 1:
+                    log.warning(f"Image plot type found with more than one dataset in {c_id}")
+                content = mod["data"][0]
+
+            # Not supplied
+            elif plot_type is None:
+                log.warning(f"Plot type not found for content ID '{c_id}'")
+
+            # Not recognised
+            else:
+                log.warning(
+                    "Error - custom content plot type '{}' not recognised for content ID {}".format(
+                        mod["config"].get("plot_type"), c_id
+                    )
                 )
-            )
 
         if plot is not None:
             for i, ds in enumerate(mod["data"]):

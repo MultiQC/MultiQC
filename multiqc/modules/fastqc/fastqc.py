@@ -969,8 +969,8 @@ class MultiqcModule(BaseMultiqcModule):
             return None
 
         if not multiple_lengths:
-            lengths = "bp , ".join([str(line) for line in list(avg_seq_lengths)])
-            desc = f"All samples have sequences of a single length ({lengths}bp)."
+            lengths_line = ", ".join([f"{length:,.0f}bp" for length in list(avg_seq_lengths)])
+            desc = f"All samples have sequences of a single length ({lengths_line})."
             if len(avg_seq_lengths) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
             self.add_section(
