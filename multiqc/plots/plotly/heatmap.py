@@ -153,6 +153,7 @@ class HeatmapPlot(Plot):
             pconfig=pconfig,
             n_samples_per_dataset=[max_n_samples],
             n_datapoints=n_datapoints,
+            defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
         )
 
         if isinstance(rows, list):

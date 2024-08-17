@@ -164,9 +164,10 @@ class BarPlot(Plot[Dataset]):
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in samples_lists],
-            n_datapoints=n_datapoints,
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
+            n_datapoints=n_datapoints,
+            defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
         )
 
         model.datasets = [

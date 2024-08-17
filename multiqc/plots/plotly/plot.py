@@ -196,21 +196,23 @@ class Plot(BaseModel, Generic[T]):
         plot_type: PlotType,
         pconfig: PConfig,
         n_samples_per_dataset: List[int],
-        n_datapoints: Optional[int] = None,
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
+        n_datapoints: Optional[int] = None,
+        defer_render_if_large: bool = True,
     ):
         """
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
-        :param n_datapoints: total number of data points. If provided, config thresholds - to defer render or render flat - will be applied
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
+        :param n_datapoints: total number of data points. If provided, config thresholds - to defer render or render flat - will be applied
+        :param defer_render_if_large: whether to defer rendering if the number of data points is large
         """
         if n_samples_per_dataset == 0:
             raise ValueError("No datasets to plot")
@@ -244,7 +246,11 @@ class Plot(BaseModel, Generic[T]):
             flat = True
 
         defer_render = False
-        if n_datapoints is not None and n_datapoints > config.plots_num_data_points_do_not_automatically_load:
+        if (
+            defer_render_if_large
+            and n_datapoints is not None
+            and n_datapoints > config.plots_num_data_points_do_not_automatically_load
+        ):
             defer_render = True
 
         showlegend = pconfig.showlegend
@@ -354,8 +360,16 @@ class Plot(BaseModel, Generic[T]):
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
-            if len(n_samples_per_dataset) > 1 and "title" not in dconfig:
-                dconfig["title"] = f"{pconfig.title} ({dataset.label})"
+
+            if "title" not in dconfig:
+                dconfig["title"] = pconfig.title
+            subtitles = []
+            if len(n_samples_per_dataset) > 1:
+                subtitles += [dataset.label]
+            if n_samples > 1:
+                subtitles += [f"{n_samples} samples"]
+            if subtitles:
+                dconfig["title"] += f"<br><sup>{', '.join(subtitles)}</sup>"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
