@@ -238,8 +238,8 @@ class MultiqcModule(BaseMultiqcModule):
         ]:
             general_stats_headers[k] = headers[k]
             general_stats_headers[k]["hidden"] = k not in [
-                "reads_classified_pc", 
-                "unique_matches_pc", 
+                "reads_classified_pc",
+                "unique_matches_pc",
                 "taxonomic_entries_reported",
             ]
 
