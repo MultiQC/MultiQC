@@ -237,7 +237,11 @@ class MultiqcModule(BaseMultiqcModule):
             "taxonomic_entries_reported",
         ]:
             general_stats_headers[k] = headers[k]
-            general_stats_headers[k]["hidden"] = k not in ["reads_classified_pc", "unique_matches_pc", "taxonomic_entries_reported"]
+            general_stats_headers[k]["hidden"] = k not in [
+                "reads_classified_pc", 
+                "unique_matches_pc", 
+                "taxonomic_entries_reported"
+            ]
 
         self.general_stats_addcols(data_by_sample, general_stats_headers)
 
