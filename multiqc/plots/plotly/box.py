@@ -106,10 +106,15 @@ class BoxPlot(Plot[Dataset]):
         pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
     ) -> "BoxPlot":
+        n_datapoints = 0
+        for data_by_sample in list_of_data_by_sample:
+            n_datapoints += len(data_by_sample)
+
         model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
+            n_datapoints=n_datapoints,
         )
 
         model.datasets = [

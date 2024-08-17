@@ -196,21 +196,21 @@ class Plot(BaseModel, Generic[T]):
         plot_type: PlotType,
         pconfig: PConfig,
         n_samples_per_dataset: List[int],
+        n_datapoints: Optional[int] = None,
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
-        flat_threshold: Optional[int] = config.plots_flat_numseries,
     ):
         """
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
+        :param n_datapoints: total number of data points. If provided, config thresholds - to defer render or render flat - will be applied
         :param id: plot ID
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
-        :param flat_threshold: threshold for the number of samples to switch to flat plots
         """
         if n_samples_per_dataset == 0:
             raise ValueError("No datasets to plot")
@@ -236,15 +236,15 @@ class Plot(BaseModel, Generic[T]):
         flat = False
         if config.plots_force_flat:
             flat = True
-        elif (
-            flat_threshold is not None
+        if (
+            n_datapoints is not None
             and not config.plots_force_interactive
-            and max(x for x in n_samples_per_dataset) > flat_threshold
+            and n_datapoints > config.plots_flat_num_data_points
         ):
             flat = True
 
         defer_render = False
-        if n_samples_per_dataset[0] > config.plots_num_samples_do_not_automatically_load:
+        if n_datapoints is not None and n_datapoints > config.plots_num_data_points_do_not_automatically_load:
             defer_render = True
 
         showlegend = pconfig.showlegend

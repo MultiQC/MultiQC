@@ -144,10 +144,15 @@ class HeatmapPlot(Plot):
             else:
                 max_n_samples = max(max_n_samples, len(rows[next(iter(rows))]))
 
+        n_datapoints = 0
+        for row in rows:
+            n_datapoints += len(row)
+
         model = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
             n_samples_per_dataset=[max_n_samples],
+            n_datapoints=n_datapoints,
         )
 
         if isinstance(rows, list):

@@ -311,12 +311,17 @@ def create(
     pconfig: LinePlotConfig,
     lists_of_lines: List[List[Series]],
 ) -> "LinePlot":
+    n_datapoints = 0
+    for lines in lists_of_lines:
+        n_datapoints += sum(len(x.pairs) for x in lines)
+
     model = Plot.initialize(
         plot_type=PlotType.LINE,
         pconfig=pconfig,
         n_samples_per_dataset=[len(x) for x in lists_of_lines],
         axis_controlled_by_switches=["yaxis"],
         default_tt_label="<br>%{x}: %{y}",
+        n_datapoints=n_datapoints,
     )
 
     # Very large legend for automatically enabled flat plot mode is not very helpful

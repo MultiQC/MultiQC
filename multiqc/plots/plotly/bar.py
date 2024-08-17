@@ -156,10 +156,15 @@ class BarPlot(Plot[Dataset]):
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
+        n_datapoints = 0
+        for cats, samples in zip(cats_lists, samples_lists):
+            n_datapoints += len(cats) * len(samples)
+
         model = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in samples_lists],
+            n_datapoints=n_datapoints,
             axis_controlled_by_switches=["xaxis"],
             default_tt_label="%{meta}: <b>%{x}</b>",
         )

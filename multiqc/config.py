@@ -108,9 +108,11 @@ make_pdf: bool
 plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool
-plots_flat_numseries: int
-plots_num_samples_do_not_automatically_load: int
-num_datasets_plot_limit: int  # deprecated name of plots_num_samples_do_not_automatically_load
+plots_flat_numseries: int  # DEPRECATED (replaced with plots_flat_num_data_points)
+plots_flat_num_data_points: int  # after this num data points, plots will render flat (unless --flat)
+num_datasets_plot_limit: int  # DEPRECATED (replaced with plots_num_samples_do_not_automatically_load)
+plots_num_data_points_do_not_automatically_load: int  # after this num data points, plot will require user to press
+# button to render plot
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
