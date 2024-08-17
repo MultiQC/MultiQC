@@ -110,6 +110,7 @@ plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
 plots_num_samples_do_not_automatically_load: int
+num_datasets_plot_limit: int  # deprecated name of plots_num_samples_do_not_automatically_load
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
