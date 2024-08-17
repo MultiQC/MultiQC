@@ -12,7 +12,7 @@ on:
 jobs:
   unit_tests:
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
 
     env:
       # GitHub currently has 4 cores available for Windows runners
