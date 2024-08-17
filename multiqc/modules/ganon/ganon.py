@@ -2,12 +2,10 @@
 
 import logging
 import re
-from collections import OrderedDict
 from typing import Union, Dict, Tuple, Optional
 
-from multiqc.base_module import BaseMultiqcModule
-from multiqc.plots import bargraph, violin, table
-from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -39,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         data_by_sample = self.ignore_samples(data_by_sample)
         if len(data_by_sample) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         log.info(f"Found {len(data_by_sample)} reports")
         self.write_data_file(data_by_sample, "ganon")
 
