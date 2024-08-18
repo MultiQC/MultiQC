@@ -50,6 +50,8 @@ jobs:
           curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
           7z x test-data.zip -y -o"test-data"
 
-      # Flat plot export doesn't work on Windows, so forcing modules like somalier and peddy write interactive
+      # Flat plot export doesn't work on Windows, so forcing modules like somalier and peddy write interactive.
+      # Also, forcing selected modules to be run. Some modules don't work when dumping plot json:
+      # UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 1: character maps to <undefined>
       - run: |
-          multiqc --strict --interactive -v test-data\test-data-main\data\modules\
+          multiqc --strict --interactive -m fastqc -m samtools -m kallisto -v test-data\test-data-main\data\modules\
