@@ -399,7 +399,9 @@ class ViolinPlot(Plot):
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
             id=main_table_dt.id,
             default_tt_label=": %{x}",
-            n_datapoints=None,  # we can make violins always interactive and visible
+            # Violins scale well, so can always keep them interactive and visible:
+            defer_render_if_large=False,
+            flat_if_very_large=False,
         )
 
         main_table_dt.id = "table-" + main_table_dt.id  # make it different from the violin id

@@ -200,16 +200,11 @@ class ScatterPlot(Plot):
 
     @staticmethod
     def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
-        n_datapoints = 0
-        for points in points_lists:
-            n_datapoints += len(points)
-
         model = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in points_lists],
             default_tt_label="<br><b>X</b>: %{x}<br><b>Y</b>: %{y}",
-            n_datapoints=n_datapoints,
         )
 
         model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]

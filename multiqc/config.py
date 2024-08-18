@@ -105,19 +105,19 @@ megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+
 plots_force_flat: bool
 plots_export_font_scale: float
 plots_force_interactive: bool
-plots_flat_numseries: int  # DEPRECATED (replaced with plots_flat_num_data_points)
-plots_flat_num_data_points: int  # after this num data points, plots will render flat (unless --flat)
-num_datasets_plot_limit: int  # DEPRECATED (replaced with plots_num_samples_do_not_automatically_load)
-plots_num_data_points_do_not_automatically_load: int  # after this num data points, plot will require user to press
-# button to render plot
+plots_flat_numseries: int
+plots_defer_loading_numseries: int
+num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
+
 collapse_tables: bool
 max_table_rows: int
 table_columns_visible: Dict
