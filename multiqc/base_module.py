@@ -186,7 +186,9 @@ class BaseMultiqcModule:
         def get_path_filters(key: str) -> List[str]:
             pfs: List[str] = []
             val = self.mod_cust_config.get(key, [])
-            for pf in val if isinstance(val, list) else [val]:
+            values = val if isinstance(val, list) else [val]
+            pf: str
+            for pf in values:
                 if pf.startswith("./"):
                     pf = pf[2:]
                 pfs.append(pf)
