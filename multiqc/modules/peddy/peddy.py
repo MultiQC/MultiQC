@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
@@ -118,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_peddy_csv(self, f, pattern):
         """Parse csv output from peddy"""
-        parsed_data = dict()
+        parsed_data: Dict[str, Dict] = dict()
         headers = None
         s_name_idx = None
         for line in f["f"].splitlines():
@@ -312,9 +313,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
+                color = {
+                    "male": "#7cb5ec",
+                    "female": "#f15c80",
+                }.get(d.get("predicted_sex_sex_check"), "#434348")
                 data[s_name] = {
                     "x": sex_index.get(d["ped_sex_sex_check"], 2) + (random.random() - 0.5) * 0.1,
                     "y": d["sex_het_ratio"],
+                    "color": color,
                 }
 
         pconfig = {
