@@ -12,7 +12,7 @@ on:
 jobs:
   unit_tests:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
 
     env:
       # GitHub currently has 4 cores available for Windows runners
@@ -52,4 +52,4 @@ jobs:
 
       # Run only selected modules, otherwise expires even after 20 minutes
       - run: |
-          multiqc -m fastqc -m qualimap -m kallisto -m somalier -m cutadapt --strict -v test-data\test-data-main\data\modules\
+          multiqc --strict -v test-data\test-data-main\data\modules\
