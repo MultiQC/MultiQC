@@ -1,29 +1,26 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from BioBloom Tools """
-
-from __future__ import print_function
-from collections import OrderedDict
 import logging
 
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BioBloom Tools",
             anchor="biobloomtools",
             href="https://github.com/bcgsc/biobloom/",
-            info="creates filters for a genome reference and categorises "
-            "sequences. This is faster than alignment and can be used for pre-processing "
-            "and QC applications such as contamination detection.",
+            info="Assigns reads to different references using bloom filters. This is faster than alignment and "
+            "can be used for contamination detection.",
+            extra="""
+            BioBloom tools (BBT) create filters for a given reference and then to categorize sequences.
+            This methodology is faster than alignment but does not provide mapping locations. BBT was initially intended to
+            be used for pre-processing and QC applications like contamination detection, but is flexible to accommodate other
+            purposes. This tool is intended to be a pipeline component to replace costly alignment steps.
+            """,
             doi="10.1093/bioinformatics/btu558",
         )
 
@@ -34,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_data = self.parse_bbt(f["f"])
             if len(parsed_data) > 0:
                 if f["s_name"] in self.bbt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 self.add_data_source(f)
                 self.bbt_data[f["s_name"]] = parsed_data
 
@@ -42,9 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.bbt_data = self.ignore_samples(self.bbt_data)
 
         if len(self.bbt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.bbt_data)))
+        log.info(f"Found {len(self.bbt_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Section 1 - Alignment Profiles
         self.add_section(plot=self.bbt_simple_plot())
@@ -59,10 +60,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_bbt(self, fh):
         """Parse the BioBloom Tools output into a 3D dict"""
-        parsed_data = OrderedDict()
+        parsed_data = dict()
         headers = None
-        for l in fh:
-            s = l.split("\t")
+        for line in fh:
+            s = line.split("\t")
             if headers is None:
                 headers = s
             else:
@@ -77,10 +78,10 @@ class MultiqcModule(BaseMultiqcModule):
         each species, stacked."""
 
         # First, sum the different types of alignment counts
-        data = OrderedDict()
-        cats = OrderedDict()
+        data = dict()
+        cats = dict()
         for s_name in self.bbt_data:
-            data[s_name] = OrderedDict()
+            data[s_name] = dict()
             for org in self.bbt_data[s_name]:
                 data[s_name][org] = self.bbt_data[s_name][org]["hits"] - self.bbt_data[s_name][org]["shared"]
                 if org not in cats and org != "multiMatch" and org != "noMatch":
@@ -96,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "biobloom_tools",
             "title": "BioBloom Tools: Alignment counts per species",
             "ylab": "Number of hits",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
         cats["multiMatch"] = {"name": "Multiple Genomes", "color": "#820000"}
         cats["noMatch"] = {"name": "No Match", "color": "#cccccc"}

@@ -1,29 +1,32 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-""" MultiQC module to parse output files from miRTrace """
-
-from __future__ import print_function
-from collections import OrderedDict
+import json
 import logging
 
-import json
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="miRTrace",
             anchor="mirtrace",
             href="https://github.com/friedlanderlab/mirtrace",
-            info="is a quality control software for small RNA sequencing data developed by Friedländer lab (KTH, Sweden).",
+            info="Quality control for small RNA sequencing data.",
+            extra="""
+            miRTrace performs adapter trimming and discards the reads that fail to pass
+            the QC filters. miRTrace specifically addresses sequencing quality, read length,
+            sequencing depth and miRNA complexity and also identifies the presence of both
+            miRNAs and undesirable sequences derived from tRNAs, rRNAs, or Illumina artifact
+            sequences.
+        
+            miRTrace also profiles clade-specific miRNAs based on a comprehensive catalog
+            of clade-specific miRNA families identified previously. With this information,
+            miRTrace can detect exogenous miRNAs, which could be contamination derived,
+            e.g. index mis-assignment on sample demultiplexing, or biologically derived,
+            e.g. parasitic RNAs.
+            """,
             doi="10.1186/s13059-018-1588-9",
         )
 
@@ -58,7 +61,11 @@ class MultiqcModule(BaseMultiqcModule):
             max(len(self.summary_data), len(self.length_data), len(self.contamination_data), len(self.complexity_data))
             == 0
         ):
-            raise UserWarning
+            raise ModuleNoSamplesFound
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed data to a file
         self.write_data_file(self.summary_data, "multiqc_mirtrace_summary")
@@ -92,7 +99,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse a miRTrace results.json file
     def parse_summary(self, f):
-
         try:
             cdict = json.loads(f["f"])
         except ValueError as e:
@@ -115,11 +121,11 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data["reads_artifact"] = record["stats"]["statsRNAType"][3]
                 parsed_data["reads_unknown"] = record["stats"]["statsRNAType"][4]
                 if s_name in self.summary_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name)
                 self.summary_data[s_name] = parsed_data
         else:
-            log.debug("No valid data {} in miRTrace summary".format(f["fn"]))
+            log.debug(f"No valid data {f['fn']} in miRTrace summary")
             return None
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
@@ -127,11 +133,11 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "LENGTH":
-                    log.debug("No valid data {} for read length distribution".format(f["fn"]))
+                    log.debug(f"No valid data {f['fn']} for read length distribution")
                     return None
                 header = s[1:]
             else:
@@ -144,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             for length in body:
                 parsed_data[length] = int(body[length][idx])
             if s_name in self.length_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.length_data[s_name] = parsed_data
 
@@ -153,11 +159,11 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "CLADE":
-                    log.debug("No valid data {} for contamination check".format(f["fn"]))
+                    log.debug(f"No valid data {f['fn']} for contamination check")
                     return None
                 header = s[1:]
             else:
@@ -170,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
             for clade in body:
                 parsed_data[clade] = int(body[clade][idx])
             if s_name in self.contamination_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.contamination_data[s_name] = parsed_data
 
@@ -179,11 +185,11 @@ class MultiqcModule(BaseMultiqcModule):
         header = []
         body = {}
         lines = f["f"].splitlines()
-        for l in lines:
-            s = l.split("\t")
+        for line in lines:
+            s = line.split("\t")
             if len(header) == 0:
                 if s[0] != "DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT":
-                    log.debug("No valid data {} for miRNA complexity".format(f["fn"]))
+                    log.debug(f"No valid data {f['fn']} for miRNA complexity")
                     return None
                 header = s[1:]
             else:
@@ -196,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
             for depth in body:
                 parsed_data[depth] = int(body[depth][idx]) if body[depth][idx] else 0
             if s_name in self.complexity_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
             self.complexity_data[s_name] = parsed_data
 
@@ -205,12 +211,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the miRTrace QC Plot"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["adapter_removed_length_ok"] = {"color": "#006837", "name": "Reads ≥ 18 nt after adapter removal"}
-        keys["adapter_not_detected"] = {"color": "#66bd63", "name": "Reads without adapter"}
-        keys["length_shorter_than_18"] = {"color": "#fdae61", "name": "Reads < 18 nt after adapter removal"}
-        keys["low_complexity"] = {"color": "#d73027", "name": "Reads with low complexity"}
-        keys["low_phred"] = {"color": "#a50026", "name": "Reads with low PHRED score"}
+        keys = {
+            "adapter_removed_length_ok": {"color": "#006837", "name": "Reads ≥ 18 nt after adapter removal"},
+            "adapter_not_detected": {"color": "#66bd63", "name": "Reads without adapter"},
+            "length_shorter_than_18": {"color": "#fdae61", "name": "Reads < 18 nt after adapter removal"},
+            "low_complexity": {"color": "#d73027", "name": "Reads with low complexity"},
+            "low_phred": {"color": "#a50026", "name": "Reads with low PHRED score"},
+        }
 
         # Config for the plot
         config = {
@@ -243,9 +250,9 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Read Lenth (bp)",
             "ymin": 0,
             "xmin": 0,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Read Length (bp) {point.x}</b>: {point.y} Read Count",
-            "xPlotBands": [
+            "x_bands": [
                 {"from": 40, "to": 50, "color": "#ffebd1"},
                 {"from": 26, "to": 40, "color": "#e2f5ff"},
                 {"from": 18, "to": 26, "color": "#e5fce0"},
@@ -260,12 +267,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate the miRTrace RNA Categories"""
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
-        keys["reads_mirna"] = {"color": "#33a02c", "name": "miRNA"}
-        keys["reads_rrna"] = {"color": "#ff7f00", "name": "rRNA"}
-        keys["reads_trna"] = {"color": "#1f78b4", "name": "tRNA"}
-        keys["reads_artifact"] = {"color": "#fb9a99", "name": "Artifact"}
-        keys["reads_unknown"] = {"color": "#d9d9d9", "name": "Unknown"}
+        keys = {
+            "reads_mirna": {"color": "#33a02c", "name": "miRNA"},
+            "reads_rrna": {"color": "#ff7f00", "name": "rRNA"},
+            "reads_trna": {"color": "#1f78b4", "name": "tRNA"},
+            "reads_artifact": {"color": "#fb9a99", "name": "Artifact"},
+            "reads_unknown": {"color": "#d9d9d9", "name": "Unknown"},
+        }
 
         # Config for the plot
         config = {
@@ -283,36 +291,36 @@ class MultiqcModule(BaseMultiqcModule):
 
         # A library of 24 colors. Should be enough for this plot
         color_lib = [
-            "rgb(166,206,227)",
-            "rgb(31,120,180)",
-            "rgb(178,223,138)",
-            "rgb(51,160,44)",
-            "rgb(251,154,153)",
-            "rgb(227,26,28)",
-            "rgb(253,191,111)",
-            "rgb(255,127,0)",
-            "rgb(202,178,214)",
-            "rgb(106,61,154)",
-            "rgb(255,255,153)",
-            "rgb(177,89,40)",
-            "rgb(141,211,199)",
-            "rgb(255,255,179)",
-            "rgb(190,186,218)",
-            "rgb(251,128,114)",
-            "rgb(128,177,211)",
-            "rgb(253,180,98)",
-            "rgb(179,222,105)",
-            "rgb(252,205,229)",
-            "rgb(217,217,217)",
-            "rgb(188,128,189)",
-            "rgb(204,235,197)",
-            "rgb(255,237,111)",
+            "#A6CEE3",
+            "#1F78B4",
+            "#B2DF8A",
+            "#33A02C",
+            "#FB9A99",
+            "#E31A1C",
+            "#FDBF6F",
+            "#FF7F00",
+            "#CAB2D6",
+            "#6A3D9A",
+            "#FFFF99",
+            "#B15928",
+            "#8DD3C7",
+            "#FFFFB3",
+            "#BEBADA",
+            "#FB8072",
+            "#80B1D3",
+            "#FDB462",
+            "#B3DE69",
+            "#FCCDE5",
+            "#D9D9D9",
+            "#BC80BD",
+            "#CCEBC5",
+            "#FFED6F",
         ]
 
         idx = 0
 
         # Specify the order of the different possible categories
-        keys = OrderedDict()
+        keys = {}
         for clade in self.contamination_data[list(self.contamination_data.keys())[0]]:
             keys[clade] = {"color": color_lib[idx], "name": clade}
             if idx < 23:
@@ -352,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Number of Sequencing Reads",
             "ymin": 0,
             "xmin": 1,
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "<b>Number of Sequencing Reads {point.x}</b>: {point.y} Distinct miRNA Count",
         }
 

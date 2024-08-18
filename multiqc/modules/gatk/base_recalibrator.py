@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-""" MultiQC submodule to parse output from GATK BaseRecalibrator """
+"""MultiQC submodule to parse output from GATK BaseRecalibrator"""
 
 import logging
 from collections import namedtuple
 from itertools import groupby
-from multiqc.plots import linegraph
-from multiqc.plots import scatter
+
+from multiqc.plots import linegraph, scatter
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -34,16 +31,19 @@ class BaseRecalibratorMixin:
         }
 
         for f in self.find_log_files("gatk/base_recalibrator", filehandles=True):
-
             # Check that we're not ignoring this sample name
             if self.is_ignore_sample(f["s_name"]):
                 continue
+
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, f["s_name"])
 
             parsed_data = self.parse_report(f["f"].readlines(), report_table_headers)
             rt_type = determine_recal_table_type(parsed_data)
             if len(parsed_data) > 0:
                 if f["s_name"] in samples_kept[rt_type]:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                    log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 samples_kept[rt_type].add(f["s_name"])
 
                 self.add_data_source(f, section="base_recalibrator")
@@ -58,7 +58,7 @@ class BaseRecalibratorMixin:
         n_reports_found = sum([len(samples_kept[rt_type]) for rt_type in recal_table_type])
 
         if n_reports_found > 0:
-            log.info("Found {} BaseRecalibrator reports".format(n_reports_found))
+            log.info(f"Found {n_reports_found} BaseRecalibrator reports")
 
             # Write data to file
             self.write_data_file(self.gatk_base_recalibrator, "gatk_base_recalibrator")
@@ -104,12 +104,8 @@ class BaseRecalibratorMixin:
             sample_data.append(pct_data)
 
             # Build data label configs for this data type
-            data_labels.append(
-                {"name": "{} Count".format(rt_type_name.capitalize().replace("_", "-")), "ylab": "Count"}
-            )
-            data_labels.append(
-                {"name": "{} Percent".format(rt_type_name.capitalize().replace("_", "-")), "ylab": "Percent"}
-            )
+            data_labels.append({"name": f"{rt_type_name.capitalize().replace('_', '-')} Count", "ylab": "Count"})
+            data_labels.append({"name": f"{rt_type_name.capitalize().replace('_', '-')} Percent", "ylab": "Percent"})
 
         plot = linegraph.plot(
             sample_data,
@@ -118,7 +114,7 @@ class BaseRecalibratorMixin:
                 "id": "gatk-base-recalibrator-quality-scores-plot",
                 "xlab": "Observed Quality Score",
                 "ylab": "Count",
-                "xDecimals": False,
+                "x_decimals": False,
                 "data_labels": data_labels,
             },
         )
@@ -173,7 +169,10 @@ class BaseRecalibratorMixin:
             sample_data.append(reported_empirical)
 
             # Build data label configs for this data type
-            data_labels.append({"name": "{} Reported vs. Empirical Quality", "ylab": "Empirical quality score"})
+            data_labels.append(
+                {"name": f"{rt_type_name} Reported vs. Empirical Quality", "ylab": "Empirical quality score"}
+            )
+
         plot = scatter.plot(
             sample_data,
             pconfig={
@@ -181,8 +180,11 @@ class BaseRecalibratorMixin:
                 "id": "gatk-base-recalibrator-reported-empirical-plot",
                 "xlab": "Reported quality score",
                 "ylab": "Empirical quality score",
-                "xDecimals": False,
+                "x_decimals": False,
                 "data_labels": data_labels,
+                "xmin": 0,
+                "ymin": 0,
+                "square": True,
             },
         )
 

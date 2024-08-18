@@ -1,25 +1,24 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from KAT """
-import logging
-from collections import OrderedDict
 import json
+import logging
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The KAT multiqc module interprets output from KAT distribution analysis json files, which typically
+    contain information such as estimated genome size and heterozygosity rates from your k-mer spectra.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="K-mer Analysis Toolkit",
             anchor="kat",
             href="https://github.com/TGAC/KAT",
-            info="is a toolkit for analysing sequencing data via its k-mer spectra.",
+            info="Analyses sequencing data via its k-mer spectra.",
             doi="10.1093/bioinformatics/btw663",
         )
 
@@ -35,42 +34,49 @@ class MultiqcModule(BaseMultiqcModule):
         self.kat_data = self.ignore_samples(self.kat_data)
 
         if len(self.kat_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.kat_data)))
+        log.info(f"Found {len(self.kat_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.kat_data, "multiqc_kat")
 
-        headers = OrderedDict()
-        headers["kmer_peaks"] = {
-            "title": "# of Kmer Peaks",
-            "description": "Number of peaks identified in the K-mer spectra",
-            "scale": False,
-            "format": "{:,.0f}",
-        }
-        headers["gc_peaks"] = {
-            "title": "# of GC Peaks",
-            "description": "Number of peaks identified in the GC distribution",
-            "scale": False,
-            "format": "{:,.0f}",
-        }
-        headers["est_genome_size"] = {
-            "title": "Est. genome Size",
-            "description": "Estimated Genome Size based on K-mer spectra",
-            "scale": "BuPu",
-            "format": "{:,.0f}",
-        }
-        headers["mean_kmer_freq"] = {
-            "title": "Mean K-mer Freq.",
-            "description": "Mean K-mer Frequency, provides an estimate of sequencing coverage",
-            "scale": "Greens",
-            "format": "{:,.0f}",
-            "suffix": "x",
+        headers = {
+            "kmer_peaks": {
+                "title": "# of Kmer Peaks",
+                "description": "Number of peaks identified in the K-mer spectra",
+                "scale": False,
+                "format": "{:,.0f}",
+            },
+            "gc_peaks": {
+                "title": "# of GC Peaks",
+                "description": "Number of peaks identified in the GC distribution",
+                "scale": False,
+                "format": "{:,.0f}",
+            },
+            "est_genome_size": {
+                "title": "Est. genome Size",
+                "description": "Estimated Genome Size based on K-mer spectra",
+                "scale": "BuPu",
+                "format": "{:,.0f}",
+            },
+            "mean_kmer_freq": {
+                "title": "Mean K-mer Freq.",
+                "description": "Mean K-mer Frequency, provides an estimate of sequencing coverage",
+                "scale": "Greens",
+                "format": "{:,.0f}",
+                "suffix": "x",
+            },
         }
 
         kat_config = {
             "namespace": "KAT",
+            "id": "kat-table",
+            "title": "K-mer Analysis Toolkit: KAT Distribution Analysis",
         }
 
         # Basic Stats Table

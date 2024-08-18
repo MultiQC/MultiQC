@@ -1,21 +1,20 @@
-#!/usr/bin/env python
 # coding=utf-8
-from __future__ import print_function
+
 
 import itertools
-import re
+import logging
 from collections import defaultdict
-from multiqc.modules.base_module import BaseMultiqcModule
+
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
-from .utils import make_headers, Metric, exist_and_number
+
+from .utils import Metric, exist_and_number, make_headers
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
-NAMESPACE = "DRAGEN mapping"
+NAMESPACE = "Mapping"
 
 
 class DragenMappingMetics(BaseMultiqcModule):
@@ -25,18 +24,21 @@ class DragenMappingMetics(BaseMultiqcModule):
 
         for f in self.find_log_files("dragen/mapping_metrics"):
             data_by_readgroup, data_by_phenotype = parse_mapping_metrics_file(f)
+            s_name = f["s_name"]
+            if s_name in data_by_rg_by_sample:
+                log.debug(f"Duplicate DRAGEN output prefix found! Overwriting: {s_name}")
+            self.add_data_source(f, section="mapping_metrics")
+            data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
-            if f["s_name"] in data_by_rg_by_sample:
-                log.debug("Duplicate DRAGEN output prefix found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
-            data_by_phenotype_by_sample[f["s_name"]].update(data_by_phenotype)
+            for phenotype, phenotype_d in data_by_readgroup.items():
+                for rg, data in phenotype_d.items():
+                    if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
+                        log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
+            data_by_rg_by_sample[s_name].update(data_by_readgroup)
 
-            for rg, data in data_by_readgroup.items():
-                if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
-                    log.debug(
-                        "Duplicate read group name {} found for output prefix {}! Overwriting".format(rg, f["s_name"])
-                    )
-            data_by_rg_by_sample[f["s_name"]].update(data_by_readgroup)
+            # Superfluous function call to confirm that it is used in this module
+            # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
 
         # filter to strip out ignored sample names:
         data_by_rg_by_sample = self.ignore_samples(data_by_rg_by_sample)
@@ -51,6 +53,17 @@ class DragenMappingMetics(BaseMultiqcModule):
                     new_sn = sn + "_normal"
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
+        # flattening phenotype-sample data by adding a prefix " normal" to the normal samples
+        data_by_rg_by_sample_new = dict()
+        for sn in data_by_rg_by_sample:
+            for phenotype in data_by_rg_by_sample[sn]:
+                new_sn = sn
+                if phenotype == "normal":
+                    new_sn = sn + "_normal"
+                data_by_rg_by_sample_new[new_sn] = data_by_rg_by_sample[sn][phenotype]
+        data_by_rg_by_sample = data_by_rg_by_sample_new
+        del data_by_rg_by_sample_new
+
         if not data_by_rg_by_sample and not data_by_phenotype_by_sample:
             return set()
 
@@ -58,15 +71,23 @@ class DragenMappingMetics(BaseMultiqcModule):
         self.write_data_file(data_by_sample, "dragen_map_metrics")
 
         self.report_mapping_metrics(data_by_sample, data_by_rg_by_sample)
+
         return data_by_rg_by_sample.keys()
 
     def report_mapping_metrics(self, data_by_sample, data_by_rg_by_sample):
         # merging all read group data
         data_by_rg = dict()
+
         for sname in data_by_rg_by_sample:
             for rg, d in data_by_rg_by_sample[sname].items():
-                if rg in data_by_rg:
-                    rg = rg + " (" + sname + ")"
+                # Check only one read-group per sample
+                if len(list(data_by_rg_by_sample[sname].keys())) == 1:
+                    rg = sname
+                    data_by_rg[rg] = d
+                    continue
+
+                # Multiple read-groups per sample
+                rg = sname + f" ({rg}) "
                 data_by_rg[rg] = d
 
         # getting all available metric names to determine table headers
@@ -88,85 +109,136 @@ class DragenMappingMetics(BaseMultiqcModule):
             Shown on per read group level. To see per-sample level metrics, refer to the general
             stats table.
             """,
-            plot=table.plot(data_by_rg, own_tabl_headers, pconfig={"namespace": NAMESPACE}),
+            plot=table.plot(
+                data_by_rg,
+                own_tabl_headers,
+                pconfig={
+                    "id": "dragen-mapping-metrics-table",
+                    "namespace": NAMESPACE,
+                    "title": "DRAGEN: Mapping metrics",
+                },
+            ),
         )
+
+        # Skip adding the barplot if it's not informative, such as if all
+        #  reads are unmapped due to a FastQcOnly workflow
+        all_unmapped = True
+        unmapped_key = "Unmapped reads pct"
+        for rg, data in data_by_rg.items():
+            if unmapped_key in data and data[unmapped_key] < 100.0:
+                all_unmapped = False
+
+        if all_unmapped:
+            return set()
 
         # Make bargraph plots of mapped, dupped and paired reads
         self.__map_pair_dup_read_chart(data_by_rg)
 
     def __map_pair_dup_read_chart(self, data_by_sample):
-        chart_data = dict()
+        paired_reads_data = {}
+        mapped_reads_data = {}
+        category_labels = []
+        data_labels = []
+
+        add_paired_label = False
+        add_mapped_label = False
         for sample_id, data in data_by_sample.items():
-            if (
-                data["Not properly paired reads (discordant)"]
-                + data["Properly paired reads"]
-                + data["Singleton reads (itself mapped; mate unmapped)"]
-                + data["Unmapped reads"]
-                != data["Total reads in RG"]
-            ):
-                log.debug(
+            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
+            if "rRNA filtered reads" in data.keys():
+                rrna_filtered_reads_key = "rRNA filtered reads"
+            elif "Adjustment of reads matching filter contigs" in data.keys():
+                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
+            else:
+                rrna_filtered_reads_key = None
+
+            if data.get("Mapped reads R2", None) == 0:
+                log.debug(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
+            elif data.get("Not properly paired reads (discordant)", 0) + data.get(
+                "Properly paired reads", 0
+            ) + data.get("Singleton reads (itself mapped; mate unmapped)", 0) + data.get("Unmapped reads", 0) + (
+                data.get(rrna_filtered_reads_key, 0)
+                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
+                else 0
+            ) != data.get("Total reads in RG", 0):
+                log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
                     "skipping mapping/paired percentages plot for: {}".format(sample_id)
                 )
-                continue
-            if (
-                data["Number of unique & mapped reads (excl. duplicate marked reads)"]
-                + data.get("Number of duplicate marked reads", 0)
-                + data["Unmapped reads"]
-                != data["Total reads in RG"]
-            ):
-                log.debug(
+            else:
+                paired_reads_data[sample_id] = data
+                add_paired_label = True
+
+            if data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0) + data.get(
+                "Number of duplicate marked reads", 0
+            ) + data.get("Unmapped reads", 0) + (
+                data.get(rrna_filtered_reads_key, 0)
+                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
+                else 0
+            ) != data.get("Total reads in RG", 0):
+                log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
                     "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
                 )
-                continue
-            chart_data[sample_id] = data
-        if len(chart_data) > 0:
-            self.add_section(
-                name="Mapped / paired / duplicated",
-                anchor="dragen-mapped-paired-duplicated",
-                description="Distribution of reads based on pairing, duplication and mapping.",
-                plot=bargraph.plot(
-                    [chart_data, chart_data],
-                    [
-                        {
-                            "Number of unique & mapped reads (excl. duplicate marked reads)": {
-                                "color": "#437bb1",
-                                "name": "Unique",
-                            },
-                            "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
-                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                        },
-                        {
-                            "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
-                            "Not properly paired reads (discordant)": {
-                                "color": "#c27a0e",
-                                "name": "Paired, discordant",
-                            },
-                            "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
-                            "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
-                        },
-                    ],
-                    {
-                        "id": "mapping_dup_percentage_plot",
-                        "title": "Dragen: Mapped/paired/duplicated reads per read group",
-                        "ylab": "Reads",
-                        "cpswitch_counts_label": "Reads",
-                        "data_labels": [
-                            {
-                                "name": "Unique vs duplicated vs unmapped",
-                                "ylab": "Reads",
-                                "cpswitch_counts_label": "Reads",
-                            },
-                            {
-                                "name": "Paired vs. discordant vs. singleton",
-                                "ylab": "Reads",
-                                "cpswitch_counts_label": "Reads",
-                            },
-                        ],
-                    },
-                ),
+            else:
+                mapped_reads_data[sample_id] = data
+                add_mapped_label = True
+
+        # Add labels
+        if add_paired_label:
+            category_labels.append(
+                {
+                    "Properly paired reads": {"color": "#099109", "name": "Paired, properly"},
+                    "Not properly paired reads (discordant)": {"color": "#c27a0e", "name": "Paired, discordant"},
+                    "Singleton reads (itself mapped; mate unmapped)": {"color": "#912476", "name": "Singleton"},
+                    "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
+                }
             )
+            data_labels.append(
+                {"name": "Paired vs. discordant vs. singleton", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
+            )
+        if add_mapped_label:
+            mapped_chart_labels = {
+                "Number of unique & mapped reads (excl. duplicate marked reads)": {
+                    "color": "#437bb1",
+                    "name": "Unique",
+                },
+                "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
+                "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
+            }
+            if "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
+                    "color": "#43b14a",
+                    "name": "rRNA filtered",
+                }
+            elif "rRNA filtered reads" in next(iter(data_by_sample.values())):
+                mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
+            elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
+                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
+                    "color": "#43b14a",
+                    "name": "rRNA filtered",
+                }
+            category_labels.append(mapped_chart_labels)
+            data_labels.append(
+                {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
+            )
+
+        data_to_plot = [d for d in [paired_reads_data, mapped_reads_data] if d]  # Leaves out empty dicts
+        self.add_section(
+            name="Mapped / paired / duplicated",
+            anchor="dragen-mapped-paired-duplicated",
+            description="Distribution of reads based on pairing, duplication and mapping.",
+            plot=bargraph.plot(
+                data_to_plot,
+                category_labels,
+                {
+                    "id": "mapping_dup_percentage_plot",
+                    "title": "Dragen: Mapped/paired/duplicated reads per read group",
+                    "ylab": "Reads",
+                    "cpswitch_counts_label": "Reads",
+                    "data_labels": data_labels,
+                },
+            ),
+        )
 
 
 def parse_mapping_metrics_file(f):
@@ -296,8 +368,6 @@ def parse_mapping_metrics_file(f):
     We are reporting summary metrics in the general stats table, and per-read-group in a separate table.
     """
 
-    f["s_name"] = re.search(r"(.*)\.mapping_metrics.csv", f["fn"]).group(1)
-
     data_by_readgroup = defaultdict(dict)
     data_by_phenotype = defaultdict(dict)
 
@@ -306,13 +376,13 @@ def parse_mapping_metrics_file(f):
         phenotype = fields[0].split("/")[0].split(" ")[0].lower()  # TUMOR MAPPING -> tumor
         analysis = fields[0].split("/")[1]  # ALIGNING SUMMARY, ALIGNING PER RG
         metric = fields[2]
-        value = fields[3]
+        value = fields[3] if fields[3] != "NA" else None
         try:
             value = int(value)
-        except ValueError:
+        except (ValueError, TypeError):
             try:
                 value = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
 
         percentage = None
@@ -325,7 +395,8 @@ def parse_mapping_metrics_file(f):
 
         # sample-unspecific metrics are reported only in ALIGNING SUMMARY sections
         if analysis == "ALIGNING SUMMARY":
-            data_by_phenotype[phenotype][metric] = value
+            if value is not None:
+                data_by_phenotype[phenotype][metric] = value
             if percentage is not None:
                 data_by_phenotype[phenotype][metric + " pct"] = percentage
 
@@ -333,15 +404,20 @@ def parse_mapping_metrics_file(f):
         if analysis == "ALIGNING PER RG":
             # setting normal and tumor sample names for future use
             readgroup = fields[1]
-            data_by_readgroup[readgroup][metric] = value
+            if readgroup not in data_by_readgroup[phenotype].keys():
+                data_by_readgroup[phenotype][readgroup] = {}
+            if value is not None:
+                data_by_readgroup[phenotype][readgroup][metric] = value
             if percentage is not None:
-                data_by_readgroup[readgroup][metric + " pct"] = percentage
+                data_by_readgroup[phenotype][readgroup][metric + " pct"] = percentage
 
     # adding some missing values that we wanna report for consistency
-    for data in itertools.chain(data_by_readgroup.values(), data_by_phenotype.values()):
+    # Expand data_by_readgroup to values below phenotype level
+    for data in itertools.chain(
+        *[data_by_readgroup[key].values() for key in data_by_readgroup.keys()], data_by_phenotype.values()
+    ):
         # fixing when deduplication wasn't performed, or running with single-end data
         for field in [
-            "Number of duplicate marked reads",
             "Number of duplicate marked and mate reads removed",
             "Number of unique reads (excl. duplicate marked reads)",
             "Mismatched bases R2 (excl. indels)",
@@ -410,6 +486,9 @@ MAPPING_METRICS = [
     Metric("Mapped reads R1", "Map R1", None, "hid", "reads", "Number of mapped reads R1, {}"),
     Metric("Mapped reads R2", "Map R2", None, "hid", "reads", "Number of mapped reads R2, {}"),
     Metric("Unmapped reads", "Unmap", "%", "%", "reads", "Number of unmapped reads, {}", the_higher_the_worse=True),
+    Metric(
+        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
+    ),
     Metric("Reads with MAPQ [40:inf)", "MQ⩾40", None, "hid", "reads", "Number of reads with MAPQ [40:inf), {}"),
     Metric(
         "Number of duplicate marked reads",
@@ -639,5 +718,27 @@ MAPPING_METRICS = [
         "over multiple loci (possibly due to structural variants). One alignment is "
         "referred to as the representative alignment, the other are supplementary",
         precision=2,
+    ),
+    Metric(
+        "Estimated sample contamination",
+        "Contam'n",
+        "#",
+        "#",
+        "proportion",
+        "Fraction of estimated sample contamination",
+        precision=2,
+        the_higher_the_worse=True,
+    ),
+    Metric(
+        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
+    ),
+    Metric(
+        "Adjustment of reads matching filter contigs",
+        "rRNA / Filtered Contigs",
+        "%",
+        "%",
+        "reads",
+        "Number of filtered reads, {}",
+        the_higher_the_worse=True,
     ),
 ]

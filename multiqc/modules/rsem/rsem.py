@@ -1,33 +1,31 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from RSEM/rsem-calculate-expression """
-
-from __future__ import print_function
 import logging
-from collections import OrderedDict
 
-from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc import config
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
+    Supported scripts:
+
+    - `rsem-calculate-expression`
+
+    This module search for the file `.cnt` created by RSEM into directory named `PREFIX.stat`
+    """
+
+    """
     RSEM module class, parses .cnt file .
     """
 
     def __init__(self):
-
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
-            name="Rsem",
+            name="RSEM",
             anchor="rsem",
             href="https://deweylab.github.io/RSEM/",
-            info="RSEM (RNA-Seq by Expectation-Maximization) is a software package for"
-            "estimating gene and isoform expression levels from RNA-Seq data.",
+            info="Estimates gene and isoform expression levels from RNA-Seq data.",
             doi="10.1186/1471-2105-12-323",
         )
 
@@ -42,9 +40,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.rsem_mapped_data = self.ignore_samples(self.rsem_mapped_data)
 
         if len(self.rsem_mapped_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.rsem_mapped_data)))
+        log.info(f"Found {len(self.rsem_mapped_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Write parsed report data to a file
         self.write_data_file(self.rsem_mapped_data, "multiqc_rsem")
@@ -65,8 +67,8 @@ class MultiqcModule(BaseMultiqcModule):
         data = dict()
         multimapping_hist = dict()
         in_hist = False
-        for l in f["f"].splitlines():
-            s = l.split()
+        for line in f["f"].splitlines():
+            s = line.split()
             if len(s) > 3:
                 # Line: N0 N1 N2 N_tot
                 # N0, number of unalignable reads;
@@ -102,16 +104,16 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             assert data["Unique"] + data["Multi"] == data["Alignable"]
         except AssertionError:
-            log.warning("Unique + Multimapping read counts != alignable reads! '{}'".format(f["fn"]))
+            log.warning(f"Unique + Multimapping read counts != alignable reads! '{f['fn']}'")
             return None
         except KeyError:
-            log.warning("Error parsing RSEM counts file '{}'".format(f["fn"]))
+            log.warning(f"Error parsing RSEM counts file '{f['fn']}'")
             return None
 
         # Save parsed data
         if len(data) > 0:
             if f["s_name"] in self.rsem_mapped_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.rsem_mapped_data[f["s_name"]] = data
             self.add_data_source(f)
         if len(multimapping_hist) > 0:
@@ -120,14 +122,15 @@ class MultiqcModule(BaseMultiqcModule):
     def rsem_stats_table(self):
         """Take the parsed stats from the rsem report and add them to the
         basic stats table at the top of the report"""
-        headers = OrderedDict()
-        headers["alignable_percent"] = {
-            "title": "% Alignable".format(config.read_count_prefix),
-            "description": "% Alignable reads".format(config.read_count_desc),
-            "max": 100,
-            "min": 0,
-            "suffix": "%",
-            "scale": "YlGn",
+        headers = {
+            "alignable_percent": {
+                "title": f"% Alignable, {config.read_count_prefix}",
+                "description": f"% Alignable reads, {config.read_count_desc}",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "YlGn",
+            }
         }
         self.general_stats_addcols(self.rsem_mapped_data, headers)
 
@@ -135,11 +138,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Make the rsem assignment rates plot"""
 
         # Plot categories
-        keys = OrderedDict()
-        keys["Unique"] = {"color": "#437bb1", "name": "Aligned uniquely to a gene"}
-        keys["Multi"] = {"color": "#e63491", "name": "Aligned to multiple genes"}
-        keys["Filtered"] = {"color": "#b1084c", "name": "Filtered due to too many alignments"}
-        keys["Unalignable"] = {"color": "#7f0000", "name": "Unalignable reads"}
+        keys = {
+            "Unique": {"color": "#437bb1", "name": "Aligned uniquely to a gene"},
+            "Multi": {"color": "#e63491", "name": "Aligned to multiple genes"},
+            "Filtered": {"color": "#b1084c", "name": "Filtered due to too many alignments"},
+            "Unalignable": {"color": "#7f0000", "name": "Unalignable reads"},
+        }
 
         # Config for the plot
         config = {
@@ -147,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Mapped reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -165,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "RSEM: Multimapping Rates",
             "ylab": "Counts",
             "xlab": "Number of alignments",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>{point.x} alignments</b>: {point.y:.0f}",
         }

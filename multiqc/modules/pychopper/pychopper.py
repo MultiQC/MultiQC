@@ -1,28 +1,28 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from pychopper """
-
-from __future__ import print_function
 import logging
-import os
-from collections import OrderedDict
 
-from multiqc.plots import linegraph, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    """
+    The module parses the pychopper stats file. Pychopper needs to be run with the `-S stats_output` option to create the file. The name of the output file defines the sample name.
 
-        # Initialise the parent object
+    The stats file is a three column `tsv` file with the format `category name value`.
+
+    Currently only two stats are displayed in MultiQC. Two bargraphs are created for the read classication and the strand orientation of the identified full length transcripts. Additional stats could be included on further request.
+
+    The general stats table contains a value that displays the percentage of full length transcripts. This value is calculated from the cumulative length of reads where Pychopper found primers at both ends.
+    """
+
+    def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Pychopper",
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
-            info="is a tool to identify, orient, trim and rescue full length Nanopore cDNA reads.",
+            info="Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.",
             # Can't find a DOI // doi=
         )
 
@@ -44,9 +44,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Raise user warning if no data found
         if len(self.pychopper_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} reports".format(len(self.pychopper_data)))
+        log.info(f"Found {len(self.pychopper_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Add to general statistics table:
         # Percentage of full length transcripts
@@ -57,13 +61,14 @@ class MultiqcModule(BaseMultiqcModule):
             ftp = c["Primers_found"] * 100 / (c["Primers_found"] + c["Rescue"] + c["Unusable"])
             data_general_stats[sample]["ftp"] = ftp
 
-        headers = OrderedDict()
-        headers["ftp"] = {
-            "title": "Full-Length cDNA",
-            "description": "Percentage of full length cDNA reads with correct primers at both ends",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
+        headers = {
+            "ftp": {
+                "title": "Full-Length cDNA",
+                "description": "Percentage of full length cDNA reads with correct primers at both ends",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            }
         }
 
         self.general_stats_addcols(data_general_stats, headers)
@@ -116,7 +121,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "pychopper_classification_plot",
             "title": "Pychopper: Read classification",
             "ylab": "",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 
@@ -136,7 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Pychopper: Strand Orientation",
             "ylab": "",
             "cpswitch_c_active": False,
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
         }
 

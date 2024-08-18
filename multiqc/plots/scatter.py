@@ -1,145 +1,118 @@
-#!/usr/bin/env python
-
-""" MultiQC functions to plot a scatter plot """
+"""MultiQC functions to plot a scatter plot"""
 
 import logging
-import random
+from typing import Union, Dict
 
-from multiqc.utils import config, report
+from multiqc import config
+from multiqc.plots.plotly import scatter
+from multiqc.plots.plotly.scatter import ScatterConfig
 
 logger = logging.getLogger(__name__)
 
-letters = "abcdefghijklmnopqrstuvwxyz"
+# Load the template so that we can access its configuration
+# Do this lazily to mitigate import-spaghetti when running unit tests
+_template_mod = None
 
 
-def plot(data, pconfig=None):
+def get_template_mod():
+    global _template_mod
+    if not _template_mod:
+        _template_mod = config.avail_templates[config.template].load()
+    return _template_mod
+
+
+def plot(
+    data,
+    pconfig: Union[Dict, ScatterConfig, None] = None,
+) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    if pconfig is None:
-        pconfig = {}
-
-    # Allow user to overwrite any given config for this plot
-    if "id" in pconfig and pconfig["id"] and pconfig["id"] in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig["id"]].items():
-            pconfig[k] = v
+    pconf = ScatterConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
-    if type(data) is not list:
+    if not isinstance(data, list):
         data = [data]
 
-    # Generate the data dict structure expected by HighCharts series
     plotdata = list()
     for data_index, ds in enumerate(data):
         d = list()
         for s_name in ds:
-            # Ensure any overwritting conditionals from data_labels (e.g. ymax) are taken in consideration
-            series_config = pconfig.copy()
-            if (
-                "data_labels" in pconfig and type(pconfig["data_labels"][data_index]) is dict
-            ):  # if not a dict: only dataset name is provided
-                series_config.update(pconfig["data_labels"][data_index])
+            # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
+            series_config: ScatterConfig = pconf.model_copy()
+            if pconf.data_labels and isinstance(pconf.data_labels[data_index], dict):
+                # if not a dict: only dataset name is provided
+                for k, v in pconf.data_labels[data_index].items():
+                    if k in series_config.model_fields:
+                        setattr(series_config, k, v)
 
-            if type(ds[s_name]) is not list:
+            if not isinstance(ds[s_name], list):
                 ds[s_name] = [ds[s_name]]
-            for k in ds[s_name]:
-                if k["x"] is not None:
-                    if "xmax" in series_config and float(k["x"]) > float(series_config["xmax"]):
+            for point in ds[s_name]:
+                if point["x"] is not None:
+                    if series_config.xmax is not None and float(point["x"]) > float(series_config.xmax):
                         continue
-                    if "xmin" in series_config and float(k["x"]) < float(series_config["xmin"]):
+                    if series_config.xmin is not None and float(point["x"]) < float(series_config.xmin):
                         continue
-                if k["y"] is not None:
-                    if "ymax" in series_config and float(k["y"]) > float(series_config["ymax"]):
+                if point["y"] is not None:
+                    if series_config.ymax is not None and float(point["y"]) > float(series_config.ymax):
                         continue
-                    if "ymin" in series_config and float(k["y"]) < float(series_config["ymin"]):
+                    if series_config.ymin is not None and float(point["y"]) < float(series_config.ymin):
                         continue
-                this_series = {"x": k["x"], "y": k["y"]}
-                try:
-                    this_series["name"] = "{}: {}".format(s_name, k["name"])
-                except KeyError:
-                    this_series["name"] = s_name
-                try:
-                    this_series["color"] = k["color"]
-                except KeyError:
-                    try:
-                        this_series["color"] = series_config["colors"][s_name]
-                    except KeyError:
-                        pass
-                d.append(this_series)
+                if "name" in point:
+                    point["name"] = f'{s_name}: {point["name"]}'
+                else:
+                    point["name"] = s_name
+
+                for k in ["color", "opacity", "marker_size", "marker_line_width"]:
+                    if k not in point:
+                        v = getattr(series_config, k)
+                        if v is not None:
+                            if isinstance(v, dict) and s_name in v:
+                                point[k] = v[s_name]
+                            else:
+                                point[k] = v
+                d.append(point)
         plotdata.append(d)
 
+    if pconf.square:
+        if pconf.ymax is None and pconf.xmax is None:
+            # Find the max value
+            max_val = 0.0
+            for d in plotdata:
+                for s in d:
+                    max_val = max(max_val, s["x"], s["y"])
+            max_val = 1.02 * float(max_val)  # add 2% padding
+            pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
+            pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
+
     # Add on annotation data series
+    # noinspection PyBroadException
     try:
-        if pconfig.get("extra_series"):
-            extra_series = pconfig["extra_series"]
-            if type(pconfig["extra_series"]) == dict:
-                extra_series = [[pconfig["extra_series"]]]
-            elif type(pconfig["extra_series"]) == list and type(pconfig["extra_series"][0]) == dict:
-                extra_series = [pconfig["extra_series"]]
+        if pconf.extra_series:
+            extra_series = pconf.extra_series
+            if isinstance(pconf.extra_series, dict):
+                extra_series = [[pconf.extra_series]]
+            elif isinstance(pconf.extra_series, list) and isinstance(pconf.extra_series[0], dict):
+                extra_series = [pconf.extra_series]
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
-    except (KeyError, IndexError):
+    except Exception:
         pass
 
     # Make a plot
-    return highcharts_scatter_plot(plotdata, pconfig)
+    mod = get_template_mod()
+    if "scatter" in mod.__dict__ and callable(mod.scatter):
+        # noinspection PyBroadException
+        try:
+            return mod.scatter(plotdata, pconf)
+        except:  # noqa: E722
+            if config.strict:
+                # Crash quickly in the strict mode. This can be helpful for interactive
+                # debugging of modules
+                raise
 
-
-def highcharts_scatter_plot(plotdata, pconfig=None):
-    """
-    Build the HTML needed for a HighCharts scatter plot. Should be
-    called by scatter.plot(), which properly formats input data.
-    """
-    if pconfig is None:
-        pconfig = {}
-
-    # Get the plot ID
-    if pconfig.get("id") is None:
-        pconfig["id"] = "mqc_hcplot_" + "".join(random.sample(letters, 10))
-
-    # Sanitise plot ID and check for duplicates
-    pconfig["id"] = report.save_htmlid(pconfig["id"])
-
-    # Build the HTML for the page
-    html = '<div class="mqc_hcplot_plotgroup">'
-
-    # Buttons to cycle through different datasets
-    if len(plotdata) > 1:
-        html += '<div class="btn-group hc_switch_group">\n'
-        for k, p in enumerate(plotdata):
-            active = "active" if k == 0 else ""
-            try:
-                name = pconfig["data_labels"][k]["name"]
-            except:
-                name = k + 1
-            try:
-                ylab = 'data-ylab="{}"'.format(pconfig["data_labels"][k]["ylab"])
-            except:
-                ylab = 'data-ylab="{}"'.format(name) if name != k + 1 else ""
-            try:
-                ymax = 'data-ymax="{}"'.format(pconfig["data_labels"][k]["ymax"])
-            except:
-                ymax = ""
-            try:
-                xlab = 'data-xlab="{}"'.format(pconfig["data_labels"][k]["xlab"])
-            except:
-                xlab = 'data-xlab="{}"'.format(name) if name != k + 1 else ""
-            html += '<button class="btn btn-default btn-sm {a}" data-action="set_data" {y} {ym} {xl} data-newdata="{k}" data-target="{id}">{n}</button>\n'.format(
-                a=active, id=pconfig["id"], n=name, y=ylab, ym=ymax, xl=xlab, k=k
-            )
-        html += "</div>\n\n"
-
-    # The plot div
-    html += '<div class="hc-plot-wrapper"{height}><div id="{id}" class="hc-plot not_rendered hc-scatter-plot"><small>loading..</small></div></div></div> \n'.format(
-        id=pconfig["id"],
-        height=f' style="height:{pconfig["height"]}px"' if "height" in pconfig else "",
-    )
-
-    report.num_hc_plots += 1
-
-    report.plot_data[pconfig["id"]] = {"plot_type": "scatter", "datasets": plotdata, "config": pconfig}
-
-    return html
+    return scatter.plot(plotdata, pconf)

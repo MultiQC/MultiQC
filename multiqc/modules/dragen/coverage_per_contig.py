@@ -1,33 +1,36 @@
-#!/usr/bin/env python
-from __future__ import print_function
-
+import logging
 import re
-from collections import OrderedDict, defaultdict
-from multiqc.modules.base_module import BaseMultiqcModule
+from collections import defaultdict
+from typing import Dict
+
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 # Initialise the logger
-import logging
-
 log = logging.getLogger(__name__)
 
 
 class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
-        perchrom_data_by_phenotype_by_sample = defaultdict(dict)
+        perchrom_data_by_phenotype_by_sample: Dict[str, Dict] = defaultdict(dict)
 
-        for f in self.find_log_files("dragen/contig_mean_cov"):
-            perchrom_data_by_phenotype = parse_contig_mean_cov(f)
-            if f["s_name"] in perchrom_data_by_phenotype_by_sample:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(f["s_name"]))
-            self.add_data_source(f, section="stats")
-            perchrom_data_by_phenotype_by_sample[f["s_name"]].update(perchrom_data_by_phenotype)
+        for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
+            perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
+            s_name = f["s_name"]
+            if s_name in perchrom_data_by_phenotype_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="wgs_contig_mean_cov")
+            perchrom_data_by_phenotype_by_sample[s_name].update(perchrom_data_by_phenotype)
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         # Filter to strip out ignored sample names:
         perchrom_data_by_phenotype_by_sample = self.ignore_samples(perchrom_data_by_phenotype_by_sample)
 
         # Merge tumor and normal data:
-        perchrom_data_by_sample = defaultdict(dict)
+        perchrom_data_by_sample: Dict[str, Dict] = defaultdict(dict)
         for sn in perchrom_data_by_phenotype_by_sample:
             for phenotype in perchrom_data_by_phenotype_by_sample[sn]:
                 new_sn = sn
@@ -92,7 +95,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         return perchrom_data_by_sample.keys()
 
 
-def parse_contig_mean_cov(f):
+def parse_wgs_contig_mean_cov(f):
     """
     The Contig Mean Coverage report generates a _contig_mean_cov.csv file, which contains the estimated coverage for
     all contigs, and an autosomal estimated coverage. The file includes the following three columns
@@ -105,7 +108,6 @@ def parse_contig_mean_cov(f):
 
     T_SRR7890936_50pc.wgs_contig_mean_cov_normal.csv
     T_SRR7890936_50pc.wgs_contig_mean_cov_tumor.csv
-    T_SRR7890936_50pc.target_bed_contig_mean_cov.csv
 
     chr1,11292297134,48.9945
     chr10,6482885699,48.6473
@@ -153,14 +155,22 @@ def parse_contig_mean_cov(f):
             # sex and other chromosomes go in the end
             return 1
 
-    main_contig_perchrom_data = OrderedDict(
-        sorted(main_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0]))
+    main_contig_perchrom_data = dict(
+        sorted(
+            main_contig_perchrom_data.items(),
+            key=lambda key_val: chrom_order(key_val[0]),
+        )
     )
-    other_contig_perchrom_data = OrderedDict(
-        sorted(other_contig_perchrom_data.items(), key=lambda key_val: chrom_order(key_val[0]))
+    other_contig_perchrom_data = dict(
+        sorted(
+            other_contig_perchrom_data.items(),
+            key=lambda key_val: chrom_order(key_val[0]),
+        )
     )
 
-    m = re.search(r"(.*)\.(\S*)_contig_mean_cov_?(\S*)?.csv", f["fn"])
-    sample, phenotype = m.group(1), m.group(2)
-    f["s_name"] = sample
+    m = re.search(r"(tumor|normal).csv", f["fn"])
+    if m:
+        phenotype = m.group(1)
+    else:
+        phenotype = "unknown"
     return {phenotype: [main_contig_perchrom_data, other_contig_perchrom_data]}

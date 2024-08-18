@@ -1,225 +1,247 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from Supernova"""
-
-from __future__ import print_function
-from collections import OrderedDict
+import json
 import logging
 import re
-import json
-from multiqc.plots import table, linegraph, bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
 
-# Initialise the logger
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, linegraph, table
+
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module parses the reports from an assembly run. As a bare minimum it requires the file `report.txt`,
+    found in the folder `sampleID/outs/`, to function. Note! If you are anything like the author (@remiolsen),
+    you might only have files (often renamed to, e.g. `sampleID-report.txt`) lying around due to disk space limitations
+    and for ease of sharing with your colleagues. This module will search for `*report*.txt`. If available the stats
+    in the report file will be superseded by the higher precision numbers found in the file
+    `sampleID/outs/assembly/stats/summary.json`. In the same folder, this module will search for the following plots
+    and render them:
+
+    - `histogram_molecules.json` -- Inferred molecule lengths
+    - `histogram_kmer_count.json` -- Kmer multiplicity
+
+    This module has been tested using Supernova versions `1.1.4` and `1.2.0`
+
+    #### Important note
+
+    Due to the size of the `histogram_kmer_count.json` files, MultiQC is likely to skip these files. To be able to
+    display these you will need to change the MultiQC configuration to allow for larger logfiles, see the MultiQC
+    [documentation](http://multiqc.info/docs/#troubleshooting-1). For instance, if you run MultiQC as part of an
+    analysis pipeline, you can create a `multiqc_config.yaml` file in the working directory, containing the
+    following line:
+
+    ```yaml
+    log_filesize_limit: 100000000
+    ```
+    """
+
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Supernova",
             anchor="supernova",
             href="https://www.10xgenomics.com/",
-            info="is a de novo genome assembler 10X Genomics linked-reads.",
+            info="De novo genome assembler of 10X Genomics linked-reads.",
             doi="10.1101/gr.214874.116",
         )
 
         # Headers for the supernova Table
-        self.headers = OrderedDict()
-        self.headers["Asm size"] = {
-            "description": "assembly size (in megabases) ;only scaffolds >= 10 kb",
-            "modify": lambda x: x / 1000000.0,
-            "suffix": "Mb",
-            "scale": "YlGn",
-        }
-        self.headers["% missing 10Kb"] = {
-            "rid": "pct_missing_10Kb",
-            "description": "% of base assembly missing from scaffolds >= 10 kb",
-            "suffix": "%",
-            "scale": "YlGn",
-        }
-        self.headers["# Long scaffs"] = {
-            "rid": "num_long_scaffs",
-            "description": "number of scaffolds >= 10 kb",
-            "scale": "YlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        self.headers["Scaff N50"] = {
-            "description": "N50 scaffold size (in kilobases)",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "RdYlGn",
-        }
-        self.headers["Phase N50"] = {
-            "description": "N50 phase block size (in kilobases)",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        self.headers["Contig N50"] = {
-            "description": "N50 contig size (in kilobases)",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        self.headers["Edge N50"] = {
-            "description": "N50 edge size (in kilobases)",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "RdYlGn",
-            "hidden": True,
-        }
-        self.headers["Mol size"] = {
-            "description": "weighted mean molecule size (in kilobases); ideal 50-100",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "BuGn",
-        }
-        self.headers["Read len"] = {
-            "description": "mean read length (in bases) after trimming; ideal 140",
-            "suffix": "b",
-            "scale": "PuBu",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        self.headers["# Reads"] = {
-            "rid": "num_reads",
-            "description": "number of reads (in millions); ideal 800M-1200M for human",
-            "modify": lambda x: x / 1000000.0,
-            "suffix": "M",
-            "scale": "PuBu",
-        }
-        self.headers["Raw coverage"] = {
-            "description": "raw coverage; ideal ~56",
-            "suffix": "x",
-            "scale": "PuBu",
-            "hidden": True,
-        }
-        self.headers["Coverage"] = {
-            "description": "effective read coverage; ideal ~42 for nominal 56x cov",
-            "suffix": "x",
-            "scale": "PuBu",
-        }
-        self.headers["% Dup"] = {
-            "rid": "pct_Dup",
-            "description": "fraction of reads that are duplicates",
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        self.headers["% R2 Q30"] = {
-            "rid": "pct_R2_Q30",
-            "description": "fraction of Q30 bases in read 2; ideal 75-85%",
-            "suffix": "%",
-            "scale": "OrRd",
-        }
-        self.headers["Insert size"] = {
-            "description": "median insert size (in bases); ideal 0.35-0.40 Kb",
-            "suffix": "b",
-            "scale": "OrRd",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        self.headers["% proper"] = {
-            "rid": "pct_proper",
-            "description": "fraction of proper read pairs; ideal >= 75%",
-            "suffix": "%",
-            "scale": "OrRd",
-            "hidden": True,
-        }
-        self.headers["BC usage"] = {
-            "description": "fraction of barcodes used; between 0 and 1",
-            "scale": "OrRd",
-            "hidden": True,
-        }
-        self.headers["Est size"] = {
-            "description": "estimated genome size",
-            "modify": lambda x: x / 1000000.0,
-            "suffix": "Mb",
-            "scale": "YlGn",
-            "hidden": True,
-        }
-        self.headers["% repeats"] = {
-            "rid": "pct_repeats",
-            "description": "Estimated repetitive fraction (of genome)",
-            "scale": "YlGn",
-            "suffix": "%",
-            "hidden": True,
-        }
-        self.headers["% AT"] = {
-            "rid": "pct_AT",
-            "description": "high AT index (of genome)",
-            "scale": "YlGn",
-            "suffix": "%",
-            "hidden": True,
-        }
-        self.headers["Het dist"] = {
-            "description": "mean distance between heterozygous SNPs (in kilobases)",
-            "modify": lambda x: x / 1000.0,
-            "suffix": "Kb",
-            "scale": "YlGn",
-            "format": "{:,.0f}",
-            "hidden": True,
-        }
-        self.headers["p10"] = {
-            "description": "molecule count extending 10 kb on both sides",
-            "scale": "BuGn",
-            "hidden": True,
-        }
-        self.headers["% missing BC"] = {
-            "rid": "pct_missing_BC",
-            "description": "fraction of reads that are not barcoded",
-            "suffix": "%",
-            "scale": "BuGn",
-        }
-        self.headers["Barcode N50"] = {
-            "description": "N50 reads per barcode (in bases)",
-            "suffix": "b",
-            "scale": "BuGn",
-            "format": "{:,.0f}",
-        }
-        self.headers["% Phased"] = {
-            "rid": "pct_Phased",
-            "description": "nonduplicate and phased reads; ideal 45-50%",
-            "suffix": "%",
-            "scale": "BuGn",
-            "hidden": True,
+        headers = {
+            "Asm size": {
+                "description": "assembly size (in megabases) ;only scaffolds >= 10 kb",
+                "modify": lambda x: x / 1000000.0,
+                "suffix": "Mb",
+                "scale": "YlGn",
+            },
+            "% missing 10Kb": {
+                "rid": "pct_missing_10Kb",
+                "description": "% of base assembly missing from scaffolds >= 10 kb",
+                "suffix": "%",
+                "scale": "YlGn",
+            },
+            "# Long scaffs": {
+                "rid": "num_long_scaffs",
+                "description": "number of scaffolds >= 10 kb",
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "Scaff N50": {
+                "description": "N50 scaffold size (in kilobases)",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "RdYlGn",
+            },
+            "Phase N50": {
+                "description": "N50 phase block size (in kilobases)",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "Contig N50": {
+                "description": "N50 contig size (in kilobases)",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "Edge N50": {
+                "description": "N50 edge size (in kilobases)",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "Mol size": {
+                "description": "weighted mean molecule size (in kilobases); ideal 50-100",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "BuGn",
+            },
+            "Read len": {
+                "description": "mean read length (in bases) after trimming; ideal 140",
+                "suffix": "b",
+                "scale": "PuBu",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "# Reads": {
+                "rid": "num_reads",
+                "description": "number of reads (in millions); ideal 800M-1200M for human",
+                "modify": lambda x: x / 1000000.0,
+                "suffix": "M",
+                "scale": "PuBu",
+            },
+            "Raw coverage": {
+                "description": "raw coverage; ideal ~56",
+                "suffix": "x",
+                "scale": "PuBu",
+                "hidden": True,
+            },
+            "Coverage": {
+                "description": "effective read coverage; ideal ~42 for nominal 56x cov",
+                "suffix": "x",
+                "scale": "PuBu",
+            },
+            "% Dup": {
+                "rid": "pct_Dup",
+                "description": "fraction of reads that are duplicates",
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "% R2 Q30": {
+                "rid": "pct_R2_Q30",
+                "description": "fraction of Q30 bases in read 2; ideal 75-85%",
+                "suffix": "%",
+                "scale": "OrRd",
+            },
+            "Insert size": {
+                "description": "median insert size (in bases); ideal 0.35-0.40 Kb",
+                "suffix": "b",
+                "scale": "OrRd",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "% proper": {
+                "rid": "pct_proper",
+                "description": "fraction of proper read pairs; ideal >= 75%",
+                "suffix": "%",
+                "scale": "OrRd",
+                "hidden": True,
+            },
+            "BC usage": {
+                "description": "fraction of barcodes used; between 0 and 1",
+                "scale": "OrRd",
+                "hidden": True,
+            },
+            "Est size": {
+                "description": "estimated genome size",
+                "modify": lambda x: x / 1000000.0,
+                "suffix": "Mb",
+                "scale": "YlGn",
+                "hidden": True,
+            },
+            "% repeats": {
+                "rid": "pct_repeats",
+                "description": "Estimated repetitive fraction (of genome)",
+                "scale": "YlGn",
+                "suffix": "%",
+                "hidden": True,
+            },
+            "% AT": {
+                "rid": "pct_AT",
+                "description": "high AT index (of genome)",
+                "scale": "YlGn",
+                "suffix": "%",
+                "hidden": True,
+            },
+            "Het dist": {
+                "description": "mean distance between heterozygous SNPs (in kilobases)",
+                "modify": lambda x: x / 1000.0,
+                "suffix": "Kb",
+                "scale": "YlGn",
+                "format": "{:,.0f}",
+                "hidden": True,
+            },
+            "p10": {
+                "description": "molecule count extending 10 kb on both sides",
+                "scale": "BuGn",
+                "hidden": True,
+            },
+            "% missing BC": {
+                "rid": "pct_missing_BC",
+                "description": "fraction of reads that are not barcoded",
+                "suffix": "%",
+                "scale": "BuGn",
+            },
+            "Barcode N50": {
+                "description": "N50 reads per barcode (in bases)",
+                "suffix": "b",
+                "scale": "BuGn",
+                "format": "{:,.0f}",
+            },
+            "% Phased": {
+                "rid": "pct_Phased",
+                "description": "nonduplicate and phased reads; ideal 45-50%",
+                "suffix": "%",
+                "scale": "BuGn",
+                "hidden": True,
+            },
         }
 
-        reports = OrderedDict()
-        summaries = OrderedDict()
-        molecules = OrderedDict()
-        kmers = OrderedDict()
+        reports = {}
+        summaries = {}
+        molecules = {}
+        kmers = {}
         root_summary = {}
 
-        ### Parse the input log files
+        # Parse the input log files
         # report.txt files
         for f in self.find_log_files("supernova/report"):
-            log.debug("Found report in: {}".format(f["root"]))
+            log.debug(f"Found report in: {f['root']}")
             sid, data = self.parse_report(f["f"])
             s_name = self.clean_s_name(sid, f)
             if s_name in reports.keys():
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             reports[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
 
         # summary.json files
         for f in self.find_log_files("supernova/summary"):
-            log.debug("Found summary.json in: {}".format(f["root"]))
+            log.debug(f"Found summary.json in: {f['root']}")
             try:
                 sid, data = self.parse_summary(f["f"])
             except ValueError:
-                log.debug("Error parsing JSON file in {}".format(f["root"]))
+                log.debug(f"Error parsing JSON file in {f['root']}")
                 continue
             except RuntimeError:
-                log.debug("Could not find sample_id in JSON file in {}".format(f["root"]))
+                log.debug(f"Could not find sample_id in JSON file in {f['root']}")
                 continue
 
             s_name = self.clean_s_name(sid, f)
             if s_name in summaries.keys():
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             summaries[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
             # The plot json files do not contain sample IDs, sadly. So we need to store it somewhere.
@@ -227,7 +249,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # histogram_molecules.json files
         for f in self.find_log_files("supernova/molecules"):
-            log.debug("Found histogram_molecules.json in: {}".format(f["root"]))
+            log.debug(f"Found histogram_molecules.json in: {f['root']}")
             try:
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"])
@@ -236,12 +258,12 @@ class MultiqcModule(BaseMultiqcModule):
                     molecules[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-molecules")
             except RuntimeError:
-                log.debug("Could not parse JSON file in {}".format(f["root"]))
+                log.debug(f"Could not parse JSON file in {f['root']}")
                 continue
 
         # histogram_kmer_count.json files
         for f in self.find_log_files("supernova/kmers"):
-            log.debug("Found histogram_kmer_count.json in: {}".format(f["root"]))
+            log.debug(f"Found histogram_kmer_count.json in: {f['root']}")
             try:
                 if f["root"] in root_summary.keys():
                     data = self.parse_histogram(f["f"], 400)
@@ -250,13 +272,13 @@ class MultiqcModule(BaseMultiqcModule):
                     kmers[s_name] = data
                     self.add_data_source(f, s_name=s_name, section="supernova-kmers")
             except RuntimeError:
-                log.debug("Could not parse JSON file in {}".format(f["root"]))
+                log.debug(f"Could not parse JSON file in {f['root']}")
                 continue
 
         # Data from summary.json supersedes data from report.txt
         for sample_id, sum_data in summaries.items():
             if sample_id in reports.keys():
-                log.debug("Found summary data for sample {} which supersedes report data".format(sample_id))
+                log.debug(f"Found summary data for sample {sample_id} which supersedes report data")
                 reports[sample_id] = sum_data
         # Ignore cmd-line specified samples
         reports = self.ignore_samples(reports)
@@ -264,13 +286,17 @@ class MultiqcModule(BaseMultiqcModule):
         kmers = self.ignore_samples(kmers)
 
         if len(reports) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
         else:
-            log.info("Found {} reports".format(len(reports.keys())))
+            log.info(f"Found {len(reports.keys())} reports")
 
-        ### Write the report
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
+        # Write the report
         self.write_data_file(reports, "multiqc_supernova")
-        config_table = {"id": "supernova_table", "namespace": "supernova"}
+        config_table = {"id": "supernova_table", "namespace": "supernova", "title": "Supernova: Assembly statistics"}
         self.add_section(
             name="Assembly statistics",
             anchor="supernova-table",
@@ -280,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
             "found in the folder `sampleID/outs/`. If available the stats in the report "
             "file will be superseded by the higher precision numbers found in the file "
             "`sampleID/outs/assembly/stats/summary.json`",
-            plot=table.plot(reports, self.headers, config_table),
+            plot=table.plot(reports, headers, config_table),
         )
 
         # N50 barcharts
@@ -367,8 +393,8 @@ class MultiqcModule(BaseMultiqcModule):
                 plot=linegraph.plot(kmers, config_kmers),
             )
 
-    def parse_summary(self, content):
-
+    @staticmethod
+    def parse_summary(content):
         stats = {
             "assembly_size": "Asm size",
             "bases_per_read": "Read len",
@@ -422,9 +448,10 @@ class MultiqcModule(BaseMultiqcModule):
                     value = 100 - value
                 data[stats[key]] = value
 
-        return (sid, data)
+        return sid, data
 
-    def parse_report(self, content):
+    @staticmethod
+    def parse_report(content):
         # Some short-hands for converting the report numbers (pi is exactly three!)
         exp = {
             "K": 1000.0,
@@ -466,13 +493,13 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         # Find the sample ID
         sid = ""
-        sid_pat = re.compile("- \[(.+)\]")
+        sid_pat = re.compile(r"- \[(.+)\]")
         # [number, unit, category]
-        stat_pat = re.compile("-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =")
+        stat_pat = re.compile(r"-\s+(\d+\.\d+)\s+(\S+|.)\s+= (.+) =")
 
-        for l in content.splitlines():
-            sid_m = re.match(sid_pat, l)
-            stat_m = re.match(stat_pat, l)
+        for line in content.splitlines():
+            sid_m = re.match(sid_pat, line)
+            stat_m = re.match(stat_pat, line)
 
             if sid_m is not None:
                 sid = sid_m.groups()[0]
@@ -488,12 +515,12 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         data[stats[stat_type]] = float(stat_val[0])
                 except ValueError:
-                    log.debug('Error in parsing sample {}, on line "{}"'.format(sid, stat_val))
+                    log.debug(f'Error in parsing sample {sid}, on line "{stat_val}"')
 
-        return (sid, data)
+        return sid, data
 
-    def parse_histogram(self, content, cutoff=None):
-
+    @staticmethod
+    def parse_histogram(content, cutoff=None):
         try:
             cdict = json.loads(content)
         except ValueError as e:
@@ -503,7 +530,8 @@ class MultiqcModule(BaseMultiqcModule):
         xdata = [i * cdict["binsize"] for i in range(0, numbins)]
         return {i: j for (i, j) in zip(xdata, cdict["vals"][:cutoff])}
 
-    def trim_tail(self, plot, min_x=50, pct=0.99):
+    @staticmethod
+    def trim_tail(plot, min_x=50, pct=0.99):
         join_plot = {}
         cuml_plot = {}
         for sample, plot_data in plot.items():

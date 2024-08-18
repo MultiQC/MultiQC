@@ -1,49 +1,57 @@
-#!/usr/bin/env python
-""" MultiQC module to parse output from bcftools """
-from __future__ import print_function
-from collections import OrderedDict
 import logging
+from typing import Dict
 
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Import the Samtools submodules
-from .stats import StatsReportMixin
+from multiqc.modules.bcftools.stats import parse_bcftools_stats
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-class MultiqcModule(BaseMultiqcModule, StatsReportMixin):
-    """Bcftools has a number of different commands and outputs.
-    This MultiQC module supports some but not all. The code for
-    each script is split into its own file and adds a section to
-    the module output if logs are found."""
+class MultiqcModule(BaseMultiqcModule):
+    """
+    Supported commands: `stats`
+
+    #### Collapse complementary substitutions
+
+    In non-strand-specific data, reporting the total numbers of occurences for both changes
+    in a comlementary pair - like `A>C` and `T>G` - might not bring any additional information.
+    To collapse such statistics in the substitutions plot, you can add the following section into
+    [your configuration](http://multiqc.info/docs/#configuring-multiqc):
+
+    ```yaml
+    bcftools:
+      collapse_complementary_changes: true
+    ```
+
+    MultiQC will sum up all complementary changes and show only `A>*` and `C>*` substitutions
+    in the resulting plot.
+    """
 
     def __init__(self):
-
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bcftools",
             anchor="bcftools",
             target="Bcftools",
             href="https://samtools.github.io/bcftools/",
-            info=" contains utilities for variant calling and manipulating VCFs and BCFs.",
+            info="Utilities for variant calling and manipulating VCFs and BCFs.",
             doi="10.1093/gigascience/giab008",
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = OrderedDict()
-        self.general_stats_data = dict()
+        self.general_stats_headers: Dict = dict()
+        self.general_stats_data: Dict = dict()
         n = dict()
 
         # Call submodule functions
-        n["stats"] = self.parse_bcftools_stats()
+        n["stats"] = parse_bcftools_stats(self)
         if n["stats"] > 0:
-            log.info("Found {} stats reports".format(n["stats"]))
+            log.info(f"Found {n['stats']} stats reports")
 
         # Exit if we didn't find anything
         if sum(n.values()) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add to the General Stats table (has to be called once per MultiQC module)
         self.general_stats_addcols(self.general_stats_data, self.general_stats_headers)

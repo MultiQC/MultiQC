@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "Please consider citing MultiQC if you use it in your analysis."
+authors:
+  - family-names: Ewels
+    given-names: Philip
+  - family-names: Magnusson
+    given-names: Måns
+  - family-names: Lundin
+    given-names: Sverker
+  - family-names: Käller
+    given-names: Max
+title: "MultiQC: summarize analysis results for multiple tools and samples in a single report"
+version: 1.12
+doi: 10.1093/bioinformatics/btw354
+date-released: 2022-02-08
+url: "https://github.com/MultiQC/MultiQC"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Ewels
+      given-names: Philip
+    - family-names: Magnusson
+      given-names: Måns
+    - family-names: Lundin
+      given-names: Sverker
+    - family-names: Käller
+      given-names: Max
+  doi: "10.1093/bioinformatics/btw354"
+  journal: "Bioinformatics"
+  number: 19
+  start: 3047
+  end: 3047
+  title: "MultiQC: summarize analysis results for multiple tools and samples in a single report"
+  issue: 1
+  volume: 32
+  year: 2016
+  url: "http://dx.doi.org/10.1093/bioinformatics/btw354"

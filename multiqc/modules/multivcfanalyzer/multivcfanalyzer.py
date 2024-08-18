@@ -1,33 +1,21 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from MultiVCFAnalyzer """
-
-from __future__ import print_function
-from collections import OrderedDict
-import logging
 import json
+import logging
 
-from multiqc.plots import table
-from multiqc.plots import bargraph
-from collections import OrderedDict
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MultiVCFAnalyzer module"""
-
     def __init__(self):
-
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MultiVCFAnalyzer",
             anchor="multivcfanalyzer",
             href="https://github.com/alexherbig/MultiVCFAnalyzer",
-            info="""combines multiple VCF files in a coherent way,
-            can produce summary statistics and downstream analysis formats for phylogeny reconstruction.""",
+            info="Reads multiple VCF files into combined genotype calls, produces summary statistics and downstream formats",
+            extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
+            "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
         )
 
@@ -43,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Return if no samples found
         if len(self.mvcf_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Add in extra columns to data file
         self.compute_perc_hets()
@@ -84,14 +72,19 @@ class MultiqcModule(BaseMultiqcModule):
             data = json.load(f["f"])
         except Exception as e:
             log.debug(e)
-            log.warning("Could not parse MultiVCFAnalyzer JSON: '{}'".format(f["fn"]))
+            log.warning(f"Could not parse MultiVCFAnalyzer JSON: '{f['fn']}'")
             return
+
+        version = data.get("metadata", {}).get("version", None)
 
         # Parse JSON data to a dict
         for s_name, metrics in data.get("metrics", {}).items():
             s_clean = self.clean_s_name(s_name, f)
             if s_clean in self.mvcf_data:
-                log.debug("Duplicate sample name found! Overwriting: {}".format(s_clean))
+                log.debug(f"Duplicate sample name found! Overwriting: {s_clean}")
+
+            if version is not None:
+                self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
             self.mvcf_data[s_clean] = dict()
@@ -112,178 +105,179 @@ class MultiqcModule(BaseMultiqcModule):
     def computeSnpHom(self):
         """Computes snp(hom) for data present by MultiVCFAnalyzer"""
         for sample in self.mvcf_data:
-            self.mvcf_data[sample]["SNP Calls (hom)"] = (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[
-                sample
-            ]["SNP Calls (het)"]
+            self.mvcf_data[sample]["SNP Calls (hom)"] = (
+                (self.mvcf_data[sample]["SNP Calls (all)"]) - self.mvcf_data[sample]["SNP Calls (het)"]
+            )
 
     def addSummaryMetrics(self):
         """Take the parsed stats from MultiVCFAnalyzer and add it to the main plot"""
 
-        headers = OrderedDict()
+        headers = {
+            "SNP Calls (all)": {
+                "title": "SNPs",
+                "description": "Total number of non-reference calls",
+                "scale": "RdBu",
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "SNP Calls (hom)": {
+                "title": "Hom SNPs",
+                "description": "Total number of non-reference calls passing homozygosity thresholds",
+                "scale": "RdYlGn",
+                "hidden": True,
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "SNP Calls (het)": {
+                "title": "Het SNPs",
+                "description": "Total number of non-reference calls not passing homozygosity thresholds",
+                "scale": "YlGn",
+                "hidden": True,
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "Heterozygous SNP alleles (percent)": {
+                "title": "% Hets",
+                "description": "Percentage of heterozygous SNP alleles",
+                "scale": "OrRd",
+                "max": 100,
+                "min": 0,
+            },
+        }
 
-        headers["SNP Calls (all)"] = {
-            "title": "SNPs",
-            "description": "Total number of non-reference calls",
-            "scale": "RdGn",
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["SNP Calls (hom)"] = {
-            "title": "Hom SNPs",
-            "description": "Total number of non-reference calls passing homozygosity thresholds",
-            "scale": "RdYlGn",
-            "hidden": True,
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["SNP Calls (het)"] = {
-            "title": "Het SNPs",
-            "description": "Total number of non-reference calls not passing homozygosity thresholds",
-            "scale": "YlGn",
-            "hidden": True,
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["Heterozygous SNP alleles (percent)"] = {
-            "title": "% Hets",
-            "description": "Percentage of heterozygous SNP alleles",
-            "scale": "OrRd",
-            "max": 100,
-            "min": 0,
-        }
         self.general_stats_addcols(self.mvcf_data, headers)
 
     def addTable(self):
         """Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
-        headers = OrderedDict()
-
-        headers["allPos"] = {
-            "title": "Bases in Final Alignment",
-            "description": "Length of FASTA file in base pairs (bp)",
-            "scale": "BrBG",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
-        }
-        headers["SNP Calls (all)"] = {
-            "title": "SNPs",
-            "description": "Total number of non-reference calls made",
-            "scale": "OrRd",
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["Heterozygous SNP alleles (percent)"] = {
-            "title": "% Hets",
-            "description": "Percentage of heterozygous SNP alleles",
-            "scale": "PuBu",
-            "max": 100,
-            "min": 0,
-        }
-        headers["SNP Calls (hom)"] = {
-            "title": "Hom SNPs",
-            "description": "Total number of non-reference calls passing homozygosity thresholds",
-            "scale": "RdYlGn",
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["SNP Calls (het)"] = {
-            "title": "Het SNPs",
-            "description": "Total number of non-reference calls not passing homozygosity thresholds",
-            "scale": "RdYlGn",
-            "shared_key": "snp_call",
-            "format": "{:,.0f}",
-        }
-        headers["discardedVarCall"] = {
-            "title": "Discarded SNP Call",
-            "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
-            "scale": "PuCr",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
-        }
-        headers["filteredVarCall"] = {
-            "title": "Filtered SNP Call",
-            "description": "Number of positions ignored defined in user-supplied filter list",
-            "scale": "RdGy",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
-        }
-        headers["refCall"] = {
-            "title": "Reference Calls",
-            "description": "Number of reference calls made",
-            "scale": "Spectral",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
-        }
-        headers["discardedRefCall"] = {
-            "title": "Discarded Reference Call",
-            "description": "Number of reference positions not reaching genotyping or coverage thresholds",
-            "scale": "YlGnBu",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
-        }
-        headers["coverage (fold)"] = {
-            "title": "Average Call Coverage",
-            "description": "Average number of reads covering final calls",
-            "scale": "OrRd",
-            "shared_key": "coverage",
-            "suffix": "X",
-        }
-        headers["coverage (percent)"] = {
-            "title": "% Reference with Calls",
-            "description": "Percent coverage of all positions with final calls",
-            "scale": "PuBuGn",
-            "shared_key": "coverage",
-            "suffix": "%",
-            "max": 100,
-            "min": 0,
-        }
-        headers["unhandledGenotype"] = {
-            "title": "Unhandled Genotypes",
-            "description": "Number of positions discarded due to presence of more than one alternate allele",
-            "scale": "BuPu",
-            "shared_key": "snp_count",
-            "format": "{:,.0f}",
-        }
-        headers["noCall"] = {
-            "title": "Positions with No Call",
-            "description": "Number of positions with no call made as reported by GATK",
-            "scale": "GnBu",
-            "shared_key": "calls",
-            "format": "{:,.0f}",
+        headers = {
+            "allPos": {
+                "title": "Bases in Final Alignment",
+                "description": "Length of FASTA file in base pairs (bp)",
+                "scale": "BrBG",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
+            "SNP Calls (all)": {
+                "title": "SNPs",
+                "description": "Total number of non-reference calls made",
+                "scale": "OrRd",
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "Heterozygous SNP alleles (percent)": {
+                "title": "% Hets",
+                "description": "Percentage of heterozygous SNP alleles",
+                "scale": "PuBu",
+                "max": 100,
+                "min": 0,
+            },
+            "SNP Calls (hom)": {
+                "title": "Hom SNPs",
+                "description": "Total number of non-reference calls passing homozygosity thresholds",
+                "scale": "RdYlGn",
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "SNP Calls (het)": {
+                "title": "Het SNPs",
+                "description": "Total number of non-reference calls not passing homozygosity thresholds",
+                "scale": "RdYlGn",
+                "shared_key": "snp_call",
+                "format": "{:,.0f}",
+            },
+            "discardedVarCall": {
+                "title": "Discarded SNP Call",
+                "description": "Number of non-reference positions not reaching genotyping or coverage thresholds",
+                "scale": "PuRd",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
+            "filteredVarCall": {
+                "title": "Filtered SNP Call",
+                "description": "Number of positions ignored defined in user-supplied filter list",
+                "scale": "RdGy",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
+            "refCall": {
+                "title": "Reference Calls",
+                "description": "Number of reference calls made",
+                "scale": "Spectral",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
+            "discardedRefCall": {
+                "title": "Discarded Reference Call",
+                "description": "Number of reference positions not reaching genotyping or coverage thresholds",
+                "scale": "YlGnBu",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
+            "coverage (fold)": {
+                "title": "Average Call Coverage",
+                "description": "Average number of reads covering final calls",
+                "scale": "OrRd",
+                "shared_key": "coverage",
+                "suffix": "X",
+            },
+            "coverage (percent)": {
+                "title": "% Reference with Calls",
+                "description": "Percent coverage of all positions with final calls",
+                "scale": "PuBuGn",
+                "shared_key": "coverage",
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+            },
+            "unhandledGenotype": {
+                "title": "Unhandled Genotypes",
+                "description": "Number of positions discarded due to presence of more than one alternate allele",
+                "scale": "BuPu",
+                "shared_key": "snp_count",
+                "format": "{:,.0f}",
+            },
+            "noCall": {
+                "title": "Positions with No Call",
+                "description": "Number of positions with no call made as reported by GATK",
+                "scale": "GnBu",
+                "shared_key": "calls",
+                "format": "{:,.0f}",
+            },
         }
 
         # Separate table config
         table_config = {
             "namespace": "MultiVCFAnalyzer",  # Name for grouping. Prepends desc and is in Config Columns modal
             "id": "mvcf-table",  # ID used for the table
-            "table_title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
+            "title": "MultiVCFAnalyzer Results",  # Title of the table. Used in the column config modal
         }
         tab = table.plot(self.mvcf_data, headers, table_config)
         return tab
 
     def addBarplot(self):
         """Take the parsed stats from MultiVCFAnalyzer and add it to the MVCF Table"""
-        cats = OrderedDict()
-
         # SNP Calls (all): Green CHECK
         # Number of Reference Calls: Blue CHECK
         # Discarded SNP Call: Orange CHECK
         # Discarded Reference Call: Red [if avaliable] CHECK
         # Positions with No Call: Black CHECK
-        cats["SNP Calls (hom)"] = {"name": "SNP Calls (hom)", "color": "#01665e"}
-        cats["SNP Calls (het)"] = {"name": "SNP Calls (het)", "color": "#5ab4ac"}
-        cats["refCall"] = {"name": "Reference Calls", "color": "#9ebcda"}
-        cats["discardedVarCall"] = {"name": "Discarded SNP Call", "color": "#f7a35c"}
-        cats["filteredVarCall"] = {
-            "name": "Filtered SNP Call",
+        cats = {
+            "SNP Calls (hom)": {"name": "SNP Calls (hom)", "color": "#01665e"},
+            "SNP Calls (het)": {"name": "SNP Calls (het)", "color": "#5ab4ac"},
+            "refCall": {"name": "Reference Calls", "color": "#9ebcda"},
+            "discardedVarCall": {"name": "Discarded SNP Call", "color": "#f7a35c"},
+            "filteredVarCall": {
+                "name": "Filtered SNP Call",
+            },
+            "discardedRefCall": {"name": "Discarded Reference Call", "color": "#e34a33"},
+            "unhandledGenotype": {"name": "Positions with an unknown Genotype Call", "color": "#252525"},
+            "noCall": {"name": "Positions with No Call", "color": "#252525"},
         }
-        cats["discardedRefCall"] = {"name": "Discarded Reference Call", "color": "#e34a33"}
-        cats["unhandledGenotype"] = {"name": "Positions with an unknown Genotype Call", "color": "#252525"}
-        cats["noCall"] = {"name": "Positions with No Call", "color": "#252525"}
 
         config = {
             # Building the plot
             "id": "mvcf_barplot",  # HTML ID used for plot
-            "hide_zero_cats": True,  # Hide categories where data for all samples is 0
+            "hide_empty": True,  # Hide categories where data for all samples is 0
             # Customising the plot
             "title": "MultiVCFAnalyzer: Call Categories",  # Plot title - should be in format "Module Name: Plot Title"
             "ylab": "Total # Positions",  # X axis label

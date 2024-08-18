@@ -1,27 +1,31 @@
-#!/usr/bin/env python
-""" MultiQC module to parse output from MALT """
-from __future__ import print_function
-from collections import OrderedDict
-from multiqc import config
-from multiqc.plots import bargraph
-from multiqc.modules.base_module import BaseMultiqcModule
-
 import logging
+import re
+
+from multiqc import config
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph
 
 log = logging.getLogger(__name__)
 
+VERSION_REGEX = r"Version\s+MALT \(version ([\d\.]+),.*"
+
 
 class MultiqcModule(BaseMultiqcModule):
-    """Malt Module"""
+    """
+    The MALT MultiQC module reads the header of the MALT log files and produces three MultiQC sections:
+
+    - A MALT summary statistics table
+    - A Mappability bargraph
+    - A Taxonomic assignment success bargraph
+    """
 
     def __init__(self):
-
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MALT",
             anchor="malt",
             href="http://ab.inf.uni-tuebingen.de/software/malt/",
-            info="performs alignment of metagenomic reads against a database of reference sequences (such as NR, GenBank or Silva) and produces a MEGAN RMA file as output.",
+            info="Aligns of metagenomic reads to a database of reference sequences "
+            "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
         )
 
@@ -34,12 +38,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.malt_data = self.ignore_samples(self.malt_data)
 
         if len(self.malt_data) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
         # Write data to file
         self.write_data_file(self.malt_data, "malt")
 
-        log.info("Found {} reports".format(len(self.malt_data)))
+        log.info(f"Found {len(self.malt_data)} reports")
 
         self.malt_general_stats()
         self.mappability_barplot()
@@ -55,16 +59,25 @@ class MultiqcModule(BaseMultiqcModule):
             "Aligned queries",
             "Num. alignments",
         ]
+        version = None
         for line in f["f"]:
             line = line.rstrip()
-            if line.startswith("+++++ Aligning file:") and reading == False:
+            if line.startswith("Version"):
+                version_match = re.search(VERSION_REGEX, line)
+                if version_match:
+                    version = version_match.group(1)
+
+            if line.startswith("+++++ Aligning file:") and reading is False:
                 reading = True
                 s_name = line.split()[-1]
                 s_name = self.clean_s_name(s_name, f)
                 if s_name in self.malt_data:
-                    log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+                    log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name=s_name)
                 self.malt_data[s_name] = {}
+                if version is not None:
+                    self.add_software_version(version, s_name)
+
             elif reading:
                 for k in keys:
                     if line.startswith(k):
@@ -77,14 +90,20 @@ class MultiqcModule(BaseMultiqcModule):
                                 self.malt_data[s_name]["No Assig. Taxonomy"] = (
                                     self.malt_data[s_name]["Total reads"] - self.malt_data[s_name]["Assig. Taxonomy"]
                                 )
-                                self.malt_data[s_name]["Mappability"] = (
-                                    float(self.malt_data[s_name]["Total reads"])
-                                    / float(self.malt_data[s_name]["Num. of queries"])
-                                ) * 100.0
-                                self.malt_data[s_name]["Taxonomic assignment success"] = (
-                                    float(self.malt_data[s_name]["Assig. Taxonomy"])
-                                    / float(self.malt_data[s_name]["Total reads"])
-                                ) * 100.0
+                                try:
+                                    self.malt_data[s_name]["Mappability"] = (
+                                        float(self.malt_data[s_name]["Total reads"])
+                                        / float(self.malt_data[s_name]["Num. of queries"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Mappability"] = 0
+                                try:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = (
+                                        float(self.malt_data[s_name]["Assig. Taxonomy"])
+                                        / float(self.malt_data[s_name]["Total reads"])
+                                    ) * 100.0
+                                except ZeroDivisionError:
+                                    self.malt_data[s_name]["Taxonomic assignment success"] = 0
                             except KeyError:
                                 pass
                             reading = False
@@ -94,9 +113,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         Mappability = (Total reads / Num. of queries) * 100
         """
-        cats = OrderedDict()
-        cats["Total reads"] = {"name": "Mapped reads"}
-        cats["Non mapped"] = {"name": "Non Mapped reads"}
+        cats = {
+            "Total reads": {"name": "Mapped reads"},
+            "Non mapped": {"name": "Non Mapped reads"},
+        }
         config = {
             "id": "malt-mappability-plot",
             "title": "MALT: Metagenomic Mappability",
@@ -129,41 +149,42 @@ class MultiqcModule(BaseMultiqcModule):
 
     def malt_general_stats(self):
         """MALT General Statistics table"""
-        headers = OrderedDict()
-        headers["Taxonomic assignment success"] = {
-            "title": "% Tax assigned",
-            "description": "Percentage of mapped reads assigned to a taxonomic node",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["Assig. Taxonomy"] = {
-            "title": "{} Tax assigned".format(config.read_count_prefix),
-            "description": "Number of reads assigned to a Taxonomic node ({})".format(config.read_count_desc),
-            "scale": "Greens",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "hidden": True,
-        }
-        headers["Mappability"] = {
-            "title": "% Metagenomic Mapped",
-            "description": "Percentage of mapped reads",
-            "suffix": "%",
-            "max": 100,
-            "scale": "RdYlGn",
-        }
-        headers["Total reads"] = {
-            "title": "{} Mapped".format(config.read_count_prefix),
-            "description": "Number of mapped reads ({})".format(config.read_count_desc),
-            "scale": "PuBu",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
-        }
-        headers["Num. of queries"] = {
-            "title": "{} Reads".format(config.read_count_prefix),
-            "description": "Number of reads in sample ({})".format(config.read_count_desc),
-            "scale": "Purples",
-            "shared_key": "read_count",
-            "modify": lambda x: x * config.read_count_multiplier,
+        headers = {
+            "Taxonomic assignment success": {
+                "title": "% Tax assigned",
+                "description": "Percentage of mapped reads assigned to a taxonomic node",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "Assig. Taxonomy": {
+                "title": f"{config.read_count_prefix} Tax assigned",
+                "description": f"Number of reads assigned to a Taxonomic node ({config.read_count_desc})",
+                "scale": "Greens",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+                "hidden": True,
+            },
+            "Mappability": {
+                "title": "% Metagenomic Mapped",
+                "description": "Percentage of mapped reads",
+                "suffix": "%",
+                "max": 100,
+                "scale": "RdYlGn",
+            },
+            "Total reads": {
+                "title": f"{config.read_count_prefix} Mapped",
+                "description": f"Number of mapped reads ({config.read_count_desc})",
+                "scale": "PuBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+            "Num. of queries": {
+                "title": f"{config.read_count_prefix} Reads",
+                "description": f"Number of reads in sample ({config.read_count_desc})",
+                "scale": "Purples",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
         }
         self.general_stats_addcols(self.malt_data, headers)

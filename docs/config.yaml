@@ -1,0 +1,25 @@
+nav:
+  - Getting Started:
+      - index.mdx
+      - getting_started/quick_start.md
+      - getting_started/installation.md
+      - getting_started/running_multiqc.md
+      - getting_started/config.md
+  - Reports:
+      - reports/reports.md
+      - reports/customisation.md
+  - Custom Content:
+      - custom_content/index.md
+  - Usage:
+      - usage/downstream.md
+      - usage/pipelines.md
+      - usage/scripts.md
+      - usage/troubleshooting.md
+  - Development:
+      - development/index.md
+      - development/modules.md
+      - development/plots.md
+      - development/plugins.md
+      - development/templates.md
+      - development/compatibility.md
+      - development/contributing.md

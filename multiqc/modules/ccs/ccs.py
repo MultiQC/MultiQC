@@ -1,40 +1,44 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from CCS """
-
 import json
 import logging
 import re
+from typing import Dict
 
-from collections import OrderedDict
-from multiqc.modules.base_module import BaseMultiqcModule
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialse the parent object
         super(MultiqcModule, self).__init__(
             name="CCS",
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
-            info=" is used to generate highly accurate single-molecule consensus reads from PacBio sequencing.",
+            info="PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)",
+            extra="""
+            CCS takes multiple subreads of the same SMRTbell molecule and combines them
+            using a statistical model to produce one highly accurate consensus sequence,
+            also called HiFi read, with base quality values. This tool powers the Circular
+            Consensus Sequencing workflow in SMRT Link.
+            """,
             # Can't find a DOI // doi=
         )
 
         # To store the mod data
-        self.ccs_data = dict()
+        self.ccs_data: Dict = dict()
         self.parse_v4_log_files()
         self.parse_v5_log_files()
         self.ccs_data = self.ignore_samples(self.ccs_data)
 
         # If we found no data
         if not self.ccs_data:
-            raise UserWarning
-        log.info("Found {} reports".format(len(self.ccs_data)))
+            raise ModuleNoSamplesFound
+        log.info(f"Found {len(self.ccs_data)} reports")
+
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
 
         self.write_data_file(self.ccs_data, "multiqc_ccs_report")
         self.add_general_stats()
@@ -44,15 +48,13 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ccs/v4", filehandles=True):
             data = parse_PacBio_log(f["f"])
             v5_data = self.convert_to_v5(data)
-            filename = f["s_name"]
-            self.ccs_data[filename] = v5_data
+            self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
             v5_data = json.load(f["f"])
-            filename = f["s_name"]
-            self.ccs_data[filename] = v5_data
+            self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
     def add_general_stats(self):
@@ -71,38 +73,38 @@ class MultiqcModule(BaseMultiqcModule):
             except (KeyError, ZeroDivisionError):
                 pass
 
-        headers = OrderedDict()
-        headers["zmw_pct_passed_yield"] = {
-            "title": "ZMWs %PF",
-            "description": "Percent of ZMWs passing filters",
-            "max": 100,
-            "min": 0,
-            "scale": "RdYlGn",
-            "suffix": "%",
-        }
-        headers["zmw_passed_yield"] = {
-            "title": "ZMWs PF",
-            "description": "ZMWs pass filters",
-            "scale": "BuGn",
-            "format": "{.0f}",
-            "shared_key": "zmw_count",
-            "hidden": True,
-        }
-        headers["zmw_input"] = {
-            "title": "ZMWs input",
-            "description": "ZMWs input",
-            "scale": "Purples",
-            "format": "{.0f}",
-            "shared_key": "zmw_count",
+        headers = {
+            "zmw_pct_passed_yield": {
+                "title": "ZMWs %PF",
+                "description": "Percent of ZMWs passing filters",
+                "max": 100,
+                "min": 0,
+                "scale": "RdYlGn",
+                "suffix": "%",
+            },
+            "zmw_passed_yield": {
+                "title": "ZMWs PF",
+                "description": "ZMWs pass filters",
+                "scale": "BuGn",
+                "format": "{:,d}",
+                "shared_key": "zmw_count",
+                "hidden": True,
+            },
+            "zmw_input": {
+                "title": "ZMWs input",
+                "description": "ZMWs input",
+                "scale": "Purples",
+                "format": "{:,d}",
+                "shared_key": "zmw_count",
+            },
         }
         self.general_stats_addcols(gstats_data, headers)
 
     def add_sections(self):
-
         # First we gather all the filters we encountered
         all_filters = dict()
-        for filename in self.ccs_data:
-            for filter_reason in self.filter_and_pass(self.ccs_data[filename]):
+        for s_name in self.ccs_data:
+            for filter_reason in self.filter_and_pass(self.ccs_data[s_name]):
                 all_filters[filter_reason] = 0
 
         # Then we add the counts for each filter to the plot data
@@ -154,7 +156,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add filtere reasons (id starts with filtered_) and total passed
         for entry in attributes:
-            if entry["id"].startswith("filtered") or entry["id"] == "zmw_passed_yield":
+            if (
+                entry["id"].startswith("filtered")
+                or entry["id"] == "zmw_passed_yield"
+                or entry["id"].startswith("ccs_processing.filtered")
+                or entry["id"] == "ccs_processing.zmw_passed_yield"
+            ):
                 reasons[entry["name"]] = entry["value"]
 
         return reasons

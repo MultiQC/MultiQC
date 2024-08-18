@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-
-""" MultiQC submodule to parse output from deepTools plotCoverage """
+"""MultiQC submodule to parse output from deepTools plotCoverage"""
 
 import logging
-from collections import OrderedDict
 
-from multiqc.plots import table, linegraph
+from multiqc.plots import linegraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -19,7 +16,7 @@ class plotCoverageMixin:
             parsed_data = self.parsePlotCoverageStdout(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageStdout:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotCoverageStdout[k] = v
 
             if len(parsed_data) > 0:
@@ -30,7 +27,7 @@ class plotCoverageMixin:
             parsed_data = self.parsePlotCoverageOutRawCounts(f)
             for k, v in parsed_data.items():
                 if k in self.deeptools_plotCoverageOutRawCounts:
-                    log.warning("Replacing duplicate sample {}.".format(k))
+                    log.warning(f"Replacing duplicate sample {k}.")
                 self.deeptools_plotCoverageOutRawCounts[k] = v
 
             if len(parsed_data) > 0:
@@ -39,38 +36,47 @@ class plotCoverageMixin:
         self.deeptools_plotCoverageStdout = self.ignore_samples(self.deeptools_plotCoverageStdout)
         self.deeptools_plotCoverageOutRawCounts = self.ignore_samples(self.deeptools_plotCoverageOutRawCounts)
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         if len(self.deeptools_plotCoverageStdout) > 0:
             # Write data to file
             self.write_data_file(self.deeptools_plotCoverageStdout, "deeptools_plot_cov_stdout")
 
-            header = OrderedDict()
-            header["min"] = {"title": "Min", "description": "Minimum Coverage", "shared_key": "coverage"}
-            header["25%"] = {
-                "rid": "first_quartile",
-                "title": "1st Quartile",
-                "description": "First quartile coverage",
-                "shared_key": "coverage",
+            header = {
+                "min": {"title": "Min", "description": "Minimum Coverage", "shared_key": "coverage"},
+                "25%": {
+                    "rid": "first_quartile",
+                    "title": "1st Quartile",
+                    "description": "First quartile coverage",
+                    "shared_key": "coverage",
+                },
+                "50%": {
+                    "rid": "median",
+                    "title": "Median",
+                    "description": "Median coverage (second quartile)",
+                    "shared_key": "coverage",
+                },
+                "mean": {"title": "Mean", "description": "Mean coverage", "shared_key": "coverage"},
+                "75%": {
+                    "rid": "third_quartile",
+                    "title": "3rd Quartile",
+                    "description": "Third quartile coverage",
+                    "shared_key": "coverage",
+                },
+                "max": {"title": "Max", "description": "Maximum coverage", "shared_key": "coverage"},
+                "std": {
+                    "title": "Std. Dev.",
+                    "description": "Coverage standard deviation",
+                    "shared_key": "coverage",
+                },
             }
-            header["50%"] = {
-                "rid": "median",
-                "title": "Median",
-                "description": "Median coverage (second quartile)",
-                "shared_key": "coverage",
+            config = {
+                "namespace": "deepTools plotCoverage",
+                "id": "deeptools_coverage_metrics_table",
+                "title": "deepTools: Coverage metrics",
             }
-            header["mean"] = {"title": "Mean", "description": "Mean coverage", "shared_key": "coverage"}
-            header["75%"] = {
-                "rid": "third_quartile",
-                "title": "3rd Quartile",
-                "description": "Third quartile coverage",
-                "shared_key": "coverage",
-            }
-            header["max"] = {"title": "Max", "description": "Maximum coverage", "shared_key": "coverage"}
-            header["std"] = {
-                "title": "Std. Dev.",
-                "description": "Coverage standard deviation",
-                "shared_key": "coverage",
-            }
-            config = {"namespace": "deepTools plotCoverage"}
             self.add_section(
                 name="Coverage metrics",
                 anchor="deeptools_coverage_metrics",
@@ -115,7 +121,7 @@ class plotCoverageMixin:
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
-                log.warning("Replacing duplicate sample {}.".format(s_name))
+                log.warning(f"Replacing duplicate sample {s_name}.")
             d[s_name] = dict()
 
             try:
@@ -126,7 +132,7 @@ class plotCoverageMixin:
                 d[s_name]["50%"] = float(cols[5])
                 d[s_name]["75%"] = float(cols[6])
                 d[s_name]["max"] = float(cols[7])
-            except:
+            except:  # noqa: E722
                 log.warning(
                     "{} was initially flagged as the standard output from plotCoverage, but that seems to not be the case. Skipping...".format(
                         f["fn"]

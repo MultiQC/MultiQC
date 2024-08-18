@@ -1,28 +1,40 @@
-#!/usr/bin/env python
-
-""" MultiQC module to parse output from Prokka """
-
-from __future__ import print_function
-from collections import OrderedDict
 import logging
 
 from multiqc import config
-from multiqc.modules.base_module import BaseMultiqcModule
-from multiqc.plots import table, bargraph
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import bargraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    def __init__(self):
+    """
+    The Prokka module accepts two configuration options:
 
-        # Initialise the parent object
+    - `prokka_table`: default `False`. Show a table in the report.
+    - `prokka_barplot`: default `True`. Show a barplot in the report.
+    - `prokka_fn_snames`: default `False`. Use filenames for sample names (see below).
+
+    Sample names are generated using the first line in the prokka reports:
+
+    ```
+    organism: Helicobacter pylori Sample1
+    ```
+
+    The module assumes that the first two words are the organism name and
+    the third is the sample name. So the above will give a sample name of
+    `Sample1`.
+
+    If you prefer, you can set `config.prokka_fn_snames` to `True` and MultiQC
+    will instead use the log filename as the sample name.
+    """
+
+    def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Prokka",
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
-            info="is a software tool for the rapid annotation of prokaryotic genomes.",
+            info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
         )
 
@@ -35,34 +47,38 @@ class MultiqcModule(BaseMultiqcModule):
         self.prokka = self.ignore_samples(self.prokka)
 
         if len(self.prokka) == 0:
-            raise UserWarning
+            raise ModuleNoSamplesFound
 
-        log.info("Found {} logs".format(len(self.prokka)))
+        log.info(f"Found {len(self.prokka)} logs")
+
         self.write_data_file(self.prokka, "multiqc_prokka")
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Add most important Prokka annotation stats to the general table
-        headers = OrderedDict()
-        headers["organism"] = {
-            "title": "Organism",
-            "description": "Organism",
-        }
-        headers["contigs"] = {
-            "title": "Contigs",
-            "description": "Number of contigs",
-            "min": 0,
-        }
-        headers["bases"] = {
-            "title": "Bases",
-            "description": "Number of bases",
-            "min": 0,
-            "format": "{:i}%",
-            "hidden": True,
-        }
-        headers["CDS"] = {
-            "title": "CDS",
-            "description": "Number of CDS",
-            "min": 0,
-            "format": "{:i}%",
+        headers = {
+            "organism": {
+                "title": "Organism",
+                "description": "Organism",
+            },
+            "contigs": {
+                "title": "Contigs",
+                "description": "Number of contigs",
+                "min": 0,
+            },
+            "bases": {
+                "title": "Bases",
+                "description": "Number of bases",
+                "min": 0,
+                "hidden": True,
+            },
+            "CDS": {
+                "title": "CDS",
+                "description": "Number of CDS",
+                "min": 0,
+            },
         }
         self.general_stats_addcols(self.prokka, headers)
 
@@ -124,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             s_name = f["s_name"]
 
         if s_name in self.prokka:
-            log.debug("Duplicate sample name found! Overwriting: {}".format(s_name))
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         self.prokka[s_name] = dict()
         self.prokka[s_name]["organism"] = organism
         self.prokka[s_name]["contigs"] = int(contigs_line.split(":")[1])
@@ -144,55 +160,47 @@ class MultiqcModule(BaseMultiqcModule):
         """Make basic table of the annotation stats"""
 
         # Specify the order of the different possible categories
-        headers = OrderedDict()
-        headers["organism"] = {
-            "title": "Organism",
-            "description": "Organism name",
-        }
-        headers["contigs"] = {
-            "title": "# contigs",
-            "description": "Number of contigs in assembly",
-            "format": "{:i}",
-        }
-        headers["bases"] = {
-            "title": "# bases",
-            "description": "Number of nucleotide bases in assembly",
-            "format": "{:i}",
-        }
-        headers["CDS"] = {
-            "title": "# CDS",
-            "description": "Number of annotated CDS",
-            "format": "{:i}",
-        }
-        headers["rRNA"] = {
-            "title": "# rRNA",
-            "description": "Number of annotated rRNA",
-            "format": "{:i}",
-        }
-        headers["tRNA"] = {
-            "title": "# tRNA",
-            "description": "Number of annotated tRNA",
-            "format": "{:i}",
-        }
-        headers["tmRNA"] = {
-            "title": "# tmRNA",
-            "description": "Number of annotated tmRNA",
-            "format": "{:i}",
-        }
-        headers["misc_RNA"] = {
-            "title": "# misc RNA",
-            "description": "Number of annotated misc. RNA",
-            "format": "{:i}",
-        }
-        headers["sig_peptide"] = {
-            "title": "# sig_peptide",
-            "description": "Number of annotated sig_peptide",
-            "format": "{:i}",
-        }
-        headers["repeat_region"] = {
-            "title": "# CRISPR arrays",
-            "description": "Number of annotated CRSIPR arrays",
-            "format": "{:i}",
+        headers = {
+            "organism": {
+                "title": "Organism",
+                "description": "Organism name",
+            },
+            "contigs": {
+                "title": "# contigs",
+                "description": "Number of contigs in assembly",
+            },
+            "bases": {
+                "title": "# bases",
+                "description": "Number of nucleotide bases in assembly",
+            },
+            "CDS": {
+                "title": "# CDS",
+                "description": "Number of annotated CDS",
+            },
+            "rRNA": {
+                "title": "# rRNA",
+                "description": "Number of annotated rRNA",
+            },
+            "tRNA": {
+                "title": "# tRNA",
+                "description": "Number of annotated tRNA",
+            },
+            "tmRNA": {
+                "title": "# tmRNA",
+                "description": "Number of annotated tmRNA",
+            },
+            "misc_RNA": {
+                "title": "# misc RNA",
+                "description": "Number of annotated misc. RNA",
+            },
+            "sig_peptide": {
+                "title": "# sig_peptide",
+                "description": "Number of annotated sig_peptide",
+            },
+            "repeat_region": {
+                "title": "# CRISPR arrays",
+                "description": "Number of annotated CRSIPR arrays",
+            },
         }
         table_config = {
             "namespace": "prokka",
@@ -205,14 +213,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Make a basic plot of the annotation stats"""
 
         # Specify the order of the different categories
-        keys = OrderedDict()
-        keys["CDS"] = {"name": "CDS"}
-        keys["rRNA"] = {"name": "rRNA"}
-        keys["tRNA"] = {"name": "tRNA"}
-        keys["tmRNA"] = {"name": "tmRNA"}
-        keys["misc_RNA"] = {"name": "misc RNA"}
-        keys["sig_peptide"] = {"name": "Signal peptides"}
-        keys["repeat_region"] = {"name": "CRISPR array"}
+        keys = {
+            "CDS": {"name": "CDS"},
+            "rRNA": {"name": "rRNA"},
+            "tRNA": {"name": "tRNA"},
+            "tmRNA": {"name": "tmRNA"},
+            "misc_RNA": {"name": "misc RNA"},
+            "sig_peptide": {"name": "Signal peptides"},
+            "repeat_region": {"name": "CRISPR array"},
+        }
 
         plot_config = {
             "id": "prokka_plot",
