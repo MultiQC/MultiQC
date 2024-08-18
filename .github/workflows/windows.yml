@@ -51,4 +51,4 @@ jobs:
           7z x test-data.zip -y -o"test-data"
 
       - run: |
-          multiqc --strict -v test-data\test-data-main\data\modules\
+          multiqc -m fastqc -m qualimap -m kallisto -m somalier -m cutadapt --strict -v test-data\test-data-main\data\modules\

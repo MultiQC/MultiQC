@@ -144,10 +144,16 @@ class HeatmapPlot(Plot):
             else:
                 max_n_samples = max(max_n_samples, len(rows[next(iter(rows))]))
 
+        n_datapoints = 0
+        for row in rows:
+            n_datapoints += len(row)
+
         model = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
             n_samples_per_dataset=[max_n_samples],
+            n_datapoints=n_datapoints,
+            defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
         )
 
         if isinstance(rows, list):

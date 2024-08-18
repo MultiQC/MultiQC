@@ -62,9 +62,10 @@ make_pdf: false
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
-plots_flat_numseries: 2000
-plots_num_samples_do_not_automatically_load: 200
-num_datasets_plot_limit: 200 # deprecated name of plots_num_samples_do_not_automatically_load; left for back-compatibility
+plots_flat_numseries: 1000 # DEPRECATED (replaced with plots_flat_num_data_points)
+plots_flat_num_data_points: 50000 # after 50k data points (~100 line plot series), plots will render flat (unless --flat)
+plots_num_data_points_do_not_automatically_load: 5000 # after 5k data points (~10 line plot series), plot will require user to press button to render plot
+num_datasets_plot_limit: 200 # DEPRECATED (replaced with plots_num_data_points_do_not_automatically_load)
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
 violin_downsample_after: 2000 # downsample data for violin plot starting from this number os samples
