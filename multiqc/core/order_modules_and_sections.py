@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
@@ -37,26 +38,29 @@ def order_modules_and_sections():
     if config.profile_runtime:
         report.modules.append(ProfileRuntimeModule())
 
+    idx: int
     # Sort the report module output if we have a config
     if len(config.report_section_order) > 0:
-        section_id_order = {}
+        module_id_order: Dict[str, int] = {}
         idx = 10
         for mod in reversed(report.modules):
-            section_id_order[mod.anchor] = idx
-            if not mod.anchor.endswith("-module"):  # back-compat with < 1.24
-                section_id_order[mod.anchor + "-module"] = idx
+            module_id_order[mod.anchor] = idx
             idx += 10
+
         for anchor, ss in config.report_section_order.items():
-            if anchor not in section_id_order.keys():
-                logger.debug(f"Reordering sections: anchor '{anchor}' not found.")
-                continue
+            if anchor not in module_id_order.keys():
+                if anchor.endswith("-module") and anchor[:-7] in module_id_order.keys():  # back-compat with < 1.24
+                    anchor = anchor[:-7]
+                else:
+                    logger.debug(f"config.report_section_order: module anchor '{anchor}' not found.")
+                    continue
             if ss.get("order") is not None:
-                section_id_order[anchor] = ss["order"]
-            if ss.get("after") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["after"]] + 1
-            if ss.get("before") in section_id_order.keys():
-                section_id_order[anchor] = section_id_order[ss["before"]] - 1
-        sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
+                module_id_order[anchor] = ss["order"]
+            if ss.get("after") in module_id_order.keys():
+                module_id_order[anchor] = module_id_order[ss["after"]] + 1
+            if ss.get("before") in module_id_order.keys():
+                module_id_order[anchor] = module_id_order[ss["before"]] - 1
+        sorted_ids = sorted(module_id_order.keys(), key=lambda k: module_id_order[k])
         report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
     # Sort the report sections if we have a config
@@ -74,7 +78,9 @@ def order_modules_and_sections():
             for anchor, ss in config.report_section_order.items():
                 # Section to be moved is not in this module
                 if anchor not in section_id_order.keys():
-                    logger.debug(f"Reordering sections: anchor '{anchor}' not found for module '{mod.name}'.")
+                    logger.debug(
+                        f"config.report_section_order: section anchor '{anchor}' not found for module '{mod.name}'."
+                    )
                     continue
                 if ss == "remove":
                     section_id_order[anchor] = False
