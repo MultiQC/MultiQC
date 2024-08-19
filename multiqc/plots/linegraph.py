@@ -54,11 +54,6 @@ def plot(
     else:
         pconf.data_labels = []
 
-    # Smooth dataset if requested in config
-    if pconf.smooth_points is not None:
-        for i, raw_data_by_sample in enumerate(raw_dataset_list):
-            raw_dataset_list[i] = smooth_line_data(raw_data_by_sample, pconf.smooth_points)
-
     datasets: List[List[Series]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series] = []
@@ -175,6 +170,10 @@ def _make_series_dict(
             if ymin is not None and float(y) < float(ymin) and discard_ymin is not False:
                 continue
         pairs.append((x, y))
+
+    # Smooth dataset if requested in config
+    if pconfig.smooth_points is not None:
+        pairs = smooth_array(pairs, pconfig.smooth_points)
 
     return Series(name=s, pairs=pairs, color=colors.get(s))
 
