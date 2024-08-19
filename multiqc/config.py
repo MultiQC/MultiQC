@@ -6,6 +6,7 @@ On import, only loads defaults from config_defaults.yaml. To populate from
 custom parameters, call load_user_config() from the user_config module
 """
 
+import itertools
 from pathlib import Path
 from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
@@ -448,12 +449,8 @@ def _add_config(conf: Dict, conf_path=None):
             sp = update_dict(sp, v, add_in_the_beginning=True)
             log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
-            # Prepend to filename cleaning patterns instead of replacing
-            fn_clean_exts[0:0] = v
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
-            # Prepend to filename cleaning patterns instead of replacing
-            fn_clean_trim[0:0] = v
             log_filename_clean_trimmings.append(v)
         elif c in ["custom_logo"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
@@ -489,8 +486,16 @@ def _add_config(conf: Dict, conf_path=None):
         logger.debug(f"Added to filename patterns: {log_filename_patterns}")
     if len(log_filename_clean_extensions) > 0:
         logger.debug(f"Added to filename clean extensions: {log_filename_clean_extensions}")
+        # Prepend to filename cleaning patterns instead of replacing.
+        # This must be done after fn_clean_exts is configured if it's specified
+        # in the config.
+        fn_clean_exts[0:0] = itertools.chain.from_iterable(log_filename_clean_extensions)
     if len(log_filename_clean_trimmings) > 0:
         logger.debug(f"Added to filename clean trimmings: {log_filename_clean_trimmings}")
+        # Prepend to filename cleaning patterns instead of replacing
+        # This must be done after fn_clean_trim is configured if it's specified
+        # in the config.
+        fn_clean_trim[0:0] = itertools.chain.from_iterable(log_filename_clean_trimmings)
 
 
 def load_sample_names(sample_names_file: Path):
