@@ -6,7 +6,16 @@ Mostly a maintenance release, containing several bugfixes, performance improveme
 plus 6 new modules, along with improvements of the existing modules.
 
 The most significant performance boost got the Kraken and Mosdepth modules, that now don't
-take way more memory and CPU than any other typical module.
+take way more memory and CPU than any other typical module:
+
+| Tool     | Data Set       | Memory - Before | CPU - Before | Memory - After | CPU - After |
+| -------- | -------------- | --------------- | ------------ | -------------- | ----------- |
+| mosdepth | 1 set of files | 196 Mb          | 3.04s        | 129 Mb         | 2.27s       |
+|          | 10             | 464 Mb          | 8.48s        | 131 Mb         | 6.11s       |
+|          | 100            | 3,719 Mb        | 63.19s       | 172 Mb         | 43.12s      |
+| kraken   | 1 set of files | 155 Mb          | 2.07s        | 132 Mb         | 2.20s       |
+|          | 10             | 606 Mb          | 8.39s        | 180 Mb         | 3.47s       |
+|          | 100            | 4,970 Mb        | 71.89s       | 809 Mb         | 14.53s      |
 
 Large plots that may hang browser are now not loaded by default, and the user can click
 a button to load, so the heavy plots don't slow down the initial report rendering. This
