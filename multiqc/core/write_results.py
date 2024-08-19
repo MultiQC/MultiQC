@@ -114,6 +114,9 @@ def write_results() -> None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
         tmp_dir.rmtree_with_retries(paths.data_dir)
 
+    if paths.report_path:
+        logger.debug(f"Report HTML written to {paths.report_path}")
+
 
 def _maybe_relative_path(path: Path) -> Path:
     """
