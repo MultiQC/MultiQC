@@ -29,7 +29,7 @@ is controlled by the `config.plots_defer_loading_numseries: 100` option.
   - Allow multiple custom content to general stats table ([#2727](https://github.com/MultiQC/MultiQC/pull/2727))
 - Plots:
   - Defer render of plots if number of samples > `config.plots_defer_loading_numseries` ([#2759](https://github.com/MultiQC/MultiQC/pull/2759), [#2777](https://github.com/MultiQC/MultiQC/pull/2777), [#2773](https://github.com/MultiQC/MultiQC/pull/2773), [#2774](https://github.com/MultiQC/MultiQC/pull/2774))
-  - Line plot: show markers when num of data points < `config.lineplot_number_of_points_to_hide_markers` (=50) ([#2760](https://github.com/MultiQC/MultiQC/pull/2760))
+  - Line plot: show markers when num of data points < `config.lineplot_number_of_points_to_hide_markers` (=50) ([#2760](https://github.com/MultiQC/MultiQC/pull/2760)). As a nice consequence, trivial lines of a single data point become visible.
   - Line plot: smooth by default to 500 points on the X axis to avoid inflating the report file size ([#2776](https://github.com/MultiQC/MultiQC/pull/2776))
   - Allow to configure the scale of the exported plot fonts through the config option `config.plots_export_font_scale` ([#2758](https://github.com/MultiQC/MultiQC/pull/2758))
   - Improve the performance of loading large tables in browser ([#2737](https://github.com/MultiQC/MultiQC/pull/2737))
