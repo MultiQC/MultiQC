@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.24dev"
+version = "1.24"
 dependencies = [
     "click",
     "humanize",
