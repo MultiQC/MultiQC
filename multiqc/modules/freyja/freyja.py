@@ -67,6 +67,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(data_by_sample, "multiqc_freyja")
 
+        # sort data_by_sample to keep the reproducible order - as the files are discovered in a non-deterministic order
+        data_by_sample = dict(sorted(data_by_sample.items()))
+
         top_lineages_dict = {}
         all_lineages = set()
         for s_name, sample_data in data_by_sample.items():
@@ -77,8 +80,8 @@ class MultiqcModule(BaseMultiqcModule):
             }
             all_lineages.add(top_lineage)
         for s_name, sample_data in data_by_sample.items():
-            for lineage, val in sample_data.items():
-                if val not in all_lineages:
+            for lineage, val in sorted(sample_data.items(), key=lambda xv: xv[1], reverse=True):
+                if lineage not in all_lineages:
                     all_lineages.add(lineage)
 
         self.scale = mqc_colour.mqc_colour_scale("plot_defaults")
