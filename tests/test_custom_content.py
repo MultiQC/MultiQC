@@ -383,6 +383,35 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert report.plot_by_id["mysample-section-plot"].layout.title.text == "My section" if section_name else "mysample"
 
 
+def test_heatmap_with_numerical_cats(tmp_path):
+    plot_id = "my_plot"
+    file = tmp_path / "mysample_mqc.json"
+    file.write_text(
+        f"""\
+{{
+    "id": "{plot_id}",
+    "plot_type": "heatmap",
+    "pconfig": {{
+        "title": "Annotation stats (DRAMv)",
+        "min": 0
+    }},
+    "ycats": ["sample 1", "sample 2"],
+    "xcats": [1, 2, 3, 4],
+    "data": [[0.9, 0.87, 0.73, 0], [0, 1, 0, 0.7]]
+}}
+"""
+    )
+
+    report.analysis_files = [file]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    assert len(report.plot_by_id) == 1
+    assert f"{plot_id}-section-plot" in report.plot_by_id
+    assert report.plot_by_id[f"{plot_id}-section-plot"].id == f"{plot_id}-section-plot"
+    assert report.plot_by_id[f"{plot_id}-section-plot"].plot_type == "heatmap"
+
+
 def test_on_all_example_files(data_dir):
     """
     Run on all example in data/custom_content, verify it didn't fail.
@@ -393,39 +422,3 @@ def test_on_all_example_files(data_dir):
 
     file_search()
     custom_module_classes()
-
-
-# @pytest.mark.parametrize("input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir()))
-# def test_custom_content_files(input_file, tmp_path):
-#     """
-#     Test other files in custom_content test-data dir that they don't fail and generate something
-#     """
-#
-#     report.analysis_files = [input_file]
-#     report.search_files(["custom_content"])
-#     modules = custom_module_classes()
-#
-#     # Verify some sections added:
-#     assert sum(len(m.sections) for m in modules) > 0
-
-
-# TODO: test each file separately
-# @pytest.mark.parametrize(
-#     "input_file", list(Path(testing.data_dir() / "custom_content" / "embedded_config").iterdir())[:1]
-# )
-# def test_custom_content_html(input_file, tmp_path, snapshot):
-#     """
-#     Test the custom content module with a snapshot of the output
-#     """
-#
-#     # Stubs for dynamic values to make the report snapshots identical
-#     config.creation_date = "CREATION_DATE"
-#     config.version = "VERSION"
-#
-#     report.analysis_files = [input_file]
-#     config.run_modules = ["custom_content"]
-#     file_search()
-#     custom_module_classes()
-#     multiqc.write_report(output_dir=str(tmp_path))
-#
-#     snapshot.assert_match((tmp_path / "multiqc_report.html").read_text())

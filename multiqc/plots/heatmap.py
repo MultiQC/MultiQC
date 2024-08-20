@@ -1,7 +1,7 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Union, Dict
+from typing import Union, Dict, Optional, List
 
 from multiqc import config
 from multiqc.plots.plotly import heatmap
@@ -23,8 +23,8 @@ def get_template_mod():
 
 def plot(
     data,
-    xcats=None,
-    ycats=None,
+    xcats: Optional[List[Union[str, int]]] = None,
+    ycats: Optional[List[Union[str, int]]] = None,
     pconfig: Union[Dict, HeatmapConfig, None] = None,
 ) -> Union[heatmap.HeatmapPlot, str]:
     """Plot a 2D heatmap.

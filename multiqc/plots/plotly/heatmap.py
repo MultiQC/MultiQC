@@ -43,8 +43,8 @@ class HeatmapConfig(PConfig):
 def plot(
     rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
     pconfig: HeatmapConfig,
-    xcats: Optional[List[str]] = None,
-    ycats: Optional[List[str]] = None,
+    xcats: Optional[List[Union[str, int]]] = None,
+    ycats: Optional[List[Union[str, int]]] = None,
 ) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -133,8 +133,8 @@ class HeatmapPlot(Plot):
     def create(
         rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
         pconfig: HeatmapConfig,
-        xcats: Optional[List[str]],
-        ycats: Optional[List[str]],
+        xcats: Optional[List[Union[str, int]]],
+        ycats: Optional[List[Union[str, int]]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:
@@ -185,8 +185,8 @@ class HeatmapPlot(Plot):
             Dataset.create(
                 model.datasets[0],
                 rows=rows,
-                xcats=xcats,
-                ycats=ycats,
+                xcats=[str(x) for x in xcats],
+                ycats=[str(y) for y in ycats],
             )
         ]
 
