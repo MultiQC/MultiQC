@@ -47,13 +47,14 @@ class MultiqcModule(BaseMultiqcModule):
         top_lineages_dict = {}
         all_lineages = set()
         for s_name, sub_dict in self.freyja_data.items():
-            top_lineage = max(sub_dict, key=sub_dict.get)
-            top_lineage_value = sub_dict[top_lineage]
-            top_lineages_dict[s_name] = {
-                "Top_lineage_freyja": top_lineage,
-                "Top_lineage_freyja_percentage": top_lineage_value,
-            }
-            all_lineages.add(top_lineage)
+            if sub_dict:
+                top_lineage = max(sub_dict, key=sub_dict.get)
+                top_lineage_value = sub_dict[top_lineage]
+                top_lineages_dict[s_name] = {
+                    "Top_lineage_freyja": top_lineage,
+                    "Top_lineage_freyja_percentage": top_lineage_value,
+                }
+                all_lineages.add(top_lineage)
         for s_name, sub_dict in self.freyja_data.items():
             for lineage, val in sub_dict.items():
                 if val not in all_lineages:
@@ -87,6 +88,10 @@ class MultiqcModule(BaseMultiqcModule):
                         d = dict(d)
                 except ValueError:
                     pass
+
+            if not d:
+                log.debug(f"No data found for '{s_name}'")
+                continue
 
             # There is no sample name in the log, so we use the root of the
             # file as sample name (since the filename is always stats.dat
