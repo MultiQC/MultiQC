@@ -1,5 +1,14 @@
 # MultiQC Version History
 
+## [MultiQC v1.24.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.24.1) - 2024-08-21
+
+A bug fix release mainly to restore compatibility with Python 3.8. Aside from that, few other minor bug fixes:
+
+- FastQC: fix long-standing issue misplacing status labels when `anchor` is specified in the custom config ([#2790](https://github.com/MultiQC/MultiQC/pull/2790))
+- Freyja: handle empty inputs, and ensure deterministic sample order ([#2788](https://github.com/MultiQC/MultiQC/pull/2788))
+- Allow numeric xcats and ycats for the heatmap plot ([#2787](https://github.com/MultiQC/MultiQC/pull/2787))
+- Make sure that config's `extra_fn_clean_exts` and `fn_clean_exts` don't conflict when both specified ([#2783](https://github.com/MultiQC/MultiQC/pull/2783))
+
 ## [MultiQC v1.24](https://github.com/MultiQC/MultiQC/releases/tag/v1.24) - 2024-08-19
 
 Mostly a maintenance release, containing several bugfixes, performance improvements,
@@ -77,6 +86,7 @@ is controlled by the `config.plots_defer_loading_numseries: 100` option.
 - STAR: add all alignment summary metrics into a new separate table ([#1828](https://github.com/MultiQC/MultiQC/pull/1828))
 - Pairtools: fix typos and grammar, remove redundancies ([#2711](https://github.com/MultiQC/MultiQC/pull/2711))
 - Peddy sex plot: color predicted sex ([#2778](https://github.com/MultiQC/MultiQC/pull/2778))
+- FastQC: for plots with bp on the X axis, use the interval start instead of average ([#2790](https://github.com/MultiQC/MultiQC/pull/2790))
 
 ### Module fixes
 
