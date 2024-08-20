@@ -1,6 +1,6 @@
 # MultiQC Version History
 
-## [MultiQC v1.24](https://github.com/MultiQC/MultiQC/releases/tag/v1.24) - 2024-08-18
+## [MultiQC v1.24](https://github.com/MultiQC/MultiQC/releases/tag/v1.24) - 2024-08-19
 
 Mostly a maintenance release, containing several bugfixes, performance improvements,
 plus 6 new modules, along with improvements of the existing modules.
