@@ -931,7 +931,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         cnt_by_range_by_sample: Dict[str, Dict[int, int]] = dict()
         all_ranges_across_samples: Set[int] = set()
-        only_single_length: bool = False
+        only_single_length: bool = True
         for s_name, sd in self.fastqc_data.items():
             if "sequence_length_distribution" not in sd:
                 continue
@@ -940,8 +940,8 @@ class MultiqcModule(BaseMultiqcModule):
                 for d in sd["sequence_length_distribution"]
             }
             sample_ranges_set = set(cnt_by_range_by_sample[s_name].keys())
-            if len(sample_ranges_set) == 1:
-                only_single_length = True
+            if len(sample_ranges_set) > 1:
+                only_single_length = False
             all_ranges_across_samples.update(sample_ranges_set)
         if len(cnt_by_range_by_sample) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
