@@ -41,7 +41,7 @@ class HeatmapConfig(PConfig):
 
 
 def plot(
-    rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+    rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
     pconfig: HeatmapConfig,
     xcats: Optional[List[Union[str, int]]] = None,
     ycats: Optional[List[Union[str, int]]] = None,
@@ -276,7 +276,7 @@ class HeatmapPlot(Plot):
             model.layout.xaxis.ticktext = xcats
         if not pconfig.angled_xticks and x_px_per_elem >= 40 and xcats:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
-            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(str(cat), 10)) for cat in xcats]
             # And leave x ticks horizontal:
             model.layout.xaxis.tickangle = 0
         else:
