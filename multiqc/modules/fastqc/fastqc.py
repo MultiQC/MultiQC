@@ -20,7 +20,7 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc import report
-from multiqc.plots.plotly.line import Series
+from multiqc.plots.plotly.line import Series, LinePlotConfig
 
 log = logging.getLogger(__name__)
 
@@ -821,8 +821,8 @@ class MultiqcModule(BaseMultiqcModule):
             theoretical_gc_raw = f["f"]
             theoretical_gc_name = f["fn"]
         if theoretical_gc_raw is None:
-            tgc = getattr(config, "fastqc_config", {}).get("fastqc_theoretical_gc", None)
-            if tgc is not None:
+            tgc = getattr(config, "fastqc_config", {}).get("fastqc_theoretical_gc")
+            if tgc is not None and isinstance(tgc, str):
                 theoretical_gc_name = os.path.basename(tgc)
                 tgc_fn = f"fastqc_theoretical_gc_{tgc}.txt"
                 tgc_path = os.path.join(os.path.dirname(__file__), "fastqc_theoretical_gc", tgc_fn)
@@ -950,57 +950,50 @@ class MultiqcModule(BaseMultiqcModule):
     def seq_length_dist_plot(self, status_checks):
         """Create the HTML for the Sequence Length Distribution plot"""
 
-        data_by_sample: Dict[str, Dict[Union[float, int], float]] = dict()
-        avg_seq_lengths: Set[Union[float, int]] = set()
-        multiple_lengths: bool = False
+        cnt_by_range_by_sample: Dict[str, Dict[str, float]] = dict()
+        all_ranges_across_samples: Set[str] = set()
+        only_single_length: bool = False
         for s_name in self.fastqc_data:
             try:
-                data_by_sample[s_name] = {
-                    _avg_bp_from_range(d["length"]): d["count"]
-                    for d in self.fastqc_data[s_name]["sequence_length_distribution"]
+                cnt_by_range_by_sample[s_name] = {
+                    d["length"]: int(d["count"]) for d in self.fastqc_data[s_name]["sequence_length_distribution"]
                 }
-                avg_seq_lengths.update(data_by_sample[s_name].keys())
-                if len(set(data_by_sample[s_name].keys())) > 1:
-                    multiple_lengths = True
+                sample_ranges_set = set(cnt_by_range_by_sample[s_name].keys())
+                if len(sample_ranges_set) == 1:
+                    only_single_length = True
+                all_ranges_across_samples.update(sample_ranges_set)
             except KeyError:
                 pass
-        if len(data_by_sample) == 0:
+        if len(cnt_by_range_by_sample) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
             return None
 
-        if not multiple_lengths:
-            lengths_line = ", ".join([f"{length:,.0f}bp" for length in list(avg_seq_lengths)])
+        desc = ""
+        if only_single_length:
+            lengths_line = ", ".join([f"{length:,.0f}bp" for length in list(all_ranges_across_samples)])
             desc = f"All samples have sequences of a single length ({lengths_line})."
-            if len(avg_seq_lengths) > 1:
+            if len(all_ranges_across_samples) > 1:
                 desc += ' See the <a href="#general_stats">General Statistics Table</a>.'
-            self.add_section(
-                name="Sequence Length Distribution",
-                anchor="fastqc_sequence_length_distribution",
-                description=f'<div class="alert alert-info">{desc}</div>',
-            )
-        else:
-            pconfig = {
-                "id": "fastqc_sequence_length_distribution_plot",
-                "title": "FastQC: Sequence Length Distribution",
-                "ylab": "Read Count",
-                "xlab": "Sequence Length (bp)",
-                "ymin": 0,
-                "tt_label": "<b>{point.x} bp</b>: {point.y}",
-                "showlegend": False if status_checks else True,
-            }
-            if status_checks:
-                pconfig.update(
-                    {
-                        "colors": self.get_status_cols("sequence_length_distribution"),
-                    }
-                )
-            self.add_section(
-                name="Sequence Length Distribution",
-                anchor="fastqc_sequence_length_distribution",
-                description="""The distribution of fragment sizes (read lengths) found.
-                    See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)""",
-                plot=linegraph.plot(data_by_sample, pconfig),
-            )
+            desc = f'<div class="alert alert-info">{desc}</div>'
+        pconfig = LinePlotConfig(
+            id="fastqc_sequence_length_distribution_plot",
+            title="FastQC: Sequence Length Distribution",
+            ylab="Read Count",
+            xlab="Sequence Length (bp)",
+            ymin=0,
+            tt_label="<b>{point.x} bp</b>: {point.y}",
+            showlegend=False if status_checks else True,
+            categories=True,
+        )
+        if status_checks:
+            pconfig.colors = self.get_status_cols("sequence_length_distribution")
+        self.add_section(
+            name="Sequence Length Distribution",
+            anchor="fastqc_sequence_length_distribution",
+            description="The distribution of fragment sizes (read lengths) found. See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)"
+            + desc,
+            plot=linegraph.plot(cnt_by_range_by_sample, pconfig),
+        )
 
     def seq_dup_levels_plot(self, status_checks):
         """Create the HTML for the Sequence Duplication Levels plot"""
