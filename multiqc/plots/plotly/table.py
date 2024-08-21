@@ -41,7 +41,7 @@ def make_table(
     def escape(s: str) -> str:
         return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
 
-    for idx, metric, header in dt.get_headers_in_order():
+    for idx, col_key, header in dt.get_headers_in_order():
         rid = header.rid
 
         # Build the table header cell
@@ -86,7 +86,7 @@ def make_table(
           <td>{header.namespace}</td>
           <td>{header.title}</td>
           <td>{header.description}</td>
-          <td><code>{metric}</code></td>
+          <td><code>{col_key}</code></td>
           <td>{header.shared_key or ""}</td>
         </tr>"""
 
@@ -111,10 +111,10 @@ def make_table(
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for s_name in dt.raw_data[idx].keys():
-            if metric in dt.raw_data[idx][s_name]:
-                val: ValueT = dt.raw_data[idx][s_name][metric]
-                valstr: str = dt.formatted_data[idx][s_name][metric]
+        for s_name in dt.sections[idx].raw_data.keys():
+            if col_key in dt.sections[idx].raw_data[s_name]:
+                val: ValueT = dt.sections[idx].raw_data[s_name][col_key]
+                valstr: str = dt.sections[idx].formatted_data[s_name][col_key]
 
                 raw_vals[s_name][f"{header.namespace}_{rid}"] = val
 
@@ -209,7 +209,7 @@ def make_table(
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.id}, column {metric}, sample {s_name}")
+                    print(f"Value {val} is not hashable for table {dt.id}, column {col_key}, sample {s_name}")
 
                 # Categorical background colours supplied
                 if isinstance(val, str) and val in header.bgcols.keys():
@@ -222,7 +222,7 @@ def make_table(
                 elif hashable and header.scale:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
-                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{metric}"')
+                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{col_key}"')
                         )
                     else:
                         col = ""
@@ -253,7 +253,7 @@ def make_table(
                 hidden_cols -= 1
             t_headers.pop(rid, None)
             t_modal_headers.pop(rid, None)
-            logger.debug(f"Removing header {metric} from table, as no data")
+            logger.debug(f"Removing header {col_key} from table, as no data")
 
     #
     # Put everything together
@@ -379,8 +379,8 @@ def make_table(
         html += f"<tr{row_hidden}>"
         # Sample name row header
         html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{s_name}</th>'
-        for metric in t_headers:
-            html += t_rows[s_name].get(metric, empty_cells[metric])
+        for col_key in t_headers:
+            html += t_rows[s_name].get(col_key, empty_cells[col_key])
         html += "</tr>"
     html += "</tbody></table></div>"
     if len(t_rows) > 10 and config.collapse_tables:

@@ -33,6 +33,7 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import SampleNameT, Row, ColumnKeyT, ValueT, InputSectionT, InputHeaderT
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
@@ -77,8 +78,8 @@ data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
 plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[Mapping[str, Union[Mapping[str, float], Sequence[Tuple[str, Mapping[str, float]]]]]]
-general_stats_headers: List[Dict[str, Dict[str, Union[str, int, float, None, Callable]]]]
+general_stats_data: List[InputSectionT]
+general_stats_headers: List[InputHeaderT]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
 

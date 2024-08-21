@@ -2,9 +2,8 @@
 MultiQC datatable class, used by tables and violin plots
 """
 
-import math
-
 import logging
+import math
 import re
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
@@ -33,7 +32,7 @@ class TableConfig(PConfig):
     min: Optional[Union[int, float]] = None
 
 
-class TableColumn(ValidatedConfig):
+class ColumnMeta(ValidatedConfig):
     """
     Column model class. Holds configuration for a single column in a table.
     """
@@ -45,9 +44,9 @@ class TableColumn(ValidatedConfig):
     namespace: str
     scale: Union[str, bool]
     hidden: bool
+    placement: float
     colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
-    placement: Optional[float] = None
     max: Optional[float] = None
     dmax: Optional[float] = None
     min: Optional[float] = None
@@ -62,11 +61,189 @@ class TableColumn(ValidatedConfig):
     cond_formatting_rules: Dict[str, List[Dict[str, str]]] = {}
     bgcols: Dict[str, str] = {}
     bars_zero_centrepoint: bool = False
+    modify: Optional[Callable] = None
+    format: Optional[Union[str, Callable]] = None
+
+    @staticmethod
+    def create(
+        header_d: Dict[str, Union[str, int, float, None, Callable]],
+        col_key: str,  # to initialize rid
+        sec_idx: int,  # to initialize the colour
+        pconfig,  # plot config dictionary
+    ) -> "ColumnMeta":
+        # Unique id to avoid overwriting by other datasets
+        unclean_rid = header_d.get("rid", col_key)
+        rid: str = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")
+        header_d["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+
+        # Applying defaults presets for data keys if shared_key is set to base_count or read_count
+        shared_key = header_d.get("shared_key", None)
+        shared_key_suffix = None
+        if shared_key in ["read_count", "long_read_count", "base_count"]:
+            if shared_key == "read_count" and config.read_count_prefix:
+                multiplier = config.read_count_multiplier
+                shared_key_suffix = config.read_count_prefix
+            elif shared_key == "long_read_count" and config.long_read_count_prefix:
+                multiplier = config.long_read_count_multiplier
+                shared_key_suffix = config.long_read_count_prefix
+            elif shared_key == "base_count" and config.base_count_prefix:
+                multiplier = config.base_count_multiplier
+                shared_key_suffix = config.base_count_prefix
+            else:
+                multiplier = 1
+            if "modify" not in header_d:
+                header_d["modify"] = lambda x: x * multiplier
+            if "min" not in header_d is None:
+                header_d["min"] = 0
+            if "format" not in header_d is None:
+                if multiplier == 1:
+                    header_d["format"] = "{:,d}"
+        if "suffix" not in header_d and shared_key_suffix is not None:
+            header_d["suffix"] = " " + shared_key_suffix
+
+        # Use defaults / data keys if headers not given
+        header_d["namespace"] = header_d.get("namespace", pconfig.namespace)
+        header_d["title"] = header_d.get("title", col_key)
+        header_d["description"] = header_d.get("description", header_d["title"])
+        header_d["scale"] = header_d.get("scale", pconfig.scale)
+        header_d["format"] = header_d.get("format")
+        header_d["color"] = header_d.get("colour", header_d.get("color"))
+        header_d["hidden"] = header_d.get("hidden", False)
+        header_d["max"] = header_d.get("max")
+        header_d["min"] = header_d.get("min", pconfig.min)
+        header_d["ceiling"] = header_d.get("ceiling")
+        header_d["floor"] = header_d.get("floor")
+        header_d["minrange"] = header_d.get("minrange", header_d.get("minRange"))
+        header_d["shared_key"] = header_d.get("shared_key")
+        modify = header_d.get("modify")
+        if modify is not None and callable(modify):
+            header_d["modify"] = modify
+        placement = header_d.get("placement")
+        if placement is not None and isinstance(placement, (str, float, int)):
+            header_d["placement"] = float(placement)
+        else:
+            header_d["placement"] = 1000  # default value
+
+        if header_d["color"] is None:
+            cidx = sec_idx
+            while cidx >= len(SECTION_COLORS):
+                cidx -= len(SECTION_COLORS)
+            header_d["color"] = SECTION_COLORS[cidx]
+
+        # Overwrite (2nd time) any given config with table-level user config
+        # This is to override column-specific values set by modules
+        if pconfig.id in config.custom_plot_config:
+            for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
+                if cpc_k in ColumnMeta.model_fields.keys():
+                    header_d[cpc_k] = cpc_v
+
+        # Overwrite "name" if set in user config
+        # Key can be a column ID, a table ID, or a namespace in the general stats table.
+        for item_id, new_title_val in config.table_columns_name.items():
+            item_id = item_id.lower()
+            # Case-insensitive check if the outer key is a table ID or a namespace.
+            if item_id in [
+                pconfig.id.lower(),
+                str(header_d["namespace"]).lower(),
+            ] and isinstance(new_title_val, dict):
+                # Assume a dict of specific column IDs
+                for item_id2, new_title in new_title_val.items():
+                    item_id2 = item_id2.lower()
+                    if item_id2 in [col_key.lower(), str(header_d["title"]).lower()]:
+                        header_d["title"] = new_title
+
+            # Case-insensitive check if the outer key is a column ID
+            elif item_id in [col_key.lower(), str(header_d["title"]).lower()] and isinstance(new_title_val, str):
+                header_d["title"] = new_title_val
+
+        # Overwrite "hidden" if set in user config
+        # Key can be a column ID, a table ID, or a namespace in the general stats table.
+        for item_id, visibility in config.table_columns_visible.items():
+            item_id = item_id.lower()
+            # Case-insensitive check if the outer key is a table ID or a namespace.
+            if item_id in [pconfig.id.lower(), str(header_d["namespace"]).lower()]:
+                # First - if config value is a bool, set all module columns to that value
+                if isinstance(visibility, bool):
+                    # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                    header_d["hidden"] = not visibility
+
+                # Not a bool, assume a dict of specific column IDs
+                elif isinstance(visibility, dict):
+                    for item_id2, visible in visibility.items():
+                        item_id2 = item_id2.lower()
+                        if item_id2 in [
+                            col_key.lower(),
+                            str(header_d["title"]).lower(),
+                        ] and isinstance(visible, bool):
+                            # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                            header_d["hidden"] = not visible
+
+            # Case-insensitive check if the outer key is a column ID
+            elif visibility in [
+                col_key.lower(),
+                str(header_d["title"]).lower(),
+            ] and isinstance(visibility, bool):
+                # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
+                header_d["hidden"] = not visibility
+
+        # Also overwrite placement if set in config
+        try:
+            header_d["placement"] = float(config.table_columns_placement[header_d["namespace"]][col_key])
+        except (KeyError, ValueError):
+            try:
+                header_d["placement"] = float(config.table_columns_placement[pconfig.id][col_key])
+            except (KeyError, ValueError):
+                pass
+
+        # Overwrite any header config if set in config
+        for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
+            header_d[custom_k] = custom_v
+
+        return ColumnMeta(**header_d)
 
 
 ValueT = Union[int, float, str, bool]
+ColumnKeyT = str
+SampleNameT = str
 
-DatasetT = Mapping[str, Union[Mapping[str, Optional[ValueT]], List[Tuple[str, Mapping[str, Optional[ValueT]]]]]]
+
+class Row(BaseModel):
+    """
+    Row class. Holds configuration for a single row in a table.
+    """
+
+    sample: SampleNameT
+    data: Mapping[ColumnKeyT, Optional[ValueT]]
+
+
+InputGroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], Row, Sequence[Row]]
+InputSectionT = Mapping[SampleNameT, InputGroupT]
+InputHeaderT = Mapping[ColumnKeyT, Mapping[str, Union[str, int, float, None, Callable]]]
+
+
+class TableSection(BaseModel):
+    """
+    Table section class. Holds configuration for a single section in a table.
+    """
+
+    column_by_key: Dict[ColumnKeyT, ColumnMeta]
+    # rows with original, unformatted values coming from modules:
+    raw_data: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]] = defaultdict(dict)
+    # formatted rows (i.e. values are HTML strings to display in the table):
+    formatted_data: Dict[SampleNameT, Dict[ColumnKeyT, str]] = defaultdict(dict)
+
+
+SECTION_COLORS = [
+    "55,126,184",  # Blue
+    "77,175,74",  # Green
+    "152,78,163",  # Purple
+    "255,127,0",  # Orange
+    "228,26,28",  # Red
+    "179,179,50",  # Olive
+    "166,86,40",  # Brown
+    "247,129,191",  # Pink
+    "153,153,153",  # Grey
+]
 
 
 class DataTable(BaseModel):
@@ -76,377 +253,100 @@ class DataTable(BaseModel):
     """
 
     id: str
-    raw_data: List[Dict[str, Dict[str, ValueT]]] = []
-    formatted_data: List[Dict[str, Dict[str, str]]] = []
-    headers_in_order: Dict[int, List[Tuple[int, str]]]
-    headers: List[Dict[str, TableColumn]] = []
     pconfig: TableConfig
+
+    sections: List[TableSection] = []
+    headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]]
+    # headers: List[Dict[ColumnKeyT, ColumnMeta]] = []
+    # raw_data: List[Dict[str, Dict[str, ValueT]]] = []
+    # formatted_data: List[Dict[str, Dict[str, str]]] = []
 
     @staticmethod
     def create(
-        data: Union[DatasetT, Sequence[DatasetT]],
+        data: Union[InputSectionT, Sequence[InputSectionT]],
         pconfig: TableConfig,
-        headers: Optional[Union[List[Dict[str, Dict]], Dict[str, Dict]]] = None,
+        headers: Optional[Union[List[InputHeaderT], InputHeaderT]] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
 
         # Given one dataset - turn it into a list
-        datasets__with_nulls = data if isinstance(data, list) else [data]
+        input_sections__with_nulls = data if isinstance(data, list) else [data]
         list_of_headers = headers if isinstance(headers, list) else [headers]
         del data
         del headers
 
-        SECTION_COLORS = [
-            "55,126,184",  # Blue
-            "77,175,74",  # Green
-            "152,78,163",  # Purple
-            "255,127,0",  # Orange
-            "228,26,28",  # Red
-            "179,179,50",  # Olive
-            "166,86,40",  # Brown
-            "247,129,191",  # Pink
-            "153,153,153",  # Grey
-        ]
-
-        raw_data: List[Dict[str, Dict[str, ValueT]]] = []
-        formatted_data: List[Dict[str, Dict[str, str]]] = []
-
-        # Go through each table section
-        for d_idx, ds__with_nulls in enumerate(datasets__with_nulls):
-            # Get the header keys
-            if d_idx < len(list_of_headers):
-                col_ids = list(list_of_headers[d_idx].keys())
-                assert len(col_ids) > 0
-            else:
-                pconfig.only_defined_headers = False
-                col_ids = list()
-
-            # Add header keys from the data
-            if not pconfig.only_defined_headers:
-                # Get the keys from the data
-                col_ids = list()
-                for v_by_metric__with_nulls in ds__with_nulls.values():
-                    for col_id in v_by_metric__with_nulls.keys():
-                        if col_id not in col_ids:
-                            col_ids.append(col_id)
-
-                # If we don't have a headers dict for this data set yet, create one
-                try:
-                    list_of_headers[d_idx]
-                except IndexError:
-                    list_of_headers.append(dict())
+        # Each section to have a list of groups (even if there is just one element in a group)
+        input_section: InputSectionT
+        input_group: InputGroupT
+        unified_sections__with_nulls: List[Dict[SampleNameT, List[Row]]] = []
+        for input_section in input_sections__with_nulls:
+            rows_by_group: Dict[SampleNameT, List[Row]] = {}
+            for sname, input_group in input_section.items():
+                if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
+                    rows_by_group[sname] = [Row(sample=sname, data=input_group)]
+                elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
+                    rows_by_group[sname] = input_group
                 else:
-                    # Convert the existing headers into a dict (e.g. if parsed from a config)
-                    od_tuples = [(key, list_of_headers[d_idx][key]) for key in list_of_headers[d_idx].keys()]
-                    list_of_headers[d_idx] = dict(od_tuples)
+                    assert isinstance(input_group, Row)
+                    rows_by_group[sname] = [input_group]
+            unified_sections__with_nulls.append(rows_by_group)
 
-                # Create empty header configs for each new data key
-                for col_id in col_ids:
-                    if col_id not in list_of_headers[d_idx]:
-                        list_of_headers[d_idx][col_id] = {}
+        del input_sections__with_nulls
 
-            # Check that we have some data in each column
-            empties = list()
-            for col_id in col_ids:
-                n = 0
-                for v_by_metric__with_nulls in ds__with_nulls.values():
-                    if isinstance(v_by_metric__with_nulls, dict):
-                        if col_id in v_by_metric__with_nulls:
-                            n += 1
-                    elif isinstance(v_by_metric__with_nulls, list):
-                        for _, v_by_metric in v_by_metric__with_nulls:
-                            if col_id in v_by_metric:
-                                n += 1
-                if n == 0:
-                    empties.append(col_id)
-            for col_id in empties:
-                col_ids = [j for j in col_ids if j != col_id]
-                logger.debug(
-                    f"Table key '{col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
-                )
-                del list_of_headers[d_idx][col_id]
+        # Go through each table section and create a list of Section objects
+        sections: List[TableSection] = []
+        sec__with_nulls: Dict[SampleNameT, List[Row]]
+        for sec_idx, sec__with_nulls in enumerate(unified_sections__with_nulls):
+            header_by_key: InputHeaderT = list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
+            if not header_by_key:
+                pconfig.only_defined_headers = False
 
-            raw_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
-            formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
-            for col_id in col_ids:
-                # Unique id to avoid overwriting by other datasets
-                unclean_rid = list_of_headers[d_idx][col_id].get("rid", col_id)
-                rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-                list_of_headers[d_idx][col_id]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
-
-                # Applying defaults presets for data keys if shared_key is set to base_count or read_count
-                shared_key = list_of_headers[d_idx][col_id].get("shared_key", None)
-                shared_key_suffix = None
-                if shared_key in ["read_count", "long_read_count", "base_count"]:
-                    if shared_key == "read_count" and config.read_count_prefix:
-                        multiplier = config.read_count_multiplier
-                        shared_key_suffix = config.read_count_prefix
-                    elif shared_key == "long_read_count" and config.long_read_count_prefix:
-                        multiplier = config.long_read_count_multiplier
-                        shared_key_suffix = config.long_read_count_prefix
-                    elif shared_key == "base_count" and config.base_count_prefix:
-                        multiplier = config.base_count_multiplier
-                        shared_key_suffix = config.base_count_prefix
-                    else:
-                        multiplier = 1
-                    if "modify" not in list_of_headers[d_idx][col_id]:
-                        list_of_headers[d_idx][col_id]["modify"] = lambda x: x * multiplier
-                    if "min" not in list_of_headers[d_idx][col_id] is None:
-                        list_of_headers[d_idx][col_id]["min"] = 0
-                    if "format" not in list_of_headers[d_idx][col_id] is None:
-                        if multiplier == 1:
-                            list_of_headers[d_idx][col_id]["format"] = "{:,d}"
-                if "suffix" not in list_of_headers[d_idx][col_id] and shared_key_suffix is not None:
-                    list_of_headers[d_idx][col_id]["suffix"] = " " + shared_key_suffix
-
-                # Use defaults / data keys if headers not given
-                list_of_headers[d_idx][col_id]["namespace"] = list_of_headers[d_idx][col_id].get(
-                    "namespace", pconfig.namespace
-                )
-                list_of_headers[d_idx][col_id]["title"] = list_of_headers[d_idx][col_id].get("title", col_id)
-                list_of_headers[d_idx][col_id]["description"] = list_of_headers[d_idx][col_id].get(
-                    "description", list_of_headers[d_idx][col_id]["title"]
-                )
-                list_of_headers[d_idx][col_id]["scale"] = list_of_headers[d_idx][col_id].get("scale", pconfig.scale)
-                list_of_headers[d_idx][col_id]["format"] = list_of_headers[d_idx][col_id].get("format")
-                list_of_headers[d_idx][col_id]["color"] = list_of_headers[d_idx][col_id].get(
-                    "colour", list_of_headers[d_idx][col_id].get("color")
-                )
-                list_of_headers[d_idx][col_id]["hidden"] = list_of_headers[d_idx][col_id].get("hidden", False)
-                list_of_headers[d_idx][col_id]["max"] = list_of_headers[d_idx][col_id].get("max")
-                list_of_headers[d_idx][col_id]["min"] = list_of_headers[d_idx][col_id].get("min", pconfig.min)
-                list_of_headers[d_idx][col_id]["ceiling"] = list_of_headers[d_idx][col_id].get("ceiling")
-                list_of_headers[d_idx][col_id]["floor"] = list_of_headers[d_idx][col_id].get("floor")
-                list_of_headers[d_idx][col_id]["minrange"] = list_of_headers[d_idx][col_id].get(
-                    "minrange", list_of_headers[d_idx][col_id].get("minRange")
-                )
-                list_of_headers[d_idx][col_id]["shared_key"] = list_of_headers[d_idx][col_id].get("shared_key")
-                list_of_headers[d_idx][col_id]["modify"] = list_of_headers[d_idx][col_id].get("modify")
-                list_of_headers[d_idx][col_id]["placement"] = float(
-                    list_of_headers[d_idx][col_id].get("placement", 1000)
+            column_by_key: Dict[ColumnKeyT, ColumnMeta] = dict()
+            header_by_key_copy = _get_or_create_headers(sec__with_nulls, header_by_key, pconfig)
+            for col_key, header_d in header_by_key_copy.items():
+                column_by_key[col_key] = ColumnMeta.create(
+                    header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig
                 )
 
-                if list_of_headers[d_idx][col_id]["color"] is None:
-                    cidx = d_idx
-                    while cidx >= len(SECTION_COLORS):
-                        cidx -= len(SECTION_COLORS)
-                    list_of_headers[d_idx][col_id]["color"] = SECTION_COLORS[cidx]
-
-                # Overwrite (2nd time) any given config with table-level user config
-                # This is to override column-specific values set by modules
-                if pconfig.id in config.custom_plot_config:
-                    for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                        if cpc_k in TableColumn.model_fields.keys():
-                            list_of_headers[d_idx][col_id][cpc_k] = cpc_v
-
-                # Overwrite "name" if set in user config
-                # Key can be a column ID, a table ID, or a namespace in the general stats table.
-                for item_id, new_title_val in config.table_columns_name.items():
-                    item_id = item_id.lower()
-                    # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if item_id in [
-                        pconfig.id.lower(),
-                        list_of_headers[d_idx][col_id]["namespace"].lower(),
-                    ] and isinstance(new_title_val, dict):
-                        # Assume a dict of specific column IDs
-                        for item_id2, new_title in new_title_val.items():
-                            item_id2 = item_id2.lower()
-                            if item_id2 in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()]:
-                                list_of_headers[d_idx][col_id]["title"] = new_title
-
-                    # Case-insensitive check if the outer key is a column ID
-                    elif item_id in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()] and isinstance(
-                        new_title_val, str
-                    ):
-                        list_of_headers[d_idx][col_id]["title"] = new_title_val
-
-                # Overwrite "hidden" if set in user config
-                # Key can be a column ID, a table ID, or a namespace in the general stats table.
-                for item_id, visibility in config.table_columns_visible.items():
-                    item_id = item_id.lower()
-                    # Case-insensitive check if the outer key is a table ID or a namespace.
-                    if item_id in [pconfig.id.lower(), list_of_headers[d_idx][col_id]["namespace"].lower()]:
-                        # First - if config value is a bool, set all module columns to that value
-                        if isinstance(visibility, bool):
-                            # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            list_of_headers[d_idx][col_id]["hidden"] = not visibility
-
-                        # Not a bool, assume a dict of specific column IDs
-                        elif isinstance(visibility, dict):
-                            for item_id2, visible in visibility.items():
-                                item_id2 = item_id2.lower()
-                                if item_id2 in [
-                                    col_id.lower(),
-                                    list_of_headers[d_idx][col_id]["title"].lower(),
-                                ] and isinstance(visible, bool):
-                                    # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                                    list_of_headers[d_idx][col_id]["hidden"] = not visible
-
-                    # Case-insensitive check if the outer key is a column ID
-                    elif visibility in [col_id.lower(), list_of_headers[d_idx][col_id]["title"].lower()] and isinstance(
-                        visibility, bool
-                    ):
-                        # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                        list_of_headers[d_idx][col_id]["hidden"] = not visibility
-
-                # Also overwrite placement if set in config
-                try:
-                    list_of_headers[d_idx][col_id]["placement"] = float(
-                        config.table_columns_placement[list_of_headers[d_idx][col_id]["namespace"]][col_id]
-                    )
-                except (KeyError, ValueError):
-                    try:
-                        list_of_headers[d_idx][col_id]["placement"] = float(
-                            config.table_columns_placement[pconfig.id][col_id]
-                        )
-                    except (KeyError, ValueError):
-                        pass
-
-                # Overwrite any header config if set in config
-                for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_id, {}).items():
-                    list_of_headers[d_idx][col_id][custom_k] = custom_v
-
+            # raw_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
+            # formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
+            section = TableSection(column_by_key=column_by_key)
+            for col_key, column in column_by_key.items():
                 # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
-                for s_name, v_by_metric__with_nulls in datasets__with_nulls[d_idx].items():
-                    if col_id in v_by_metric__with_nulls:
-                        val__with_nulls = v_by_metric__with_nulls[col_id]
-                        if val__with_nulls is None or str(val__with_nulls).strip() == "":
+                for s_name, rows__with_nulls in sec__with_nulls.items():
+                    rows = [row for row in rows__with_nulls if col_key in row.data]
+                    for row in rows:
+                        optional_val = row.data[col_key]
+                        if optional_val is None or str(optional_val).strip() == "":
                             continue
-                        val: ValueT = val__with_nulls
-
-                        # Try parse as a number
-                        if str(val).isdigit():
-                            val = int(val)
-                        else:
-                            try:
-                                val = float(val)
-                            except ValueError:
-                                pass
-
-                        # Apply modify
-                        if "modify" in list_of_headers[d_idx][col_id] and callable(
-                            list_of_headers[d_idx][col_id]["modify"]
-                        ):
-                            # noinspection PyBroadException
-                            try:
-                                val = list_of_headers[d_idx][col_id]["modify"](val)
-                            except Exception as e:  # User-provided modify function can raise any exception
-                                logger.error(f"Error modifying table value '{col_id}': '{val}'. {e}")
-                        raw_dataset[s_name][col_id] = val
-
-                        # Now also calculate formatted values
-                        valstr = str(val)
-                        fmt: Union[None, str, Callable] = list_of_headers[d_idx][col_id].get("format")
-                        if fmt is None:
-                            if isinstance(val, float):
-                                fmt = "{:,.1f}"
-                            elif isinstance(val, int):
-                                fmt = "{:,d}"
-                        if fmt is not None:
-                            if callable(fmt):
-                                try:
-                                    # noinspection PyCallingNonCallable
-                                    valstr = fmt(val)
-                                except Exception as e:
-                                    logger.error(f"Error applying format to table value '{col_id}': '{val}'. {e}")
-                            elif isinstance(val, (int, float)):
-                                try:
-                                    valstr = fmt.format(val)
-                                except Exception as e:
-                                    logger.error(
-                                        f"Error applying format string '{fmt}' to table value '{col_id}': '{val}'. {e}. "
-                                        f"Check if your format string is correct."
-                                    )
-                        formatted_dataset[s_name][col_id] = valstr
+                        val, valstr = _process_and_format_value(optional_val, column)
+                        section.raw_data[s_name][col_key] = val
+                        section.formatted_data[s_name][col_key] = valstr
 
                 # Work out max and min value if not given
-                set_dmax = False
-                set_dmin = False
-                try:
-                    list_of_headers[d_idx][col_id]["dmax"] = float(list_of_headers[d_idx][col_id]["max"])
-                except Exception:
-                    list_of_headers[d_idx][col_id]["dmax"] = 0
-                    set_dmax = True
+                _determine_dmin_and_dmax(column, col_key, section.raw_data)
 
-                try:
-                    list_of_headers[d_idx][col_id]["dmin"] = float(list_of_headers[d_idx][col_id]["min"])
-                except Exception:
-                    list_of_headers[d_idx][col_id]["dmin"] = 0
-                    set_dmin = True
+            sections.append(section)
 
-                # Figure out the min / max if not supplied
-                if set_dmax or set_dmin:
-                    for s_name, v_by_metric in raw_dataset.items():
-                        try:
-                            val = float(v_by_metric[col_id])
-                            if math.isfinite(val) and not math.isnan(val):
-                                if set_dmax:
-                                    list_of_headers[d_idx][col_id]["dmax"] = max(
-                                        list_of_headers[d_idx][col_id]["dmax"], val
-                                    )
-                                if set_dmin:
-                                    list_of_headers[d_idx][col_id]["dmin"] = min(
-                                        list_of_headers[d_idx][col_id]["dmin"], val
-                                    )
-                        except (ValueError, TypeError):
-                            val = v_by_metric[col_id]  # couldn't convert to float - keep as a string
-                        except KeyError:
-                            pass  # missing data - skip
-                    # Limit auto-generated scales with floor, ceiling and minrange.
-                    if (
-                        list_of_headers[d_idx][col_id]["ceiling"] is not None
-                        and list_of_headers[d_idx][col_id]["max"] is None
-                    ):
-                        list_of_headers[d_idx][col_id]["dmax"] = min(
-                            list_of_headers[d_idx][col_id]["dmax"], float(list_of_headers[d_idx][col_id]["ceiling"])
-                        )
-                    if (
-                        list_of_headers[d_idx][col_id]["floor"] is not None
-                        and list_of_headers[d_idx][col_id]["min"] is None
-                    ):
-                        list_of_headers[d_idx][col_id]["dmin"] = max(
-                            list_of_headers[d_idx][col_id]["dmin"], float(list_of_headers[d_idx][col_id]["floor"])
-                        )
-                    if list_of_headers[d_idx][col_id]["minrange"] is not None:
-                        drange = list_of_headers[d_idx][col_id]["dmax"] - list_of_headers[d_idx][col_id]["dmin"]
-                        if drange < float(list_of_headers[d_idx][col_id]["minrange"]):
-                            list_of_headers[d_idx][col_id]["dmax"] = list_of_headers[d_idx][col_id]["dmin"] + float(
-                                list_of_headers[d_idx][col_id]["minrange"]
-                            )
+        del unified_sections__with_nulls
+        del list_of_headers
 
-            raw_data.append(raw_dataset)
-            formatted_data.append(formatted_dataset)
-
-        # Collect settings for shared keys
-        shared_keys: Dict[str, Dict[str, Union[int, float]]] = defaultdict(lambda: dict())
-        for d_idx, hs in enumerate(list_of_headers):
-            for col_id in hs.keys():
-                sk: str = list_of_headers[d_idx][col_id]["shared_key"]
-                if sk is not None:
-                    shared_keys[sk]["dmax"] = max(
-                        list_of_headers[d_idx][col_id]["dmax"],
-                        shared_keys[sk].get("dmax", list_of_headers[d_idx][col_id]["dmax"]),
-                    )
-                    shared_keys[sk]["dmin"] = min(
-                        list_of_headers[d_idx][col_id]["dmin"],
-                        shared_keys[sk].get("dmin", list_of_headers[d_idx][col_id]["dmin"]),
-                    )
+        shared_keys: Dict[str, Dict[str, Union[int, float]]] = _collect_shared_keys(sections)
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
         # So the final ordering is:
         #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
-        headers_in_order = defaultdict(list)
-        for d_idx, hs in enumerate(list_of_headers):
-            for col_id in hs.keys():
-                sk = list_of_headers[d_idx][col_id]["shared_key"]
-                if sk is not None:
-                    list_of_headers[d_idx][col_id]["dmax"] = shared_keys[sk]["dmax"]
-                    list_of_headers[d_idx][col_id]["dmin"] = shared_keys[sk]["dmin"]
+        headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]] = defaultdict(list)
+        for sec_idx, section in enumerate(sections):
+            for col_key, column in section.column_by_key.items():
+                if column.shared_key is not None:
+                    column.dmax = shared_keys[column.shared_key]["dmax"]
+                    column.dmin = shared_keys[column.shared_key]["dmin"]
 
-                headers_in_order[list_of_headers[d_idx][col_id]["placement"]].append((d_idx, col_id))
+                headers_in_order[column.placement].append((sec_idx, col_key))
 
         # # Skip any data that is not used in the table
         # # Would be ignored for making the table anyway, but can affect whether a violin plot is used
@@ -456,29 +356,197 @@ class DataTable(BaseModel):
         #             del raw_data[d_idx][s_name]
 
         # Remove callable headers that are not compatible with JSON
-        list_of_headers = [
-            {metric: {k: v for k, v in d.items() if k not in ["modify", "format"]} for metric, d in h.items()}
-            for h in list_of_headers
-        ]
+        for section in sections:
+            for column in section.column_by_key.values():
+                del column.modify
+                del column.format
+        # list_of_headers = [
+        #     {metric: {k: v for k, v in d.items() if k not in ["modify", "format"]} for metric, d in h.items()}
+        #     for h in list_of_headers
+        # ]
 
         # Assign to class
         return DataTable(
             id=pconfig.id,
-            raw_data=raw_data,
-            formatted_data=formatted_data,
-            headers_in_order=dict(headers_in_order),
-            headers=list_of_headers,
+            sections=sections,
+            headers_in_order=headers_in_order,
+            # raw_data=raw_data,
+            # formatted_data=formatted_data,
+            # headers=list_of_headers,
             pconfig=pconfig,
         )
 
-    def get_headers_in_order(self) -> List[Tuple[int, str, TableColumn]]:
+    def get_headers_in_order(self) -> List[Tuple[int, ColumnKeyT, ColumnMeta]]:
         """
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)
         """
-        res: List[Tuple[int, str, TableColumn]] = list()
+        res: List[Tuple[int, ColumnKeyT, ColumnMeta]] = list()
         # Scan through self.headers_in_order and just bolt on the actual header info
-        for bucket in sorted(self.headers_in_order):
-            for bucket_idx, k in self.headers_in_order[bucket]:
-                res.append((bucket_idx, k, self.headers[bucket_idx][k]))
+        placement: float
+        for placement in sorted(self.headers_in_order.keys()):
+            for section_idx, col_key in self.headers_in_order[placement]:
+                res.append((section_idx, col_key, self.sections[section_idx].column_by_key[col_key]))
         return res
+
+
+def _get_or_create_headers(
+    rows_by_sample: Dict[SampleNameT, List[Row]],
+    header_by_key: InputHeaderT,
+    pconfig,
+) -> Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]:
+    """
+    Process and populate headers, if missing or incomplete.
+    """
+    # Make a copy to keep the input immutable.
+    header_by_key_copy = {k: dict(h) for k, h in header_by_key.items()}
+    if not pconfig.only_defined_headers:
+        # Get additional header keys from the data
+        col_ids: List[str] = list(header_by_key_copy.keys())
+        # Get the keys from the data
+        for sname, rows in rows_by_sample.items():
+            for row in rows:
+                for col_id in row.data.keys():
+                    if col_id not in col_ids:
+                        col_ids.append(col_id)
+
+        # Create empty header configs for each new data key
+        for col_id in col_ids:
+            if col_id not in header_by_key:
+                header_by_key_copy[col_id] = dict()
+
+    # Check that we have some data in each column
+    empties = list()
+    for col_id in header_by_key_copy.keys():
+        n = 0
+        for sname, rows in rows_by_sample.items():
+            for row in rows:
+                if col_id in row.data.keys():
+                    n += 1
+
+        if n == 0:
+            empties.append(col_id)
+
+    # Remove empty columns
+    for empty_col_id in empties:
+        logger.debug(
+            f"Table key '{empty_col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
+        )
+        del header_by_key_copy[empty_col_id]
+
+    return header_by_key_copy
+
+
+def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, str]:
+    """
+    Takes row value, applies "modify" and "format" functions, and returns a tuple:
+    the modified value and its formatted string.
+    """
+    # Try parse as a number
+    if str(val).isdigit():
+        val = int(val)
+    else:
+        try:
+            val = float(val)
+        except ValueError:
+            pass
+
+    # Apply modify
+    if column.modify:
+        # noinspection PyBroadException
+        try:
+            val = column.modify(val)
+        except Exception as e:  # User-provided modify function can raise any exception
+            logger.error(f"Error modifying table value '{column.id}': '{val}'. {e}")
+    # section.raw_data[s_name][col_key] = val
+
+    # Now also calculate formatted values
+    valstr = str(val)
+    fmt: Union[None, str, Callable] = column.format
+    if fmt is None:
+        if isinstance(val, float):
+            fmt = "{:,.1f}"
+        elif isinstance(val, int):
+            fmt = "{:,d}"
+    if fmt is not None:
+        if callable(fmt):
+            try:
+                # noinspection PyCallingNonCallable
+                valstr = fmt(val)
+            except Exception as e:
+                logger.error(f"Error applying format to table value '{column.rid}': '{val}'. {e}")
+        elif isinstance(val, (int, float)):
+            try:
+                valstr = fmt.format(val)
+            except Exception as e:
+                logger.error(
+                    f"Error applying format string '{fmt}' to table value '{column.rid}': '{val}'. {e}. "
+                    f"Check if your format string is correct."
+                )
+    # section.formatted_data[s_name][col_key] = valstr
+    return val, valstr
+
+
+def _determine_dmin_and_dmax(
+    column: ColumnMeta,
+    col_key: ColumnKeyT,
+    raw_data: Dict[str, Dict[str, ValueT]],
+) -> None:
+    """
+    Work out max and min value in a column if not given, to support color scale.
+    """
+
+    set_dmax = False
+    if column.max is not None:
+        column.dmax = float(column.max)
+    else:
+        column.dmax = 0
+        set_dmax = True
+
+    set_dmin = False
+    if column.min is not None:
+        column.dmin = float(column.min)
+    else:
+        column.dmin = 0
+        set_dmin = True
+
+    # Figure out the min / max if not supplied
+    if set_dmax or set_dmin:
+        for s_name, v_by_col in raw_data.items():
+            try:
+                val = float(v_by_col[col_key])
+                if math.isfinite(val) and not math.isnan(val):
+                    if set_dmax:
+                        column.dmax = max(column.dmax, val)
+                    if set_dmin:
+                        column.dmin = min(column.dmin, val)
+            except KeyError:
+                pass  # missing data - skip
+
+        # Limit auto-generated scales with floor, ceiling and minrange.
+        if column.ceiling is not None and column.max is None:
+            column.dmax = min(column.dmax, float(column.ceiling))
+        if column.floor is not None and column.min is None:
+            column.dmin = max(column.dmin, float(column.floor))
+        if column.minrange is not None:
+            ddiff = column.dmax - column.dmin
+            if ddiff < float(column.minrange):
+                column.dmax = column.dmin + float(column.minrange)
+
+
+def _collect_shared_keys(sections) -> Dict[str, Dict[str, Union[int, float]]]:
+    # Collect settings for shared keys
+    shared_keys: Dict[str, Dict[str, Union[int, float]]] = defaultdict(lambda: dict())
+    for sec_idx, section in enumerate(sections):
+        for _, column in section.column_by_key.items():
+            sk: str = column.shared_key
+            if sk is not None:
+                shared_keys[sk]["dmax"] = max(
+                    column.dmax,
+                    shared_keys[sk].get("dmax", column.dmax),
+                )
+                shared_keys[sk]["dmin"] = min(
+                    column.dmin,
+                    shared_keys[sk].get("dmin", column.dmin),
+                )
+    return shared_keys

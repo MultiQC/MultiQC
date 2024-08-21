@@ -4,7 +4,7 @@ from typing import List, Dict, Optional, Union
 from multiqc import config
 from multiqc.plots import table_object
 from multiqc.plots.plotly import violin
-from multiqc.plots.table_object import TableConfig, DatasetT
+from multiqc.plots.table_object import TableConfig, InputSectionT, InputHeaderT
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,8 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[List[DatasetT], DatasetT],
-    headers: Optional[Union[List[Dict], Dict]] = None,
+    data: Union[List[InputSectionT], InputSectionT],
+    headers: Optional[Union[List[InputHeaderT], InputHeaderT]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, violin.ViolinPlot]:
     """

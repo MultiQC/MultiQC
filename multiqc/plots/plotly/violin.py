@@ -8,7 +8,7 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable, TableColumn
+from multiqc.plots.table_object import DataTable, ColumnMeta
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc.plots.plotly.table import make_table
 
@@ -63,15 +63,15 @@ class Dataset(BaseDataset):
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
-    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, TableColumn]]:
+    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, ColumnMeta]]:
         value_by_sample_by_metric = {}
-        dt_column_by_metric: Dict[str, TableColumn] = {}
+        dt_column_by_metric: Dict[str, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
             full_metric_id = dt_column.rid
 
             value_by_sample = dict()
-            for s_name, val_by_metric in dt.raw_data[idx].items():
+            for s_name, val_by_metric in dt.sections[idx].raw_data.items():
                 try:
                     v = val_by_metric[metric_name]
                 except KeyError:
@@ -387,8 +387,8 @@ class ViolinPlot(Plot):
         samples_per_dataset: List[Set[str]] = []
         for dt_idx, dt in enumerate(dts):
             ds_samples: Set[str] = set()
-            for rd in dt.raw_data:
-                ds_samples.update(rd.keys())
+            for section in dt.sections:
+                ds_samples.update(section.raw_data.keys())
             samples_per_dataset.append(ds_samples)
 
         main_table_dt: DataTable = dts[0]  # used for the table
@@ -499,9 +499,9 @@ class ViolinPlot(Plot):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.raw_data[idx].keys():
-                    if metric in self.main_table_dt.raw_data[idx][s_name]:
-                        val = self.main_table_dt.raw_data[idx][s_name][metric]
+                for s_name in self.main_table_dt.sections[idx].raw_data.keys():
+                    if metric in self.main_table_dt.sections[idx].raw_data[s_name]:
+                        val = self.main_table_dt.sections[idx].raw_data[s_name][metric]
                         if val is not None:
                             data.setdefault(s_name, {})[rid] = val
 
@@ -530,9 +530,9 @@ class ViolinPlot(Plot):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.raw_data[idx].keys():
-                    if metric in self.main_table_dt.raw_data[idx][s_name]:
-                        val = self.main_table_dt.raw_data[idx][s_name][metric]
+                for s_name in self.main_table_dt.sections[idx].raw_data.keys():
+                    if metric in self.main_table_dt.sections[idx].raw_data[s_name]:
+                        val = self.main_table_dt.sections[idx].raw_data[s_name][metric]
                         if val is not None:
                             data.setdefault(s_name, {})[rid] = val
 

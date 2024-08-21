@@ -8,19 +8,19 @@ import dataclasses
 import io
 import json
 import logging
-from typing import Dict, Set, List, Union, Literal, Optional, Tuple, Mapping, Sequence, Any, Callable
-
 import math
 import os
 import re
 import zipfile
 from collections import Counter, defaultdict
+from typing import Dict, Set, List, Union, Literal, Optional, Tuple, Mapping, Callable
 
 from multiqc import config
+from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
-from multiqc import report
 from multiqc.plots.plotly.line import Series, LinePlotConfig
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, Row
 
 log = logging.getLogger(__name__)
 
@@ -430,7 +430,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Add count of fail statuses
             num_statuses = 0
             num_fails = 0
-            for s in sample_data[s_name]["statuses"].values():
+            for s in sample_data["statuses"].values():
                 num_statuses += 1
                 if s == "fail":
                     num_fails += 1
@@ -503,7 +503,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Merge Read 1 + Read 2 data
-        data_by_grouped_samples: Dict[str, List[Tuple[str, Metrics]]] = defaultdict(list)
+        data_by_grouped_samples: Dict[SampleNameT, List[Tuple[ColumnKeyT, Metrics]]] = defaultdict(list)
         for g_name, s_names in self.group_samples(
             list(data_by_sample.keys()),
             grouping_criteria="read_pairs",
@@ -563,8 +563,8 @@ class MultiqcModule(BaseMultiqcModule):
             if num_statuses > 0:
                 merged_sample.percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
 
-        gen_stats_data_by_sample: Mapping[str, Sequence[Tuple[str, Mapping[str, float]]]] = {
-            g_name: [(s_name, metrics.__dict__) for s_name, metrics in samples]
+        gen_stats_data_by_sample: Mapping[SampleNameT, List[Row]] = {
+            g_name: [Row(sample=s_name, data=metrics.__dict__) for s_name, metrics in samples]
             for g_name, samples in data_by_grouped_samples.items()
         }
 
@@ -1255,31 +1255,6 @@ class MultiqcModule(BaseMultiqcModule):
             top_seqs = overrep_by_sample.most_common(top_n)
         else:
             top_seqs = overrep_total_cnt.most_common(top_n)
-        headers = {
-            "samples": {
-                "title": "Samples",
-                "description": "Number of samples where this sequence is overrepresented",
-                "scale": "Greens",
-                "min": 0,
-                "format": "{:,d}",
-            },
-            "total_count": {
-                "title": "Occurrences",
-                "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
-                "scale": "Blues",
-                "min": 0,
-                "format": "{:,d}",
-            },
-            "total_percent": {
-                "title": "% of all reads",
-                "description": "Total number of occurrences as the percentage of all reads (among samples where the sequence is overrepresented)",
-                "scale": "Blues",
-                "min": 0,
-                "max": 100,
-                "suffix": "%",
-                "format": "{:,.4f}",
-            },
-        }
         data = {
             seq: {
                 "sequence": seq,
@@ -1302,8 +1277,32 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=table.plot(
                 data,
-                headers,
-                {
+                headers={
+                    "samples": {
+                        "title": "Samples",
+                        "description": "Number of samples where this sequence is overrepresented",
+                        "scale": "Greens",
+                        "min": 0,
+                        "format": "{:,d}",
+                    },
+                    "total_count": {
+                        "title": "Occurrences",
+                        "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
+                        "scale": "Blues",
+                        "min": 0,
+                        "format": "{:,d}",
+                    },
+                    "total_percent": {
+                        "title": "% of all reads",
+                        "description": "Total number of occurrences as the percentage of all reads (among samples where the sequence is overrepresented)",
+                        "scale": "Blues",
+                        "min": 0,
+                        "max": 100,
+                        "suffix": "%",
+                        "format": "{:,.4f}",
+                    },
+                },
+                pconfig={
                     "namespace": self.name,
                     "id": "fastqc_top_overrepresented_sequences_table",
                     "title": "FastQC: Top overrepresented sequences",

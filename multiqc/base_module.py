@@ -24,7 +24,7 @@ from multiqc.config import CleanPatternT
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
 from multiqc.core import software_versions
-from multiqc.plots.table_object import TableColumn
+from multiqc.plots.table_object import ColumnMeta, Row, SampleNameT, ValueT, ColumnKeyT, InputSectionT, InputHeaderT
 
 logger = logging.getLogger(__name__)
 
@@ -739,8 +739,8 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data: Mapping[str, Union[Mapping[str, float], Sequence[Tuple[str, Mapping[str, float]]]]],
-        headers: Optional[Mapping[str, Mapping[str, Union[str, int, float, None, Callable]]]] = None,
+        data: InputSectionT,
+        headers: Optional[InputHeaderT] = None,
         namespace=None,
     ):
         """Helper function to add to the General Statistics variable.
@@ -756,7 +756,7 @@ class BaseMultiqcModule:
                           Can be e.g. a submodule name.
         :return: None
         """
-        _headers: Dict[str, Dict[str, Union[str, int, float, None, Callable]]] = {}
+        _headers: Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
