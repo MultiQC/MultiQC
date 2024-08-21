@@ -199,7 +199,8 @@ class Plot(BaseModel, Generic[T]):
         id: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
-        flat_threshold: Optional[int] = config.plots_flat_numseries,
+        defer_render_if_large: bool = True,
+        flat_if_very_large: bool = True,
     ):
         """
         Initialize a plot model with the given configuration.
@@ -210,7 +211,8 @@ class Plot(BaseModel, Generic[T]):
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
-        :param flat_threshold: threshold for the number of samples to switch to flat plots
+        :param defer_render_if_large: whether to defer rendering if the number of data points is large
+        :param flat_if_very_large: whether to render flat if the number of data points is very large
         """
         if n_samples_per_dataset == 0:
             raise ValueError("No datasets to plot")
@@ -236,16 +238,26 @@ class Plot(BaseModel, Generic[T]):
         flat = False
         if config.plots_force_flat:
             flat = True
-        elif (
-            flat_threshold is not None
+        if (
+            flat_if_very_large
             and not config.plots_force_interactive
-            and max(x for x in n_samples_per_dataset) > flat_threshold
+            and n_samples_per_dataset[0] > config.plots_flat_numseries
         ):
+            logger.debug(
+                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+            )
             flat = True
 
         defer_render = False
-        if n_samples_per_dataset[0] > config.plots_num_samples_do_not_automatically_load:
-            defer_render = True
+        if defer_render_if_large:
+            if (
+                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+            ):
+                logger.debug(
+                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                )
+                defer_render = True
 
         showlegend = pconfig.showlegend
         if showlegend is None:
@@ -354,8 +366,16 @@ class Plot(BaseModel, Generic[T]):
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
-            if len(n_samples_per_dataset) > 1 and "title" not in dconfig:
-                dconfig["title"] = f"{pconfig.title} ({dataset.label})"
+
+            if "title" not in dconfig:
+                dconfig["title"] = pconfig.title
+            subtitles = []
+            if len(n_samples_per_dataset) > 1:
+                subtitles += [dataset.label]
+            if n_samples > 1:
+                subtitles += [f"{n_samples} samples"]
+            if subtitles:
+                dconfig["title"] += f"<br><sup>{', '.join(subtitles)}</sup>"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig

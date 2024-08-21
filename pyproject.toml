@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.24dev"
+version = "1.24.1"
 dependencies = [
     "click",
     "humanize",
@@ -130,6 +130,7 @@ flexbar = "multiqc.modules.flexbar:MultiqcModule"
 filtlong = "multiqc.modules.filtlong:MultiqcModule"
 freyja = "multiqc.modules.freyja:MultiqcModule"
 gffcompare = "multiqc.modules.gffcompare:MultiqcModule"
+ganon = "multiqc.modules.ganon:MultiqcModule"
 gatk = "multiqc.modules.gatk:MultiqcModule"
 glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"

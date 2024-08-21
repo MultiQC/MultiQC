@@ -76,7 +76,7 @@ def write_results() -> None:
         _write_data_files(paths.data_dir)
         logger.info(
             "Data        : {}{}".format(
-                paths.data_dir,
+                _maybe_relative_path(paths.data_dir),
                 "   (overwritten)" if paths.data_dir_overwritten else "",
             )
         )
@@ -90,21 +90,21 @@ def write_results() -> None:
         if paths.report_path and not config.make_pdf:
             logger.info(
                 "Report      : {}{}".format(
-                    paths.report_path,
+                    _maybe_relative_path(paths.report_path),
                     "   (overwritten)" if paths.report_overwritten else "",
                 )
             )
         elif paths.report_path and config.make_pdf:
             pdf_path = _write_pdf(paths.report_path)
             if pdf_path:
-                logger.info(f"Report      : {pdf_path}")
+                logger.info(f"Report      : {_maybe_relative_path(pdf_path)}")
 
     if config.export_plots and paths.plots_dir:
         # Copy across the static plot images if requested
         _move_exported_plots(paths.plots_dir)
         logger.info(
             "Plots       : {}{}".format(
-                paths.plots_dir,
+                _maybe_relative_path(paths.plots_dir),
                 "   (overwritten)" if paths.plots_dir_overwritten else "",
             )
         )
@@ -113,6 +113,19 @@ def write_results() -> None:
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
         tmp_dir.rmtree_with_retries(paths.data_dir)
+
+    if paths.report_path:
+        logger.debug(f"Report HTML written to {paths.report_path}")
+
+
+def _maybe_relative_path(path: Path) -> Path:
+    """
+    If the path is relative to CWD, return the relative path; otherwise, return the full path
+    """
+    try:
+        return path.relative_to(os.getcwd())
+    except ValueError:  # could call path.is_relative_to() here, but it's new in Py 3.9
+        return path
 
 
 def _set_output_names() -> OutputNames:

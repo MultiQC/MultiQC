@@ -542,6 +542,12 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
             if ftype is not None and ftype.startswith("image"):
                 return False
 
+        # Check if file is in ignore files
+        is_ignore_file = False
+        for ignore_pat in config.fn_ignore_files:
+            if fnmatch.fnmatch(search_f.filename, ignore_pat):
+                is_ignore_file = True
+
         # Test file for each search pattern
         file_matched = False
         with search_f:  # Ensure any open filehandles are closed.
@@ -549,7 +555,7 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
                 for key, sps in patterns.items():
                     start = time.time()
                     for sp in sps:
-                        if search_file(sp, search_f, key):
+                        if search_file(sp, search_f, key, is_ignore_file):
                             # Check that we shouldn't exclude this file
                             if not exclude_file(sp, search_f):
                                 # Looks good! Remember this file
@@ -604,7 +610,7 @@ def search_files(sp_keys):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key, is_ignore_file: bool = False):
     """
     Function to search a single file for a single search pattern.
     """
@@ -631,30 +637,43 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key):
     if not pattern.contents and not pattern.contents_re:
         return True
 
-    # Before parsing file content, check that we don't want to ignore this file to avoid parsing large files
-    for ignore_pat in config.fn_ignore_files:
-        if fnmatch.fnmatch(f.filename, ignore_pat):
-            file_search_stats["skipped_ignore_pattern"].add(f.path)
-            return False
+    if is_ignore_file:
+        # Ignore filenames are never searched for content.
+        file_search_stats["skipped_ignore_pattern"].add(f.path)
+        return False
 
     # Search by file contents
     num_lines = pattern.num_lines or config.filesearch_lines_limit
 
     match_strs: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+    total_lines = 0
     try:
-        for line_count, line in f.line_iterator():
+        for line_count, block in f.line_block_iterator():
             for s in pattern.contents:
-                if s in line:
-                    match_strs.add(s)
+                if s in block:
+                    if total_lines + line_count > num_lines:
+                        # We read more lines than requested and the match may
+                        # be in a part of the file that shouldn't be read.
+                        # Test how many lines preceed the match to see if there
+                        # was overshoot.
+                        s_index = block.index(s)
+                        lines_including_match = block[:s_index].count("\n") + 1
+                        if total_lines + lines_including_match <= num_lines:
+                            match_strs.add(s)
+                    else:
+                        match_strs.add(s)
                     if len(match_strs) == len(pattern.contents):  # all strings matched
                         break
             for p in pattern.contents_re:
-                if p.match(line):
-                    match_re_patterns.add(p)
-                    if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
-                        break
-            if line_count >= num_lines:
+                # Limit the number of lines to the amount of lines that should remain
+                for line in block.splitlines(keepends=True)[: num_lines - total_lines]:
+                    if p.match(line):
+                        match_re_patterns.add(p)
+                        if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
+                            break
+            total_lines += line_count
+            if total_lines >= num_lines:
                 break
     except Exception:
         file_search_stats["skipped_file_contents_search_errors"].add(f.path)

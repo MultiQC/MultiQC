@@ -231,16 +231,16 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         raise ModuleNoSamplesFound
 
     # Go through each data type
-    parsed_modules = dict()
-    for c_id, mod in cust_mod_by_id.items():
+    parsed_modules: Dict[str, MultiqcModule] = dict()
+    for c_id, mod_dict in cust_mod_by_id.items():
         # General Stats
-        assert isinstance(mod["config"], dict)
-        if mod["config"].get("plot_type") == "generalstats":
-            assert isinstance(mod["data"], dict), mod["data"]
-            gsheaders = mod["config"].get("pconfig")
+        assert isinstance(mod_dict["config"], dict)
+        if mod_dict["config"].get("plot_type") == "generalstats":
+            assert isinstance(mod_dict["data"], dict), mod_dict["data"]
+            gsheaders = mod_dict["config"].get("pconfig")
             if gsheaders is None:
                 headers_set: Set[str] = set()
-                for _hd in mod["data"].values():
+                for _hd in mod_dict["data"].values():
                     headers_set.update(_hd.keys())
                 headers = list(headers_set)
                 headers.sort()
@@ -259,40 +259,45 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # Add namespace and description if not specified
             for m_id in gsheaders:
                 if "namespace" not in gsheaders[m_id]:
-                    gsheaders[m_id]["namespace"] = mod["config"].get("namespace", c_id)
-            log.info(f"{c_id}: Found {len(mod['data'])} General Statistics columns")
-            bm.general_stats_addcols(mod["data"], gsheaders)
+                    gsheaders[m_id]["namespace"] = mod_dict["config"].get("namespace", c_id)
+            log.info(f"{c_id}: Found {len(mod_dict['data'])} General Statistics columns")
+            bm.general_stats_addcols(mod_dict["data"], gsheaders)
 
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = mod["config"].get("parent_id", mod["config"].get("anchor", c_id + "-module"))
+            mod_id = mod_dict["config"].get("parent_id", mod_dict["config"].get("anchor"))
+            if mod_id is None:
+                mod_id = c_id
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
-                mod["config"].update(mod_cust_config[mod_id])
+                mod_dict["config"].update(mod_cust_config[mod_id])
             # We've not seen this module section before (normal for most custom content)
             if mod_id not in parsed_modules:
-                parsed_modules[mod_id] = MultiqcModule(mod_id, mod)
+                parsed_modules[mod_id] = MultiqcModule(mod_id, mod_dict)
             else:
                 # New sub-section
-                parsed_modules[mod_id].update_init(c_id, mod)
-            parsed_modules[mod_id].add_cc_section(c_id, mod)
-            if mod["config"].get("plot_type") == "html":
+                parsed_modules[mod_id].update_init(mod_id, mod_dict)
+            parsed_modules[mod_id].add_cc_section(c_id, mod_dict)
+            if mod_dict["config"].get("plot_type") == "html":
                 log.info(f"{c_id}: Found 1 sample (html)")
-            elif mod["config"].get("plot_type") == "image":
+            elif mod_dict["config"].get("plot_type") == "image":
                 log.info(f"{c_id}: Found 1 sample (image)")
             else:
-                log.info(f"{c_id}: Found {len(mod['data'])} samples ({mod['config'].get('plot_type')})")
+                log.info(f"{c_id}: Found {len(mod_dict['data'])} samples ({mod_dict['config'].get('plot_type')})")
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, "custom_content", {}).get("order", [])
-    sorted_modules: List[BaseMultiqcModule] = [
+    # after each element, also add a version with a "-module" next to it for back-compat with < 1.24
+    mod_order = [x for x in mod_order for x in [x, re.sub("-module$", "", x), f"{x}-module"]]
+    modules__not_in_order: List[BaseMultiqcModule] = [
         parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order
     ]
-    sorted_modules.extend(
-        [parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id]
-    )
+    modules_in_order = [
+        parsed_mod for mod_id in mod_order for parsed_mod in parsed_modules.values() if parsed_mod.anchor == mod_id
+    ]
+    sorted_modules = modules_in_order + modules__not_in_order
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
@@ -311,20 +316,22 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
-    def __init__(self, c_id, mod):
+    def __init__(self, c_id: str, mod: Dict[str, Union[Dict, List, str]]):
         modname = c_id.replace("_", " ").title()
+        assert isinstance(mod["config"], dict)
         mod_info = mod["config"].get("description")
         if "parent_name" in mod["config"]:
+            assert isinstance(mod["config"]["parent_name"], str)
             modname = mod["config"]["parent_name"]
             mod_info = mod["config"].get("parent_description")
         elif "section_name" in mod["config"]:
+            assert isinstance(mod["config"]["section_name"], str)
             modname = mod["config"]["section_name"]
         if modname == "" or modname is None:
             modname = "Custom Content"
 
         anchor = mod["config"].get("section_anchor", c_id)
 
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name=modname,
             anchor=anchor,
@@ -360,9 +367,14 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
 
+        if self.id == c_id:  # make sure the anchors are unique
+            c_id = c_id + "-section"
+
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
             pconfig["id"] = f"{c_id}-plot"
+        if pconfig["id"] == c_id or pconfig["id"] == mod["config"].get("id"):
+            pconfig["id"] += "-plot"
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
@@ -376,75 +388,75 @@ class MultiqcModule(BaseMultiqcModule):
             plot = heatmap.plot(
                 mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
             )
-
-        if not isinstance(mod["data"], list):
-            mod["data"] = [mod["data"]]
-
-        # Try to coerce x-axis to numeric
-        if plot_type in ["linegraph", "scatter"]:
-            try:
-                mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
-            except ValueError:
-                pass
-
-        # Table
-        if plot_type == "table":
-            headers = mod["config"].get("headers")
-
-            # handle some legacy fields for backwards compat
-            sort_rows = pconfig.pop("sortRows", None)
-            if sort_rows is not None:
-                pconfig["sort_rows"] = sort_rows
-            no_violin = pconfig.pop("no_beeswarm", None)
-            if no_violin is not None:
-                pconfig["no_violin"] = no_violin
-
-            plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
-
-        # Bar plot
-        elif plot_type == "bargraph":
-            mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-            plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
-
-        # Line plot
-        elif plot_type == "linegraph":
-            plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
-
-        # Scatter plot
-        elif plot_type == "scatter":
-            plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
-
-        # Box plot
-        elif plot_type == "box":
-            plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
-
-        # Violin plot
-        elif plot_type in ["violin", "beeswarm"]:
-            plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
-
-        # Raw HTML
-        elif plot_type == "html":
-            if len(mod["data"]) > 1:
-                log.warning(f"HTML plot type found with more than one dataset in {c_id}")
-            content = mod["data"][0]
-
-        # Raw image file as html
-        elif plot_type == "image":
-            if len(mod["data"]) > 1:
-                log.warning(f"Image plot type found with more than one dataset in {c_id}")
-            content = mod["data"][0]
-
-        # Not supplied
-        elif plot_type is None:
-            log.warning(f"Plot type not found for content ID '{c_id}'")
-
-        # Not recognised
         else:
-            log.warning(
-                "Error - custom content plot type '{}' not recognised for content ID {}".format(
-                    mod["config"].get("plot_type"), c_id
+            if not isinstance(mod["data"], list):
+                mod["data"] = [mod["data"]]
+
+            # Try to coerce x-axis to numeric
+            if plot_type in ["linegraph", "scatter"]:
+                try:
+                    mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
+                except ValueError:
+                    pass
+
+            # Table
+            if plot_type == "table":
+                headers = mod["config"].get("headers")
+
+                # handle some legacy fields for backwards compat
+                sort_rows = pconfig.pop("sortRows", None)
+                if sort_rows is not None:
+                    pconfig["sort_rows"] = sort_rows
+                no_violin = pconfig.pop("no_beeswarm", None)
+                if no_violin is not None:
+                    pconfig["no_violin"] = no_violin
+
+                plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
+
+            # Bar plot
+            elif plot_type == "bargraph":
+                mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
+                plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
+
+            # Line plot
+            elif plot_type == "linegraph":
+                plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
+
+            # Scatter plot
+            elif plot_type == "scatter":
+                plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
+
+            # Box plot
+            elif plot_type == "box":
+                plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
+
+            # Violin plot
+            elif plot_type in ["violin", "beeswarm"]:
+                plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
+
+            # Raw HTML
+            elif plot_type == "html":
+                if len(mod["data"]) > 1:
+                    log.warning(f"HTML plot type found with more than one dataset in {c_id}")
+                content = mod["data"][0]
+
+            # Raw image file as html
+            elif plot_type == "image":
+                if len(mod["data"]) > 1:
+                    log.warning(f"Image plot type found with more than one dataset in {c_id}")
+                content = mod["data"][0]
+
+            # Not supplied
+            elif plot_type is None:
+                log.warning(f"Plot type not found for content ID '{c_id}'")
+
+            # Not recognised
+            else:
+                log.warning(
+                    "Error - custom content plot type '{}' not recognised for content ID {}".format(
+                        mod["config"].get("plot_type"), c_id
+                    )
                 )
-            )
 
         if plot is not None:
             for i, ds in enumerate(mod["data"]):
@@ -626,8 +638,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
         data_ddict: Dict[str, Dict] = defaultdict(dict)
         for i, section in enumerate(matrix[1:], 1):
             for j, v in enumerate(section[1:], 1):
-                assert isinstance(section[0], str)
-                data_ddict[section[0]][matrix[0][j]] = v
+                s_name = str(section[0])
+                data_ddict[s_name][matrix[0][j]] = v
         return data_ddict, conf
 
     # Heatmap: Number of headers == number of lines
@@ -643,11 +655,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
         data_ddict = dict()
         for s in matrix[1:]:
-            sname = str(s[0])
-            data_ddict[sname] = dict()
+            s_name = str(s[0])
+            data_ddict[s_name] = dict()
             for i, v in enumerate(s[1:]):
                 cat = str(matrix[0][i + 1])
-                data_ddict[sname][cat] = v
+                data_ddict[s_name][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
         if conf.get("plot_type") is None:
             allfloats = True
@@ -659,11 +671,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
             else:
                 conf["plot_type"] = "table"
         # Set table col_1 header
-        assert isinstance(matrix[0][0], str)
-        if conf.get("plot_type") == "table" and matrix[0][0].strip() != "":
+        col_name = str(matrix[0][0])
+        if conf.get("plot_type") == "table" and col_name.strip() != "":
             conf["pconfig"] = conf.get("pconfig", {})
             if not conf["pconfig"].get("col1_header"):
-                conf["pconfig"]["col1_header"] = matrix[0][0].strip()
+                conf["pconfig"]["col1_header"] = col_name.strip()
         # Return parsed data
         if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
             return data_ddict, conf
@@ -683,9 +695,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     if conf.get("plot_type") == "scatter":
         dicts: Dict[str, Dict[str, float]] = dict()
         for s in matrix:
-            assert isinstance(s[0], str)
             try:
-                dicts[s[0]] = {"x": float(s[1]), "y": float(s[2])}
+                dicts[str(s[0])] = {"x": float(s[1]), "y": float(s[2])}
             except (IndexError, ValueError):
                 pass
         return dicts, conf
@@ -717,13 +728,13 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
-        assert isinstance(matrix[0][0], str)
-        if matrix[0][0].strip() == "":
+        s_name = str(matrix[0][0])
+        if s_name.strip() == "":
             x_labels = matrix.pop(0)[1:]
         # Use 1..n range for x values
         for s in matrix:
-            assert isinstance(s[0], str)
-            data_ddict[s[0]] = dict()
+            name = str(s[0])
+            data_ddict[name] = dict()
             for i, v in enumerate(s[1:]):
                 try:
                     x_val = x_labels[i]
@@ -733,7 +744,7 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
                         pass
                 except IndexError:
                     x_val = i + 1
-                data_ddict[s[0]][x_val] = v
+                data_ddict[name][x_val] = v
         return data_ddict, conf
 
     # Got to the end and haven't returned. It's a mystery, capn'!
