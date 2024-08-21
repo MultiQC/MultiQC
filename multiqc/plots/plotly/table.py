@@ -388,24 +388,24 @@ def make_table(
                 break
         row_class = ""
         for number_in_group, s_name in enumerate(t_rows[g_name]):
-            bg = "" if number_in_group == 0 else "background-color: rgba(0,0,0,0.05);"
+            # bg = "" if number_in_group == 0 else "background-color: rgba(0,0,0,0.05);"
             prefix = ""
             if non_trivial_groups_present:
-                char = ""
+                caret_cls = ""
                 if len(t_rows[g_name]) > 1 and number_in_group == 0:
-                    char = "►"
-                    row_class = "class='mqc-row-expandable-primary' "
-                prefix += (
-                    f"<div style='display: inline-block; width: 20px' class='mqc-row-expandable-arrow'>{char}</div>"
-                )
+                    caret_cls = "expandable-row-caret"
+                    row_class = "expandable-row"
+                prefix += f"<div style='display: inline-block; width: 20px' class='{caret_cls}'>&nbsp;</div>"
             if number_in_group != 0:
-                prefix += "&nbsp;&nbsp;↳&nbsp;"
-                row_class = "class='mqc-row-expandable-secondary' "
+                prefix += "&nbsp;↳&nbsp;"
+                row_class = "expandable-row-secondary"
                 do_not_display = True
             row_hidden = "display: none;" if do_not_display else ""
-            html += f'<tr data-group-id={escape(g_name)} data-table-id={dt.id} {row_class} style="{row_hidden} {bg}">'
+            html += (
+                f'<tr data-group-id={escape(g_name)} data-table-id={dt.id} class="{row_class}" style="{row_hidden}">'
+            )
             # Sample name row header
-            html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{prefix}<span class="mqc-th-sample-name">{s_name}</span></th>'
+            html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{prefix}<span class="th-sample-name">{s_name}</span></th>'
             for col_key in t_headers:
                 html += t_rows[g_name][s_name].get(col_key, empty_cells[col_key])
             html += "</tr>"

@@ -306,7 +306,7 @@ $(function () {
     });
 
     // Support expanding grouped samples in table
-    $(".mqc-row-expandable-primary").click(function (e) {
+    $(".expandable-row").click(function (e) {
       e.preventDefault();
       let element = $(this);
       // final most parent table object
@@ -314,21 +314,16 @@ $(function () {
       let tableId = element.data("table-id");
       // find all rows with the same data-group-id
       let groupId = element.data("group-id");
-      let otherRows = table.find("tbody tr.mqc-row-expandable-secondary[data-group-id='" + groupId + "']");
-      // toggle the visibility of the rows
+      let otherRows = table.find(
+        "tbody tr.expandable-row-secondary[data-group-id='" + groupId + "'][data-table-id='" + tableId + "']",
+      );
+      // toggle the visibility of the rows and type of arrow
       otherRows.toggle();
-
-      let arrowElement = element.find(".mqc-row-expandable-arrow");
-      // toggle the text content between ▼ and ►
-      if (arrowElement.text() === "►") {
-        arrowElement.text("▼");
-      } else {
-        arrowElement.text("►");
-      }
+      element.toggleClass("expanded");
     });
 
     // We want to allow user select sample name text without expanding the row
-    $(".mqc-th-sample-name").click(function (e) {
+    $(".th-sample-name").click(function (e) {
       // stop propagation to prevent row expansion
       e.stopPropagation();
     });
