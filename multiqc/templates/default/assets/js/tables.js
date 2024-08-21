@@ -304,6 +304,34 @@ $(function () {
         $(this).text($("#" + tid + " thead th:visible").length - 1);
       });
     });
+
+    // Support expanding grouped samples in table
+    $(".mqc-row-expandable-primary").click(function (e) {
+      e.preventDefault();
+      let element = $(this);
+      // final most parent table object
+      let table = element.closest("table");
+      let tableId = element.data("table-id");
+      // find all rows with the same data-group-id
+      let groupId = element.data("group-id");
+      let otherRows = table.find("tbody tr.mqc-row-expandable-secondary[data-group-id='" + groupId + "']");
+      // toggle the visibility of the rows
+      otherRows.toggle();
+
+      let arrowElement = element.find(".mqc-row-expandable-arrow");
+      // toggle the text content between ▼ and ►
+      if (arrowElement.text() === "►") {
+        arrowElement.text("▼");
+      } else {
+        arrowElement.text("►");
+      }
+    });
+
+    // We want to allow user select sample name text without expanding the row
+    $(".mqc-th-sample-name").click(function (e) {
+      // stop propagation to prevent row expansion
+      e.stopPropagation();
+    });
   } // End of check for table
 
   // Table Scatter Modal
