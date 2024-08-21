@@ -71,14 +71,15 @@ class Dataset(BaseDataset):
             full_metric_id = dt_column.rid
 
             value_by_sample = dict()
-            for s_name, val_by_metric in dt.sections[idx].raw_data.items():
-                try:
-                    v = val_by_metric[metric_name]
-                except KeyError:
-                    pass
-                else:
-                    assert v is not None and str(v).strip != "", v
-                    value_by_sample[s_name] = v
+            for group_name, group_rows in dt.sections[idx].rows_by_sgroup.items():
+                for row in group_rows:
+                    try:
+                        v = row.raw_data[metric_name]
+                    except KeyError:
+                        pass
+                    else:
+                        assert v is not None and str(v).strip != "", v
+                        value_by_sample[row.sample] = v
 
             value_by_sample_by_metric[full_metric_id] = value_by_sample
 
@@ -388,7 +389,7 @@ class ViolinPlot(Plot):
         for dt_idx, dt in enumerate(dts):
             ds_samples: Set[str] = set()
             for section in dt.sections:
-                ds_samples.update(section.raw_data.keys())
+                ds_samples.update(section.rows_by_sgroup.keys())
             samples_per_dataset.append(ds_samples)
 
         main_table_dt: DataTable = dts[0]  # used for the table
@@ -497,13 +498,14 @@ class ViolinPlot(Plot):
             # we only support one dataset, and the flat mode is not applicable.
 
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
-            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+            for idx, col_key, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.sections[idx].raw_data.keys():
-                    if metric in self.main_table_dt.sections[idx].raw_data[s_name]:
-                        val = self.main_table_dt.sections[idx].raw_data[s_name][metric]
-                        if val is not None:
-                            data.setdefault(s_name, {})[rid] = val
+                for group_name, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                    for row in group_rows:
+                        if col_key in row.raw_data:
+                            val = row.raw_data[col_key]
+                            if val is not None:
+                                data.setdefault(row.sample, {})[rid] = val
 
             import pandas as pd  # type: ignore
 
@@ -530,11 +532,12 @@ class ViolinPlot(Plot):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.sections[idx].raw_data.keys():
-                    if metric in self.main_table_dt.sections[idx].raw_data[s_name]:
-                        val = self.main_table_dt.sections[idx].raw_data[s_name][metric]
-                        if val is not None:
-                            data.setdefault(s_name, {})[rid] = val
+                for group_name, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                    for row in group_rows:
+                        if metric in row.raw_data:
+                            val = row.raw_data[metric]
+                            if val is not None:
+                                data.setdefault(row.sample, {})[rid] = val
 
             values: List[List[Any]] = [list(data.keys())]
             for idx, metric, header in self.main_table_dt.get_headers_in_order():

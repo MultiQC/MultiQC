@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from typing import Tuple, Optional, List, Dict
 
-from multiqc.plots.table_object import DataTable, ValueT
+from multiqc.plots.table_object import DataTable, ValueT, SampleNameT, ColumnKeyT, SampleGroupT
 from multiqc import config, report
 from multiqc.utils import mqc_colour
 
@@ -27,12 +27,12 @@ def make_table(
     :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
-    t_headers = dict()
-    t_modal_headers = dict()
-    t_rows: Dict[str, Dict[str, str]] = dict()
-    t_rows_empty: Dict[str, Dict[str, bool]] = dict()
-    raw_vals: Dict[str, Dict[str, ValueT]] = defaultdict(lambda: dict())
-    empty_cells = dict()
+    t_headers: Dict[ColumnKeyT, str] = dict()
+    t_modal_headers: Dict[ColumnKeyT, str] = dict()
+    t_rows: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnKeyT, str]]] = defaultdict(lambda: defaultdict(dict))
+    t_rows_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnKeyT, bool]]] = defaultdict(lambda: defaultdict(dict))
+    raw_vals: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnKeyT, ValueT]]] = defaultdict(lambda: defaultdict(dict))
+    empty_cells: Dict[ColumnKeyT, str] = dict()
     hidden_cols = 1
     table_title = dt.pconfig.title
     if table_title is None:
@@ -111,12 +111,16 @@ def make_table(
         cond_formatting_colours.extend(config.table_cond_formatting_colours)
 
         # Add the data table cells
-        for s_name in dt.sections[idx].raw_data.keys():
-            if col_key in dt.sections[idx].raw_data[s_name]:
-                val: ValueT = dt.sections[idx].raw_data[s_name][col_key]
-                valstr: str = dt.sections[idx].formatted_data[s_name][col_key]
+        section = dt.sections[idx]
+        for group_name, group_rows in section.rows_by_sgroup.items():
+            for row_idx, row in enumerate(group_rows):
+                if col_key not in row.raw_data:
+                    continue
 
-                raw_vals[s_name][f"{header.namespace}_{rid}"] = val
+                val: ValueT = row.raw_data[col_key]
+                valstr: str = row.formatted_data[col_key]
+
+                raw_vals[group_name][row.sample][f"{header.namespace}_{rid}"] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     dmin = header.dmin
@@ -209,14 +213,14 @@ def make_table(
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.id}, column {col_key}, sample {s_name}")
+                    print(f"Value {val} is not hashable for table {dt.id}, column {col_key}, sample {row.sample}")
 
                 # Categorical background colours supplied
                 if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
-                    if s_name not in t_rows:
-                        t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{escape(str(val))}" class="{rid} {hide}" {col}>{valstr}</td>'
+                    t_rows[group_name][row.sample][rid] = (
+                        f'<td val="{escape(str(val))}" class="{rid} {hide}" {col}>{valstr}</td>'
+                    )
 
                 # Build table cell background colour bar
                 elif hashable and header.scale:
@@ -230,25 +234,24 @@ def make_table(
                     val_html = f'<span class="val">{valstr}</span>'
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
-                    if s_name not in t_rows:
-                        t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = (
+                    t_rows[group_name][row.sample][rid] = (
                         f'<td val="{escape(str(val))}" class="data-coloured {rid} {hide}">{wrapper_html}</td>'
                     )
 
                 # Scale / background colours are disabled
                 else:
-                    if s_name not in t_rows:
-                        t_rows[s_name] = dict()
-                    t_rows[s_name][rid] = f'<td val="{escape(str(val))}" class="{rid} {hide}">{valstr}</td>'
+                    t_rows[group_name][row.sample][rid] = (
+                        f'<td val="{escape(str(val))}" class="{rid} {hide}">{valstr}</td>'
+                    )
 
                 # Is this cell hidden or empty?
-                if s_name not in t_rows_empty:
-                    t_rows_empty[s_name] = dict()
-                t_rows_empty[s_name][rid] = header.hidden or str(val).strip() == ""
+                t_rows_empty[group_name][row.sample][rid] = header.hidden or str(val).strip() == ""
 
         # Remove header if we don't have any filled cells for it
-        if sum([len(rows) for rows in t_rows.values()]) == 0:
+        sum_vals = 0
+        for g, rows_by_sample in t_rows.items():
+            sum_vals += sum([len(rows) for rows in rows_by_sample.values()])
+        if sum_vals == 0:
             if header.hidden:
                 hidden_cols -= 1
             t_headers.pop(rid, None)
@@ -370,18 +373,30 @@ def make_table(
 
     # Build the table body
     html += "<tbody>"
-    t_row_keys = list(t_rows.keys())
+    t_row_group_names = list(t_rows.keys())
     if dt.pconfig.sort_rows:
-        t_row_keys = sorted(t_row_keys)
-    for s_name in t_row_keys:
+        t_row_group_names = sorted(t_row_group_names)
+
+    # non_trivial_groups_present = any(len(t_rows[g_name]) > 1 for g_name in t_row_group_names)
+
+    for g_name in t_row_group_names:
         # Hide the row if all cells are empty or hidden
-        row_hidden = ' style="display:none"' if all(t_rows_empty[s_name].values()) else ""
-        html += f"<tr{row_hidden}>"
-        # Sample name row header
-        html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{s_name}</th>'
-        for col_key in t_headers:
-            html += t_rows[s_name].get(col_key, empty_cells[col_key])
-        html += "</tr>"
+        do_not_display = True
+        for s_name in t_rows[g_name]:
+            if not all(t_rows_empty[g_name][s_name].values()):  # not all empty!
+                do_not_display = False
+                break
+        row_hidden = "display:none;" if do_not_display else ""
+        for number_in_group, s_name in enumerate(t_rows[g_name]):
+            bg = "" if number_in_group == 0 else "background-color: rgba(0,0,0,0.05);"
+            prefix = "" if number_in_group == 0 else "&nbsp;&nbsp;↳&nbsp;"
+            postfix = " ▼" if len(t_rows[g_name]) > 1 and number_in_group == 0 else ""
+            html += f'<tr style="{row_hidden} {bg}">'
+            # Sample name row header
+            html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{prefix}{s_name}{postfix}</th>'
+            for col_key in t_headers:
+                html += t_rows[g_name][s_name].get(col_key, empty_cells[col_key])
+            html += "</tr>"
     html += "</tbody></table></div>"
     if len(t_rows) > 10 and config.collapse_tables:
         html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'

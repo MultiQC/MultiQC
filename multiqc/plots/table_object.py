@@ -6,6 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
+from random import sample
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
 
 from pydantic import BaseModel, Field
@@ -205,20 +206,34 @@ class ColumnMeta(ValidatedConfig):
 ValueT = Union[int, float, str, bool]
 ColumnKeyT = str
 SampleNameT = str
+SampleGroupT = str
+
+
+class InputRow(BaseModel):
+    """
+    Row class. Holds configuration for a single row in a table (can be multiple for one sample)
+    """
+
+    sample: SampleNameT
+    data: Dict[ColumnKeyT, Optional[ValueT]] = dict()
+
+
+InputGroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], InputRow, Sequence[InputRow]]
+InputSectionT = Mapping[SampleGroupT, InputGroupT]
+InputHeaderT = Mapping[ColumnKeyT, Mapping[str, Union[str, int, float, None, Callable]]]
 
 
 class Row(BaseModel):
     """
-    Row class. Holds configuration for a single row in a table.
+    Processed row class. Holds configuration for a single row in a table (can be multiple for one sample).
+    Contains raw, optionally modified, non-null values, and corresponding formatted values to display.
     """
 
     sample: SampleNameT
-    data: Mapping[ColumnKeyT, Optional[ValueT]]
-
-
-InputGroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], Row, Sequence[Row]]
-InputSectionT = Mapping[SampleNameT, InputGroupT]
-InputHeaderT = Mapping[ColumnKeyT, Mapping[str, Union[str, int, float, None, Callable]]]
+    # rows with original, unformatted values coming from modules:
+    raw_data: Dict[ColumnKeyT, ValueT] = dict()
+    # formatted rows (i.e. values are HTML strings to display in the table):
+    formatted_data: Dict[ColumnKeyT, str] = dict()
 
 
 class TableSection(BaseModel):
@@ -227,10 +242,7 @@ class TableSection(BaseModel):
     """
 
     column_by_key: Dict[ColumnKeyT, ColumnMeta]
-    # rows with original, unformatted values coming from modules:
-    raw_data: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]] = defaultdict(dict)
-    # formatted rows (i.e. values are HTML strings to display in the table):
-    formatted_data: Dict[SampleNameT, Dict[ColumnKeyT, str]] = defaultdict(dict)
+    rows_by_sgroup: Dict[SampleGroupT, List[Row]] = defaultdict(list)
 
 
 SECTION_COLORS = [
@@ -280,53 +292,58 @@ class DataTable(BaseModel):
         # Each section to have a list of groups (even if there is just one element in a group)
         input_section: InputSectionT
         input_group: InputGroupT
-        unified_sections__with_nulls: List[Dict[SampleNameT, List[Row]]] = []
+        unified_sections__with_nulls: List[Dict[SampleGroupT, List[InputRow]]] = []
         for input_section in input_sections__with_nulls:
-            rows_by_group: Dict[SampleNameT, List[Row]] = {}
-            for sname, input_group in input_section.items():
+            rows_by_group: Dict[SampleGroupT, List[InputRow]] = {}
+            for g_name, input_group in input_section.items():
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
-                    rows_by_group[sname] = [Row(sample=sname, data=input_group)]
+                    rows_by_group[g_name] = [InputRow(sample=g_name, data=input_group)]
                 elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
-                    rows_by_group[sname] = input_group
+                    rows_by_group[g_name] = input_group
                 else:
-                    assert isinstance(input_group, Row)
-                    rows_by_group[sname] = [input_group]
+                    assert isinstance(input_group, InputRow)
+                    rows_by_group[g_name] = [input_group]
             unified_sections__with_nulls.append(rows_by_group)
 
         del input_sections__with_nulls
 
         # Go through each table section and create a list of Section objects
         sections: List[TableSection] = []
-        sec__with_nulls: Dict[SampleNameT, List[Row]]
-        for sec_idx, sec__with_nulls in enumerate(unified_sections__with_nulls):
+        for sec_idx, rows_by_sname__with_nulls in enumerate(unified_sections__with_nulls):
             header_by_key: InputHeaderT = list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
             if not header_by_key:
                 pconfig.only_defined_headers = False
 
             column_by_key: Dict[ColumnKeyT, ColumnMeta] = dict()
-            header_by_key_copy = _get_or_create_headers(sec__with_nulls, header_by_key, pconfig)
+            header_by_key_copy = _get_or_create_headers(rows_by_sname__with_nulls, header_by_key, pconfig)
             for col_key, header_d in header_by_key_copy.items():
                 column_by_key[col_key] = ColumnMeta.create(
                     header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig
                 )
 
-            # raw_dataset: Dict[str, Dict[str, ValueT]] = defaultdict(dict)
-            # formatted_dataset: Dict[str, Dict[str, str]] = defaultdict(dict)
+            # Filter out null values and columns that are not present in column_by_key,
+            # and apply "modify" and "format" to values. Will generate non-null data and str data.
             section = TableSection(column_by_key=column_by_key)
-            for col_key, column in column_by_key.items():
-                # Filter keys and apply "modify" and "format" to values. Builds a copy of a dataset
-                for s_name, rows__with_nulls in sec__with_nulls.items():
-                    rows = [row for row in rows__with_nulls if col_key in row.data]
-                    for row in rows:
-                        optional_val = row.data[col_key]
-                        if optional_val is None or str(optional_val).strip() == "":
+            for g_name, group_rows__with_nulls in rows_by_sname__with_nulls.items():
+                for input_row in group_rows__with_nulls:
+                    row = Row(sample=input_row.sample)
+                    for col_key, optional_val in input_row.data.items():
+                        if col_key not in column_by_key:  # missing in provided headers
                             continue
-                        val, valstr = _process_and_format_value(optional_val, column)
-                        section.raw_data[s_name][col_key] = val
-                        section.formatted_data[s_name][col_key] = valstr
+                        if optional_val is None or str(optional_val).strip() == "":  # empty
+                            continue
+                        val, valstr = _process_and_format_value(optional_val, column_by_key[col_key])
+                        row.raw_data[col_key] = val
+                        row.formatted_data[col_key] = valstr
+                    if row.raw_data:
+                        section.rows_by_sgroup[g_name].append(row)
 
-                # Work out max and min value if not given
-                _determine_dmin_and_dmax(column, col_key, section.raw_data)
+            # Remove empty groups:
+            section.rows_by_sgroup = {sname: rows for sname, rows in section.rows_by_sgroup.items() if rows}
+
+            # Work out max and min value if not given:
+            for col_key, column in column_by_key.items():
+                _determine_dmin_and_dmax(column, col_key, section.rows_by_sgroup)
 
             sections.append(section)
 
@@ -391,7 +408,7 @@ class DataTable(BaseModel):
 
 
 def _get_or_create_headers(
-    rows_by_sample: Dict[SampleNameT, List[Row]],
+    rows_by_sample: Dict[SampleGroupT, List[InputRow]],
     header_by_key: InputHeaderT,
     pconfig,
 ) -> Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]:
@@ -490,7 +507,7 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, 
 def _determine_dmin_and_dmax(
     column: ColumnMeta,
     col_key: ColumnKeyT,
-    raw_data: Dict[str, Dict[str, ValueT]],
+    rows_by_sample: Dict[SampleGroupT, List[Row]],
 ) -> None:
     """
     Work out max and min value in a column if not given, to support color scale.
@@ -512,7 +529,8 @@ def _determine_dmin_and_dmax(
 
     # Figure out the min / max if not supplied
     if set_dmax or set_dmin:
-        for s_name, v_by_col in raw_data.items():
+        for s_name, rows in rows_by_sample.items():
+            v_by_col = rows[0].raw_data
             try:
                 val = float(v_by_col[col_key])
                 if math.isfinite(val) and not math.isnan(val):

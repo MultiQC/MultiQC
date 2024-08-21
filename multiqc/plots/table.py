@@ -48,7 +48,7 @@ def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
         # Collect unique sample names
         s_names = set()
         for section in dt.sections:
-            for s_name in section.raw_data.keys():
+            for s_name in section.rows_by_sgroup.keys():
                 s_names.add(s_name)
 
         # noinspection PyBroadException

@@ -20,7 +20,7 @@ from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.plotly.line import Series, LinePlotConfig
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, Row
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
 
 log = logging.getLogger(__name__)
 
@@ -563,8 +563,8 @@ class MultiqcModule(BaseMultiqcModule):
             if num_statuses > 0:
                 merged_sample.percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
 
-        gen_stats_data_by_sample: Mapping[SampleNameT, List[Row]] = {
-            g_name: [Row(sample=s_name, data=metrics.__dict__) for s_name, metrics in samples]
+        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = {
+            g_name: [InputRow(sample=s_name, data=metrics.__dict__) for s_name, metrics in samples]
             for g_name, samples in data_by_grouped_samples.items()
         }
 
