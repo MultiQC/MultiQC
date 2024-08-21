@@ -177,7 +177,6 @@ sample_merge_groups:
         pattern: "_R2"
       - type: regex
         pattern: "[_.-][rR]?2$"
-    Unpaired:
 
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true

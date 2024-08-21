@@ -416,7 +416,7 @@ class BaseMultiqcModule:
         >>> self.groups_for_sample("S1_1.trimmed", "read_pairs")
         "S1.trimmed", "Read 1"
         >>> self.groups_for_sample("S1", "read_pairs")
-        "S1", "Unpaired"
+        "S1", None
         >>> self.groups_for_sample("S1", "trimming")
         "S1": "Raw"
         >>> self.groups_for_sample("S1_1.trimmed", "trimming")
@@ -500,8 +500,10 @@ class BaseMultiqcModule:
         {"S1": ["S1_R1_001", "S1_R2_001"],
          "S1.trimmed: ["S1_R1_001.trimmed"],
          "S2": ["S2_R1"]}
-        >>> self.group_samples(["S1_R1", "S1"], "read_pairs")
-        {None: ["S1"], "Read 1": ["S1_R1"]}
+        >>> self.group_samples(["S1_R1", "S1"], key_by="read_pairs")
+        {"Unpaired": ["S1"], "Read 1": ["S1_R1"]}
+        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1"], "read_pairs", key_by="merged_name")
+        {"S1 (groupped)": ["S1_R1_001", "S1_R2_001"], "S1": ["S1"]}
         >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
         {"Raw": ["S1_R1_001", "S1_R2_001", "S2_R1"],
          "Trimmed": ["S1_R1_001.trimmed"]}
@@ -517,6 +519,9 @@ class BaseMultiqcModule:
         groups: Dict[Optional[str], List[Tuple[str, str]]] = defaultdict(list)
         for original_name in sorted(samples):
             merged_name, label = self.groups_for_sample(original_name, grouping_criteria)
+            if label is not None and merged_name in samples:
+                # do not want "merged sample" clash with other legit samples
+                merged_name += " (grouped)"
             groups[label].append((merged_name, original_name))
 
         regrouped: Dict[Optional[str], List[str]] = defaultdict(list)

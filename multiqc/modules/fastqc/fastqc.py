@@ -462,7 +462,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "min": 0,
                 "suffix": "%",
                 "scale": "PuRd",
-                "format": "{:,.0f}",
+                "format": "{:,.1f}",
             },
             "avg_sequence_length": {
                 "title": "Average Read Length",
@@ -544,14 +544,19 @@ class MultiqcModule(BaseMultiqcModule):
                         for s_name in s_names
                     ]
                 ) / float(total_n_seqs)
-                if all(data_by_sample[s_name].percent_duplicates for s_name in s_names):
-                    merged_sample.percent_duplicates = sum(
-                        [
-                            float(data_by_sample[s_name].percent_duplicates)
-                            * float(data_by_sample[s_name].total_sequences)
-                            for s_name in s_names
-                        ]
-                    ) / float(total_n_seqs)
+                merged_sample.percent_duplicates = sum(
+                    [
+                        float(data_by_sample[s_name].percent_duplicates) * float(data_by_sample[s_name].total_sequences)
+                        for s_name in s_names
+                    ]
+                ) / float(total_n_seqs)
+                merged_sample.median_sequence_length = sum(
+                    [
+                        float(data_by_sample[s_name].median_sequence_length)
+                        * float(data_by_sample[s_name].total_sequences)
+                        for s_name in s_names
+                    ]
+                ) / float(total_n_seqs)
             # Add count of fail statuses
             num_statuses = 0
             num_fails = 0
