@@ -271,8 +271,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the general statistics table
         self.fastqc_general_stats()
 
-        return
-
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
