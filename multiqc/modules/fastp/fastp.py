@@ -343,24 +343,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report"""
 
-        # Merge Read 1 + Read 2 data
-        pprint(data_by_sample)
-        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = self.group_samples_and_average_metrics(
-            data_by_sample,
-            grouping_criteria="read_pairs",
-            cols_to_sum=["before_filtering_total_reads", "filtering_result_passed_filter_reads"],
-            cols_to_weighted_average=[
-                ("pct_duplication", "before_filtering_total_reads"),
-                ("after_filtering_q30_rate", "filtering_result_passed_filter_reads"),
-                ("after_filtering_q30_bases", "filtering_result_passed_filter_reads"),
-                ("after_filtering_gc_content", "filtering_result_passed_filter_reads"),
-                ("pct_surviving", "before_filtering_total_reads"),
-                ("pct_adapter", "before_filtering_total_reads"),
-            ],
-        )
-
         self.general_stats_addcols(
-            gen_stats_data_by_sample,
+            data_by_sample,
             {
                 "pct_duplication": {
                     "title": "% Duplication",
