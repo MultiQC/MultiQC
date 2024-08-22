@@ -4,7 +4,7 @@
 
 // Execute when page load has finished loading
 $(function () {
-  if ($(".mqc_table").length > 0) {
+  if ($(".mqc_per_sample_table").length > 0) {
     // Enable tablesorter on MultiQC tables
     let get_sort_val = function (node) {
       // if val is defined, use it
@@ -27,7 +27,7 @@ $(function () {
 
       return text;
     };
-    $(".mqc_table").tablesorter({
+    $(".mqc_per_sample_table").tablesorter({
       sortInitialOrder: "desc",
       textExtraction: get_sort_val,
       cancelSelection: false,
@@ -36,7 +36,7 @@ $(function () {
 
     // Update tablesorter if samples renamed
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_table").trigger("update");
+      $(".mqc_per_sample_table").trigger("update");
     });
 
     $(".mqc-table-to-violin").click(function (e) {
@@ -193,8 +193,8 @@ $(function () {
     // highlight samples
     $(document).on("mqc_highlights", function (e, f_texts, f_cols, regex_mode) {
       $(".mqc_table_sortHighlight").hide();
-      $(".mqc_table tbody th").removeClass("highlighted").removeData("highlight");
-      $(".mqc_table tbody th").each(function (i) {
+      $(".mqc_per_sample_table tbody th").removeClass("highlighted").removeData("highlight");
+      $(".mqc_per_sample_table tbody th").each(function (i) {
         let th = $(this);
         let thtext = $(this).text();
         let thiscol = "#333";
@@ -232,7 +232,7 @@ $(function () {
 
     // Rename samples
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_table tbody th").each(function () {
+      $(".mqc_per_sample_table tbody th").each(function () {
         let s_name = String($(this).data("original-sn"));
         $.each(f_texts, function (idx, f_text) {
           if (regex_mode) {
@@ -249,21 +249,30 @@ $(function () {
     // Hide samples
     $(document).on("mqc_hidesamples", function (e, f_texts, regex_mode) {
       // Hide rows in MultiQC tables
-      $(".mqc_table tbody th").each(function () {
+      $(".mqc_per_sample_table tbody tr").each(function () {
+        let tr = $(this);
+        let th = tr.find("th");
         let match = false;
-        let hfilter = $(this).text();
+        let s_name = th.find(".th-sample-name").text();
+        let g_name = tr.data("sample-group");
         $.each(f_texts, function (idx, f_text) {
-          if ((regex_mode && hfilter.match(f_text)) || (!regex_mode && hfilter.indexOf(f_text) > -1)) {
-            match = true;
+          if (regex_mode) {
+            if (s_name.match(f_text) || g_name.match(f_text)) {
+              match = true;
+            }
+          } else {
+            if (s_name.indexOf(f_text) > -1 || g_name.indexOf(f_text) > -1) {
+              match = true;
+            }
           }
         });
         if (window.mqc_hide_mode === "show") {
           match = !match;
         }
         if (match) {
-          $(this).parent().hide().addClass("hidden");
+          tr.hide().addClass("hidden");
         } else {
-          $(this).parent().show().removeClass("hidden");
+          tr.show().removeClass("hidden");
         }
       });
       $(".mqc_table_numrows").each(function () {
@@ -272,7 +281,7 @@ $(function () {
       });
 
       // Hide empty columns
-      $(".mqc_table").each(function () {
+      $(".mqc_per_sample_table").each(function () {
         let table = $(this);
         let gsthidx = 0;
         table.find("thead th, tbody tr td").show();
@@ -306,20 +315,21 @@ $(function () {
     });
 
     // Support expanding grouped samples in table
-    $(".expandable-row").click(function (e) {
+    $(".expandable-row th").click(function (e) {
       e.preventDefault();
-      let element = $(this);
+      let th = $(this);
       // final most parent table object
-      let table = element.closest("table");
-      let tableId = element.data("table-id");
+      let tr = th.closest("tr");
+      let table = tr.closest("table");
+      let tableId = tr.data("table-id");
       // find all rows with the same data-group-id
-      let groupId = element.data("group-id");
+      let groupId = tr.data("sample-group");
       let otherRows = table.find(
-        "tbody tr.expandable-row-secondary[data-group-id='" + groupId + "'][data-table-id='" + tableId + "']",
+        "tbody tr.expandable-row-secondary[data-sample-group='" + groupId + "'][data-table-id='" + tableId + "']",
       );
       // toggle the visibility of the rows and type of arrow
       otherRows.toggle();
-      element.toggleClass("expanded");
+      tr.toggleClass("expanded");
     });
 
     // We want to allow user select sample name text without expanding the row

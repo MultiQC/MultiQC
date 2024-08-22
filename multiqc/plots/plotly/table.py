@@ -364,7 +364,7 @@ def make_table(
     html += f"""
         <div id="{dt.id}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {collapse_class}">
-                <table id="{dt.id}" class="table table-condensed mqc_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
+                <table id="{dt.id}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
         """
 
     # Build the header row
@@ -395,15 +395,13 @@ def make_table(
                 if len(t_rows[g_name]) > 1 and number_in_group == 0:
                     caret_cls = "expandable-row-caret"
                     row_class = "expandable-row"
-                prefix += f"<div style='display: inline-block; width: 20px' class='{caret_cls}'>&nbsp;</div>"
+                prefix += f'<div style="display: inline-block; width: 20px" class="{caret_cls}">&nbsp;</div>'
             if number_in_group != 0:
                 prefix += "&nbsp;↳&nbsp;"
                 row_class = "expandable-row-secondary"
                 do_not_display = True
             row_hidden = "display: none;" if do_not_display else ""
-            html += (
-                f'<tr data-group-id={escape(g_name)} data-table-id={dt.id} class="{row_class}" style="{row_hidden}">'
-            )
+            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{row_class}" style="{row_hidden}">'
             # Sample name row header
             html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{prefix}<span class="th-sample-name">{s_name}</span></th>'
             for col_key in t_headers:

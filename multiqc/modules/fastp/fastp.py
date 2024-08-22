@@ -1,14 +1,11 @@
 import json
 import logging
 import re
-from collections import defaultdict
-from pprint import pprint
-from typing import Dict, Optional, Tuple, List, Mapping
+from typing import Dict, Optional, Tuple
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
 
 log = logging.getLogger(__name__)
 
