@@ -24,7 +24,16 @@ from multiqc.config import CleanPatternT
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
 from multiqc.core import software_versions
-from multiqc.plots.table_object import ColumnMeta, Row, SampleNameT, ValueT, ColumnKeyT, InputSectionT, InputHeaderT
+from multiqc.plots.table_object import (
+    ColumnMeta,
+    Row,
+    SampleNameT,
+    ValueT,
+    ColumnKeyT,
+    InputSectionT,
+    InputHeaderT,
+    InputRow,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +488,7 @@ class BaseMultiqcModule:
         merged_label = " ".join(labels) if labels else None
         return s_name + "".join(skipped_suffixes), merged_label
 
-    def group_samples(
+    def group_samples_names(
         self,
         samples: Iterable[str],
         grouping_criteria: str,
@@ -493,27 +502,27 @@ class BaseMultiqcModule:
         :param key_by: key to use for the resulting dictionary (e.g. "label" or "merged_name")
         :return: a dict where the keys are group labels, and the values are lists of tuples,
             of cleaned basenames according to the cleaning rules and the original sample names
-        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs")
+        >>> self.group_samples_names(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs")
         {"Read 1": ["S1_R1_001", "S1_R1_001.trimmed", "S2_R1"],
          "Read 2": ["S1_R2_001"]}
-        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs", key_by="merged_name")
+        >>> self.group_samples_names(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "read_pairs", key_by="merged_name")
         {"S1": ["S1_R1_001", "S1_R2_001"],
          "S1.trimmed: ["S1_R1_001.trimmed"],
          "S2": ["S2_R1"]}
-        >>> self.group_samples(["S1_R1", "S1"], key_by="read_pairs")
+        >>> self.group_samples_names(["S1_R1", "S1"], key_by="read_pairs")
         {"Unpaired": ["S1"], "Read 1": ["S1_R1"]}
-        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1"], "read_pairs", key_by="merged_name")
+        >>> self.group_samples_names(["S1_R1_001", "S1_R2_001", "S1"], "read_pairs", key_by="merged_name")
         {"S1 (groupped)": ["S1_R1_001", "S1_R2_001"], "S1": ["S1"]}
-        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
+        >>> self.group_samples_names(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming")
         {"Raw": ["S1_R1_001", "S1_R2_001", "S2_R1"],
          "Trimmed": ["S1_R1_001.trimmed"]}
-        >>> self.group_samples(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming", key_by="merged_name")
+        >>> self.group_samples_names(["S1_R1_001", "S1_R2_001", "S1_R1_001.trimmed", "S2_R1"], "trimming", key_by="merged_name")
         {"S1_R1_001": ["S1_R1_001", "S1_R1_001.trimmed"],
          "S1_R2_001": ["S1_R2_001"],
          "S2_R1: ["S2_R1"]}
-        >>> self.group_samples(["S1_R1_001", "S2_R1"], "trimming")
+        >>> self.group_samples_names(["S1_R1_001", "S2_R1"], "trimming")
         {"Raw": ["S1_R1_001", "S2_R1"]}
-        >>> self.group_samples(["S1", "S2"], "non_existing_criteria")
+        >>> self.group_samples_names(["S1", "S2"], "non_existing_criteria")
         {None: ["S1", "S2"]}
         """
         groups: Dict[Optional[str], List[Tuple[str, str]]] = defaultdict(list)
@@ -535,6 +544,107 @@ class BaseMultiqcModule:
                     regrouped[merged_name].append(original_name)
 
         return regrouped
+
+    ExtraFunctionType = Callable[[InputRow, List[SampleNameT]], None]
+
+    def group_samples_and_average_metrics(
+        self,
+        data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
+        grouping_criteria: str,
+        cols_to_weighted_average: Optional[List[Tuple[ColumnKeyT, ColumnKeyT]]] = None,
+        cols_to_average: Optional[List[ColumnKeyT]] = None,
+        cols_to_sum: Optional[List[ColumnKeyT]] = None,
+        extra_functions: Optional[List[ExtraFunctionType]] = None,
+    ) -> Dict[SampleNameT, List[InputRow]]:
+        """
+        Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
+        """
+
+        rows_by_grouped_samples: Dict[SampleNameT, List[InputRow]] = defaultdict(list)
+        for g_name, s_names in self.group_samples_names(
+            list(data_by_sample.keys()),
+            grouping_criteria=grouping_criteria,
+            key_by="merged_name",
+        ).items():
+            if len(s_names) == 0:
+                continue
+            if g_name is None:
+                # Ungrouped samples, adding them separately
+                for s_name in s_names:
+                    rows_by_grouped_samples[s_name] = [InputRow(sample=s_name, data=data_by_sample[s_name])]
+                continue
+            if len(s_names) == 1:
+                # Single sample in group, no need to merge
+                rows_by_grouped_samples[g_name] = [InputRow(sample=s_names[0], data=data_by_sample[s_names[0]])]
+                continue
+
+            merged_row = InputRow(sample=g_name, data={}, is_merged=True)
+
+            # Init a dictionary of all cols that would be summed to serve as weights
+            sum_by_col: Dict[ColumnKeyT, float] = dict()
+
+            if cols_to_weighted_average:
+                for _, weight_col_key in cols_to_weighted_average:
+                    sum_by_col[weight_col_key] = 0
+
+                # Calculate the weights
+                for col in sum_by_col.keys():
+                    for s_name in s_names:
+                        val = data_by_sample[s_name][col]
+                        if isinstance(val, int | float):
+                            sum_by_col[col] += float(val)
+
+                for col, weight_col in cols_to_weighted_average:
+                    weight = sum_by_col[weight_col]
+                    if weight > 0:
+                        merged_row.data[col] = (
+                            sum(
+                                [
+                                    float(data_by_sample[s_name][col]) * float(data_by_sample[s_name][weight_col])
+                                    if isinstance(data_by_sample[s_name][col], float | int)
+                                    and isinstance(data_by_sample[s_name][weight_col], float | int)
+                                    else 0
+                                    for s_name in s_names
+                                ]
+                            )
+                            / weight
+                        )
+
+            if cols_to_average:
+                for col in cols_to_average:
+                    merged_row.data[col] = sum(
+                        [
+                            float(data_by_sample[s_name][col])
+                            if isinstance(data_by_sample[s_name][col], float | int)
+                            else 0
+                            for s_name in s_names
+                        ]
+                    ) / len(s_names)
+
+            if cols_to_sum:
+                for col in cols_to_sum:
+                    if col in sum_by_col:
+                        merged_row.data[col] = sum_by_col[col]
+                    else:
+                        merged_row.data[col] = sum(
+                            [
+                                float(data_by_sample[s_name][col])
+                                if isinstance(data_by_sample[s_name][col], float | int)
+                                else 0
+                                for s_name in s_names
+                            ]
+                        )
+
+            # Add count of fail statuses
+            if extra_functions:
+                for fn in extra_functions:
+                    fn(merged_row, s_names)
+
+            rows_by_grouped_samples[g_name] = [merged_row] + [
+                InputRow(sample=s_name, data=data_by_sample[s_name]) for s_name in s_names
+            ]
+
+        return rows_by_grouped_samples
 
     def clean_s_name(
         self,

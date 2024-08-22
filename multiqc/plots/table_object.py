@@ -215,6 +215,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleNameT
+    is_merged: bool = False
     data: Dict[ColumnKeyT, Optional[ValueT]] = dict()
 
 

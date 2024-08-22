@@ -164,7 +164,8 @@ export_plot_formats:
 custom_content:
   order: []
 
-# Search patterns for grouping paired samples within a report (e.g. FastQ R1/R2)
+# Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
+# Affects all modules that support it (e.g. fastqc, fastp)
 sample_merge_groups:
   read_pairs:
     Read 1:

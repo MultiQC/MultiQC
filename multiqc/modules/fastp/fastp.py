@@ -1,11 +1,14 @@
 import json
 import logging
 import re
-from typing import Dict, Optional, Tuple
+from collections import defaultdict
+from pprint import pprint
+from typing import Dict, Optional, Tuple, List, Mapping
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +74,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.fastp_all_data, "multiqc_fastp")
 
         # General Stats Table
-        self.fastp_general_stats_table()
+        self.fastp_general_stats_table(self.fastp_data)
 
         # Filtering statistics bar plot
         self.add_section(
@@ -336,74 +339,77 @@ class MultiqcModule(BaseMultiqcModule):
         if "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
-    def fastp_general_stats_table(self):
+    def fastp_general_stats_table(self, data_by_sample):
         """Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report"""
 
-        headers = {
-            "pct_duplication": {
-                "title": "% Duplication",
-                "description": "Duplication rate before filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-            "after_filtering_q30_rate": {
-                "title": "% > Q30",
-                "description": "Percentage of reads > Q30 after filtering",
-                "min": 0,
-                "max": 100,
-                "modify": lambda x: x * 100.0,
-                "scale": "GnBu",
-                "suffix": "%",
-                "hidden": True,
-            },
-            "after_filtering_q30_bases": {
-                "title": f"{config.base_count_prefix} Q30 bases",
-                "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.base_count_multiplier,
-                "scale": "GnBu",
-                "shared_key": "base_count",
-                "hidden": True,
-            },
-            "filtering_result_passed_filter_reads": {
-                "title": f"{config.read_count_prefix} Reads After Filtering",
-                "description": f"Total reads after filtering ({config.read_count_desc})",
-                "min": 0,
-                "scale": "Blues",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "after_filtering_gc_content": {
-                "title": "GC content",
-                "description": "GC content after filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "Blues",
-                "modify": lambda x: x * 100.0,
-            },
-            "pct_surviving": {
-                "title": "% PF",
-                "description": "Percent reads passing filter",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "BuGn",
-            },
-            "pct_adapter": {
-                "title": "% Adapter",
-                "description": "Percentage adapter-trimmed reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-        }
+        # Merge Read 1 + Read 2 data
+        pprint(data_by_sample)
+        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = self.group_samples_and_average_metrics(
+            data_by_sample,
+            grouping_criteria="read_pairs",
+            cols_to_sum=["before_filtering_total_reads", "filtering_result_passed_filter_reads"],
+            cols_to_weighted_average=[
+                ("pct_duplication", "before_filtering_total_reads"),
+                ("after_filtering_q30_rate", "filtering_result_passed_filter_reads"),
+                ("after_filtering_q30_bases", "filtering_result_passed_filter_reads"),
+                ("after_filtering_gc_content", "filtering_result_passed_filter_reads"),
+                ("pct_surviving", "before_filtering_total_reads"),
+                ("pct_adapter", "before_filtering_total_reads"),
+            ],
+        )
 
-        self.general_stats_addcols(self.fastp_data, headers)
+        self.general_stats_addcols(
+            gen_stats_data_by_sample,
+            {
+                "pct_duplication": {
+                    "title": "% Duplication",
+                    "description": "Duplication rate before filtering",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
+                "after_filtering_q30_rate": {
+                    "title": "% > Q30",
+                    "description": "Percentage of reads > Q30 after filtering",
+                    "modify": lambda x: x * 100.0,
+                    "scale": "GnBu",
+                    "suffix": "%",
+                    "hidden": True,
+                },
+                "after_filtering_q30_bases": {
+                    "title": f"{config.base_count_prefix} Q30 bases",
+                    "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
+                    "scale": "GnBu",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "filtering_result_passed_filter_reads": {
+                    "title": f"{config.read_count_prefix} Reads After Filtering",
+                    "description": f"Total reads after filtering ({config.read_count_desc})",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                },
+                "after_filtering_gc_content": {
+                    "title": "GC content",
+                    "description": "GC content after filtering",
+                    "suffix": "%",
+                    "scale": "Blues",
+                    "modify": lambda x: x * 100.0,
+                },
+                "pct_surviving": {
+                    "title": "% PF",
+                    "description": "Percent reads passing filter",
+                    "suffix": "%",
+                    "scale": "BuGn",
+                },
+                "pct_adapter": {
+                    "title": "% Adapter",
+                    "description": "Percentage adapter-trimmed reads",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
+            },
+        )
 
     def fastp_filtered_reads_chart(self):
         """Function to generate the fastp filtered reads bar plot"""

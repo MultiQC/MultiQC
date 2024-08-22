@@ -20,7 +20,7 @@ from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.plotly.line import Series, LinePlotConfig
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow, ValueT
 
 log = logging.getLogger(__name__)
 
@@ -271,8 +271,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the general statistics table
         self.fastqc_general_stats()
 
-        return
-
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
         # Add the statuses to the intro for multiqc_fastqc.js JavaScript to pick up
@@ -502,76 +500,31 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        # Merge Read 1 + Read 2 data
-        data_by_grouped_samples: Dict[SampleNameT, List[Tuple[ColumnKeyT, Metrics]]] = defaultdict(list)
-        for g_name, s_names in self.group_samples(
-            list(data_by_sample.keys()),
-            grouping_criteria="read_pairs",
-            key_by="merged_name",
-        ).items():
-            if len(s_names) == 0:
-                continue
-            if g_name is None:
-                # Ungrouped samples, adding them separately
-                for s_name in s_names:
-                    data_by_grouped_samples[s_name] = [(s_name, data_by_sample[s_name])]
-                continue
-            if len(s_names) == 1:
-                # Single sample in group, no need to merge
-                data_by_grouped_samples[g_name] = [(s_names[0], data_by_sample[s_names[0]])]
-                continue
-
-            merged_sample = Metrics()
-            data_by_grouped_samples[g_name] = [(g_name, merged_sample)] + [
-                (s_name, data_by_sample[s_name]) for s_name in s_names
-            ]
-
-            total_n_seqs: float = 0
-            for s_name in s_names:
-                total_n_seqs += data_by_sample[s_name].total_sequences
-            merged_sample.total_sequences = float(total_n_seqs) / len(s_names)
-            if total_n_seqs > 0:
-                merged_sample.avg_sequence_length = sum(
-                    [
-                        float(data_by_sample[s_name].avg_sequence_length)
-                        * float(data_by_sample[s_name].total_sequences)
-                        for s_name in s_names
-                    ]
-                ) / float(total_n_seqs)
-                merged_sample.percent_gc = sum(
-                    [
-                        float(data_by_sample[s_name].percent_gc) * float(data_by_sample[s_name].total_sequences)
-                        for s_name in s_names
-                    ]
-                ) / float(total_n_seqs)
-                merged_sample.percent_duplicates = sum(
-                    [
-                        float(data_by_sample[s_name].percent_duplicates) * float(data_by_sample[s_name].total_sequences)
-                        for s_name in s_names
-                    ]
-                ) / float(total_n_seqs)
-                merged_sample.median_sequence_length = sum(
-                    [
-                        float(data_by_sample[s_name].median_sequence_length)
-                        * float(data_by_sample[s_name].total_sequences)
-                        for s_name in s_names
-                    ]
-                ) / float(total_n_seqs)
+        def _summarize_statues(merged_row: InputRow, group_s_names: List[SampleNameT]):
             # Add count of fail statuses
-            num_statuses = 0
-            num_fails = 0
-            for s_name in s_names:
-                for s in self.fastqc_data[s_name]["statuses"].values():
-                    num_statuses += 1
-                    if s == "fail":
-                        num_fails += 1
-            if num_statuses > 0:
-                merged_sample.percent_fails = (float(num_fails) / float(num_statuses)) * 100.0
+            _num_statuses = 0
+            _num_fails = 0
+            for sn in group_s_names:
+                for st in self.fastqc_data[sn]["statuses"].values():
+                    _num_statuses += 1
+                    if st == "fail":
+                        _num_fails += 1
+            if _num_statuses > 0:
+                merged_row.data["percent_fails"] = (float(_num_fails) / float(_num_statuses)) * 100.0
 
-        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = {
-            g_name: [InputRow(sample=s_name, data=metrics.__dict__) for s_name, metrics in samples]
-            for g_name, samples in data_by_grouped_samples.items()
-        }
+        # Merge Read 1 + Read 2 data
+        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = self.group_samples_and_average_metrics(
+            {s: d.__dict__ for s, d in data_by_sample.items()},
+            grouping_criteria="read_pairs",
+            cols_to_sum=["total_sequences"],
+            cols_to_weighted_average=[
+                ("percent_gc", "total_sequences"),
+                ("avg_sequence_length", "total_sequences"),
+                ("percent_duplicates", "total_sequences"),
+                ("median_sequence_length", "total_sequences"),
+            ],
+            extra_functions=[_summarize_statues],
+        )
 
         # # Take only the trimmed data for the General Stats Table
         # trimmed_samples = False
