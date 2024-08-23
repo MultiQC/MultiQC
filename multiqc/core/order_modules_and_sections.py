@@ -47,19 +47,22 @@ def order_modules_and_sections():
             module_id_order[mod.anchor] = idx
             idx += 10
 
-        for anchor, ss in config.report_section_order.items():
-            if anchor not in module_id_order.keys():
-                if anchor.endswith("-module") and anchor[:-7] in module_id_order.keys():  # back-compat with < 1.24
-                    anchor = anchor[:-7]
+        for sec_or_mod_id_or_anchor, ss in config.report_section_order.items():
+            if sec_or_mod_id_or_anchor not in module_id_order.keys():
+                if (
+                    sec_or_mod_id_or_anchor.endswith("-module")
+                    and sec_or_mod_id_or_anchor[:-7] in module_id_order.keys()
+                ):  # back-compat with < 1.24
+                    sec_or_mod_id_or_anchor = sec_or_mod_id_or_anchor[:-7]
                 else:
-                    logger.debug(f"config.report_section_order: module anchor '{anchor}' not found.")
+                    logger.debug(f"config.report_section_order: module '{sec_or_mod_id_or_anchor}' not found.")
                     continue
             if ss.get("order") is not None:
-                module_id_order[anchor] = ss["order"]
+                module_id_order[sec_or_mod_id_or_anchor] = ss["order"]
             if ss.get("after") in module_id_order.keys():
-                module_id_order[anchor] = module_id_order[ss["after"]] + 1
+                module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["after"]] + 1
             if ss.get("before") in module_id_order.keys():
-                module_id_order[anchor] = module_id_order[ss["before"]] - 1
+                module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["before"]] - 1
         sorted_ids = sorted(module_id_order.keys(), key=lambda k: module_id_order[k])
         report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
@@ -72,27 +75,25 @@ def order_modules_and_sections():
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:
+                section_id_order[s.id] = idx
                 section_id_order[s.anchor] = idx
                 idx += 10
             # Go through each section to be reordered
-            for anchor, ss in config.report_section_order.items():
+            for sec_or_mod_id_or_anchor, ss in config.report_section_order.items():
                 # Section to be moved is not in this module
-                if anchor not in section_id_order.keys():
-                    logger.debug(
-                        f"config.report_section_order: section anchor '{anchor}' not found for module '{mod.name}'."
-                    )
+                if sec_or_mod_id_or_anchor not in section_id_order.keys():
                     continue
                 if ss == "remove":
-                    section_id_order[anchor] = False
+                    section_id_order[sec_or_mod_id_or_anchor] = False
                     continue
                 if ss.get("order") is not None:
-                    section_id_order[anchor] = ss["order"]
+                    section_id_order[sec_or_mod_id_or_anchor] = ss["order"]
                 if ss.get("after") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["after"]] + 1
+                    section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["after"]] + 1
                 if ss.get("before") in section_id_order.keys():
-                    section_id_order[anchor] = section_id_order[ss["before"]] - 1
+                    section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["before"]] - 1
             # Remove module sections
             section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
             # Sort the module sections
             sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
-            report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i]
+            report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i or s.id == i]

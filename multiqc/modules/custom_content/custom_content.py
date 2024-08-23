@@ -367,14 +367,10 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == "" or section_name is None:
             section_name = "Custom Content"
 
-        if self.id == c_id:  # make sure the anchors are unique
-            c_id = c_id + "-section"
-
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
-            pconfig["id"] = f"{c_id}-plot"
-        if pconfig["id"] == c_id or pconfig["id"] == mod["config"].get("id"):
-            pconfig["id"] += "-plot"
+            pconfig["id"] = c_id
+
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
 
@@ -472,7 +468,12 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == self.name:
             section_name = None
 
-        self.add_section(name=section_name, anchor=c_id, plot=plot, content=content)
+        # make sure the anchors are unique
+        anchor = c_id
+        if self.id == anchor or pconfig["id"] == anchor:
+            anchor += "-section"
+
+        self.add_section(name=section_name, anchor=anchor, plot=plot, content=content)
 
 
 def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
