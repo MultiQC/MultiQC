@@ -25,32 +25,35 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_gex_sections():
         if len(gex_alerts.data) > 0:
             module.add_section(
-                name="Gene-Expression alerts",
+                name="Gene-Expression Alerts",
                 anchor="cellranger-multi-gex-alerts",
                 plot=table.plot(
                     data=gex_alerts.data,
                     headers=gex_alerts.headers,
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-Gex",
                         "id": "cellranger-multi-gex-alerts-table",
-                        "title": "CellRanger Multi: Gene-Expression alerts",
-                    },
-                ),
+                        "title": "CellRanger Multi: Gene-Expression Alerts",
+                    }
+                )
             )
 
         if len(gex_cells_metrics.data) > 0:
             module.add_section(
-                name="Gene-Expression cell metrics",
+                name="Gene-Expression Cell Metrics",
                 anchor="cellranger-multi-gex-cell-metrics",
                 plot=table.plot(
                     data=gex_cells_metrics.data,
-                    headers=gex_cells_metrics.headers,
+                    headers=set_hidden_cols(
+                        gex_cells_metrics.headers,
+                        ['Median UMI counts per cell']
+                    ),
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-Gex",
                         "id": "cellranger-multi-gex-cell-table",
-                        "title": "CellRanger Multi: Gene-Expression cell metrics",
-                    },
-                ),
+                        "title": "CellRanger Multi: Gene-Expression Cell Metrics",
+                    }
+                )
             )
 
         if len(gex_library_metrics_summary.data) > 0:
@@ -62,19 +65,20 @@ def parse_multi_html(module: BaseMultiqcModule):
                     headers=set_hidden_cols(
                         gex_library_metrics_summary.headers,
                         [
-                            "Number of short reads skipped",
-                            "Number of reads",
+                            "Confidently mapped reads in cells",
                             "Fastq ID",
+                            "Number of reads",
+                            "Number of short reads skipped",
                             "Physical library ID",
-                            "Mean reads per cell",
+                            "Mean reads per cell"
                         ],
                     ),
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-Gex",
                         "id": "cellranger-multi-gex-library-table",
-                        "title": "CellRanger Multi: Gene-Expression library metrics summary",
-                    },
-                ),
+                        "title": "CellRanger Multi: Gene-Expression Library Metrics Summary",
+                    }
+                )
             )
 
         if len(gex_bc_plot.data) > 0:
@@ -96,39 +100,50 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_vdj_t_sections():
         if len(vdj_t_alerts.data) > 0:
             module.add_section(
-                name="VDJ-T alerts",
+                name="VDJ-T Alerts",
                 anchor="cellranger-multi-vdj-t-alerts",
                 plot=table.plot(
                     data=vdj_t_alerts.data,
                     headers=vdj_t_alerts.headers,
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-VDJ-T",
                         "id": "cellranger-multi-vdj-t-alerts-table",
-                        "title": "CellRanger Multi: VDJ-T alerts",
-                    },
-                ),
+                        "title": "CellRanger Multi: VDJ-T Alerts",
+                    }
+                )
             )
 
-        if len(vdj_t_expression_annotation_metrics.data) > 0:
+        if len(vdj_t_expression_metrics.data) > 0:
             module.add_section(
-                name="VDJ-T expression and annotation metrics",
-                anchor="cellranger-multi-vdj-t-expression-annotation-metrics",
+                name="VDJ-T Expression Metrics",
+                anchor="cellranger-multi-vdj-t-expression-metrics",
                 plot=table.plot(
-                    data=vdj_t_expression_annotation_metrics.data,
+                    data=vdj_t_expression_metrics.data,
+                    headers=vdj_t_expression_metrics.headers,
+                    pconfig={
+                        "namespace": "Multi-VDJ-T",
+                        "id": "cellranger-multi-vdj-t-expression-table",
+                        "title": "CellRanger Multi: VDJ-T Expression Metrics",
+                    }
+                )
+            )
+
+        if len(vdj_t_annotation_metrics.data) > 0:
+            module.add_section(
+                name="VDJ-T Annotation Metrics",
+                anchor="cellranger-multi-vdj-t-annotation-metrics",
+                plot=table.plot(
+                    data=vdj_t_annotation_metrics.data,
                     headers=set_hidden_cols(
-                        vdj_t_expression_annotation_metrics.headers,
-                        [
-                            "Median TRA UMIs per Cell",
-                            "Median TRB UMIs per Cell",
-                            "Number of cells with productive V-J spanning pair",
-                        ],
+                        vdj_t_annotation_metrics.headers,
+                        ["Cells with productive V-J spanning (TRA, TRB) pair"],
                     ),
                     pconfig={
-                        "namespace": "Multi",
-                        "id": "cellranger-multi-vdj-t-expression-annotation-table",
-                        "title": "CellRanger Multi: VDJ-T alerts",
-                    },
-                ),
+                        "namespace": "Multi-VDJ-T",
+                        "id": "cellranger-multi-vdj-t-annotation-table",
+                        "title": "CellRanger Multi: VDJ-T Annotation Metrics",
+                    }
+                )
             )
 
         if len(vdj_t_bc_plot.data) > 0:
@@ -142,39 +157,51 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_vdj_b_sections():
         if len(vdj_b_alerts.data) > 0:
             module.add_section(
-                name="VDJ-B alerts",
+                name="VDJ-B Alerts",
                 anchor="cellranger-multi-vdj-b-alerts",
                 plot=table.plot(
                     data=vdj_b_alerts.data,
                     headers=vdj_b_alerts.headers,
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-VDJ-B",
                         "id": "cellranger-multi-vdj-b-alerts-table",
-                        "title": "CellRanger Multi: VDJ-B alerts",
-                    },
-                ),
+                        "title": "CellRanger Multi: VDJ-B Alerts",
+                    }
+                )
             )
 
-        if len(vdj_b_expression_annotation_metrics.data) > 0:
+        if len(vdj_b_expression_metrics.data) > 0:
             module.add_section(
-                name="VDJ-B expression and annotation metrics",
-                anchor="cellranger-multi-vdj-b-expression-annotation-metrics",
+                name="VDJ-B Expression Metrics",
+                anchor="cellranger-multi-vdj-b-expression-metrics",
                 plot=table.plot(
-                    data=vdj_b_expression_annotation_metrics.data,
-                    headers=set_hidden_cols(
-                        vdj_b_expression_annotation_metrics.headers,
-                        [
-                            "Median TRA UMIs per Cell",
-                            "Median TRB UMIs per Cell",
-                            "Number of cells with productive V-J spanning pair",
-                        ],
-                    ),
+                    data=vdj_b_expression_metrics.data,
+                    headers=vdj_b_expression_metrics.headers,
                     pconfig={
-                        "namespace": "Multi",
-                        "id": "cellranger-multi-vdj-b-expression-annotation-table",
-                        "title": "CellRanger Multi: VDJ-B alerts",
-                    },
-                ),
+                        "namespace": "Multi-VDJ-B",
+                        "id": "cellranger-multi-vdj-b-expression-table",
+                        "title": "CellRanger Multi: VDJ-B Exppression Metrics",
+                    }
+                )
+            )
+
+        if len(vdj_b_annotation_metrics.data) > 0:
+            module.add_section(
+                name="VDJ-B Annotation Metrics",
+                anchor="cellranger-multi-vdj-b-annotation-metrics",
+                plot=table.plot(
+                    data=vdj_b_annotation_metrics.data,
+                    headers=set_hidden_cols(
+                        vdj_b_annotation_metrics.headers,
+                        [
+                            "Cells with productive V-J spanning (IGK, IGH) pair",
+                            "Cells with productive V-J spanning (IGL, IGH) pair"]),
+                    pconfig={
+                        "namespace": "Multi-VDJ-B",
+                        "id": "cellranger-multi-vdj-b-annotation-table",
+                        "title": "CellRanger Multi: VDJ-B Annotation Metrics",
+                    }
+                )
             )
 
         if len(vdj_b_bc_plot.data) > 0:
@@ -194,11 +221,11 @@ def parse_multi_html(module: BaseMultiqcModule):
                     data=antibody_alerts.data,
                     headers=antibody_alerts.headers,
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-Antibody",
                         "id": "cellranger-multi-antibody-alerts-table",
                         "title": "CellRanger Multi: Antibody alerts",
-                    },
-                ),
+                    }
+                )
             )
 
         if len(antibody_expression_mapping_metrics.data) > 0:
@@ -207,15 +234,13 @@ def parse_multi_html(module: BaseMultiqcModule):
                 anchor="cellranger-multi-antibody-expression-mapping-metrics",
                 plot=table.plot(
                     data=antibody_expression_mapping_metrics.data,
-                    headers=set_hidden_cols(
-                        antibody_expression_mapping_metrics.headers, ["Mean antibody reads usable per cell"]
-                    ),
+                    headers=set_hidden_cols(antibody_expression_mapping_metrics.headers, []),
                     pconfig={
-                        "namespace": "Multi",
+                        "namespace": "Multi-Antibody",
                         "id": "cellranger-multi-antibody-expression-mapping-table",
                         "title": "CellRanger Multi: VDJ-B alerts",
-                    },
-                ),
+                    }
+                )
             )
 
         if len(antibody_bc_plot.data) > 0:
@@ -233,10 +258,12 @@ def parse_multi_html(module: BaseMultiqcModule):
     gex_bc_plot = SectionData()
     gex_genes_plot = SectionData()
     vdj_t_alerts = SectionData()
-    vdj_t_expression_annotation_metrics = SectionData()
+    vdj_t_expression_metrics = SectionData()
+    vdj_t_annotation_metrics = SectionData()
     vdj_t_bc_plot = SectionData()
     vdj_b_alerts = SectionData()
-    vdj_b_expression_annotation_metrics = SectionData()
+    vdj_b_expression_metrics = SectionData()
+    vdj_b_annotation_metrics = SectionData()
     vdj_b_bc_plot = SectionData()
     antibody_alerts = SectionData()
     antibody_expression_mapping_metrics = SectionData()
@@ -320,7 +347,7 @@ def parse_multi_html(module: BaseMultiqcModule):
             version_match = re.search(r"cellranger-([\d\.]+)", version)
             if version_match:
                 module.add_software_version(version_match.group(1), sample_name)
-        except (KeyError, AssertionError):
+        except KeyError:
             log.debug(f"Unable to parse version for sample {sample_name}")
 
         _build_gex_data(
@@ -333,9 +360,9 @@ def parse_multi_html(module: BaseMultiqcModule):
             gex_genes_plot,
         )
 
-        _build_vdj_t_data(data["data"], sample_name, vdj_t_alerts, vdj_t_expression_annotation_metrics, vdj_t_bc_plot)
+        _build_vdj_t_data(data["data"], sample_name, vdj_t_alerts, vdj_t_expression_metrics, vdj_t_annotation_metrics, vdj_t_bc_plot)
 
-        _build_vdj_b_data(data["data"], sample_name, vdj_b_alerts, vdj_b_expression_annotation_metrics, vdj_b_bc_plot)
+        _build_vdj_b_data(data["data"], sample_name, vdj_b_alerts, vdj_b_expression_metrics, vdj_b_annotation_metrics, vdj_b_bc_plot)
 
         _build_antibody_data(
             data["data"], sample_name, antibody_alerts, antibody_expression_mapping_metrics, antibody_bc_plot
@@ -345,12 +372,15 @@ def parse_multi_html(module: BaseMultiqcModule):
 
     general_data.data, general_data.headers = combine_data_and_headers(
         [
-            (gex_cells_metrics.data, gex_cells_metrics.headers, ["Cells", "Mean reads per Cell"]),
             (
+                gex_cells_metrics.data,
+                gex_cells_metrics.headers,
+                ["Cells", "Mean reads per Cell"]
+            ), (
                 gex_library_metrics_summary.data,
                 gex_library_metrics_summary.headers,
                 ["Q30 barcodes", "Sequencing saturation"],
-            ),
+            )
         ]
     )
 
@@ -361,9 +391,11 @@ def parse_multi_html(module: BaseMultiqcModule):
 
     module.write_data_file(gex_cells_metrics.data, "multiqc_cellranger_gex_cells")
     module.write_data_file(gex_library_metrics_summary.data, "multiqc_cellranger_gex_libraries")
-    module.write_data_file(vdj_t_expression_annotation_metrics.data, "multiqc_cellranger_vdj_t_expr_anno")
-    module.write_data_file(vdj_b_expression_annotation_metrics.data, "multiqc_cellranger_vdj_b_expr_anno")
-    module.write_data_file(antibody_expression_mapping_metrics.data, "multiqc_cellranger_antibody_expr_mapp")
+    module.write_data_file(vdj_t_expression_metrics.data, "multiqc_cellranger_vdj_t_expr")
+    module.write_data_file(vdj_t_annotation_metrics.data, "multiqc_cellranger_vdj_t_anno")
+    module.write_data_file(vdj_b_expression_metrics.data, "multiqc_cellranger_vdj_b_expr")
+    module.write_data_file(vdj_b_annotation_metrics.data, "multiqc_cellranger_vdj_b_anno")
+    module.write_data_file(antibody_expression_mapping_metrics.data, "multiqc_cellranger_antibody_expr")
 
     for section in [
         gex_alerts,
@@ -372,10 +404,12 @@ def parse_multi_html(module: BaseMultiqcModule):
         gex_bc_plot,
         gex_genes_plot,
         vdj_t_alerts,
-        vdj_t_expression_annotation_metrics,
+        vdj_t_expression_metrics,
+        vdj_t_annotation_metrics,
         vdj_t_bc_plot,
         vdj_b_alerts,
-        vdj_b_expression_annotation_metrics,
+        vdj_b_expression_metrics,
+        vdj_b_annotation_metrics,
         vdj_b_bc_plot,
         antibody_alerts,
         antibody_expression_mapping_metrics,
@@ -390,15 +424,12 @@ def parse_multi_html(module: BaseMultiqcModule):
     return len(general_data.data)
 
 
-def _parse_table(table_root: Dict, color_dict=None) -> Tuple[Dict, Dict]:
+def _parse_table(table_root: Dict, color_dict: Dict[str, str], filter_with_color_dict: bool = True) -> Tuple[Dict, Dict]:
     if not table_root:
         return {}, {}
 
-    if color_dict is None:
-        color_dict = {}
-
     if len(table_root["table"]["rows"]) > 1:
-        log.critical(f'Multiple rows for table: {table_root["help"].get("title", "UNDEFINED")}')
+        log.critical(f'Multiple rows for table: {table_root["help"].get("title", "UNDEFINED TABLE TITLE")}')
 
     table_keys = table_root["table"]["header"]
     table_data = table_root["table"]["rows"][0]
@@ -407,7 +438,18 @@ def _parse_table(table_root: Dict, color_dict=None) -> Tuple[Dict, Dict]:
     parsed_data = dict(zip(table_keys, table_data))
     parsed_headers = {entry[0]: {"title": entry[0], "description": entry[1][0]} for entry in table_help["data"]}
 
-    parsed_data, parsed_headers = update_data_and_header(parsed_data, parsed_headers, color_dict)
+    # if filter_with_color_dict is True then the keys in the color dict are used as filters for columns we want to add
+    if filter_with_color_dict:
+        filtered_data, filtered_headers = {}, {}
+        for key in color_dict.keys():
+            if key in parsed_data and key in parsed_headers:
+                filtered_data[key] = parsed_data[key]
+                filtered_headers[key] = parsed_headers[key]
+            else:
+                log.debug(f'Removing unexpected column {key}')
+        parsed_data, parsed_headers = filtered_data, filtered_headers
+
+    parsed_data, parsed_headers = update_data_and_header(parsed_data, parsed_headers, color_dict, log)
     return parsed_data, parsed_headers
 
 
@@ -416,8 +458,7 @@ def _parse_alerts(data: Dict, path: List):
         alert_list = resolve_dict(data, path)
     except KeyError:
         alert_list = []
-    alerts = {alert["title"]: alert["level"] if alert["level"] != "ERROR" else "FAIL" for alert in alert_list}
-    return alerts
+    return {alert["title"]: alert["level"] if alert["level"] != "ERROR" else "FAIL" for alert in alert_list}
 
 
 def _build_gex_data(
@@ -427,7 +468,7 @@ def _build_gex_data(
     cells_metrics: SectionData,
     library_metrics: SectionData,
     barcode_plot: SectionData,
-    genes_plot: SectionData,
+    genes_plot: SectionData
 ):
     sample_websummary = data.get("sample_websummary", {}).get("gex_tab", {})
     library_websummary = data.get("library_websummary", {}).get("gex_tab", {})
@@ -449,13 +490,13 @@ def _build_gex_data(
         cells, cells_headers = _parse_table(
             cells_source,
             {
-                "Cells": "GnBu",
-                "Mean reads per cell": "BuPu",
-                "Median genes per Cell": "Purples",
-                "Total genes detected": "GnBu",
-                "Median UMI counts per Cell": "BuPu",
-                "Confidently mapped reads in cells": "Purples",
-            },
+                "Cells": "Purples",
+                "Mean reads per cell": "Greens",
+                "Median genes per cell": "Blues",
+                "Total genes detected": "Purples",
+                "Median UMI counts per cell": "Greys",  # hidden
+                "Confidently mapped reads in cells": "Greens",
+            }
         )
 
         if cells:
@@ -464,10 +505,18 @@ def _build_gex_data(
         log.debug("Could not find sample_websummary/gex_tab/content/hero_metrics")
 
     try:
-        sequencing_metrics_source = library_websummary["content"]["sequencing_metrics_table"]
+        sequencing_metrics_source = library_websummary["content"]["sequencing_metrics_table"]  # could have multiple rows?
         sequencing_metrics, sequencing_metrics_headers = _parse_table(
             sequencing_metrics_source,
-            {"Q30 barcodes": "GnBu", "Q30 UMI": "BuPu", "Q30 RNA read": "Purples", "Q30 RNA read2": "GnBu"},
+            {
+                "Fastq ID": "Greys",  # hidden
+                "Number of reads": "Greys",  # hidden
+                "Number of short reads skipped": "Greys",  # hidden
+                "Q30 barcodes": "Greens",
+                "Q30 UMI": "Blues",
+                "Q30 RNA read": "Greens",
+                "Q30 RNA read 2": "Blues"
+            }
         )
 
         if sequencing_metrics:
@@ -479,7 +528,15 @@ def _build_gex_data(
         physical_library_metrics_source = library_websummary["content"]["physical_library_metrics_table"]
         physical_library_metrics, physical_library_metrics_headers = _parse_table(
             physical_library_metrics_source,
-            {"Valid barcodes": "GnBu", "Valid UMIs": "BuPu", "Sequencing saturation": "Purples"},
+            {
+                "Physical library ID": "Greys",  # hidden
+                "Number of reads": "Greys",  # hidden
+                "Valid barcodes": "Greens",
+                "Valid UMIs": "Blues",
+                "Sequencing saturation": "YlGn",
+                "Confidently mapped reads in cells": "Greys", # hidden
+                "Mean reads per cell": "Greys"  # hidden
+            }
         )
 
         if physical_library_metrics:
@@ -514,8 +571,9 @@ def _build_vdj_t_data(
     data: Dict,
     sample_name: str,
     alerts: SectionData,
-    expression_annotation_metrics: SectionData,
-    barcode_plot: SectionData,
+    expression_metrics: SectionData,
+    annotation_metrics: SectionData,
+    barcode_plot: SectionData
 ):
     sample_websummary = data.get("sample_websummary", {}).get("vdj_t_tab", {})
     library_websummary = data.get("library_websummary", {}).get("vdj_t_tab", {})
@@ -533,37 +591,37 @@ def _build_vdj_t_data(
         alerts.update_sample(parsed_alerts, {}, sample_name)
 
     try:
-        expression_metrics_source = sample_websummary["content"]["hero_metrics"]
-        expression_metrics, expression_metrics_headers = _parse_table(
-            expression_metrics_source,
+        expr_metrics_source = sample_websummary["content"]["hero_metrics"]
+        expr_metrics, expr_metrics_headers = _parse_table(
+            expr_metrics_source,
             {
-                "Estimated number of cells": "GnBu",
-                "Number of cells with productive V-J spanning pair": "BuPu",
-                "Median TRA UMIs per Cell": "Purples",
-                "Median TRB UMIs per Cell": "GnBu",
-            },
+                "Estimated number of cells": "Purples",
+                "Number of cells with productive V-J spanning pair": "Greens",
+                "Median TRA UMIs per Cell": "Blues",
+                "Median TRB UMIs per Cell": "Greens",
+            }
         )
 
-        if expression_metrics:
-            expression_annotation_metrics.update_sample(expression_metrics, expression_metrics_headers, sample_name)
+        if expr_metrics:
+            expression_metrics.update_sample(expr_metrics, expr_metrics_headers, sample_name)
     except KeyError:
         log.debug("Could not find sample_websummary/vdj_t_tab/content/hero_metrics")
 
     try:
-        annotation_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
-        annotation_metrics, annotation_metrics_headers = _parse_table(
-            annotation_metrics_source,
+        anno_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
+        anno_metrics, anno_metrics_headers = _parse_table(
+            anno_metrics_source,
             {
-                "Cells with productive V-J spanning pair": "GnBu",
-                "Cells with productive V-J spanning (TRA, TRB) pair": "BuPu",
-                "Cells with productive TRA contig": "Purples",
-                "Cells with productive TRB contig": "GnBu",
-                "Paired clonotype diversity": "BuPu",
-            },
+                "Cells with productive V-J spanning pair": "Greens",
+                "Cells with productive V-J spanning (TRA, TRB) pair": "Greys",  # hidden
+                "Cells with productive TRA contig": "Blues",
+                "Cells with productive TRB contig": "Greens",
+                "Paired clonotype diversity": "Purples"
+            }
         )
 
-        if annotation_metrics:
-            expression_annotation_metrics.update_sample(annotation_metrics, annotation_metrics_headers, sample_name)
+        if anno_metrics:
+            annotation_metrics.update_sample(anno_metrics, anno_metrics_headers, sample_name)
     except KeyError:
         log.debug("Could not find sample_websummary/vdj_t_tab/content/annotation_metrics_table")
 
@@ -583,8 +641,9 @@ def _build_vdj_b_data(
     data: Dict,
     sample_name: str,
     alerts: SectionData,
-    expression_annotation_metrics: SectionData,
-    barcode_plot: SectionData,
+    expression_metrics: SectionData,
+    annotation_metrics: SectionData,
+    barcode_plot: SectionData
 ):
     sample_websummary = data.get("sample_websummary", {}).get("vdj_b_tab", {})
     library_websummary = data.get("library_websummary", {}).get("vdj_b_tab", {})
@@ -602,40 +661,39 @@ def _build_vdj_b_data(
         alerts.update_sample(parsed_alerts, {}, sample_name)
 
     try:
-        expression_metrics_source = sample_websummary["content"]["hero_metrics"]
-        expression_metrics, expression_metrics_headers = _parse_table(
-            expression_metrics_source,
+        expr_metrics_source = sample_websummary["content"]["hero_metrics"]
+        expr_metrics, expr_metrics_headers = _parse_table(
+            expr_metrics_source,
             {
-                "Estimated number of cells": "GnBu",
-                "Number of cells with productive V-J spanning pair": "BuPu",
-                "Median IGH UMIs per Cell": "Purples",
-                "Median IGK UMIs per Cell": "GnBu",
-                "Median IGL UMIs per Cell": "BuPu",
-            },
+                "Estimated number of cells": "Purples",
+                "Number of cells with productive V-J spanning pair": "Greens",
+                "Median IGH UMIs per Cell": "Blues",
+                "Median IGK UMIs per Cell": "Greens"
+            }
         )
 
-        if expression_metrics:
-            expression_annotation_metrics.update_sample(expression_metrics, expression_metrics_headers, sample_name)
+        if expr_metrics:
+            expression_metrics.update_sample(expr_metrics, expr_metrics_headers, sample_name)
     except KeyError:
         log.debug("Could not find sample_websummary/vdj_b_tab/content/hero_metrics")
 
     try:
-        annotation_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
-        annotation_metrics, annotation_metrics_headers = _parse_table(
-            annotation_metrics_source,
+        anno_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
+        anno_metrics, anno_metrics_headers = _parse_table(
+            anno_metrics_source,
             {
-                "Cells with productive V-J spanning pair": "GnBu",
-                "Cells with productive V-J spanning (IGK, IGH) pair": "BuPu",
-                "Cells with productive V-J spanning (IGL, IGH) pair": "Purples",
-                "Cells with productive IGH contig": "GnBu",
-                "Cells with productive IGK contig": "BuPu",
-                "Cells with productive IGL contig": "Purples",
-                "Paired clonotype diversity": "GnBu",
-            },
+                "Cells with productive V-J spanning pair": "Greens",
+                "Cells with productive V-J spanning (IGK, IGH) pair": "Greys",  # hidden
+                "Cells with productive V-J spanning (IGL, IGH) pair": "Greys",  # hidden
+                "Cells with productive IGH contig": "Blues",
+                "Cells with productive IGK contig": "Greens",
+                "Cells with productive IGL contig": "Blues",
+                "Paired clonotype diversity": "Purples"
+            }
         )
 
-        if annotation_metrics:
-            expression_annotation_metrics.update_sample(annotation_metrics, annotation_metrics_headers, sample_name)
+        if anno_metrics:
+            annotation_metrics.update_sample(anno_metrics, anno_metrics_headers, sample_name)
     except KeyError:
         log.debug("Could not find sample_websummary/vdj_b_tab/content/annotation_metrics_table")
 
@@ -663,10 +721,10 @@ def _build_antibody_data(
 
     if not sample_websummary and not library_websummary:
         log.debug("No antibody data found")
-        return ()
+        return
     if not sample_websummary or not library_websummary:
         log.debug("Antibody data incomplete")
-        return ()
+        return
 
     parsed_alerts = _parse_alerts(sample_websummary, ["alerts"])
     parsed_alerts.update(_parse_alerts(data, ["alerts"]))
@@ -678,11 +736,11 @@ def _build_antibody_data(
         expression_metrics, expression_metrics_headers = _parse_table(
             expression_metrics_source,
             {
-                "Cells": "GnBu",
-                "Median UMI counts per cell": "BuPu",
-                "Mean antibody reads usable per cell": "Purples",
-                "Antibody reads in cells": "GnBu",
-            },
+                "Cells": "Purples",
+                "Median UMI counts per cell": "Greens",
+                "Mean antibody reads usable per cell": "Blues",
+                "Antibody reads in cells": "Greens",
+            }
         )
 
         if expression_metrics:

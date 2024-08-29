@@ -112,15 +112,6 @@ def transform_data(data: Dict[str, List]) -> Dict[str, Union[int, str, float]]:
     return value_dict
 
 
-def update_sections_tuple(original_tuple: Tuple, delta_tuple: Tuple):
-    """Helper to apply Section.update(delta.data, delta.headers) for each tuple element"""
-    if len(delta_tuple) != len(original_tuple):
-        logging.critical("len(delta_tuple) != len(original_tuple), Likely to be a bug")
-
-    for original, delta in zip(original_tuple, delta_tuple):
-        original.update(delta.data, delta.headers)
-
-
 def resolve_dict(data: dict, path: list):
     """Return the contents of a dictionary after traversing the path provided"""
 
@@ -131,10 +122,12 @@ def resolve_dict(data: dict, path: list):
     return cdata
 
 
-def update_data_and_header(data: Dict, header: Dict, color_dict: Dict):
+def update_data_and_header(data: Dict, header: Dict, color_dict: Dict, logger: logging.Logger):
     """Transform data and headers of a table"""
-
     for key in data:
+        if key not in color_dict:
+            logger.warning(f'Unexpected key {key} - applying defaults')
+
         new_header = {"scale": color_dict.get(key, "GnBu")}
         value = data[key].replace(",", "")
         if "%" in value:
