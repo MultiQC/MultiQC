@@ -91,7 +91,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         mod_cust_config[cust_mod_id] = config_custom_data_item
 
     # Now go through each of the file search patterns
-    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor="custom_content")
+    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=AnchorT("custom_content"))
     for config_cust_data_id in search_pattern_keys:
         num_sp_found_files = 0
         for f in bm.find_log_files(config_cust_data_id):
@@ -394,12 +394,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro = self._get_intro()
 
     def add_cc_section(self, section_id: SectionIdT, section_anchor: AnchorT, mod: Dict):
-        section_name = mod["config"].get("section_name", section_id.replace("_", " ").title())
+        section_name: str = mod["config"].get("section_name", section_id.replace("_", " ").title())
         if section_name == "":
             section_name = "Custom Content"
         # But don't repeat if it's the same title as the module title
         if section_name == self.name:
-            section_name = None
+            section_name = ""
 
         pconfig = mod["config"].get("pconfig", {})
         if pconfig.get("id") is None:
@@ -451,6 +451,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Line plot
             elif plot_type == "linegraph":
+                del pconfig["anchor"]
+                print(pconfig)
                 plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
 
             # Scatter plot
