@@ -304,12 +304,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             if mod_id in mod_cust_config:
                 mod_dict["config"].update(mod_cust_config[mod_id])
 
-            # We've not seen this module section before (normal for most custom content)
-            if mod_id not in parsed_modules:
-                parsed_modules[mod_id] = MultiqcModule(mod_id, anchor=mod_anchor, mod=mod_dict)
-            else:
-                # New sub-section
+            if mod_id in parsed_modules:
+                # We've seen this module section before
                 parsed_modules[mod_id].update_init(mod_dict)
+            else:
+                parsed_modules[mod_id] = MultiqcModule(mod_id, anchor=mod_anchor, mod=mod_dict)
 
             parsed_modules[mod_id].add_cc_section(section_id, section_anchor, mod_dict)
             if mod_dict["config"].get("plot_type") == "html":
