@@ -1,4 +1,24 @@
-from typing import Dict, Union, List
+import logging
+from typing import Dict, Union, List, Tuple, Any
+
+
+class SectionData:
+    data: Dict[str, Dict]
+    headers: Dict[str, Any]
+
+    def __init__(self):
+        self.data = dict()
+        self.headers = dict()
+
+    def update(self, data: Dict[str, Dict], headers: Dict[str, Dict]):
+        self.data.update(data)
+        self.headers.update(headers)
+
+    def update_sample(self, data: Dict[str, Any], headers: Dict[str, Dict], sample: str):
+        if sample not in self.data:
+            self.data[sample] = {}
+        self.data[sample].update(data)
+        self.headers.update(headers)
 
 
 def clean_title_case(col_id):
@@ -90,3 +110,58 @@ def transform_data(data: Dict[str, List]) -> Dict[str, Union[int, str, float]]:
             value_dict[row] = data["y"][idx]
 
     return value_dict
+
+
+def update_sections_tuple(original_tuple: Tuple, delta_tuple: Tuple):
+    """Helper to apply Section.update(delta.data, delta.headers) for each tuple element"""
+    if len(delta_tuple) != len(original_tuple):
+        logging.critical("len(delta_tuple) != len(original_tuple), Likely to be a bug")
+
+    for original, delta in zip(original_tuple, delta_tuple):
+        original.update(delta.data, delta.headers)
+
+
+def resolve_dict(data: dict, path: list):
+    """Return the contents of a dictionary after traversing the path provided"""
+
+    cdata = data
+    for entry in path:
+        cdata = cdata[entry]
+
+    return cdata
+
+
+def update_data_and_header(data: Dict, header: Dict, color_dict: Dict):
+    """Transform data and headers of a table"""
+
+    for key in data:
+        new_header = {"scale": color_dict.get(key, "GnBu")}
+        value = data[key].replace(",", "")
+        if "%" in value:
+            new_header.update({"suffix": "%", "max": 100, "min": 0})
+            value = value.replace("%", "").strip()
+        try:
+            value = float(value)
+            value = int(value) if value % 1 == 0 else value
+        except ValueError:
+            pass
+        data[key] = value
+        header[key].update(new_header)
+    return data, header
+
+
+def combine_data_and_headers(dictionaries: List[Tuple]):
+    """Method to combine multiple data dictionaries and headers into one"""
+
+    ret_data: Dict[str, Dict] = {}
+    ret_headers: Dict[str, Any] = {}
+    for data, headers, cols in dictionaries:
+        for sample in data:
+            if sample not in ret_data:
+                ret_data[sample] = {}
+            for col in cols:
+                if col in data[sample]:
+                    ret_data[sample][col] = data[sample][col]
+                    ret_headers[col] = headers[col]
+
+    return ret_data, ret_headers

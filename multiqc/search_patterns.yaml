@@ -207,20 +207,16 @@ ccs/v4:
 ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: "*.json"
+cellranger/multi_html:
+  - fn: "*.html"
+    num_lines: 20
+    contents_re: '.*"subcommand": ?"multi".*'
 cellranger/count_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"count"'
-    num_lines: 20
-  - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "count"'
-    num_lines: 20
+    contents_re: '.*"command": ?"Cell Ranger", ?"subcommand": ?"count".*'
 cellranger/vdj_html:
   - fn: "*.html"
-    contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    num_lines: 20
-  - fn: "*.html"
-    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    num_lines: 20
+    contents_re: '.*"command": ?"Cell Ranger", ?"subcommand": ?"vdj".*'
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -362,9 +358,6 @@ freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
-ganon:
-  contents: ["(_|(_|| |(_)| |", "Classifying reads"]
-  num_lines: 10
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
