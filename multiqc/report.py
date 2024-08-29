@@ -692,38 +692,27 @@ def exclude_file(sp, f: SearchFile):
     Exclude discovered files if they match the special exclude_
     search pattern keys
     """
-    # Make everything a list if it isn't already
-    for k in sp:
-        if k in ["exclude_fn", "exclude_fn_re" "exclude_contents", "exclude_contents_re"]:
-            if not isinstance(sp[k], list):
-                sp[k] = [sp[k]]
 
     # Search by file name (glob)
-    if "exclude_fn" in sp:
-        for pat in sp["exclude_fn"]:
-            if fnmatch.fnmatch(f.filename, pat):
-                return True
+    for pat in sp.exclude_fn:
+        if pat and fnmatch.fnmatch(f.filename, pat):
+            return True
 
     # Search by file name (regex)
-    if "exclude_fn_re" in sp:
-        for pat in sp["exclude_fn_re"]:
-            if re.match(pat, f.filename):
-                return True
+    for pat in sp.exclude_fn_re:
+        if pat and re.match(pat, f.filename):
+            return True
 
     # Search the contents of the file
-    if "exclude_contents" in sp or "exclude_contents_re" in sp:
-        # Compile regex patterns if we have any
-        if "exclude_contents_re" in sp:
-            sp["exclude_contents_re"] = [re.compile(pat) for pat in sp["exclude_contents_re"]]
-        for num_lines, line_block in f.line_block_iterator():
-            if "exclude_contents" in sp:
-                for pat in sp["exclude_contents"]:
-                    if pat in line_block:
-                        return True
-            if "exclude_contents_re" in sp:
-                for pat in sp["exclude_contents_re"]:
-                    if re.search(pat, line_block):
-                        return True
+    for num_lines, line_block in f.line_block_iterator():
+        if sp.exclude_contents:
+            for pat in sp.exclude_contents:
+                if pat and pat in line_block:
+                    return True
+        if sp.exclude_contents_re:
+            for pat in sp.exclude_contents_re:
+                if pat and re.search(pat, line_block):
+                    return True
     return False
 
 
