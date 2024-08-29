@@ -22,6 +22,7 @@ import packaging.version
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
 from multiqc.core import software_versions
+from multiqc.types import AnchorT, SectionIdT, ModuleIdT
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,8 @@ class ModuleNoSamplesFound(Exception):
 @dataclasses.dataclass
 class Section:
     name: str
-    anchor: str
-    id: str
+    anchor: AnchorT
+    id: SectionIdT  # unlike anchor, doesn't have to be different from the module or plot ids
     description: str
     module: str
     comment: str = ""
@@ -43,18 +44,18 @@ class Section:
     content: str = ""
     plot: str = ""
     print_section: bool = True
-    plot_id: Optional[str] = None
+    plot_anchor: Optional[AnchorT] = None
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
-    mod_id = None
+    mod_id: ModuleIdT = None
 
     def __init__(
         self,
         name="base",
-        anchor="base",
+        anchor: AnchorT = AnchorT("base"),
         target=None,
         href: Union[str, List[str], None] = None,
         info=None,
@@ -66,7 +67,8 @@ class BaseMultiqcModule:
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
-        self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
+        # cannot be overwritten for repeated modules with path_filters:
+        self.id: ModuleIdT = self.mod_id if self.mod_id else anchor
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
@@ -293,7 +295,7 @@ class BaseMultiqcModule:
         self,
         name=None,
         anchor=None,
-        id=None,  # unlike anchor, doesn't have to be different from the module or plot ids
+        id=None,
         description="",
         comment="",
         helptext="",
@@ -304,7 +306,6 @@ class BaseMultiqcModule:
         autoformat_type="markdown",
     ):
         """Add a section to the module report output"""
-
         if id is None:
             id = anchor
 
@@ -321,9 +322,10 @@ class BaseMultiqcModule:
             anchor = id
 
         # Prepend custom module anchor to the section if set
-        if "anchor" in self.mod_cust_config:
-            anchor = f"{self.mod_cust_config['anchor']}_{anchor}"
-            id = f"{self.mod_cust_config['anchor']}_{id}"
+        cust_anchor = self.mod_cust_config.get("anchor")
+        if cust_anchor:
+            anchor = f"{cust_anchor}_{anchor}"
+            id = f"{cust_anchor}_{id}"
 
         # Sanitise anchor ID and check for global duplicates
         anchor = report.save_htmlid(anchor)
@@ -379,9 +381,9 @@ class BaseMultiqcModule:
 
         if plot is not None:
             if isinstance(plot, Plot):
-                section.plot_id = plot.id
+                section.plot_anchor = plot.anchor
                 # separately keeping track of Plot objects to be rendered further
-                report.plot_by_id[plot.id] = plot
+                report.plot_by_id[plot.anchor] = plot
             elif isinstance(plot, str):
                 section.plot = plot
 

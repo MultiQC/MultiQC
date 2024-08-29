@@ -9,7 +9,7 @@ eg. Modals / other HTML to be hidden out of the way.
 
 
 <!-- Table Scatter Plot Modal -->
-<div class="modal fade" id="tableScatterModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="table_scatter_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -17,22 +17,22 @@ eg. Modals / other HTML to be hidden out of the way.
         <h3 class="modal-title">Plot Table Data</h3>
       </div>
       <div class="modal-body">
-        <form id="tableScatterForm">
-          <input type="hidden" id="tableScatter_tid" name="tableScatter_tid" value="" />
+        <form id="table_scatter_form">
+          <input type="hidden" id="table_scatter_table_anchor" name="table_scatter_table_anchor" value="" />
           <div class="row">
             <div class="col-sm-6">
-              <select id="tableScatter_col1" name="tableScatter_col1" class="form-control">
+              <select id="table_scatter_col1" name="table_scatter_col1" class="form-control">
                 <option value="">Select Column</option>
               </select>
             </div>
             <div class="col-sm-6">
-              <select id="tableScatter_col2" name="tableScatter_col2" class="form-control">
+              <select id="table_scatter_col2" name="table_scatter_col2" class="form-control">
                 <option value="">Select Column</option>
               </select>
             </div>
           </div>
           <div class="hc-plot-wrapper">
-            <div id="tableScatterPlot" class="hc-plot not_rendered hc-scatter-plot no-handle" style="width:566px; height: 510px;">
+            <div id="table_scatter_plot" class="hc-plot not_rendered hc-scatter-plot no-handle" style="width:566px; height: 510px;">
               <small>Please select two table columns.</small>
             </div>
           </div>

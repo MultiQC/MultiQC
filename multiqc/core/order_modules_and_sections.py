@@ -1,8 +1,9 @@
 import logging
-from typing import Dict
+from typing import Dict, Union
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
+from multiqc.types import AnchorT, SectionIdT
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +72,11 @@ def order_modules_and_sections():
     if len(config.report_section_order) > 0:
         # Go through each module
         for midx, mod in enumerate(report.modules):
-            section_id_order = dict()
+            section_id_order: Dict[Union[AnchorT, SectionIdT], int] = dict()
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:
                 section_id_order[s.id] = idx
-                section_id_order[s.anchor] = idx
                 idx += 10
             # Go through each section to be reordered
             for sec_or_mod_id_or_anchor, ss in config.report_section_order.items():
@@ -93,7 +93,7 @@ def order_modules_and_sections():
                 if ss.get("before") in section_id_order.keys():
                     section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["before"]] - 1
             # Remove module sections
-            section_id_order = {s: o for s, o in section_id_order.items() if o is not False}
+            section_id_order = {sec_id: order for sec_id, order in section_id_order.items() if order is not False}
             # Sort the module sections
-            sorted_ids = sorted(section_id_order.keys(), key=lambda k: section_id_order[k])
+            sorted_ids = sorted(section_id_order.keys(), key=lambda sec_id: section_id_order[sec_id])
             report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i or s.id == i]

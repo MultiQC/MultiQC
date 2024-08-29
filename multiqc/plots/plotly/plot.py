@@ -16,6 +16,7 @@ from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
+from multiqc.types import AnchorT
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -26,6 +27,7 @@ check_plotly_version()
 
 class PConfig(ValidatedConfig):
     id: str
+    anchor: Optional[AnchorT]  # unlike id, has to be globally unique
     table_title: Optional[str] = Field(None, deprecated="title")
     title: str
     height: Optional[int] = None
@@ -160,6 +162,7 @@ class Plot(BaseModel, Generic[T]):
     """
 
     id: str
+    anchor: AnchorT  # unlike id, has to be unique
     plot_type: PlotType
     layout: go.Layout
     datasets: List[T]
@@ -197,6 +200,7 @@ class Plot(BaseModel, Generic[T]):
         pconfig: PConfig,
         n_samples_per_dataset: List[int],
         id: Optional[str] = None,
+        anchor: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
@@ -208,6 +212,7 @@ class Plot(BaseModel, Generic[T]):
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
         :param id: plot ID
+        :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
@@ -221,7 +226,8 @@ class Plot(BaseModel, Generic[T]):
         if id is None:  # id of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
             id = f"mqc_plot_{uniq_suffix}"
-        id = report.save_htmlid(id)
+        anchor = anchor or pconfig.anchor or id
+        anchor = report.save_htmlid(anchor)  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
         add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
@@ -385,6 +391,7 @@ class Plot(BaseModel, Generic[T]):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
+            anchor=anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -541,21 +548,20 @@ class Plot(BaseModel, Generic[T]):
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
         # re-calculate the wrapper size after rendering.
-        height = self.layout.height
-        height_style = f'style="height:{height + 7}px"' if height else ""
-        cls = f"hc-plot hc-{self.plot_type}-plot not_loaded not_rendered"
-        if self.defer_render:
-            cls += " defer_render"
+        height_style = f'style="height:{self.layout.height + 7}px"' if self.layout.height else ""
+        defer_render_style = "defer_render" if self.defer_render else ""
         html += f"""
-        <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.id}-wrapper" {height_style}>
-            <div id="{self.id}" class="{cls}"></div>
+        <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.anchor}-wrapper" {height_style}>
+            <div 
+                id="{self.anchor}" 
+                class="hc-plot hc-{self.plot_type}-plot not_loaded not_rendered {defer_render_style}">
+            </div>
             <div class="created-with-multiqc">Created with MultiQC</div>
         </div>"""
-
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.plot_data[self.id] = self.model_dump(warnings=False)
+        report.plot_data[self.anchor] = self.model_dump(warnings=False)
         return html
 
     def flat_plot(self, embed_in_html: Optional[bool] = None, plots_dir_name: Optional[str] = None) -> str:
@@ -573,7 +579,7 @@ class Plot(BaseModel, Generic[T]):
                 "</p>",
             ]
         )
-        html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
+        html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.anchor}" data-plot-anchor={self.anchor}>'
 
         if not config.simple_output:
             html += self.__control_panel(flat=True)
@@ -618,8 +624,8 @@ class Plot(BaseModel, Generic[T]):
     def _btn(self, cls: str, label: str, data_attrs: Optional[Dict[str, str]] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        if "pid" not in data_attrs:
-            data_attrs["pid"] = self.id
+        if "plot-anchor" not in data_attrs:
+            data_attrs["plot-anchor"] = self.anchor
         data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
         return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
 
@@ -744,10 +750,9 @@ def fig_to_static_html(
 
     # Should this plot be hidden on report load?
     hiding = "" if active else ' style="display:none;"'
-    id = file_name or f"plot-{random.randint(1000000, 9999999)}"
     return "".join(
         [
-            f'<div class="mqc_mplplot" id="{id}"{hiding}>',
+            f'<div class="mqc_mplplot" {hiding}>',
             f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
             "</div>",
         ]

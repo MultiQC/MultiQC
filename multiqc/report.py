@@ -33,6 +33,7 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
+from multiqc.types import ModuleIdT, AnchorT
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
@@ -70,13 +71,13 @@ runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
-files: Dict
+files: Dict[ModuleIdT, List[Dict]]
 
 # Fields below is kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
-plot_data: Dict[str, Dict] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[str, Plot] = dict()  # plot objects for interactive use
+plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict]
 general_stats_headers: List[Dict]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
@@ -326,7 +327,7 @@ class SearchFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def to_dict(self):
+    def to_dict(self) -> Dict:
         return {"fn": self.filename, "root": str(self.root)}
 
 
@@ -398,13 +399,15 @@ class SearchPattern(BaseModel):
         return SearchPattern(**d)
 
 
-def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, List[SearchPattern]]], List[Path]]:
+def prep_ordered_search_files_list(
+    sp_keys: List[ModuleIdT],
+) -> Tuple[List[Dict[ModuleIdT, List[SearchPattern]]], List[Path]]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
     """
 
-    spatterns: List[Dict[str, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     searchfiles: List[Path] = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
@@ -474,7 +477,7 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
         else:
             spatterns[0][key] = sps
 
-    def _sort_by_key(_sps: Dict[str, List[SearchPattern]], _key: str) -> Dict[str, List[SearchPattern]]:
+    def _sort_by_key(_sps: Dict[ModuleIdT, List[SearchPattern]], _key: str) -> Dict[ModuleIdT, List[SearchPattern]]:
         """Sort search patterns dict by key like num_lines or max_filesize."""
 
         def _sort_key(kv) -> int:
@@ -486,7 +489,7 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[str, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -513,7 +516,7 @@ def prep_ordered_search_files_list(sp_keys: List[str]) -> Tuple[List[Dict[str, L
     return spatterns, searchfiles
 
 
-def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfiles: List[Path]):
+def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], searchfiles: List[Path]):
     runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
@@ -552,26 +555,26 @@ def run_search_files(spatterns: List[Dict[str, List[SearchPattern]]], searchfile
         file_matched = False
         with search_f:  # Ensure any open filehandles are closed.
             for patterns in spatterns:
-                for key, sps in patterns.items():
+                for module_id, sps in patterns.items():
                     start = time.time()
                     for sp in sps:
-                        if search_file(sp, search_f, key, is_ignore_file):
+                        if search_file(sp, search_f, module_id, is_ignore_file):
                             # Check that we shouldn't exclude this file
                             if not exclude_file(sp, search_f):
                                 # Looks good! Remember this file
-                                if key not in files:
-                                    files[key] = []
-                                files[key].append(search_f.to_dict())
-                                file_search_stats[key] = file_search_stats.get(key, set()) | {path}
+                                if module_id not in files:
+                                    files[module_id] = []
+                                files[module_id].append(search_f.to_dict())
+                                file_search_stats[module_id] = file_search_stats.get(module_id, set()) | {path}
                                 file_matched = True
-                                # logger.debug(f"File {f.path} matched {key}")
+                                # logger.debug(f"File {f.path} matched {module_id}")
                             # Don't keep searching this file for other modules
-                            if not sp.shared and key not in config.filesearch_file_shared:
-                                runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
+                            if not sp.shared and module_id not in config.filesearch_file_shared:
+                                runtimes.sp[module_id] = runtimes.sp.get(module_id, 0) + (time.time() - start)
                                 return True
                             # Don't look at other patterns for this module
                             break
-                    runtimes.sp[key] = runtimes.sp.get(key, 0) + (time.time() - start)
+                    runtimes.sp[module_id] = runtimes.sp.get(module_id, 0) + (time.time() - start)
         return file_matched
 
     def update_fn(_, sf: Path):
@@ -610,7 +613,7 @@ def search_files(sp_keys):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key, is_ignore_file: bool = False):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is_ignore_file: bool = False):
     """
     Function to search a single file for a single search pattern.
     """
