@@ -799,6 +799,11 @@ def save_htmlid(html_id, skiplint=False):
     global html_ids
     global lint_errors
 
+    # print("html_id:", html_id)
+    # import traceback
+    #
+    # traceback.print_stack()
+
     # Clean up the HTML ID
     html_id_clean = clean_htmlid(html_id)
 

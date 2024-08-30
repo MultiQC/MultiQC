@@ -397,17 +397,23 @@ class MultiqcModule(BaseMultiqcModule):
         section_name: str = mod["config"].get("section_name", section_id.replace("_", " ").title())
         if section_name == "":
             section_name = "Custom Content"
-        # But don't repeat if it's the same title as the module title
-        if section_name == self.name:
-            section_name = ""
 
         pconfig = mod["config"].get("pconfig", {})
+        if pconfig.get("anchor") is None:
+            if pconfig.get("id") is not None:
+                pconfig["anchor"] = pconfig["id"]
+                if pconfig["anchor"] == section_anchor:  # making sure plot anchor is globally unique
+                    pconfig["anchor"] += "-plot"
+            else:
+                pconfig["anchor"] = section_anchor + "-plot"  # making sure anchor is globally unique
         if pconfig.get("id") is None:
             pconfig["id"] = section_id
         if pconfig.get("title") is None:
             pconfig["title"] = section_name
-        if pconfig.get("anchor") is None:
-            pconfig["anchor"] = section_anchor + "-plot"  # making sure anchor is globally unique
+
+        # But don't repeat header if it's the same title as the module title
+        if section_name == self.name:
+            section_name = ""
 
         plot: Optional[Union[Plot, str]] = None
         content = None
@@ -451,8 +457,6 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Line plot
             elif plot_type == "linegraph":
-                del pconfig["anchor"]
-                print(pconfig)
                 plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
 
             # Scatter plot

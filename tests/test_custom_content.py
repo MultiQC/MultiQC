@@ -295,9 +295,10 @@ sp:
 
     # Expecting to see only one table, and no bar plot from the _mqc file
     assert len(report.plot_by_id) == 1
-    assert "last_o2o-section-plot" in report.plot_by_id
-    assert report.plot_by_id["last_o2o-section-plot"].id == "last_o2o-section-plot"
-    assert report.plot_by_id["last_o2o-section-plot"].plot_type == "violin"
+    anchor = AnchorT("last_o2o-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].id == "last_o2o"
+    assert report.plot_by_id[anchor].plot_type == "violin"
 
 
 @pytest.mark.parametrize(
@@ -352,7 +353,8 @@ myfile.fasta	chr1	55312	56664	+	GENE""",
     ],
 )
 def test_from_tsv(tmp_path, section_name, is_good, contents):
-    tmp_path.joinpath("mysample_mqc.tsv").write_text(contents)
+    id = "mysample"
+    tmp_path.joinpath(f"{id}_mqc.tsv").write_text(contents)
 
     report.analysis_files = [tmp_path]
     update_config(cfg=ClConfig(run_modules=["custom_content"]))
@@ -365,10 +367,11 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
 
     custom_module_classes()
     assert len(report.plot_by_id) == 1
-    assert "mysample-section-plot" in report.plot_by_id
-    assert report.plot_by_id["mysample-section-plot"].plot_type == "violin"
-    assert len(report.plot_by_id["mysample-section-plot"].datasets) == 1
-    assert report.plot_by_id["mysample-section-plot"].datasets[0].header_by_metric.keys() == {
+    anchor = AnchorT(f"{id}-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].plot_type == "violin"
+    assert len(report.plot_by_id[anchor].datasets) == 1
+    assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
         "SEQUENCE",
         "START",
         "END",
@@ -376,14 +379,17 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
         "GENE",
     }
 
-    assert report.plot_by_id["mysample-section-plot"].datasets[0].violin_value_by_sample_by_metric == {
+    assert report.plot_by_id[anchor].datasets[0].violin_value_by_sample_by_metric == {
         "SEQUENCE": {"myfile.fasta": "chr1"},
         "START": {"myfile.fasta": 55312.0},
         "END": {"myfile.fasta": 56664.0},
         "STRAND": {"myfile.fasta": "+"},
         "GENE": {"myfile.fasta": "GENE"},
     }
-    assert report.plot_by_id["mysample-section-plot"].layout.title.text == "My section" if section_name else "mysample"
+    if section_name:
+        assert report.plot_by_id[anchor].layout.title.text == section_name
+    else:
+        assert report.plot_by_id[anchor].layout.title.text == id.title()
 
 
 def test_heatmap_with_numerical_cats(tmp_path):
@@ -410,9 +416,10 @@ def test_heatmap_with_numerical_cats(tmp_path):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    assert f"{plot_id}-section-plot" in report.plot_by_id
-    assert report.plot_by_id[f"{plot_id}-section-plot"].id == f"{plot_id}-section-plot"
-    assert report.plot_by_id[f"{plot_id}-section-plot"].plot_type == "heatmap"
+    anchor = AnchorT(f"{plot_id}-section-plot")
+    assert anchor in report.plot_by_id
+    assert report.plot_by_id[anchor].id == plot_id
+    assert report.plot_by_id[anchor].plot_type == "heatmap"
 
 
 def test_on_all_example_files(data_dir):

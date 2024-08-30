@@ -749,10 +749,10 @@ def fig_to_static_html(
         img_buffer.close()
 
     # Should this plot be hidden on report load?
-    hiding = "" if active else ' style="display:none;"'
+    style = "" if active else "display:none;"
     return "".join(
         [
-            f'<div class="mqc_mplplot" {hiding}>',
+            f'<div class="mqc_mplplot" style="{style}" id="{file_name}">',
             f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
             "</div>",
         ]
