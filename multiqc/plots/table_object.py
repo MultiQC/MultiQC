@@ -273,9 +273,6 @@ class DataTable(BaseModel):
 
     sections: List[TableSection] = []
     headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]]
-    # headers: List[Dict[ColumnKeyT, ColumnMeta]] = []
-    # raw_data: List[Dict[str, Dict[str, ValueT]]] = []
-    # formatted_data: List[Dict[str, Dict[str, str]]] = []
 
     @staticmethod
     def create(
@@ -300,7 +297,10 @@ class DataTable(BaseModel):
         for input_section in input_sections__with_nulls:
             rows_by_group: Dict[SampleGroupT, List[InputRow]] = {}
             for g_name, input_group in input_section.items():
+                g_name = str(g_name)  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
+                    # Remove non-scalar values for table cells
+                    input_group = {k: v for k, v in input_group.items() if isinstance(v, (int, float, str, bool))}
                     rows_by_group[g_name] = [InputRow(sample=g_name, data=input_group)]
                 elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
                     rows_by_group[g_name] = input_group
