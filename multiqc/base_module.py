@@ -24,6 +24,7 @@ from multiqc.config import CleanPatternT
 from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
 from multiqc.core import software_versions
+from multiqc.types import AnchorT, SectionIdT, ModuleIdT
 from multiqc.plots.table_object import (
     ColumnMeta,
     Row,
@@ -45,7 +46,8 @@ class ModuleNoSamplesFound(Exception):
 @dataclasses.dataclass
 class Section:
     name: str
-    anchor: str
+    anchor: AnchorT
+    id: SectionIdT  # unlike anchor, doesn't have to be different from the module or plot ids
     description: str
     module: str
     comment: str = ""
@@ -54,18 +56,18 @@ class Section:
     content: str = ""
     plot: str = ""
     print_section: bool = True
-    plot_id: Optional[str] = None
+    plot_anchor: Optional[AnchorT] = None
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
-    mod_id = None
+    mod_id: ModuleIdT = None
 
     def __init__(
         self,
         name="base",
-        anchor="base",
+        anchor: AnchorT = AnchorT("base"),
         target=None,
         href: Union[str, List[str], None] = None,
         info=None,
@@ -77,7 +79,8 @@ class BaseMultiqcModule:
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
-        self.id = self.mod_id if self.mod_id else anchor  # cannot be overwritten for repeated modules with path_filters
+        # cannot be overwritten for repeated modules with path_filters:
+        self.id: ModuleIdT = self.mod_id if self.mod_id else anchor
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
@@ -304,6 +307,7 @@ class BaseMultiqcModule:
         self,
         name=None,
         anchor=None,
+        id=None,
         description="",
         comment="",
         helptext="",
@@ -314,30 +318,44 @@ class BaseMultiqcModule:
         autoformat_type="markdown",
     ):
         """Add a section to the module report output"""
+        if id is None:
+            id = anchor
 
-        # Default anchor
         if anchor is None:
+            anchor = id
+
+        if id is None:
             if name is not None:
                 nid = name.lower().strip().replace(" ", "-")
-                anchor = f"{self.anchor}-{nid}"
+                id = f"{self.anchor}-{nid}"
             else:
                 sl = len(self.sections) + 1
-                anchor = f"{self.anchor}-section-{sl}"
+                id = f"{self.anchor}-section-{sl}"
+            anchor = id
 
-        # Append custom module anchor to the section if set
-        if "anchor" in self.mod_cust_config:
-            anchor = f"{self.mod_cust_config['anchor']}_{anchor}"
+        # Prepend custom module anchor to the section if set
+        cust_anchor = self.mod_cust_config.get("anchor")
+        if cust_anchor:
+            anchor = f"{cust_anchor}_{anchor}"
+            id = f"{cust_anchor}_{id}"
 
-        # Sanitise anchor ID and check for duplicates
+        # Sanitise anchor ID and check for global duplicates
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
         if anchor in config.remove_sections:
-            logger.debug(f"Skipping section '{anchor}' because specified in user config")
+            logger.debug(f"Skipping section with anchor '{anchor}' because specified in user config")
+            return
+
+        # Skip if user has a config to remove this module section
+        if id in config.remove_sections:
+            logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
         # See if we have a user comment in the config
-        if anchor in config.section_comments:
+        if id in config.section_comments:
+            comment = config.section_comments[id]
+        elif anchor in config.section_comments:
             comment = config.section_comments[anchor]
 
         # Format the content
@@ -363,6 +381,7 @@ class BaseMultiqcModule:
         section = Section(
             name=name,
             anchor=anchor,
+            id=id,
             description=description,
             module=self.name,
             comment=comment,
@@ -374,9 +393,9 @@ class BaseMultiqcModule:
 
         if plot is not None:
             if isinstance(plot, Plot):
-                section.plot_id = plot.id
+                section.plot_anchor = plot.anchor
                 # separately keeping track of Plot objects to be rendered further
-                report.plot_by_id[plot.id] = plot
+                report.plot_by_id[plot.anchor] = plot
             elif isinstance(plot, str):
                 section.plot = plot
 
@@ -978,21 +997,3 @@ class BaseMultiqcModule:
 
         # Save the file
         report.write_data_file(data, fn, sort_cols, data_format)
-
-    ##################################################
-    #### DEPRECATED FORWARDERS
-    def plot_bargraph(self, data, cats=None, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import bargraph
-
-        if pconfig is None:
-            pconfig = {}
-        return bargraph.plot(data, cats, pconfig)
-
-    def plot_xy_data(self, data, pconfig=None):
-        """Depreciated function. Forwards to new location."""
-        from multiqc.plots import linegraph
-
-        if pconfig is None:
-            pconfig = {}
-        return linegraph.plot(data, pconfig)

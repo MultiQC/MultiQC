@@ -761,7 +761,7 @@ tbody .sorthandle {
   cursor: pointer;
   color: #ccc;
 }
-.mqc_configModal_table tbody .sorthandle {
+.mqc_config_modal_table tbody .sorthandle {
   color: #999;
 }
 .mqc_table .rowheader {

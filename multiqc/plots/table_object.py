@@ -3,8 +3,10 @@ MultiQC datatable class, used by tables and violin plots
 """
 
 import logging
+import random
 import math
 import re
+import string
 from collections import defaultdict
 from random import sample
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
@@ -13,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
+from multiqc.types import AnchorT
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -266,6 +269,7 @@ class DataTable(BaseModel):
     """
 
     id: str
+    anchor: AnchorT
     pconfig: TableConfig
 
     sections: List[TableSection] = []
@@ -378,14 +382,18 @@ class DataTable(BaseModel):
             for column in section.column_by_key.values():
                 del column.modify
                 del column.format
-        # list_of_headers = [
-        #     {metric: {k: v for k, v in d.items() if k not in ["modify", "format"]} for metric, d in h.items()}
-        #     for h in list_of_headers
-        # ]
+
+        id = pconfig.id
+        if id is None:  # id of the plot group
+            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
+            id = f"mqc_table_{uniq_suffix}"
+        table_anchor: AnchorT = AnchorT(f"{pconfig.anchor or id}-table")
+        table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
 
         # Assign to class
         return DataTable(
-            id=pconfig.id,
+            id=id,
+            anchor=table_anchor,
             sections=sections,
             headers_in_order=headers_in_order,
             # raw_data=raw_data,

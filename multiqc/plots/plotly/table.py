@@ -17,13 +17,13 @@ def plot(dt: List[DataTable]):
 
 def make_table(
     dt: DataTable,
-    violin_id: Optional[str] = None,
+    violin_anchor: Optional[str] = None,
     add_control_panel: bool = True,
 ) -> Tuple[str, str]:
     """
     Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
-    :param violin_id: optional, will add a button to switch to a violin plot with this ID
+    :param violin_anchor: optional, will add a button to switch to a violin plot with this ID
     :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
@@ -74,9 +74,9 @@ def make_table(
         empty_cells[rid] = f'<td class="data-coloured {rid} {hide}"></td>'
 
         # Build the modal table row
-        data = f"data-table-id='{dt.id}'"
-        if violin_id:
-            data += f" data-violin-id='{violin_id}'"
+        data = f"data-table-anchor='{dt.anchor}'"
+        if violin_anchor:
+            data += f" data-violin-anchor='{violin_anchor}'"
         t_modal_headers[rid] = f"""
         <tr class="{rid}{muted}" style="background-color: rgba({header.color}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
@@ -213,7 +213,7 @@ def make_table(
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.id}, column {col_key}, sample {row.sample}")
+                    print(f"Value {val} is not hashable for table {dt.anchor}, column {col_key}, sample {row.sample}")
 
                 # Categorical background colours supplied
                 if isinstance(val, str) and val in header.bgcols.keys():
@@ -226,7 +226,7 @@ def make_table(
                 elif hashable and header.scale:
                     if c_scale is not None:
                         col = " background-color:{} !important;".format(
-                            c_scale.get_colour(val, source=f'Table "{dt.id}", column "{col_key}"')
+                            c_scale.get_colour(val, source=f'Table "{dt.anchor}", column "{col_key}"')
                         )
                     else:
                         col = ""
@@ -270,7 +270,7 @@ def make_table(
 
         buttons.append(
             f"""
-        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.id}">
+        <button type="button" class="mqc_table_copy_btn btn btn-default btn-sm" data-clipboard-target="table#{dt.anchor}">
             <span class="glyphicon glyphicon-copy"></span> Copy table
         </button>
         """
@@ -288,8 +288,8 @@ def make_table(
 
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_configModal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
-                data-target="#{dt.id}_configModal" {disabled_attrs}>
+            <button type="button" class="mqc_table_config_modal_btn btn btn-default btn-sm {disabled_class}" data-toggle="modal"
+                data-target="#{dt.anchor}_config_modal" {disabled_attrs}>
                 <span class="glyphicon glyphicon-th"></span> Configure columns
             </button>
             """
@@ -299,7 +299,7 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="mqc_table_sortHighlight btn btn-default btn-sm"
-            data-target="#{dt.id}" data-direction="desc" style="display:none;">
+            data-table-anchor="{dt.anchor}" data-direction="desc" style="display:none;">
             <span class="glyphicon glyphicon-sort-by-attributes-alt"></span> Sort by highlight
         </button>
         """
@@ -309,18 +309,18 @@ def make_table(
         if len(t_headers) > 1:
             buttons.append(
                 f"""
-            <button type="button" class="mqc_table_makeScatter btn btn-default btn-sm"
-                data-toggle="modal" data-target="#tableScatterModal" data-table="#{dt.id}">
+            <button type="button" class="mqc_table_make_scatter btn btn-default btn-sm"
+                data-toggle="modal" data-target="#table_scatter_modal" data-table-anchor="{dt.anchor}">
                 <span class="glyphicon glyphicon glyphicon-equalizer"></span> Scatter plot
             </button>
             """
             )
 
-        if violin_id is not None:
+        if violin_anchor is not None:
             buttons.append(
                 f"""
             <button type="button" class="mqc-table-to-violin btn btn-default btn-sm"
-                data-table-id="{dt.id}" data-violin-id="{violin_id}">
+                data-table-anchor="{dt.anchor}" data-violin-anchor="{violin_anchor}">
                 <span class="glyphicon glyphicon-align-left"></span> Violin plot
             </button>
             """
@@ -329,7 +329,7 @@ def make_table(
         buttons.append(
             f"""
         <button type="button" class="export-plot btn btn-default btn-sm"
-            data-pid="{violin_id or dt.id}" data-type="table"
+            data-plot-anchor="{violin_anchor or dt.anchor}" data-type="table"
         >Export as CSV</button>
         """
         )
@@ -339,18 +339,18 @@ def make_table(
         visible_rows = [x for x in row_visibilities if not x]
 
         # Visible rows
-        t_showing_rows_txt = f'Showing <sup id="{dt.id}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(t_rows)}</sub> rows'
+        t_showing_rows_txt = f'Showing <sup id="{dt.anchor}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(t_rows)}</sub> rows'
 
         # How many columns are visible?
         ncols_vis = (len(t_headers) + 1) - hidden_cols
         t_showing_cols_txt = ""
         if len(t_headers) > 1:
-            t_showing_cols_txt = f' and <sup id="{dt.id}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{len(t_headers)}</sub> columns'
+            t_showing_cols_txt = f' and <sup id="{dt.anchor}_numcols" class="mqc_table_numcols">{ncols_vis}</sup>/<sub>{len(t_headers)}</sub> columns'
 
         # Build table header text
         buttons.append(
             f"""
-        <small id="{dt.id}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
+        <small id="{dt.anchor}_numrows_text" class="mqc_table_numrows_text">{t_showing_rows_txt}{t_showing_cols_txt}.</small>
         """
         )
 
@@ -362,9 +362,9 @@ def make_table(
     # Build the table itself
     collapse_class = "mqc-table-collapse" if len(t_rows) > 10 and config.collapse_tables else ""
     html += f"""
-        <div id="{dt.id}_container" class="mqc_table_container">
+        <div id="{dt.anchor}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {collapse_class}">
-                <table id="{dt.id}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
+                <table id="{dt.anchor}" class="table table-condensed mqc_table mqc_per_sample_table" data-title="{table_title}" data-sortlist="{_get_sortlist(dt)}">
         """
 
     # Build the header row
@@ -414,30 +414,30 @@ def make_table(
 
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
-        fn = dt.pconfig.raw_data_fn or f"multiqc_{dt.id}"
-        report.write_data_file(raw_vals, fn)
-        report.saved_raw_data[fn] = raw_vals
+        fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
+        report.write_data_file(raw_vals, fname)
+        report.saved_raw_data[fname] = raw_vals
 
     # Build the bootstrap modal to customise columns and order
     modal = ""
     if not config.simple_output and add_control_panel and not _is_configure_columns_disabled(len(t_headers)):
         modal = _configuration_modal(
-            tid=dt.id,
+            table_anchor=dt.anchor,
             title=table_title,
             trows="".join(t_modal_headers.values()),
-            violin_id=violin_id,
+            violin_anchor=violin_anchor,
         )
 
     return html, modal
 
 
-def _configuration_modal(tid: str, title: str, trows: str, violin_id: Optional[str] = None) -> str:
-    data = f"data-table-id='{tid}'"
-    if violin_id is not None:
-        data += f" data-violin-id='{violin_id}'"
+def _configuration_modal(table_anchor: str, title: str, trows: str, violin_anchor: Optional[str] = None) -> str:
+    data = f"data-table-anchor='{table_anchor}'"
+    if violin_anchor is not None:
+        data += f" data-violin-anchor='{violin_anchor}'"
     return f"""
     <!-- MultiQC Table Columns Modal -->
-    <div class="modal fade mqc_configModal" id="{tid}_configModal" tabindex="-1">
+    <div class="modal fade mqc_config_modal" id="{table_anchor}_config_modal" tabindex="-1">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -445,12 +445,12 @@ def _configuration_modal(tid: str, title: str, trows: str, violin_id: Optional[s
             <h4 class="modal-title">{title}: Columns</h4>
           </div>
           <div class="modal-body">
-            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{tid}</code></p>
+            <p>Uncheck the tick box to hide columns. Click and drag the handle on the left to change order. Table ID: <code>{table_anchor}</code></p>
             <p>
-                <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" {data} data-action="showAll">Show All</button>
-                <button class="btn btn-default btn-sm mqc_configModal_bulkVisible" {data} data-action="showNone">Show None</button>
+                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showAll">Show All</button>
+                <button class="btn btn-default btn-sm mqc_config_modal_bulk_visible" {data} data-action="showNone">Show None</button>
             </p>
-            <table class="table mqc_table mqc_sortable mqc_configModal_table" id="{tid}_configModal_table" data-title="{title}">
+            <table class="table mqc_table mqc_sortable mqc_config_modal_table" id="{table_anchor}_config_modal_table" data-title="{title}">
               <thead>
                 <tr>
                   <th class="sorthandle" style="text-align:center;">Sort</th>

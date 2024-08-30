@@ -405,7 +405,6 @@ class ViolinPlot(Plot):
             flat_if_very_large=False,
         )
 
-        main_table_dt.id = "table-" + main_table_dt.id  # make it different from the violin id
         no_violin = model.pconfig.no_violin
         show_table_by_default = show_table_by_default or no_violin
 
@@ -454,7 +453,7 @@ class ViolinPlot(Plot):
             show_table = False
             if show_table_by_default:
                 logger.debug(
-                    f"Table '{model.id}': sample number {max_n_samples} > {config.max_table_rows}, "
+                    f"Table '{model.anchor}': sample number {max_n_samples} > {config.max_table_rows}, "
                     "Will render only a violin plot instead of the table"
                 )
 
@@ -473,9 +472,9 @@ class ViolinPlot(Plot):
         if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
-                    cls="mqc_table_configModal_btn",
+                    cls="mqc_table_config_modal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.id}_configModal"},
+                    data_attrs={"toggle": "modal", "target": f"{self.main_table_dt.anchor}_config_modal"},
                 )
             )
         if self.show_table:
@@ -483,7 +482,7 @@ class ViolinPlot(Plot):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-id": self.main_table_dt.id, "violin-id": self.id},
+                    data_attrs={"table-anchor": self.main_table_dt.anchor, "violin-anchor": self.anchor},
                 )
             )
 
@@ -579,7 +578,7 @@ class ViolinPlot(Plot):
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
-                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "A violin plot is generated instead, showing density of values for each metric, as "
@@ -588,7 +587,7 @@ class ViolinPlot(Plot):
             )
         elif not self.show_table:
             warning = (
-                f'<p class="text-muted" id="table-violin-info-{self.id}">'
+                f'<p class="text-muted" id="table-violin-info-{self.anchor}">'
                 + '<span class="glyphicon glyphicon-exclamation-sign" '
                 + 'title="An interactive table is not available because of the large number of samples. '
                 + "The violin plot displays hoverable points only for outlier samples in each metric, "
@@ -609,14 +608,16 @@ class ViolinPlot(Plot):
         else:
             assert self.main_table_dt is not None
             # Render both, add a switch between table and violin
-            table_html, configuration_modal = make_table(self.main_table_dt, violin_id=self.id)
+            table_html, configuration_modal = make_table(self.main_table_dt, violin_anchor=self.anchor)
             violin_html = super().add_to_report(plots_dir_name=plots_dir_name)
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
-            html = f"<div id='mqc_violintable_wrapper_{self.id}' {violin_visibility}>{warning}{violin_html}</div>"
+            html = f"<div id='mqc_violintable_wrapper_{self.anchor}' {violin_visibility}>{warning}{violin_html}</div>"
 
             table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
-            html += f"<div id='mqc_violintable_wrapper_{self.main_table_dt.id}' {table_visibility}>{table_html}</div>"
+            html += (
+                f"<div id='mqc_violintable_wrapper_{self.main_table_dt.anchor}' {table_visibility}>{table_html}</div>"
+            )
 
             html += configuration_modal
 

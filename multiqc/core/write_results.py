@@ -249,8 +249,8 @@ def render_and_export_plots(plots_dir_name: str):
     """
 
     def update_fn(_, s: Section):
-        if s.plot_id:
-            _plot = report.plot_by_id[s.plot_id]
+        if s.plot_anchor:
+            _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
                 s.plot = _plot.add_to_report(plots_dir_name=plots_dir_name)
             elif isinstance(_plot, str):
@@ -266,8 +266,8 @@ def render_and_export_plots(plots_dir_name: str):
     show_progress = config.export_plots
     if not show_progress:
         for s in sections:
-            if s.plot_id:
-                plot = report.plot_by_id[s.plot_id]
+            if s.plot_anchor:
+                plot = report.plot_by_id[s.plot_anchor]
                 if isinstance(plot, Plot) and plot.flat:
                     show_progress = True
                     break
@@ -282,9 +282,9 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
     report.some_plots_are_deferred = any(
-        isinstance(report.plot_by_id[s.plot_id], Plot) and report.plot_by_id[s.plot_id].defer_render
+        isinstance(report.plot_by_id[s.plot_anchor], Plot) and report.plot_by_id[s.plot_anchor].defer_render
         for s in sections
-        if s.plot_id
+        if s.plot_anchor
     )
 
 
@@ -345,8 +345,8 @@ def _write_data_files(data_dir: Path) -> None:
     # Exporting plots to files if requested
     logger.debug("Exporting plot data to files")
     for s in report.get_all_sections():
-        if s.plot_id and isinstance(report.plot_by_id.get(s.plot_id), Plot):
-            report.plot_by_id[s.plot_id].save_data_files()
+        if s.plot_anchor and isinstance(report.plot_by_id.get(s.plot_anchor), Plot):
+            report.plot_by_id[s.plot_anchor].save_data_files()
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")

@@ -25,6 +25,7 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.types import ModuleIdT
 
 logger = logging.getLogger("multiqc")
 
@@ -185,21 +186,21 @@ def list_plots() -> Dict:
     @return: Dict of plot names indexed by module and section
     """
 
-    result: Dict = {}
+    result: Dict[ModuleIdT, List] = {}
     for module in report.modules:
-        result[module.anchor] = list()
+        result[module.id] = list()
         for section in module.sections:
-            if not section.plot_id:
+            if not section.plot_anchor:
                 continue
             section_id = section.name or section.anchor
-            plot_id = section.plot_id
-            if plot_id not in report.plot_by_id:
-                raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
-            plot = report.plot_by_id[plot_id]
+            plot_anchor = section.plot_anchor
+            if plot_anchor not in report.plot_by_id:
+                raise ValueError(f'CRITICAL: Plot "{plot_anchor}" not found in report.plot_by_id')
+            plot = report.plot_by_id[plot_anchor]
             if len(plot.datasets) == 1:
-                result[module.anchor].append(section_id)
+                result[module.id].append(section_id)
             if len(plot.datasets) > 1:
-                result[module.anchor].append({section_id: [d.label for d in plot.datasets]})
+                result[module.id].append({section_id: [d.label for d in plot.datasets]})
 
     return result
 
@@ -222,10 +223,10 @@ def get_plot(
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
-    if sec.plot_id is None:
+    if sec.plot_anchor is None:
         raise ValueError(f"Section {section} doesn't contain a Plot object")
 
-    return report.plot_by_id[sec.plot_id]
+    return report.plot_by_id[sec.plot_anchor]
 
 
 def _load_plot(dump: Dict) -> Plot:
