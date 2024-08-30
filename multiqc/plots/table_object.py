@@ -8,7 +8,6 @@ import math
 import re
 import string
 from collections import defaultdict
-from random import sample
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
 
 from pydantic import BaseModel, Field
@@ -541,8 +540,8 @@ def _determine_dmin_and_dmax(
         for s_name, rows in rows_by_sample.items():
             v_by_col = rows[0].raw_data
             try:
-                val = float(v_by_col[col_key])
-                if math.isfinite(val) and not math.isnan(val):
+                val = v_by_col[col_key]
+                if isinstance(val, float) or isinstance(val, int) and math.isfinite(val) and not math.isnan(val):
                     if set_dmax:
                         column.dmax = max(column.dmax, val)
                     if set_dmin:

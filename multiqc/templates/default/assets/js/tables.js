@@ -232,7 +232,7 @@ $(function () {
 
     // Rename samples
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_per_sample_table tbody th").each(function () {
+      $(".mqc_per_sample_table tbody th span.th-sample-name").each(function () {
         let s_name = String($(this).data("original-sn"));
         $.each(f_texts, function (idx, f_text) {
           if (regex_mode) {

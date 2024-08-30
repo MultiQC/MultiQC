@@ -58,8 +58,8 @@ def make_table(
             checked = ""
             hidden_cols += 1
 
-        data_attr = 'data-dmax="{}" data-dmin="{}" data-namespace="{}" {}'.format(
-            header.dmax, header.dmin, header.namespace, shared_key
+        data_attr = (
+            f'data-dmax="{header.dmax}" data-dmin="{header.dmin}" data-namespace="{header.namespace}" {shared_key}'
         )
 
         ns = f"{header.namespace}: " if header.namespace else ""
@@ -67,9 +67,7 @@ def make_table(
             f'<span class="mqc_table_tooltip" title="{ns}{header.description}" data-html="true">{header.title}</span>'
         )
 
-        t_headers[rid] = '<th id="header_{rid}" class="{rid} {h}" {da}>{c}</th>'.format(
-            rid=rid, h=hide, da=data_attr, c=cell_contents
-        )
+        t_headers[rid] = f'<th id="header_{rid}" class="{rid} {hide}" {data_attr}>{cell_contents}</th>'
 
         empty_cells[rid] = f'<td class="data-coloured {rid} {hide}"></td>'
 
@@ -213,7 +211,9 @@ def make_table(
                     hash(val)
                 except TypeError:
                     hashable = False
-                    print(f"Value {val} is not hashable for table {dt.anchor}, column {col_key}, sample {row.sample}")
+                    logger.warning(
+                        f"Value {val} is not hashable for table {dt.anchor}, column {col_key}, sample {row.sample}"
+                    )
 
                 # Categorical background colours supplied
                 if isinstance(val, str) and val in header.bgcols.keys():
@@ -369,7 +369,7 @@ def make_table(
 
     # Build the header row
     col1_header = dt.pconfig.col1_header
-    html += f"<thead><tr><th class=\"rowheader\">{col1_header}</th>{''.join(t_headers.values())}</tr></thead>"
+    html += f'<thead><tr><th class="rowheader">{col1_header}</th>{"".join(t_headers.values())}</tr></thead>'
 
     # Build the table body
     html += "<tbody>"
@@ -388,7 +388,6 @@ def make_table(
                 break
         row_class = ""
         for number_in_group, s_name in enumerate(t_rows[g_name]):
-            # bg = "" if number_in_group == 0 else "background-color: rgba(0,0,0,0.05);"
             prefix = ""
             if non_trivial_groups_present:
                 caret_cls = ""
@@ -403,7 +402,7 @@ def make_table(
             row_hidden = "display: none;" if do_not_display else ""
             html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{row_class}" style="{row_hidden}">'
             # Sample name row header
-            html += f'<th class="rowheader" data-original-sn="{escape(s_name)}">{prefix}<span class="th-sample-name">{s_name}</span></th>'
+            html += f'<th class="rowheader">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
             for col_key in t_headers:
                 html += t_rows[g_name][s_name].get(col_key, empty_cells[col_key])
             html += "</tr>"
