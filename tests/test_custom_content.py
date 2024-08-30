@@ -427,7 +427,8 @@ def test_on_all_example_files(data_dir):
     Run on all example in data/custom_content, verify it didn't fail.
     Deprecate this in the future in favour of more granular tests like those above.
     """
-    report.analysis_files = [data_dir]
+
+    report.analysis_files = [data_dir / "custom_content"]
     config.run_modules = ["custom_content"]
 
     file_search()

@@ -100,10 +100,10 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Must just be configuration for a separate custom-content class
         mod_cust_config[cc_id] = config_custom_data_item
 
-    # Now go through each of the file search patterns
     bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=AnchorT("custom_content"))
+
+    # Now go through each of the file search patterns
     for config_custom_data_id in search_pattern_keys:
-        ccdict: CcDict = ccdict_by_id.get(config_custom_data_id, CcDict())
         num_sp_found_files = 0
         for f in bm.find_log_files(config_custom_data_id):
             num_sp_found_files += 1
@@ -140,9 +140,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                     "data": img_html,
                 }
-                assert isinstance(ccdict.config, dict)
-                # If the search pattern 'k' has an associated custom content section config, use it:
-                parsed_data.update(ccdict.config)
+                # # If the search pattern 'k' has an associated custom content section config, use it:
+                # if config_custom_data_id in ccdict_by_id:
+                #     parsed_data.update(ccdict_by_id[config_custom_data_id].config)
             elif f_extension == ".html":
                 parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                 parsed_data.update(_find_html_file_header(f))
@@ -152,16 +152,18 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     # Run sample-name cleaning on the data keys
                     parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
 
-                c_id = parsed_data.get("id", config_custom_data_id)
+                _c_id = parsed_data.get("id", config_custom_data_id)
                 parsed_item = parsed_data.get("data", {})
                 if parsed_item:
-                    ccdict = ccdict_by_id[c_id]
-                    if isinstance(parsed_item, dict) and isinstance(ccdict.data, dict):
-                        ccdict.data.update(parsed_item)
+                    if _c_id not in ccdict_by_id:
+                        ccdict_by_id[_c_id] = CcDict()
+                    _ccdict = ccdict_by_id[_c_id]
+                    if isinstance(parsed_item, dict) and isinstance(_ccdict.data, dict):
+                        _ccdict.data.update(parsed_item)
                     else:
-                        ccdict.data = parsed_item
-                    assert isinstance(ccdict.config, dict)
-                    ccdict.config.update({j: k for j, k in parsed_data.items() if j != "data"})
+                        _ccdict.data = parsed_item
+                    assert isinstance(_ccdict.config, dict)
+                    _ccdict.config.update({j: k for j, k in parsed_data.items() if j != "data"})
                 else:
                     log.warning(f"No data found in {f['fn']}")
 
@@ -173,13 +175,12 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 c_id: ModuleIdT
                 if m_config is not None:
                     c_id = m_config.get("id", config_custom_data_id)
-                    if c_id in ccdict_by_id:
-                        # Update the base config with anything parsed from the file
-                        ccdict_by_id[c_id].config.update(m_config)
-                        # Now set the module config to the merged dict
-                        m_config = ccdict_by_id[c_id].config
-                    else:
-                        ccdict_by_id[c_id] = CcDict(config=m_config)
+                    # Update the base config with anything parsed from the file
+                    b_config = ccdict_by_id.get(c_id, CcDict()).config
+                    assert isinstance(b_config, dict)
+                    b_config.update(m_config)
+                    # Now set the module config to the merged dict
+                    m_config = dict(b_config)
                     s_name = m_config.get("sample_name")
                 else:
                     c_id = config_custom_data_id
@@ -214,19 +215,21 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 else:
                     # Did we get a new section id from the file?
                     if parsed_conf.get("id") is not None:
-                        c_id = parsed_conf.get("id")
-                    ccdict = ccdict_by_id.get(c_id, CcDict())
+                        c_id = ModuleIdT(parsed_conf["id"])
+                    if c_id not in ccdict_by_id:
+                        ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
                     if isinstance(parsed_data, list):
-                        ccdict.data = parsed_data
+                        ccdict_by_id[c_id].data = parsed_data
                     elif parsed_conf.get("plot_type") == "html":
-                        ccdict.data = parsed_data
+                        ccdict_by_id[c_id].data = parsed_data
                     else:
                         assert isinstance(parsed_data, dict)
-                        assert isinstance(ccdict.data, dict)
-                        ccdict.data.update(parsed_data)
-                    assert isinstance(ccdict.config, dict)
-                    ccdict.config.update(parsed_conf)
+                        d = ccdict_by_id[c_id].data
+                        assert isinstance(d, dict), (c_id, f["fn"], f["root"])
+                        d.update(parsed_data)
+                    assert isinstance(ccdict_by_id[c_id].config, dict)
+                    ccdict_by_id[c_id].config.update(parsed_conf)
 
         # Give log message if no files found for search pattern
         if num_sp_found_files == 0 and config_custom_data_id != "custom_content":
@@ -253,7 +256,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         assert isinstance(ccdict.config, dict)
         if ccdict.config.get("plot_type") == "generalstats":
             assert isinstance(ccdict.data, dict), ccdict.data
-            gs_headers = ccdict.config.get("pconfig")
+            gs_headers = ccdict.config.get("headers")
             if gs_headers is None:
                 headers_set: Set[str] = set()
                 for _hd in ccdict.data.values():
@@ -655,8 +658,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     matrix: List[List[Union[str, float, int]]] = []
     ncols = None
     for line in non_header_lines:
-        if line:
-            sections = cast(List[Any], line.split(sep))
+        if line.rstrip():
+            sections = cast(List[Any], line.rstrip().split(sep))
             matrix.append(sections)
             if ncols is None:
                 ncols = len(sections)
