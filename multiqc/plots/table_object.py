@@ -5,7 +5,9 @@ MultiQC datatable class, used by tables and violin plots
 import math
 
 import logging
+import random
 import re
+import string
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
 
@@ -13,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
+from multiqc.types import AnchorT
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -76,6 +79,7 @@ class DataTable(BaseModel):
     """
 
     id: str
+    anchor: AnchorT
     raw_data: List[Dict[str, Dict[str, ValueT]]] = []
     formatted_data: List[Dict[str, Dict[str, str]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
@@ -452,9 +456,17 @@ class DataTable(BaseModel):
             for h in list_of_headers
         ]
 
+        id = pconfig.id
+        if id is None:  # id of the plot group
+            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
+            id = f"mqc_table_{uniq_suffix}"
+        table_anchor: AnchorT = AnchorT(f"{pconfig.anchor or id}-table")
+        table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
+
         # Assign to class
         return DataTable(
-            id=pconfig.id,
+            id=id,
+            anchor=table_anchor,
             raw_data=raw_data,
             formatted_data=formatted_data,
             headers_in_order=dict(headers_in_order),
