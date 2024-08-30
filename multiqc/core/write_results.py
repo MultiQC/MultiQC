@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, List, Union, Callable
 
 import jinja2
 
@@ -23,6 +23,7 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import ColumnKeyT
 from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
@@ -300,20 +301,27 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
+    # Convert to editable type to fix rid
+    general_stats_headers_copy: List[Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]] = [
+        {k: dict(v) for k, v in h.items()} for h in report.general_stats_headers
+    ]
+
     # Add general-stats IDs to table row headers
-    for idx, headers in enumerate(report.general_stats_headers):
+    for idx, headers in enumerate(general_stats_headers_copy):
         for k in headers.keys():
             unclean_rid = str(headers[k].get("rid", k))
             rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
             headers[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
 
-            ns_html = re.sub(r"\W+", "_", headers[k]["namespace"]).strip().strip("_").lower()
-            report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
+            ns = headers[k]["namespace"]
+            assert isinstance(ns, str)
+            ns_html = re.sub(r"\W+", "_", ns).strip().strip("_").lower()
+            general_stats_headers_copy[idx][k]["rid"] = report.save_htmlid(
                 f"mqc-generalstats-{ns_html}-{headers[k]['rid']}"
             )
 
     all_hidden = True
-    for headers in report.general_stats_headers:
+    for headers in general_stats_headers_copy:
         for h in headers.values():
             if not h.get("hidden", False):
                 all_hidden = False
@@ -331,7 +339,7 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        p = table.plot(report.general_stats_data, general_stats_headers_copy, pconfig)  # type: ignore
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
