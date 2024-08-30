@@ -21,6 +21,7 @@ import importlib_metadata
 import yaml
 import pyaml_env  # type: ignore
 
+from multiqc.types import SectionIdT, ModuleIdT, AnchorT
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -194,7 +195,9 @@ exclude_modules: List[str]
 data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
-report_section_order: Dict
+report_section_order: Dict[
+    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+]
 output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool

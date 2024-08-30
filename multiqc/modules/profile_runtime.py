@@ -10,6 +10,7 @@ from multiqc.plots import bargraph, table
 from multiqc import report, config
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
+from multiqc.types import AnchorT
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             <a href="https://multiqc.info/docs/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
         super(MultiqcModule, self).__init__(
             name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
-            anchor="multiqc_runtime",
+            anchor=AnchorT("multiqc_runtime"),
             info=info,
         )
 
