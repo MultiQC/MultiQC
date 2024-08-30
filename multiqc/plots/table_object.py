@@ -271,7 +271,7 @@ class DataTable(BaseModel):
     anchor: AnchorT
     pconfig: TableConfig
 
-    sections: List[TableSection] = []
+    sections: List[TableSection]
     headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]]
 
     @staticmethod
@@ -395,9 +395,6 @@ class DataTable(BaseModel):
             anchor=table_anchor,
             sections=sections,
             headers_in_order=headers_in_order,
-            # raw_data=raw_data,
-            # formatted_data=formatted_data,
-            # headers=list_of_headers,
             pconfig=pconfig,
         )
 
