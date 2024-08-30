@@ -55,17 +55,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Add drop rate to the general stats table
-        headers = {
-            "dropped_pct": {
-                "title": "% Dropped",
-                "description": "% Dropped reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "OrRd",
-            }
-        }
-        self.general_stats_addcols(self.trimmomatic, headers)
+        self.general_stats_addcols(
+            self.trimmomatic,
+            {
+                "dropped_pct": {
+                    "title": "% Dropped",
+                    "description": "% Dropped reads",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "OrRd",
+                }
+            },
+        )
 
         # Make barplot
         self.trimmomatic_barplot()
