@@ -2,6 +2,7 @@
 MultiQC datatable class, used by tables and violin plots
 """
 
+import dataclasses
 import math
 
 import logging
@@ -80,11 +81,11 @@ class DataTable(BaseModel):
 
     id: str
     anchor: AnchorT
-    raw_data: List[Dict[str, Dict[str, ValueT]]] = []
-    formatted_data: List[Dict[str, Dict[str, str]]] = []
-    headers_in_order: Dict[int, List[Tuple[int, str]]]
-    headers: List[Dict[str, TableColumn]] = []
     pconfig: TableConfig
+    raw_data: List[Dict[str, Dict[str, ValueT]]]
+    formatted_data: List[Dict[str, Dict[str, str]]]
+    headers: List[Dict[str, TableColumn]]
+    headers_in_order: Dict[int, List[Tuple[int, str]]]
 
     @staticmethod
     def create(
@@ -450,12 +451,6 @@ class DataTable(BaseModel):
         #         if not any(h in data[d_idx][s_name].keys() for h in headers[d_idx]):
         #             del raw_data[d_idx][s_name]
 
-        # Remove callable headers that are not compatible with JSON
-        list_of_headers = [
-            {metric: {k: v for k, v in d.items() if k not in ["modify", "format"]} for metric, d in h.items()}
-            for h in list_of_headers
-        ]
-
         id = pconfig.id
         if id is None:  # id of the plot group
             uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
@@ -470,9 +465,21 @@ class DataTable(BaseModel):
             raw_data=raw_data,
             formatted_data=formatted_data,
             headers_in_order=dict(headers_in_order),
-            headers=list_of_headers,
+            headers=[
+                {
+                    # Remove callable headers that are not compatible with JSON
+                    metric: TableColumn(**{k: v for k, v in d.items() if k not in ["modify", "format"]})
+                    for metric, d in h.items()
+                }
+                for h in list_of_headers
+            ],
             pconfig=pconfig,
         )
+
+    def model_dump(self, **kwargs):
+        # In Python 3.8, pydantic doesn't like TypeAliases
+        self.anchor = str(self.anchor)  # type: ignore
+        super().model_dump(**kwargs)
 
     def get_headers_in_order(self) -> List[Tuple[int, str, TableColumn]]:
         """
