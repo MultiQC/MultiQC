@@ -497,8 +497,8 @@ $(function () {
     $("#mqc_export_selectplots input").prop("checked", false);
     $('#mqc_export_selectplots input[value="' + id + '"]').prop("checked", true);
     // Special case - Table scatter plots are in a modal, need to close this first
-    if (id === "tableScatterPlot") {
-      $("#tableScatterModal").modal("hide");
+    if (id === "table_scatter_plot") {
+      $("#table_scatter_modal").modal("hide");
     }
     mqc_toolbox_openclose(
       "#mqc_exportplots",
