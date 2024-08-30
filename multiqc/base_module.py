@@ -610,7 +610,7 @@ class BaseMultiqcModule:
                 for col in sum_by_col.keys():
                     for s_name in s_names:
                         val = data_by_sample[s_name][col]
-                        if isinstance(val, int | float):
+                        if isinstance(val, int) or isinstance(val, float):
                             sum_by_col[col] += float(val)
 
                 for col, weight_col in cols_to_weighted_average:
@@ -620,8 +620,14 @@ class BaseMultiqcModule:
                             sum(
                                 [
                                     float(data_by_sample[s_name][col]) * float(data_by_sample[s_name][weight_col])
-                                    if isinstance(data_by_sample[s_name][col], float | int)
-                                    and isinstance(data_by_sample[s_name][weight_col], float | int)
+                                    if (
+                                        isinstance(data_by_sample[s_name][col], float)
+                                        or isinstance(data_by_sample[s_name][col], int)
+                                    )
+                                    and (
+                                        isinstance(data_by_sample[s_name][weight_col], float)
+                                        or isinstance(data_by_sample[s_name][weight_col], int)
+                                    )
                                     else 0
                                     for s_name in s_names
                                 ]
@@ -634,7 +640,10 @@ class BaseMultiqcModule:
                     merged_row.data[col] = sum(
                         [
                             float(data_by_sample[s_name][col])
-                            if isinstance(data_by_sample[s_name][col], float | int)
+                            if (
+                                isinstance(data_by_sample[s_name][col], float)
+                                or isinstance(data_by_sample[s_name][col], int)
+                            )
                             else 0
                             for s_name in s_names
                         ]
@@ -648,7 +657,10 @@ class BaseMultiqcModule:
                         merged_row.data[col] = sum(
                             [
                                 float(data_by_sample[s_name][col])
-                                if isinstance(data_by_sample[s_name][col], float | int)
+                                if (
+                                    isinstance(data_by_sample[s_name][col], float)
+                                    or isinstance(data_by_sample[s_name][col], int)
+                                )
                                 else 0
                                 for s_name in s_names
                             ]
