@@ -50,7 +50,7 @@ class Section:
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
-    mod_id: ModuleIdT = None
+    mod_id: Optional[ModuleIdT] = None
 
     def __init__(
         self,
@@ -68,7 +68,7 @@ class BaseMultiqcModule:
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
         # cannot be overwritten for repeated modules with path_filters:
-        self.id: ModuleIdT = self.mod_id if self.mod_id else anchor
+        self.id: ModuleIdT = ModuleIdT(self.mod_id or anchor)
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
@@ -172,7 +172,7 @@ class BaseMultiqcModule:
         """
         return self.__saved_raw_data
 
-    def find_log_files(self, sp_key, filecontents=True, filehandles=False):
+    def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -204,7 +204,7 @@ class BaseMultiqcModule:
             logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
             return
 
-        for f in report.files.get(sp_key, []):
+        for f in report.files.get(ModuleIdT(sp_key), []):
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
