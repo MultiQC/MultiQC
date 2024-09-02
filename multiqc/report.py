@@ -978,18 +978,20 @@ def multiqc_dump_json():
             "output_dir",
         ],
     }
-    for s in export_vars:
-        for k in export_vars[s]:
+    for pymod, names in export_vars.items():
+        for name in names:
+            if name == "general_stats_data":
+                print()
             try:
                 d = None
-                if s == "config":
-                    v = getattr(config, k)
+                if pymod == "config":
+                    v = getattr(config, name)
                     v = str(v) if isinstance(v, PosixPath) else v
                     if isinstance(v, list):
                         v = [str(el) if isinstance(el, PosixPath) else el for el in v]
-                    d = {f"{s}_{k}": v}
-                elif s == "report":
-                    d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
+                    d = {f"{pymod}_{name}": v}
+                elif pymod == "report":
+                    d = {f"{pymod}_{name}": getattr(sys.modules[__name__], name)}
                 if d:
                     with open(os.devnull, "wt") as f:
                         # Test that exporting to JSON works. Write to
@@ -997,7 +999,7 @@ def multiqc_dump_json():
                         dump_json(d, f, ensure_ascii=False)
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
+                logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
         # Get the absolute paths of analysis directories
         exported_data["config_analysis_dir_abs"] = list()
         for config_analysis_dir in exported_data.get("config_analysis_dir", []):

@@ -58,9 +58,9 @@ def plot(
     # Given one dataset - turn it into a list
     raw_datasets: List[DatasetT]
     if isinstance(data, Sequence):
-        raw_datasets = list(data)  # type: ignore
+        raw_datasets = cast(List[DatasetT], data)
     else:
-        raw_datasets = [data]  # type: ignore
+        raw_datasets = [cast(DatasetT, data)]
     del data
 
     # Make list of cats from different inputs

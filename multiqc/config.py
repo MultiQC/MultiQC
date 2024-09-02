@@ -146,7 +146,7 @@ fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
 sample_names_rename_buttons: List[str]
-sample_names_replace: Dict
+sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
@@ -172,10 +172,10 @@ use_filename_as_sample_name: bool
 fn_clean_exts: List[CleanPatternT]
 fn_clean_trim: List[str]
 fn_ignore_files: List[str]
-sample_merge_groups: Dict[str, Dict[str, List[CleanPatternT]]]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
+sample_merge_groups: Dict[str, Dict[str, List[CleanPatternT]]]
 
 # Module filename search patterns
 sp: Dict = {}

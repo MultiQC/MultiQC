@@ -11,6 +11,7 @@ from pydantic import Field, BaseModel
 
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
+from multiqc.types import SampleNameT
 from multiqc.utils.util_functions import update_dict
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 KeyT = TypeVar("KeyT", int, str, float)
 ValueT = TypeVar("ValueT", int, str, float, None)
 XToYDictT = Mapping[KeyT, ValueT]
-DatasetT = Mapping[str, XToYDictT]
+DatasetT = Mapping[Union[str, SampleNameT], XToYDictT]
 
 
 class Marker(BaseModel):

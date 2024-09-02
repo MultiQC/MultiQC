@@ -164,21 +164,6 @@ export_plot_formats:
 custom_content:
   order: []
 
-# Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
-# Affects all modules that support it (e.g. fastqc, fastp)
-sample_merge_groups:
-  read_pairs:
-    Read 1:
-      - type: regex
-        pattern: "_R1"
-      - type: regex
-        pattern: "[_.-][rR]?1$"
-    Read 2:
-      - type: regex
-        pattern: "_R2"
-      - type: regex
-        pattern: "[_.-][rR]?2$"
-
 # Option to disable sample name cleaning if desired
 fn_clean_sample_names: true
 
@@ -328,6 +313,21 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+
+# Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
+# Affects all modules that support it (e.g. fastqc, fastp)
+sample_merge_groups:
+#  read_pairs:
+#    "Read 1":
+#      - type: regex
+#        pattern: "_R1"
+#      - type: regex
+#        pattern: "[_.-][rR]?1$"
+#    "Read 2":
+#      - type: regex
+#        pattern: "_R2"
+#      - type: regex
+#        pattern: "[_.-][rR]?2$"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.

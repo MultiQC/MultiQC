@@ -10,7 +10,15 @@ if sys.version_info[1] >= 10:
     ModuleIdT = NewType("ModuleIdT", str)
     SectionIdT = NewType("SectionIdT", str)
 
+    ColumnKeyT = NewType("ColumnKeyT", str)
+    SampleNameT = NewType("SampleNameT", str)
+    SampleGroupT = NewType("SampleGroupT", str)
+
 else:
     AnchorT = str
     ModuleIdT = str
     SectionIdT = str
+
+    ColumnKeyT = str
+    SampleNameT = str
+    SampleGroupT = str

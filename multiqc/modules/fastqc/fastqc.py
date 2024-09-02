@@ -12,15 +12,18 @@ import math
 import os
 import re
 import zipfile
-from collections import Counter, defaultdict
-from typing import Dict, Set, List, Union, Literal, Optional, Tuple, Mapping, Callable
+from collections import Counter
+from pathlib import Path
+from typing import Dict, Set, List, Union, Literal, Optional, Tuple, Mapping, Any
 
 from multiqc import config
 from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.config import CleanPatternT
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.plotly.line import Series, LinePlotConfig
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow, ValueT
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
+from multiqc.types import SampleGroupT, AnchorT
 
 log = logging.getLogger(__name__)
 
@@ -193,31 +196,40 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="FastQC",
-            anchor="fastqc",
+            anchor=AnchorT("fastqc"),
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="Quality control tool for high throughput sequencing data",
             # No publication / DOI // doi=
         )
 
-        self.fastqc_data: Dict = dict()
+        self.fastqc_data: Dict[SampleNameT, Any] = dict()
         self.order_of_duplication_levels: List[float] = []
 
         # Find and parse unzipped FastQC reports
         for f in self.find_log_files("fastqc/data"):
-            s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
-            self.parse_fastqc_report(f["f"], s_name, f)
+            s_name = SampleNameT(
+                self.clean_s_name(
+                    os.path.basename(f["root"]),
+                    f,
+                    root=os.path.dirname(f["root"]),
+                    fn_clean_exts=self.pre_grouping_fn_clean_exts,
+                )
+            )
+            s_name = self.parse_fastqc_report(f["f"], s_name=s_name, f=f)
+            self.add_data_source(f, str(s_name))
 
         # Find and parse zipped FastQC reports
         for f in self.find_log_files("fastqc/zip", filecontents=False):
-            s_name = f["fn"]
-            if s_name.endswith("_fastqc.zip"):
-                s_name = s_name[:-11]
+            fn = f["fn"]
+            if fn.endswith("_fastqc.zip"):
+                fn = fn[:-11]
+            s_name = SampleNameT(self.clean_s_name(fn, f, fn_clean_exts=self.pre_grouping_fn_clean_exts))
             # Skip if we already have this report - parsing zip files is slow
             if s_name in self.fastqc_data.keys():
                 log.debug(f"Skipping '{f['fn']}' as already parsed '{s_name}'")
                 continue
             try:
-                fqc_zip = zipfile.ZipFile(os.path.join(f["root"], f["fn"]))
+                fqc_zip = zipfile.ZipFile(Path(f["root"]) / f["fn"])
             except Exception as e:
                 log.warning(f"Couldn't read '{f['fn']}' - Bad zip file")
                 log.debug(f"Bad zip file error: {e}")
@@ -237,7 +249,8 @@ class MultiqcModule(BaseMultiqcModule):
                         except Exception as e:
                             log.warning(f"Error reading FastQC data file {path}: {e}. Skipping sample {s_name}.")
                             continue
-                    self.parse_fastqc_report(r_data, s_name, f)
+                    s_name = self.parse_fastqc_report(r_data, s_name=s_name, f=f)
+                    self.add_data_source(f, str(s_name))
             except KeyError:
                 log.warning(f"Error - can't find fastqc_raw_data.txt in {f}")
 
@@ -249,11 +262,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(self.fastqc_data)} reports")
 
         # Write the summary stats to a file
-        data = dict()
+        dump_data = dict()
         for s_name in self.fastqc_data:
-            data[s_name] = self.fastqc_data[s_name]["basic_statistics"]
-            data[s_name].update(self.fastqc_data[s_name]["statuses"])
-        self.write_data_file(data, "multiqc_fastqc")
+            dump_data[s_name] = self.fastqc_data[s_name]["basic_statistics"]
+            dump_data[s_name].update(self.fastqc_data[s_name]["statuses"])
+        self.write_data_file(dump_data, "multiqc_fastqc")
 
         # Add to self.css and self.js to be included in template
         self.css = {
@@ -271,7 +284,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to the general statistics table
         self.fastqc_general_stats()
 
-        return
+        # Clean the exts that were used for grouping
+        self.fastqc_data = {
+            SampleNameT(self.clean_s_name(s, None, fn_clean_exts=self.post_grouping_fn_clean_exts)): d
+            for s, d in self.fastqc_data.items()
+        }
 
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
@@ -306,7 +323,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.status_heatmap()
         del self.fastqc_data
 
-    def parse_fastqc_report(self, file_contents, s_name=None, f=None):
+    def parse_fastqc_report(self, file_contents, s_name: SampleNameT, f=None) -> SampleNameT:
         """Takes contents from a fastq_data.txt file and parses out required
         statistics and data. Returns a dict with keys 'stats' and 'data'.
         Data is for plotting graphs, stats are for top table."""
@@ -314,11 +331,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Make the sample name from the input filename if we find it
         fn_search = re.search(r"Filename\s+(.+)", file_contents)
         if fn_search:
-            s_name = self.clean_s_name(fn_search.group(1), f)
+            s_name = SampleNameT(
+                self.clean_s_name(fn_search.group(1), f, fn_clean_exts=self.pre_grouping_fn_clean_exts)
+            )
 
-        if s_name in self.fastqc_data.keys():
+        if s_name in self.fastqc_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.add_data_source(f, s_name)
+
         self.fastqc_data[s_name] = {"statuses": dict()}
 
         # Parse the report
@@ -402,13 +421,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
         if median is not None:
             self.fastqc_data[s_name]["basic_statistics"]["median_sequence_length"] = median
+        return s_name
 
     def fastqc_general_stats(self):
         """Add some single-number stats to the basic statistics
         table at the top of the report"""
 
         # Prep the data
-        data_by_sample: Dict[str, Metrics] = dict()
+        data_by_sample: Dict[SampleNameT, Metrics] = dict()
         for s_name, sample_data in self.fastqc_data.items():
             bs = sample_data["basic_statistics"]
             # Samples with 0 reads and reports with some skipped sections might be missing things here
@@ -446,112 +466,103 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        headers: Mapping[str, Mapping[str, Union[float, int, str, None, Callable]]] = {
-            "percent_duplicates": {
-                "title": "% Dups",
-                "description": "% Duplicate Reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-            "percent_gc": {
-                "title": "% GC",
-                "description": "Average % GC Content",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "PuRd",
-                "format": "{:,.1f}",
-            },
-            "avg_sequence_length": {
-                "title": "Average Read Length",
-                "description": "Average Read Length (bp)",
-                "min": 0,
-                "suffix": " bp",
-                "scale": "RdYlGn",
-                "format": "{:,.0f}",
-                "hidden": True,
-            },
-            "median_sequence_length": {
-                "title": "Median Read Length",
-                "description": "Median Read Length (bp)",
-                "min": 0,
-                "suffix": " bp",
-                "scale": "RdYlGn",
-                "format": "{:,.0f}",
-                "hidden": hide_seq_length,
-            },
-            "percent_fails": {
-                "title": "% Failed",
-                "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "Reds",
-                "format": "{:,.0f}",
-                "hidden": True,
-            },
-            "total_sequences": {
-                "title": f"{config.read_count_prefix} Seqs",
-                "description": f"Total Sequences ({config.read_count_desc})",
-                "min": 0,
-                "scale": "Blues",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-        }
+        # Take only the trimmed data for the general stats table, if both trimmed and untrimmed reports found
+        trimmed_data_by_sample: Dict[SampleNameT, Metrics] = dict()
+        for g_name, labels_s_names in self.group_samples_names(
+            list(data_by_sample.keys()),
+            grouping_criteria="trimming",
+        ).items():
+            for label, s_name, original_name in labels_s_names:
+                if label == "trimmed" or len(labels_s_names) == 1:
+                    trimmed_data_by_sample[SampleNameT(g_name)] = data_by_sample[original_name]
+        data_by_sample = trimmed_data_by_sample
 
-        def _summarize_statues(merged_row: InputRow, group_s_names: List[SampleNameT]):
+        def _summarize_statues(
+            merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
+        ):
             # Add count of fail statuses
             _num_statuses = 0
             _num_fails = 0
-            for sn in group_s_names:
-                for st in self.fastqc_data[sn]["statuses"].values():
+            for _, _, original_sn in group_s_names:
+                for st in self.fastqc_data[original_sn]["statuses"].values():
                     _num_statuses += 1
                     if st == "fail":
                         _num_fails += 1
             if _num_statuses > 0:
-                merged_row.data["percent_fails"] = (float(_num_fails) / float(_num_statuses)) * 100.0
+                merged_row.data[ColumnKeyT("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
 
         # Merge Read 1 + Read 2 data
-        gen_stats_data_by_sample: Mapping[SampleNameT, List[InputRow]] = self.group_samples_and_average_metrics(
-            {s: d.__dict__ for s, d in data_by_sample.items()},
+        gen_stats_data_by_sample: Mapping[SampleGroupT, List[InputRow]] = self.group_samples_and_average_metrics(
+            {s: {ColumnKeyT(k): v for k, v in d.__dict__.items()} for s, d in data_by_sample.items()},
             grouping_criteria="read_pairs",
-            cols_to_sum=["total_sequences"],
+            cols_to_sum=[ColumnKeyT("total_sequences")],
             cols_to_weighted_average=[
-                ("percent_gc", "total_sequences"),
-                ("avg_sequence_length", "total_sequences"),
-                ("percent_duplicates", "total_sequences"),
-                ("median_sequence_length", "total_sequences"),
+                (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),
+                (ColumnKeyT("avg_sequence_length"), ColumnKeyT("total_sequences")),
+                (ColumnKeyT("percent_duplicates"), ColumnKeyT("total_sequences")),
+                (ColumnKeyT("median_sequence_length"), ColumnKeyT("total_sequences")),
             ],
             extra_functions=[_summarize_statues],
         )
 
-        # # Take only the trimmed data for the General Stats Table
-        # trimmed_samples = False
-        # for merged_name, s_names in self.group_samples(
-        #     list(data_by_grouped_sample.keys()),
-        #     grouping_criteria="trimming",
-        #     key_by="merged_name",
-        # ).items():
-        #     if len(s_names) > 1:
-        #         # We expect these groups to contain trimmed and not trimmed.
-        #         # The non-trimmed sample names will be the same as the group,
-        #         # so we keep the one that's different.
-        #         s_names_trimmed = [s for s in s_names if s != merged_name]
-        #         # Only continue if we have one result as expected
-        #         if len(s_names_trimmed) == 1:
-        #             trimmed_samples = True
-        #             # Save this data temporarily
-        #             tmp_data = data_by_grouped_sample[s_names_trimmed[0]]
-        #             # Remove the whole group from general stats
-        #             for s_name in s_names:
-        #                 del data_by_grouped_sample[s_name]
-        #             # Add our chosen row back again
-        #             data_by_grouped_sample[merged_name] = tmp_data
-
-        self.general_stats_addcols(gen_stats_data_by_sample, headers)
+        self.general_stats_addcols(
+            gen_stats_data_by_sample,
+            {
+                ColumnKeyT("percent_duplicates"): {
+                    "title": "% Dups",
+                    "description": "% Duplicate Reads",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
+                ColumnKeyT("percent_gc"): {
+                    "title": "% GC",
+                    "description": "Average % GC Content",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "PuRd",
+                    "format": "{:,.1f}",
+                },
+                ColumnKeyT("avg_sequence_length"): {
+                    "title": "Average Read Length",
+                    "description": "Average Read Length (bp)",
+                    "min": 0,
+                    "suffix": " bp",
+                    "scale": "RdYlGn",
+                    "format": "{:,.0f}",
+                    "hidden": True,
+                },
+                ColumnKeyT("median_sequence_length"): {
+                    "title": "Median Read Length",
+                    "description": "Median Read Length (bp)",
+                    "min": 0,
+                    "suffix": " bp",
+                    "scale": "RdYlGn",
+                    "format": "{:,.0f}",
+                    "hidden": hide_seq_length,
+                },
+                ColumnKeyT("percent_fails"): {
+                    "title": "% Failed",
+                    "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "Reds",
+                    "format": "{:,.0f}",
+                    "hidden": True,
+                },
+                ColumnKeyT("total_sequences"): {
+                    "title": f"{config.read_count_prefix} Seqs",
+                    "description": f"Total Sequences ({config.read_count_desc})",
+                    "min": 0,
+                    "scale": "Blues",
+                    "modify": lambda x: x * config.read_count_multiplier,
+                    "shared_key": "read_count",
+                },
+            },
+        )
 
     def read_count_plot(self):
         """Stacked bar plot showing counts of reads"""
@@ -1238,21 +1249,21 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 data,
                 headers={
-                    "samples": {
+                    ColumnKeyT("samples"): {
                         "title": "Samples",
                         "description": "Number of samples where this sequence is overrepresented",
                         "scale": "Greens",
                         "min": 0,
                         "format": "{:,d}",
                     },
-                    "total_count": {
+                    ColumnKeyT("total_count"): {
                         "title": "Occurrences",
                         "description": "Total number of occurrences of the sequence (among the samples where the sequence is overrepresented)",
                         "scale": "Blues",
                         "min": 0,
                         "format": "{:,d}",
                     },
-                    "total_percent": {
+                    ColumnKeyT("total_percent"): {
                         "title": "% of all reads",
                         "description": "Total number of occurrences as the percentage of all reads (among samples where the sequence is overrepresented)",
                         "scale": "Blues",

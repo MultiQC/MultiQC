@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
-from multiqc.types import AnchorT
+from multiqc.types import AnchorT, SampleNameT, ColumnKeyT, SampleGroupT
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -44,10 +44,10 @@ class ColumnMeta(ValidatedConfig):
     rid: str
     title: str
     description: str
-    namespace: str
     scale: Union[str, bool]
     hidden: bool
     placement: float
+    namespace: str = ""
     colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     max: Optional[float] = None
@@ -72,12 +72,23 @@ class ColumnMeta(ValidatedConfig):
         header_d: Dict[str, Union[str, int, float, None, Callable]],
         col_key: str,  # to initialize rid
         sec_idx: int,  # to initialize the colour
-        pconfig,  # plot config dictionary
+        pconfig: TableConfig,  # plot config dictionary
     ) -> "ColumnMeta":
+        ns = header_d.get("namespace", pconfig.namespace) or ""
+        assert isinstance(ns, str)
+        if ns:
+            header_d["namespace"] = ns
+
         # Unique id to avoid overwriting by other datasets
         unclean_rid = header_d.get("rid", col_key)
-        rid: str = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")
-        header_d["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+        rid: AnchorT = AnchorT(re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_"))
+        rid = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+        if ns:
+            ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
+            rid = AnchorT(f"{ns}-{rid}")
+        if pconfig.id == "general_stats_table":
+            rid = AnchorT(f"mqc-generalstats-{rid}")
+        header_d["rid"] = rid
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = header_d.get("shared_key", None)
@@ -105,7 +116,6 @@ class ColumnMeta(ValidatedConfig):
             header_d["suffix"] = " " + shared_key_suffix
 
         # Use defaults / data keys if headers not given
-        header_d["namespace"] = header_d.get("namespace", pconfig.namespace)
         header_d["title"] = header_d.get("title", col_key)
         header_d["description"] = header_d.get("description", header_d["title"])
         header_d["scale"] = header_d.get("scale", pconfig.scale)
@@ -206,9 +216,6 @@ class ColumnMeta(ValidatedConfig):
 
 
 ValueT = Union[int, float, str, bool]
-ColumnKeyT = str
-SampleNameT = str
-SampleGroupT = str
 
 
 class InputRow(BaseModel):
@@ -217,7 +224,6 @@ class InputRow(BaseModel):
     """
 
     sample: SampleNameT
-    is_merged: bool = False
     data: Dict[ColumnKeyT, Optional[ValueT]] = dict()
 
 
@@ -297,7 +303,7 @@ class DataTable(BaseModel):
         for input_section in input_sections__with_nulls:
             rows_by_group: Dict[SampleGroupT, List[InputRow]] = {}
             for g_name, input_group in input_section.items():
-                g_name = str(g_name)  # Make sure sample names are strings
+                g_name = SampleGroupT(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
                     # Remove non-scalar values for table cells
                     input_group = {k: v for k, v in input_group.items() if isinstance(v, (int, float, str, bool))}
@@ -424,7 +430,7 @@ def _get_or_create_headers(
     header_by_key_copy = {k: dict(h) for k, h in header_by_key.items()}
     if not pconfig.only_defined_headers:
         # Get additional header keys from the data
-        col_ids: List[str] = list(header_by_key_copy.keys())
+        col_ids: List[ColumnKeyT] = list(header_by_key_copy.keys())
         # Get the keys from the data
         for sname, rows in rows_by_sample.items():
             for row in rows:

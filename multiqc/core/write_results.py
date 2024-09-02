@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional, Dict, List, Union, Callable
+from typing import Optional, Dict, List, Union, Callable, cast
 
 import jinja2
 
@@ -301,27 +301,8 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
-    # Convert to editable type to fix rid
-    general_stats_headers_copy: List[Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]] = [
-        {k: dict(v) for k, v in h.items()} for h in report.general_stats_headers
-    ]
-
-    # Add general-stats IDs to table row headers
-    for idx, headers in enumerate(general_stats_headers_copy):
-        for k in headers.keys():
-            unclean_rid = str(headers[k].get("rid", k))
-            rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-            headers[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
-
-            ns = headers[k]["namespace"]
-            assert isinstance(ns, str)
-            ns_html = re.sub(r"\W+", "_", ns).strip().strip("_").lower()
-            general_stats_headers_copy[idx][k]["rid"] = report.save_htmlid(
-                f"mqc-generalstats-{ns_html}-{headers[k]['rid']}"
-            )
-
     all_hidden = True
-    for headers in general_stats_headers_copy:
+    for headers in report.general_stats_headers:
         for h in headers.values():
             if not h.get("hidden", False):
                 all_hidden = False
@@ -339,7 +320,7 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        p = table.plot(report.general_stats_data, general_stats_headers_copy, pconfig)  # type: ignore
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
