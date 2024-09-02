@@ -246,7 +246,10 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path)
 
     plot_id = "test_plot"
-    plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, {"id": plot_id, "title": "Line Graph"})
+    plot = linegraph.plot(
+        {"Sample1": {0: 1, 1: 1}},
+        {"id": plot_id, "title": "Line Graph"},
+    )
     assert isinstance(plot, Plot)
 
     plot.flat = True
@@ -260,12 +263,12 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
     assert len(report.plot_data) == 0
     assert html is not None
     if not development:
-        assert f'<div class="mqc_mplplot" id="{plot_id}"><img src="data:image/png;base64' in html
+        assert f'<div class="mqc_mplplot" style="" id="{plot_id}"><img src="data:image/png;base64' in html
         if not export_plots:
             for fmt in ["png", "pdf", "svg"]:
                 assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
     else:
-        assert f'<div class="mqc_mplplot" id="{plot_id}"><img src="multiqc_plots/png/{plot_id}.png' in html
+        assert f'<div class="mqc_mplplot" style="" id="{plot_id}"><img src="multiqc_plots/png/{plot_id}.png' in html
         assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").is_file()
         assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").stat().st_size > 0
         if not export_plots:
