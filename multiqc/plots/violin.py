@@ -49,11 +49,9 @@ def plot(
 
     # Make datatable objects
     dts = []
-    for i, (d, h) in enumerate(zip(data, (headers if headers else ([None] * len(data))))):
+    for i, d in enumerate(data):
+        h = headers[i] if headers and len(headers) > i else None
         table_id = pconfig.id
-        # if table_id is None:  # id of the plot group
-        #     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-        #     table_id = f"mqc_table_{uniq_suffix}"
         table_anchor = AnchorT(f"{pconfig.anchor or table_id}-table")
         if len(data) > 0:
             table_anchor = AnchorT(f"{table_anchor}-{i + 1}")
