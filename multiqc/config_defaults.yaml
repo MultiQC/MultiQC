@@ -316,7 +316,7 @@ fn_clean_exts:
 
 # Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
 # Affects all modules that support it (e.g. fastqc, fastp)
-sample_merge_groups:
+generalstats_sample_merge_groups:
 #  read_pairs:
 #    "Read 1":
 #      - type: regex

@@ -74,7 +74,7 @@ diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleIdT, List[Dict]]
 
-# Fields below is kept between interactive runs
+# Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
 plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html

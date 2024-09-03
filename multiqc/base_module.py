@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Any, cast, Tuple, Iterable, Set, Callable
+from typing import List, Union, Optional, Dict, Any, Tuple, Iterable, Set, Callable
 
 import markdown
 import packaging.version
@@ -65,6 +65,18 @@ class Section:
     plot_anchor: Optional[AnchorT] = None
 
 
+ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleNameT, SampleNameT]]], None]
+
+
+@dataclasses.dataclass
+class SampleGroupingConfig:
+    criteria: Optional[str] = None
+    cols_to_weighted_average: Optional[List[Tuple[ColumnKeyT, ColumnKeyT]]] = None
+    cols_to_average: Optional[List[ColumnKeyT]] = None
+    cols_to_sum: Optional[List[ColumnKeyT]] = None
+    extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+
+
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
@@ -82,6 +94,7 @@ class BaseMultiqcModule:
         autoformat=True,
         autoformat_type="markdown",
         doi: Optional[Union[str, List[str]]] = None,
+        sample_grouping_enabled: bool = False,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
@@ -93,6 +106,7 @@ class BaseMultiqcModule:
         self.comment = self.mod_cust_config.get("comment", comment)
         self.extra = self.mod_cust_config.get("extra", extra)
         self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
+        self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
         self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
@@ -147,11 +161,6 @@ class BaseMultiqcModule:
         self._base_attributes = [k for k in dir(self)]
 
         self.sample_names: List[SampleNameMeta] = []
-
-        # Deferring the collected grouping suffixes to after-grouping cleaning
-        self.pre_grouping_fn_clean_exts: List[CleanPatternT] = []
-        self.post_grouping_fn_clean_exts: List[CleanPatternT] = []
-        self._set_pre_and_post_grouping_patterns()
 
     def _get_intro(self):
         doi_html = ""
@@ -445,40 +454,43 @@ class BaseMultiqcModule:
     def groups_for_sample(
         self,
         s_name: SampleNameT,
-        grouping_criteria: str,
+        grouping_criteria: Optional[str] = None,
     ) -> Tuple[SampleGroupT, SampleNameT, Optional[str]]:
         """
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
         """
-        if not config.sample_merge_groups or grouping_criteria not in config.sample_merge_groups:
+        if (
+            not grouping_criteria
+            or not config.generalstats_sample_merge_groups
+            or grouping_criteria not in config.generalstats_sample_merge_groups
+        ):
             return SampleGroupT(s_name), SampleNameT(s_name), None
-        grouping: Dict[str, List[CleanPatternT]] = config.sample_merge_groups[grouping_criteria]
+        grouping: Dict[str, List[CleanPatternT]] = config.generalstats_sample_merge_groups[grouping_criteria]
 
         matched_label: Optional[str] = None
         grouping_exts: List[CleanPatternT]
         group_name = SampleGroupT(s_name)
-        trimmed_name = s_name
         for label, grouping_exts in grouping.items():
+            if isinstance(grouping_exts, (str, dict)):
+                grouping_exts = [grouping_exts]
             if grouping_exts:
                 s_name_without_ext = SampleNameT(
                     self.clean_s_name(s_name, fn_clean_exts=grouping_exts, fn_clean_trim=[], prepend_dirs=False)
                 )
                 if s_name_without_ext != s_name:  # matched the label
-                    # take the extension that was removed from s_name to get s_name_without_ext
-                    # ext = s_name[len(s_name_without_ext) :]
                     matched_label = label
                     # Clean the rest of the name
                     group_name = SampleGroupT(self.clean_s_name(s_name_without_ext))
-                    trimmed_name = SampleNameT(str(group_name) + s_name[len(s_name_without_ext) :])
+                    s_name = SampleNameT(f"{group_name} ({label})")
                     break
 
-        return group_name, trimmed_name, matched_label
+        return group_name, s_name, matched_label
 
     def group_samples_names(
         self,
         samples: Iterable[SampleNameT],
-        grouping_criteria: str,
+        grouping_criteria: Optional[str] = None,
     ) -> Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]]:
         """
         Group sample name according to a named set of patterns defined in
@@ -502,16 +514,10 @@ class BaseMultiqcModule:
 
         return group_by_merged_name
 
-    ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleNameT, SampleNameT]]], None]
-
     def group_samples_and_average_metrics(
         self,
         data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
-        grouping_criteria: str,
-        cols_to_weighted_average: Optional[List[Tuple[ColumnKeyT, ColumnKeyT]]] = None,
-        cols_to_average: Optional[List[ColumnKeyT]] = None,
-        cols_to_sum: Optional[List[ColumnKeyT]] = None,
-        extra_functions: Optional[List[ExtraFunctionType]] = None,
+        grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroupT, List[InputRow]]:
         """
         Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
@@ -520,12 +526,12 @@ class BaseMultiqcModule:
         rows_by_grouped_samples: Dict[SampleGroupT, List[InputRow]] = defaultdict(list)
         for g_name, labels_s_names in self.group_samples_names(
             list(data_by_sample.keys()),
-            grouping_criteria=grouping_criteria,
+            grouping_criteria=grouping_config.criteria,
         ).items():
             if len(labels_s_names) == 0:
                 continue
             if g_name is None:
-                # Ungrouped samples, adding them separately
+                # Ungrouped samples, adding them separately one by one
                 for _, (label, s_name, _) in labels_s_names:
                     rows_by_grouped_samples[s_name] = [InputRow(sample=s_name, data=data_by_sample[s_name])]
                 continue
@@ -546,8 +552,8 @@ class BaseMultiqcModule:
             # Init a dictionary of all cols that would be summed to serve as weights
             sum_by_col: Dict[ColumnKeyT, float] = dict()
 
-            if cols_to_weighted_average:
-                for _, weight_col_key in cols_to_weighted_average:
+            if grouping_config.cols_to_weighted_average:
+                for _, weight_col_key in grouping_config.cols_to_weighted_average:
                     sum_by_col[weight_col_key] = 0
 
                 # Calculate the weights
@@ -557,7 +563,7 @@ class BaseMultiqcModule:
                         if isinstance(val, int) or isinstance(val, float):
                             sum_by_col[col] += float(val)
 
-                for col, weight_col in cols_to_weighted_average:
+                for col, weight_col in grouping_config.cols_to_weighted_average:
                     weight = sum_by_col[weight_col]
                     if weight > 0:
                         merged_row.data[col] = (
@@ -580,8 +586,8 @@ class BaseMultiqcModule:
                             / weight
                         )
 
-            if cols_to_average:
-                for col in cols_to_average:
+            if grouping_config.cols_to_average:
+                for col in grouping_config.cols_to_average:
                     merged_row.data[col] = sum(
                         [
                             float(data_by_sample[original_s_name][col])
@@ -594,8 +600,8 @@ class BaseMultiqcModule:
                         ]
                     ) / len(labels_s_names)
 
-            if cols_to_sum:
-                for col in cols_to_sum:
+            if grouping_config.cols_to_sum:
+                for col in grouping_config.cols_to_sum:
                     if col in sum_by_col:
                         merged_row.data[col] = sum_by_col[col]
                     else:
@@ -612,8 +618,8 @@ class BaseMultiqcModule:
                         )
 
             # Add count of fail statuses
-            if extra_functions:
-                for fn in extra_functions:
+            if grouping_config.extra_functions:
+                for fn in grouping_config.extra_functions:
                     fn(merged_row, labels_s_names)
 
             rows_by_grouped_samples[g_name] = [merged_row] + [
@@ -809,7 +815,7 @@ class BaseMultiqcModule:
         sn.trimmed_name = trimmed_name
         return trimmed_name
 
-    def ignore_samples(self, data):
+    def ignore_samples(self, data, sample_names_ignore=None, sample_names_ignore_re=None):
         """Strip out samples which match `sample_names_ignore`"""
         try:
             if isinstance(data, dict):
@@ -817,29 +823,32 @@ class BaseMultiqcModule:
             else:
                 return data
             for s_name, v in data.items():
-                if not self.is_ignore_sample(s_name):
+                if not self.is_ignore_sample(s_name, sample_names_ignore, sample_names_ignore_re):
                     new_data[s_name] = v
             return new_data
         except (TypeError, AttributeError):
             return data
 
     @staticmethod
-    def is_ignore_sample(s_name):
+    def is_ignore_sample(s_name, sample_names_ignore=None, sample_names_ignore_re=None):
         """Should a sample name be ignored?"""
-        glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in config.sample_names_ignore)
-        re_match = any(re.match(sn, s_name) for sn in config.sample_names_ignore_re)
+        sample_names_ignore = sample_names_ignore or config.sample_names_ignore
+        sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
+        glob_match = any(fnmatch.fnmatch(s_name, sn) for sn in sample_names_ignore)
+        re_match = any(re.match(sn, s_name) for sn in sample_names_ignore_re)
         return glob_match or re_match
 
     def general_stats_addcols(
         self,
-        data: InputSectionT,
+        data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
         headers: Optional[InputHeaderT] = None,
         namespace=None,
+        group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
         """Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
         in required config variables if not supplied.
-        :param data: A dict with the data. Key should be sample name, the data can be a key-value dict.
+        :param data_by_sample: A dict with the data. Key should be sample name, the data can be a key-value dict.
                      Or, for grouped samples, the key is the group name, and the data is a list of tuples with
                      the first element being the sample name in the group, and the second a key-value dict.
         :param headers: Dict with information for the headers,
@@ -847,14 +856,27 @@ class BaseMultiqcModule:
                         See docs/writing_python.md for more information.
         :param namespace: Append to the module name in the table column description.
                           Can be e.g. a submodule name.
+        :param group_samples_config: Configuration for grouping samples.
         :return: None
         """
+        if self.skip_generalstats:
+            return
+
+        grouped_data_by_sample: InputSectionT
+        if config.generalstats_sample_merge_groups:
+            grouped_data_by_sample = self.group_samples_and_average_metrics(
+                data_by_sample,
+                group_samples_config,
+            )
+        else:
+            grouped_data_by_sample = {SampleGroupT(k): [InputRow(sample=k, data=v)] for k, v in data_by_sample.items()}
+
         _headers: Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
             column_ids: Set[ColumnKeyT] = set()
-            for d in data.values():
+            for d in grouped_data_by_sample.values():
                 if isinstance(d, dict):
                     column_ids.update(d.keys())
                 elif isinstance(d, list):
@@ -877,7 +899,7 @@ class BaseMultiqcModule:
                 _headers[col_id]["description"] = _headers[col_id].get("title", col_id)
 
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(data)
+        report.general_stats_data.append(grouped_data_by_sample)
         report.general_stats_headers.append(_headers)
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
@@ -958,37 +980,3 @@ class BaseMultiqcModule:
 
         # Save the file
         report.write_data_file(data, fn, sort_cols, data_format)
-
-    def _set_pre_and_post_grouping_patterns(self):
-        """
-        Collecting suffixes for read-pair grouping so we defer cleaning them to after-grouping
-        """
-        if config.sample_merge_groups:
-            _grouping_patterns: List[str] = []
-            for criteria, grouping in config.sample_merge_groups.items():
-                for group, patterns in grouping.items():
-                    if patterns is not None:
-                        for pp in patterns:
-                            if isinstance(pp, str):
-                                _grouping_patterns.append(pp)
-                            elif isinstance(pp, dict):
-                                if isinstance(pp["pattern"], str):
-                                    _grouping_patterns.append(pp["pattern"])
-                                elif isinstance(pp["pattern"], list):
-                                    _grouping_patterns.extend(pp["pattern"])
-
-            for pp in config.fn_clean_exts:
-                if isinstance(pp, str) and pp in _grouping_patterns:
-                    self.post_grouping_fn_clean_exts.append(pp)
-                    continue
-                elif isinstance(pp, dict):
-                    if isinstance(pp["pattern"], str) and pp["pattern"] in _grouping_patterns:
-                        self.post_grouping_fn_clean_exts.append(pp["pattern"])
-                        continue
-                    elif isinstance(pp["pattern"], list):
-                        if any(p in _grouping_patterns for p in pp["pattern"]):
-                            self.post_grouping_fn_clean_exts.append(pp)
-                            continue
-                self.pre_grouping_fn_clean_exts.append(pp)
-        else:
-            self.pre_grouping_fn_clean_exts = config.fn_clean_exts

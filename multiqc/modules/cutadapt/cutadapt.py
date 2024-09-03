@@ -8,7 +8,7 @@ from typing import Dict
 
 from packaging import version
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph
 from multiqc.types import ColumnKeyT, AnchorT, SampleNameT
 
@@ -43,6 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
+            sample_grouping_enabled=True,
         )
 
         # Find and load any Cutadapt reports
@@ -351,16 +352,8 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         # Merge Read 1 + Read 2 data
-        gen_stats_data_by_sample = self.group_samples_and_average_metrics(
-            {s: {ColumnKeyT(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
-            grouping_criteria="read_pairs",
-            cols_to_weighted_average=[
-                (ColumnKeyT("percent_trimmed"), ColumnKeyT("bp_processed")),
-            ],
-        )
-
         self.general_stats_addcols(
-            gen_stats_data_by_sample,
+            {s: {ColumnKeyT(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
             {
                 ColumnKeyT("percent_trimmed"): {
                     "title": "% BP Trimmed",
@@ -371,6 +364,12 @@ class MultiqcModule(BaseMultiqcModule):
                     "scale": "RdYlBu-rev",
                 }
             },
+            group_samples_config=SampleGroupingConfig(
+                criteria="read_pairs",
+                cols_to_weighted_average=[
+                    (ColumnKeyT("percent_trimmed"), ColumnKeyT("bp_processed")),
+                ],
+            ),
         )
 
         # Now that we finished with the gen stats, clean out the exts that were used for grouping
