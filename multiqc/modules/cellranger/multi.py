@@ -485,6 +485,20 @@ def _parse_alerts(data: Dict, path: List):
     return {alert["title"]: alert["level"] if alert["level"] != "ERROR" else "FAIL" for alert in alert_list}
 
 
+def _parse_plot(data: Dict):
+    if not data:
+        return None, None
+    if ("plot" not in data) or ("data" not in data["plot"]):
+        return None, None
+    if ("help" not in data) or ("helpText" not in data["help"]):
+        return None, None
+
+    plot_data = {}
+    for subset in data["plot"]["data"]:
+        plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
+
+    return plot_data, {"helptext": data["help"]["helpText"]}
+
 def _build_gex_data(
     data: Dict,
     sample_name: str,
@@ -570,35 +584,29 @@ def _build_gex_data(
         log.debug("Could not find library_websummary/gex_tab/content/physical_library_metrics_table")
 
     try:
-        bc_plot_source = library_websummary["content"]["barcode_rank_plot"]
-        bc_plot_data = {}
-        for subset in bc_plot_source["plot"]["data"]:
-            bc_plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
-
-        if bc_plot_data:
-            barcode_plot.update_sample(bc_plot_data, {"helptext": bc_plot_source["help"]["helpText"]}, sample_name)
+        bc_plot_source: Dict = library_websummary.get("content", {}).get("barcode_rank_plot", {})
+        if bc_plot_source:
+            bc_plot_data, bc_plot_headers = _parse_plot(bc_plot_source)
+            if bc_plot_data:
+                barcode_plot.update_sample(bc_plot_data, bc_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/gex_tab/content/barcode_rank_plot")
 
     try:
-        genes_plot_source = library_websummary["content"]["median_genes_per_cell_plot"]
-        genes_plot_data = {}
-        for subset in genes_plot_source["plot"]["data"]:
-            genes_plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
-
-        if genes_plot_data:
-            genes_plot.update_sample(genes_plot_data, {"helptext": genes_plot_source["help"]["helpText"]}, sample_name)
+        genes_plot_source: Dict = library_websummary.get("content", {}).get("median_genes_per_cell_plot", {})
+        if genes_plot_source:
+            genes_plot_data, genes_plot_headers = _parse_plot(genes_plot_source)
+            if genes_plot_data:
+                genes_plot.update_sample(genes_plot_data, genes_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/gex_tab/content/median_genes_per_cell_plot")
 
     try:
-        sequencing_plot_source = library_websummary["content"]["sequencing_saturation_plot"]
-        sequencing_plot_data = {}
-        for subset in sequencing_plot_source["plot"]["data"]:
-            sequencing_plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
-
-        if sequencing_plot_data:
-            sequencing_plot.update_sample(sequencing_plot_data, {"helptext": sequencing_plot_source["help"]["helpText"]}, sample_name)
+        sequencing_plot_source: Dict = library_websummary.get("content", {}).get("sequencing_saturation_plot", {})
+        if sequencing_plot_source:
+            sequencing_plot_data, sequencing_plot_headers = _parse_plot(sequencing_plot_source)
+            if sequencing_plot_data:
+                sequencing_plot.update_sample(sequencing_plot_data, sequencing_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/gex_tab/content/sequencing_saturation_plot")
 
@@ -662,13 +670,11 @@ def _build_vdj_t_data(
         log.debug("Could not find sample_websummary/vdj_t_tab/content/annotation_metrics_table")
 
     try:
-        bc_plot_source = library_websummary["content"]["barcode_rank_plot"]
-        bc_plot_data = {}
-        for subset in bc_plot_source["plot"]["data"]:
-            bc_plot_data.update(dict(zip(subset["x"], subset["y"])))
-
-        if bc_plot_data:
-            barcode_plot.update_sample(bc_plot_data, {"helptext": bc_plot_source["help"]["helpText"]}, sample_name)
+        bc_plot_source: Dict = library_websummary.get("content", {}).get("barcode_rank_plot", {})
+        if bc_plot_source:
+            bc_plot_data, bc_plot_headers = _parse_plot(bc_plot_source)
+            if bc_plot_data:
+                barcode_plot.update_sample(bc_plot_data, bc_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/vdj_t_tab/content/barcode_rank_plot")
 
@@ -734,13 +740,11 @@ def _build_vdj_b_data(
         log.debug("Could not find sample_websummary/vdj_b_tab/content/annotation_metrics_table")
 
     try:
-        bc_plot_source = library_websummary["content"]["barcode_rank_plot"]
-        bc_plot_data = {}
-        for subset in bc_plot_source["plot"]["data"]:
-            bc_plot_data.update(dict(zip(subset["x"], subset["y"])))
-
-        if bc_plot_data:
-            barcode_plot.update_sample(bc_plot_data, {"helptext": bc_plot_source["help"]["helpText"]}, sample_name)
+        bc_plot_source: Dict = library_websummary.get("content", {}).get("barcode_rank_plot", {})
+        if bc_plot_source:
+            bc_plot_data, bc_plot_headers = _parse_plot(bc_plot_source)
+            if bc_plot_data:
+                barcode_plot.update_sample(bc_plot_data, bc_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/vdj_b_tab/content/barcode_rank_plot")
 
@@ -785,12 +789,10 @@ def _build_antibody_data(
         log.debug("Could not find sample_websummary/antibody_tab/content/hero_metrics")
 
     try:
-        bc_plot_source = library_websummary["content"]["barcode_rank_plot"]
-        bc_plot_data = {}
-        for subset in bc_plot_source["plot"]["data"]:
-            bc_plot_data.update(dict(zip(subset["x"], subset["y"])))
-
-        if bc_plot_data:
-            barcode_plot.update_sample(bc_plot_data, {"helptext": bc_plot_source["help"]["helpText"]}, sample_name)
+        bc_plot_source: Dict = library_websummary.get("content", {}).get("barcode_rank_plot", {})
+        if bc_plot_source:
+            bc_plot_data, bc_plot_headers = _parse_plot(bc_plot_source)
+            if bc_plot_data:
+                barcode_plot.update_sample(bc_plot_data, bc_plot_headers, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/antibody_tab/content/barcode_rank_plot")
