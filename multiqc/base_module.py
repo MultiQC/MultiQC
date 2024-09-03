@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Union, Optional, Dict, Any, Tuple, Iterable, Set, Callable
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import markdown
 import packaging.version
@@ -23,15 +23,15 @@ from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
-    SampleNameT,
-    ValueT,
     ColumnKeyT,
-    InputSectionT,
     InputHeaderT,
     InputRow,
+    InputSectionT,
     SampleGroupT,
+    SampleNameT,
+    ValueT,
 )
-from multiqc.types import AnchorT, SectionIdT, ModuleIdT
+from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 
 logger = logging.getLogger(__name__)
 
@@ -869,7 +869,15 @@ class BaseMultiqcModule:
                 group_samples_config,
             )
         else:
-            grouped_data_by_sample = {SampleGroupT(k): [InputRow(sample=k, data=v)] for k, v in data_by_sample.items()}
+            grouped_data_by_sample = {
+                SampleGroupT(sample): [
+                    InputRow(
+                        sample=sample,
+                        data={k: v for k, v in data.items() if isinstance(v, (int, float, str, bool)) or v is None},
+                    )
+                ]
+                for sample, data in data_by_sample.items()
+            }
 
         _headers: Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]] = {}
 
