@@ -296,6 +296,9 @@ load_defaults()
 # To restore after load_defaults()
 explicit_user_config_files: Set[Path] = set()
 
+# To avoid finding same file many times
+loaded_user_files: Set[Path] = set()
+
 
 def reset():
     """
@@ -315,15 +318,8 @@ def find_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
-    _loaded = set()
-
     def _load_found_file(path: Union[Path, str, None]):
-        if not path:
-            return
-        if Path(path).absolute() in _loaded:
-            return
         load_config_file(path, is_explicit_config=False)
-        _loaded.add(Path(path).absolute())
 
     # Load and parse installation config file if we find it
     _load_found_file(REPO_DIR / "multiqc_config.yaml")
@@ -348,7 +344,7 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True):
+def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
     """
     Load and parse a config file if we find it.
 
@@ -356,28 +352,37 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
     which means we need to keep track of to restore the config update update_defaults.
     """
     if not yaml_config_path:
-        return
+        return None
 
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
 
-    if path.is_file():
-        if is_explicit_config:
-            explicit_user_config_files.add(path)
+    if not path.is_file():
+        return None
 
-        try:
-            # pyaml_env allows referencing environment variables in YAML for default values
-            # new_config can be None if the file is empty
-            new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
-            if new_config:
-                logger.info(f"Loading config settings from: {path}")
-                _add_config(new_config, str(path))
-        except (IOError, AttributeError) as e:
-            logger.warning(f"Error loading config {path}: {e}")
-        except yaml.scanner.ScannerError as e:
-            logger.error(f"Error parsing config YAML: {e}")
-            raise
+    if path.absolute() in loaded_user_files:  # already loaded
+        return path
+
+    if is_explicit_config:
+        explicit_user_config_files.add(path)
+
+    try:
+        # pyaml_env allows referencing environment variables in YAML for default values
+        # new_config can be None if the file is empty
+        new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
+        if new_config:
+            logger.info(f"Loading config settings from: {path}")
+            _add_config(new_config, str(path))
+    except (IOError, AttributeError) as e:
+        logger.warning(f"Error loading config {path}: {e}")
+        return None
+    except yaml.scanner.ScannerError as e:
+        logger.error(f"Error parsing config YAML: {e}")
+        raise
+
+    loaded_user_files.add(path.absolute())
+    return path
 
 
 def load_cl_config(cl_config: List[str]):
