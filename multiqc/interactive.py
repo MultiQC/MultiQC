@@ -25,7 +25,7 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import ModuleIdT
+from multiqc.types import ModuleIdT, AnchorT
 
 logger = logging.getLogger("multiqc")
 
@@ -362,13 +362,13 @@ def add_custom_content_section(
 
     module = BaseMultiqcModule(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(f"{anchor}-module"),
         info=description,
         comment=comment,
     )
     module.add_section(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(anchor),
         description=description,
         helptext=helptext,
         content_before_plot=content_before_plot,
