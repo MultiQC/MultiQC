@@ -706,8 +706,8 @@ picard/quality_yield_metrics:
   - contents_re: ".*CollectMultipleMetrics.*QualityYieldMetrics"
     shared: true
 picard/rnaseqmetrics:
-  - contents: "# picard.analysis.Collectrnaseqmetrics"
-  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents: "## METRICS CLASS*picard.analysis.Collectrnaseqmetrics"
+  - contents: "## METRICS CLASS*picard.analysis.CollectRnaSeqMetrics"
   - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
     shared: true
 picard/rrbs_metrics:
