@@ -905,8 +905,6 @@ class BaseMultiqcModule:
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         if s_name is not None and self.is_ignore_sample(s_name):
             return
-        if s_name is not None and self.post_grouping_fn_clean_exts:
-            s_name = self.clean_s_name(s_name, f, fn_clean_exts=self.post_grouping_fn_clean_exts)
         try:
             if module is None:
                 module = self.name

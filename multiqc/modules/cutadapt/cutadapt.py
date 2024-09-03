@@ -129,21 +129,12 @@ class MultiqcModule(BaseMultiqcModule):
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        pre_grouping_s_name = SampleNameT(
-            self.clean_s_name(
-                [v for k, v in data["input"].items() if k.startswith("path")],
-                f=f,
-                fn_clean_exts=self.pre_grouping_fn_clean_exts,
-            )
-        )
-        clean_s_name = SampleNameT(
-            self.clean_s_name(pre_grouping_s_name, f, fn_clean_exts=self.post_grouping_fn_clean_exts)
-        )
-        if clean_s_name in self.cutadapt_data or pre_grouping_s_name in self.cutadapt_data:
-            log.debug(f"Duplicate sample name found! Overwriting: {clean_s_name}")
+        s_name = SampleNameT(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f=f))
+        if s_name in self.cutadapt_data:
+            log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
-        self.add_software_version(data["cutadapt_version"], clean_s_name)
-        self.add_data_source(f, clean_s_name)
+        self.add_software_version(data["cutadapt_version"], s_name)
+        self.add_data_source(f, s_name)
 
         d = dict()
         d["cutadapt_version"] = data["cutadapt_version"]
@@ -158,17 +149,17 @@ class MultiqcModule(BaseMultiqcModule):
         d["r_too_many_N"] = data["read_counts"]["filtered"]["too_many_n"]
         d["r_written"] = data["read_counts"]["output"]
         d = {k: v for k, v in d.items() if v is not None}
-        self.cutadapt_data[clean_s_name] = d
+        self.cutadapt_data[s_name] = d
 
         for end, end_key in [("5", "five_prime_end"), ("3", "three_prime_end")]:
             if end not in self.cutadapt_length_counts:
                 self.cutadapt_length_counts[end] = dict()
                 self.cutadapt_length_exp[end] = dict()
                 self.cutadapt_length_obsexp[end] = dict()
-            if clean_s_name not in self.cutadapt_length_counts[end]:
-                self.cutadapt_length_counts[end][clean_s_name] = dict()
-                self.cutadapt_length_exp[end][clean_s_name] = dict()
-                self.cutadapt_length_obsexp[end][clean_s_name] = dict()
+            if s_name not in self.cutadapt_length_counts[end]:
+                self.cutadapt_length_counts[end][s_name] = dict()
+                self.cutadapt_length_exp[end][s_name] = dict()
+                self.cutadapt_length_obsexp[end][s_name] = dict()
 
             for read in ["read1", "read2"]:
                 if f"input_{read}" not in data["basepair_counts"]:
@@ -178,14 +169,14 @@ class MultiqcModule(BaseMultiqcModule):
                     if end_data:
                         for trimmed_length in end_data["trimmed_lengths"]:
                             length = trimmed_length["len"]
-                            if length not in self.cutadapt_length_counts[end][clean_s_name]:
-                                self.cutadapt_length_counts[end][clean_s_name][length] = 0
-                                self.cutadapt_length_exp[end][clean_s_name][length] = 0
-                                self.cutadapt_length_obsexp[end][clean_s_name][length] = 0
-                            self.cutadapt_length_counts[end][clean_s_name][length] += trimmed_length["counts"][0]
-                            self.cutadapt_length_exp[end][clean_s_name][length] += trimmed_length["expect"]
+                            if length not in self.cutadapt_length_counts[end][s_name]:
+                                self.cutadapt_length_counts[end][s_name][length] = 0
+                                self.cutadapt_length_exp[end][s_name][length] = 0
+                                self.cutadapt_length_obsexp[end][s_name][length] = 0
+                            self.cutadapt_length_counts[end][s_name][length] += trimmed_length["counts"][0]
+                            self.cutadapt_length_exp[end][s_name][length] += trimmed_length["expect"]
                             if trimmed_length["expect"] > 0:
-                                self.cutadapt_length_obsexp[end][clean_s_name][length] += (
+                                self.cutadapt_length_obsexp[end][s_name][length] += (
                                     trimmed_length["counts"][0] / trimmed_length["expect"]
                                 )
 
@@ -260,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
                     ):
                         input_fqs.append(x)
                 if input_fqs:
-                    s_name = SampleNameT(self.clean_s_name(input_fqs, f, fn_clean_exts=self.pre_grouping_fn_clean_exts))
+                    s_name = SampleNameT(self.clean_s_name(input_fqs, f))
                 else:
                     # Manage case where sample name is '-' (reading from stdin)
                     s_name = SampleNameT(f["s_name"])
@@ -371,12 +362,6 @@ class MultiqcModule(BaseMultiqcModule):
                 ],
             ),
         )
-
-        # Now that we finished with the gen stats, clean out the exts that were used for grouping
-        self.cutadapt_data = {
-            SampleNameT(self.clean_s_name(s, None, fn_clean_exts=self.post_grouping_fn_clean_exts)): d
-            for s, d in self.cutadapt_data.items()
-        }
 
     def cutadapt_filtered_barplot(self):
         """Bar plot showing proportion of reads trimmed"""
