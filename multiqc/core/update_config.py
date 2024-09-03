@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Set
 
 from pydantic import BaseModel
 
@@ -93,6 +93,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 
     plugin_hooks.mqc_trigger("before_config")
+
+    config.loaded_user_files = set()
 
     # Re-finding implicit configs
     config.find_user_files()
