@@ -25,7 +25,7 @@ from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
     ColumnKeyT,
     InputHeaderT,
-    InputRow,
+    InputRowT,
     InputSectionT,
     SampleGroupT,
     SampleNameT,
@@ -65,7 +65,7 @@ class Section:
     plot_anchor: Optional[AnchorT] = None
 
 
-ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleNameT, SampleNameT]]], None]
+ExtraFunctionType = Callable[[InputRowT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]], None]
 
 
 @dataclasses.dataclass
@@ -518,12 +518,12 @@ class BaseMultiqcModule:
         self,
         data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
         grouping_config: SampleGroupingConfig,
-    ) -> Dict[SampleGroupT, List[InputRow]]:
+    ) -> Dict[SampleGroupT, List[InputRowT]]:
         """
         Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
         """
 
-        rows_by_grouped_samples: Dict[SampleGroupT, List[InputRow]] = defaultdict(list)
+        rows_by_grouped_samples: Dict[SampleGroupT, List[InputRowT]] = defaultdict(list)
         for g_name, labels_s_names in self.group_samples_names(
             list(data_by_sample.keys()),
             grouping_criteria=grouping_config.criteria,
@@ -533,7 +533,7 @@ class BaseMultiqcModule:
             if g_name is None:
                 # Ungrouped samples, adding them separately one by one
                 for _, (label, s_name, _) in labels_s_names:
-                    rows_by_grouped_samples[s_name] = [InputRow(sample=s_name, data=data_by_sample[s_name])]
+                    rows_by_grouped_samples[s_name] = [InputRowT(sample=s_name, data=data_by_sample[s_name])]
                 continue
 
             # We do not want "merged sample" clash with other real samples if the group is non-trivial,
@@ -544,10 +544,10 @@ class BaseMultiqcModule:
             # Just a single row for a trivial group
             if len(labels_s_names) == 1:
                 _, s_name, _ = labels_s_names[0]
-                rows_by_grouped_samples[g_name] = [InputRow(sample=s_name, data=data_by_sample[s_name])]
+                rows_by_grouped_samples[g_name] = [InputRowT(sample=s_name, data=data_by_sample[s_name])]
                 continue
 
-            merged_row = InputRow(sample=g_name, data={})
+            merged_row = InputRowT(sample=g_name, data={})
 
             # Init a dictionary of all cols that would be summed to serve as weights
             sum_by_col: Dict[ColumnKeyT, float] = dict()
@@ -623,7 +623,7 @@ class BaseMultiqcModule:
                     fn(merged_row, labels_s_names)
 
             rows_by_grouped_samples[g_name] = [merged_row] + [
-                InputRow(sample=s_name, data=data_by_sample[original_s_name])
+                InputRowT(sample=s_name, data=data_by_sample[original_s_name])
                 for _, s_name, original_s_name in labels_s_names
             ]
 
@@ -862,16 +862,16 @@ class BaseMultiqcModule:
         if self.skip_generalstats:
             return
 
-        grouped_data_by_sample: InputSectionT
+        rows_by_group: Dict[SampleGroupT, List[InputRowT]]
         if config.generalstats_sample_merge_groups:
-            grouped_data_by_sample = self.group_samples_and_average_metrics(
+            rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
             )
         else:
-            grouped_data_by_sample = {
+            rows_by_group = {
                 SampleGroupT(sample): [
-                    InputRow(
+                    InputRowT(
                         sample=sample,
                         data={k: v for k, v in data.items() if isinstance(v, (int, float, str, bool)) or v is None},
                     )
@@ -884,17 +884,14 @@ class BaseMultiqcModule:
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
             column_ids: Set[ColumnKeyT] = set()
-            for d in grouped_data_by_sample.values():
-                if isinstance(d, dict):
-                    column_ids.update(d.keys())
-                elif isinstance(d, list):
-                    for _, dd in d:
-                        column_ids.update(dd.keys())
+            for rows in rows_by_group.values():
+                for row in rows:
+                    column_ids.update(row.data.keys())
             for col_id in sorted(column_ids):
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {col_id: {k: v for k, v in col.items()} for col_id, col in headers.items()}
+            _headers = {ColumnKeyT(col_id): {k: v for k, v in col.items()} for col_id, col in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
@@ -907,8 +904,8 @@ class BaseMultiqcModule:
                 _headers[col_id]["description"] = _headers[col_id].get("title", col_id)
 
         # Append to report.general_stats for later assembly into table
-        report.general_stats_data.append(grouped_data_by_sample)
-        report.general_stats_headers.append(_headers)
+        report.general_stats_data.append(rows_by_group)
+        report.general_stats_headers.append(_headers)  # type: ignore
 
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         if s_name is not None and self.is_ignore_sample(s_name):

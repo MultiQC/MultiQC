@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Union, Any, Optional, Tuple, Set
+from typing import Dict, List, Union, Any, Optional, Tuple, Set, cast, Mapping
 import copy
 
 import math
@@ -8,9 +8,10 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable, ColumnMeta
+from multiqc.plots.table_object import DataTable, ColumnMeta, ValueT
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
 from multiqc.plots.plotly.table import make_table
+from multiqc.types import SampleNameT, ColumnKeyT
 
 logger = logging.getLogger(__name__)
 
@@ -63,14 +64,19 @@ class Dataset(BaseDataset):
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
-    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, ColumnMeta]]:
-        value_by_sample_by_metric = {}
-        dt_column_by_metric: Dict[str, ColumnMeta] = {}
+    def values_and_headers_from_dt(
+        dt: DataTable,
+    ) -> Tuple[
+        Dict[ColumnKeyT, Dict[SampleNameT, ValueT]],
+        Dict[ColumnKeyT, ColumnMeta],
+    ]:
+        value_by_sample_by_metric: Dict[ColumnKeyT, Dict[SampleNameT, ValueT]] = {}
+        dt_column_by_metric: Dict[ColumnKeyT, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
             full_metric_id = dt_column.rid
 
-            value_by_sample = dict()
+            value_by_sample: Dict[SampleNameT, ValueT] = {}
             for group_name, group_rows in dt.sections[idx].rows_by_sgroup.items():
                 for row in group_rows:
                     try:
@@ -157,7 +163,7 @@ class Dataset(BaseDataset):
                     column.xaxis.range = [xmin, xmax]
 
             if not column.show_points:  # Do not add any interactive points
-                scatter_value_by_sample: Dict[str, Union[int, float, str, None]] = {}
+                scatter_value_by_sample: Dict[SampleNameT, Union[int, float, str, None]] = {}
             elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
@@ -168,15 +174,18 @@ class Dataset(BaseDataset):
                 else:
                     # For numbers, finding outliers and adding only them as interactive points
                     samples = list(value_by_sample.keys())
-                    values = list(value_by_sample.values())
+                    numeric_values: List[Union[int, float]] = []
+                    for v in value_by_sample.values():
+                        assert isinstance(v, (int, float))  # values_are_numeric assures that all values are numeric
+                        numeric_values.append(v)
                     outlier_statuses = find_outliers(
-                        values,
+                        numeric_values,
                         minval=column.dmin,
                         maxval=column.dmax,
                         metric=column.title,
                     )
                     scatter_value_by_sample = {
-                        samples[idx]: values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
+                        samples[idx]: numeric_values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
                     }
 
             scatter_value_by_sample_by_metric[metric] = scatter_value_by_sample
@@ -625,7 +634,7 @@ class ViolinPlot(Plot):
 
 
 def find_outliers(
-    values: Union[List[int], List[float]],
+    values: List[Union[int, float]],
     top_n: Optional[int] = None,
     z_cutoff: float = 2.0,
     minval: Optional[Union[float, int]] = None,

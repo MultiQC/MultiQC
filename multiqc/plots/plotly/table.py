@@ -100,7 +100,7 @@ def make_table(
             )
 
         # Collect conditional formatting config
-        cond_formatting_rules = {}
+        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
         if header.cond_formatting_rules:
             cond_formatting_rules[rid] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
@@ -118,7 +118,7 @@ def make_table(
                 val: ValueT = row.raw_data[col_key]
                 valstr: str = row.formatted_data[col_key]
 
-                raw_vals[group_name][row.sample][f"{header.namespace}_{rid}"] = val
+                raw_vals[group_name][row.sample][ColumnKeyT(f"{header.namespace}_{rid}")] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     dmin = header.dmin
@@ -167,7 +167,7 @@ def make_table(
                     for cfck in cfc:
                         cmatches[cfck] = False
                 # Find general rules followed by column-specific rules
-                for cfk in ["all_columns", rid, dt.id]:
+                for cfk in ["all_columns", str(rid), str(dt.id)]:
                     if cfk in cond_formatting_rules:
                         # Loop through match types
                         for ftype in cmatches.keys():
@@ -414,8 +414,12 @@ def make_table(
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
-        report.write_data_file(raw_vals, fname)
-        report.saved_raw_data[fname] = raw_vals
+        flatten_raw_vals: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]] = {}
+        for g_name, g_data in raw_vals.items():
+            for s_name, s_data in g_data.items():
+                flatten_raw_vals[s_name] = s_data
+        report.write_data_file(flatten_raw_vals, fname)
+        report.saved_raw_data[fname] = flatten_raw_vals
 
     # Build the bootstrap modal to customise columns and order
     modal = ""

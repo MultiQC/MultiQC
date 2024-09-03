@@ -15,21 +15,9 @@ if sys.version_info[1] >= 10:
     SampleGroupT = NewType("SampleGroupT", str)
 
 else:
-
-    class AnchorT(str):
-        pass
-
-    class ModuleIdT(str):
-        pass
-
-    class SectionIdT(str):
-        pass
-
-    class ColumnKeyT(str):
-        pass
-
-    class SampleNameT(str):
-        pass
-
-    class SampleGroupT(str):
-        pass
+    AnchorT = str
+    ModuleIdT = str
+    SectionIdT = str
+    ColumnKeyT = str
+    SampleNameT = str
+    SampleGroupT = str

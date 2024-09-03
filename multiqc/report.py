@@ -33,8 +33,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import SampleNameT, Row, ColumnKeyT, ValueT, InputSectionT, InputHeaderT
-from multiqc.types import ModuleIdT, AnchorT
+from multiqc.plots.table_object import SampleNameT, InputHeaderT, InputRowT, InputSectionT
+from multiqc.types import ModuleIdT, AnchorT, SampleGroupT
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
@@ -66,7 +66,7 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[SampleNameT, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
@@ -79,7 +79,7 @@ data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
 plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[InputSectionT]
+general_stats_data: List[Dict[SampleGroupT, List[InputRowT]]]
 general_stats_headers: List[InputHeaderT]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
@@ -859,7 +859,11 @@ def compress_json(data):
 
 
 def write_data_file(
-    data: Union[Mapping[str, Union[Mapping, Sequence]], Sequence[Mapping], Sequence[Sequence]],
+    data: Union[
+        Mapping,
+        Sequence[Mapping],
+        Sequence[Sequence],
+    ],
     fn: str,
     sort_cols=False,
     data_format=None,
@@ -980,8 +984,6 @@ def multiqc_dump_json():
     }
     for pymod, names in export_vars.items():
         for name in names:
-            if name == "general_stats_data":
-                print()
             try:
                 d = None
                 if pymod == "config":

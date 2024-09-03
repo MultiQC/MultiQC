@@ -40,8 +40,8 @@ class ColumnMeta(ValidatedConfig):
     Column model class. Holds configuration for a single column in a table.
     """
 
-    id: Optional[str] = Field(None, deprecated="rid")
-    rid: str
+    id: Optional[ColumnKeyT] = Field(None, deprecated="rid")
+    rid: ColumnKeyT
     title: str
     description: str
     scale: Union[str, bool]
@@ -70,7 +70,7 @@ class ColumnMeta(ValidatedConfig):
     @staticmethod
     def create(
         header_d: Dict[str, Union[str, int, float, None, Callable]],
-        col_key: str,  # to initialize rid
+        col_key: ColumnKeyT,  # to initialize rid
         sec_idx: int,  # to initialize the colour
         pconfig: TableConfig,  # plot config dictionary
     ) -> "ColumnMeta":
@@ -81,13 +81,13 @@ class ColumnMeta(ValidatedConfig):
 
         # Unique id to avoid overwriting by other datasets
         unclean_rid = header_d.get("rid", col_key)
-        rid: AnchorT = AnchorT(re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_"))
+        rid: ColumnKeyT = ColumnKeyT(re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_"))
         rid = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
-            rid = AnchorT(f"{ns}-{rid}")
+            rid = ColumnKeyT(f"{ns}-{rid}")
         if pconfig.id == "general_stats_table":
-            rid = AnchorT(f"mqc-generalstats-{rid}")
+            rid = ColumnKeyT(f"mqc-generalstats-{rid}")
         header_d["rid"] = rid
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
@@ -218,7 +218,7 @@ class ColumnMeta(ValidatedConfig):
 ValueT = Union[int, float, str, bool]
 
 
-class InputRow(BaseModel):
+class InputRowT(BaseModel):
     """
     Row class. Holds configuration for a single row in a table (can be multiple for one sample)
     """
@@ -227,9 +227,11 @@ class InputRow(BaseModel):
     data: Dict[ColumnKeyT, Optional[ValueT]] = dict()
 
 
-InputGroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], InputRow, Sequence[InputRow]]
-InputSectionT = Mapping[SampleGroupT, InputGroupT]
-InputHeaderT = Mapping[ColumnKeyT, Mapping[str, Union[str, int, float, None, Callable]]]
+ColumnKey = Union[str, ColumnKeyT]
+SampleGroup = Union[str, SampleGroupT]
+InputGroupT = Union[Mapping[ColumnKey, Optional[ValueT]], InputRowT, Sequence[InputRowT]]
+InputSectionT = Mapping[SampleGroup, InputGroupT]
+InputHeaderT = Mapping[ColumnKey, Mapping[str, Union[str, int, float, None, Callable]]]
 
 
 class Row(BaseModel):
@@ -299,19 +301,19 @@ class DataTable(BaseModel):
         # Each section to have a list of groups (even if there is just one element in a group)
         input_section: InputSectionT
         input_group: InputGroupT
-        unified_sections__with_nulls: List[Dict[SampleGroupT, List[InputRow]]] = []
+        unified_sections__with_nulls: List[Dict[SampleGroupT, List[InputRowT]]] = []
         for input_section in input_sections__with_nulls:
-            rows_by_group: Dict[SampleGroupT, List[InputRow]] = {}
+            rows_by_group: Dict[SampleGroupT, List[InputRowT]] = {}
             for g_name, input_group in input_section.items():
                 g_name = SampleGroupT(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
                     # Remove non-scalar values for table cells
                     input_group = {k: v for k, v in input_group.items() if isinstance(v, (int, float, str, bool))}
-                    rows_by_group[g_name] = [InputRow(sample=g_name, data=input_group)]
+                    rows_by_group[g_name] = [InputRowT(sample=g_name, data=input_group)]
                 elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
                     rows_by_group[g_name] = input_group
                 else:
-                    assert isinstance(input_group, InputRow)
+                    assert isinstance(input_group, InputRowT)
                     rows_by_group[g_name] = [input_group]
             unified_sections__with_nulls.append(rows_by_group)
 
@@ -419,7 +421,7 @@ class DataTable(BaseModel):
 
 
 def _get_or_create_headers(
-    rows_by_sample: Dict[SampleGroupT, List[InputRow]],
+    rows_by_sample: Dict[SampleGroupT, List[InputRowT]],
     header_by_key: InputHeaderT,
     pconfig,
 ) -> Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]:
@@ -427,7 +429,7 @@ def _get_or_create_headers(
     Process and populate headers, if missing or incomplete.
     """
     # Make a copy to keep the input immutable.
-    header_by_key_copy = {k: dict(h) for k, h in header_by_key.items()}
+    header_by_key_copy = {ColumnKeyT(k): dict(h) for k, h in header_by_key.items()}
     if not pconfig.only_defined_headers:
         # Get additional header keys from the data
         col_ids: List[ColumnKeyT] = list(header_by_key_copy.keys())

@@ -10,7 +10,7 @@ from multiqc.plots import bargraph, table
 from multiqc import report, config
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
-from multiqc.types import AnchorT
+from multiqc.types import AnchorT, ColumnKeyT
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -49,30 +49,6 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Table with time and memory usage per module
         """
-        headers = {
-            "run_time": {
-                "title": "Run time",
-                "description": "Time spent running the module",
-                "suffix": "s",
-                "format": "{:.2f}",
-                "scale": "Oranges",
-            },
-            "peak_mem": {
-                "title": "Peak memory",
-                "description": "Peak memory usage during module execution",
-                "suffix": " MB",
-                "format": "{:.2f}",
-                "scale": "Greys",
-            },
-            "mem_change": {
-                "title": "Memory change",
-                "description": "Change in memory usage during module execution",
-                "suffix": " MB",
-                "format": "{:.2f}",
-                "scale": "Blues",
-            },
-        }
-
         table_data: Dict[str, Dict[str, float]] = {}
         for key in report.runtimes.mods:
             table_data[key] = {
@@ -94,7 +70,29 @@ class MultiqcModule(BaseMultiqcModule):
             description=self.alert,
             plot=table.plot(
                 table_data,
-                headers,
+                headers={
+                    ColumnKeyT("run_time"): {
+                        "title": "Run time",
+                        "description": "Time spent running the module",
+                        "suffix": "s",
+                        "format": "{:.2f}",
+                        "scale": "Oranges",
+                    },
+                    ColumnKeyT("peak_mem"): {
+                        "title": "Peak memory",
+                        "description": "Peak memory usage during module execution",
+                        "suffix": " MB",
+                        "format": "{:.2f}",
+                        "scale": "Greys",
+                    },
+                    ColumnKeyT("mem_change"): {
+                        "title": "Memory change",
+                        "description": "Change in memory usage during module execution",
+                        "suffix": " MB",
+                        "format": "{:.2f}",
+                        "scale": "Blues",
+                    },
+                },
                 pconfig=TableConfig(
                     id="per_module_benchmark_table",
                     title="Module run times" + " and memory usage" if config.profile_memory else "",

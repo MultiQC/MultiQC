@@ -261,21 +261,14 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
-        for s, d in data_by_sample.items():
+    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+        for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
-            if isinstance(d, dict):
-                for key, val in d.items():
+            for row in rows:
+                for key, val in row.data.items():
                     if key in header:
-                        key = f"{header[key].get('namespace', '')}.{key}"
-                        data[s][key] = val
-            elif isinstance(d, list):
-                for _, dd in d:
-                    for key, val in dd.items():
-                        if key in header:
-                            key = f"{header[key].get('namespace', '')}.{key}"
-                            data[s][key] = val
+                        data[s][f"{header[key].get('namespace', '')}.{key}"] = val
     if sample:
         if not data:
             return {}

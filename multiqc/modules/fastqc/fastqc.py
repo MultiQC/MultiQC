@@ -21,7 +21,7 @@ from multiqc import report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, heatmap, linegraph, table
 from multiqc.plots.plotly.line import Series, LinePlotConfig
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRow
+from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRowT
 from multiqc.types import SampleGroupT, AnchorT
 
 log = logging.getLogger(__name__)
@@ -459,7 +459,7 @@ class MultiqcModule(BaseMultiqcModule):
             hide_seq_length = True
 
         def _summarize_statues(
-            merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
+            merged_row: InputRowT, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
         ):
             # Add count of fail statuses
             _num_statuses = 0

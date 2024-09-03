@@ -320,7 +320,7 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
