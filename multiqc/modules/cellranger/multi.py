@@ -25,11 +25,11 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_gex_sections():
         if len(gex_alerts.data) > 0:
             module.add_section(
-                name="Gene-Expression Alerts",
+                name="Gene-Expression: Alerts",
                 anchor="cellranger-multi-gex-alerts",
                 plot=table.plot(
                     data=gex_alerts.data,
-                    headers=gex_alerts.headers,
+                    headers=set_hidden_cols(gex_alerts.headers, ['Intron mode used']),
                     pconfig={
                         "namespace": "Multi-Gex",
                         "id": "cellranger-multi-gex-alerts-table",
@@ -40,7 +40,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(gex_cells_metrics.data) > 0:
             module.add_section(
-                name="Gene-Expression Cell Metrics",
+                name="Gene-Expression: Cell Metrics",
                 anchor="cellranger-multi-gex-cell-metrics",
                 plot=table.plot(
                     data=gex_cells_metrics.data,
@@ -58,7 +58,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(gex_library_metrics_summary.data) > 0:
             module.add_section(
-                name="Gene-Expression Library Metrics Summary",
+                name="Gene-Expression: Library Metrics Summary",
                 anchor="cellranger-multi-gex-library-metrics",
                 plot=table.plot(
                     data=gex_library_metrics_summary.data,
@@ -83,7 +83,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(gex_bc_plot.data) > 0:
             module.add_section(
-                name="Gene-Expression Barcode Rank Plot",
+                name="Gene-Expression: Barcode Rank Plot",
                 anchor="cellranger-multi-gex-bcrank-section",
                 helptext=gex_bc_plot.headers["helptext"],
                 plot=linegraph.plot(gex_bc_plot.data, gex_bc_plot.headers["config"]),
@@ -91,16 +91,24 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(gex_genes_plot.data) > 0:
             module.add_section(
-                name="Gene-Expression Median Genes per Cell",
+                name="Gene-Expression: Median Genes per Cell",
                 anchor="cellranger-multi-gex-genes-section",
                 helptext=gex_genes_plot.headers["helptext"],
                 plot=linegraph.plot(gex_genes_plot.data, gex_genes_plot.headers["config"]),
             )
 
+        if len(gex_sequencing_plot.data) > 0:
+            module.add_section(
+                name="Gene-Expression: Sequencing Saturation",
+                anchor="cellranger-multi-gex-sequencing-section",
+                helptext=gex_sequencing_plot.headers["helptext"],
+                plot=linegraph.plot(gex_sequencing_plot.data, gex_sequencing_plot.headers["config"]),
+            )
+
     def add_vdj_t_sections():
         if len(vdj_t_alerts.data) > 0:
             module.add_section(
-                name="VDJ-T Alerts",
+                name="VDJ-T: Alerts",
                 anchor="cellranger-multi-vdj-t-alerts",
                 plot=table.plot(
                     data=vdj_t_alerts.data,
@@ -115,7 +123,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_t_expression_metrics.data) > 0:
             module.add_section(
-                name="VDJ-T Expression Metrics",
+                name="VDJ-T: Expression Metrics",
                 anchor="cellranger-multi-vdj-t-expression-metrics",
                 plot=table.plot(
                     data=vdj_t_expression_metrics.data,
@@ -130,7 +138,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_t_annotation_metrics.data) > 0:
             module.add_section(
-                name="VDJ-T Annotation Metrics",
+                name="VDJ-T: Annotation Metrics",
                 anchor="cellranger-multi-vdj-t-annotation-metrics",
                 plot=table.plot(
                     data=vdj_t_annotation_metrics.data,
@@ -148,7 +156,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_t_bc_plot.data) > 0:
             module.add_section(
-                name="VDJ-T Barcode Rank Plot",
+                name="VDJ-T: Barcode Rank Plot",
                 anchor="cellranger-multi-vdj-t-bcrank-section",
                 helptext=vdj_t_bc_plot.headers["helptext"],
                 plot=linegraph.plot(vdj_t_bc_plot.data, vdj_t_bc_plot.headers["config"]),
@@ -157,7 +165,7 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_vdj_b_sections():
         if len(vdj_b_alerts.data) > 0:
             module.add_section(
-                name="VDJ-B Alerts",
+                name="VDJ-B: Alerts",
                 anchor="cellranger-multi-vdj-b-alerts",
                 plot=table.plot(
                     data=vdj_b_alerts.data,
@@ -172,7 +180,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_b_expression_metrics.data) > 0:
             module.add_section(
-                name="VDJ-B Expression Metrics",
+                name="VDJ-B: Expression Metrics",
                 anchor="cellranger-multi-vdj-b-expression-metrics",
                 plot=table.plot(
                     data=vdj_b_expression_metrics.data,
@@ -187,7 +195,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_b_annotation_metrics.data) > 0:
             module.add_section(
-                name="VDJ-B Annotation Metrics",
+                name="VDJ-B: Annotation Metrics",
                 anchor="cellranger-multi-vdj-b-annotation-metrics",
                 plot=table.plot(
                     data=vdj_b_annotation_metrics.data,
@@ -206,7 +214,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(vdj_b_bc_plot.data) > 0:
             module.add_section(
-                name="VDJ-B Barcode Rank Plot",
+                name="VDJ-B: Barcode Rank Plot",
                 anchor="cellranger-multi-vdj-b-bcrank-section",
                 helptext=vdj_b_bc_plot.headers["helptext"],
                 plot=linegraph.plot(vdj_b_bc_plot.data, vdj_b_bc_plot.headers["config"]),
@@ -215,7 +223,7 @@ def parse_multi_html(module: BaseMultiqcModule):
     def add_antibody_sections():
         if len(antibody_alerts.data) > 0:
             module.add_section(
-                name="Antibody alerts",
+                name="Antibody: alerts",
                 anchor="cellranger-multi-antibody-alerts",
                 plot=table.plot(
                     data=antibody_alerts.data,
@@ -230,7 +238,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(antibody_expression_mapping_metrics.data) > 0:
             module.add_section(
-                name="Antibody expression and mapping metrics",
+                name="Antibody: expression and mapping metrics",
                 anchor="cellranger-multi-antibody-expression-mapping-metrics",
                 plot=table.plot(
                     data=antibody_expression_mapping_metrics.data,
@@ -245,7 +253,7 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         if len(antibody_bc_plot.data) > 0:
             module.add_section(
-                name="Antibody Barcode Rank Plot",
+                name="Antibody: Barcode Rank Plot",
                 anchor="cellranger-multi-antibody-bcrank-section",
                 helptext=antibody_bc_plot.headers["helptext"],
                 plot=linegraph.plot(antibody_bc_plot.data, antibody_bc_plot.headers["config"]),
@@ -257,6 +265,7 @@ def parse_multi_html(module: BaseMultiqcModule):
     gex_library_metrics_summary = SectionData()
     gex_bc_plot = SectionData()
     gex_genes_plot = SectionData()
+    gex_sequencing_plot = SectionData()
     vdj_t_alerts = SectionData()
     vdj_t_expression_metrics = SectionData()
     vdj_t_annotation_metrics = SectionData()
@@ -289,6 +298,20 @@ def parse_multi_html(module: BaseMultiqcModule):
             "title": "Median Genes per Cell",
             "xlab": "Mean Reads per Cell",
             "ylab": "Median Genes per Cell",
+            "xmin": 0,
+            "ymin": 0,
+        },
+    }
+    gex_sequencing_plot.headers = {
+        "helptext": "",
+        "config": {
+            "id": "cellranger-multi-gex-sequencing-plot",
+            "title": "Sequencing Saturation",
+            "xlab": "Mean Reads per Cell",
+            "ylab": "Sequencing Saturation",
+            "xmin": 0,
+            "ymin": 0,
+            "ymax": 1,
         },
     }
     vdj_t_bc_plot.headers = {
@@ -358,6 +381,7 @@ def parse_multi_html(module: BaseMultiqcModule):
             gex_library_metrics_summary,
             gex_bc_plot,
             gex_genes_plot,
+            gex_sequencing_plot
         )
 
         _build_vdj_t_data(data["data"], sample_name, vdj_t_alerts, vdj_t_expression_metrics, vdj_t_annotation_metrics, vdj_t_bc_plot)
@@ -468,7 +492,8 @@ def _build_gex_data(
     cells_metrics: SectionData,
     library_metrics: SectionData,
     barcode_plot: SectionData,
-    genes_plot: SectionData
+    genes_plot: SectionData,
+    sequencing_plot: SectionData
 ):
     sample_websummary = data.get("sample_websummary", {}).get("gex_tab", {})
     library_websummary = data.get("library_websummary", {}).get("gex_tab", {})
@@ -565,6 +590,17 @@ def _build_gex_data(
             genes_plot.update_sample(genes_plot_data, {"helptext": genes_plot_source["help"]["helpText"]}, sample_name)
     except KeyError:
         log.debug("Could not find library_websummary/gex_tab/content/median_genes_per_cell_plot")
+
+    try:
+        sequencing_plot_source = library_websummary["content"]["sequencing_saturation_plot"]
+        sequencing_plot_data = {}
+        for subset in sequencing_plot_source["plot"]["data"]:
+            sequencing_plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
+
+        if sequencing_plot_data:
+            sequencing_plot.update_sample(sequencing_plot_data, {"helptext": sequencing_plot_source["help"]["helpText"]}, sample_name)
+    except KeyError:
+        log.debug("Could not find library_websummary/gex_tab/content/sequencing_saturation_plot")
 
 
 def _build_vdj_t_data(
