@@ -285,6 +285,8 @@ class DataTable(BaseModel):
     @staticmethod
     def create(
         data: Union[InputSectionT, Sequence[InputSectionT]],
+        table_id: str,
+        table_anchor: AnchorT,
         pconfig: TableConfig,
         headers: Optional[Union[List[InputHeaderT], InputHeaderT]] = None,
     ) -> "DataTable":
@@ -390,16 +392,9 @@ class DataTable(BaseModel):
                 del column.modify
                 del column.format
 
-        id = pconfig.id
-        if id is None:  # id of the plot group
-            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-            id = f"mqc_table_{uniq_suffix}"
-        table_anchor: AnchorT = AnchorT(f"{pconfig.anchor or id}-table")
-        table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
-
         # Assign to class
         return DataTable(
-            id=id,
+            id=table_id,
             anchor=table_anchor,
             sections=sections,
             headers_in_order=headers_in_order,

@@ -3,9 +3,10 @@ from typing import List, Dict, Union, Optional, Sequence
 
 from multiqc.plots import table_object
 from multiqc.plots.plotly.plot import Plot
-from multiqc import config
+from multiqc import config, report
 from multiqc.plots.plotly import table
 from multiqc.plots.table_object import TableConfig, InputSectionT, InputHeaderT
+from multiqc.types import AnchorT
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,10 @@ def plot(
         pconfig = TableConfig(**pconfig)
 
     # Make a datatable object
-    dt = table_object.DataTable.create(data, pconfig, headers)
+    table_id = pconfig.id
+    table_anchor = AnchorT(f"{pconfig.anchor or table_id}-table")
+    table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
+    dt = table_object.DataTable.create(data, table_id, table_anchor, pconfig.model_copy(), headers)
 
     return plot_dt(dt)
 

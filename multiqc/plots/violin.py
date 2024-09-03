@@ -1,10 +1,13 @@
 import logging
+import random
+import string
 from typing import List, Dict, Optional, Union
 
-from multiqc import config
+from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import violin
 from multiqc.plots.table_object import TableConfig, InputSectionT, InputHeaderT
+from multiqc.types import AnchorT
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +48,18 @@ def plot(
         headers = [headers]
 
     # Make datatable objects
-    if headers:
-        dts = [table_object.DataTable.create(d, pconfig.model_copy(), h) for d, h in zip(data, headers)]
-    else:
-        dts = [table_object.DataTable.create(d, pconfig.model_copy()) for d in data]
+    dts = []
+    for i, (d, h) in enumerate(zip(data, (headers if headers else ([None] * len(data))))):
+        table_id = pconfig.id
+        # if table_id is None:  # id of the plot group
+        #     uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
+        #     table_id = f"mqc_table_{uniq_suffix}"
+        table_anchor = AnchorT(f"{pconfig.anchor or table_id}-table")
+        if len(data) > 0:
+            table_anchor = AnchorT(f"{table_anchor}-{i + 1}")
+        table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
+        dt = table_object.DataTable.create(d, table_id, table_anchor, pconfig.model_copy(), h)
+        dts.append(dt)
 
     mod = get_template_mod()
     if "violin" in mod.__dict__ and callable(mod.violin):
