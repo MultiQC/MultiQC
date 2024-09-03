@@ -199,7 +199,6 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="Quality control tool for high throughput sequencing data",
             # No publication / DOI // doi=
-            sample_grouping_enabled=True,
         )
 
         self.fastqc_data: Dict[SampleNameT, Any] = dict()
@@ -533,7 +532,6 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             },
             group_samples_config=SampleGroupingConfig(
-                criteria="read_pairs",
                 cols_to_sum=[ColumnKeyT("total_sequences")],
                 cols_to_weighted_average=[
                     (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),

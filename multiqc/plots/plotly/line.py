@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 KeyT = TypeVar("KeyT", int, str, float)
 ValueT = TypeVar("ValueT", int, str, float, None)
 XToYDictT = Mapping[KeyT, ValueT]
-DatasetT = Mapping[Union[str, SampleNameT], XToYDictT]
+DatasetT = Mapping[SampleNameT, XToYDictT]
 
 
 class Marker(BaseModel):

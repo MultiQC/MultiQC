@@ -43,7 +43,6 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
-            sample_grouping_enabled=True,
         )
 
         # Find and load any Cutadapt reports
@@ -296,7 +295,6 @@ class MultiqcModule(BaseMultiqcModule):
                         self.cutadapt_length_exp[end] = dict()
                         self.cutadapt_length_obsexp[end] = dict()
 
-                # Histogram showing lengths trimmed
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
@@ -356,7 +354,6 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             },
             group_samples_config=SampleGroupingConfig(
-                criteria="read_pairs",
                 cols_to_weighted_average=[
                     (ColumnKeyT("percent_trimmed"), ColumnKeyT("bp_processed")),
                 ],

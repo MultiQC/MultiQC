@@ -10,6 +10,7 @@ from multiqc import config
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly import bar
 from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.types import SampleGroupT, ColumnKeyT, SampleNameT
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -32,7 +33,7 @@ class Category(ValidatedConfig):
     color: Optional[str] = None
 
 
-InputDatasetT = Mapping[str, Mapping[str, Union[int, float]]]
+InputDatasetT = Mapping[SampleNameT, Mapping[str, Union[int, float]]]
 DatasetT = Dict[str, Dict[str, Union[int, float]]]
 
 # Either a list of strings, or a dictionary mapping category names to their properties dicts or objects

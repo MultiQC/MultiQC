@@ -70,7 +70,6 @@ ExtraFunctionType = Callable[[InputRowT, List[Tuple[Optional[str], SampleNameT, 
 
 @dataclasses.dataclass
 class SampleGroupingConfig:
-    criteria: Optional[str] = None
     cols_to_weighted_average: Optional[List[Tuple[ColumnKeyT, ColumnKeyT]]] = None
     cols_to_average: Optional[List[ColumnKeyT]] = None
     cols_to_sum: Optional[List[ColumnKeyT]] = None
@@ -94,7 +93,6 @@ class BaseMultiqcModule:
         autoformat=True,
         autoformat_type="markdown",
         doi: Optional[Union[str, List[str]]] = None,
-        sample_grouping_enabled: bool = False,
     ):
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
@@ -451,27 +449,18 @@ class BaseMultiqcModule:
 
         return None
 
-    def groups_for_sample(
-        self,
-        s_name: SampleNameT,
-        grouping_criteria: Optional[str] = None,
-    ) -> Tuple[SampleGroupT, SampleNameT, Optional[str]]:
+    def groups_for_sample(self, s_name: SampleNameT) -> Tuple[SampleGroupT, Optional[str]]:
         """
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
         """
-        if (
-            not grouping_criteria
-            or not config.generalstats_sample_merge_groups
-            or grouping_criteria not in config.generalstats_sample_merge_groups
-        ):
-            return SampleGroupT(s_name), SampleNameT(s_name), None
-        grouping: Dict[str, List[CleanPatternT]] = config.generalstats_sample_merge_groups[grouping_criteria]
+        if not config.generalstats_sample_merge_groups:
+            return SampleGroupT(s_name), None
 
         matched_label: Optional[str] = None
         grouping_exts: List[CleanPatternT]
         group_name = SampleGroupT(s_name)
-        for label, grouping_exts in grouping.items():
+        for label, grouping_exts in config.generalstats_sample_merge_groups.items():
             if isinstance(grouping_exts, (str, dict)):
                 grouping_exts = [grouping_exts]
             if grouping_exts:
@@ -482,37 +471,42 @@ class BaseMultiqcModule:
                     matched_label = label
                     # Clean the rest of the name
                     group_name = SampleGroupT(self.clean_s_name(s_name_without_ext))
-                    s_name = SampleNameT(f"{group_name} ({label})")
                     break
 
-        return group_name, s_name, matched_label
+        return group_name, matched_label
 
     def group_samples_names(
-        self,
-        samples: Iterable[SampleNameT],
-        grouping_criteria: Optional[str] = None,
+        self, samples: Iterable[SampleNameT]
     ) -> Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
         :param samples: sample names
-        :param grouping_criteria: name of the grouping criteria to use (e.g. ["trimming", "read_pairs"])
         :return: a dict where the keys are group names, and the values are lists of tuples,
             of cleaned base names according to the cleaning rules and the original sample names
         """
-        group_by_label: Dict[Optional[str], List[Tuple[SampleGroupT, SampleNameT, SampleNameT]]] = defaultdict(list)
+        group_by_label: Dict[Optional[str], List[Tuple[SampleGroupT, SampleNameT]]] = defaultdict(list)
         for original_name in sorted(samples):
-            group_name, s_name, label = self.groups_for_sample(original_name, grouping_criteria)
-            group_by_label[label].append((group_name, s_name, original_name))
+            group_name, label = self.groups_for_sample(original_name)
+            group_by_label[label].append((group_name, original_name))
 
-        group_by_merged_name: Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]] = defaultdict(
-            list
-        )
+        group_by_merged_name: Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT]]] = defaultdict(list)
         for label, group in group_by_label.items():
-            for group_name, s_name, original_name in group:
-                group_by_merged_name[group_name].append((label, s_name, original_name))
+            for group_name, original_name in group:
+                group_by_merged_name[group_name].append((label, original_name))
 
-        return group_by_merged_name
+        # Extend sample names in non-trivial groups with the group label
+        return {
+            group_name: [
+                (
+                    label,
+                    SampleNameT(group_name) if len(group) == 1 else SampleNameT(f"{group_name} ({label})"),
+                    original_name,
+                )
+                for (label, original_name) in group
+            ]
+            for group_name, group in group_by_merged_name.items()
+        }
 
     def group_samples_and_average_metrics(
         self,
@@ -524,10 +518,7 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroupT, List[InputRowT]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names(
-            list(data_by_sample.keys()),
-            grouping_criteria=grouping_config.criteria,
-        ).items():
+        for g_name, labels_s_names in self.group_samples_names(list(data_by_sample.keys())).items():
             if len(labels_s_names) == 0:
                 continue
             if g_name is None:
@@ -543,8 +534,8 @@ class BaseMultiqcModule:
 
             # Just a single row for a trivial group
             if len(labels_s_names) == 1:
-                _, s_name, _ = labels_s_names[0]
-                rows_by_grouped_samples[g_name] = [InputRowT(sample=s_name, data=data_by_sample[s_name])]
+                _, s_name, original_s_name = labels_s_names[0]
+                rows_by_grouped_samples[g_name] = [InputRowT(sample=s_name, data=data_by_sample[original_s_name])]
                 continue
 
             merged_row = InputRowT(sample=g_name, data={})
