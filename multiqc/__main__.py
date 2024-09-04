@@ -7,7 +7,7 @@ $ multiqc .
 $ python -m multiqc .
 """
 
-from importlib.metadata import entry_points
+from importlib_metadata import entry_points
 
 from . import multiqc
 
