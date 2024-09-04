@@ -1,8 +1,9 @@
 """MultiQC functions to plot a box plot"""
 
 import logging
-from importlib.metadata import EntryPoint
 from typing import Dict, List, Optional, OrderedDict, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import box

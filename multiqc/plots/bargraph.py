@@ -3,8 +3,9 @@
 import logging
 import math
 from collections import OrderedDict
-from importlib.metadata import EntryPoint
 from typing import Dict, List, Mapping, Optional, Sequence, Union, cast
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.core.exceptions import RunError
