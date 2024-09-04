@@ -427,7 +427,8 @@ def make_table(
             if number_in_group != 0:
                 prefix += "&nbsp;↳&nbsp;"
                 tr_classes.append("expandable-row-secondary expandable-row-secondary-hidden")
-            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{' '.join(group_classes + tr_classes)}">'
+            cls = " ".join(group_classes + tr_classes)
+            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{cls}">'
             # Sample name row header
             html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
             for col_anchor in col_to_th.keys():
