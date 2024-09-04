@@ -3,9 +3,8 @@
 import logging
 import math
 from collections import OrderedDict
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
-
-import importlib_metadata
+from importlib.metadata import EntryPoint
+from typing import Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from multiqc import config
 from multiqc.core.exceptions import RunError
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod: Optional[importlib_metadata.EntryPoint] = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
