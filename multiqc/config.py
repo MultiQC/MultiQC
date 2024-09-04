@@ -6,6 +6,7 @@ On import, only loads defaults from config_defaults.yaml. To populate from
 custom parameters, call load_user_config() from the user_config module
 """
 
+import importlib.metadata
 import itertools
 
 # Default logger will be replaced by caller
@@ -18,7 +19,6 @@ from importlib.metadata import EntryPoint
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-import importlib_metadata
 import pyaml_env  # type: ignore
 import yaml
 
@@ -28,7 +28,7 @@ from multiqc.utils.util_functions import strtobool, update_dict
 logger = logging.getLogger(__name__)
 
 # Get the MultiQC version
-version = importlib_metadata.version("multiqc")
+version = importlib.metadata.version("multiqc")
 short_version = version
 git_hash = None
 git_hash_short = None
@@ -260,7 +260,7 @@ def load_defaults():
     # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
     # Get all modules, including those from other extension packages
     avail_modules = dict()
-    for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+    for entry_point in importlib.metadata.entry_points(group="multiqc.modules.v1"):
         nice_name = entry_point.name
         avail_modules[nice_name] = entry_point
 
@@ -269,7 +269,7 @@ def load_defaults():
     # Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
     # Get all templates, including those from other extension packages
     avail_templates = {}
-    for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+    for entry_point in importlib.metadata.entry_points(group="multiqc.templates.v1"):
         nice_name = entry_point.name
         avail_templates[nice_name] = entry_point
 
