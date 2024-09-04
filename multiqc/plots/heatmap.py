@@ -1,7 +1,9 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Union, Dict, Optional, List
+from typing import Dict, List, Optional, Union
+
+import importlib_metadata
 
 from multiqc import config
 from multiqc.plots.plotly import heatmap
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[importlib_metadata.EntryPoint] = None
 
 
 def get_template_mod():
