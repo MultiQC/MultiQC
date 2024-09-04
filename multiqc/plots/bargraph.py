@@ -1,16 +1,15 @@
 """MultiQC functions to plot a bargraph"""
 
 import logging
-from collections import OrderedDict
-from typing import Union, Dict, Optional, List, Sequence, Any, cast, Mapping
-
 import math
+from collections import OrderedDict
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from multiqc import config
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly import bar
 from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.types import SampleGroupT, ColumnKeyT, SampleNameT
+from multiqc.types import ColumnKeyT, SampleGroupT, SampleNameT
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -196,7 +195,7 @@ def plot(
     if "bargraph" in mod.__dict__ and callable(mod.bargraph):
         try:
             return mod.bargraph(plot_data, plot_samples, pconfig)
-        except:  # noqa: E722
+        except:  # noqa: E722s
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
