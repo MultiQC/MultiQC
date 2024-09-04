@@ -161,7 +161,6 @@ def make_table(
                 valstr = valstr.replace("DECIMAL", config.decimalPoint_format).replace(
                     "THOUSAND", config.thousandsSep_format
                 )
-                valstr = valstr
 
                 suffix = header.suffix
                 if suffix:

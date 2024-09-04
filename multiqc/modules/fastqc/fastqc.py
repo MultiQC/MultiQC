@@ -14,15 +14,14 @@ import re
 import zipfile
 from collections import Counter
 from pathlib import Path
-from typing import Dict, Set, List, Union, Literal, Optional, Tuple, Mapping, Any
+from typing import Any, Dict, List, Literal, Mapping, Optional, Set, Tuple, Union
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, heatmap, linegraph, table
-from multiqc.plots.plotly.line import Series, LinePlotConfig
-from multiqc.plots.table_object import SampleNameT, ColumnKeyT, InputRowT
-from multiqc.types import SampleGroupT, AnchorT
+from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.plots.table_object import ColumnKeyT, InputRowT, SampleNameT
+from multiqc.types import AnchorT, SampleGroupT
 
 log = logging.getLogger(__name__)
 
@@ -280,8 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.status_colours = {"pass": "#5cb85c", "warn": "#f0ad4e", "fail": "#d9534f", "default": "#999"}
 
         # Add to the general statistics table
-        if not self.skip_generalstats:
-            self.fastqc_general_stats()
+        self.fastqc_general_stats()
 
         status_checks = getattr(config, "fastqc_config", {}).get("status_checks", True)
 
@@ -478,7 +476,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             headers={
                 ColumnKeyT("percent_duplicates"): {
-                    "title": "% Dups",
+                    "title": "Dups",
                     "description": "% Duplicate Reads",
                     "max": 100,
                     "min": 0,
@@ -486,7 +484,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "scale": "RdYlGn-rev",
                 },
                 ColumnKeyT("percent_gc"): {
-                    "title": "% GC",
+                    "title": "GC",
                     "description": "Average % GC Content",
                     "max": 100,
                     "min": 0,
@@ -495,8 +493,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,.1f}",
                 },
                 ColumnKeyT("avg_sequence_length"): {
-                    "title": "Average Read Length",
-                    "description": "Average Read Length (bp)",
+                    "title": "Avg Length",
+                    "description": "Average Read Length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -504,8 +502,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": True,
                 },
                 ColumnKeyT("median_sequence_length"): {
-                    "title": "Median Read Length",
-                    "description": "Median Read Length (bp)",
+                    "title": "Median Len",
+                    "description": "Median Read Length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -513,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": hide_seq_length,
                 },
                 ColumnKeyT("percent_fails"): {
-                    "title": "% Failed",
+                    "title": "Failed",
                     "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
                     "max": 100,
                     "min": 0,
@@ -523,12 +521,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": True,
                 },
                 ColumnKeyT("total_sequences"): {
-                    "title": f"{config.read_count_prefix} Seqs",
+                    "title": "Seqs",
                     "description": f"Total Sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
                     "modify": lambda x: x * config.read_count_multiplier,
-                    "shared_key": "read_count",
                 },
             },
             group_samples_config=SampleGroupingConfig(
@@ -1229,8 +1226,8 @@ class MultiqcModule(BaseMultiqcModule):
                 data,
                 headers={
                     ColumnKeyT("samples"): {
-                        "title": "Samples",
-                        "description": "Number of samples where this sequence is overrepresented",
+                        "title": "Reports",
+                        "description": "Number of FastQC reports where this sequence is founds as overrepresented",
                         "scale": "Greens",
                         "min": 0,
                         "format": "{:,d}",
