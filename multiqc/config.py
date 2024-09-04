@@ -14,8 +14,9 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from importlib.metadata import EntryPoint
 from pathlib import Path
-from typing import Dict, List, Optional, Set, TextIO, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import pyaml_env  # type: ignore
@@ -202,8 +203,8 @@ output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 
-avail_modules: Dict[str, importlib_metadata.EntryPoint]
-avail_templates: Dict[str, importlib_metadata.EntryPoint]
+avail_modules: Dict[str, EntryPoint]
+avail_templates: Dict[str, EntryPoint]
 
 
 def load_defaults():
