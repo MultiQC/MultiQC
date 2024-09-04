@@ -1,9 +1,9 @@
 import logging
 from collections import defaultdict
-from typing import Tuple, Optional, List, Dict
+from typing import Dict, List, Optional, Tuple
 
-from multiqc.plots.table_object import DataTable, ValueT, SampleNameT, SampleGroupT
 from multiqc import config, report
+from multiqc.plots.table_object import DataTable, SampleGroupT, SampleNameT, ValueT
 from multiqc.types import AnchorT
 from multiqc.utils import mqc_colour
 
@@ -418,7 +418,7 @@ def make_table(
             row_hidden = "display: none;" if do_not_display_group else ""
             html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{row_class}" style="{row_hidden}">'
             # Sample name row header
-            html += f'<th class="rowheader">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
+            html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
