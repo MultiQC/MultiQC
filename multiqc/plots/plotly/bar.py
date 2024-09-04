@@ -50,7 +50,7 @@ SampleName = Union[SampleNameT, str]
 
 class InputCat(TypedDict):
     name: str
-    color: Optional[str]
+    color: str
     data: List[float]
     data_pct: List[float]
 
@@ -80,7 +80,7 @@ def plot(
 
 class Category(BaseModel):
     name: str
-    color: Optional[str]
+    color: str
     data: List[float]
     data_pct: List[float]
 
@@ -102,21 +102,20 @@ class Dataset(BaseDataset):
             if "name" not in input_cat:
                 raise ValueError(f"Bar plot {dataset.plot_id}: missing 'name' key in category")
 
+            # Split long category names
+            name = "<br>".join(split_long_string(input_cat["name"]))
+
+            # Reformat color to be ready to add alpha in Plotly-JS
+            color = spectra.html(input_cat["color"])
+            color_str = ",".join([f"{int(x * 256)}" for x in color.rgb])
+
             # Reverse the data to match the reversed samples
             cat: Category = Category(
-                name=input_cat["name"],
-                color=input_cat.get("color"),
+                name=name,
+                color=color_str,
                 data=list(reversed(input_cat["data"])),
                 data_pct=list(reversed(input_cat["data_pct"])) if "data_pct" in input_cat else [],
             )
-
-            # Split long category names
-            cat.name = "<br>".join(split_long_string(cat.name))
-
-            # Reformat color to be ready to add alpha in Plotly-JS
-            if cat.color:
-                color = spectra.html(cat.color)
-                cat.color = ",".join([f"{int(x * 256)}" for x in color.rgb])
 
             # Check that the number of samples is the same for all categories
             assert len(samples) == len(cat.data)
@@ -149,8 +148,8 @@ class Dataset(BaseDataset):
             data = cat.data_pct if is_pct else cat.data
 
             params = copy.deepcopy(self.trace_params)
-            if cat.color:
-                params["marker"]["color"] = f"rgb({cat.color})"
+            assert cat.color is not None
+            params["marker"]["color"] = f"rgb({cat.color})"
             fig.add_trace(
                 go.Bar(
                     y=self.samples,

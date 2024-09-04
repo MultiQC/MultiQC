@@ -115,15 +115,17 @@ def plot(
     # Allow user to overwrite a given category config for this plot
     if pconf.id and pconf.id in config.custom_plot_config:
         for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
-            for idx in range(len(categories_per_ds)):
-                if cat_name in categories_per_ds[idx].keys():
+            for ds_idx in range(len(categories_per_ds)):
+                if cat_name in categories_per_ds[ds_idx].keys():
                     for prop_name, prop_val in user_cat_props.items():
-                        setattr(categories_per_ds[idx][cat_name], prop_name, prop_val)
+                        setattr(categories_per_ds[ds_idx][cat_name], prop_name, prop_val)
 
     # Parse the data into a chart friendly format
+    # To add colors to the categories if not set:
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
     plot_samples: List[List[SampleNameT]] = list()
     plot_data: List[List[InputCat]] = list()
-    for idx, d in enumerate(raw_datasets):
+    for ds_idx, d in enumerate(raw_datasets):
         hc_samples: List[SampleNameT] = [SampleNameT(s) for s in d.keys()]
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
@@ -133,7 +135,7 @@ def plot(
             hc_samples = sorted([SampleNameT(s) for s in d.keys()])
         hc_data: List[InputCat] = list()
         sample_d_count: Dict[SampleNameT, int] = dict()
-        for c in categories_per_ds[idx].keys():
+        for cat_idx, c in enumerate(categories_per_ds[ds_idx].keys()):
             this_data: List[Union[int, float]] = list()
             cat_count = 0
             for s in hc_samples:
@@ -165,9 +167,10 @@ def plot(
                 sample_d_count[s] += 1
             if cat_count > 0:
                 if pconf.hide_zero_cats is False or max(x for x in this_data if not math.isnan(x)) > 0:
+                    color: str = categories_per_ds[ds_idx][c].color or scale.get_colour(cat_idx, lighten=1)
                     this_dict: InputCat = {
-                        "name": categories_per_ds[idx][c].name,
-                        "color": categories_per_ds[idx][c].color,
+                        "name": categories_per_ds[ds_idx][c].name,
+                        "color": color,
                         "data": this_data,
                         "data_pct": [],
                     }
@@ -187,12 +190,6 @@ def plot(
     if len(plot_data) == 0:
         logger.warning(f"Tried to make bar plot, but had no data: {pconf.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
-
-    # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for plot_data_idx, plot_data_item in enumerate(plot_data):
-        for d_idx, d_item in enumerate(plot_data_item):
-            d_item.setdefault("color", scale.get_colour(d_idx, lighten=1))
 
     # Make a plot - custom, interactive or flat
     mod = get_template_mod()
