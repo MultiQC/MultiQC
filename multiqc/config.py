@@ -14,13 +14,13 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-from importlib.metadata import EntryPoint
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import pyaml_env  # type: ignore
 import yaml
+from importlib_metadata import EntryPoint
 
 from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 from multiqc.utils.util_functions import strtobool, update_dict

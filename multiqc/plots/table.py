@@ -1,6 +1,7 @@
 import logging
-from importlib.metadata import EntryPoint
 from typing import Dict, List, Optional, Sequence, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.plots import table_object

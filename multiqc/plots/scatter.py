@@ -1,8 +1,9 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from importlib.metadata import EntryPoint
 from typing import Dict, Optional, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import scatter
