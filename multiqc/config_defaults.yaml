@@ -456,6 +456,7 @@ module_order:
   - stacks
   - varscan2
   - snippy
+  - umicollapse
   - umitools
   - truvari
   - megahit
