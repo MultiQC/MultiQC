@@ -56,7 +56,7 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
 class Dataset(BaseDataset):
-    metrics: List[str]
+    metrics: List[AnchorT]
     header_by_metric: Dict[AnchorT, ViolinColumn]
     violin_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
     scatter_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
