@@ -1,17 +1,17 @@
-import logging
-from dataclasses import dataclass
-from typing import Dict, List, Union, Any, Optional, Tuple, Set
 import copy
-
+import logging
 import math
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable, ColumnMeta, ValueT
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
-from multiqc.types import SampleNameT, ColumnKeyT
+from multiqc.plots.table_object import ColumnMeta, DataTable, ValueT
+from multiqc.types import AnchorT, ColumnKeyT, SampleNameT
 
 logger = logging.getLogger(__name__)
 
@@ -57,25 +57,23 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 class Dataset(BaseDataset):
     metrics: List[str]
-    header_by_metric: Dict[str, ViolinColumn]
-    violin_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
-    scatter_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
-    all_samples: List[str]  # unique list of all samples in this dataset
+    header_by_metric: Dict[AnchorT, ViolinColumn]
+    violin_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
+    scatter_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
+    all_samples: List[SampleNameT]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
     def values_and_headers_from_dt(
         dt: DataTable,
     ) -> Tuple[
-        Dict[ColumnKeyT, Dict[SampleNameT, ValueT]],
-        Dict[ColumnKeyT, ColumnMeta],
+        Dict[AnchorT, Dict[SampleNameT, ValueT]],
+        Dict[AnchorT, ColumnMeta],
     ]:
-        value_by_sample_by_metric: Dict[ColumnKeyT, Dict[SampleNameT, ValueT]] = {}
-        dt_column_by_metric: Dict[ColumnKeyT, ColumnMeta] = {}
+        value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, ValueT]] = {}
+        dt_column_by_metric: Dict[AnchorT, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            full_metric_id = dt_column.rid
-
             value_by_sample: Dict[SampleNameT, ValueT] = {}
             for group_name, group_rows in dt.sections[idx].rows_by_sgroup.items():
                 for row in group_rows:
@@ -87,11 +85,10 @@ class Dataset(BaseDataset):
                         assert v is not None and str(v).strip != "", v
                         value_by_sample[row.sample] = v
 
-            value_by_sample_by_metric[full_metric_id] = value_by_sample
+            value_by_sample_by_metric[dt_column.rid] = value_by_sample
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            full_metric_id = dt_column.rid
-            dt_column_by_metric[full_metric_id] = dt_column
+            dt_column_by_metric[dt_column.rid] = dt_column
 
         # If all colors are the same, remove them
         if len(set([t_col.color for t_col in dt_column_by_metric.values()])) == 1:
@@ -110,10 +107,10 @@ class Dataset(BaseDataset):
         all_samples = set()
         scatter_value_by_sample_by_metric = {}
         violin_value_by_sample_by_metric = {}
-        header_by_metric: Dict[str, ViolinColumn] = {}
+        header_by_metric: Dict[AnchorT, ViolinColumn] = {}
         metrics = []
 
-        for metric, dt_column in dt_column_by_metric.items():
+        for col_anchor, dt_column in dt_column_by_metric.items():
             column = ViolinColumn(
                 namespace=dt_column.namespace,
                 title=dt_column.title,
@@ -127,9 +124,9 @@ class Dataset(BaseDataset):
                 show_points=True,
                 show_only_outliers=False,
             )
-            header_by_metric[metric] = column
+            header_by_metric[col_anchor] = column
 
-            value_by_sample = value_by_sample_by_metric[metric]
+            value_by_sample = value_by_sample_by_metric[col_anchor]
             if not value_by_sample:
                 logger.debug(f"No non-empty values found for metric: {column.title}")
                 continue
@@ -188,7 +185,7 @@ class Dataset(BaseDataset):
                         samples[idx]: numeric_values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
                     }
 
-            scatter_value_by_sample_by_metric[metric] = scatter_value_by_sample
+            scatter_value_by_sample_by_metric[col_anchor] = scatter_value_by_sample
 
             # Now sort and downsample values to keep max 2000 points for each metric
             violin_value_by_sample = value_by_sample
@@ -204,7 +201,7 @@ class Dataset(BaseDataset):
                 indices = indices[:: int(math.ceil(len(indices) / max_violin_points))]
                 violin_value_by_sample = {samples[idx]: values[idx] for idx in indices}
 
-            violin_value_by_sample_by_metric[metric] = violin_value_by_sample
+            violin_value_by_sample_by_metric[col_anchor] = violin_value_by_sample
 
             # Clean up the header
             if values_are_numeric and not values_are_integer:
@@ -213,7 +210,7 @@ class Dataset(BaseDataset):
 
             all_samples.update(set(list(scatter_value_by_sample.keys())))
             all_samples.update(set(list(violin_value_by_sample.keys())))
-            metrics.append(metric)
+            metrics.append(col_anchor)
 
         ds = Dataset(
             **dataset.model_dump(),
