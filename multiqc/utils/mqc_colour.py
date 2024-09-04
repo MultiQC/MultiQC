@@ -421,7 +421,7 @@ class mqc_colour_scale(object):
         except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
             logger.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
-            return ""
+        return ""
 
     def get_colours(self, name="GnBu"):
         """Function to get a colour scale by name
