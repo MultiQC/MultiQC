@@ -273,9 +273,9 @@ $(function () {
           match = !match;
         }
         if (match) {
-          tr.hide().addClass("hidden");
+          tr.addClass("sample-hidden");
         } else {
-          tr.show().removeClass("hidden");
+          tr.removeClass("sample-hidden");
         }
       });
       $(".mqc_table_numrows").each(function () {
@@ -318,7 +318,7 @@ $(function () {
     });
 
     // Support expanding grouped samples in table
-    $(".expandable-row th").click(function (e) {
+    $(".expandable-row-primary th").click(function (e) {
       e.preventDefault();
       let th = $(this);
       // final most parent table object
@@ -331,7 +331,7 @@ $(function () {
         "tbody tr.expandable-row-secondary[data-sample-group='" + groupId + "'][data-table-id='" + tableId + "']",
       );
       // toggle the visibility of the rows and type of arrow
-      otherRows.toggle();
+      otherRows.toggleClass("expandable-row-secondary-hidden");
       tr.toggleClass("expanded");
     });
 

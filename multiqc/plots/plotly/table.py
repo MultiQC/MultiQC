@@ -406,27 +406,28 @@ def make_table(
     non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 
     for g_name in t_row_group_names:
+        group_classes = []
         # Hide the row if all cells are empty or hidden
-        do_not_display_group = True
+        all_samples_empty = True
         for s_name in group_to_sample_to_anchor_to_td[g_name]:
             if not all(group_to_sample_to_anchor_to_empty[g_name][s_name].values()):  # not all empty!
-                do_not_display_group = False
+                all_samples_empty = False
                 break
-        row_class = ""
+        if all_samples_empty:
+            group_classes.append("row-empty")
         for number_in_group, s_name in enumerate(group_to_sample_to_anchor_to_td[g_name]):
+            tr_classes = []
             prefix = ""
             if non_trivial_groups_present:
                 caret_cls = ""
                 if len(group_to_sample_to_anchor_to_td[g_name]) > 1 and number_in_group == 0:
                     caret_cls = "expandable-row-caret"
-                    row_class = "expandable-row"
+                    tr_classes.append("expandable-row-primary")
                 prefix += f'<div style="display: inline-block; width: 20px" class="{caret_cls}">&nbsp;</div>'
             if number_in_group != 0:
                 prefix += "&nbsp;↳&nbsp;"
-                row_class = "expandable-row-secondary"
-                do_not_display_group = True
-            row_hidden = "display: none;" if do_not_display_group else ""
-            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{row_class}" style="{row_hidden}">'
+                tr_classes.append("expandable-row-secondary expandable-row-secondary-hidden")
+            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{' '.join(group_classes + tr_classes)}">'
             # Sample name row header
             html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
             for col_anchor in col_to_th.keys():
