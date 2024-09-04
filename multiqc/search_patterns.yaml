@@ -938,6 +938,8 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+telseq:
+  contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE	TEL0	TEL1	TEL2	TEL3	TEL4	TEL5	TEL6	TEL7	TEL8	TEL9	TEL10	TEL11	TEL12	TEL13	TEL14	TEL15	TEL16	GC0	GC1	GC2	GC3	GC4	GC5	GC6	GC7	GC8	GC9"
 theta2:
   fn: "*.BEST.results"
 tophat:
