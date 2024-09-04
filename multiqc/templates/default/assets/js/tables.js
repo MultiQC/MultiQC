@@ -6,10 +6,13 @@
 $(function () {
   if ($(".mqc_per_sample_table").length > 0) {
     // Enable tablesorter on MultiQC tables
-    let get_sort_val = function (node) {
+    let getSortVal = function (node) {
       // if val is defined, use it
-      if (node.getAttribute("val") !== null) {
-        let val = node.getAttribute("val");
+      let val = $(node).data("sorting-val");
+      if (val !== null && val !== undefined) {
+        if (val === "") {
+          return val;
+        }
         let floatVal = parseFloat(val);
         if (!isNaN(floatVal)) {
           return val; // expected to return a string
@@ -29,7 +32,7 @@ $(function () {
     };
     $(".mqc_per_sample_table").tablesorter({
       sortInitialOrder: "desc",
-      textExtraction: get_sort_val,
+      textExtraction: getSortVal,
       cancelSelection: false,
       headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
     });

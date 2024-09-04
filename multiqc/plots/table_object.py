@@ -3,10 +3,8 @@ MultiQC datatable class, used by tables and violin plots
 """
 
 import logging
-import random
 import math
 import re
-import string
 from collections import defaultdict
 from typing import List, Tuple, Dict, Optional, Union, Callable, Sequence, Mapping
 
@@ -40,8 +38,8 @@ class ColumnMeta(ValidatedConfig):
     Column model class. Holds configuration for a single column in a table.
     """
 
-    id: Optional[ColumnKeyT] = Field(None, deprecated="rid")
-    rid: ColumnKeyT
+    id: Optional[AnchorT] = Field(None, deprecated="rid")
+    rid: AnchorT
     title: str
     description: str
     scale: Union[str, bool]
@@ -81,14 +79,14 @@ class ColumnMeta(ValidatedConfig):
 
         # Unique id to avoid overwriting by other datasets
         unclean_rid = header_d.get("rid", col_key)
-        rid: ColumnKeyT = ColumnKeyT(re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_"))
-        rid = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
+        anchor: AnchorT = AnchorT(re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_"))
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
-            rid = ColumnKeyT(f"{ns}-{rid}")
+            anchor = AnchorT(f"{ns}-{anchor}")
         if pconfig.id == "general_stats_table":
-            rid = ColumnKeyT(f"mqc-generalstats-{rid}")
-        header_d["rid"] = rid
+            anchor = AnchorT(f"mqc-generalstats-{anchor}")
+        anchor = report.save_htmlid(report.clean_htmlid(anchor), skiplint=True)
+        header_d["rid"] = anchor
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = header_d.get("shared_key", None)
