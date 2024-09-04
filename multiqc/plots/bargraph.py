@@ -5,6 +5,8 @@ import math
 from collections import OrderedDict
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
+import importlib_metadata
+
 from multiqc import config
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly import bar
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[importlib_metadata.EntryPoint] = None
 
 
 def get_template_mod():

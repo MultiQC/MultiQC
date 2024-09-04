@@ -7,8 +7,6 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-from pathlib import Path
-from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
 # Default logger will be replaced by caller
 import logging
@@ -16,12 +14,14 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Set, TextIO, Tuple, Union
 
 import importlib_metadata
-import yaml
 import pyaml_env  # type: ignore
+import yaml
 
-from multiqc.types import SectionIdT, ModuleIdT, AnchorT
+from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -202,8 +202,8 @@ output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 
-avail_modules: Dict
-avail_templates: Dict
+avail_modules: Dict[str, importlib_metadata.EntryPoint]
+avail_templates: Dict[str, importlib_metadata.EntryPoint]
 
 
 def load_defaults():

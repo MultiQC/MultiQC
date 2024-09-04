@@ -1,6 +1,8 @@
 import logging
 from typing import Dict, List, Optional, Sequence, Union
 
+import importlib_metadata
+
 from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import table
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[importlib_metadata.EntryPoint] = None
 
 
 def get_template_mod():
