@@ -1,11 +1,11 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence, Any, Iterable, TypeVar, Generator
+from typing import Dict, List, Sequence, Tuple, TypeVar, Union
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf, XToYDictT, KeyT
+from multiqc.plots.plotly.line import DatasetT, KeyT, LinePlotConfig, Series, ValueT, XToYDictT
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)

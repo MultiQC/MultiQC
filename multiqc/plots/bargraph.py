@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 from multiqc import config
 from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly import bar
-from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.types import ColumnKeyT, SampleGroupT, SampleNameT
+from multiqc.plots.plotly.bar import BarPlotConfig, InputCat
+from multiqc.types import SampleNameT
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -32,8 +32,9 @@ class Category(ValidatedConfig):
     color: Optional[str] = None
 
 
-InputDatasetT = Mapping[SampleNameT, Mapping[str, Union[int, float]]]
-DatasetT = Dict[str, Dict[str, Union[int, float]]]
+SampleName = Union[SampleNameT, str]
+InputDatasetT = Mapping[SampleName, Mapping[str, Union[int, float]]]
+DatasetT = Dict[SampleName, Dict[str, Union[int, float]]]
 
 # Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
 CatT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], Category]]]
@@ -120,20 +121,20 @@ def plot(
                         setattr(categories_per_ds[idx][cat_name], prop_name, prop_val)
 
     # Parse the data into a chart friendly format
-    plot_samples = list()
-    plot_data = list()
+    plot_samples: List[List[SampleNameT]] = list()
+    plot_data: List[List[InputCat]] = list()
     for idx, d in enumerate(raw_datasets):
-        hc_samples = list(d.keys())
+        hc_samples: List[SampleNameT] = [SampleNameT(s) for s in d.keys()]
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
         elif pconf.sort_samples:
-            hc_samples = sorted(list(d.keys()))
-        hc_data = list()
-        sample_d_count = dict()
+            hc_samples = sorted([SampleNameT(s) for s in d.keys()])
+        hc_data: List[InputCat] = list()
+        sample_d_count: Dict[SampleNameT, int] = dict()
         for c in categories_per_ds[idx].keys():
-            this_data = list()
+            this_data: List[Union[int, float]] = list()
             cat_count = 0
             for s in hc_samples:
                 if s not in sample_d_count:
@@ -143,7 +144,7 @@ def plot(
                     # Pad with NaNs when we have missing categories in a sample
                     this_data.append(float("nan"))
                     continue
-                val = d[s][c]
+                val = d[SampleNameT(s)][c]
                 if not isinstance(val, (float, int)):
                     try:
                         val = int(val)
@@ -164,18 +165,21 @@ def plot(
                 sample_d_count[s] += 1
             if cat_count > 0:
                 if pconf.hide_zero_cats is False or max(x for x in this_data if not math.isnan(x)) > 0:
-                    this_dict: Dict[str, Any] = {"name": categories_per_ds[idx][c].name, "data": this_data}
-                    if categories_per_ds[idx][c].color is not None:
-                        this_dict["color"] = categories_per_ds[idx][c].color
+                    this_dict: InputCat = {
+                        "name": categories_per_ds[idx][c].name,
+                        "color": categories_per_ds[idx][c].color,
+                        "data": this_data,
+                        "data_pct": [],
+                    }
                     hc_data.append(this_dict)
 
         # Remove empty samples
         for sample_name, cnt in sample_d_count.items():
             if cnt == 0:
-                idx = hc_samples.index(sample_name)
-                del hc_samples[idx]
-                for j, d in enumerate(hc_data):
-                    del hc_data[j]["data"][idx]
+                sample_idx = hc_samples.index(sample_name)
+                del hc_samples[sample_idx]
+                for hc_data_idx, _ in enumerate(hc_data):
+                    del hc_data[hc_data_idx]["data"][sample_idx]
         if len(hc_data) > 0:
             plot_samples.append(hc_samples)
             plot_data.append(hc_data)
@@ -186,9 +190,9 @@ def plot(
 
     # Add colors to the categories if not set. Since the "plot_defaults" scale is
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, sd in enumerate(plot_data):
-        for di, d in enumerate(sd):
-            d.setdefault("color", scale.get_colour(di, lighten=1))
+    for plot_data_idx, plot_data_item in enumerate(plot_data):
+        for d_idx, d_item in enumerate(plot_data_item):
+            d_item.setdefault("color", scale.get_colour(d_idx, lighten=1))
 
     # Make a plot - custom, interactive or flat
     mod = get_template_mod()

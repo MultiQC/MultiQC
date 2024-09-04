@@ -3,12 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from multiqc import report, Plot, config
+from multiqc import Plot, config, report
 from multiqc.core.exceptions import RunError
-from multiqc.plots.plotly.line import Series, LinePlotConfig
+from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
+from multiqc.plots.plotly.line import LinePlotConfig, Series
 from multiqc.types import AnchorT
 from multiqc.validation import ConfigValidationError
-from multiqc.plots import bargraph, linegraph, box, table, violin, heatmap, scatter
 
 
 def _verify_rendered(plot) -> Plot:
@@ -173,9 +173,9 @@ def test_bar_plot_fill_cats():
     """
     plot = _verify_rendered(
         bargraph.plot(
-            [{"Sample1": {"Cat1": 2, "Cat2": 2}}, {"Sample1": {"Cat1": 2, "Cat3": 2}}],
-            {"Cat1": {"name": "My category"}},
-            {"id": "test_bar_plot_fill_cats", "title": "Test: Bar Graph"},
+            data=[{"Sample1": {"Cat1": 2, "Cat2": 2}}, {"Sample1": {"Cat1": 2, "Cat3": 2}}],
+            cats={"Cat1": {"name": "My category"}},
+            pconfig={"id": "test_bar_plot_fill_cats", "title": "Test: Bar Graph"},
         )
     )
     assert len(report.plot_data[plot.anchor]["datasets"]) == 2
