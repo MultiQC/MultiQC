@@ -149,7 +149,8 @@ class Dataset(BaseDataset):
             data = cat.data_pct if is_pct else cat.data
 
             params = copy.deepcopy(self.trace_params)
-            params["marker"]["color"] = f"rgb({cat.color})"
+            if cat.color:
+                params["marker"]["color"] = f"rgb({cat.color})"
             fig.add_trace(
                 go.Bar(
                     y=self.samples,
