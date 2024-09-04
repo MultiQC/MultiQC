@@ -1,11 +1,11 @@
 import logging
-from typing import List, Dict, Union, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
-from multiqc.plots import table_object
-from multiqc.plots.plotly.plot import Plot
 from multiqc import config, report
+from multiqc.plots import table_object
 from multiqc.plots.plotly import table
-from multiqc.plots.table_object import TableConfig, InputSectionT, InputHeaderT
+from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import InputHeaderT, InputSectionT, TableConfig
 from multiqc.types import AnchorT
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def plot(
 
     # Make a datatable object
     table_id = pconfig.id
-    table_anchor = AnchorT(f"{pconfig.anchor or table_id}-table")
+    table_anchor = AnchorT(f"{pconfig.anchor or table_id}_table")
     table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
     dt = table_object.DataTable.create(data, table_id, table_anchor, pconfig.model_copy(), headers)
 

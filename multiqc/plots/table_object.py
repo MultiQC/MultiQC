@@ -71,6 +71,7 @@ class ColumnMeta(ValidatedConfig):
         col_key: ColumnKeyT,  # to initialize rid
         sec_idx: int,  # to initialize the colour
         pconfig: TableConfig,  # plot config dictionary
+        table_anchor: AnchorT,
     ) -> "ColumnMeta":
         ns = header_d.get("namespace", pconfig.namespace) or ""
         assert isinstance(ns, str)
@@ -83,7 +84,7 @@ class ColumnMeta(ValidatedConfig):
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
             rid = f"{ns}-{rid}"
-        header_d["rid"] = AnchorT(report.save_htmlid(report.clean_htmlid(f"{pconfig.anchor}-{rid}"), skiplint=True))
+        header_d["rid"] = AnchorT(report.save_htmlid(f"{table_anchor}-{rid}"))
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = header_d.get("shared_key", None)
@@ -327,7 +328,7 @@ class DataTable(BaseModel):
             header_by_key_copy = _get_or_create_headers(rows_by_sname__with_nulls, header_by_key, pconfig)
             for col_key, header_d in header_by_key_copy.items():
                 column_by_key[col_key] = ColumnMeta.create(
-                    header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig
+                    header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig, table_anchor=table_anchor
                 )
 
             # Filter out null values and columns that are not present in column_by_key,

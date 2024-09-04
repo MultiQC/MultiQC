@@ -1,12 +1,12 @@
 import logging
 import random
 import string
-from typing import List, Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import violin
-from multiqc.plots.table_object import TableConfig, InputSectionT, InputHeaderT
+from multiqc.plots.table_object import InputHeaderT, InputSectionT, TableConfig
 from multiqc.types import AnchorT
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ def plot(
     for i, d in enumerate(data):
         h = headers[i] if headers and len(headers) > i else None
         table_id = pconfig.id
-        table_anchor = AnchorT(f"{pconfig.anchor or table_id}-table")
+        table_anchor = AnchorT(f"{pconfig.anchor or table_id}_table")
         if len(data) > 0:
             table_anchor = AnchorT(f"{table_anchor}-{i + 1}")
         table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique

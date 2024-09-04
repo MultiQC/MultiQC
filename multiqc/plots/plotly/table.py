@@ -31,14 +31,17 @@ def make_table(
     col_to_th: Dict[AnchorT, str] = dict()
     col_to_modal_headers: Dict[AnchorT, str] = dict()
     col_to_hidden: Dict[AnchorT, bool] = dict()
-    group_to_sample_to_td: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, str]]] = defaultdict(
+    group_to_sample_to_anchor_to_td: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, str]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, ValueT]]] = defaultdict(
+    group_to_sample_to_anchor_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sorting_val: Dict[SampleGroupT, Dict[AnchorT, ValueT]] = defaultdict(dict)
-    group_to_sample_to_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, bool]]] = defaultdict(
+    group_to_sample_to_nice_name_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[str, ValueT]]] = defaultdict(
+        lambda: defaultdict(dict)
+    )
+    group_to_sorting_to_anchor_to_val: Dict[SampleGroupT, Dict[AnchorT, ValueT]] = defaultdict(dict)
+    group_to_sample_to_anchor_to_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, bool]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     # empty_cells: Dict[ColumnKeyT, str] = dict()
@@ -128,7 +131,8 @@ def make_table(
                 val: ValueT = row.raw_data[col_key]
                 valstr: str = row.formatted_data[col_key]
 
-                group_to_sample_to_val[group_name][row.sample][col_anchor] = val
+                group_to_sample_to_anchor_to_val[group_name][row.sample][col_anchor] = val
+                group_to_sample_to_nice_name_to_val[group_name][row.sample][col_key] = val
 
                 if c_scale and c_scale.name not in c_scale.qualitative_scales:
                     dmin = header.dmin
@@ -226,15 +230,15 @@ def make_table(
                         f"Value {val} is not hashable for table {dt.anchor}, column {col_key}, sample {row.sample}"
                     )
 
-                sorting_val = group_to_sorting_val.get(group_name, {}).get(col_anchor)
+                sorting_val = group_to_sorting_to_anchor_to_val.get(group_name, {}).get(col_anchor)
                 if sorting_val is None:
-                    group_to_sorting_val[group_name][col_anchor] = val
+                    group_to_sorting_to_anchor_to_val[group_name][col_anchor] = val
                     sorting_val = val
 
                 # Categorical background colours supplied
                 if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
-                    group_to_sample_to_td[group_name][row.sample][col_anchor] = (
+                    group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
                         f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}" {col}>{valstr}</td>'
                     )
 
@@ -250,22 +254,24 @@ def make_table(
                     val_html = f'<span class="val">{valstr}</span>'
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
-                    group_to_sample_to_td[group_name][row.sample][col_anchor] = (
+                    group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
                         f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {hide}">{wrapper_html}</td>'
                     )
 
                 # Scale / background colours are disabled
                 else:
-                    group_to_sample_to_td[group_name][row.sample][col_anchor] = (
+                    group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
                         f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}">{valstr}</td>'
                     )
 
                 # Is this cell hidden or empty?
-                group_to_sample_to_empty[group_name][row.sample][col_anchor] = header.hidden or str(val).strip() == ""
+                group_to_sample_to_anchor_to_empty[group_name][row.sample][col_anchor] = (
+                    header.hidden or str(val).strip() == ""
+                )
 
         # Remove header if we don't have any filled cells for it
         sum_vals = 0
-        for g, rows_by_sample in group_to_sample_to_td.items():
+        for g, rows_by_sample in group_to_sample_to_anchor_to_td.items():
             sum_vals += sum([len(rows) for rows in rows_by_sample.values()])
         if sum_vals == 0:
             if header.hidden:
@@ -351,11 +357,13 @@ def make_table(
         )
 
         # "Showing x of y columns" text
-        row_visibilities = [all(group_to_sample_to_empty[s_name].values()) for s_name in group_to_sample_to_empty]
+        row_visibilities = [
+            all(group_to_sample_to_anchor_to_empty[s_name].values()) for s_name in group_to_sample_to_anchor_to_empty
+        ]
         visible_rows = [x for x in row_visibilities if not x]
 
         # Visible rows
-        t_showing_rows_txt = f'Showing <sup id="{dt.anchor}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(group_to_sample_to_td)}</sub> rows'
+        t_showing_rows_txt = f'Showing <sup id="{dt.anchor}_numrows" class="mqc_table_numrows">{len(visible_rows)}</sup>/<sub>{len(group_to_sample_to_anchor_to_td)}</sub> rows'
 
         # How many columns are visible?
         ncols_vis = (len(col_to_th) + 1) - hidden_cols
@@ -376,7 +384,9 @@ def make_table(
         """
 
     # Build the table itself
-    collapse_class = "mqc-table-collapse" if len(group_to_sample_to_td) > 10 and config.collapse_tables else ""
+    collapse_class = (
+        "mqc-table-collapse" if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables else ""
+    )
     html += f"""
         <div id="{dt.anchor}_container" class="mqc_table_container">
             <div class="table-responsive mqc-table-responsive {collapse_class}">
@@ -389,25 +399,25 @@ def make_table(
 
     # Build the table body
     html += "<tbody>"
-    t_row_group_names = list(group_to_sample_to_td.keys())
+    t_row_group_names = list(group_to_sample_to_anchor_to_td.keys())
     if dt.pconfig.sort_rows:
         t_row_group_names = sorted(t_row_group_names)
 
-    non_trivial_groups_present = any(len(group_to_sample_to_td[g_name]) > 1 for g_name in t_row_group_names)
+    non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 
     for g_name in t_row_group_names:
         # Hide the row if all cells are empty or hidden
         do_not_display_group = True
-        for s_name in group_to_sample_to_td[g_name]:
-            if not all(group_to_sample_to_empty[g_name][s_name].values()):  # not all empty!
+        for s_name in group_to_sample_to_anchor_to_td[g_name]:
+            if not all(group_to_sample_to_anchor_to_empty[g_name][s_name].values()):  # not all empty!
                 do_not_display_group = False
                 break
         row_class = ""
-        for number_in_group, s_name in enumerate(group_to_sample_to_td[g_name]):
+        for number_in_group, s_name in enumerate(group_to_sample_to_anchor_to_td[g_name]):
             prefix = ""
             if non_trivial_groups_present:
                 caret_cls = ""
-                if len(group_to_sample_to_td[g_name]) > 1 and number_in_group == 0:
+                if len(group_to_sample_to_anchor_to_td[g_name]) > 1 and number_in_group == 0:
                     caret_cls = "expandable-row-caret"
                     row_class = "expandable-row"
                 prefix += f'<div style="display: inline-block; width: 20px" class="{caret_cls}">&nbsp;</div>'
@@ -420,15 +430,15 @@ def make_table(
             # Sample name row header
             html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
             for col_anchor in col_to_th.keys():
-                cell_html = group_to_sample_to_td[g_name][s_name].get(col_anchor)
+                cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
                     hide = "hide" if col_to_hidden[col_anchor] else ""
-                    sorting_val = group_to_sorting_val.get(g_name, {}).get(col_anchor, "")
+                    sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
                     cell_html = f'<td class="data-coloured {col_anchor} {hide}" data-sorting-val="{sorting_val}"></td>'
                 html += cell_html
             html += "</tr>"
     html += "</tbody></table></div>"
-    if len(group_to_sample_to_td) > 10 and config.collapse_tables:
+    if len(group_to_sample_to_anchor_to_td) > 10 and config.collapse_tables:
         html += '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>'
     html += "</div>"
 
@@ -436,7 +446,7 @@ def make_table(
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
         flatten_raw_vals: Dict[SampleNameT, Dict[AnchorT, ValueT]] = {}
-        for g_name, g_data in group_to_sample_to_val.items():
+        for g_name, g_data in group_to_sample_to_anchor_to_val.items():
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[s_name] = s_data
         report.write_data_file(flatten_raw_vals, fname)
