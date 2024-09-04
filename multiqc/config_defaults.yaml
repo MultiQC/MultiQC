@@ -314,20 +314,17 @@ fn_clean_exts:
   - ".error.grp"
   - ".vgstats"
 
-# Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
-# Affects all modules that support it (e.g. fastqc, fastp)
-generalstats_sample_merge_groups:
-#  read_pairs:
-#    "Read 1":
-#      - type: regex
-#        pattern: "_R1"
-#      - type: regex
-#        pattern: "[_.-][rR]?1$"
-#    "Read 2":
-#      - type: regex
-#        pattern: "_R2"
-#      - type: regex
-#        pattern: "[_.-][rR]?2$"
+# Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
+# Affects all modules that support it (e.g. fastqc, cutadapt)
+# generalstats_sample_merge_groups:
+#   "R1":
+#     - "_R1"
+#     - type: regex
+#       pattern: "[_.-][rR]?1$"
+#   "R2":
+#     - "_R2"
+#     - type: regex
+#       pattern: "[_.-][rR]?2$"
 
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
