@@ -25,7 +25,7 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import PlotType, Plot
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import ModuleIdT
+from multiqc.types import ModuleIdT, AnchorT
 
 logger = logging.getLogger("multiqc")
 
@@ -261,14 +261,14 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
-        for s, val_by_key in data_by_sample.items():
+    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+        for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
-            for key, val in val_by_key.items():
-                if key in header:
-                    key = f"{header[key].get('namespace', '')}.{key}"
-                    data[s][key] = val
+            for row in rows:
+                for key, val in row.data.items():
+                    if key in header:
+                        data[s][f"{header[key].get('namespace', '')}.{key}"] = val
     if sample:
         if not data:
             return {}
@@ -362,13 +362,13 @@ def add_custom_content_section(
 
     module = BaseMultiqcModule(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(f"{anchor}-module"),
         info=description,
         comment=comment,
     )
     module.add_section(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(anchor),
         description=description,
         helptext=helptext,
         content_before_plot=content_before_plot,

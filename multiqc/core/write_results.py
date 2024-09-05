@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, List, Union, Callable, cast
 
 import jinja2
 
@@ -23,6 +23,7 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import ColumnKeyT
 from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
@@ -300,18 +301,6 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
-    # Add general-stats IDs to table row headers
-    for idx, h in enumerate(report.general_stats_headers):
-        for k in h.keys():
-            unclean_rid = h[k].get("rid", k)
-            rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-            h[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
-
-            ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
-            report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
-                f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
-            )
-
     all_hidden = True
     for headers in report.general_stats_headers:
         for h in headers.values():
@@ -331,7 +320,7 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True

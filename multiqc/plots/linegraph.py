@@ -1,18 +1,20 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence, Any, Iterable, TypeVar, Generator
+from typing import Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf, XToYDictT, KeyT
+from multiqc.plots.plotly.line import DatasetT, KeyT, LinePlotConfig, Series, ValueT, XToYDictT
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():

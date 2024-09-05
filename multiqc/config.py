@@ -7,8 +7,6 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-from pathlib import Path
-from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
 # Default logger will be replaced by caller
 import logging
@@ -16,11 +14,15 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
-import yaml
 import pyaml_env  # type: ignore
+import yaml
+from importlib_metadata import EntryPoint
 
+from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -55,6 +57,8 @@ try:
         version = f"{version} ({git_hash_short})"
 except:  # noqa: E722
     pass
+
+CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
 
 
 title: str
@@ -143,7 +147,7 @@ fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
 sample_names_rename_buttons: List[str]
-sample_names_replace: Dict
+sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
@@ -166,12 +170,13 @@ filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
-fn_clean_exts: List
-fn_clean_trim: List
-fn_ignore_files: List
+fn_clean_exts: List[CleanPatternT]
+fn_clean_trim: List[str]
+fn_ignore_files: List[str]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
+generalstats_sample_merge_groups: Dict[str, List[CleanPatternT]]
 
 # Module filename search patterns
 sp: Dict = {}
@@ -191,13 +196,15 @@ exclude_modules: List[str]
 data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
-report_section_order: Dict
+report_section_order: Dict[
+    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+]
 output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 
-avail_modules: Dict
-avail_templates: Dict
+avail_modules: Dict[str, EntryPoint]
+avail_templates: Dict[str, EntryPoint]
 
 
 def load_defaults():
@@ -290,6 +297,9 @@ load_defaults()
 # To restore after load_defaults()
 explicit_user_config_files: Set[Path] = set()
 
+# To avoid finding same file many times
+loaded_user_files: Set[Path] = set()
+
 
 def reset():
     """
@@ -309,15 +319,8 @@ def find_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
-    _loaded = set()
-
     def _load_found_file(path: Union[Path, str, None]):
-        if not path:
-            return
-        if Path(path).absolute() in _loaded:
-            return
         load_config_file(path, is_explicit_config=False)
-        _loaded.add(Path(path).absolute())
 
     # Load and parse installation config file if we find it
     _load_found_file(REPO_DIR / "multiqc_config.yaml")
@@ -342,7 +345,7 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True):
+def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
     """
     Load and parse a config file if we find it.
 
@@ -350,28 +353,37 @@ def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_confi
     which means we need to keep track of to restore the config update update_defaults.
     """
     if not yaml_config_path:
-        return
+        return None
 
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
 
-    if path.is_file():
-        if is_explicit_config:
-            explicit_user_config_files.add(path)
+    if not path.is_file():
+        return None
 
-        try:
-            # pyaml_env allows referencing environment variables in YAML for default values
-            # new_config can be None if the file is empty
-            new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
-            if new_config:
-                logger.info(f"Loading config settings from: {path}")
-                _add_config(new_config, str(path))
-        except (IOError, AttributeError) as e:
-            logger.warning(f"Error loading config {path}: {e}")
-        except yaml.scanner.ScannerError as e:
-            logger.error(f"Error parsing config YAML: {e}")
-            raise
+    if path.absolute() in loaded_user_files:  # already loaded
+        return path
+
+    if is_explicit_config:
+        explicit_user_config_files.add(path)
+
+    try:
+        # pyaml_env allows referencing environment variables in YAML for default values
+        # new_config can be None if the file is empty
+        new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
+        if new_config:
+            logger.info(f"Loading config settings from: {path}")
+            _add_config(new_config, str(path))
+    except (IOError, AttributeError) as e:
+        logger.warning(f"Error loading config {path}: {e}")
+        return None
+    except yaml.scanner.ScannerError as e:
+        logger.error(f"Error parsing config YAML: {e}")
+        raise
+
+    loaded_user_files.add(path.absolute())
+    return path
 
 
 def load_cl_config(cl_config: List[str]):

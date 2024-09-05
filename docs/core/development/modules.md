@@ -852,14 +852,14 @@ To give more informative table headers and configure things like
 data scales and colour schemes, you can supply an extra dict:
 
 ```python
-from multiqc.plots.table_object import TableColumn
+from multiqc.plots.table_object import ColumnMeta
 headers = {
-    'first_col': TableColumn(
+    'first_col': ColumnMeta(
         title='First',
         description='My First Column',
         scale='RdYlGn-rev'
     ),
-    'second_col': TableColumn(
+    'second_col': ColumnMeta(
         title='Second',
         description='My Second Column',
         max=100,
