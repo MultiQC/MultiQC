@@ -3,11 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from multiqc import report, Plot, config
+from multiqc import Plot, config, report
 from multiqc.core.exceptions import RunError
-from multiqc.plots.plotly.line import Series, LinePlotConfig
+from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
+from multiqc.plots.plotly.line import LinePlotConfig, Series
+from multiqc.types import AnchorT
 from multiqc.validation import ConfigValidationError
-from multiqc.plots import bargraph, linegraph, box, table, violin, heatmap, scatter
 
 
 def _verify_rendered(plot) -> Plot:
@@ -50,7 +51,7 @@ def test_linegraph():
         )
     )
 
-    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.id]["datasets"][0]["lines"]):
+    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.anchor]["datasets"][0]["lines"]):
         assert len(in_series) == len(out_series["pairs"])
 
 
@@ -136,7 +137,7 @@ def test_bar_plot_cats_dicts():
             {"id": "test_bar_plot_cats_dicts", "title": "Test: Bar Graph"},
         )
     )
-    assert report.plot_data[plot.id]["datasets"][0]["cats"][0]["name"] == "My category"
+    assert report.plot_data[plot.anchor]["datasets"][0]["cats"][0]["name"] == "My category"
 
 
 def test_bar_plot_cats_dicts_with_typo():
@@ -151,7 +152,7 @@ def test_bar_plot_cats_dicts_with_typo():
         )
     )
 
-    assert report.plot_data[plot.id]["datasets"][0]["cats"][0]["name"] == "Cat1"
+    assert report.plot_data[plot.anchor]["datasets"][0]["cats"][0]["name"] == "Cat1"
 
 
 def test_bar_plot_cats_mismatch_cats_and_ds_count():
@@ -172,16 +173,16 @@ def test_bar_plot_fill_cats():
     """
     plot = _verify_rendered(
         bargraph.plot(
-            [{"Sample1": {"Cat1": 2, "Cat2": 2}}, {"Sample1": {"Cat1": 2, "Cat3": 2}}],
-            {"Cat1": {"name": "My category"}},
-            {"id": "test_bar_plot_fill_cats", "title": "Test: Bar Graph"},
+            data=[{"Sample1": {"Cat1": 2, "Cat2": 2}}, {"Sample1": {"Cat1": 2, "Cat3": 2}}],
+            cats={"Cat1": {"name": "My category"}},
+            pconfig={"id": "test_bar_plot_fill_cats", "title": "Test: Bar Graph"},
         )
     )
-    assert len(report.plot_data[plot.id]["datasets"]) == 2
-    assert len(report.plot_data[plot.id]["datasets"][0]["cats"]) == 1
-    assert len(report.plot_data[plot.id]["datasets"][1]["cats"]) == 1
-    assert report.plot_data[plot.id]["datasets"][0]["cats"][0]["name"] == "My category"
-    assert report.plot_data[plot.id]["datasets"][1]["cats"][0]["name"] == "My category"
+    assert len(report.plot_data[plot.anchor]["datasets"]) == 2
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["cats"]) == 1
+    assert len(report.plot_data[plot.anchor]["datasets"][1]["cats"]) == 1
+    assert report.plot_data[plot.anchor]["datasets"][0]["cats"][0]["name"] == "My category"
+    assert report.plot_data[plot.anchor]["datasets"][1]["cats"][0]["name"] == "My category"
 
 
 def test_bar_plot_no_cats():
@@ -199,7 +200,7 @@ def test_bar_plot_no_cats():
         )
     )
 
-    assert len(report.plot_data[plot.id]["datasets"][0]["cats"]) == 3
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["cats"]) == 3
 
 
 def test_linegraph_smooth():
@@ -213,7 +214,7 @@ def test_linegraph_smooth():
         )
     )
 
-    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.id]["datasets"][0]["lines"]):
+    for in_series, out_series in zip(dataset.values(), report.plot_data[plot.anchor]["datasets"][0]["lines"]):
         assert min(len(in_series), SMOOTH_TO) == len(out_series["pairs"])
 
 
@@ -229,7 +230,7 @@ def test_linegraph_multiple_datasets():
         )
     )
 
-    assert len(report.plot_data[plot.id]["datasets"]) == 2
+    assert len(report.plot_data[plot.anchor]["datasets"]) == 2
 
 
 @pytest.mark.parametrize(
@@ -370,17 +371,18 @@ def test_extra_series_multiple_datasets():
         )
     )
 
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 2
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][0]["pairs"]) == 2
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][1]["pairs"]) == 1
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][0]["name"] == "Sample1"
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
+    anchor = AnchorT(plot_id)
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 2
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"][1]["pairs"]) == 1
+    assert report.plot_data[anchor]["datasets"][0]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[anchor]["datasets"][0]["lines"][1]["name"] == "Extra1"
 
-    assert len(report.plot_data[plot_id]["datasets"][1]["lines"]) == 2
-    assert len(report.plot_data[plot_id]["datasets"][1]["lines"][0]["pairs"]) == 2
-    assert len(report.plot_data[plot_id]["datasets"][1]["lines"][1]["pairs"]) == 1
-    assert report.plot_data[plot_id]["datasets"][1]["lines"][0]["name"] == "Sample1"
-    assert report.plot_data[plot_id]["datasets"][1]["lines"][1]["name"] == "Extra1"
+    assert len(report.plot_data[anchor]["datasets"][1]["lines"]) == 2
+    assert len(report.plot_data[anchor]["datasets"][1]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[anchor]["datasets"][1]["lines"][1]["pairs"]) == 1
+    assert report.plot_data[anchor]["datasets"][1]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[anchor]["datasets"][1]["lines"][1]["name"] == "Extra1"
 
 
 def test_multiple_extra_series():
@@ -397,14 +399,15 @@ def test_multiple_extra_series():
         )
     )
 
-    assert len(report.plot_data[plot_id]["datasets"]) == 1
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 3
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][0]["pairs"]) == 2
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][1]["pairs"]) == 1
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"][2]["pairs"]) == 1
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][0]["name"] == "Sample1"
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][2]["name"] == "Extra2"
+    anchor = AnchorT(plot_id)
+    assert len(report.plot_data[anchor]["datasets"]) == 1
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 3
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"][1]["pairs"]) == 1
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"][2]["pairs"]) == 1
+    assert report.plot_data[anchor]["datasets"][0]["lines"][0]["name"] == "Sample1"
+    assert report.plot_data[anchor]["datasets"][0]["lines"][1]["name"] == "Extra1"
+    assert report.plot_data[anchor]["datasets"][0]["lines"][2]["name"] == "Extra2"
 
 
 def test_extra_series_multiple_datasets_different_series():
@@ -422,14 +425,15 @@ def test_extra_series_multiple_datasets_different_series():
         )
     )
 
-    assert len(report.plot_data[plot_id]["datasets"]) == 2
-    for ds in report.plot_data[plot_id]["datasets"]:
+    anchor = AnchorT(plot_id)
+    assert len(report.plot_data[anchor]["datasets"]) == 2
+    for ds in report.plot_data[anchor]["datasets"]:
         assert len(ds["lines"]) == 2
         assert len(ds["lines"][0]["pairs"]) == 2
         assert len(ds["lines"][1]["pairs"]) == 1
         assert ds["lines"][0]["name"] == "Sample1"
-    assert report.plot_data[plot_id]["datasets"][0]["lines"][1]["name"] == "Extra1"
-    assert report.plot_data[plot_id]["datasets"][1]["lines"][1]["name"] == "Extra2"
+    assert report.plot_data[anchor]["datasets"][0]["lines"][1]["name"] == "Extra1"
+    assert report.plot_data[anchor]["datasets"][1]["lines"][1]["name"] == "Extra2"
 
 
 def test_extra_series_multiple_datasets_multiple_series():
@@ -446,8 +450,9 @@ def test_extra_series_multiple_datasets_multiple_series():
         )
     )
 
-    assert len(report.plot_data[plot_id]["datasets"]) == 2
-    for ds in report.plot_data[plot_id]["datasets"]:
+    anchor = AnchorT(plot_id)
+    assert len(report.plot_data[anchor]["datasets"]) == 2
+    for ds in report.plot_data[anchor]["datasets"]:
         assert len(ds["lines"]) == 3
         assert len(ds["lines"][0]["pairs"]) == 2
         assert len(ds["lines"][1]["pairs"]) == 1
@@ -472,11 +477,12 @@ def test_dash_styles():
     data = {
         "Sample1": {0: 1, 1: 1},
     }
+    anchor = AnchorT(plot_id)
     with patch("logging.Logger.warning") as log:
         _verify_rendered(linegraph.plot(data, pconfig=pconfig))
         warnings = [call.args[0] for call in log.mock_calls if call.args]
         assert "• 'dashStyle' field is deprecated. Please use 'dash' instead" in warnings
         assert "• 'ShortDash' is a deprecated dash style, use 'dash'" in warnings
-    assert len(report.plot_data[plot_id]["datasets"][0]["lines"]) == 5
-    for line in report.plot_data[plot_id]["datasets"][0]["lines"][1:]:
+    assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 5
+    for line in report.plot_data[anchor]["datasets"][0]["lines"][1:]:
         assert line["dash"] == "dash"

@@ -3,7 +3,7 @@ from typing import Dict, Union
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
-from multiqc.types import AnchorT, SectionIdT
+from multiqc.types import AnchorT, SectionIdT, ModuleIdT
 
 logger = logging.getLogger(__name__)
 
@@ -54,16 +54,20 @@ def order_modules_and_sections():
                     sec_or_mod_id_or_anchor.endswith("-module")
                     and sec_or_mod_id_or_anchor[:-7] in module_id_order.keys()
                 ):  # back-compat with < 1.24
-                    sec_or_mod_id_or_anchor = sec_or_mod_id_or_anchor[:-7]
+                    sec_or_mod_id_or_anchor = ModuleIdT(sec_or_mod_id_or_anchor[:-7])
                 else:
                     logger.debug(f"config.report_section_order: module '{sec_or_mod_id_or_anchor}' not found.")
                     continue
-            if ss.get("order") is not None:
-                module_id_order[sec_or_mod_id_or_anchor] = ss["order"]
-            if ss.get("after") in module_id_order.keys():
-                module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["after"]] + 1
-            if ss.get("before") in module_id_order.keys():
-                module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["before"]] - 1
+            if isinstance(ss, dict):
+                if ss.get("order") is not None:
+                    assert isinstance(ss["order"], int)
+                    module_id_order[sec_or_mod_id_or_anchor] = ss["order"]
+                if ss.get("after") in module_id_order.keys():
+                    assert isinstance(ss["after"], str)
+                    module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["after"]] + 1
+                if ss.get("before") in module_id_order.keys():
+                    assert isinstance(ss["before"], str)
+                    module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["before"]] - 1
         sorted_ids = sorted(module_id_order.keys(), key=lambda k: module_id_order[k])
         report.modules = [mod for i in reversed(sorted_ids) for mod in report.modules if mod.anchor == i]
 
@@ -72,7 +76,7 @@ def order_modules_and_sections():
     if len(config.report_section_order) > 0:
         # Go through each module
         for midx, mod in enumerate(report.modules):
-            section_id_order: Dict[Union[AnchorT, SectionIdT], int] = dict()
+            section_id_order: Dict[Union[AnchorT, SectionIdT, ModuleIdT], int] = dict()
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:
@@ -86,14 +90,18 @@ def order_modules_and_sections():
                 if ss == "remove":
                     section_id_order[sec_or_mod_id_or_anchor] = False
                     continue
-                if ss.get("order") is not None:
-                    section_id_order[sec_or_mod_id_or_anchor] = ss["order"]
-                if ss.get("after") in section_id_order.keys():
-                    section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["after"]] + 1
-                if ss.get("before") in section_id_order.keys():
-                    section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["before"]] - 1
+                if isinstance(ss, dict):
+                    if ss.get("order") is not None:
+                        assert isinstance(ss["order"], int)
+                        section_id_order[sec_or_mod_id_or_anchor] = ss["order"]
+                    if ss.get("after") in section_id_order.keys():
+                        assert isinstance(ss["after"], str)
+                        section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["after"]] + 1
+                    if ss.get("before") in section_id_order.keys():
+                        assert isinstance(ss["before"], str)
+                        section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["before"]] - 1
             # Remove module sections
             section_id_order = {sec_id: order for sec_id, order in section_id_order.items() if order is not False}
             # Sort the module sections
-            sorted_ids = sorted(section_id_order.keys(), key=lambda sec_id: section_id_order[sec_id])
+            sorted_ids = sorted(section_id_order.keys(), key=lambda sec_id: section_id_order[SectionIdT(sec_id)])
             report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i or s.id == i]

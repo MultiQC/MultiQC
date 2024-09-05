@@ -21,6 +21,7 @@ import importlib_metadata
 import yaml
 import pyaml_env  # type: ignore
 
+from multiqc.types import SectionIdT, ModuleIdT, AnchorT
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -55,6 +56,8 @@ try:
         version = f"{version} ({git_hash_short})"
 except:  # noqa: E722
     pass
+
+CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
 
 
 title: str
@@ -143,7 +146,7 @@ fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
 sample_names_rename_buttons: List[str]
-sample_names_replace: Dict
+sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
@@ -166,12 +169,13 @@ filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
-fn_clean_exts: List
-fn_clean_trim: List
-fn_ignore_files: List
+fn_clean_exts: List[CleanPatternT]
+fn_clean_trim: List[str]
+fn_ignore_files: List[str]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
+generalstats_sample_merge_groups: Dict[str, List[CleanPatternT]]
 
 # Module filename search patterns
 sp: Dict = {}
@@ -191,7 +195,9 @@ exclude_modules: List[str]
 data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
-report_section_order: Dict
+report_section_order: Dict[
+    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+]
 output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
