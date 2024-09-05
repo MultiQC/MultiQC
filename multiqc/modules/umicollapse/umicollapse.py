@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Discarded unmapped, unpaired, or chimeric reads",
                 "min": 0,
                 "format": "{:,d}",
-                "scale": "Blacks",
+                "scale": "Blues",
             },
         }
 

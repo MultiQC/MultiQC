@@ -24,6 +24,7 @@ Number of unremoved reads	53466354
 Number of unique alignment positions	21532282
 Average number of UMIs per alignment position	1.3478738110526325
 Max number of UMIs over all alignment positions	165
+Number of reads after deduplicating	27208411
 UMI collapsing finished in 1077.717 seconds!
 """)
 
@@ -48,6 +49,9 @@ UMI collapsing finished in 1077.717 seconds!
         "SRR19887568": {
             "input_reads": 53490614,
             "dedup_input_reads": 53466354,
+            "dedup_output_reads": 27208411,
+            "dedup_percent_passing": 50.89,
+            "dedup_removed_reads": 26257943,
             "positions_deduplicated": 21532282,
             "mean_umi_per_pos": 1.3478738110526325,
             "max_umi_per_pos": 165,
