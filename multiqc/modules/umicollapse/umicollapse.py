@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         headers = {
             "dedup_output_reads": {
-                "title": f"{config.read_count_prefix} Unique Reads",
+                "title": "Unique Reads",
                 "description": f"Reads remaining after deduplication ({config.read_count_desc})",
                 "min": 0,
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "PuRd",
             },
             "dedup_percent_passing": {
-                "title": "% Pass Dedup",
+                "title": "Pass Dedup",
                 "description": "% processed reads that passed deduplication",
                 "max": 100,
                 "min": 0,
