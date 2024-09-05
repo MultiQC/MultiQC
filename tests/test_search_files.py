@@ -7,9 +7,9 @@ from typing import Dict, Set, Union
 
 import pytest
 import yaml
+from importlib_metadata import EntryPoint
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.core.file_search import file_search
 
@@ -22,7 +22,7 @@ def _test_search_files(
 ):
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())
-    config.avail_modules = dict.fromkeys(config.run_modules)
+    config.avail_modules = {k: EntryPoint(k, k, k) for k in config.run_modules}
 
     config.analysis_dir = [str(analysis_dir)]
     if extra_config:
