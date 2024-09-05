@@ -1,11 +1,12 @@
 import logging
-from typing import List, Dict, Union, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
+from multiqc import config, report
 from multiqc.plots import table_object
-from multiqc.plots.plotly.plot import Plot
-from multiqc import config
 from multiqc.plots.plotly import table
-from multiqc.plots.table_object import TableConfig, DatasetT
+from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import InputHeaderT, InputSectionT, TableConfig
+from multiqc.types import AnchorT
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,8 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[DatasetT, Sequence[DatasetT]],
-    headers: Optional[Union[List[Dict], Dict]] = None,
+    data: Union[InputSectionT, Sequence[InputSectionT]],
+    headers: Optional[Union[List[InputHeaderT], InputHeaderT]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, Plot]:
     """Return HTML for a MultiQC table.
@@ -37,7 +38,10 @@ def plot(
         pconfig = TableConfig(**pconfig)
 
     # Make a datatable object
-    dt = table_object.DataTable.create(data, pconfig, headers)
+    table_id = pconfig.id
+    table_anchor = AnchorT(f"{pconfig.anchor or table_id}_table")
+    table_anchor = report.save_htmlid(table_anchor)  # make sure it's unique
+    dt = table_object.DataTable.create(data, table_id, table_anchor, pconfig.model_copy(), headers)
 
     return plot_dt(dt)
 
@@ -47,8 +51,8 @@ def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
     if "table" in mod.__dict__ and callable(mod.table):
         # Collect unique sample names
         s_names = set()
-        for d in dt.raw_data:
-            for s_name in d.keys():
+        for section in dt.sections:
+            for s_name in section.rows_by_sgroup.keys():
                 s_names.add(s_name)
 
         # noinspection PyBroadException

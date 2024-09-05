@@ -1,21 +1,21 @@
 import base64
 import io
 import logging
+import math
 import random
 import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any, TypeVar, Generic
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
-import math
 import plotly.graph_objects as go  # type: ignore
-from pydantic import BaseModel, field_validator, field_serializer, Field
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc import config, report
 from multiqc.types import AnchorT
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
@@ -223,9 +223,6 @@ class Plot(BaseModel, Generic[T]):
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
-        if id is None:  # id of the plot group
-            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-            id = f"mqc_plot_{uniq_suffix}"
         anchor = anchor or pconfig.anchor or id
         anchor = report.save_htmlid(anchor)  # make sure it's unique
 

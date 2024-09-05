@@ -18,7 +18,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence, Set
+from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence, Set, Callable
 
 import yaml
 from pydantic import BaseModel, Field
@@ -33,7 +33,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.plots.plotly.plot import Plot
-from multiqc.types import ModuleIdT, AnchorT
+from multiqc.plots.table_object import SampleNameT, InputHeaderT, InputRowT, InputSectionT
+from multiqc.types import ModuleIdT, AnchorT, SampleGroupT
 from multiqc.utils.util_functions import (
     replace_defaultdicts,
     dump_json,
@@ -65,7 +66,7 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[SampleNameT, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
@@ -73,13 +74,13 @@ diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleIdT, List[Dict]]
 
-# Fields below is kept between interactive runs
+# Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
 html_ids: List[str]
 plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict]
-general_stats_headers: List[Dict]
+general_stats_data: List[Dict[SampleGroupT, List[InputRowT]]]
+general_stats_headers: List[InputHeaderT]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
 
@@ -858,7 +859,11 @@ def compress_json(data):
 
 
 def write_data_file(
-    data: Union[Mapping[str, Union[Mapping, Sequence]], Sequence[Mapping], Sequence[Sequence]],
+    data: Union[
+        Mapping,
+        Sequence[Mapping],
+        Sequence[Sequence],
+    ],
     fn: str,
     sort_cols=False,
     data_format=None,
@@ -977,18 +982,18 @@ def multiqc_dump_json():
             "output_dir",
         ],
     }
-    for s in export_vars:
-        for k in export_vars[s]:
+    for pymod, names in export_vars.items():
+        for name in names:
             try:
                 d = None
-                if s == "config":
-                    v = getattr(config, k)
+                if pymod == "config":
+                    v = getattr(config, name)
                     v = str(v) if isinstance(v, PosixPath) else v
                     if isinstance(v, list):
                         v = [str(el) if isinstance(el, PosixPath) else el for el in v]
-                    d = {f"{s}_{k}": v}
-                elif s == "report":
-                    d = {f"{s}_{k}": getattr(sys.modules[__name__], k)}
+                    d = {f"{pymod}_{name}": v}
+                elif pymod == "report":
+                    d = {f"{pymod}_{name}": getattr(sys.modules[__name__], name)}
                 if d:
                     with open(os.devnull, "wt") as f:
                         # Test that exporting to JSON works. Write to
@@ -996,7 +1001,7 @@ def multiqc_dump_json():
                         dump_json(d, f, ensure_ascii=False)
                     exported_data.update(d)
             except (TypeError, KeyError, AttributeError) as e:
-                logger.warning(f"Couldn't export data key '{s}.{k}': {e}")
+                logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
         # Get the absolute paths of analysis directories
         exported_data["config_analysis_dir_abs"] = list()
         for config_analysis_dir in exported_data.get("config_analysis_dir", []):

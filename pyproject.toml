@@ -271,4 +271,5 @@ lint.ignore = ["F401"]  # unused-import
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
+files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
