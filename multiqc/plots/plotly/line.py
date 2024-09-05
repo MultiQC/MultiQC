@@ -1,16 +1,17 @@
 import io
 import logging
+import math
 import os
 import random
-from typing import Dict, List, Union, Tuple, Optional, Literal, Any, Mapping, TypeVar, Generic
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, TypeVar, Union
 
-import math
 import plotly.graph_objects as go  # type: ignore
 from plotly.graph_objs.layout.shape import Label  # type: ignore
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import config, report
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
+from multiqc.types import SampleNameT
 from multiqc.utils.util_functions import update_dict
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 KeyT = TypeVar("KeyT", int, str, float)
 ValueT = TypeVar("ValueT", int, str, float, None)
 XToYDictT = Mapping[KeyT, ValueT]
-DatasetT = Mapping[str, XToYDictT]
+DatasetT = Mapping[Union[str, SampleNameT], XToYDictT]
 
 
 class Marker(BaseModel):

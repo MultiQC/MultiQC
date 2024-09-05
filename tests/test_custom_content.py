@@ -3,9 +3,9 @@ import tempfile
 import pytest
 
 import multiqc
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.core.file_search import file_search
-from multiqc.core.update_config import update_config, ClConfig
+from multiqc.core.update_config import ClConfig, update_config
 from multiqc.modules.custom_content import custom_module_classes
 from multiqc.types import AnchorT
 from multiqc.validation import ConfigValidationError
@@ -372,19 +372,19 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert report.plot_by_id[anchor].plot_type == "violin"
     assert len(report.plot_by_id[anchor].datasets) == 1
     assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
-        "SEQUENCE",
-        "START",
-        "END",
-        "STRAND",
-        "GENE",
+        f"{anchor}_table-SEQUENCE",
+        f"{anchor}_table-START",
+        f"{anchor}_table-END",
+        f"{anchor}_table-STRAND",
+        f"{anchor}_table-GENE",
     }
 
     assert report.plot_by_id[anchor].datasets[0].violin_value_by_sample_by_metric == {
-        "SEQUENCE": {"myfile.fasta": "chr1"},
-        "START": {"myfile.fasta": 55312.0},
-        "END": {"myfile.fasta": 56664.0},
-        "STRAND": {"myfile.fasta": "+"},
-        "GENE": {"myfile.fasta": "GENE"},
+        f"{anchor}_table-SEQUENCE": {"myfile.fasta": "chr1"},
+        f"{anchor}_table-START": {"myfile.fasta": 55312.0},
+        f"{anchor}_table-END": {"myfile.fasta": 56664.0},
+        f"{anchor}_table-STRAND": {"myfile.fasta": "+"},
+        f"{anchor}_table-GENE": {"myfile.fasta": "GENE"},
     }
     if section_name:
         assert report.plot_by_id[anchor].layout.title.text == section_name
@@ -427,7 +427,8 @@ def test_on_all_example_files(data_dir):
     Run on all example in data/custom_content, verify it didn't fail.
     Deprecate this in the future in favour of more granular tests like those above.
     """
-    report.analysis_files = [data_dir]
+
+    report.analysis_files = [data_dir / "custom_content"]
     config.run_modules = ["custom_content"]
 
     file_search()

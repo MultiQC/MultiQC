@@ -1,16 +1,17 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+import array
 import json
 import logging
+import math
 import shutil
 import sys
 import time
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from pathlib import Path
 from typing import Dict
 
-import array
-import math
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,8 @@ def dump_json(data, filehandle=None, **kwargs):
                 return replace_nan(o.tolist())
             if callable(o):
                 return None
+            if isinstance(o, BaseModel):  # special handling for pydantic models
+                return o.model_dump_json()
             return super().default(o)
 
     if filehandle:

@@ -6,6 +6,7 @@ from typing import List, Dict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc import config as mqc_config, report as mqc_report
+from multiqc.types import AnchorT
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Software Versions",
-            anchor="multiqc_software_versions",
+            anchor=AnchorT("multiqc_software_versions"),
             info="lists versions of software tools extracted from file contents.",
         )
 
