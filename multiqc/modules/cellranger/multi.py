@@ -18,7 +18,6 @@ from multiqc.modules.cellranger.utils import (
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-
 def parse_multi_html(module: BaseMultiqcModule):
     """Cell Ranger multi report parser"""
 
@@ -365,11 +364,13 @@ def parse_multi_html(module: BaseMultiqcModule):
 
         sample_name = module.clean_s_name(data["sample"]["id"], file)
 
+        crm_version = 'UNDEFINED'
         try:
             version = data["data"]["sample_websummary"]["header_info"]["Pipeline Version"]
             version_match = re.search(r"cellranger-([\d\.]+)", version)
             if version_match:
-                module.add_software_version(version_match.group(1), sample_name)
+                crm_version = version_match.group(1)
+                module.add_software_version(crm_version, sample_name)
         except KeyError:
             log.debug(f"Unable to parse version for sample {sample_name}")
 
@@ -381,15 +382,16 @@ def parse_multi_html(module: BaseMultiqcModule):
             gex_library_metrics_summary,
             gex_bc_plot,
             gex_genes_plot,
-            gex_sequencing_plot
+            gex_sequencing_plot,
+            crm_version
         )
 
-        _build_vdj_t_data(data["data"], sample_name, vdj_t_alerts, vdj_t_expression_metrics, vdj_t_annotation_metrics, vdj_t_bc_plot)
+        _build_vdj_t_data(data["data"], sample_name, vdj_t_alerts, vdj_t_expression_metrics, vdj_t_annotation_metrics, vdj_t_bc_plot, crm_version)
 
-        _build_vdj_b_data(data["data"], sample_name, vdj_b_alerts, vdj_b_expression_metrics, vdj_b_annotation_metrics, vdj_b_bc_plot)
+        _build_vdj_b_data(data["data"], sample_name, vdj_b_alerts, vdj_b_expression_metrics, vdj_b_annotation_metrics, vdj_b_bc_plot, crm_version)
 
         _build_antibody_data(
-            data["data"], sample_name, antibody_alerts, antibody_expression_mapping_metrics, antibody_bc_plot
+            data["data"], sample_name, antibody_alerts, antibody_expression_mapping_metrics, antibody_bc_plot, crm_version
         )
 
         module.add_data_source(file, sample_name, module="cellranger", section="multi")
@@ -447,6 +449,130 @@ def parse_multi_html(module: BaseMultiqcModule):
     add_antibody_sections()
     return len(general_data.data)
 
+def _get_column_colors(tab: str, section: str, version: str) -> Dict:
+    is_v7 = re.match(re.compile(r'7\.[0-9]\.[0-9]'), version)
+    is_v8 = re.match(re.compile(r'8\.[0-9]\.[0-9]'), version)
+    if not (is_v7 or is_v8):
+        log.warn(f"Version {version} did not match to a known version")
+
+    if tab == "gex":
+        if section == "hero_metrics":
+            if is_v7:
+                return {
+                    "Cells": "Purples",
+                    "Median reads per cell": "Greens",
+                    "Median genes per cell": "Blues",
+                    "Total genes detected": "Purples",
+                    "Median UMI counts per cell": "Greys",
+                    "Confidently mapped reads in cells": "Greens"
+                }
+            if is_v8:
+                return {
+                    "Cells": "Purples",
+                    "Mean reads per cell": "Greens",
+                    "Median genes per cell": "Blues",
+                    "Total genes detected": "Purples",
+                    "Median UMI counts per cell": "Greys",
+                    "Confidently mapped reads in cells": "Greens"
+                }
+            # Return mix of everything as last resort
+            return {
+                "Cells": "Purples",
+                "Mean reads per cell": "Greens",
+                "Median reads per cell": "Greens",
+                "Median genes per cell": "Blues",
+                "Total genes detected": "Purples",
+                "Median UMI counts per cell": "Greys",
+                "Confidently mapped reads in cells": "Greens"
+
+            }
+        if section == "sequencing_metrics_table":
+            # Is the same for v7.* and v8.*
+            return {
+                "Fastq ID": "Greys",
+                "Number of reads": "Greys",
+                "Number of short reads skipped": "Greys",
+                "Q30 barcodes": "Greens",
+                "Q30 UMI": "Blues",
+                "Q30 RNA read": "Greens",
+                "Q30 RNA read 2": "Blues"
+            }
+        if section == "physical_library_metrics_table":
+            # Is the same for v7.* and v8.*
+            return {
+                    "Physical library ID": "Greys",
+                    "Number of reads": "Greys",
+                    "Valid barcodes": "Greens",
+                    "Valid UMIs": "Blues",
+                    "Sequencing saturation": "YlGn",
+                    "Confidently mapped reads in cells": "Greys",
+                    "Mean reads per cell": "Greys"
+            }
+        log.critical(f"Section {section} not recognized in tab {tab}")
+        return {}
+    if tab == "vdj-t":
+        if section == "hero_metrics":
+            return {
+                "Estimated number of cells": "Purples",
+                "Number of cells with productive V-J spanning pair": "Greens",
+                "Median TRA UMIs per Cell": "Blues",
+                "Median TRB UMIs per Cell": "Greens"
+            }
+        if section == "annotation_metrics_table":
+            return {
+                "Cells with productive V-J spanning pair": "Greens",
+                "Cells with productive V-J spanning (TRA, TRB) pair": "Greys",  # hidden
+                "Cells with productive TRA contig": "Blues",
+                "Cells with productive TRB contig": "Greens",
+                "Paired clonotype diversity": "Purples"
+            }
+        log.critical(f"Section {section} not recognized in tab {tab}")
+        return {}
+    if tab == "vdj-b":
+        if section == "hero_metrics":
+            return {
+                "Estimated number of cells": "Purples",
+                "Number of cells with productive V-J spanning pair": "Greens",
+                "Median IGH UMIs per Cell": "Blues",
+                "Median IGK UMIs per Cell": "Greens"
+            }
+        if section == "annotation_metrics_table":
+            return {
+                "Cells with productive V-J spanning pair": "Greens",
+                "Cells with productive V-J spanning (IGK, IGH) pair": "Greys",  # hidden
+                "Cells with productive V-J spanning (IGL, IGH) pair": "Greys",  # hidden
+                "Cells with productive IGH contig": "Blues",
+                "Cells with productive IGK contig": "Greens",
+                "Cells with productive IGL contig": "Blues",
+                "Paired clonotype diversity": "Purples"
+            }
+        log.critical(f"Section {section} not recognized in tab {tab}")
+        return {}
+    if tab == "antibody":
+        if section == "hero_metrics":
+            if is_v7:
+                return {
+                    "Cells": "Purples",
+                    "Median UMI counts per cell": "Greens",
+                    "Mean antibody reads usable per cell": "Blues",
+                }
+            if is_v8:
+                return {
+                    "Cells": "Purples",
+                    "Median UMI counts per cell": "Greens",
+                    "Mean antibody reads usable per cell": "Blues",
+                    "Antibody reads in cells": "Greens",
+                }
+            return {
+                "Cells": "Purples",
+                "Median UMI counts per cell": "Greens",
+                "Mean antibody reads usable per cell": "Blues",
+                "Antibody reads in cells": "Greens",
+            }
+        log.critical(f"Section {section} not recognized in tab {tab}")
+        return {}
+    log.critical(f"Tab {tab} not recognized")
+    return {}
 
 def _parse_table(table_root: Dict, color_dict: Dict[str, str], filter_with_color_dict: bool = True) -> Tuple[Dict, Dict]:
     if not table_root:
@@ -495,7 +621,7 @@ def _parse_plot(data: Dict):
 
     plot_data = {}
     for subset in data["plot"]["data"]:
-        plot_data.update({x: y for x, y in zip(subset["x"], subset["y"])})
+        plot_data.update(dict(zip(subset['x'], subset['y'])))
 
     return plot_data, {"helptext": data["help"]["helpText"]}
 
@@ -507,7 +633,8 @@ def _build_gex_data(
     library_metrics: SectionData,
     barcode_plot: SectionData,
     genes_plot: SectionData,
-    sequencing_plot: SectionData
+    sequencing_plot: SectionData,
+    version: str
 ):
     sample_websummary = data.get("sample_websummary", {}).get("gex_tab", {})
     library_websummary = data.get("library_websummary", {}).get("gex_tab", {})
@@ -528,14 +655,7 @@ def _build_gex_data(
         cells_source = sample_websummary["content"]["hero_metrics"]
         cells, cells_headers = _parse_table(
             cells_source,
-            {
-                "Cells": "Purples",
-                "Mean reads per cell": "Greens",
-                "Median genes per cell": "Blues",
-                "Total genes detected": "Purples",
-                "Median UMI counts per cell": "Greys",  # hidden
-                "Confidently mapped reads in cells": "Greens",
-            }
+            _get_column_colors("gex", "hero_metrics", version)
         )
 
         if cells:
@@ -547,15 +667,7 @@ def _build_gex_data(
         sequencing_metrics_source = library_websummary["content"]["sequencing_metrics_table"]  # could have multiple rows?
         sequencing_metrics, sequencing_metrics_headers = _parse_table(
             sequencing_metrics_source,
-            {
-                "Fastq ID": "Greys",  # hidden
-                "Number of reads": "Greys",  # hidden
-                "Number of short reads skipped": "Greys",  # hidden
-                "Q30 barcodes": "Greens",
-                "Q30 UMI": "Blues",
-                "Q30 RNA read": "Greens",
-                "Q30 RNA read 2": "Blues"
-            }
+            _get_column_colors("gex", "sequencing_metrics_table", version)
         )
 
         if sequencing_metrics:
@@ -567,15 +679,7 @@ def _build_gex_data(
         physical_library_metrics_source = library_websummary["content"]["physical_library_metrics_table"]
         physical_library_metrics, physical_library_metrics_headers = _parse_table(
             physical_library_metrics_source,
-            {
-                "Physical library ID": "Greys",  # hidden
-                "Number of reads": "Greys",  # hidden
-                "Valid barcodes": "Greens",
-                "Valid UMIs": "Blues",
-                "Sequencing saturation": "YlGn",
-                "Confidently mapped reads in cells": "Greys", # hidden
-                "Mean reads per cell": "Greys"  # hidden
-            }
+            _get_column_colors("gex", "physical_library_metrics_table", version)
         )
 
         if physical_library_metrics:
@@ -617,7 +721,8 @@ def _build_vdj_t_data(
     alerts: SectionData,
     expression_metrics: SectionData,
     annotation_metrics: SectionData,
-    barcode_plot: SectionData
+    barcode_plot: SectionData,
+    version: str
 ):
     sample_websummary = data.get("sample_websummary", {}).get("vdj_t_tab", {})
     library_websummary = data.get("library_websummary", {}).get("vdj_t_tab", {})
@@ -638,12 +743,7 @@ def _build_vdj_t_data(
         expr_metrics_source = sample_websummary["content"]["hero_metrics"]
         expr_metrics, expr_metrics_headers = _parse_table(
             expr_metrics_source,
-            {
-                "Estimated number of cells": "Purples",
-                "Number of cells with productive V-J spanning pair": "Greens",
-                "Median TRA UMIs per Cell": "Blues",
-                "Median TRB UMIs per Cell": "Greens",
-            }
+            _get_column_colors("vdj-t", "hero_metrics", version)
         )
 
         if expr_metrics:
@@ -655,13 +755,7 @@ def _build_vdj_t_data(
         anno_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
         anno_metrics, anno_metrics_headers = _parse_table(
             anno_metrics_source,
-            {
-                "Cells with productive V-J spanning pair": "Greens",
-                "Cells with productive V-J spanning (TRA, TRB) pair": "Greys",  # hidden
-                "Cells with productive TRA contig": "Blues",
-                "Cells with productive TRB contig": "Greens",
-                "Paired clonotype diversity": "Purples"
-            }
+            _get_column_colors("vdj-t", "annotation_metrics_table", version)
         )
 
         if anno_metrics:
@@ -685,7 +779,8 @@ def _build_vdj_b_data(
     alerts: SectionData,
     expression_metrics: SectionData,
     annotation_metrics: SectionData,
-    barcode_plot: SectionData
+    barcode_plot: SectionData,
+    version: str
 ):
     sample_websummary = data.get("sample_websummary", {}).get("vdj_b_tab", {})
     library_websummary = data.get("library_websummary", {}).get("vdj_b_tab", {})
@@ -706,12 +801,7 @@ def _build_vdj_b_data(
         expr_metrics_source = sample_websummary["content"]["hero_metrics"]
         expr_metrics, expr_metrics_headers = _parse_table(
             expr_metrics_source,
-            {
-                "Estimated number of cells": "Purples",
-                "Number of cells with productive V-J spanning pair": "Greens",
-                "Median IGH UMIs per Cell": "Blues",
-                "Median IGK UMIs per Cell": "Greens"
-            }
+            _get_column_colors("vdj-b", "hero_metrics", version)
         )
 
         if expr_metrics:
@@ -723,15 +813,7 @@ def _build_vdj_b_data(
         anno_metrics_source = sample_websummary["content"]["annotation_metrics_table"]
         anno_metrics, anno_metrics_headers = _parse_table(
             anno_metrics_source,
-            {
-                "Cells with productive V-J spanning pair": "Greens",
-                "Cells with productive V-J spanning (IGK, IGH) pair": "Greys",  # hidden
-                "Cells with productive V-J spanning (IGL, IGH) pair": "Greys",  # hidden
-                "Cells with productive IGH contig": "Blues",
-                "Cells with productive IGK contig": "Greens",
-                "Cells with productive IGL contig": "Blues",
-                "Paired clonotype diversity": "Purples"
-            }
+            _get_column_colors("vdj-b", "annotation_metrics_table", version)
         )
 
         if anno_metrics:
@@ -755,6 +837,7 @@ def _build_antibody_data(
     alerts: SectionData,
     expression_mapping_metrics: SectionData,
     barcode_plot: SectionData,
+    version: str
 ):
     sample_websummary = data.get("sample_websummary", {}).get("antibody_tab", {})
     library_websummary = data.get("library_websummary", {}).get("antibody_tab", {})
@@ -775,12 +858,7 @@ def _build_antibody_data(
         expression_metrics_source = sample_websummary["content"]["hero_metrics"]
         expression_metrics, expression_metrics_headers = _parse_table(
             expression_metrics_source,
-            {
-                "Cells": "Purples",
-                "Median UMI counts per cell": "Greens",
-                "Mean antibody reads usable per cell": "Blues",
-                "Antibody reads in cells": "Greens",
-            }
+            _get_column_colors("antibody", "hero_metrics", version)
         )
 
         if expression_metrics:
