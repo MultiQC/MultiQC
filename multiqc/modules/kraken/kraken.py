@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Union, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -281,6 +281,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             cats.append(rank_cats)
             rank_datasets.append(rank_cnt_data_by_taxon_by_sample)
+
+        if not rank_datasets:
+            return
 
         pconfig = {
             "id": f"{self.anchor}-top-n-plot",

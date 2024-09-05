@@ -372,19 +372,19 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
     assert report.plot_by_id[anchor].plot_type == "violin"
     assert len(report.plot_by_id[anchor].datasets) == 1
     assert report.plot_by_id[anchor].datasets[0].header_by_metric.keys() == {
-        f"{anchor}_table-SEQUENCE",
-        f"{anchor}_table-START",
-        f"{anchor}_table-END",
-        f"{anchor}_table-STRAND",
-        f"{anchor}_table-GENE",
+        "SEQUENCE",
+        "START",
+        "END",
+        "STRAND",
+        "GENE",
     }
 
     assert report.plot_by_id[anchor].datasets[0].violin_value_by_sample_by_metric == {
-        f"{anchor}_table-SEQUENCE": {"myfile.fasta": "chr1"},
-        f"{anchor}_table-START": {"myfile.fasta": 55312.0},
-        f"{anchor}_table-END": {"myfile.fasta": 56664.0},
-        f"{anchor}_table-STRAND": {"myfile.fasta": "+"},
-        f"{anchor}_table-GENE": {"myfile.fasta": "GENE"},
+        "SEQUENCE": {"myfile.fasta": "chr1"},
+        "START": {"myfile.fasta": 55312.0},
+        "END": {"myfile.fasta": 56664.0},
+        "STRAND": {"myfile.fasta": "+"},
+        "GENE": {"myfile.fasta": "GENE"},
     }
     if section_name:
         assert report.plot_by_id[anchor].layout.title.text == section_name
