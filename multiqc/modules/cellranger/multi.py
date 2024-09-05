@@ -603,13 +603,36 @@ def _parse_table(table_root: Dict, color_dict: Dict[str, str], filter_with_color
     return parsed_data, parsed_headers
 
 
-def _parse_alerts(data: Dict, path: List):
-    try:
-        alert_list = resolve_dict(data, path)
-    except KeyError:
-        alert_list = []
-    return {alert["title"]: alert["level"] if alert["level"] != "ERROR" else "FAIL" for alert in alert_list}
+def _parse_all_alerts(sample_alert_list: List, library_alert_list: List):
+    def parse_alert_list(alert_list: List):
+        modify = lambda level: level if level not in ("INFO", "ERROR") else "PASS" if level == "INFO" else "FAIL"
+        return (
+            {alert["title"]: alert["level"] for alert in alert_list},
+            {alert["title"]: {"modify": modify} for alert in alert_list}
+        )
 
+    sample_alerts, sample_headers = parse_alert_list(sample_alert_list)
+    library_alerts, library_headers = parse_alert_list(library_alert_list)
+    total_alerts, total_headers = (library_alerts, library_headers)
+
+    # Careful dictionary update:
+    for sample_alert_key in sample_alerts.keys():
+        if sample_alert_key not in total_alerts:
+            total_alerts[sample_alert_key] = sample_alerts[sample_alert_key]
+            total_headers[sample_alert_key] = sample_headers[sample_alert_key]
+        else:
+            log.warn(f"Duplicate alert {sample_alert_key}")
+
+            # ERROR > WARN > INFO
+            remap = {"ERROR": 2, "WARN": 1, "INFO": 0}
+            sample_alert_value = sample_alerts[sample_alert_key]
+            library_alert_value = total_alerts[sample_alert_key]
+            print(remap.get(sample_alert_value, 4), remap.get(library_alert_value, 4))
+
+            if remap.get(sample_alert_value, 3) > remap.get(library_alert_value, 3):
+                total_alerts[sample_alert_key] = library_alert_value
+                total_alerts[sample_alert_key] = library_headers[sample_alert_key]
+    return total_alerts, total_headers
 
 def _parse_plot(data: Dict):
     if not data:
@@ -646,10 +669,11 @@ def _build_gex_data(
         log.debug("Gene-Expression data incomplete")
         return
 
-    parsed_alerts = _parse_alerts(sample_websummary, ["alerts"])
-    parsed_alerts.update(_parse_alerts(library_websummary, ["alerts"]))
+    parsed_alerts, parsed_alert_headers = _parse_all_alerts(
+        sample_websummary['alerts'],
+        library_websummary['alerts'])
     if parsed_alerts:
-        alerts.update_sample(parsed_alerts, {}, sample_name)
+        alerts.update_sample(parsed_alerts, parsed_alert_headers, sample_name)
 
     try:
         cells_source = sample_websummary["content"]["hero_metrics"]
@@ -734,10 +758,11 @@ def _build_vdj_t_data(
         log.debug("VDJ-T data incomplete")
         return
 
-    parsed_alerts = _parse_alerts(sample_websummary, ["alerts"])
-    parsed_alerts.update(_parse_alerts(library_websummary, ["alerts"]))
+    parsed_alerts, parsed_alert_headers = _parse_all_alerts(
+        sample_websummary['alerts'],
+        library_websummary['alerts'])
     if parsed_alerts:
-        alerts.update_sample(parsed_alerts, {}, sample_name)
+        alerts.update_sample(parsed_alerts, parsed_alert_headers, sample_name)
 
     try:
         expr_metrics_source = sample_websummary["content"]["hero_metrics"]
@@ -792,10 +817,11 @@ def _build_vdj_b_data(
         log.debug("VDJ-B data incomplete")
         return
 
-    parsed_alerts = _parse_alerts(sample_websummary, ["alerts"])
-    parsed_alerts.update(_parse_alerts(data, ["alerts"]))
+    parsed_alerts, parsed_alert_headers = _parse_all_alerts(
+        sample_websummary['alerts'],
+        library_websummary['alerts'])
     if parsed_alerts:
-        alerts.update_sample(parsed_alerts, {}, sample_name)
+        alerts.update_sample(parsed_alerts, parsed_alert_headers, sample_name)
 
     try:
         expr_metrics_source = sample_websummary["content"]["hero_metrics"]
@@ -849,10 +875,11 @@ def _build_antibody_data(
         log.debug("Antibody data incomplete")
         return
 
-    parsed_alerts = _parse_alerts(sample_websummary, ["alerts"])
-    parsed_alerts.update(_parse_alerts(data, ["alerts"]))
+    parsed_alerts, parsed_alert_headers = _parse_all_alerts(
+        sample_websummary['alerts'],
+        library_websummary['alerts'])
     if parsed_alerts:
-        alerts.update_sample(parsed_alerts, {}, sample_name)
+        alerts.update_sample(parsed_alerts, parsed_alert_headers, sample_name)
 
     try:
         expression_metrics_source = sample_websummary["content"]["hero_metrics"]
