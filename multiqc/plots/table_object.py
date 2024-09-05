@@ -182,7 +182,6 @@ class ColumnMeta(ValidatedConfig):
             if _ns_match(item_id) and isinstance(new_title_val, dict):
                 # Assume a dict of specific column IDs
                 for item_id2, new_title in new_title_val.items():
-                    item_id2 = item_id2.lower()
                     if _col_match(item_id2):
                         col.title = new_title
 
@@ -203,7 +202,6 @@ class ColumnMeta(ValidatedConfig):
                 # Not a bool, assume a dict of specific column IDs
                 elif isinstance(visibility, dict):
                     for item_id2, visible in visibility.items():
-                        item_id2 = item_id2.lower()
                         if _col_match(item_id2) and isinstance(visible, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
                             col.hidden = not visible
@@ -214,13 +212,13 @@ class ColumnMeta(ValidatedConfig):
                 col.hidden = not visibility
 
         # Also overwrite placement if set in config
-        try:
-            col.placement = float(config.table_columns_placement[col.namespace][str(col_key)])
-        except (KeyError, ValueError):
-            try:
-                col.placement = float(config.table_columns_placement[pconfig.id][str(col_key)])
-            except (KeyError, ValueError):
-                pass
+        for item_id, item in config.table_columns_placement.items():
+            if _ns_match(item_id) and isinstance(item, dict):
+                for item_id2, placement in item.items():
+                    if _col_match(item_id2) and isinstance(placement, (float, int)):
+                        col.placement = float(placement)
+            elif _col_match(item_id) and isinstance(item, (float, int)):
+                col.placement = float(item)
 
         # Overwrite any header config if set in config
         for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
