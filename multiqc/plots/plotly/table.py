@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable, SampleGroupT, SampleNameT, ValueT
+from multiqc.plots.table_object import ColumnAnchorT, DataTable, SampleGroupT, SampleNameT, ValueT
 from multiqc.types import AnchorT
 from multiqc.utils import mqc_colour
 
@@ -28,20 +28,20 @@ def make_table(
     :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
-    col_to_th: Dict[AnchorT, str] = dict()
-    col_to_modal_headers: Dict[AnchorT, str] = dict()
-    col_to_hidden: Dict[AnchorT, bool] = dict()
-    group_to_sample_to_anchor_to_td: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, str]]] = defaultdict(
+    col_to_th: Dict[ColumnAnchorT, str] = dict()
+    col_to_modal_headers: Dict[ColumnAnchorT, str] = dict()
+    col_to_hidden: Dict[ColumnAnchorT, bool] = dict()
+    group_to_sample_to_anchor_to_td: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, str]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_anchor_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, ValueT]]] = defaultdict(
+    group_to_sample_to_anchor_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     group_to_sample_to_nice_name_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[str, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sorting_to_anchor_to_val: Dict[SampleGroupT, Dict[AnchorT, ValueT]] = defaultdict(dict)
-    group_to_sample_to_anchor_to_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[AnchorT, bool]]] = defaultdict(
+    group_to_sorting_to_anchor_to_val: Dict[SampleGroupT, Dict[ColumnAnchorT, ValueT]] = defaultdict(dict)
+    group_to_sample_to_anchor_to_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, bool]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     # empty_cells: Dict[ColumnKeyT, str] = dict()
@@ -54,7 +54,7 @@ def make_table(
         return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
 
     for idx, col_key, header in dt.get_headers_in_order():
-        col_anchor: AnchorT = header.rid
+        col_anchor: ColumnAnchorT = header.rid
 
         # Build the table header cell
         shared_key = ""
@@ -447,7 +447,7 @@ def make_table(
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
-        flatten_raw_vals: Dict[SampleNameT, Dict[AnchorT, ValueT]] = {}
+        flatten_raw_vals: Dict[SampleNameT, Dict[ColumnAnchorT, ValueT]] = {}
         for g_name, g_data in group_to_sample_to_anchor_to_val.items():
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[s_name] = s_data

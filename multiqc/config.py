@@ -125,9 +125,9 @@ violin_min_threshold_no_points: int
 
 collapse_tables: bool
 max_table_rows: int
-table_columns_visible: Dict
-table_columns_placement: Dict
-table_columns_name: Dict
+table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
+table_columns_placement: Dict[str, Dict[str, float]]
+table_columns_name: Dict[str, Union[str, Dict[str, str]]]
 table_cond_formatting_colours: List[Dict[str, str]]
 table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str

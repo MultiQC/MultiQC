@@ -18,7 +18,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Dict, Union, List, Optional, TextIO, Iterator, Tuple, Any, Mapping, Sequence, Set, Callable
+from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Set, TextIO, Tuple, Union
 
 import yaml
 from pydantic import BaseModel, Field
@@ -30,14 +30,14 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
-from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.core.log_and_rich import iterate_using_progress_bar
+from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import SampleNameT, InputHeaderT, InputRowT, InputSectionT
-from multiqc.types import ModuleIdT, AnchorT, SampleGroupT
+from multiqc.plots.table_object import InputHeaderT, InputRowT, InputSectionT, SampleNameT
+from multiqc.types import AnchorT, ModuleIdT, SampleGroupT
 from multiqc.utils.util_functions import (
-    replace_defaultdicts,
     dump_json,
+    replace_defaultdicts,
     rmtree_with_retries,
 )
 
@@ -76,7 +76,7 @@ files: Dict[ModuleIdT, List[Dict]]
 
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
-html_ids: List[str]
+html_ids_by_scope: Dict[Optional[str], Set[AnchorT]] = defaultdict(set)
 plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict[SampleGroupT, List[InputRowT]]]
@@ -104,7 +104,7 @@ def reset():
     global peak_memory_bytes_per_module
     global diff_memory_bytes_per_module
     global data_sources
-    global html_ids
+    global html_ids_by_scope
     global plot_data
     global plot_by_id
     global general_stats_data
@@ -129,7 +129,7 @@ def reset():
     peak_memory_bytes_per_module = dict()
     diff_memory_bytes_per_module = dict()
     data_sources = defaultdict(lambda: defaultdict(lambda: defaultdict()))
-    html_ids = []
+    html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
     general_stats_data = []
@@ -783,16 +783,11 @@ def clean_htmlid(html_id):
     return html_id_clean
 
 
-def save_htmlid(html_id, skiplint=False):
+def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
-    global html_ids
+    global html_ids_by_scope
     global lint_errors
-
-    # print("html_id:", html_id)
-    # import traceback
-    #
-    # traceback.print_stack()
 
     # Clean up the HTML ID
     html_id_clean = clean_htmlid(html_id)
@@ -817,7 +812,7 @@ def save_htmlid(html_id, skiplint=False):
     # Check for duplicates
     i = 1
     html_id_base = html_id_clean
-    while html_id_clean in html_ids:
+    while AnchorT(html_id_clean) in html_ids_by_scope[scope]:
         if html_id_clean == "general_stats_table":
             raise ValueError("HTML ID 'general_stats_table' is reserved and cannot be used")
         html_id_clean = f"{html_id_base}-{i}"
@@ -828,7 +823,7 @@ def save_htmlid(html_id, skiplint=False):
             lint_errors.append(errmsg)
 
     # Remember and return
-    html_ids.append(html_id_clean)
+    html_ids_by_scope[scope].add(AnchorT(html_id_clean))
     return html_id_clean
 
 
