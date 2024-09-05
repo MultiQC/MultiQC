@@ -81,10 +81,9 @@ class ColumnMeta(ValidatedConfig):
             header_d["namespace"] = ns
 
         unclean_rid = header_d.get("rid") or col_key
-        legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")
-
-        # Unique id to avoid overwriting by other datasets
+        legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
         rid = legacy_short_rid
+        # Prefixing with namepsace to get a unique column ID within a table across all sections
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
             rid = f"{ns}-{rid}"
