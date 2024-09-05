@@ -10,8 +10,8 @@ import plotly.graph_objects as go  # type: ignore
 from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
-from multiqc.plots.table_object import ColumnMeta, DataTable, ValueT
-from multiqc.types import AnchorT, ColumnKeyT, SampleNameT
+from multiqc.plots.table_object import ColumnAnchorT, ColumnMeta, DataTable, ValueT
+from multiqc.types import SampleNameT
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,10 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
 class Dataset(BaseDataset):
-    metrics: List[AnchorT]
-    header_by_metric: Dict[AnchorT, ViolinColumn]
-    violin_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
-    scatter_value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
+    metrics: List[ColumnAnchorT]
+    header_by_metric: Dict[ColumnAnchorT, ViolinColumn]
+    violin_value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
+    scatter_value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
     all_samples: List[SampleNameT]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
 
@@ -67,11 +67,11 @@ class Dataset(BaseDataset):
     def values_and_headers_from_dt(
         dt: DataTable,
     ) -> Tuple[
-        Dict[AnchorT, Dict[SampleNameT, ValueT]],
-        Dict[AnchorT, ColumnMeta],
+        Dict[ColumnAnchorT, Dict[SampleNameT, ValueT]],
+        Dict[ColumnAnchorT, ColumnMeta],
     ]:
-        value_by_sample_by_metric: Dict[AnchorT, Dict[SampleNameT, ValueT]] = {}
-        dt_column_by_metric: Dict[AnchorT, ColumnMeta] = {}
+        value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, ValueT]] = {}
+        dt_column_by_metric: Dict[ColumnAnchorT, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
             value_by_sample: Dict[SampleNameT, ValueT] = {}
@@ -107,7 +107,7 @@ class Dataset(BaseDataset):
         all_samples = set()
         scatter_value_by_sample_by_metric = {}
         violin_value_by_sample_by_metric = {}
-        header_by_metric: Dict[AnchorT, ViolinColumn] = {}
+        header_by_metric: Dict[ColumnAnchorT, ViolinColumn] = {}
         metrics = []
 
         for col_anchor, dt_column in dt_column_by_metric.items():

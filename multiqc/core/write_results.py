@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional, Dict, List, Union, Callable, cast
+from typing import Callable, Dict, List, Optional, Union, cast
 
 import jinja2
 
@@ -24,6 +24,7 @@ from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import ColumnKeyT
+from multiqc.types import AnchorT
 from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
@@ -311,8 +312,8 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0 and not all_hidden:
         # Clean previous general stats table if running write_report interactively second time
-        if "general_stats_table" in report.html_ids:
-            report.html_ids.remove("general_stats_table")
+        if AnchorT("general_stats_table") in report.html_ids_by_scope[None]:
+            report.html_ids_by_scope[None].remove(AnchorT("general_stats_table"))
             del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
