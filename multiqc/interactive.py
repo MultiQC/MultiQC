@@ -7,31 +7,31 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.order_modules_and_sections import order_modules_and_sections
-from multiqc.core.update_config import update_config, ClConfig
-from multiqc.core.file_search import file_search
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
+from multiqc.core.file_search import file_search
+from multiqc.core.order_modules_and_sections import order_modules_and_sections
+from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import PlotType, Plot
+from multiqc.plots.plotly.plot import Plot, PlotType
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import ModuleIdT, AnchorT
+from multiqc.types import AnchorT, ModuleIdT
 
 logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path],
+    *analysis_dir: Union[str, Path, List[Union[str, Path]]],
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -83,8 +83,12 @@ def parse_logs(
      later interactively. Defaults to `True`. Set to `False` to save memory.
     """
     assert isinstance(analysis_dir, tuple)
+    if len(analysis_dir) == 1 and isinstance(analysis_dir[0], list):
+        analysis_dir = tuple(analysis_dir[0])
     if not all(isinstance(d, (str, Path)) for d in analysis_dir):
-        raise ValueError("Path arguments should be path-like or strings, got:", analysis_dir)
+        raise ValueError(
+            "Path arguments should be path-like, strings, or list of path-like or strings, got:", analysis_dir
+        )
 
     update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 
