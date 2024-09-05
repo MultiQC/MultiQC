@@ -1,7 +1,9 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Union, Dict
+from typing import Dict, Optional, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import scatter
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
