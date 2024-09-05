@@ -8,8 +8,9 @@ from typing import Dict
 
 from packaging import version
 
-from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph
+from multiqc.types import ColumnKeyT, AnchorT, SampleNameT
 
 log = logging.getLogger(__name__)
 
@@ -38,17 +39,17 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
-            anchor="cutadapt",
+            anchor=AnchorT("cutadapt"),
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data: Dict = dict()
-        self.cutadapt_length_counts: Dict[str, Dict] = {"default": dict()}
-        self.cutadapt_length_exp: Dict[str, Dict] = {"default": dict()}
-        self.cutadapt_length_obsexp: Dict[str, Dict] = {"default": dict()}
+        self.cutadapt_data: Dict[SampleNameT, Dict] = dict()
+        self.cutadapt_length_counts: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
+        self.cutadapt_length_exp: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
+        self.cutadapt_length_obsexp: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -58,17 +59,16 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         self.cutadapt_data = self.ignore_samples(self.cutadapt_data)
-
         if len(self.cutadapt_data) == 0:
             raise ModuleNoSamplesFound
 
         log.info(f"Found {len(self.cutadapt_data)} reports")
 
-        # Write parsed report data to a file
-        self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
-
         # Basic Stats Table
         self.cutadapt_general_stats_table()
+
+        # Write parsed report data to a file
+        self.write_data_file(self.cutadapt_data, "multiqc_cutadapt")
 
         # Bar plot with number of reads trimmed
         self.cutadapt_filtered_barplot()
@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        s_name = self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f)
+        s_name = SampleNameT(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f=f))
         if s_name in self.cutadapt_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -250,10 +250,10 @@ class MultiqcModule(BaseMultiqcModule):
                     ):
                         input_fqs.append(x)
                 if input_fqs:
-                    s_name = self.clean_s_name(input_fqs, f)
+                    s_name = SampleNameT(self.clean_s_name(input_fqs, f))
                 else:
                     # Manage case where sample name is '-' (reading from stdin)
-                    s_name = f["s_name"]
+                    s_name = SampleNameT(f["s_name"])
 
                 if s_name in self.cutadapt_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -266,7 +266,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if cutadapt_version is not None:
                     self.add_software_version(cutadapt_version, s_name)
 
-                self.add_data_source(f, s_name)
+                self.add_data_source(f, str(s_name))
 
                 # Search regexes for overview stats
                 for k, r in regexes[parsing_version].items():
@@ -295,11 +295,10 @@ class MultiqcModule(BaseMultiqcModule):
                         self.cutadapt_length_exp[end] = dict()
                         self.cutadapt_length_obsexp[end] = dict()
 
-                # Histogram showing lengths trimmed
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
-                        plot_sname = f"{s_name} - {log_section}"
+                        plot_sname = SampleNameT(f"{s_name} - {log_section}")
                     self.cutadapt_length_counts[end][plot_sname] = dict()
                     self.cutadapt_length_exp[end][plot_sname] = dict()
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
@@ -341,17 +340,25 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the Cutadapt report and add it to the
         basic stats table at the top of the report"""
 
-        headers = {
-            "percent_trimmed": {
-                "title": "% BP Trimmed",
-                "description": "% Total Base Pairs trimmed",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlBu-rev",
-            }
-        }
-        self.general_stats_addcols(self.cutadapt_data, headers)
+        # Merge Read 1 + Read 2 data
+        self.general_stats_addcols(
+            {s: {ColumnKeyT(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
+            {
+                ColumnKeyT("percent_trimmed"): {
+                    "title": "% BP Trimmed",
+                    "description": "% Total Base Pairs trimmed",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "RdYlBu-rev",
+                }
+            },
+            group_samples_config=SampleGroupingConfig(
+                cols_to_weighted_average=[
+                    (ColumnKeyT("percent_trimmed"), ColumnKeyT("bp_processed")),
+                ],
+            ),
+        )
 
     def cutadapt_filtered_barplot(self):
         """Bar plot showing proportion of reads trimmed"""

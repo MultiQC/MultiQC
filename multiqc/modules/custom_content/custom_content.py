@@ -9,6 +9,7 @@ from collections import defaultdict
 from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
 
 import yaml
+from pydantic import BaseModel
 
 from multiqc import config, report, Plot
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -26,6 +27,11 @@ from multiqc.validation import ConfigValidationError
 log = logging.getLogger(__name__)
 
 
+class CcDict(BaseModel):
+    config: Dict = {}
+    data: Union[Dict, List, str] = {}
+
+
 def custom_module_classes() -> List[BaseMultiqcModule]:
     """
     MultiQC Custom Content class. This module does a lot of different
@@ -39,62 +45,67 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    cust_mod_by_id: Dict[ModuleIdT, Dict[str, Union[Dict, List, str]]] = defaultdict(dict)
+    ccdict_by_id: Dict[ModuleIdT, CcDict] = {}
 
     # Dictionary to hold search patterns - start with those defined in the config
     search_pattern_keys: List[ModuleIdT] = [ModuleIdT("custom_content")]
 
     # First - find files using patterns described in the config
-    config_custom_data = getattr(config, "custom_data", {})
     mod_cust_config = {}
-    config_cust_data_id: ModuleIdT
-    for config_cust_data_id, config_custom_data_item in config_custom_data.items():
+    config_custom_data_id: ModuleIdT
+    for config_custom_data_id, config_custom_data_item in config.custom_data.items():
         # Check that we have a dictionary
         if not isinstance(config_custom_data_item, dict):
-            log.debug(f"config.custom_data row was not a dictionary: {config_cust_data_id}")
+            log.debug(f"config.custom_data row was not a dictionary: {config_custom_data_id}")
             continue
-        cust_mod_id: ModuleIdT = config_custom_data_item.get("id", config_cust_data_id)
-        cust_mod_anchor: AnchorT = config_custom_data_item.get("anchor", config_cust_data_id)
+        cc_id: ModuleIdT = config_custom_data_item.get("id", config_custom_data_id)
+        cc_mod_anchor: AnchorT = config_custom_data_item.get("anchor", config_custom_data_id)
 
         # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
         if "data" in config_custom_data_item:
-            if isinstance(cust_mod_by_id.get(cust_mod_id), dict) and isinstance(
-                cust_mod_by_id[cust_mod_id].get("data"), dict
-            ):
-                d = cust_mod_by_id[cust_mod_id]["data"]
-                assert isinstance(d, dict)
-                d.update(config_custom_data_item["data"])
+            ccdict: CcDict
+            if cc_id in ccdict_by_id:
+                ccdict = ccdict_by_id[cc_id]
+                if isinstance(ccdict.data, dict):
+                    assert isinstance(ccdict.data, dict)
+                    ccdict.data.update(config_custom_data_item["data"])
+                else:
+                    # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
+                    ccdict.data = config_custom_data_item["data"]
             else:
-                # HTML plot type doesn't have a data sample-id key, so just take the whole chunk of data
-                cust_mod_by_id[cust_mod_id]["data"] = config_custom_data_item["data"]
+                ccdict = CcDict(config={}, data=config_custom_data_item["data"])
+                ccdict_by_id[cc_id] = ccdict
 
-            cust_mod_conf = cust_mod_by_id[cust_mod_id]["config"]
-            assert isinstance(cust_mod_conf, dict)
-            cust_mod_conf.update({k: v for k, v in config_custom_data_item.items() if k != "data"})
-            if "id" not in cust_mod_conf:
-                cust_mod_conf["id"] = cust_mod_id
-            if "anchor" not in cust_mod_conf:
-                cust_mod_conf["anchor"] = cust_mod_anchor
+            assert isinstance(ccdict.config, dict)
+            ccdict.config.update({k: v for k, v in config_custom_data_item.items() if k != "data"})
+            if "id" not in ccdict.config:
+                ccdict.config["id"] = cc_id
+            if "anchor" not in ccdict.config:
+                ccdict.config["anchor"] = cc_mod_anchor
             continue
 
         # Custom Content ID has search patterns in the config
-        if report.files.get(cust_mod_id):
+        if report.files.get(cc_id):
             if "id" not in config_custom_data_item:
-                config_custom_data_item["id"] = cust_mod_id
+                config_custom_data_item["id"] = cc_id
             if "anchor" not in config_custom_data_item:
-                config_custom_data_item["anchor"] = cust_mod_anchor
-            cust_mod_by_id[cust_mod_id]["config"] = config_custom_data_item
-            search_pattern_keys.append(cust_mod_id)
+                config_custom_data_item["anchor"] = cc_mod_anchor
+            if cc_id not in ccdict_by_id:
+                ccdict_by_id[cc_id] = CcDict(config=config_custom_data_item)
+            else:
+                ccdict_by_id[cc_id].config = config_custom_data_item
+            search_pattern_keys.append(cc_id)
             continue
 
         # Must just be configuration for a separate custom-content class
-        mod_cust_config[cust_mod_id] = config_custom_data_item
+        mod_cust_config[cc_id] = config_custom_data_item
+
+    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=AnchorT("custom_content"))
 
     # Now go through each of the file search patterns
-    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=AnchorT("custom_content"))
-    for config_cust_data_id in search_pattern_keys:
+    for config_custom_data_id in search_pattern_keys:
         num_sp_found_files = 0
-        for f in bm.find_log_files(config_cust_data_id):
+        for f in bm.find_log_files(config_custom_data_id):
             num_sp_found_files += 1
 
             f_extension = os.path.splitext(f["fn"])[1]
@@ -129,10 +140,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                     "data": img_html,
                 }
-                cust_mod_conf = cust_mod_by_id.get(config_cust_data_id, {}).get("config", {})
-                assert isinstance(cust_mod_conf, dict)
-                # If the search pattern 'k' has an associated custom content section config, use it:
-                parsed_data.update(cust_mod_conf)
+                # # If the search pattern 'k' has an associated custom content section config, use it:
+                # if config_custom_data_id in ccdict_by_id:
+                #     parsed_data.update(ccdict_by_id[config_custom_data_id].config)
             elif f_extension == ".html":
                 parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
                 parsed_data.update(_find_html_file_header(f))
@@ -142,18 +152,18 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     # Run sample-name cleaning on the data keys
                     parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
 
-                c_id = parsed_data.get("id", config_cust_data_id)
+                _c_id = parsed_data.get("id", config_custom_data_id)
                 parsed_item = parsed_data.get("data", {})
                 if parsed_item:
-                    cust_mod_data = cust_mod_by_id[c_id].get("data")
-                    if isinstance(parsed_item, dict) and isinstance(cust_mod_data, dict):
-                        cust_mod_data.update(parsed_item)
+                    if _c_id not in ccdict_by_id:
+                        ccdict_by_id[_c_id] = CcDict()
+                    _ccdict = ccdict_by_id[_c_id]
+                    if isinstance(parsed_item, dict) and isinstance(_ccdict.data, dict):
+                        _ccdict.data.update(parsed_item)
                     else:
-                        cust_mod_by_id[c_id]["data"] = parsed_item
-                    cust_mod_conf = cust_mod_by_id[c_id].get("config", {})
-                    assert isinstance(cust_mod_conf, dict)
-                    cust_mod_conf.update({j: k for j, k in parsed_data.items() if j != "data"})
-                    cust_mod_by_id[c_id]["config"] = cust_mod_conf
+                        _ccdict.data = parsed_item
+                    assert isinstance(_ccdict.config, dict)
+                    _ccdict.config.update({j: k for j, k in parsed_data.items() if j != "data"})
                 else:
                     log.warning(f"No data found in {f['fn']}")
 
@@ -162,27 +172,26 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # Look for configuration details in the header
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
+                c_id: ModuleIdT
                 if m_config is not None:
-                    c_id = m_config.get("id", config_cust_data_id)
+                    c_id = m_config.get("id", config_custom_data_id)
                     # Update the base config with anything parsed from the file
-                    b_config = cust_mod_by_id.get(c_id, {}).get("config", {})
+                    b_config = ccdict_by_id.get(c_id, CcDict()).config
                     assert isinstance(b_config, dict)
                     b_config.update(m_config)
                     # Now set the module config to the merged dict
                     m_config = dict(b_config)
                     s_name = m_config.get("sample_name")
                 else:
-                    c_id = config_cust_data_id
-                    _m_config = cust_mod_by_id.get(c_id, {}).get("config", {})
-                    assert isinstance(_m_config, dict)
-                    m_config = _m_config
+                    c_id = config_custom_data_id
+                    m_config = ccdict_by_id.setdefault(c_id, CcDict()).config
 
                 # Guess sample name if not given
                 if s_name is None:
                     s_name = f["s_name"]
 
                 # Guess c_id if no information known
-                if config_cust_data_id == "custom_content":
+                if config_custom_data_id == "custom_content":
                     c_id = s_name
                     if not m_config.get("id"):
                         m_config["id"] = c_id
@@ -206,53 +215,51 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 else:
                     # Did we get a new section id from the file?
                     if parsed_conf.get("id") is not None:
-                        c_id = parsed_conf.get("id")
+                        c_id = ModuleIdT(parsed_conf["id"])
+                    if c_id not in ccdict_by_id:
+                        ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
                     if isinstance(parsed_data, list):
-                        cust_mod_by_id[c_id]["data"] = parsed_data
+                        ccdict_by_id[c_id].data = parsed_data
                     elif parsed_conf.get("plot_type") == "html":
-                        cust_mod_by_id[c_id]["data"] = parsed_data
+                        ccdict_by_id[c_id].data = parsed_data
                     else:
                         assert isinstance(parsed_data, dict)
-                        cust_data = cust_mod_by_id[c_id].get("data", {})
-                        assert isinstance(cust_data, dict)
-                        cust_data.update(parsed_data)
-                        cust_mod_by_id[c_id]["data"] = cust_data
-                    cust_config = cust_mod_by_id[c_id].get("config", {})
-                    assert isinstance(cust_config, dict)
-                    cust_config.update(parsed_conf)
-                    cust_mod_by_id[c_id]["config"] = cust_config
+                        d = ccdict_by_id[c_id].data
+                        assert isinstance(d, dict), (c_id, f["fn"], f["root"])
+                        d.update(parsed_data)
+                    assert isinstance(ccdict_by_id[c_id].config, dict)
+                    ccdict_by_id[c_id].config.update(parsed_conf)
 
         # Give log message if no files found for search pattern
-        if num_sp_found_files == 0 and config_cust_data_id != "custom_content":
-            log.debug(f"No samples found: custom content ({config_cust_data_id})")
+        if num_sp_found_files == 0 and config_custom_data_id != "custom_content":
+            log.debug(f"No samples found: custom content ({config_custom_data_id})")
 
     # Filter to strip out ignored sample names
-    for config_cust_data_id in cust_mod_by_id:
-        cust_mod_by_id[config_cust_data_id]["data"] = bm.ignore_samples(
-            cust_mod_by_id[config_cust_data_id].get("data", {})
-        )
+    for config_custom_data_id in ccdict_by_id:
+        ccdict = ccdict_by_id[config_custom_data_id]
+        ccdict.data = bm.ignore_samples(ccdict.data)
 
     # Remove any configs that have no data
-    remove_cids = [k for k in cust_mod_by_id if len(cust_mod_by_id[k].get("data", {})) == 0]
-    for config_cust_data_id in remove_cids:
-        del cust_mod_by_id[config_cust_data_id]
+    remove_cids = [k for k in ccdict_by_id if len(ccdict_by_id[k].data) == 0]
+    for config_custom_data_id in remove_cids:
+        del ccdict_by_id[config_custom_data_id]
 
-    if len(cust_mod_by_id) == 0:
+    if len(ccdict_by_id) == 0:
         raise ModuleNoSamplesFound
 
     # Go through each data type
     parsed_modules: Dict[ModuleIdT, MultiqcModule] = dict()
     mod_id: ModuleIdT
-    for mod_id, mod_dict in cust_mod_by_id.items():
+    for mod_id, ccdict in ccdict_by_id.items():
         # General Stats
-        assert isinstance(mod_dict["config"], dict)
-        if mod_dict["config"].get("plot_type") == "generalstats":
-            assert isinstance(mod_dict["data"], dict), mod_dict["data"]
-            gs_headers = mod_dict["config"].get("pconfig")
+        assert isinstance(ccdict.config, dict)
+        if ccdict.config.get("plot_type") == "generalstats":
+            assert isinstance(ccdict.data, dict), ccdict.data
+            gs_headers = ccdict.config.get("headers")
             if gs_headers is None:
                 headers_set: Set[str] = set()
-                for _hd in mod_dict["data"].values():
+                for _hd in ccdict.data.values():
                     headers_set.update(_hd.keys())
                 headers = list(headers_set)
                 headers.sort()
@@ -271,25 +278,25 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # Add namespace and description if not specified
             for m_id in gs_headers:
                 if "namespace" not in gs_headers[m_id]:
-                    gs_headers[m_id]["namespace"] = mod_dict["config"].get("namespace", mod_id)
-            log.info(f"{mod_id}: Found {len(mod_dict['data'])} General Statistics columns")
-            bm.general_stats_addcols(mod_dict["data"], gs_headers)
+                    gs_headers[m_id]["namespace"] = ccdict.config.get("namespace", mod_id)
+            log.info(f"{mod_id}: Found {len(ccdict.data)} General Statistics columns")
+            bm.general_stats_addcols(ccdict.data, gs_headers)
 
         # Initialise this new module class and append to list
         else:
             # Is this file asking to be a sub-section under a parent section?
-            mod_id = mod_dict["config"].get("parent_id", mod_dict["config"].get("id", mod_id))
-            section_id: SectionIdT = mod_dict["config"].get("section_id", mod_id)
+            mod_id = ccdict.config.get("parent_id", ccdict.config.get("id", mod_id))
+            section_id: SectionIdT = ccdict.config.get("section_id", mod_id)
 
             mod_anchor: Optional[AnchorT] = None
-            if "parent_anchor" in mod_dict["config"]:
-                mod_anchor = mod_dict["config"]["parent_anchor"]
+            if "parent_anchor" in ccdict.config:
+                mod_anchor = ccdict.config["parent_anchor"]
 
             section_anchor: Optional[AnchorT] = None
-            if "section_anchor" in mod_dict["config"]:
-                section_anchor = mod_dict["config"]["section_anchor"]
-            elif "anchor" in mod_dict["config"]:
-                section_anchor = mod_dict["config"]["anchor"]
+            if "section_anchor" in ccdict.config:
+                section_anchor = ccdict.config["section_anchor"]
+            elif "anchor" in ccdict.config:
+                section_anchor = ccdict.config["anchor"]
 
             # Assuring anchors are unique, but prioritizing section over module
             if not section_anchor:
@@ -302,21 +309,22 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
             if mod_id in mod_cust_config:
-                mod_dict["config"].update(mod_cust_config[mod_id])
+                ccdict.config.update(mod_cust_config[mod_id])
 
             if mod_id in parsed_modules:
                 # We've seen this module section before
-                parsed_modules[mod_id].update_init(mod_dict)
+                parsed_modules[mod_id].update_init(ccdict)
             else:
-                parsed_modules[mod_id] = MultiqcModule(mod_id, anchor=mod_anchor, mod=mod_dict)
+                parsed_modules[mod_id] = MultiqcModule(mod_id, anchor=mod_anchor, cc_dict=ccdict)
 
-            parsed_modules[mod_id].add_cc_section(section_id, section_anchor, mod_dict)
-            if mod_dict["config"].get("plot_type") == "html":
+            parsed_modules[mod_id].add_cc_section(section_id, section_anchor=section_anchor, ccdict=ccdict)
+
+            if ccdict.config.get("plot_type") == "html":
                 log.info(f"{section_id}: Found 1 sample (html)")
-            elif mod_dict["config"].get("plot_type") == "image":
+            elif ccdict.config.get("plot_type") == "image":
                 log.info(f"{section_id}: Found 1 sample (image)")
             else:
-                log.info(f"{section_id}: Found {len(mod_dict['data'])} samples ({mod_dict['config'].get('plot_type')})")
+                log.info(f"{section_id}: Found {len(ccdict.data)} samples ({ccdict.config.get('plot_type')})")
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, "custom_content", {}).get("order", [])
@@ -333,10 +341,10 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
         cfgs: List[Dict] = []
-        for cust_mod_v in cust_mod_by_id.values():
-            assert isinstance(cust_mod_v["config"], dict)
-            cfgs.append(cust_mod_v["config"])
-        if len(cust_mod_by_id) >= 1 and all(cfg.get("plot_type") == "generalstats" for cfg in cfgs):
+        for ccdict in ccdict_by_id.values():
+            assert isinstance(ccdict.config, dict)
+            cfgs.append(ccdict.config)
+        if len(ccdict_by_id) >= 1 and all(cfg.get("plot_type") == "generalstats" for cfg in cfgs):
             sorted_modules = [bm]
         else:
             raise ModuleNoSamplesFound
@@ -347,28 +355,28 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
-    def __init__(self, id: ModuleIdT, anchor: AnchorT, mod: Dict[str, Union[Dict, List, str]]):
+    def __init__(self, id: ModuleIdT, anchor: AnchorT, cc_dict: CcDict):
         modname: str = id.replace("_", " ").title()
         if modname == "":
             modname = "Custom Content"
 
-        assert isinstance(mod["config"], dict)
-        mod_info = mod["config"].get("description")
-        if "parent_name" in mod["config"]:
-            assert isinstance(mod["config"]["parent_name"], str)
-            modname = mod["config"]["parent_name"]
-            mod_info = mod["config"].get("parent_description")
-        elif "section_name" in mod["config"]:
-            assert isinstance(mod["config"]["section_name"], str)
-            modname = mod["config"]["section_name"]
+        assert isinstance(cc_dict.config, dict)
+        mod_info = cc_dict.config.get("description")
+        if "parent_name" in cc_dict.config:
+            assert isinstance(cc_dict.config["parent_name"], str)
+            modname = cc_dict.config["parent_name"]
+            mod_info = cc_dict.config.get("parent_description")
+        elif "section_name" in cc_dict.config:
+            assert isinstance(cc_dict.config["section_name"], str)
+            modname = cc_dict.config["section_name"]
 
         super(MultiqcModule, self).__init__(
             name=modname,
             anchor=anchor,
-            href=mod["config"].get("section_href"),
+            href=cc_dict.config.get("section_href"),
             info=mod_info,
-            extra=mod["config"].get("extra"),
-            doi=mod["config"].get("doi"),
+            extra=cc_dict.config.get("extra"),
+            doi=cc_dict.config.get("doi"),
         )
         self.id = id
 
@@ -376,7 +384,7 @@ class MultiqcModule(BaseMultiqcModule):
             # To allow file_search.include_or_exclude_modules() correctly filter these modules
             config.custom_content_modules.append(anchor)
 
-    def update_init(self, mod):
+    def update_init(self, ccdict: CcDict):
         """
         This function runs when we have already initialised a module
         and this is a subsequent file that will be another subsection.
@@ -387,22 +395,27 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         if self.info is None or self.info == "":
-            self.info = mod["config"].get("parent_description")
+            self.info = ccdict.config.get("parent_description")
         if self.extra is None or self.info == "":
-            self.extra = mod["config"].get("extra", None)
+            self.extra = ccdict.config.get("extra", None)
         # This needs overwriting again as it has already run on init
         self.intro = self._get_intro()
 
-    def add_cc_section(self, section_id: SectionIdT, section_anchor: AnchorT, mod: Dict):
-        section_name: str = mod["config"].get("section_name", section_id.replace("_", " ").title())
+    def add_cc_section(self, section_id: SectionIdT, section_anchor: AnchorT, ccdict: CcDict):
+        plot: Optional[Union[Plot, str]] = None
+        content = None
+
+        # Set section and plot id and anchor
+        section_name: str = ccdict.config.get("section_name", section_id.replace("_", " ").title())
         if section_name == "":
             section_name = "Custom Content"
 
-        pconfig = mod["config"].get("pconfig", {})
+        pconfig = ccdict.config.get("pconfig", {})
         if pconfig.get("anchor") is None:
             if pconfig.get("id") is not None:
                 pconfig["anchor"] = pconfig["id"]
-                if pconfig["anchor"] == section_anchor:  # making sure plot anchor is globally unique
+                if pconfig["anchor"] == self.anchor or pconfig["anchor"] == section_anchor:
+                    # making sure plot anchor is globally unique
                     pconfig["anchor"] += "-plot"
             else:
                 pconfig["anchor"] = section_anchor + "-plot"  # making sure anchor is globally unique
@@ -415,30 +428,31 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == self.name:
             section_name = ""
 
-        plot: Optional[Union[Plot, str]] = None
-        content = None
-
-        plot_type = mod["config"].get("plot_type")
+        plot_type = ccdict.config.get("plot_type")
+        plot_datasets: List  # to save after rendering
 
         # Heatmap
         if plot_type == "heatmap":
             plot = heatmap.plot(
-                mod["data"], mod["config"].get("xcats"), mod["config"].get("ycats"), pconfig=HeatmapConfig(**pconfig)
+                ccdict.data,
+                ccdict.config.get("xcats"),
+                ccdict.config.get("ycats"),
+                pconfig=HeatmapConfig(**pconfig),
             )
+            plot_datasets = [ccdict.data]  # to save after rendering
         else:
-            if not isinstance(mod["data"], list):
-                mod["data"] = [mod["data"]]
+            plot_datasets = [ccdict.data] if not isinstance(ccdict.data, list) else ccdict.data
 
             # Try to coerce x-axis to numeric
             if plot_type in ["linegraph", "scatter"]:
                 try:
-                    mod["data"] = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in mod["data"]]
+                    ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
                 except ValueError:
                     pass
 
             # Table
             if plot_type == "table":
-                headers = mod["config"].get("headers")
+                headers = ccdict.config.get("headers")
 
                 # handle some legacy fields for backwards compat
                 sort_rows = pconfig.pop("sortRows", None)
@@ -448,40 +462,40 @@ class MultiqcModule(BaseMultiqcModule):
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
 
-                plot = table.plot(mod["data"], headers=headers, pconfig=pconfig)
+                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)
 
             # Bar plot
             elif plot_type == "bargraph":
-                mod["data"] = [{str(k): v for k, v in ds.items()} for ds in mod["data"]]
-                plot = bargraph.plot(mod["data"], mod["config"].get("categories"), pconfig=BarPlotConfig(**pconfig))
+                ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
+                plot = bargraph.plot(plot_datasets, ccdict.config.get("categories"), pconfig=BarPlotConfig(**pconfig))
 
             # Line plot
             elif plot_type == "linegraph":
-                plot = linegraph.plot(mod["data"], pconfig=LinePlotConfig(**pconfig))
+                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))
 
             # Scatter plot
             elif plot_type == "scatter":
-                plot = scatter.plot(mod["data"], pconfig=ScatterConfig(**pconfig))
+                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))
 
             # Box plot
             elif plot_type == "box":
-                plot = box.plot(mod["data"], pconfig=BoxPlotConfig(**pconfig))
+                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type in ["violin", "beeswarm"]:
-                plot = violin.plot(mod["data"], pconfig=TableConfig(**pconfig))
+                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))
 
             # Raw HTML
             elif plot_type == "html":
-                if len(mod["data"]) > 1:
+                if len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
-                content = mod["data"][0]
+                content = ccdict.data[0]
 
             # Raw image file as html
             elif plot_type == "image":
-                if len(mod["data"]) > 1:
+                if len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
-                content = mod["data"][0]
+                content = ccdict.data[0]
 
             # Not supplied
             elif plot_type is None:
@@ -491,12 +505,12 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 log.warning(
                     "Error - custom content plot type '{}' not recognised for content ID {}".format(
-                        mod["config"].get("plot_type"), section_id
+                        ccdict.config.get("plot_type"), section_id
                     )
                 )
 
         if plot is not None:
-            for i, ds in enumerate(mod["data"]):
+            for i, ds in enumerate(plot_datasets):
                 # Save the data if it's not a html string
                 if not isinstance(plot, str):
                     did = plot.pconfig.id
@@ -644,8 +658,8 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
     matrix: List[List[Union[str, float, int]]] = []
     ncols = None
     for line in non_header_lines:
-        if line:
-            sections = cast(List[Any], line.split(sep))
+        if line.rstrip():
+            sections = cast(List[Any], line.rstrip().split(sep))
             matrix.append(sections)
             if ncols is None:
                 ncols = len(sections)
