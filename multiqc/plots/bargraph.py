@@ -68,7 +68,7 @@ def plot(
 
     # Make list of cats from different inputs
     raw_cats_per_ds: List[CatT]
-    if cats is None:
+    if not cats:
         # Not supplied, generate default categories
         raw_cats_per_ds = []
         for val_by_cat_by_sample in raw_datasets:
