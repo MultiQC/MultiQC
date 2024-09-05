@@ -524,11 +524,18 @@ class Plot(BaseModel, Generic[T]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot(plots_dir_name=plots_dir_name)
+            try:
+                html = self.flat_plot(plots_dir_name=plots_dir_name)
+            except ValueError:
+                logger.error(f"Unable to export plot '{self.id}' to flat images, falling back to interactive plot")
+                html = self.interactive_plot()
         else:
             html = self.interactive_plot()
             if config.export_plots:
-                self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                try:
+                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                except ValueError:
+                    logger.error(f"Unable to export plot '{self.id}' to flat images")
 
         return html
 
@@ -711,6 +718,7 @@ def fig_to_static_html(
             formats.add("png")
 
     # Save the plot to the data directory if export is requested
+    png_is_written = False
     if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
@@ -729,7 +737,12 @@ def fig_to_static_html(
                         f.write(img_buffer.getvalue())
                     img_buffer.close()
             except Exception as e:
-                logger.error(f"Error: Unable to write {file_ext} plot image to {plot_path}. Exception: {e}")
+                logger.error(
+                    f"Error: Unable to export {file_ext} figure to static image at {plot_path}. Exception: {e}"
+                )
+            else:
+                if file_ext == "png":
+                    png_is_written = True
 
     # Now writing the PNGs for the HTML
     if not embed_in_html:
@@ -738,7 +751,10 @@ def fig_to_static_html(
         if plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = str(Path(plots_dir_name) / "png" / f"{file_name}.png")
+        img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
+        if not png_is_written:  # Could not write in the block above
+            raise ValueError(f"Unable to export plot to PNG plot image: {file_name}")
+        img_src = str(img_path)
     else:
         try:
             img_buffer = io.BytesIO()
@@ -749,7 +765,8 @@ def fig_to_static_html(
             img_src = f"data:image/png;base64,{b64_img}"
             img_buffer.close()
         except Exception as e:
-            logger.error(f"Error: Unable to write PNG plot image to {plot_path}. Exception: {e}")
+            logger.error(f"Unable to export PNG figure to static image: {e}")
+            raise ValueError("Unable to export PNG figure to static image")
 
     # Should this plot be hidden on report load?
     style = "" if active else "display:none;"
