@@ -1,5 +1,4 @@
 from multiqc import report
-from multiqc.base_module import Section
 from multiqc.modules.umicollapse import MultiqcModule
 
 
