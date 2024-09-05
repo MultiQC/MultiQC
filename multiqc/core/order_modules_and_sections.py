@@ -3,7 +3,7 @@ from typing import Dict, Union
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
-from multiqc.types import AnchorT, SectionIdT, ModuleIdT
+from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 
 logger = logging.getLogger(__name__)
 
@@ -13,12 +13,14 @@ def order_modules_and_sections():
     Finalise modules and sections: place in the write order, add special-case modules.
     """
     # Importing here to avoid circular imports
-    from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
     from multiqc.modules.profile_runtime import MultiqcModule as ProfileRuntimeModule
+    from multiqc.modules.software_versions import MultiqcModule as SoftwareVersionsModule
 
     # First, remove the special-case modules that we want to re-add at the end, in case if they were
     # already added by a previous call of multiqc.write_report in an interactive session.
-    report.html_ids = [x for x in report.html_ids if x not in ["multiqc_software_versions", "multiqc_runtime"]]
+    report.html_ids_by_scope[None] = {
+        x for x in report.html_ids_by_scope[None] if x not in ["multiqc_software_versions", "multiqc_runtime"]
+    }
     report.modules = [
         m
         for m in report.modules

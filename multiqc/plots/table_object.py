@@ -6,7 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
-from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, Union
 
 from pydantic import BaseModel, Field
 
@@ -33,13 +33,15 @@ class TableConfig(PConfig):
     min: Optional[Union[int, float]] = None
 
 
+ColumnAnchorT = NewType("ColumnAnchorT", str)  # Unique within a table
+
+
 class ColumnMeta(ValidatedConfig):
     """
     Column model class. Holds configuration for a single column in a table.
     """
 
-    id: Optional[AnchorT] = Field(None, deprecated="rid")
-    rid: AnchorT
+    rid: ColumnAnchorT  # namespace + short_rid = ID unique within a table
     title: str
     description: str
     scale: Union[str, bool]
@@ -78,13 +80,15 @@ class ColumnMeta(ValidatedConfig):
         if ns:
             header_d["namespace"] = ns
 
+        unclean_rid = header_d.get("rid") or col_key
+        legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")
+
         # Unique id to avoid overwriting by other datasets
-        unclean_rid = header_d.get("rid", col_key)
-        rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")
+        rid = legacy_short_rid
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
             rid = f"{ns}-{rid}"
-        header_d["rid"] = AnchorT(report.save_htmlid(f"{table_anchor}-{rid}"))
+        header_d["rid"] = ColumnAnchorT(report.save_htmlid(rid, scope=table_anchor))
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = header_d.get("shared_key", None)
@@ -146,69 +150,83 @@ class ColumnMeta(ValidatedConfig):
                 if cpc_k in ColumnMeta.model_fields.keys():
                     header_d[cpc_k] = cpc_v
 
+        col: ColumnMeta = ColumnMeta(**header_d)
+
+        def _ns_match(item_id: str) -> bool:
+            return item_id.lower() in [
+                str(s).lower()
+                for s in [
+                    pconfig.id,
+                    pconfig.anchor,
+                    col.namespace,
+                ]
+                if s is not None
+            ]
+
+        def _col_match(item_id: str) -> bool:
+            return item_id.lower() in [
+                str(s).lower()
+                for s in [
+                    col.rid,
+                    legacy_short_rid,
+                    col_key,
+                    col.title,
+                ]
+                if s is not None
+            ]
+
         # Overwrite "name" if set in user config
         # Key can be a column ID, a table ID, or a namespace in the general stats table.
         for item_id, new_title_val in config.table_columns_name.items():
-            item_id = item_id.lower()
             # Case-insensitive check if the outer key is a table ID or a namespace.
-            if item_id in [
-                pconfig.id.lower(),
-                str(header_d["namespace"]).lower(),
-            ] and isinstance(new_title_val, dict):
+            if _ns_match(item_id) and isinstance(new_title_val, dict):
                 # Assume a dict of specific column IDs
                 for item_id2, new_title in new_title_val.items():
                     item_id2 = item_id2.lower()
-                    if item_id2 in [col_key.lower(), str(header_d["title"]).lower()]:
-                        header_d["title"] = new_title
+                    if _col_match(item_id2):
+                        col.title = new_title
 
             # Case-insensitive check if the outer key is a column ID
-            elif item_id in [col_key.lower(), str(header_d["title"]).lower()] and isinstance(new_title_val, str):
-                header_d["title"] = new_title_val
+            elif _col_match(item_id) and isinstance(new_title_val, str):
+                col.title = new_title_val
 
         # Overwrite "hidden" if set in user config
         # Key can be a column ID, a table ID, or a namespace in the general stats table.
         for item_id, visibility in config.table_columns_visible.items():
-            item_id = item_id.lower()
             # Case-insensitive check if the outer key is a table ID or a namespace.
-            if item_id in [pconfig.id.lower(), str(header_d["namespace"]).lower()]:
+            if _ns_match(item_id):
                 # First - if config value is a bool, set all module columns to that value
                 if isinstance(visibility, bool):
                     # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                    header_d["hidden"] = not visibility
+                    col.hidden = not visibility
 
                 # Not a bool, assume a dict of specific column IDs
                 elif isinstance(visibility, dict):
                     for item_id2, visible in visibility.items():
                         item_id2 = item_id2.lower()
-                        if item_id2 in [
-                            col_key.lower(),
-                            str(header_d["title"]).lower(),
-                        ] and isinstance(visible, bool):
+                        if _col_match(item_id2) and isinstance(visible, bool):
                             # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                            header_d["hidden"] = not visible
+                            col.hidden = not visible
 
             # Case-insensitive check if the outer key is a column ID
-            elif visibility in [
-                col_key.lower(),
-                str(header_d["title"]).lower(),
-            ] and isinstance(visibility, bool):
+            elif _col_match(item_id) and isinstance(visibility, bool):
                 # Config has True = visible, False = Hidden. Here we're setting "hidden" which is inverse
-                header_d["hidden"] = not visibility
+                col.hidden = not visibility
 
         # Also overwrite placement if set in config
         try:
-            header_d["placement"] = float(config.table_columns_placement[header_d["namespace"]][col_key])
+            col.placement = float(config.table_columns_placement[col.namespace][str(col_key)])
         except (KeyError, ValueError):
             try:
-                header_d["placement"] = float(config.table_columns_placement[pconfig.id][col_key])
+                col.placement = float(config.table_columns_placement[pconfig.id][str(col_key)])
             except (KeyError, ValueError):
                 pass
 
         # Overwrite any header config if set in config
         for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            header_d[custom_k] = custom_v
+            setattr(col, custom_k, custom_v)
 
-        return ColumnMeta(**header_d)
+        return col
 
 
 ValueT = Union[int, float, str, bool]
@@ -263,6 +281,9 @@ SECTION_COLORS = [
     "247,129,191",  # Pink
     "153,153,153",  # Grey
 ]
+
+
+col_anchors_by_table: Dict[AnchorT, Set[ColumnAnchorT]] = defaultdict(set)
 
 
 class DataTable(BaseModel):
