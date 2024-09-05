@@ -392,22 +392,21 @@ class MultiqcModule(BaseMultiqcModule):
         sequence_length_distributions.sort(key=lambda d: _range_bp_to_num(d["length"], method="mean"))
 
         # Calculate the average sequence length (Basic Statistics gives a range)
-        length_reads = 0
-        length_bp = 0
-        total_count = sum(d["count"] for d in sequence_length_distributions)
+        total_read_count = sum(d["count"] for d in sequence_length_distributions)
         median: Optional[int] = None
-
+        running_read_count = 0
+        running_bp_sum = 0
         for d in sequence_length_distributions:
-            length_reads += d["count"]
-            length_bp += d["count"] * _range_bp_to_num(d["length"], method="mean")
+            running_read_count += d["count"]
+            running_bp_sum += d["count"] * _range_bp_to_num(d["length"], method="mean")
 
-            if median is None and length_reads >= total_count / 2:
+            if median is None and running_read_count >= total_read_count / 2:
                 # if the distribution-entry is a range, we use the average of the range.
                 # this isn't technically correct, because we can't know what the distribution
                 # is within that range. Probably good enough though.
                 median = int(_range_bp_to_num(d["length"], method="median"))
-        if total_count > 0:
-            self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = length_bp / total_count
+        if total_read_count > 0:
+            self.fastqc_data[s_name]["basic_statistics"]["avg_sequence_length"] = running_bp_sum / total_read_count
         if median is not None:
             self.fastqc_data[s_name]["basic_statistics"]["median_sequence_length"] = median
         return s_name
@@ -1436,7 +1435,7 @@ def _range_bp_to_num(bp: Union[str, int], method: Literal["start", "median", "me
             elif method == "median":
                 return ((maxlen - minlen) // 2) + minlen
             else:
-                return ((maxlen + minlen) / 2) + minlen
+                return ((maxlen - minlen) / 2) + minlen
         except TypeError:
             pass
     return int(bp)
