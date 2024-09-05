@@ -524,11 +524,18 @@ class Plot(BaseModel, Generic[T]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot(plots_dir_name=plots_dir_name)
+            try:
+                html = self.flat_plot(plots_dir_name=plots_dir_name)
+            except ValueError:
+                logger.error(f"Unable to export plot '{self.id}' to flat images, falling back to interactive plot")
+                html = self.interactive_plot()
         else:
             html = self.interactive_plot()
             if config.export_plots:
-                self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                try:
+                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                except ValueError:
+                    logger.error(f"Unable to export plot '{self.id}' to flat images")
 
         return html
 
@@ -711,22 +718,31 @@ def fig_to_static_html(
             formats.add("png")
 
     # Save the plot to the data directory if export is requested
+    png_is_written = False
     if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in formats:
-            plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-            if file_ext == "svg":
-                # Cannot add logo to SVGs
-                fig.write_image(plot_path, **write_kwargs)
+            try:
+                plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
+                plot_path.parent.mkdir(parents=True, exist_ok=True)
+                if file_ext == "svg":
+                    # Cannot add logo to SVGs
+                    fig.write_image(plot_path, **write_kwargs)
+                else:
+                    img_buffer = io.BytesIO()
+                    fig.write_image(img_buffer, **write_kwargs)
+                    img_buffer = add_logo(img_buffer, format=file_ext)
+                    with open(plot_path, "wb") as f:
+                        f.write(img_buffer.getvalue())
+                    img_buffer.close()
+            except Exception as e:
+                logger.error(
+                    f"Error: Unable to export {file_ext} figure to static image at {plot_path}. Exception: {e}"
+                )
             else:
-                img_buffer = io.BytesIO()
-                fig.write_image(img_buffer, **write_kwargs)
-                img_buffer = add_logo(img_buffer, format=file_ext)
-                with open(plot_path, "wb") as f:
-                    f.write(img_buffer.getvalue())
-                img_buffer.close()
+                if file_ext == "png":
+                    png_is_written = True
 
     # Now writing the PNGs for the HTML
     if not embed_in_html:
@@ -735,15 +751,22 @@ def fig_to_static_html(
         if plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = str(Path(plots_dir_name) / "png" / f"{file_name}.png")
+        img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
+        if not png_is_written:  # Could not write in the block above
+            raise ValueError(f"Unable to export plot to PNG plot image: {file_name}")
+        img_src = str(img_path)
     else:
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        img_buffer = add_logo(img_buffer, format="PNG")
-        # Convert to a base64 encoded string
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_src = f"data:image/png;base64,{b64_img}"
-        img_buffer.close()
+        try:
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = add_logo(img_buffer, format="PNG")
+            # Convert to a base64 encoded string
+            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+            img_src = f"data:image/png;base64,{b64_img}"
+            img_buffer.close()
+        except Exception as e:
+            logger.error(f"Unable to export PNG figure to static image: {e}")
+            raise ValueError("Unable to export PNG figure to static image")
 
     # Should this plot be hidden on report load?
     style = "" if active else "display:none;"
