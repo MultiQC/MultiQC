@@ -715,18 +715,21 @@ def fig_to_static_html(
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in formats:
-            plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-            if file_ext == "svg":
-                # Cannot add logo to SVGs
-                fig.write_image(plot_path, **write_kwargs)
-            else:
-                img_buffer = io.BytesIO()
-                fig.write_image(img_buffer, **write_kwargs)
-                img_buffer = add_logo(img_buffer, format=file_ext)
-                with open(plot_path, "wb") as f:
-                    f.write(img_buffer.getvalue())
-                img_buffer.close()
+            try:
+                plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
+                plot_path.parent.mkdir(parents=True, exist_ok=True)
+                if file_ext == "svg":
+                    # Cannot add logo to SVGs
+                    fig.write_image(plot_path, **write_kwargs)
+                else:
+                    img_buffer = io.BytesIO()
+                    fig.write_image(img_buffer, **write_kwargs)
+                    img_buffer = add_logo(img_buffer, format=file_ext)
+                    with open(plot_path, "wb") as f:
+                        f.write(img_buffer.getvalue())
+                    img_buffer.close()
+            except Exception as e:
+                logger.error(f"Error: Unable to write {file_ext} plot image to {plot_path}. Exception: {e}")
 
     # Now writing the PNGs for the HTML
     if not embed_in_html:
@@ -737,13 +740,16 @@ def fig_to_static_html(
         # Using file written in the config.export_plots block above
         img_src = str(Path(plots_dir_name) / "png" / f"{file_name}.png")
     else:
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        img_buffer = add_logo(img_buffer, format="PNG")
-        # Convert to a base64 encoded string
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_src = f"data:image/png;base64,{b64_img}"
-        img_buffer.close()
+        try:
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = add_logo(img_buffer, format="PNG")
+            # Convert to a base64 encoded string
+            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+            img_src = f"data:image/png;base64,{b64_img}"
+            img_buffer.close()
+        except Exception as e:
+            logger.error(f"Error: Unable to write PNG plot image to {plot_path}. Exception: {e}")
 
     # Should this plot be hidden on report load?
     style = "" if active else "display:none;"
