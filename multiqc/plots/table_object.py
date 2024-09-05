@@ -79,7 +79,7 @@ class DataTable(BaseModel):
     """
 
     id: str
-    anchor: str
+    anchor: AnchorT
     raw_data: List[Dict[str, Dict[str, ValueT]]] = []
     formatted_data: List[Dict[str, Dict[str, str]]] = []
     headers_in_order: Dict[int, List[Tuple[int, str]]]
