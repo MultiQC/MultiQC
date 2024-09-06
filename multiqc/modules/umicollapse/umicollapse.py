@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
         data_by_sample = self.ignore_samples(data_by_sample)
         if len(data_by_sample) == 0 and len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
-        log.info(f"Found {len(data_by_sample)} UMI collapse reports")
+        log.info(f"Found {len(data_by_sample)} UMICollapse reports")
 
         # Write parsed reports data to a file
         self.write_data_file(data_by_sample, "multiqc_umicollapse")
@@ -78,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(f) -> Dict:
         regexes = [
             (int, "input_reads", r"Number of input reads\t(\d+)"),
-            (int, "dedup_input_reads", r"Number of unremoved reads\t(\d+)"),
+            (int, "dedup_input_reads", r"Number of unremoved reads\t(\d+)|Number of unique reads\t(\d+)"), # BAM mode | FastQ mode
             (int, "positions_deduplicated", r"Number of unique alignment positions\t(\d+)"),
             (float, "mean_umi_per_pos", r"Average number of UMIs per alignment position\t([\d\.]+)"),
             (int, "max_umi_per_pos", r"Max number of UMIs over all alignment positions\t(\d+)"),
@@ -88,9 +88,10 @@ class MultiqcModule(BaseMultiqcModule):
         data: Dict[str, Union[str, int, float]] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
-            re_matches = re.search(regex, f["f"])
+            comp_regex = re.compile(regex)
+            re_matches = comp_regex.search(f["f"])
             if re_matches:
-                data[key] = type_(re_matches.group(1))
+                data[key] = type_(re_matches.group(1) or re_matches.group(2)) # BAM mode | FastQ mode
 
         # Calculate a few simple supplementary stats
         try:
