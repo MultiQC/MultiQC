@@ -78,7 +78,11 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_logs(f) -> Dict:
         regexes = [
             (int, "input_reads", r"Number of input reads\t(\d+)"),
-            (int, "dedup_input_reads", r"Number of unremoved reads\t(\d+)|Number of unique reads\t(\d+)"), # BAM mode | FastQ mode
+            (
+                int,
+                "dedup_input_reads",
+                r"Number of unremoved reads\t(\d+)|Number of unique reads\t(\d+)",
+            ),  # BAM mode | FastQ mode
             (int, "positions_deduplicated", r"Number of unique alignment positions\t(\d+)"),
             (float, "mean_umi_per_pos", r"Average number of UMIs per alignment position\t([\d\.]+)"),
             (int, "max_umi_per_pos", r"Max number of UMIs over all alignment positions\t(\d+)"),
@@ -91,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
             comp_regex = re.compile(regex)
             re_matches = comp_regex.search(f["f"])
             if re_matches:
-                data[key] = type_(re_matches.group(1) or re_matches.group(2)) # BAM mode | FastQ mode
+                data[key] = type_(re_matches.group(1) or re_matches.group(2))  # BAM mode | FastQ mode
 
         # Calculate a few simple supplementary stats
         try:
