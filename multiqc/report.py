@@ -649,32 +649,34 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is
     # Search by file contents
     num_lines = pattern.num_lines or config.filesearch_lines_limit
 
-    match_strs: Set[str] = set()
-    match_re_patterns: Set[re.Pattern] = set()
     total_lines = 0
+    query_strings = pattern.contents
+    query_re_patterns = pattern.contents_re
+    match_strings: Set[str] = set()
+    match_re_patterns: Set[re.Pattern] = set()
     try:
         for line_count, block in f.line_block_iterator():
-            for s in pattern.contents:
-                if s in block:
+            for q_string in query_strings:
+                if q_string in block:
                     if total_lines + line_count > num_lines:
                         # We read more lines than requested and the match may
                         # be in a part of the file that shouldn't be read.
                         # Test how many lines preceed the match to see if there
                         # was overshoot.
-                        s_index = block.index(s)
+                        s_index = block.index(q_string)
                         lines_including_match = block[:s_index].count("\n") + 1
                         if total_lines + lines_including_match <= num_lines:
-                            match_strs.add(s)
+                            match_strings.add(q_string)
                     else:
-                        match_strs.add(s)
-                    if len(match_strs) == len(pattern.contents):  # all strings matched
+                        match_strings.add(q_string)
+                    if len(match_strings) == len(query_strings):  # all strings matched
                         break
-            for p in pattern.contents_re:
+            for q_pattern in query_re_patterns:
                 # Limit the number of lines to the amount of lines that should remain
                 for line in block.splitlines(keepends=True)[: num_lines - total_lines]:
-                    if p.match(line):
-                        match_re_patterns.add(p)
-                        if len(match_re_patterns) == len(pattern.contents_re):  # all strings matched
+                    if q_pattern.match(line):
+                        match_re_patterns.add(q_pattern)
+                        if len(match_re_patterns) == len(query_re_patterns):  # all strings matched
                             break
             total_lines += line_count
             if total_lines >= num_lines:
@@ -683,12 +685,9 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is
         file_search_stats["skipped_file_contents_search_errors"].add(f.path)
         return False
 
-    return (
-        pattern.contents
-        and len(match_strs) == len(pattern.contents)
-        or pattern.contents_re
-        and len(match_re_patterns) == len(pattern.contents_re)
-    )
+    strings_match = not query_strings or len(match_strings) == len(query_strings)
+    re_patterns_match = not query_re_patterns or len(match_re_patterns) == len(query_re_patterns)
+    return strings_match and re_patterns_match
 
 
 def exclude_file(sp, f: SearchFile):
