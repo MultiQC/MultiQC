@@ -525,10 +525,15 @@ myother_module:
   - fn: "different_fn.out"
     contents: "This is myprogram v1.3"
   - fn: "another.txt"
-    contents: "What are these files anyway?"
+    contents: ["What are these files anyway?", "End of program"]
+    contents_re: "^Metric: \d+\.\d+"
 ```
 
-Here, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
+For `mymodule`, a file must have the filename `mylog.txt` _and_ contain the string `mystring`.
+
+`myother_module` will match `different_fn.out` with the contents `This is myprogram v1.3`,
+_or_ `another.txt` containing ALL of the lines `What are these files anyway?`, `End of program"`,
+and `^Metric: \d+\.\d+`.
 
 You can match subsets of files by using `exclude_` keys as follows:
 
