@@ -6,7 +6,8 @@ multiqc_plots/
 /examples/
 /result
 /benchmarks
-/tmp/
+/tmp
+/playground
 
 # CI tooling
 .ruff_cache
