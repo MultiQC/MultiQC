@@ -17,7 +17,7 @@ import jinja2
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
@@ -340,6 +340,11 @@ def _write_data_files(data_dir: Path) -> None:
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")
+
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    if log_and_rich.log_tmp_fn:
+        shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
 
     shutil.copytree(
         report.data_tmp_dir(),
