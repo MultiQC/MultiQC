@@ -1002,7 +1002,7 @@ if myvar is none # Note - Lower case!
 
 ## Sample grouping in the General Statistics table
 
-MultiQC aims at having one row per sample in the _General Statistics_ table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
+MultiQC aims at having one row per sample in the General Statistics table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
 
 ![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
@@ -1036,7 +1036,7 @@ generalstats_sample_merge_groups:
       pattern: "[_.-][rR]?2$"
 ```
 
-The format of supported types is the same as for [Cleaning extensions](../getting_started/config.md#cleaning-extensions):
+The format of supported types is the same as for [cleaning extensions](../getting_started/config.md#cleaning-extensions) option:
 
 - `"truncate"`: The default mode. To get the group name, remove the pattern from the end of the string.
 - `"remove"`: Remove the pattern from the middle.
@@ -1048,5 +1048,5 @@ Only a handful of modules are supported (like FastQC and Cutadapt). If you'd lik
 :::
 
 :::tip
-This only works for the _General Statistics_ table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](./customisation.md#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+This only works for the _General Statistics_ table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
