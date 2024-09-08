@@ -999,3 +999,29 @@ my_var: null
 # Jinja2
 if myvar is none # Note - Lower case!
 ```
+
+## Sample grouping in the general statistics table
+
+MultiQC aims at grouping all data for a sample within one row of the General Statistics table. Some modules, however, work with chunks of a sample, e.g. FastQC can be run separately on forward and reverse reads, resulting in how-empty rows like this:
+
+<img src="../../../docs/images/genstats_grouping_ungrouped.png" alt="General Statistics table with sample grouping" width="500"/>
+
+For those modules that support this, MultiQC offers an config option `generalstats_sample_merge_groups` to group such cunks in the general stats table:
+
+```yaml
+generalstats_sample_merge_groups:
+  "R1": ["_R1"]
+  "R2": ["_R2"]
+```
+
+Which this block in the config, for each `SAMPLE_R1`-`SAMPLE_R2` pair, FastQC will add a new virtual sample `SAMPLE`, constucted by merging the `SAMPLE_R1` and `SAMPLE_R2` data - summing up, or calculating the weighted average, whatever is relevant for each given statistic.
+
+<img src="../../../docs/images/genstats_grouping_grouped.png" alt="General Statistics table with sample grouping" width="500"/>
+
+Clicking on the row header will expand the row to show the individual chunks data.
+
+<img src="../../../docs/images/genstats_grouping_expanded.png" alt="General Statistics table with sample grouping" width="500"/>
+
+This wouldn't affect plots or any data in sections, only the General Stats table.
+
+Only a handful of modules are supported (FastQC and Cutadapt at the moment). If you'd like to add support for more modules, please open an issue or submit a pull request.
