@@ -1,7 +1,9 @@
 import logging
+import os
 from typing import Dict, Union
 
-from .qualimap import MultiqcModule
+from multiqc import BaseMultiqcModule
+from multiqc.modules.qualimap.qualimap import MultiqcModule
 
 __all__ = ["MultiqcModule"]
 
@@ -77,7 +79,7 @@ def parse_numerals(
     if decimalcomma is None:
         log.debug(f"Couldn't determine decimal separator for file {fpath}")
 
-    d = {}
+    d: Dict = {}
     for k, v in preparsed_d.items():
         v = v.strip("X").strip("%")
         if k in float_metrics or k in rate_metrics or k in int_metrics:
@@ -92,3 +94,11 @@ def parse_numerals(
                 d[rate_metrics[k]] = float(v)
 
     return d
+
+
+def get_s_name(module: BaseMultiqcModule, f):
+    s_name = os.path.basename(os.path.dirname(f["root"]))
+    s_name = module.clean_s_name(s_name, f)
+    if s_name.endswith(".qc"):
+        s_name = s_name[:-3]
+    return s_name

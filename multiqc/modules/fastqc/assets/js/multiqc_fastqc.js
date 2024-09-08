@@ -281,7 +281,7 @@ function fastqc_module(module_element, module_key) {
       "</div> \
         </div>";
     module_element
-      .find("[id^=fastqc_" + k + "]")
+      .find("[id*=fastqc_" + k + "]")
       .first()
       .append(p_bar);
   });

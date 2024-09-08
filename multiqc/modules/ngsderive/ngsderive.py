@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from ngsderive"""
-
 import csv
 import io
 import logging
@@ -7,22 +5,20 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    ngsderive module class, parses stderr logs.
-    """
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
-            info="attempts to predict library information from next-generation sequencing data.",
+            info="Forensic tool for by backwards computing library information in sequencing data",
+            extra="""
+            Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results 
+            should be considered with that understanding. Please see the documentation for more information.
+            """,
             # Can't find a DOI // doi=
         )
 
@@ -279,7 +275,7 @@ class MultiqcModule(BaseMultiqcModule):
         for sample, readlen in self.readlen.items():
             data[sample] = {
                 "evidence": readlen.get("Evidence"),
-                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected")) * 100.0, 2),
+                "majoritypctdetected": round(float(readlen.get("MajorityPctDetected").strip("%")) * 100.0, 2),
                 "consensusreadlength": int(readlen.get("ConsensusReadLength")),
             }
 
@@ -447,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
             "id": "ngsderive_junctions_plot",
             "title": "ngsderive: Junction Annotation",
             "cpswitch_counts_label": "Number",
-            "yDecimals": False,
+            "y_decimals": False,
             "ylab": "Number of junctions",
             "data_labels": [
                 {"name": "Junctions", "ylab": "Number of junctions"},

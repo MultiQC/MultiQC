@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from GATK BaseRecalibrator """
+"""MultiQC submodule to parse output from GATK BaseRecalibrator"""
 
 import logging
 from collections import namedtuple
@@ -114,7 +114,7 @@ class BaseRecalibratorMixin:
                 "id": "gatk-base-recalibrator-quality-scores-plot",
                 "xlab": "Observed Quality Score",
                 "ylab": "Count",
-                "xDecimals": False,
+                "x_decimals": False,
                 "data_labels": data_labels,
             },
         )
@@ -180,7 +180,7 @@ class BaseRecalibratorMixin:
                 "id": "gatk-base-recalibrator-reported-empirical-plot",
                 "xlab": "Reported quality score",
                 "ylab": "Empirical quality score",
-                "xDecimals": False,
+                "x_decimals": False,
                 "data_labels": data_labels,
                 "xmin": 0,
                 "ymin": 0,

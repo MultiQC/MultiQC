@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard ValidateSamFile"""
 
 import logging
+from typing import List, Tuple, Union
 
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
@@ -106,7 +107,7 @@ def parse_reports(module):
         # Write parsed data to a file
         module.write_data_file(data, "multiqc_picard_validatesamfile")
 
-    return len(data)
+    return data.keys()
 
 
 def _parse_reports_by_type(module):
@@ -270,7 +271,7 @@ def _get_general_stats_headers():
             "description": "ValidateSamFile (number of warnings)",
             "scale": "Oranges",
             "shared_key": "ValidateSamEntries",
-            "colour": "255,237,160",
+            "color": "255,237,160",
             "format": "{:.0f}",
             "hidden": True,
         },
@@ -279,7 +280,7 @@ def _get_general_stats_headers():
             "description": "ValidateSamFile (number of errors)",
             "scale": "Reds",
             "shared_key": "ValidateSamEntries",
-            "colour": "252,146,114",
+            "color": "252,146,114",
             "format": "{:.0f}",
             "hidden": True,
         },
@@ -293,10 +294,10 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     status."""
 
     note_html = ['<div class="progress">']
-    pbars = [
-        [float(error_count), "danger", "had errors"],
-        [float(only_warning_count), "warning", "had warnings"],
-        [float(pass_count), "success", "passed"],
+    pbars: List[Tuple[float, str, str]] = [
+        (float(error_count), "danger", "had errors"),
+        (float(only_warning_count), "warning", "had warnings"),
+        (float(pass_count), "success", "passed"),
     ]
     for b in pbars:
         if b[0]:
@@ -309,7 +310,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     return "\n".join(note_html)
 
 
-def _generate_detailed_table(data) -> Plot:
+def _generate_detailed_table(data) -> Union[Plot, str]:
     """
     Generates and returns the HTML table that overviews the details found.
     """
@@ -340,7 +341,7 @@ def _generate_detailed_table(data) -> Plot:
                 }
 
     table_config = {
-        "table_title": "Picard: SAM/BAM File Validation",
+        "title": "Picard: SAM/BAM File Validation",
         "id": "picard_validatesamfile_table",
     }
 

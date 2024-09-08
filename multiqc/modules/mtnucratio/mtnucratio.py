@@ -1,25 +1,19 @@
-"""MultiQC module to parse output from mtnucratio"""
-
 import json
 import logging
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """mtnucratio module"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mtnucratio",
             anchor="mtnucratio",
             href="http://www.github.com/apeltzer/MTNucRatioCalculator",
-            info="is a tool to compute mt/nuc ratios for NGS datasets.",
+            info="Computes mitochondrial to nuclear genome ratios in NGS datasets.",
             doi="10.1186/s13059-016-0918-z",
         )
 

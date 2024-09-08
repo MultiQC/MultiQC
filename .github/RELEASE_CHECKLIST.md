@@ -5,7 +5,8 @@ This checklist is for my own reference, as I forget the steps every time.
 1. Check that everything is up-to-date and ready to go
 2. Update version numbers in `pyproject.toml`
 3. Run `python scripts/print_changelog.py` to generate a new changelog section stub, paste it into `CHANGELOG.md` and edit accordingly: group changes if needed, add highlights.
-4. Install the package again in `install` mode:
+4. Run `python scripts/make_module_docs.py` to update markdown files for module
+5. Install the package again in `install` mode:
 
    ```bash
    pip install .
@@ -14,21 +15,15 @@ This checklist is for my own reference, as I forget the steps every time.
    - This removes the commit hash from the version number when MultiQC runs
    - If still getting the commit hash in the version, check that the `venv` isn't in a subdirectory of the cloned MultiQC git repo
 
-5. Run using test data
+6. Run using test data
    - Check for any command line or javascript errors
    - Check version numbers are printed correctly
-6. Create new demo reports for the website
+7. Create new demo reports for the website
 
    - Comment out any config in `~/.multiqc_config.yaml`
 
      ```bash
      mv ~/.multiqc_config.yml ~/.multiqc_config.yml.bkup
-     ```
-
-   - Install `NationalGenomicsInfrastructure/MultiQC_NGI` - **NEEDS Python 3.11**:
-
-     ```bash
-     pip install git+https://github.com/NationalGenomicsInfrastructure/MultiQC_NGI@0.7.1
      ```
 
    - Generate reports in the multiqc/website repo.
@@ -46,24 +41,24 @@ This checklist is for my own reference, as I forget the steps every time.
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
 
-7. Commit and push version updates
-8. Generate new rich-codex screenshots
+8. Commit and push version updates
+9. Generate new rich-codex screenshots
    - On github.com, make a new branch using the branch dropdown called `rich-codex` (or whatever).
    - Go to _Actions_ and then [_Docs screenshots_](https://github.com/MultiQC/MultiQC/actions/workflows/screenshots.yml)
    - Click _Run Workflow_ top right, and **select your new branch**
    - Click Run. Wait for the action to complete.
    - Make a PR from this branch to `main` and check that the new screenshot looks ok. Merge if so.
-9. Make sure that all tests are passing
-10. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
-11. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
-12. Update version numbers to new dev version in `pyproject.toml` + a new section in the changelog for the development version
-13. Commit and push version bump
-14. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
-15. Look for the automated release PR on `bioconda` and approve / merge
+10. Make sure that all tests are passing
+11. Make a [release](https://github.com/MultiQC/MultiQC/releases) on GitHub - paste changelog section.
+12. Check that [PyPI listing page](https://pypi.python.org/pypi/multiqc/) looks sane
+13. Update version numbers to new dev version in `pyproject.toml`
+14. Commit and push version bump
+15. Run Seqera `#product-releases` [Slack workflow](https://slack.com/shortcuts/Ft06GYSX4UUB/c3733786a0ad2fc1794d1959aed5df19)
+16. Look for the automated release PR on `bioconda` and approve / merge
     - IMPORTANT: If any new dependencies added, need a manual PR to add them.
     - Do this quickly, as other people merge the automated PRs really quickly
-16. Tweet that new version is released
-17. Continue making more awesome :metal:
+17. Tweet that new version is released
+18. Continue making more awesome :metal:
 
 ## Appendix
 

@@ -1,25 +1,23 @@
-"""MultiQC module to parse base misincorporation output from mapdamage2"""
-
 import logging
 import os
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """mapDamage module"""
+    """
+    This module parses the base `misincorporation` output.
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="mapDamage",
             anchor="mapdamage",
             href="https://github.com/ginolhac/mapDamage",
-            info="mapDamage: tracking and quantifying damage patterns in ancient DNA sequences.",
+            info="Tracks and quantifies damage patterns in ancient DNA sequences.",
             doi="https://doi.org/10.1093/bioinformatics/btt193",
         )
 
@@ -172,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers = {
             f"mapdamage-{readend}1": {
-                "id": f"misinc-stats-1st-{readend}-{substitution}",
+                "rid": f"misinc-stats-1st-{readend}-{substitution}",
                 "title": f"{readend} {substitution} 1st base",
                 "description": f"{readend} 1st base substitution frequency for {substitution}",
                 "max": 100,
@@ -182,7 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "modify": lambda x: x * 100.0,
             },
             f"mapdamage-{readend}2": {
-                "id": f"misinc-stats-2nd-{readend}-{substitution}",
+                "rid": f"misinc-stats-2nd-{readend}-{substitution}",
                 "title": f"{readend} {substitution} 2nd base",
                 "description": f"{readend} 2nd base substitution frequency for {substitution}",
                 "max": 100,
@@ -230,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": f"mapDamage: Read length distribution - {orientation} ",
             "ylab": "Number of reads",
             "xlab": "Readlength (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "tt_label": "{point.y} reads of length {point.x}",
             "ymin": 0,
             "xmin": 0,

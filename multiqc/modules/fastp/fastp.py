@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Fastp"""
-
 import json
 import logging
 import re
@@ -9,22 +7,33 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    fastp module class
+    By default, the module generates the sample names based on the input FastQ file names in
+    the command line used by fastp. If you prefer, you can tell the module to use
+    the filenames as sample names instead. To do so, use the following config option:
+
+    ```yaml
+    fastp:
+      s_name_filenames: true
+    ```
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="fastp",
             anchor="fastp",
             href="https://github.com/OpenGene/fastp",
-            info="An ultra-fast all-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            info="All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)",
+            extra="""
+            Fastp goes through fastq files in a folder and perform a series of quality control and filtering. 
+            Quality control and reporting are displayed both before and after filtering, allowing for a clear 
+            depiction of the consequences of the filtering process. Notably, the latter can be conducted on a 
+            variety of parameters including quality scores, length, as well as the presence of adapters, polyG, 
+            or polyX tailing.""",
             doi="10.1093/bioinformatics/bty560",
         )
 
@@ -62,7 +71,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.fastp_all_data, "multiqc_fastp")
 
         # General Stats Table
-        self.fastp_general_stats_table()
+        self.fastp_general_stats_table(self.fastp_data)
 
         # Filtering statistics bar plot
         self.add_section(
@@ -85,7 +94,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Fastp: Duplication Rate",
                         "xlab": "Duplication level",
                         "ylab": "Read percent",
-                        "yCeiling": 100,
+                        "y_clipmax": 100,
                         "ymin": 0,
                         "tt_label": "{point.x}: {point.y:.2f}%",
                     },
@@ -105,7 +114,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "title": "Fastp: Insert Size Distribution",
                         "xlab": "Insert size",
                         "ylab": "Read percent",
-                        "yCeiling": 100,
+                        "y_clipmax": 100,
                         "ymin": 0,
                         "tt_label": "{point.x}: {point.y:.2f}%",
                         "smooth_points": 300,
@@ -327,74 +336,61 @@ class MultiqcModule(BaseMultiqcModule):
         if "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
-    def fastp_general_stats_table(self):
+    def fastp_general_stats_table(self, data_by_sample):
         """Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report"""
 
-        headers = {
-            "pct_duplication": {
-                "title": "% Duplication",
-                "description": "Duplication rate before filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
+        self.general_stats_addcols(
+            data_by_sample,
+            {
+                "pct_duplication": {
+                    "title": "% Duplication",
+                    "description": "Duplication rate before filtering",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
+                "after_filtering_q30_rate": {
+                    "title": "% > Q30",
+                    "description": "Percentage of reads > Q30 after filtering",
+                    "modify": lambda x: x * 100.0,
+                    "scale": "GnBu",
+                    "suffix": "%",
+                    "hidden": True,
+                },
+                "after_filtering_q30_bases": {
+                    "title": f"{config.base_count_prefix} Q30 bases",
+                    "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
+                    "scale": "GnBu",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "filtering_result_passed_filter_reads": {
+                    "title": f"{config.read_count_prefix} Reads After Filtering",
+                    "description": f"Total reads after filtering ({config.read_count_desc})",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                },
+                "after_filtering_gc_content": {
+                    "title": "GC content",
+                    "description": "GC content after filtering",
+                    "suffix": "%",
+                    "scale": "Blues",
+                    "modify": lambda x: x * 100.0,
+                },
+                "pct_surviving": {
+                    "title": "% PF",
+                    "description": "Percent reads passing filter",
+                    "suffix": "%",
+                    "scale": "BuGn",
+                },
+                "pct_adapter": {
+                    "title": "% Adapter",
+                    "description": "Percentage adapter-trimmed reads",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
             },
-            "after_filtering_q30_rate": {
-                "title": "% > Q30",
-                "description": "Percentage of reads > Q30 after filtering",
-                "min": 0,
-                "max": 100,
-                "modify": lambda x: x * 100.0,
-                "scale": "GnBu",
-                "suffix": "%",
-                "hidden": True,
-            },
-            "after_filtering_q30_bases": {
-                "title": f"{config.base_count_prefix} Q30 bases",
-                "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.base_count_multiplier,
-                "scale": "GnBu",
-                "shared_key": "base_count",
-                "hidden": True,
-            },
-            "filtering_result_passed_filter_reads": {
-                "title": f"{config.read_count_prefix} Reads After Filtering",
-                "description": f"Total reads after filtering ({config.read_count_desc})",
-                "min": 0,
-                "scale": "Blues",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "after_filtering_gc_content": {
-                "title": "GC content",
-                "description": "GC content after filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "Blues",
-                "modify": lambda x: x * 100.0,
-            },
-            "pct_surviving": {
-                "title": "% PF",
-                "description": "Percent reads passing filter",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "BuGn",
-            },
-            "pct_adapter": {
-                "title": "% Adapter",
-                "description": "Percentage adapter-trimmed reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-        }
-
-        self.general_stats_addcols(self.fastp_data, headers)
+        )
 
     def fastp_filtered_reads_chart(self):
         """Function to generate the fastp filtered reads bar plot"""
@@ -414,7 +410,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Fastp: Filtered Reads",
             "ylab": "# Reads",
             "cpswitch_counts_label": "Number of Reads",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
         return bargraph.plot(self.fastp_data, keys, pconfig)
 
@@ -462,10 +458,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         return linegraph.plot(pdata, pconfig)
 
-    def filter_pconfig_pdata_subplots(self, data, label):
+    @staticmethod
+    def filter_pconfig_pdata_subplots(data, label):
         data_labels = []
         pdata = []
-        config = {
+        for k, dl in {
             "read1_before_filtering": {
                 "name": "Read 1: Before filtering",
                 "ylab": f"R1 Before filtering: {label}",
@@ -482,10 +479,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "name": "Read 2: After filtering",
                 "ylab": f"R2 After filtering: {label}",
             },
-        }
-        for k in config:
+        }.items():
             if sum([len(data[k][x]) for x in data[k]]) > 0:
-                data_labels.append(config[k])
+                data_labels.append(dl)
                 pdata.append(data[k])
 
         # Abort sample if no data

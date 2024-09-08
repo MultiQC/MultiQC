@@ -1,23 +1,24 @@
-"""MultiQC module to parse output from KAT"""
-
 import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The KAT multiqc module interprets output from KAT distribution analysis json files, which typically
+    contain information such as estimated genome size and heterozygosity rates from your k-mer spectra.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="K-mer Analysis Toolkit",
             anchor="kat",
             href="https://github.com/TGAC/KAT",
-            info="is a toolkit for analysing sequencing data via its k-mer spectra.",
+            info="Analyses sequencing data via its k-mer spectra.",
             doi="10.1093/bioinformatics/btw663",
         )
 

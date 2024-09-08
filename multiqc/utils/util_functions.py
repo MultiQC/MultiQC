@@ -1,37 +1,39 @@
 """MultiQC Utility functions, used in a variety of places."""
 
-from typing import Dict
-
 import array
 import json
 import logging
-from collections import defaultdict, OrderedDict
-
-import os
+import math
 import shutil
 import sys
 import time
-import datetime
-import math
+from collections import OrderedDict, defaultdict
+from pathlib import Path
+from typing import Dict
+
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-def robust_rmtree(path, logger=None, max_retries=10):
-    """Robustly tries to delete paths.
+def rmtree_with_retries(path, _logger=None, max_retries=10):
+    """
+    Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
     occurs.  If the final attempt fails, the Exception is propagated
     to the caller.
     """
+    if path is None or not Path(path).exists():
+        return
 
     for i in range(max_retries):
         try:
             shutil.rmtree(path)
             return
         except OSError:
-            if logger:
-                logger.info(f"Unable to remove path: {path}")
-                logger.info(f"Retrying after {i**2} seconds")
+            if _logger:
+                _logger.info(f"Unable to remove path: {path}")
+                _logger.info(f"Retrying after {i**2} seconds")
             else:
                 print(f"Unable to remove path: {path}", file=sys.stderr)
                 print(f"Retrying after {i**2} seconds", file=sys.stderr)
@@ -63,48 +65,6 @@ def strtobool(val) -> bool:
         raise ValueError(f"invalid truth value {val!r}")
 
 
-emoji_rich_ids = {
-    "🍾": ":bottle_with_popping_cork:",
-    "🌹": ":rose:",
-    "🍀": ":four_leaf_clover:",
-    "🌏": ":globe_showing_asia-australia:",
-    "🎃": ":jack-o-lantern:",
-    "🎅": ":santa:",
-    "🎄": ":christmas_tree:",
-    "🔍": ":mag:",
-}
-
-emoji_dates = {
-    "🍾": (1, 1, 1, 5),  # New Year's Day
-    "🌹": (2, 14, 0, 0),  # Valentine's Day
-    "🍀": (3, 17, 0, 0),  # St Patrick's Day
-    "🌏": (4, 22, 0, 0),  # Earth Day
-    "🎃": (10, 31, 5, 0),  # Halloween
-    "🎅": (12, 25, 0, 0),  # Christmas Day
-    "🎄": (12, 25, 7, 7),  # Christmas
-}
-
-
-def choose_emoji(rich=False) -> str:
-    """Choose an emoji to use in the report header."""
-    # NB: We haven't parsed the config yet, so can't disable via config
-    if no_unicode():
-        return ""
-
-    today = datetime.date.today()
-
-    selected_emoji = "🔍"
-    for emoji, (month, day, days_before, days_after) in emoji_dates.items():
-        special_date = datetime.date(today.year, month, day)
-        date_range_start = special_date - datetime.timedelta(days=days_before)
-        date_range_end = special_date + datetime.timedelta(days=days_after)
-        if date_range_start <= today <= date_range_end:
-            selected_emoji = emoji
-    if rich:
-        return emoji_rich_ids[selected_emoji]
-    return selected_emoji
-
-
 def replace_defaultdicts(data):
     """
     Recursively replace dict-likes as dicts for nice yaml representation.
@@ -124,7 +84,7 @@ def replace_defaultdicts(data):
     return _replace(data)
 
 
-def dump_json(data, filehandle, **kwargs):
+def dump_json(data, filehandle=None, **kwargs):
     """
     Recursively replace non-JSON-conforming NaNs and lambdas with None.
     Note that a custom JSONEncoder would not work for NaNs:
@@ -172,6 +132,8 @@ def dump_json(data, filehandle, **kwargs):
                 return replace_nan(o.tolist())
             if callable(o):
                 return None
+            if isinstance(o, BaseModel):  # special handling for pydantic models
+                return o.model_dump_json()
             return super().default(o)
 
     if filehandle:
@@ -182,24 +144,13 @@ def dump_json(data, filehandle, **kwargs):
 
 def is_running_in_notebook() -> bool:
     try:
-        from IPython import get_ipython
+        from IPython import get_ipython  # type: ignore
 
         if "IPKernelApp" in get_ipython().config:
             return True
     except (ImportError, AttributeError):
         pass
     return False
-
-
-def no_unicode() -> bool:
-    # When LANG or PYTHONIOENCODING or is not set, Rich won't be able to print fancy unicode
-    # characters for the progress bar, and the runtime would crash with UnicodeEncodeError:
-    # https://github.com/MultiQC/MultiQC/actions/runs/8814275065/job/24193771822
-    # See https://github.com/Textualize/rich/issues/212
-    return (
-        "utf".casefold() not in os.environ.get("LANG", "").casefold()
-        and "utf".casefold() not in os.environ.get("PYTHONIOENCODING", "").casefold()
-    )
 
 
 def compress_number_lists_for_json(obj):
@@ -256,16 +207,30 @@ def compress_number_lists_for_json(obj):
     return obj
 
 
-def update_dict(target: Dict, source: Dict, none_only=False):
-    """Recursively updates nested dict d from nested dict u"""
+def update_dict(target: Dict, source: Dict, none_only=False, add_in_the_beginning=False):
+    """
+    Recursively updates nested dict d from nested dict u
+
+    >>> update_dict({"cutadapt": {"fn": "old", "fn2": "old2"}}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new', 'fn2': 'old2'}}
+    >>> update_dict({"cutadapt": [{"fn": "old"}]}, {"cutadapt": {"fn": "new"}})
+    {'cutadapt': {'fn': 'new'}}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"})
+    {'existing': 'v1', 'new': 'v2'}
+    >>> update_dict({"existing": "v1"}, {"new": "v2"}, add_in_the_beginning=True)
+    {'new': 'v2', 'existing': 'v1'}
+    """
     assert target is not None, source is not None
-    for key, val in source.items():
-        if isinstance(val, dict):
-            target[key] = update_dict(target.get(key, {}), val)
+    for key, src_val in source.items():
+        if isinstance(src_val, dict) and key in target and isinstance(target[key], dict):
+            target[key] = update_dict(target[key], src_val, none_only=none_only)
         else:
             if not none_only or target.get(key) is None:
-                if isinstance(val, list):
-                    target[key] = val.copy()
+                if isinstance(src_val, list):
+                    target[key] = src_val.copy()
                 else:
-                    target[key] = val
+                    if add_in_the_beginning:
+                        target = {key: src_val, **target}
+                    else:
+                        target[key] = src_val
     return target

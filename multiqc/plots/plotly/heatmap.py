@@ -1,6 +1,6 @@
 import logging
-from typing import Dict, List, Union, Optional
-import plotly.graph_objects as go
+from typing import Dict, List, Union, Optional, Tuple
+import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
 from multiqc.plots.plotly.plot import (
@@ -41,10 +41,10 @@ class HeatmapConfig(PConfig):
 
 
 def plot(
-    rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+    rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
     pconfig: HeatmapConfig,
-    xcats: Optional[List[str]] = None,
-    ycats: Optional[List[str]] = None,
+    xcats: Optional[List[Union[str, int]]] = None,
+    ycats: Optional[List[Union[str, int]]] = None,
 ) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -65,27 +65,32 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-        xcats: Optional[List[str]] = None,
-        ycats: Optional[List[str]] = None,
+        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+        xcats: Optional[List[Union[str, int]]] = None,
+        ycats: Optional[List[Union[str, int]]] = None,
     ) -> "Dataset":
         if isinstance(rows, dict):
+            # Re-key the dict to be strings
+            rows_str: Dict[str, Dict[str, ElemT]] = {
+                str(y): {str(x): value for x, value in value_by_x.items()} for y, value_by_x in rows.items()
+            }
+
             # Convert dict to a list of lists
             if not ycats:
-                ycats = list(rows.keys())
+                ycats = list(rows_str.keys())
             if not xcats:
                 xcats = []
-                for y, value_by_x in rows.items():
+                for y, value_by_x in rows_str.items():
                     for x, value in value_by_x.items():
                         if x not in xcats:
                             xcats.append(x)
-            rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
+            rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
 
         dataset = Dataset(
             **dataset.__dict__,
             rows=rows,
-            xcats=xcats,
-            ycats=ycats,
+            xcats=[str(x) for x in xcats] if xcats else None,
+            ycats=[str(y) for y in ycats] if ycats else None,
         )
         return dataset
 
@@ -110,11 +115,14 @@ class Dataset(BaseDataset):
         )
 
     def save_data_file(self) -> None:
-        data = [
-            ["."] + self.xcats,
-        ]
+        row: List[ElemT] = ["."]
+        row += self.xcats
+        data: List[List[ElemT]] = []
+        data.append(row)
         for ycat, row in zip(self.ycats, self.rows):
-            data.append([ycat] + row)
+            new_row: List[ElemT] = [ycat]
+            new_row += row
+            data.append(new_row)
 
         report.write_data_file(data, self.uid)
 
@@ -128,10 +136,10 @@ class HeatmapPlot(Plot):
 
     @staticmethod
     def create(
-        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
         pconfig: HeatmapConfig,
-        xcats: Optional[List[str]],
-        ycats: Optional[List[str]],
+        xcats: Optional[List[Union[str, int]]],
+        ycats: Optional[List[Union[str, int]]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:
@@ -144,8 +152,9 @@ class HeatmapPlot(Plot):
         model = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
-            n_datasets=1,
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[max_n_samples],
+            defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
+            flat_if_very_large=True,  # However, the data is still embedded into the HTML, and we don't want the report size to inflate
         )
 
         if isinstance(rows, list):
@@ -192,14 +201,14 @@ class HeatmapPlot(Plot):
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            minval = val if minval is None else min(minval, val)
+                            minval = val if minval is None else min(minval, val)  # type: ignore
         maxval = model.pconfig.max
         if maxval is None:
             for dataset in model.datasets:
                 for row in dataset.rows:
                     for val in row:
                         if val is not None and isinstance(val, (int, float)):
-                            maxval = val if maxval is None else max(maxval, val)
+                            maxval = val if maxval is None else max(maxval, val)  # type: ignore
 
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
@@ -265,9 +274,9 @@ class HeatmapPlot(Plot):
             model.layout.xaxis.tickmode = "array"
             model.layout.xaxis.tickvals = list(range(num_cols))
             model.layout.xaxis.ticktext = xcats
-        if not pconfig.angled_xticks and x_px_per_elem >= 40:
+        if not pconfig.angled_xticks and x_px_per_elem >= 40 and xcats:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
-            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(str(cat), 10)) for cat in xcats]
             # And leave x ticks horizontal:
             model.layout.xaxis.tickangle = 0
         else:
@@ -282,34 +291,35 @@ class HeatmapPlot(Plot):
         model.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
         model.layout.yaxis.ticklabelposition = "outside right"
 
+        colorscale: List[Tuple[float, str]] = []
         if pconfig.colstops:
             # A list of 2-element lists where the first element is the
             # normalized color level value (starting at 0 and ending at 1),
             # and the second item is a valid color string.
             try:
-                colorscale = [[float(x), color] for x, color in pconfig.colstops]
+                colorscale = [(float(x), color) for x, color in pconfig.colstops]
             except ValueError:
-                colorscale = None
+                pass
             else:
                 # normalise the stop to a range from 0 to 1
                 minval = min(x for x, _ in colorscale)
                 maxval = max(x for x, _ in colorscale)
                 rng = maxval - minval
-                colorscale = [[(x - minval) / rng, color] for x, color in colorscale]
+                colorscale = [((x - minval) / rng, color) for x, color in colorscale]
         else:
             # default colstops
             colorscale = [
-                [0, "#313695"],
-                [0.1, "#4575b4"],
-                [0.2, "#74add1"],
-                [0.3, "#abd9e9"],
-                [0.4, "#e0f3f8"],
-                [0.5, "#ffffbf"],
-                [0.6, "#fee090"],
-                [0.7, "#fdae61"],
-                [0.8, "#f46d43"],
-                [0.9, "#d73027"],
-                [1, "#a50026"],
+                (0, "#313695"),
+                (0.1, "#4575b4"),
+                (0.2, "#74add1"),
+                (0.3, "#abd9e9"),
+                (0.4, "#e0f3f8"),
+                (0.5, "#ffffbf"),
+                (0.6, "#fee090"),
+                (0.7, "#fdae61"),
+                (0.8, "#f46d43"),
+                (0.9, "#d73027"),
+                (1, "#a50026"),
             ]
 
         xlab = pconfig.xlab

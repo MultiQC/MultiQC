@@ -11,7 +11,7 @@ import re
 from typing import Tuple
 
 import numpy as np
-import spectra
+import spectra  # type: ignore
 
 from multiqc import config, report
 
@@ -353,7 +353,7 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
+    def get_colour(self, val, colformat="hex", lighten=0.3, source=None) -> str:
         """Given a value, return a colour within the colour scale"""
 
         if val is None:
@@ -404,6 +404,7 @@ class mqc_colour_scale(object):
                     try:
                         val_float = float(val_stripped)
                     except ValueError:
+                        # No color formatting for non-numeric values
                         return ""
                     val_float = max(val_float, self.minval)
                     val_float = min(val_float, self.maxval)
@@ -420,7 +421,7 @@ class mqc_colour_scale(object):
         except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
             logger.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
-            return ""
+        return ""
 
     def get_colours(self, name="GnBu"):
         """Function to get a colour scale by name

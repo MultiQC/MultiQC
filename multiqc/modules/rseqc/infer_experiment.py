@@ -1,20 +1,20 @@
-""" MultiQC submodule to parse output from RSeQC infer_experiment.py
-http://rseqc.sourceforge.net/#infer-experiment-py """
+"""MultiQC submodule to parse output from RSeQC infer_experiment.py
+http://rseqc.sourceforge.net/#infer-experiment-py"""
 
 import logging
 import re
+from typing import Dict
 
+from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC infer_experiment reports and parse their data"""
 
-    # Set up vars
-    self.infer_exp = dict()
+    infer_exp: Dict = dict()
     regexes = {
         "pe_sense": r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d+)",
         "pe_antisense": r"\"1\+-,1-\+,2\+\+,2--\": (\d\.\d+)",
@@ -24,7 +24,7 @@ def parse_reports(self):
     }
 
     # Go through files and parse data using regexes
-    for f in self.find_log_files("rseqc/infer_experiment"):
+    for f in module.find_log_files("rseqc/infer_experiment"):
         d = dict()
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
@@ -32,27 +32,27 @@ def parse_reports(self):
                 d[k] = float(r_search.group(1))
 
         if len(d) > 0:
-            if f["s_name"] in self.infer_exp:
+            if f["s_name"] in infer_exp:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            self.add_data_source(f, section="infer_experiment")
-            self.infer_exp[f["s_name"]] = d
+            module.add_data_source(f, section="infer_experiment")
+            infer_exp[f["s_name"]] = d
 
     # Filter to strip out ignored sample names
-    self.infer_exp = self.ignore_samples(self.infer_exp)
+    infer_exp = module.ignore_samples(infer_exp)
 
-    if len(self.infer_exp) == 0:
+    if len(infer_exp) == 0:
         return 0
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Write to file
-    self.write_data_file(self.infer_exp, "multiqc_rseqc_infer_experiment")
+    module.write_data_file(infer_exp, "multiqc_rseqc_infer_experiment")
 
     # Merge PE and SE for plot
     pdata = dict()
-    for s_name, vals in self.infer_exp.items():
+    for s_name, vals in infer_exp.items():
         pdata[s_name] = dict()
         for k, v in vals.items():
             v *= 100.0  # Multiply to get percentage
@@ -77,7 +77,7 @@ def parse_reports(self):
         "cpswitch": False,
     }
 
-    self.add_section(
+    module.add_section(
         name="Infer experiment",
         anchor="rseqc-infer_experiment",
         description='<a href="http://rseqc.sourceforge.net/#infer-experiment-py" target="_blank">Infer experiment</a>'
@@ -87,4 +87,4 @@ def parse_reports(self):
     )
 
     # Return number of samples found
-    return len(self.infer_exp)
+    return len(infer_exp)

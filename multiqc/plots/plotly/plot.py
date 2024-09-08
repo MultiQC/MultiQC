@@ -1,39 +1,33 @@
 import base64
-import inspect
 import io
 import logging
+import math
 import random
 import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any
-from typeguard import check_type, TypeCheckError
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
-import math
-import plotly.graph_objects as go
-from pydantic import BaseModel, field_validator, field_serializer, Field, ValidationError, model_validator
+import plotly.graph_objects as go  # type: ignore
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from multiqc.plots.plotly import check_plotly_version
 from multiqc import config, report
+from multiqc.core import tmp_dir
+from multiqc.core.strict_helpers import lint_error
+from multiqc.plots.plotly import check_plotly_version
+from multiqc.types import AnchorT
 from multiqc.utils import mqc_colour
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
 
-class PConfigValidationError(Exception):
-    def __init__(self, module_name: str):
-        self.module_name = module_name
-        super().__init__()
-
-
-pconfig_validation_errors = []
-
-
-class PConfig(BaseModel):
+class PConfig(ValidatedConfig):
     id: str
+    anchor: Optional[AnchorT] = None  # unlike id, has to be globally unique
     table_title: Optional[str] = Field(None, deprecated="title")
     title: str
     height: Optional[int] = None
@@ -60,13 +54,14 @@ class PConfig(BaseModel):
     tt_suffix: Optional[str] = None
     xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
     yLabFormat: Optional[bool] = Field(None, deprecated="ylab_format")
-    yLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    xLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
+    yLabelFormat: Optional[bool] = Field(None, deprecated="ylab_format")
     xlab_format: Optional[str] = None
     ylab_format: Optional[str] = None
     tt_label: Optional[str] = None
     xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
     yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
-    decimalPlaces: Optional[bool] = Field(None, deprecated="tt_decimals")
+    decimalPlaces: Optional[int] = Field(None, deprecated="tt_decimals")
     x_decimals: Optional[int] = None
     y_decimals: Optional[int] = None
     tt_decimals: Optional[int] = None
@@ -83,88 +78,31 @@ class PConfig(BaseModel):
     y_clipmin: Optional[Union[float, int]] = None
     y_clipmax: Optional[Union[float, int]] = None
     save_data_file: bool = True
+    showlegend: Optional[bool] = None
+
+    @classmethod
+    def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
+        if pconfig is None:
+            lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
+            return cls(
+                id=f"{cls.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}",
+                title=cls.__name__,
+            )
+        elif isinstance(pconfig, PConfig):
+            return pconfig
+        else:
+            return cls(**pconfig)
 
     def __init__(self, **data):
-        try:
-            super().__init__(**data)
-        except ValidationError as e:
-            if not pconfig_validation_errors:
-                raise
-            else:
-                # errors are already added into plot.pconfig_validation_errors by a custom validator
-                logger.debug(e)
+        super().__init__(**data)
 
-        if pconfig_validation_errors:
-            # Get module name
-            modname = ""
-            callstack = inspect.stack()
-            for n in callstack:
-                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                    callpath = n[1].split("multiqc/modules/", 1)[-1]
-                    modname = f"{callpath}: "
-                    break
-
-            plot_type = self.__class__.__name__.replace("Config", "")
-            logger.error(f"{modname}Invalid {plot_type} plot configuration {data}:")
-            for error in pconfig_validation_errors:
-                logger.error(f"• {error}")
-            pconfig_validation_errors.clear()  # Reset for interactive usage
-            raise PConfigValidationError(module_name=modname)
+        if not self.id:
+            self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
 
         # Allow user to overwrite any given config for this plot
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
-
-    # noinspection PyNestedDecorators
-    @model_validator(mode="before")
-    @classmethod
-    def validate_fields(cls, values):
-        # Check unrecognized fields
-        filtered_values = {}
-        for name, val in values.items():
-            if name not in cls.model_fields:
-                pconfig_validation_errors.append(
-                    f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
-                )
-            else:
-                filtered_values[name] = val
-        values = filtered_values
-
-        # Convert deprecated fields
-        values_without_deprecateds = {}
-        for name, val in values.items():
-            if cls.model_fields[name].deprecated:
-                new_name = cls.model_fields[name].deprecated
-                logger.debug(f"Deprecated field '{name}'. Use '{new_name}' instead")
-                if new_name not in values:
-                    values_without_deprecateds[new_name] = val
-            else:
-                values_without_deprecateds[name] = val
-        values = values_without_deprecateds
-
-        # Check missing fields
-        for name, field in cls.model_fields.items():
-            if field.is_required():
-                if name not in values:
-                    pconfig_validation_errors.append(f"missing required field '{name}'")
-
-        # Check types
-        for name, val in values.items():
-            field = cls.model_fields[name]
-            expected_type = field.annotation
-            try:
-                check_type(val, expected_type)
-            except TypeCheckError as e:
-                v_str = repr(val)
-                if len(v_str) > 20:
-                    v_str = v_str[:20] + "..."
-                expected_type_str = str(expected_type).replace("typing.", "")
-                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
-                pconfig_validation_errors.append(msg)
-                logger.debug(f"{msg}: {e}")
-
-        return values
 
 
 class PlotType(Enum):
@@ -194,6 +132,7 @@ class BaseDataset(BaseModel):
     layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
     trace_params: Dict
     pct_range: Dict
+    n_samples: int
 
     def create_figure(
         self,
@@ -214,15 +153,19 @@ class BaseDataset(BaseModel):
         raise NotImplementedError
 
 
-class Plot(BaseModel):
+T = TypeVar("T", bound="BaseDataset")
+
+
+class Plot(BaseModel, Generic[T]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
 
     id: str
+    anchor: AnchorT  # unlike id, has to be unique
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[BaseDataset]
+    datasets: List[T]
     pconfig: PConfig
     add_log_tab: bool
     add_pct_tab: bool
@@ -232,6 +175,7 @@ class Plot(BaseModel):
     axis_controlled_by_switches: List[str] = []
     square: bool = False
     flat: bool = False
+    defer_render: bool = False
 
     model_config = dict(
         arbitrary_types_allowed=True,
@@ -254,33 +198,33 @@ class Plot(BaseModel):
     def initialize(
         plot_type: PlotType,
         pconfig: PConfig,
-        n_datasets: int,
-        n_samples: int,
+        n_samples_per_dataset: List[int],
         id: Optional[str] = None,
+        anchor: Optional[str] = None,
         axis_controlled_by_switches: Optional[List[str]] = None,
         default_tt_label: Optional[str] = None,
-        flat_threshold: Optional[int] = config.plots_flat_numseries,
+        defer_render_if_large: bool = True,
+        flat_if_very_large: bool = True,
     ):
         """
         Initialize a plot model with the given configuration.
         :param plot_type: plot type
         :param pconfig: plot configuration model
-        :param n_datasets: number of datasets to pre-initialize dataset models
-        :param n_samples: maximum number of samples in a dataset
+        :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
         :param id: plot ID
+        :param anchor: plot HTML anchor. Unlike ID, must be globally unique
         :param axis_controlled_by_switches: list of axis names that are controlled by the
             log10 scale and percentage switch buttons, e.g. ["yaxis"]
         :param default_tt_label: default tooltip label
-        :param flat_threshold: threshold for the number of samples to switch to flat plots
+        :param defer_render_if_large: whether to defer rendering if the number of data points is large
+        :param flat_if_very_large: whether to render flat if the number of data points is very large
         """
-        if n_datasets == 0:
+        if n_samples_per_dataset == 0:
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
-        if id is None:  # id of the plot group
-            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-            id = f"mqc_plot_{uniq_suffix}"
-        id = report.save_htmlid(id)
+        anchor = anchor or pconfig.anchor or id
+        anchor = report.save_htmlid(anchor)  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
         add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
@@ -293,11 +237,34 @@ class Plot(BaseModel):
         if pconfig.square:
             width = height
 
+        # Render static image if the number of samples is above the threshold
         flat = False
         if config.plots_force_flat:
             flat = True
-        elif flat_threshold is not None and not config.plots_force_interactive and n_samples > flat_threshold:
+        if (
+            flat_if_very_large
+            and not config.plots_force_interactive
+            and n_samples_per_dataset[0] > config.plots_flat_numseries
+        ):
+            logger.debug(
+                f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_flat_numseries={config.plots_flat_numseries}, rendering flat"
+            )
             flat = True
+
+        defer_render = False
+        if defer_render_if_large:
+            if (
+                n_samples_per_dataset[0] > config.plots_defer_loading_numseries
+                or n_samples_per_dataset[0] > config.num_datasets_plot_limit  # DEPRECATED in v1.24
+            ):
+                logger.debug(
+                    f"Plot {id} has {n_samples_per_dataset[0]} samples > config.plots_defer_loading_numseries={config.plots_defer_loading_numseries}, will defer render"
+                )
+                defer_render = True
+
+        showlegend = pconfig.showlegend
+        if showlegend is None:
+            showlegend = True if flat else False
 
         layout = go.Layout(
             title=go.layout.Title(
@@ -342,7 +309,7 @@ class Plot(BaseModel):
                 color="rgba(0, 0, 0, 0.5)",
                 activecolor="rgba(0, 0, 0, 1)",
             ),
-            showlegend=flat,
+            showlegend=showlegend,
             legend=go.layout.Legend(
                 orientation="h",
                 yanchor="top",
@@ -374,7 +341,7 @@ class Plot(BaseModel):
 
         dconfigs: List[Union[str, Dict[str, str]]] = pconfig.data_labels
         datasets = []
-        for idx in range(n_datasets):
+        for idx, n_samples in enumerate(n_samples_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
                 label=str(idx + 1),
@@ -386,8 +353,9 @@ class Plot(BaseModel):
                     xaxis=dict(min=0, max=100),
                     yaxis=dict(min=0, max=100),
                 ),
+                n_samples=n_samples,
             )
-            if n_datasets > 1:
+            if len(n_samples_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
             if idx < len(dconfigs):
@@ -400,9 +368,17 @@ class Plot(BaseModel):
             dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
             dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
             if "ylab" not in dconfig and not pconfig.ylab:
-                dconfig["ylab"] = dconfig.get("name", dconfig.get("label"))
-            if n_datasets > 1 and "title" not in dconfig:
-                dconfig["title"] = f'{pconfig.title} ({dconfig["name"]})'
+                dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
+
+            if "title" not in dconfig:
+                dconfig["title"] = pconfig.title
+            subtitles = []
+            if len(n_samples_per_dataset) > 1:
+                subtitles += [dataset.label]
+            if n_samples > 1:
+                subtitles += [f"{n_samples} samples"]
+            if subtitles:
+                dconfig["title"] += f"<br><sup>{', '.join(subtitles)}</sup>"
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -412,6 +388,7 @@ class Plot(BaseModel):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
+            anchor=anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -422,6 +399,7 @@ class Plot(BaseModel):
             axis_controlled_by_switches=axis_controlled_by_switches,
             square=pconfig.square,
             flat=flat,
+            defer_render=defer_render,
         )
 
     def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
@@ -434,7 +412,7 @@ class Plot(BaseModel):
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
             try:
-                from IPython.core.display import HTML
+                from IPython.core.display import HTML  # type: ignore
             except ImportError:
                 raise ImportError(
                     "IPython is required to show plot. The function is expected to be run in an interactive environment, "
@@ -445,13 +423,26 @@ class Plot(BaseModel):
                 fig_to_static_html(
                     fig,
                     active=True,
-                    embed=True,
+                    embed_in_html=True,
                     export_plots=False,
                     file_name=self.id,
                 )
             )
         else:
             return fig
+
+    @staticmethod
+    def _proc_save_args(filename: str, flat: bool) -> Tuple[str, bool]:
+        if isinstance(filename, (Path, str)):
+            if Path(filename).suffix.lower() == ".html":
+                if flat is not None and flat is True:
+                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
+                flat = False
+            else:
+                if flat is not None and flat is False:
+                    raise ValueError("Set flat=True to save a static plot as an image file")
+                flat = True
+        return filename, flat
 
     def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
         """
@@ -464,15 +455,7 @@ class Plot(BaseModel):
         @param dataset_id: index of the dataset to plot
         @param flat: whether to save a static image instead of an interactive HTML.
         """
-        if isinstance(filename, (Path, str)):
-            if Path(filename).suffix.lower() == ".html":
-                if flat is not None and flat is True:
-                    raise ValueError("Set flat=False to save an interactive plot as an HTML file")
-                flat = False
-            else:
-                if flat is not None and flat is False:
-                    raise ValueError("Set flat=True to save a static plot as an image file")
-                flat = True
+        filename, flat = self._proc_save_args(filename, flat)
 
         fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
@@ -507,7 +490,10 @@ class Plot(BaseModel):
         layout = go.Layout(self.layout.to_plotly_json())  # make a copy
         layout.update(**dataset.layout)
         if flat:
-            layout.width = FLAT_PLOT_WIDTH
+            if config.simple_output:
+                layout.width = 600
+            else:
+                layout.width = 1100
         for axis in self.axis_controlled_by_switches:
             layout[axis].type = "linear"
             minval = layout[axis].autorangeoptions["minallowed"]
@@ -528,7 +514,7 @@ class Plot(BaseModel):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self) -> str:
+    def add_to_report(self, plots_dir_name: Optional[str] = None) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
@@ -538,17 +524,25 @@ class Plot(BaseModel):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot()
+            try:
+                html = self.flat_plot(plots_dir_name=plots_dir_name)
+            except ValueError:
+                logger.error(f"Unable to export plot '{self.id}' to flat images, falling back to interactive plot")
+                html = self.interactive_plot()
         else:
             html = self.interactive_plot()
             if config.export_plots:
-                self.flat_plot()
-
-        for dataset in self.datasets:
-            if self.id != "general_stats_table" and self.pconfig.save_data_file:
-                dataset.save_data_file()
+                try:
+                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                except ValueError:
+                    logger.error(f"Unable to export plot '{self.id}' to flat images")
 
         return html
+
+    def save_data_files(self):
+        if self.id != "general_stats_table" and self.pconfig.save_data_file:
+            for dataset in self.datasets:
+                dataset.save_data_file()
 
     def interactive_plot(self) -> str:
         html = '<div class="mqc_hcplot_plotgroup">'
@@ -558,21 +552,27 @@ class Plot(BaseModel):
         # This width only affects the space before plot is rendered, and the initial
         # height for the resizing function. For the actual plot container, Plotly will
         # re-calculate the wrapper size after rendering.
-        height = self.layout.height
-        height_style = f'style="height:{height + 7}px"' if height else ""
+        height_style = f'style="height:{self.layout.height + 7}px"' if self.layout.height else ""
+        defer_render_style = "defer_render" if self.defer_render else ""
         html += f"""
-        <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.id}-wrapper" {height_style}>
-            <div id="{self.id}" class="hc-plot hc-{self.plot_type}-plot not_rendered"></div>
+        <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.anchor}-wrapper" {height_style}>
+            <div 
+                id="{self.anchor}" 
+                class="hc-plot hc-{self.plot_type}-plot not_loaded not_rendered {defer_render_style}">
+            </div>
             <div class="created-with-multiqc">Created with MultiQC</div>
         </div>"""
-
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.plot_data[self.id] = self.model_dump(warnings=False)
+        report.plot_data[self.anchor] = self.model_dump(warnings=False)
         return html
 
-    def flat_plot(self) -> str:
+    def flat_plot(self, embed_in_html: Optional[bool] = None, plots_dir_name: Optional[str] = None) -> str:
+        embed_in_html = embed_in_html if embed_in_html is not None else not config.development
+        if not embed_in_html and plots_dir_name is None:
+            raise ValueError("plots_dir_name is required for non-embedded plots")
+
         html = "".join(
             [
                 '<p class="text-info">',
@@ -583,7 +583,7 @@ class Plot(BaseModel):
                 "</p>",
             ]
         )
-        html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.id}" data-pid={self.id}>'
+        html += f'<div class="mqc_mplplot_plotgroup" id="plotgroup-{self.anchor}" data-plot-anchor={self.anchor}>'
 
         if not config.simple_output:
             html += self.__control_panel(flat=True)
@@ -594,36 +594,44 @@ class Plot(BaseModel):
                 self.get_figure(ds_idx, flat=True),
                 active=ds_idx == 0 and not self.p_active and not self.l_active,
                 file_name=dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                plots_dir_name=plots_dir_name,
+                embed_in_html=embed_in_html,
             )
             if self.add_pct_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, flat=True),
                     active=ds_idx == 0 and self.p_active,
                     file_name=f"{dataset.uid}-pct",
+                    plots_dir_name=plots_dir_name,
+                    embed_in_html=embed_in_html,
                 )
             if self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_log=True, flat=True),
                     active=ds_idx == 0 and self.l_active,
                     file_name=f"{dataset.uid}-log",
+                    plots_dir_name=plots_dir_name,
+                    embed_in_html=embed_in_html,
                 )
             if self.add_pct_tab and self.add_log_tab:
                 html += fig_to_static_html(
                     self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
                     active=ds_idx == 0 and self.p_active and self.l_active,
                     file_name=f"{dataset.uid}-pct-log",
+                    plots_dir_name=plots_dir_name,
+                    embed_in_html=embed_in_html,
                 )
 
         html += "</div>"
         return html
 
-    def _btn(self, cls: str, label: str, data_attrs: Dict[str, str] = None, pressed: bool = False) -> str:
+    def _btn(self, cls: str, label: str, data_attrs: Optional[Dict[str, str]] = None, pressed: bool = False) -> str:
         """Build a switch button for the plot."""
         data_attrs = data_attrs.copy() if data_attrs else {}
-        if "pid" not in data_attrs:
-            data_attrs["pid"] = self.id
-        data_attrs = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs}>{label}</button>\n'
+        if "plot-anchor" not in data_attrs:
+            data_attrs["plot-anchor"] = self.anchor
+        data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
+        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
 
     def buttons(self, flat: bool) -> List[str]:
         """
@@ -650,8 +658,8 @@ class Plot(BaseModel):
         if len(self.datasets) > 1:
             switch_buttons += f'<div class="btn-group {cls} dataset-switch-group">\n'
             for ds_idx, ds in enumerate(self.datasets):
-                data_attrs = {
-                    "dataset-index": ds_idx,
+                data_attrs: Dict[str, str] = {
+                    "dataset-index": str(ds_idx),
                     # For flat plots, we will generate separate flat images for each
                     # dataset and view, so have to save individual image IDs.
                     "dataset-uid": ds.uid,
@@ -681,62 +689,90 @@ class Plot(BaseModel):
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
-    export_plots: bool = config.export_plots,
-    embed: bool = not config.development,
+    export_plots: Optional[bool] = None,
+    embed_in_html: Optional[bool] = None,
+    plots_dir_name: Optional[str] = None,
     file_name: Optional[str] = None,
 ) -> str:
     """
     Build one static image, return an HTML wrapper.
     """
+    embed_in_html = embed_in_html if embed_in_html is not None else not config.development
+    export_plots = export_plots if export_plots is not None else config.export_plots
+
     assert fig.layout.width
+    scale = 2.0  # higher detail (to look sharp on the retina display)
+    scale *= config.plots_export_font_scale  # bigger font if configured in the settings
     write_kwargs = dict(
-        width=fig.layout.width,  # While interactive plots take full width of screen,
+        width=fig.layout.width / config.plots_export_font_scale,  # While interactive plots take full width of screen,
         # for the flat plots we explicitly set width
-        height=fig.layout.height,
-        scale=2,  # higher detail (retina display)
+        height=fig.layout.height / config.plots_export_font_scale,
+        scale=scale,  # higher detail (retina display)
     )
 
+    formats = set(config.export_plot_formats) if export_plots else set()
+    if not embed_in_html and "png" not in formats:
+        if not export_plots:
+            formats = {"png"}
+        else:
+            formats.add("png")
+
     # Save the plot to the data directory if export is requested
-    if export_plots:
+    png_is_written = False
+    if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
-        for file_ext in config.export_plot_formats:
-            plot_path = Path(report.plots_tmp_dir()) / file_ext / f"{file_name}.{file_ext}"
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-            short_path = Path(config.plots_dir_name) / file_ext / f"{file_name}.{file_ext}"
-            logger.debug(f"Writing plot to {short_path}")
-            if file_ext == "svg":
-                # Cannot add logo to SVGs
-                fig.write_image(plot_path, **write_kwargs)
+        for file_ext in formats:
+            try:
+                plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
+                plot_path.parent.mkdir(parents=True, exist_ok=True)
+                if file_ext == "svg":
+                    # Cannot add logo to SVGs
+                    fig.write_image(plot_path, **write_kwargs)
+                else:
+                    img_buffer = io.BytesIO()
+                    fig.write_image(img_buffer, **write_kwargs)
+                    img_buffer = add_logo(img_buffer, format=file_ext)
+                    with open(plot_path, "wb") as f:
+                        f.write(img_buffer.getvalue())
+                    img_buffer.close()
+            except Exception as e:
+                logger.error(
+                    f"Error: Unable to export {file_ext} figure to static image at {plot_path}. Exception: {e}"
+                )
             else:
-                img_buffer = io.BytesIO()
-                fig.write_image(img_buffer, **write_kwargs)
-                img_buffer = add_logo(img_buffer, format=file_ext)
-                with open(plot_path, "wb") as f:
-                    f.write(img_buffer.getvalue())
-                img_buffer.close()
+                if file_ext == "png":
+                    png_is_written = True
 
     # Now writing the PNGs for the HTML
-    if not embed:
+    if not embed_in_html:
         if file_name is None:
             raise ValueError("file_name is required for non-embedded plots")
+        if plots_dir_name is None:
+            raise ValueError("plots_dir_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = Path(config.plots_dir_name) / "png" / f"{file_name}.png"
+        img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
+        if not png_is_written:  # Could not write in the block above
+            raise ValueError(f"Unable to export plot to PNG plot image: {file_name}")
+        img_src = str(img_path)
     else:
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        img_buffer = add_logo(img_buffer, format="PNG")
-        # Convert to a base64 encoded string
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_src = f"data:image/png;base64,{b64_img}"
-        img_buffer.close()
+        try:
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = add_logo(img_buffer, format="PNG")
+            # Convert to a base64 encoded string
+            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+            img_src = f"data:image/png;base64,{b64_img}"
+            img_buffer.close()
+        except Exception as e:
+            logger.error(f"Unable to export PNG figure to static image: {e}")
+            raise ValueError("Unable to export PNG figure to static image")
 
     # Should this plot be hidden on report load?
-    hiding = "" if active else ' style="display:none;"'
-    id = file_name or f"plot-{random.randint(1000000, 9999999)}"
+    style = "" if active else "display:none;"
     return "".join(
         [
-            f'<div class="mqc_mplplot" id="{id}"{hiding}>',
+            f'<div class="mqc_mplplot" style="{style}" id="{file_name}">',
             f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
             "</div>",
         ]
@@ -779,10 +815,6 @@ def add_logo(
     return output_buffer
 
 
-# Default width for flat plots
-FLAT_PLOT_WIDTH = 1100
-
-
 def _set_axis_log_scale(axis):
     axis.type = "log"
     minval = axis.autorangeoptions["minallowed"]
@@ -810,7 +842,7 @@ def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
 def _dataset_layout(
     pconfig: PConfig,
     dconfig: Dict,
-    default_tt_label: Optional[str],
+    default_tt_label: Optional[str] = None,
 ) -> Tuple[Dict, Dict]:
     """
     Given plot config and dataset config, set layout and trace params.
@@ -853,6 +885,7 @@ def _dataset_layout(
             if pconfig.xlab.endswith(f" ({suf.strip()})"):
                 xsuffix = suf
 
+    tt_label: Optional[str] = None
     if pconfig.tt_label is not None:
         # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig.tt_label
@@ -894,7 +927,7 @@ def _dataset_layout(
         # add missing line break between the sample name and the key-value pair
         if not tt_label.startswith("<br>"):
             tt_label = "<br>" + tt_label
-    else:
+    elif default_tt_label is not None:
         tt_label = default_tt_label
 
     if tt_label:

@@ -100,7 +100,7 @@ class Stats:
             "xlab": "Cycle",
             "categories": True,
             "tt_label": "{point.x}: {point.y:.2f}%",
-            "yPlotBands": [
+            "y_bands": [
                 {"from": 0, "to": 8, "color": "#c3e6c3"},
                 {"from": 8, "to": 35, "color": "#e6dcc3"},
                 {"from": 35, "to": 100, "color": "#e6c3c3"},

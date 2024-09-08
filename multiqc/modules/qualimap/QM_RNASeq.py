@@ -3,18 +3,18 @@
 import logging
 import os
 import re
+from typing import Dict
 
-from multiqc import config
-from multiqc.modules.qualimap import parse_numerals
+from multiqc import config, BaseMultiqcModule
+from multiqc.modules.qualimap import parse_numerals, get_s_name
 from multiqc.plots import bargraph, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find Qualimap RNASeq reports and parse their data"""
-    self.qualimap_rnaseq_genome_results = dict()
+    genome_results: Dict = dict()
 
     int_metrics = {
         "read pairs aligned": "reads_aligned",
@@ -37,7 +37,7 @@ def parse_reports(self):
     }
 
     value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
-    for f in self.find_log_files("qualimap/rnaseq/rnaseq_results"):
+    for f in module.find_log_files("qualimap/rnaseq/rnaseq_results"):
         preparsed_d = dict()
         for line in f["f"].splitlines():
             if "=" in line:
@@ -52,8 +52,13 @@ def parse_reports(self):
         # Check we have an input filename
         if "bam file" not in preparsed_d:
             log.debug(f"Couldn't find an input filename in genome_results file {f['fn']}")
-            return None
-        s_name = self.clean_s_name(preparsed_d["bam file"], f)
+            return 0
+
+        s_name = module.clean_s_name(preparsed_d["bam file"], f)
+        if s_name in genome_results:
+            log.debug(f"Duplicate genome results sample name found! Overwriting: {s_name}")
+
+        module.add_data_source(f, s_name=s_name, section="rna_genome_results")
 
         d = parse_numerals(
             preparsed_d,
@@ -63,23 +68,37 @@ def parse_reports(self):
             fpath=os.path.join(f["root"], f["fn"]),
         )
 
-        # Add to general stats table
-        for k in ["5_3_bias", "reads_aligned"]:
-            try:
-                self.general_stats_data[s_name][k] = d[k]
-            except KeyError:
-                pass
+        genome_results[s_name] = d
 
-        # Save results
-        if s_name in self.qualimap_rnaseq_genome_results:
-            log.debug(f"Duplicate genome results sample name found! Overwriting: {s_name}")
-        self.qualimap_rnaseq_genome_results[s_name] = d
-        self.add_data_source(f, s_name=s_name, section="rna_genome_results")
+    module.general_stats_addcols(
+        genome_results,
+        headers={
+            "5_3_bias": {
+                "title": "5'-3' bias",
+                "format": "{:,.2f}",
+            },
+            "reads_aligned": {
+                "title": f"{config.read_count_prefix} Aligned",
+                "description": f"Reads Aligned ({config.read_count_desc})",
+                "min": 0,
+                "scale": "RdBu",
+                "shared_key": "read_count",
+                "modify": lambda x: x * config.read_count_multiplier,
+            },
+        },
+        namespace="RNASeq",
+    )
 
     # Coverage profile
-    self.qualimap_rnaseq_cov_hist = dict()
-    for f in self.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
-        s_name = self.get_s_name(f)
+    cov_hist: Dict = dict()
+    for f in module.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
+        s_name = get_s_name(module, f)
+        # Save results
+        if s_name in cov_hist:
+            log.debug(f"Duplicate coverage histogram sample name found! Overwriting: {s_name}")
+
+        module.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
+
         d = dict()
         for line in f["f"]:
             if line.startswith("#"):
@@ -91,37 +110,33 @@ def parse_reports(self):
 
         if len(d) == 0:
             log.debug(f"Couldn't parse contents of coverage histogram file {f['fn']}")
-            return None
+            return 0
 
-        # Save results
-        if s_name in self.qualimap_rnaseq_cov_hist:
-            log.debug(f"Duplicate coverage histogram sample name found! Overwriting: {s_name}")
-        self.qualimap_rnaseq_cov_hist[s_name] = d
-        self.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
+        cov_hist[s_name] = d
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Filter to strip out ignored sample names
-    self.qualimap_rnaseq_genome_results = self.ignore_samples(self.qualimap_rnaseq_genome_results)
-    self.qualimap_rnaseq_cov_hist = self.ignore_samples(self.qualimap_rnaseq_cov_hist)
+    genome_results = module.ignore_samples(genome_results)
+    cov_hist = module.ignore_samples(cov_hist)
 
     # Plots
     # Genomic Origin Bar Graph
     # NB: Ignore 'Overlapping Exon' in report - these make the numbers add up to > 100%
-    if len(self.qualimap_rnaseq_genome_results) > 0:
+    if len(genome_results) > 0:
         # Check that we have anything to plot
         if (
             sum(
                 entry[key]
-                for entry in self.qualimap_rnaseq_genome_results.values()
+                for entry in genome_results.values()
                 for key in ["reads_aligned_exonic", "reads_aligned_intronic", "reads_aligned_intronic"]
             )
             > 0
         ):
             # Write data to file
-            self.write_data_file(self.qualimap_rnaseq_genome_results, "qualimap_rnaseq_genome_results")
+            module.write_data_file(genome_results, "qualimap_rnaseq_genome_results")
 
             gorigin_cats = {
                 "reads_aligned_exonic": {"name": "Exonic"},
@@ -161,31 +176,31 @@ def parse_reports(self):
             transcripts, which are detected in greater numbers at the sequencing depths
             needed to detect poorly-expressed transcripts (<a href="https://doi.org/10.1101/gr.124321.111"
             target="_blank">Tarazona et al. 2011</a>)."""
-            self.add_section(
+            module.add_section(
                 name="Genomic origin of reads",
                 anchor="qualimap-reads-genomic-origin",
                 description="Classification of mapped reads as originating in exonic, intronic or intergenic regions. These can be displayed as either the number or percentage of mapped reads.",
                 helptext=genomic_origin_helptext,
-                plot=bargraph.plot(self.qualimap_rnaseq_genome_results, gorigin_cats, gorigin_pconfig),
+                plot=bargraph.plot(genome_results, gorigin_cats, gorigin_pconfig),
             )
         else:
             log.warning("Found zero aligned reads. Skipping 'Genomic origin of reads' plot.")
 
-    if len(self.qualimap_rnaseq_cov_hist) > 0:
+    if len(cov_hist) > 0:
         # Write data to file
-        self.write_data_file(self.qualimap_rnaseq_cov_hist, "qualimap_rnaseq_cov_hist")
+        module.write_data_file(cov_hist, "qualimap_rnaseq_cov_hist")
 
         # Make a normalised percentage version of the coverage data
-        self.qualimap_rnaseq_cov_hist_percent = dict()
-        for s_name in self.qualimap_rnaseq_cov_hist:
-            self.qualimap_rnaseq_cov_hist_percent[s_name] = dict()
-            total = sum(self.qualimap_rnaseq_cov_hist[s_name].values())
+        cov_hist_percent: Dict = dict()
+        for s_name in cov_hist:
+            cov_hist_percent[s_name] = dict()
+            total = sum(cov_hist[s_name].values())
             if total == 0:
-                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
-                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = 0.0
+                for k, v in cov_hist[s_name].items():
+                    cov_hist_percent[s_name][k] = 0.0
             else:
-                for k, v in self.qualimap_rnaseq_cov_hist[s_name].items():
-                    self.qualimap_rnaseq_cov_hist_percent[s_name][k] = (v / total) * 100.0
+                for k, v in cov_hist[s_name].items():
+                    cov_hist_percent[s_name][k] = (v / total) * 100.0
 
         coverage_profile_helptext = """
         There are currently three main approaches to map reads to transcripts in an
@@ -235,27 +250,13 @@ def parse_reports(self):
                 {"name": "Normalised", "ylab": "Percentage total cumulative mapped-read depth"},
             ],
         }
-        self.add_section(
+        module.add_section(
             name="Gene Coverage Profile",
             anchor="qualimap-genome-fraction-coverage",
             description="Mean distribution of coverage depth across the length of all mapped transcripts.",
             helptext=coverage_profile_helptext,
-            plot=linegraph.plot([self.qualimap_rnaseq_cov_hist, self.qualimap_rnaseq_cov_hist_percent], pconfig),
+            plot=linegraph.plot([cov_hist, cov_hist_percent], pconfig),
         )
 
-    #### General Stats
-    self.general_stats_headers["5_3_bias"] = {
-        "title": "5'-3' bias",
-        "format": "{:,.2f}",
-    }
-    self.general_stats_headers["reads_aligned"] = {
-        "title": f"{config.read_count_prefix} Aligned",
-        "description": f"Reads Aligned ({config.read_count_desc})",
-        "min": 0,
-        "scale": "RdBu",
-        "shared_key": "read_count",
-        "modify": lambda x: x * config.read_count_multiplier,
-    }
-
     # Return the number of reports we found
-    return len(self.qualimap_rnaseq_genome_results.keys())
+    return len(genome_results.keys())

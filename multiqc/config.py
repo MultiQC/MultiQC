@@ -6,9 +6,7 @@ On import, only loads defaults from config_defaults.yaml. To populate from
 custom parameters, call load_user_config() from the user_config module
 """
 
-from pathlib import Path
-from typing import List, Dict, Optional, Union
-
+import itertools
 
 # Default logger will be replaced by caller
 import logging
@@ -16,11 +14,15 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
+import pyaml_env  # type: ignore
 import yaml
-import pyaml_env
+from importlib_metadata import EntryPoint
 
+from multiqc.types import AnchorT, ModuleIdT, SectionIdT
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -35,13 +37,13 @@ MODULE_DIR = Path(__file__).parent.absolute()
 script_path = str(MODULE_DIR)  # dynamically used by report.multiqc_dump_json()
 REPO_DIR = MODULE_DIR.parent.absolute()
 
-git_root = None
 # noinspection PyBroadException
 try:
-    git_root = subprocess.check_output(
-        ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
-    ).strip()
-    git_root = Path(git_root)
+    git_root = Path(
+        subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"], cwd=script_path, stderr=subprocess.STDOUT, universal_newlines=True
+        ).strip()
+    )
     # .git
     # multiqc/
     #   utils/
@@ -55,6 +57,8 @@ try:
         version = f"{version} ({git_hash_short})"
 except:  # noqa: E722
     pass
+
+CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
 
 
 title: str
@@ -101,26 +105,29 @@ make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
 megaqc_url: str
-megaqc_access_token: str
+megaqc_access_token: Optional[str]
 megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+
 plots_force_flat: bool
+plots_export_font_scale: float
 plots_force_interactive: bool
 plots_flat_numseries: int
-num_datasets_plot_limit: int
-lineplot_style: str
-lineplot_max_samples: int
+plots_defer_loading_numseries: int
+num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
+lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
 violin_downsample_after: int
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
+
 collapse_tables: bool
 max_table_rows: int
-table_columns_visible: Dict
-table_columns_placement: Dict
-table_columns_name: Dict
+table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
+table_columns_placement: Dict[str, Dict[str, float]]
+table_columns_name: Dict[str, Union[str, Dict[str, str]]]
 table_cond_formatting_colours: List[Dict[str, str]]
 table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str
@@ -140,7 +147,7 @@ fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
 sample_names_rename_buttons: List[str]
-sample_names_replace: Dict
+sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
@@ -163,12 +170,41 @@ filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
-fn_clean_exts: List
-fn_clean_trim: List
-fn_ignore_files: List
-top_modules: List[Dict[str, Dict]]
-module_order: List[Union[str, Dict]]
+fn_clean_exts: List[CleanPatternT]
+fn_clean_trim: List[str]
+fn_ignore_files: List[str]
+top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
+module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
+generalstats_sample_merge_groups: Dict[str, List[CleanPatternT]]
+
+# Module filename search patterns
+sp: Dict = {}
+
+# Other defaults that can't be set in YAML
+modules_dir: str
+creation_date: str
+working_dir: str
+analysis_dir: List[str]
+output_dir: str
+kwargs: Dict = {}
+
+# Other variables that set only through the CLI
+run_modules: List[str]
+custom_content_modules: List[str]
+exclude_modules: List[str]
+data_dir: Optional[str]
+plots_dir: Optional[str]
+custom_data: Dict
+report_section_order: Dict[
+    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+]
+output_fn: Optional[str]
+filename: Optional[str]
+megaqc_upload: bool
+
+avail_modules: Dict[str, EntryPoint]
+avail_templates: Dict[str, EntryPoint]
 
 
 def load_defaults():
@@ -181,10 +217,88 @@ def load_defaults():
     for c, v in _default_config.items():
         globals()[c] = v
 
+    # Module filename search patterns
+    with (Path(MODULE_DIR) / "search_patterns.yaml").open() as f:
+        global sp
+        sp = yaml.safe_load(f)
+
+    # Other defaults that can't be set in defaults YAML
+    global modules_dir, creation_date, working_dir, analysis_dir, output_dir, megaqc_access_token, kwargs
+    modules_dir = str(Path(MODULE_DIR) / "modules")
+    creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
+    working_dir = os.getcwd()
+    analysis_dir = [os.getcwd()]
+    output_dir = os.path.realpath(os.getcwd())
+    megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
+    kwargs = {}
+
+    # Other variables that set only through the CLI
+    global \
+        run_modules, \
+        custom_content_modules, \
+        exclude_modules, \
+        data_dir, \
+        plots_dir, \
+        custom_data, \
+        report_section_order, \
+        output_fn, \
+        filename, \
+        megaqc_upload
+    run_modules = []
+    custom_content_modules = []
+    exclude_modules = []
+    data_dir = None
+    plots_dir = None
+    custom_data = {}
+    report_section_order = {}
+    output_fn = None
+    filename = None
+    megaqc_upload = False
+
+    # Available modules.
+    global avail_modules
+    # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
+    # Get all modules, including those from other extension packages
+    avail_modules = dict()
+    for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
+        nice_name = entry_point.name
+        avail_modules[nice_name] = entry_point
+
+    # Available templates.
+    global avail_templates
+    # Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
+    # Get all templates, including those from other extension packages
+    avail_templates = {}
+    for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
+        nice_name = entry_point.name
+        avail_templates[nice_name] = entry_point
+
+    # Check we have modules & templates
+    # Check that we were able to find some modules and templates
+    # If not, package probably hasn't been installed properly.
+    # Need to do this before click, else will throw cryptic error
+    # Note: Can't use logger here, not yet initiated.
+    if len(avail_modules) == 0 or len(avail_templates) == 0:
+        if len(avail_modules) == 0:
+            print("Error - No MultiQC modules found.", file=sys.stderr)
+        if len(avail_templates) == 0:
+            print("Error - No MultiQC templates found.", file=sys.stderr)
+        print(
+            "Could not load MultiQC - has it been installed? \n\
+            Please either install with pip (pip install multiqc) or by using \n\
+            the local files (pip install .)",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
 
 load_defaults()
 
-session_user_config_files: List[Path] = []
+# To restore after load_defaults()
+explicit_user_config_files: Set[Path] = set()
+
+# To avoid finding same file many times
+loaded_user_files: Set[Path] = set()
 
 
 def reset():
@@ -192,13 +306,11 @@ def reset():
     Reset the interactive session
     """
 
-    global session_user_config_files
-    session_user_config_files = []
-
+    explicit_user_config_files.clear()
     load_defaults()
 
 
-def load_user_files():
+def find_user_files():
     """
     Overwrite config defaults with user config files.
 
@@ -207,110 +319,71 @@ def load_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
+    def _load_found_file(path: Union[Path, str, None]):
+        load_config_file(path, is_explicit_config=False)
+
     # Load and parse installation config file if we find it
-    load_config_file(REPO_DIR / "multiqc_config.yaml")
+    _load_found_file(REPO_DIR / "multiqc_config.yaml")
 
     # Load and parse a config file in $XDG_CONFIG_HOME
     # Ref: https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-    load_config_file(
+    _load_found_file(
         os.path.join(os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config")), "multiqc_config.yaml")
     )
 
     # Load and parse a user config file if we find it
-    load_config_file(os.path.expanduser("~/.multiqc_config.yaml"))
+    _load_found_file(os.path.expanduser("~/.multiqc_config.yaml"))
 
     # Load and parse a config file path set in an ENV variable if we find it
     if os.environ.get("MULTIQC_CONFIG_PATH") is not None:
-        load_config_file(os.environ.get("MULTIQC_CONFIG_PATH"))
+        _load_found_file(os.environ.get("MULTIQC_CONFIG_PATH"))
 
     # Load separate config entries from MULTIQC_* environment variables
     _add_config(_env_vars_config())
 
     # Load and parse a config file in this working directory if we find it
-    load_config_file("multiqc_config.yaml")
+    _load_found_file("multiqc_config.yaml")
 
 
-# Module filename search patterns
-searchp_fn = os.path.join(MODULE_DIR, "search_patterns.yaml")
-with open(searchp_fn) as f:
-    sp = yaml.safe_load(f)
-
-# Other defaults that can't be set in YAML
-modules_dir = os.path.join(MODULE_DIR, "modules")
-creation_date = datetime.now().astimezone().strftime("%Y-%m-%d, %H:%M %Z")
-working_dir = os.getcwd()
-analysis_dir = [os.getcwd()]
-output_dir = os.path.realpath(os.getcwd())
-megaqc_access_token = os.environ.get("MEGAQC_ACCESS_TOKEN")
-kwargs: Dict = {}
-
-# Other variables that set only through the CLI
-run_modules: List[str] = []
-exclude_modules: List[str] = []
-data_dir: Optional[str] = None
-plots_dir: Optional[str] = None
-custom_data: Dict = {}
-report_section_order: Dict = {}
-output_fn: Optional[str] = None
-filename: Optional[str] = None
-megaqc_upload: bool = False
-
-##### Available modules
-# Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
-# Get all modules, including those from other extension packages
-avail_modules = dict()
-for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
-    nicename = entry_point.name
-    avail_modules[nicename] = entry_point
-
-##### Available templates
-# Templates must be listed in pyproject.toml under entry_points['multiqc.templates.v1']
-# Get all templates, including those from other extension packages
-avail_templates = {}
-for entry_point in importlib_metadata.entry_points(group="multiqc.templates.v1"):
-    nicename = entry_point.name
-    avail_templates[nicename] = entry_point
-
-##### Check we have modules & templates
-# Check that we were able to find some modules and templates
-# If not, package probably hasn't been installed properly.
-# Need to do this before click, else will throw cryptic error
-# Note: Can't use logger here, not yet initiated.
-if len(avail_modules) == 0 or len(avail_templates) == 0:
-    if len(avail_modules) == 0:
-        print("Error - No MultiQC modules found.", file=sys.stderr)
-    if len(avail_templates) == 0:
-        print("Error - No MultiQC templates found.", file=sys.stderr)
-    print(
-        "Could not load MultiQC - has it been installed? \n\
-        Please either install with pip (pip install multiqc) or by using \n\
-        the local files (pip install .)",
-        file=sys.stderr,
-    )
-    sys.exit(1)
-
-
-def load_config_file(yaml_config_path: Union[str, Path]):
+def load_config_file(yaml_config_path: Union[str, Path, None], is_explicit_config=True) -> Optional[Path]:
     """
-    Load and parse a config file if we find it
+    Load and parse a config file if we find it.
+
+    `is_explicit_config` config means the function was called directly or through multiqc.load_config(),
+    which means we need to keep track of to restore the config update update_defaults.
     """
+    if not yaml_config_path:
+        return None
+
     path = Path(yaml_config_path)
     if not path.is_file() and path.with_suffix(".yml").is_file():
         path = path.with_suffix(".yml")
 
-    if path.is_file():
-        try:
-            # pyaml_env allows referencing environment variables in YAML for default values
-            # new_config can be None if the file is empty
-            new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
-            if new_config:
-                logger.info(f"Loading config settings from: {path}")
-                _add_config(new_config, str(path))
-        except (IOError, AttributeError) as e:
-            logger.warning(f"Error loading config {path}: {e}")
-        except yaml.scanner.ScannerError as e:
-            logger.error(f"Error parsing config YAML: {e}")
-            raise
+    if not path.is_file():
+        return None
+
+    if path.absolute() in loaded_user_files:  # already loaded
+        return path
+
+    if is_explicit_config:
+        explicit_user_config_files.add(path)
+
+    try:
+        # pyaml_env allows referencing environment variables in YAML for default values
+        # new_config can be None if the file is empty
+        new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
+        if new_config:
+            logger.info(f"Loading config settings from: {path}")
+            _add_config(new_config, str(path))
+    except (IOError, AttributeError) as e:
+        logger.warning(f"Error loading config {path}: {e}")
+        return None
+    except yaml.scanner.ScannerError as e:
+        logger.error(f"Error parsing config YAML: {e}")
+        raise
+
+    loaded_user_files.add(path.absolute())
+    return path
 
 
 def load_cl_config(cl_config: List[str]):
@@ -337,7 +410,7 @@ def _env_vars_config() -> Dict:
     """
     RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
     PREFIX = "MULTIQC_"  # Prefix for environment variables
-    env_config = {}
+    env_config: Dict[str, Union[str, int, float, bool]] = {}
     for k, v in os.environ.items():
         if k.startswith(PREFIX) and k not in RESERVED_NAMES:
             conf_key = k[len(PREFIX) :].lower()
@@ -345,19 +418,19 @@ def _env_vars_config() -> Dict:
                 continue
             if isinstance(globals()[conf_key], bool):
                 try:
-                    v = strtobool(v)
+                    env_config[conf_key] = strtobool(v)
                 except ValueError:
                     logger.warning(f"Could not parse a boolean value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], int):
                 try:
-                    v = int(v)
+                    env_config[conf_key] = int(v)
                 except ValueError:
                     logger.warning(f"Could not parse a int value from the environment variable ${k}={v}")
                     continue
             elif isinstance(globals()[conf_key], float):
                 try:
-                    v = float(v)
+                    env_config[conf_key] = float(v)
                 except ValueError:
                     logger.warning(f"Could not parse a float value from the environment variable ${k}={v}")
                     continue
@@ -367,7 +440,6 @@ def _env_vars_config() -> Dict:
                     f"but config.{conf_key} expects a type '{type(globals()[conf_key]).__name__}'. Ignoring ${k}"
                 )
                 continue
-            env_config[conf_key] = v
             logger.debug(f"Setting config.{conf_key} from the environment variable ${k}")
     return env_config
 
@@ -383,16 +455,14 @@ def _add_config(conf: Dict, conf_path=None):
     log_filename_clean_trimmings = []
     for c, v in conf.items():
         if c == "sp":
-            # Merge filename patterns instead of replacing
-            sp.update(v)
+            # Merge filename patterns instead of replacing. Add custom pattern to the beginning,
+            # so they supersede the default patterns.
+            global sp
+            sp = update_dict(sp, v, add_in_the_beginning=True)
             log_filename_patterns.append(v)
         elif c == "extra_fn_clean_exts":
-            # Prepend to filename cleaning patterns instead of replacing
-            fn_clean_exts[0:0] = v
             log_filename_clean_extensions.append(v)
         elif c == "extra_fn_clean_trim":
-            # Prepend to filename cleaning patterns instead of replacing
-            fn_clean_trim[0:0] = v
             log_filename_clean_trimmings.append(v)
         elif c in ["custom_logo"] and v:
             # Resolve file paths - absolute or cwd, or relative to config file
@@ -428,8 +498,16 @@ def _add_config(conf: Dict, conf_path=None):
         logger.debug(f"Added to filename patterns: {log_filename_patterns}")
     if len(log_filename_clean_extensions) > 0:
         logger.debug(f"Added to filename clean extensions: {log_filename_clean_extensions}")
+        # Prepend to filename cleaning patterns instead of replacing.
+        # This must be done after fn_clean_exts is configured if it's specified
+        # in the config.
+        fn_clean_exts[0:0] = itertools.chain.from_iterable(log_filename_clean_extensions)
     if len(log_filename_clean_trimmings) > 0:
         logger.debug(f"Added to filename clean trimmings: {log_filename_clean_trimmings}")
+        # Prepend to filename cleaning patterns instead of replacing
+        # This must be done after fn_clean_trim is configured if it's specified
+        # in the config.
+        fn_clean_trim[0:0] = itertools.chain.from_iterable(log_filename_clean_trimmings)
 
 
 def load_sample_names(sample_names_file: Path):
@@ -511,9 +589,36 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 
 
 # Keep track of all changes to the config
-nondefault_config = dict()
+nondefault_config: Dict = {}
 
 
 def update(u):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
+
+
+def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
+    """
+    Reads coverage thresholds from the config, otherwise sets sensible defaults. Useful for modules like mosdepth, qualimap (BamQC), ngsbits
+    """
+    covs = globals().get(config_key, {}).get("general_stats_coverage", [])
+    if not covs:
+        covs = getattr(globals(), "general_stats_coverage", [])
+
+    if covs and isinstance(covs, list):
+        covs = [int(t) for t in covs]
+        logger.debug(f"Custom coverage thresholds: {', '.join([str(t) for t in covs])}")
+    else:
+        covs = [1, 5, 10, 30, 50]
+        logger.debug(f"Using default coverage thresholds: {', '.join([str(t) for t in covs])}")
+
+    hidden_covs = globals().get(config_key, {}).get("general_stats_coverage_hidden", [])
+    if not hidden_covs:
+        hidden_covs = getattr(globals(), "general_stats_coverage_hidden", [])
+
+    if hidden_covs and isinstance(hidden_covs, list):
+        logger.debug(f"Hiding coverage thresholds: {', '.join([str(t) for t in hidden_covs])}")
+    else:
+        hidden_covs = [t for t in covs if t != 30]
+
+    return covs, hidden_covs

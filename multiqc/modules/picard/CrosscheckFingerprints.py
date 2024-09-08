@@ -1,4 +1,4 @@
-""" MultiQC submodule to parse output from Picard CrosscheckFingerprints """
+"""MultiQC submodule to parse output from Picard CrosscheckFingerprints"""
 
 import logging
 import re
@@ -38,7 +38,7 @@ def parse_reports(module):
     """
 
     row_by_number = dict()
-    n_found_reports = 0
+    found_reports = []
 
     # Go through logs and find Metrics
     row_number = 0
@@ -59,7 +59,7 @@ def parse_reports(module):
             row_number += 1
         if not lines:
             continue
-        n_found_reports += 1
+        found_reports.append(f["s_name"])
         for row_number, row in lines:
             # Clean the sample names
             row["LEFT_SAMPLE"] = module.clean_s_name(row["LEFT_SAMPLE"], f)
@@ -92,8 +92,8 @@ def parse_reports(module):
             module.add_data_source(f, section="CrosscheckFingerprints")
 
     # Only add sections if we found data
-    if n_found_reports == 0:
-        return 0
+    if not found_reports:
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -196,7 +196,7 @@ def parse_reports(module):
                 "ycats_samples": True,
                 "square": True,
                 "legend": False,
-                "reverseColors": True,
+                "reverse_colors": True,
             },
         ),
     )
@@ -232,7 +232,7 @@ def parse_reports(module):
         ),
     )
 
-    return n_found_reports
+    return found_reports
 
 
 def _take_till(iterator, fn):

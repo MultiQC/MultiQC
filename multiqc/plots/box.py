@@ -1,18 +1,19 @@
 """MultiQC functions to plot a box plot"""
 
-from typing import List, Dict, Union, OrderedDict
-
 import logging
+from typing import Dict, List, Optional, OrderedDict, Union
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
-from multiqc.plots.plotly.box import BoxT, BoxPlotConfig
 from multiqc.plots.plotly import box
+from multiqc.plots.plotly.box import BoxPlotConfig, BoxT
 
 logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
@@ -24,17 +25,14 @@ def get_template_mod():
 
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
-    pconfig: Union[Dict, BoxPlotConfig, None] = None,
+    pconfig: Union[Dict, BoxPlotConfig, None],
 ) -> Union[str, box.BoxPlot]:
     """
     Plot a box plot. Expects either:
     - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
-    if pconfig is None:
-        pconfig = BoxPlotConfig()
-    if isinstance(pconfig, dict):
-        pconfig = BoxPlotConfig(**pconfig)
+    pconf: BoxPlotConfig = BoxPlotConfig.from_pconfig_dict(pconfig)
 
     # Given one dataset - turn it into a list
     if not isinstance(list_of_data_by_sample, list):
@@ -45,7 +43,7 @@ def plot(
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif pconfig.sort_samples:
+        elif pconf.sort_samples:
             samples = sorted(list(list_of_data_by_sample[0].keys()))
             list_of_data_by_sample[i] = {s: list_of_data_by_sample[i][s] for s in samples}
 
@@ -61,4 +59,4 @@ def plot(
                 # debugging of modules
                 raise
 
-    return box.plot(list_of_data_by_sample, pconfig)
+    return box.plot(list_of_data_by_sample, pconf)

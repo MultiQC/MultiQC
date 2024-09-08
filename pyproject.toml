@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.23dev"
+version = "1.24.1"
 dependencies = [
     "click",
     "humanize",
-    "importlib-metadata",
+    "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
     "markdown",
@@ -22,10 +22,10 @@ dependencies = [
     "rich>=10",
     "rich-click",
     "coloredlogs",  # logging in notebooks
-    "tqdm",  # progress bar in notebooks
     "spectra>=0.0.10",
     "pydantic>=2.7.1",
     "typeguard",
+    "tqdm",  # progress bar in notebooks
 ]
 requires-python = ">=3.8"
 authors = [
@@ -59,6 +59,18 @@ dev = [
     "ruff",
     "pdoc3",
     "pytest",
+    "pytest-cov",
+    "pytest-xdist",  # for parallel testing with `pytest -n`
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    # does work better with parametrized tests
+    "pytest-asyncio",  # for async tests
+    "mypy",
+    "types-PyYAML",
+    "types-tqdm",
+    "types-requests",
+    "types-Markdown",
+    "types-beautifulsoup4",
+    "types-Pillow",
 ]
 
 [project.urls]
@@ -111,14 +123,16 @@ eigenstratdatabasetools = "multiqc.modules.eigenstratdatabasetools:MultiqcModule
 fastp = "multiqc.modules.fastp:MultiqcModule"
 fastq_screen = "multiqc.modules.fastq_screen:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
-featureCounts = "multiqc.modules.featureCounts:MultiqcModule"
+featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
 flash = "multiqc.modules.flash:MultiqcModule"
 flexbar = "multiqc.modules.flexbar:MultiqcModule"
 filtlong = "multiqc.modules.filtlong:MultiqcModule"
 freyja = "multiqc.modules.freyja:MultiqcModule"
 gffcompare = "multiqc.modules.gffcompare:MultiqcModule"
+ganon = "multiqc.modules.ganon:MultiqcModule"
 gatk = "multiqc.modules.gatk:MultiqcModule"
+glimpse = "multiqc.modules.glimpse:MultiqcModule"
 goleft_indexcov = "multiqc.modules.goleft_indexcov:MultiqcModule"
 gopeaks = "multiqc.modules.gopeaks:MultiqcModule"
 happy = "multiqc.modules.happy:MultiqcModule"
@@ -159,13 +173,16 @@ mosdepth = "multiqc.modules.mosdepth:MultiqcModule"
 motus = "multiqc.modules.motus:MultiqcModule"
 mtnucratio = "multiqc.modules.mtnucratio:MultiqcModule"
 multivcfanalyzer = "multiqc.modules.multivcfanalyzer:MultiqcModule"
+nanoq = "multiqc.modules.nanoq:MultiqcModule"
 nanostat = "multiqc.modules.nanostat:MultiqcModule"
+ngsbits = "multiqc.modules.ngsbits:MultiqcModule"
 nextclade = "multiqc.modules.nextclade:MultiqcModule"
 ngsderive = "multiqc.modules.ngsderive:MultiqcModule"
 nonpareil = "multiqc.modules.nonpareil:MultiqcModule"
 odgi = "multiqc.modules.odgi:MultiqcModule"
 optitype = "multiqc.modules.optitype:MultiqcModule"
 pangolin = "multiqc.modules.pangolin:MultiqcModule"
+pairtools = "multiqc.modules.pairtools:MultiqcModule"
 pbmarkdup = "multiqc.modules.pbmarkdup:MultiqcModule"
 peddy = "multiqc.modules.peddy:MultiqcModule"
 phantompeakqualtools = "multiqc.modules.phantompeakqualtools:MultiqcModule"
@@ -212,11 +229,13 @@ theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
 truvari = "multiqc.modules.truvari:MultiqcModule"
+umicollapse = "multiqc.modules.umicollapse:MultiqcModule"
 umitools = "multiqc.modules.umitools:MultiqcModule"
 varscan2 = "multiqc.modules.varscan2:MultiqcModule"
 vcftools = "multiqc.modules.vcftools:MultiqcModule"
 vep = "multiqc.modules.vep:MultiqcModule"
 verifybamid = "multiqc.modules.verifybamid:MultiqcModule"
+vg = "multiqc.modules.vg:MultiqcModule"
 whatshap = "multiqc.modules.whatshap:MultiqcModule"
 xenome = "multiqc.modules.xenome:MultiqcModule"
 xengsort = "multiqc.modules.xengsort:MultiqcModule"
@@ -247,4 +266,13 @@ packages = ["multiqc"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-lint.ignore-init-module-imports = true
+
+lint.ignore = ["F401"]  # unused-import
+
+[tool.mypy]
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+# exclude all files in multiqc/modules
+files = ["multiqc", "tests"]
+exclude = "multiqc/modules/*"
+

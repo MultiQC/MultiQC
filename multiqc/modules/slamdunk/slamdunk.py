@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Slamdunk"""
-
 import logging
 import re
 
@@ -7,7 +5,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph, scatter, table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
@@ -15,16 +12,15 @@ VERSION_REGEX = r"# slamdunk summary v([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    Slamdunk module class, parses slamdunk logs.
+    This module should be able to parse logs from v0.2.2-dev onwards.
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Slamdunk",
             anchor="slamdunk",
             href="http://t-neumann.github.io/slamdunk/",
-            info="is a tool to analyze SLAMSeq data.",
+            info="Tool to analyze SLAM-Seq data.",
             doi="10.1186/s12859-019-2849-7",
         )
 
@@ -454,7 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_zero_cats": False,
+            "hide_empty": False,
             "data_labels": [
                 "Plus Strand +",
                 "Minus Strand -",
@@ -497,7 +493,7 @@ class MultiqcModule(BaseMultiqcModule):
             "stacking": "normal",
             "tt_decimals": 2,
             "tt_suffix": "%",
-            "hide_zero_cats": False,
+            "hide_empty": False,
         }
 
         self.add_section(
@@ -536,7 +532,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Slamdunk: Non-T>C mismatches over reads",
             "ylab": "Percent mismatches %",
             "xlab": "Position in read",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Pos {point.x}</b>: {point.y:.2f} %",
             "data_labels": [
@@ -550,7 +546,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Slamdunk: T>C conversions over reads",
             "ylab": "Percent converted %",
             "xlab": "Position in read",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Pos {point.x}</b>: {point.y:.2f} %",
             "data_labels": [
@@ -583,7 +579,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Slamdunk: Non-T>C mutations over 3' UTR ends",
             "ylab": "Percent mismatches %",
             "xlab": "Position in the static last 250bp window of 3' UTR",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Pos {point.x}</b>: {point.y:.2f} %",
             "data_labels": [
@@ -597,7 +593,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Slamdunk: T>C conversions over 3' UTR ends",
             "ylab": "Percent converted %",
             "xlab": "Position in the static last 250bp window of 3' UTR",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymin": 0,
             "tt_label": "<b>Pos {point.x}</b>: {point.y:.2f} %",
             "data_labels": [

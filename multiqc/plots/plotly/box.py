@@ -2,7 +2,7 @@ import copy
 import logging
 from typing import Dict, List, Union
 
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
@@ -98,7 +98,7 @@ class Dataset(BaseDataset):
         report.write_data_file(vals_by_sample, self.uid)
 
 
-class BoxPlot(Plot):
+class BoxPlot(Plot[Dataset]):
     datasets: List[Dataset]
 
     @staticmethod
@@ -106,19 +106,17 @@ class BoxPlot(Plot):
         pconfig: BoxPlotConfig,
         list_of_data_by_sample: List[Dict[str, BoxT]],
     ) -> "BoxPlot":
-        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
-
         model = Plot.initialize(
             plot_type=PlotType.BOX,
             pconfig=pconfig,
-            n_datasets=len(list_of_data_by_sample),
-            n_samples=max_n_samples,
+            n_samples_per_dataset=[len(x) for x in list_of_data_by_sample],
         )
 
         model.datasets = [
             Dataset.create(ds, data_by_sample) for ds, data_by_sample in zip(model.datasets, list_of_data_by_sample)
         ]
 
+        max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
         height = determine_barplot_height(max_n_samples)
 
         model.layout.update(

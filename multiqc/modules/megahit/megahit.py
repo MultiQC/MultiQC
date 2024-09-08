@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from MEGAHIT"""
-
 import logging
 import re
 
@@ -8,20 +6,21 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """MEGAHIT module"""
+    """
+    MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
+    name (e.g. `sample1.log` will yield a sample name of `sample1`).
+    """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="MEGAHIT",
             anchor="megahit",
             href="https://github.com/voutcn/megahit",
-            info="is an ultra-fast and memory-efficient NGS assembler",
+            info="NGS read assembler",
             doi="10.1093/bioinformatics/btv033",
         )
 

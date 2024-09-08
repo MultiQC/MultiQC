@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Bismark"""
-
 import logging
 import re
 
@@ -7,7 +5,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin, linegraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 # Log parsing regexes
@@ -60,12 +57,11 @@ regexes = {
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bismark",
             anchor="bismark",
             href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/",
-            info="is a tool to map bisulfite converted sequence reads and determine cytosine methylation states.",
+            info="Maps bisulfite converted sequence reads and determine cytosine methylation states.",
             doi="10.1093/bioinformatics/btr167",
         )
 
@@ -471,7 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Bismark: M-Bias",
             "ylab": "% Methylation",
             "xlab": "Position (bp)",
-            "xDecimals": False,
+            "x_decimals": False,
             "ymax": 100,
             "ymin": 0,
             "tt_label": "<b>{point.x} bp</b>: {point.y:.1f}%",

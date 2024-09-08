@@ -7,30 +7,31 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional
+from typing import Dict, List, Optional, Sequence, Union
 
-
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.update_config import update_config, ClConfig
-from multiqc.core.file_search import file_search
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
+from multiqc.core.file_search import file_search
+from multiqc.core.order_modules_and_sections import order_modules_and_sections
+from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import PlotType, Plot
+from multiqc.plots.plotly.plot import Plot, PlotType
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
+from multiqc.types import AnchorT, ModuleIdT
 
 logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path],
+    *analysis_dir: Union[str, Path, List[Union[str, Path]]],
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -43,14 +44,14 @@ def parse_logs(
     no_ansi: Optional[bool] = None,
     profile_runtime: Optional[bool] = None,
     no_version_check: Optional[bool] = None,
-    ignore: List[str] = (),
-    ignore_samples: List[str] = (),
-    run_modules: List[str] = (),
-    exclude_modules: List[str] = (),
-    config_files: List[str] = (),
-    module_order: List[Union[str, Dict]] = (),
-    extra_fn_clean_exts: List = (),
-    extra_fn_clean_trim: List = (),
+    ignore: Sequence[str] = (),
+    ignore_samples: Sequence[str] = (),
+    run_modules: Sequence[str] = (),
+    exclude_modules: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
+    module_order: Sequence[Union[str, Dict]] = (),
+    extra_fn_clean_exts: Sequence = (),
+    extra_fn_clean_trim: Sequence = (),
     preserve_module_raw_data: bool = True,
 ):
     """
@@ -82,8 +83,12 @@ def parse_logs(
      later interactively. Defaults to `True`. Set to `False` to save memory.
     """
     assert isinstance(analysis_dir, tuple)
+    if len(analysis_dir) == 1 and isinstance(analysis_dir[0], list):
+        analysis_dir = tuple(analysis_dir[0])
     if not all(isinstance(d, (str, Path)) for d in analysis_dir):
-        raise ValueError("Path arguments should be path-like or strings, got:", analysis_dir)
+        raise ValueError(
+            "Path arguments should be path-like, strings, or list of path-like or strings, got:", analysis_dir
+        )
 
     update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 
@@ -92,10 +97,12 @@ def parse_logs(
     report.reset_file_search()
     try:
         searched_modules = file_search()
-        exec_modules(searched_modules, clean_up=False)
+        exec_modules(searched_modules)
     except RunError as e:
         if e.message:
             logger.critical(e.message)
+    except NoAnalysisFound as e:
+        logger.warning(e)
 
 
 def parse_data_json(path: Union[str, Path]):
@@ -108,8 +115,8 @@ def parse_data_json(path: Union[str, Path]):
 
     json_path_found = False
     json_path: Path
-    if path.endswith(".json"):
-        json_path = path
+    if str(path).endswith(".json"):
+        json_path = Path(path)
         json_path_found = True
     else:
         json_path = Path(path) / "multiqc_data.json"
@@ -157,7 +164,7 @@ def list_modules() -> List[str]:
 
     @return: List of loaded module names
     """
-    return [m.name for m in report.modules]
+    return [m.anchor for m in report.modules]
 
 
 def list_samples() -> List[str]:
@@ -176,28 +183,28 @@ def list_samples() -> List[str]:
     return sorted(samples)
 
 
-def list_plots() -> Dict[str, List[Union[str, Dict[str, str]]]]:
+def list_plots() -> Dict:
     """
     Return plot names that have been loaded, indexed by module and section.
 
     @return: Dict of plot names indexed by module and section
     """
 
-    result = dict()
+    result: Dict[ModuleIdT, List] = {}
     for module in report.modules:
-        result[module.name]: List[Union[str, Dict[str, str]]] = list()
+        result[module.id] = list()
         for section in module.sections:
-            if not section.plot_id:
+            if not section.plot_anchor:
                 continue
             section_id = section.name or section.anchor
-            plot_id = section.plot_id
-            if plot_id not in report.plot_by_id:
-                raise ValueError(f'CRITICAL: Plot "{plot_id}" not found in report.plot_by_id')
-            plot = report.plot_by_id[plot_id]
+            plot_anchor = section.plot_anchor
+            if plot_anchor not in report.plot_by_id:
+                raise ValueError(f'CRITICAL: Plot "{plot_anchor}" not found in report.plot_by_id')
+            plot = report.plot_by_id[plot_anchor]
             if len(plot.datasets) == 1:
-                result[module.name].append(section_id)
+                result[module.id].append(section_id)
             if len(plot.datasets) > 1:
-                result[module.name].append({section_id: [d.label for d in plot.datasets]})
+                result[module.id].append({section_id: [d.label for d in plot.datasets]})
 
     return result
 
@@ -212,18 +219,18 @@ def get_plot(
     @param module: Module name or anchor
     @param section: Section name or anchor
     """
-    mod = next((m for m in report.modules if m.name == module or m.anchor == module), None)
+    mod = next((m for m in report.modules if m.name.lower() == module.lower() or m.anchor == module), None)
     if not mod:
         raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    sec = next((s for s in mod.sections if (s.name and s.name == section) or s.anchor == section), None)
+    sec = next((s for s in mod.sections if (s.name and s.name.lower() == section.lower()) or s.anchor == section), None)
     if not sec:
         raise ValueError(f'Section "{section}" is not found in module "{module}"')
 
-    if sec.plot_id is None:
+    if sec.plot_anchor is None:
         raise ValueError(f"Section {section} doesn't contain a Plot object")
 
-    return report.plot_by_id[sec.plot_id]
+    return report.plot_by_id[sec.plot_anchor]
 
 
 def _load_plot(dump: Dict) -> Plot:
@@ -257,15 +264,15 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     @return: Dict of general stats data indexed by sample and data key
     """
 
-    data = defaultdict(dict)
-    for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
-        for s, val_by_key in data_by_sample.items():
+    data: Dict[str, Dict] = defaultdict(dict)
+    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+        for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
-            for key, val in val_by_key.items():
-                if key in header:
-                    key = f"{header[key].get('namespace', '')}.{key}"
-                    data[s][key] = val
+            for row in rows:
+                for key, val in row.data.items():
+                    if key in header:
+                        data[s][f"{header[key].get('namespace', '')}.{key}"] = val
     if sample:
         if not data:
             return {}
@@ -295,30 +302,32 @@ def get_module_data(
 
     if sample and sample not in list_samples():
         raise ValueError(f"Sample '{sample}' is not found. Use multiqc.list_samples() to list available samples")
-    if module and module not in list_modules():
-        raise ValueError(f"Module '{module}' is not found. Use multiqc.list_modules() to list available modules")
 
-    data_by_module = {}
+    if module:
+        mod = next((m for m in report.modules if m.name.lower() == module.lower() or m.anchor == module), None)
+        if not mod:
+            raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
+
+    data_by_module: Dict[str, Dict] = {}
     for m in report.modules:
-        if module and (m.name != module and m.anchor != module):
+        if module and (m.name.lower() != module and m.anchor != module):
             continue
 
-        module_data = m.saved_raw_data
+        data_by_key: Dict[str, Dict] = m.saved_raw_data
         if sample:
-            module_data = {k: v.get(sample, {}) for k, v in module_data.items()}
+            data_by_key = {data_key: data_by_sample.get(sample, {}) for data_key, data_by_sample in data_by_key.items()}
         if key:
             if module and key not in m.saved_raw_data:
                 raise ValueError(f"Key '{key}' is not found in module '{module}'")
-            module_data = module_data.get(key, {})
-        elif len(module_data) == 1:  # only one key, flatten
-            module_data = module_data[list(module_data.keys())[0]]
+        elif len(data_by_key) == 1:  # only one key, flatten
+            data_by_key = data_by_key[list(data_by_key.keys())[0]]
 
-        data_by_module[m.name] = module_data
+        data_by_module[m.anchor] = data_by_key
 
     if module:
         if not data_by_module:
             return {}
-        return data_by_module[module]
+        return data_by_module[module.lower()]
 
     return data_by_module
 
@@ -357,13 +366,13 @@ def add_custom_content_section(
 
     module = BaseMultiqcModule(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(f"{anchor}-module"),
         info=description,
         comment=comment,
     )
     module.add_section(
         name=name,
-        anchor=anchor,
+        anchor=AnchorT(anchor),
         description=description,
         helptext=helptext,
         content_before_plot=content_before_plot,
@@ -378,7 +387,7 @@ def write_report(
     title: Optional[str] = None,
     report_comment: Optional[str] = None,
     template: Optional[str] = None,
-    output_dir: Optional[str] = None,
+    output_dir: Optional[Union[str, Path]] = None,
     filename: Optional[str] = None,
     make_data_dir: Optional[bool] = None,
     data_format: Optional[str] = None,
@@ -398,11 +407,12 @@ def write_report(
     no_ansi: Optional[bool] = None,
     profile_runtime: Optional[bool] = None,
     no_version_check: Optional[bool] = None,
-    run_modules: List[str] = (),
-    exclude_modules: List[str] = (),
-    config_files: List[str] = (),
-    custom_css_files: List[str] = (),
-    module_order: List[Union[str, Dict]] = (),
+    run_modules: Sequence[str] = (),
+    exclude_modules: Sequence[str] = (),
+    config_files: Sequence[Union[str, Path]] = (),
+    custom_css_files: Sequence[str] = (),
+    module_order: Sequence[Union[str, Dict]] = (),
+    clean_up=True,
 ):
     """
     Render HTML from parsed module data, and write a report and data files to disk.
@@ -435,26 +445,34 @@ def write_report(
     @param config_files: Specific config file to load, after those in MultiQC dir / home dir / working dir
     @param custom_css_files: Custom CSS files to include in the report
     @param module_order: Names of modules in order of precedence to show in report
+    @param clean_up: Clean up temp files after writing the report
     """
 
     if force is None and overwrite is not None:
         force = overwrite
     params = locals()
     del params["overwrite"]
+    del params["clean_up"]
     update_config(cfg=ClConfig(**params))
 
     check_version(write_report.__name__)
 
-    if len(report.modules) == 0:
-        logger.error("No analysis results found to make a report")
-        return
-
     try:
+        order_modules_and_sections()
+
         write_results()
+
+    except NoAnalysisFound:
+        logger.warning("No analysis results found to make a report")
 
     except RunError as e:
         if e.message:
             logger.critical(e.message)
+
+    finally:
+        # Clean up temporary directory, reset logger file handler
+        if clean_up:
+            report.reset_tmp_dir()
 
 
 def load_config(config_file: Union[str, Path]):
@@ -470,5 +488,4 @@ def load_config(config_file: Union[str, Path]):
     if not path.exists():
         raise ValueError(f"Config file '{config_file}' not found")
 
-    config.session_user_config_files.append(path.absolute())
-    config.load_config_file(config_file)
+    config.load_config_file(config_file, is_explicit_config=True)

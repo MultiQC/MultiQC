@@ -1,21 +1,25 @@
 """MultiQC functions to plot a bargraph"""
 
 import logging
-from collections import OrderedDict
-from typing import Union, Dict
-
 import math
+from collections import OrderedDict
+from typing import Dict, List, Mapping, Optional, Sequence, Union, cast
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
+from multiqc.core.exceptions import RunError
 from multiqc.plots.plotly import bar
-from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.plotly.bar import BarPlotConfig, InputCat
+from multiqc.types import SampleNameT
 from multiqc.utils import mqc_colour
+from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
@@ -25,10 +29,23 @@ def get_template_mod():
     return _template_mod
 
 
+class Category(ValidatedConfig):
+    name: str
+    color: Optional[str] = None
+
+
+SampleName = Union[SampleNameT, str]
+InputDatasetT = Mapping[SampleName, Mapping[str, Union[int, float]]]
+DatasetT = Dict[SampleName, Dict[str, Union[int, float]]]
+
+# Either a list of strings, or a dictionary mapping category names to their properties dicts or objects
+CatT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], Category]]]
+
+
 def plot(
-    data,
-    cats=None,
-    pconfig: Union[Dict, BarPlotConfig, None] = None,
+    data: Union[InputDatasetT, Sequence[InputDatasetT]],
+    cats: Optional[Union[CatT, Sequence[CatT]]] = None,
+    pconfig: Optional[Union[Dict, BarPlotConfig]] = None,
 ) -> Union[bar.BarPlot, str]:
     """Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also, can take info about categories. There are quite a
@@ -39,78 +56,99 @@ def plot(
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = BarPlotConfig(**pconfig)
+    pconf = BarPlotConfig.from_pconfig_dict(pconfig)
 
-    # Validate config if linting
     # Given one dataset - turn it into a list
-    if not isinstance(data, list):
-        data = [data]
+    raw_datasets: List[DatasetT]
+    if isinstance(data, Sequence):
+        raw_datasets = cast(List[DatasetT], data)
+    else:
+        raw_datasets = [cast(DatasetT, data)]
+    del data
 
     # Make list of cats from different inputs
-    if cats is None:
-        cats = list()
-    elif not isinstance(cats, list):
-        cats = [cats]
-    elif cats and isinstance(cats[0], str):
-        cats = [cats]
-    # Generate default categories if not supplied
-    for idx in range(len(data)):
-        try:
-            cats[idx]
-        except IndexError:
-            cats.append(list())
-            for s in data[idx].keys():
-                for k in data[idx][s].keys():
-                    if k not in cats[idx]:
-                        cats[idx].append(k)
+    raw_cats_per_ds: List[CatT]
+    if not cats:
+        # Not supplied, generate default categories
+        raw_cats_per_ds = []
+        for val_by_cat_by_sample in raw_datasets:
+            ds_cats: List[str] = []
+            for sample_name, val_by_cat in val_by_cat_by_sample.items():
+                for cat_name in val_by_cat.keys():
+                    if cat_name not in raw_cats_per_ds:
+                        ds_cats.append(cat_name)
+            raw_cats_per_ds.append(ds_cats)
+    elif isinstance(cats, List) and isinstance(cats[0], str):
+        # ["Cat1", "Cat2"] - list of strings for one dataset
+        raw_cats_per_ds = [[cat_name for cat_name in cast(List[str], cats)]]
+    elif isinstance(cats, Sequence):
+        # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
+        raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
+    else:
+        raw_cats_per_ds = [cats]
 
-    # If we have cats in lists, turn them into dicts
-    for idx, cat in enumerate(cats):
-        if isinstance(cat, list):
-            newcats = dict()
-            for c in cat:
-                newcats[c] = {"name": c}
-            cats[idx] = newcats
+    if len(raw_datasets) > 1 and len(raw_cats_per_ds) == 1:
+        raw_cats_per_ds = raw_cats_per_ds * len(raw_datasets)
+    elif len(raw_datasets) != len(raw_cats_per_ds):
+        raise RunError(
+            f"Bar graph: number of dataset and category lists must match, got {len(raw_datasets)} "
+            f"datasets and {len(raw_cats_per_ds)} category lists: {raw_cats_per_ds}"
+        )
+
+    # Parse the categories into pydantic objects
+    categories_per_ds: List[Dict[str, Category]] = []
+    for raw_ds_cats in raw_cats_per_ds:
+        ds_categories: Dict[str, Category] = dict()
+        if isinstance(raw_ds_cats, list):
+            for cat_name in raw_ds_cats:
+                ds_categories[cat_name] = Category(name=cat_name)
+        elif isinstance(raw_ds_cats, dict):
+            for cat_name, cat_props in raw_ds_cats.items():
+                if isinstance(cat_props, Category):
+                    ds_categories[cat_name] = cat_props
+                else:
+                    if "name" not in cat_props:
+                        cat_props["name"] = cat_name
+                    ds_categories[cat_name] = Category(**cat_props, _parent_class=bar.BarPlot)
         else:
-            for c in cat:
-                if "name" not in cat[c]:
-                    cats[idx][c]["name"] = c
+            raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
+        categories_per_ds.append(ds_categories)
 
     # Allow user to overwrite a given category config for this plot
-    if pconfig.id and pconfig.id in config.custom_plot_config:
-        for k, v in config.custom_plot_config[pconfig.id].items():
-            for idx in range(len(cats)):
-                if k in cats[idx].keys():
-                    for kk, vv in v.items():
-                        cats[idx][k][kk] = vv
+    if pconf.id and pconf.id in config.custom_plot_config:
+        for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
+            for ds_idx in range(len(categories_per_ds)):
+                if cat_name in categories_per_ds[ds_idx].keys():
+                    for prop_name, prop_val in user_cat_props.items():
+                        setattr(categories_per_ds[ds_idx][cat_name], prop_name, prop_val)
 
     # Parse the data into a chart friendly format
-    plotsamples = list()
-    plotdata = list()
-    for idx, d in enumerate(data):
-        hc_samples = list(d.keys())
+    # To add colors to the categories if not set:
+    scale = mqc_colour.mqc_colour_scale("plot_defaults")
+    plot_samples: List[List[SampleNameT]] = list()
+    plot_data: List[List[InputCat]] = list()
+    for ds_idx, d in enumerate(raw_datasets):
+        hc_samples: List[SampleNameT] = [SampleNameT(s) for s in d.keys()]
         if isinstance(d, OrderedDict):
             # Legacy: users assumed that passing an OrderedDict indicates that we
             # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
             pass
-        elif pconfig.sort_samples:
-            hc_samples = sorted(list(d.keys()))
-        hc_data = list()
-        sample_dcount = dict()
-        for c in cats[idx].keys():
-            thisdata = list()
-            catcount = 0
+        elif pconf.sort_samples:
+            hc_samples = sorted([SampleNameT(s) for s in d.keys()])
+        hc_data: List[InputCat] = list()
+        sample_d_count: Dict[SampleNameT, int] = dict()
+        for cat_idx, c in enumerate(categories_per_ds[ds_idx].keys()):
+            this_data: List[Union[int, float]] = list()
+            cat_count = 0
             for s in hc_samples:
-                if s not in sample_dcount:
-                    sample_dcount[s] = 0
+                if s not in sample_d_count:
+                    sample_d_count[s] = 0
 
                 if s not in d or c not in d[s]:
                     # Pad with NaNs when we have missing categories in a sample
-                    thisdata.append(float("nan"))
+                    this_data.append(float("nan"))
                     continue
-                val = d[s][c]
+                val = d[SampleNameT(s)][c]
                 if not isinstance(val, (float, int)):
                     try:
                         val = int(val)
@@ -121,51 +159,49 @@ def plot(
                             val = None
                 if val is None:
                     # Pad with NaNs when we have missing categories in a sample
-                    thisdata.append(float("nan"))
+                    this_data.append(float("nan"))
                     continue
                 if isinstance(val, float):
                     if math.floor(val) == val:
                         val = int(val)
-                thisdata.append(val)
-                catcount += 1
-                sample_dcount[s] += 1
-            if catcount > 0:
-                if pconfig.hide_zero_cats is False or max(x for x in thisdata if not math.isnan(x)) > 0:
-                    thisdict = {"name": cats[idx][c]["name"], "data": thisdata}
-                    if "color" in cats[idx][c]:
-                        thisdict["color"] = cats[idx][c]["color"]
-                    hc_data.append(thisdict)
+                this_data.append(val)
+                cat_count += 1
+                sample_d_count[s] += 1
+            if cat_count > 0:
+                if pconf.hide_zero_cats is False or max(x for x in this_data if not math.isnan(x)) > 0:
+                    color: str = categories_per_ds[ds_idx][c].color or scale.get_colour(cat_idx, lighten=1)
+                    this_dict: InputCat = {
+                        "name": categories_per_ds[ds_idx][c].name,
+                        "color": color,
+                        "data": this_data,
+                        "data_pct": [],
+                    }
+                    hc_data.append(this_dict)
 
         # Remove empty samples
-        for s, c in sample_dcount.items():
-            if c == 0:
-                idx = hc_samples.index(s)
-                del hc_samples[idx]
-                for j, d in enumerate(hc_data):
-                    del hc_data[j]["data"][idx]
+        for sample_name, cnt in sample_d_count.items():
+            if cnt == 0:
+                sample_idx = hc_samples.index(sample_name)
+                del hc_samples[sample_idx]
+                for hc_data_idx, _ in enumerate(hc_data):
+                    del hc_data[hc_data_idx]["data"][sample_idx]
         if len(hc_data) > 0:
-            plotsamples.append(hc_samples)
-            plotdata.append(hc_data)
+            plot_samples.append(hc_samples)
+            plot_data.append(hc_data)
 
-    if len(plotdata) == 0:
-        logger.warning(f"Tried to make bar plot, but had no data: {pconfig.id}")
+    if len(plot_data) == 0:
+        logger.warning(f"Tried to make bar plot, but had no data: {pconf.id}")
         return '<p class="text-danger">Error - was not able to plot data.</p>'
-
-    # Add colors to the categories if not set. Since the "plot_defaults" scale is
-    scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for si, sd in enumerate(plotdata):
-        for di, d in enumerate(sd):
-            d.setdefault("color", scale.get_colour(di, lighten=1))
 
     # Make a plot - custom, interactive or flat
     mod = get_template_mod()
     if "bargraph" in mod.__dict__ and callable(mod.bargraph):
         try:
-            return mod.bargraph(plotdata, plotsamples, pconfig)
-        except:  # noqa: E722
+            return mod.bargraph(plot_data, plot_samples, pconfig)
+        except:  # noqa: E722s
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
                 # debugging of modules
                 raise
 
-    return bar.plot(plotdata, plotsamples, pconfig)
+    return bar.plot(plot_data, plot_samples, pconf)

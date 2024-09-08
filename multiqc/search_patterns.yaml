@@ -74,7 +74,7 @@ bbmap/qahist:
   contents: "#Deviation"
   num_lines: 1
 bbmap/qchist:
-  contents_re: '#Quality	count1	fraction1\n'
+  contents_re: "#Quality	count1	fraction1$"
   num_lines: 1
 bbmap/qhist:
   contents: "#BaseNum	Read1_linear	Read1_log	Read1_measured	Read2_linear	Read2_log	Read2_measured"
@@ -210,17 +210,17 @@ ccs/v5:
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "count"'
-    num_lines: 13
+    num_lines: 20
 cellranger/vdj_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    num_lines: 13
+    num_lines: 20
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -286,6 +286,9 @@ deeptools/plotProfile:
   num_lines: 1
 diamond:
   fn: "diamond.log"
+disambiguate:
+  contents: "unique species A pairs"
+  num_lines: 2
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/gvcf_metrics:
@@ -359,6 +362,9 @@ freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
+ganon:
+  contents: ["(_|(_|| |(_)| |", "Classifying reads"]
+  num_lines: 10
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:
@@ -372,6 +378,12 @@ gffcompare:
   fn: "*.stats"
   contents: "# gffcompare"
   num_lines: 2
+glimpse/err_spl:
+  fn: "*.error.spl.txt.gz"
+  num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt.gz"
+  num_lines: 1
 goleft_indexcov/roc:
   fn: "*-indexcov.roc"
 goleft_indexcov/ped:
@@ -382,8 +394,13 @@ happy:
   fn: "*.summary.csv"
   contents: "Type,Filter,TRUTH"
 htseq:
-  contents_re: '^(feature\tcount|\w+.*\t\d+)$'
-  num_lines: 1
+  - contents_re: '^feature\tcount$'
+    num_lines: 1
+    shared: true
+  # can lack header and start with a GENE\tNUMBER line
+  - contents_re: '^\w+.*\t\d+$'
+    num_lines: 1
+    shared: true
 htstream:
   contents: "Program_details"
   num_lines: 2
@@ -478,14 +495,6 @@ kaiju:
   num_lines: 1
 kallisto:
   contents: "[quant] finding pseudoalignments for the reads"
-nanostat:
-  max_filesize: 4096
-  contents_re: "Metrics\\s+dataset\\s*"
-  num_lines: 1
-nanostat/legacy:
-  max_filesize: 4096
-  contents_re: "General summary:\\s*"
-  num_lines: 1
 kat:
   fn: "*.dist_analysis.json"
 kraken:
@@ -555,12 +564,31 @@ motus:
   num_lines: 2
 multivcfanalyzer:
   fn: "MultiVCFAnalyzer.json"
-disambiguate:
-  contents: "unique species A pairs"
-  num_lines: 2
+nanostat:
+  max_filesize: 4096
+  contents_re: "Metrics\\s+dataset\\s*"
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: "General summary:\\s*"
+  num_lines: 1
+nanoq:
+  contents: "Nanoq Read Summary"
+  num_lines: 3
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: "ReadQC"
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: "SeqPurge"
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: "MappingQC"
+    num_lines: 20
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1
@@ -592,6 +620,9 @@ odgi:
   - fn: "*.og.stats.yml"
   - fn: "*.odgi.stats.yaml"
   - fn: "*.odgi.stats.yml"
+pairtools:
+  contents: ["total_single_sided_mapped\t", "cis\t", "trans\t", "pair_types/"]
+  num_lines: 20
 peddy/summary_table:
   fn: "*.peddy.ped"
 peddy/het_check:
@@ -656,27 +687,41 @@ picard/markdups:
   - contents: "markduplicates.GATKDuplicationMetrics"
   - contents: "--algo Dedup"
 picard/oxogmetrics:
-  contents: "OxoGMetrics"
+  - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
+    shared: true
 picard/pcr_metrics:
-  contents: "TargetedPcrMetrics"
+  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
+  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
+    shared: true
 picard/quality_by_cycle:
-  - contents_re: "[Qq]uality[Bb]y[Cc]ycle"
-    contents: "MEAN_QUALITY"
+  - contents: "# MeanQualityByCycle"
   - contents: "--algo MeanQualityByCycle"
+  - contents_re: ".*CollectMultipleMetrics.*MeanQualityByCycle"
+    shared: true
 picard/quality_score_distribution:
-  - contents_re: "[Qq]uality[Ss]core[Dd]istribution"
-    contents: "COUNT_OF_Q"
+  - contents: "# QualityScoreDistribution"
   - contents: "--algo QualDistribution"
+  - contents_re: ".*CollectMultipleMetrics.*QualityScoreDistribution"
+    shared: true
 picard/quality_yield_metrics:
-  contents: "QualityYieldMetrics"
+  - contents: "# CollectQualityYieldMetrics"
+  - contents_re: ".*CollectMultipleMetrics.*QualityYieldMetrics"
+    shared: true
 picard/rnaseqmetrics:
-  contents_re: "[Rr]na[Ss]eq[Mm]etrics"
+  - contents: "# picard.analysis.Collectrnaseqmetrics"
+  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents: "# CollectRnaSeqMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
+    shared: true
 picard/rrbs_metrics:
-  contents: "RrbsSummaryMetrics"
+  - contents: "# picard.analysis.CollectRrbsMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
+    shared: true
 picard/sam_file_validation:
   fn: "*[Vv]alidate[Ss]am[Ff]ile*"
 picard/variant_calling_metrics:
-  contents: "VariantCallingDetailMetrics"
+  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
 picard/wgs_metrics:
   contents_re: "## METRICS CLASS.*WgsMetrics"
 picard/collectilluminabasecallingmetrics:
@@ -863,10 +908,10 @@ sortmerna:
 spaceranger/count_html:
   - fn: "*.html"
     contents: '"command":"Space Ranger","subcommand":"count"'
-    num_lines: 13
+    num_lines: 20
   - fn: "*.html"
     contents: '"command": "Space Ranger", "subcommand": "count"'
-    num_lines: 13
+    num_lines: 20
 stacks/gstacks:
   fn: "gstacks.log.distribs"
   contents: "BEGIN effective_coverages_per_sample"
@@ -908,6 +953,10 @@ truvari/bench:
   contents_re: ".*truvari.* bench.*"
   fn: "log.txt"
   num_lines: 2
+umicollapse:
+  fn: "*_UMICollapse.log"
+  num_lines: 100
+  contents: "UMI collapsing finished in "
 umitools/extract:
   contents: "# output generated by extract"
   num_lines: 3
@@ -942,6 +991,13 @@ vep/vep_txt:
   max_filesize: 100000
 verifybamid/selfsm:
   fn: "*.selfSM"
+vg/stats:
+  contents:
+    - "Total perfect:"
+    - "Total gapless (softclips allowed):"
+    - "Total time:"
+    - "Speed:"
+  num_lines: 30
 whatshap/stats:
   contents: "#sample	chromosome	file_name	variants	phased	unphased	singletons"
   num_lines: 1

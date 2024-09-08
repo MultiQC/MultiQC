@@ -1,20 +1,18 @@
 import logging
-import shutil
 import sys
 import time
 import traceback
 import tracemalloc
-from importlib.metadata import EntryPoint
-from typing import Dict, Union, Callable, List
+from typing import Callable, Dict, List, Union
 
 import rich
+from importlib_metadata import EntryPoint
 from rich.syntax import Syntax
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.core.exceptions import RunError
 from multiqc.core import plugin_hooks, software_versions
-from multiqc.plots.plotly.plot import PConfigValidationError
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +23,7 @@ def trace_memory(stage: str):
         logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
 
 
-def exec_modules(
-    mod_dicts_in_order: List[Dict[str, Dict]],
-    clean_up: bool = True,
-) -> None:
+def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     """
     Execute the modules that have been found and loaded.
     """
@@ -42,6 +37,8 @@ def exec_modules(
         # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
         or list(m.keys())[0].lower() == "custom_content"
     ]
+    # Special-case software_versions module must be run in the end
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0].lower() != "software_versions"]
     mod_names = [list(m.keys())[0] for m in mod_dicts_in_order]
     if not required_logs_found(mod_names):
         raise RunError()
@@ -63,7 +60,8 @@ def exec_modules(
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
-            module_initializer.mod_cust_config = mod_cust_config
+            setattr(module_initializer, "mod_cust_config", mod_cust_config)
+            setattr(module_initializer, "mod_id", this_module)
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
@@ -102,8 +100,6 @@ def exec_modules(
             logger.debug(f"No samples found: {this_module}")
         except KeyboardInterrupt:
             raise
-        except PConfigValidationError:
-            raise
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
@@ -111,31 +107,32 @@ def exec_modules(
 
             # Flag the error, but carry on
             class CustomTraceback:
+                type, value, traceback = sys.exc_info()
+
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
-                    sys_tb = sys.exc_info()
-                    issue_url = "https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title={}%20module%20-%20{}".format(
-                        this_module, sys_tb[0].__name__
+                    issue_url = f"https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title={this_module}%20module%20-%20{type.__name__}"
+                    err_msg = (
+                        f"Please copy this log and report it at [bright_blue][link={issue_url}]"
+                        f"https://github.com/MultiQC/MultiQC/issues[/link][/] \n"
+                        f"[bold underline]Please attach a file that triggers the error.[/] "
                     )
-                    yield (
-                        "Please copy this log and report it at [bright_blue][link={}]https://github.com/MultiQC/MultiQC/issues[/link][/] \n"
-                        "[bold underline]Please attach a file that triggers the error.[/] The last file found was: [green]{}[/]\n".format(
-                            issue_url, report.last_found_file
-                        )
-                    )
+                    if report.last_found_file:
+                        err_msg += f"The last file found was: [green]{report.last_found_file}[/]\n"
+
+                    yield err_msg
                     yield Syntax(traceback.format_exc(), "python")
 
                 def __rich_measure__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     tb_width = max([len(line) for line in traceback.format_exc().split("\n")])
-                    try:
-                        log_width = 71 + len(report.last_found_file)
-                    except TypeError:
-                        log_width = 71
+                    log_width = 71
+                    if report.last_found_file:
+                        log_width += len(report.last_found_file)
                     panel_width = max(tb_width, log_width)
                     return rich.console.Measurement(panel_width, panel_width)
 
-            from multiqc.core.init_log import rich_console
+            from multiqc.core.log_and_rich import rich_console_print
 
-            rich_console.print(
+            rich_console_print(
                 rich.panel.Panel(
                     CustomTraceback(),
                     title=f"Oops! The '[underline]{this_module}[/]' MultiQC module broke...",
@@ -155,7 +152,7 @@ def exec_modules(
             # Exit code 1 for CI failures etc
             sys_exit_code = 1
 
-        report.runtimes["mods"][mod_names[mod_idx]] = time.time() - mod_starttime
+        report.runtimes.mods[mod_names[mod_idx]] = time.time() - mod_starttime
         if config.profile_memory:
             mem_current, mem_peak = tracemalloc.get_traced_memory()
             tracemalloc.stop()
@@ -165,26 +162,21 @@ def exec_modules(
                 f"{this_module}: memory change: {mem_current:,d}b, peak during module execution: {mem_peak:,d}b"
             )
         if config.profile_runtime:
-            logger.warning(f"{this_module}: module run time: {report.runtimes['mods'][mod_names[mod_idx]]:.2f}s")
+            logger.warning(f"{this_module}: module run time: {report.runtimes.mods[mod_names[mod_idx]]:.2f}s")
 
-    report.runtimes["total_mods"] = time.time() - total_mods_starttime
+    report.runtimes.total_mods = time.time() - total_mods_starttime
 
     # Again, if config.require_logs is set, check if for all explicitly requested
     # modules samples were found.
-    if not required_logs_found([m.anchor for m in report.modules]):
+    if not required_logs_found([m.id for m in report.modules]):
         raise RunError()
 
     # Update report with software versions provided in configs
-    software_versions.update_versions_from_config(config, report)
+    software_versions.update_versions_from_config()
 
     # Did we find anything?
     if len(report.modules) == 0:
-        logger.warning("No analysis results found. Cleaning up…")
-        if clean_up:
-            shutil.rmtree(report.tmp_dir)
-        logger.info("MultiQC complete")
-        # Exit with an error code if a module broke
-        raise RunError(sys_exit_code=sys_exit_code)
+        raise NoAnalysisFound("No analysis results found", sys_exit_code=sys_exit_code)
 
     plugin_hooks.mqc_trigger("after_modules")
 

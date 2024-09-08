@@ -1,7 +1,8 @@
-""" MultiQC submodule to parse output from Picard RrbsSummaryMetrics """
+"""MultiQC submodule to parse output from Picard RrbsSummaryMetrics"""
 
 import logging
 from collections import OrderedDict
+from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
@@ -13,7 +14,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard RrbsSummaryMetrics reports and parse their data"""
 
-    data_by_sample = dict()
+    data_by_sample: Dict = dict()
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/rrbs_metrics", filehandles=True):
@@ -56,7 +57,7 @@ def parse_reports(module):
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -96,8 +97,8 @@ def parse_reports(module):
     module.general_stats_addcols(data_by_sample, headers, namespace="RrbsSummaryMetrics")
 
     # Make the bar plot of converted bases
-    pdata_cpg = dict()
-    pdata_noncpg = dict()
+    pdata_cpg: Dict = dict()
+    pdata_noncpg: Dict = dict()
     for s_name in data_by_sample.keys():
         pdata_cpg[s_name] = dict()
         pdata_cpg[s_name]["converted"] = data_by_sample[s_name]["CPG_BASES_CONVERTED"]
@@ -130,7 +131,7 @@ def parse_reports(module):
     )
 
     # Make the bar plot of processed reads
-    pdata = dict()
+    pdata: Dict = dict()
     for s_name in data_by_sample:
         pdata[s_name] = dict()
         pdata[s_name]["with_no_cpg"] = data_by_sample[s_name]["READS_WITH_NO_CPG"]
@@ -162,4 +163,4 @@ def parse_reports(module):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()

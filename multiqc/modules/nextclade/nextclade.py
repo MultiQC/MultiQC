@@ -1,23 +1,24 @@
-"""MultiQC module to parse output from Nextclade"""
-
 import csv
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Nextclade",
             anchor="nextclade",
             href="https://github.com/nextstrain/nextclade",
-            info="does viral genome alignment, clade assignment, mutation calling, and quality checks",
+            info="Viral genome alignment, clade assignment, mutation calling, and quality checks",
+            extra="""
+            Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences 
+            and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of 
+            the samples by performing several quality control checks on the input sequences.
+            """,
             doi="10.21105/joss.03773",
         )
 
@@ -307,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
         table_config = {
             "namespace": "Nextclade",
             "id": "nextclade_run_table",
-            "table_title": "Nextclade Run details",
+            "title": "Nextclade Run details",
         }
 
         return table.plot(self.nextclade_data, headers, table_config)

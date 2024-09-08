@@ -95,11 +95,11 @@ class ViolinPlot extends Plot {
       }
     });
     if (outliersWarning)
-      $("#table-violin-info-" + this.target).append(" For efficiency, separate points are shown only for outliers.");
+      $("#table-violin-info-" + this.anchor).append(" For efficiency, separate points are shown only for outliers.");
 
     let layout = this.layout;
     layout.height = this.violinHeight * metrics.length + this.extraHeight;
-    $("#" + this.target + "-wrapper").css("height", layout.height + "px");
+    $("#" + this.anchor + "-wrapper").css("height", layout.height + "px");
     if (metrics.length === 0) return [];
 
     layout.grid.rows = metrics.length;
@@ -298,8 +298,8 @@ class ViolinPlot extends Plot {
   }
 
   afterPlotCreated() {
-    let target = this.target;
-    let plot = document.getElementById(target);
+    let anchor = this.anchor;
+    let plot = document.getElementById(anchor);
 
     plot.on("plotly_hover", function (eventdata) {
       if (!eventdata.points) return;
@@ -312,7 +312,7 @@ class ViolinPlot extends Plot {
         });
         // console.log("hover", point.curveNumber);
         // hoverInfoDiv.html(point.data.text);
-        Plotly.Fx.hover(target, points, curveAxis);
+        Plotly.Fx.hover(anchor, points, curveAxis);
       }
     });
   }

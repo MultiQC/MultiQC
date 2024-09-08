@@ -1,5 +1,3 @@
-"""MultiQC module to parse output from Samblaster"""
-
 import logging
 import os
 import re
@@ -7,22 +5,18 @@ import re
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 VERSION_REGEX = r"Version\ (\d{1}.\d+.\d+)"
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """Samblaster"""
-
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Samblaster",
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",
-            info="is a tool to mark duplicates and extract discordant and split reads from sam files.",
+            info="Marks duplicates and extracts discordant and split reads from sam files.",
             doi="10.1093/bioinformatics/btu314",
         )
 

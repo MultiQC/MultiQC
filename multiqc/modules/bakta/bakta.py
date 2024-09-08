@@ -1,22 +1,24 @@
-"""MultiQC module to parse output from Bakta"""
-
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
 
-# Initialise the logger
 log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
+    summary text file used is included in the Bakta output since v1.3.0. The MultiQC module was written for
+    the output of v1.7.0.
+    """
+
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="Bakta",
             anchor="bakta",
             href="https://github.com/oschwengers/bakta",
-            info="is a tool for the rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
+            info="Rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
             doi="10.1099/mgen.0.000685",
         )
 

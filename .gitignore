@@ -6,7 +6,8 @@ multiqc_plots/
 /examples/
 /result
 /benchmarks
-/tmp/
+/tmp
+/playground
 
 # CI tooling
 .ruff_cache
@@ -51,7 +52,7 @@ runTest.sh
 venv/
 
 # Related repos
-/test_data/
+/test-data/
 /website/
 /usage/
 

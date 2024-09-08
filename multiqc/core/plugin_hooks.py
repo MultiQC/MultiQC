@@ -1,11 +1,13 @@
-""" MultiQC plugin hooks. Enables MultiQC plugins
+"""MultiQC plugin hooks. Enables MultiQC plugins
 to run their own custom subroutines at predefined
-trigger points during MultiQC execution. """
+trigger points during MultiQC execution."""
+
+from typing import Dict, List
 
 from importlib_metadata import entry_points
 
 # Load the hooks
-hook_functions = {}
+hook_functions: Dict[str, List] = {}
 for entry_point in entry_points(group="multiqc.hooks.v1"):
     try:
         hook_functions[entry_point.name].append(entry_point.load())

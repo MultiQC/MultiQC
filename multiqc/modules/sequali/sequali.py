@@ -1,4 +1,3 @@
-"""MultiQC module to parse output from Sequali"""
 import json
 import logging
 import textwrap
@@ -82,16 +81,16 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """
-    Sequali module class
-    """
-
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Sequali",
             anchor="sequali",
             href="https://github.com/rhpvorderman/sequali",
-            info="Universal sequencing QC",
+            info="Sequencing quality control for both long-read and short-read data",
+            extra="""
+            Features adapter search, overrepresented sequence  analysis and duplication analysis and supports
+            FASTQ and uBAM inputs.
+            """,
             doi="10.5281/zenodo.10822485",
         )
 
@@ -251,7 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Sequali: Sequence Counts",
                 "ylab": "Number of reads",
                 "cpswitch_counts_label": "Number of reads",
-                "hide_zero_cats": False,
+                "hide_empty": False,
             },
         )
 

@@ -1,6 +1,8 @@
-""" MultiQC submodule to parse output from Picard MarkDuplicates """
+"""MultiQC submodule to parse output from Picard MarkDuplicates"""
 
 import logging
+from typing import Dict, List
+
 import math
 from collections import defaultdict
 
@@ -12,20 +14,20 @@ from multiqc.plots import bargraph
 log = logging.getLogger(__name__)
 
 
-def parse_reports(module, sp_key="picard/markdups"):
+def parse_reports(
+    module,
+    sp_key="picard/markdups",
+):
     """
     Find Picard MarkDuplicates reports and parse their data.
     Note that this function is also used by the biobambam2 module, that's why
     the parameter.
     """
 
-    data_by_sample = dict()
+    data_by_sample: Dict = dict()
 
     # Get custom config value
-    try:
-        merge_multiple_libraries = config.picard_config["markdups_merge_multiple_libraries"]
-    except (AttributeError, KeyError):
-        merge_multiple_libraries = True
+    merge_multiple_libraries: bool = getattr(config, "picard_config", {}).get("markdups_merge_multiple_libraries", True)
 
     # Function to save results at end of table
     def save_table_results(s_name, keys, parsed_data, recompute_merged_metrics):
@@ -70,7 +72,7 @@ def parse_reports(module, sp_key="picard/markdups"):
     # Go through logs and find Metrics
     for f in module.find_log_files(sp_key, filehandles=True):
         s_name = f["s_name"]
-        parsed_lists = defaultdict(list)
+        parsed_lists: Dict[str, List] = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
@@ -112,18 +114,19 @@ def parse_reports(module, sp_key="picard/markdups"):
                     continue
 
                 # Parse the column values
-                assert len(vals) == len(keys), (keys, vals, f)
-                for k, v in zip(keys, vals):
-                    # More than one library present and merging stats
-                    if k in parsed_lists:
-                        recompute_merged_metrics = True
+                if keys is not None:
+                    assert len(vals) == len(keys), (keys, vals, f)
+                    for k, v in zip(keys, vals):
+                        # More than one library present and merging stats
+                        if k in parsed_lists:
+                            recompute_merged_metrics = True
 
-                    v = v.strip()
-                    try:
-                        v = float(v)
-                    except ValueError:
-                        pass
-                    parsed_lists[k].append(v)
+                        v = v.strip()
+                        try:
+                            v = float(v)
+                        except ValueError:
+                            pass
+                        parsed_lists[k].append(v)
 
         parsed_data = {}
         for k in parsed_lists:
@@ -140,7 +143,7 @@ def parse_reports(module, sp_key="picard/markdups"):
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
     if len(data_by_sample) == 0:
-        return 0
+        return set()
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
@@ -226,7 +229,7 @@ def parse_reports(module, sp_key="picard/markdups"):
     )
 
     # Return the number of detected samples to the parent module
-    return len(data_by_sample)
+    return data_by_sample.keys()
 
 
 def calculate_percentage_duplication(d):

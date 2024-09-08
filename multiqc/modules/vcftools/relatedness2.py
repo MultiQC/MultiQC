@@ -1,4 +1,4 @@
-""" MultiQC module to parse relatedness output from vcftools relatedness """
+"""MultiQC module to parse relatedness output from vcftools relatedness"""
 
 import csv
 import logging
