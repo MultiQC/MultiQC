@@ -1,4 +1,4 @@
-import json
+ import json
 import logging
 
 #################################################
@@ -37,7 +37,7 @@ def resolve(pairs):
 # Json and stats parsing functions
 def parse_json(name, f):
     app_dict = {}
-    apps = json.loads(f)
+    apps = json.loads(f, strict=False)
     repeated_apps = []
 
     # Will fail if old format is usef
