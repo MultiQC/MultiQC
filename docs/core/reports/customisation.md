@@ -1000,13 +1000,13 @@ my_var: null
 if myvar is none # Note - Lower case!
 ```
 
-## Sample grouping in the general statistics table
+## Sample grouping in the General Statistics table
 
-MultiQC aims at grouping all data for a sample within one row of the General Statistics table. Some modules, however, work with chunks of a sample, e.g. FastQC can be run separately on forward and reverse reads, resulting in how-empty rows like this:
+MultiQC aims at having one row per sample in the General Statistics table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
 
 <img src="../../../docs/images/genstats_grouping_ungrouped.png" alt="General Statistics table with sample grouping" width="500"/>
 
-For those modules that support this, MultiQC offers an config option `generalstats_sample_merge_groups` to group such cunks in the general stats table:
+For those modules that support this, MultiQC offers a config option `generalstats_sample_merge_groups` that maps chunk labels to file name patterns. For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
 
 ```yaml
 generalstats_sample_merge_groups:
@@ -1014,14 +1014,39 @@ generalstats_sample_merge_groups:
   "R2": ["_R2"]
 ```
 
-Which this block in the config, for each `SAMPLE_R1`-`SAMPLE_R2` pair, FastQC will add a new virtual sample `SAMPLE`, constucted by merging the `SAMPLE_R1` and `SAMPLE_R2` data - summing up, or calculating the weighted average, whatever is relevant for each given statistic.
+FastQC will try trim to `_R1` and `_R1` from each sample name ending, and on success, will map them to the trimmed group name. Specifically, it will merge stats for `SAMPLE_R1` and `SAMPLE_R2` into a new virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
 
 <img src="../../../docs/images/genstats_grouping_grouped.png" alt="General Statistics table with sample grouping" width="500"/>
 
-Clicking on the row header will expand the row to show the individual chunks data.
+Clicking on the row header will expand the row to show the individual chunks data:
 
 <img src="../../../docs/images/genstats_grouping_expanded.png" alt="General Statistics table with sample grouping" width="500"/>
 
-This wouldn't affect plots or any data in sections, only the General Stats table.
+More sofisticated patterns are supported, for example, listing options, or using regular expression with `regex`:
 
-Only a handful of modules are supported (FastQC and Cutadapt at the moment). If you'd like to add support for more modules, please open an issue or submit a pull request.
+```yaml
+generalstats_sample_merge_groups:
+  "Read 1":
+    - "_R1"
+    - type: regex
+      pattern: "[_.-][rR]?1$"
+  "Read 2":
+    - "_R2"
+    - type: regex
+      pattern: "[_.-][rR]?2$"
+```
+
+The format of supported types is the same as for [Cleaning extensions](../getting_started/config.md#cleaning-extensions):
+
+- "truncate": The default mode. To get the group name, remove the pattern from the end of the string.
+- "remove": Remove the pattern from the middle.
+- "regex": Match a regular expression pattern and remove the matched part.
+- "regex_keep": Match a regular expression pattern and keep only the matched part.
+
+:::note
+This only works for the General Statistics table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](./customisation.md#running-modules-multiple-times) for each groupping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+:::
+
+:::note
+Only a handful of modules are supported (like FastQC and Cutadapt). If you'd like to add support for more modules, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
+:::
