@@ -1002,9 +1002,9 @@ if myvar is none # Note - Lower case!
 
 ## Sample grouping in the General Statistics table
 
-MultiQC aims at having one row per sample in the General Statistics table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
+MultiQC aims at having one row per sample in the _General Statistics_ table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
 
-<img src="../../../docs/images/genstats_grouping_ungrouped.png" alt="General Statistics table with sample grouping" width="500"/>
+![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
 For those modules that support this, MultiQC offers a config option `generalstats_sample_merge_groups` that maps chunk labels to file name patterns. For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
 
@@ -1016,11 +1016,11 @@ generalstats_sample_merge_groups:
 
 FastQC will try trim to `_R1` and `_R1` from each sample name ending, and on success, will map them to the trimmed group name. Specifically, it will merge stats for `SAMPLE_R1` and `SAMPLE_R2` into a new virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
 
-<img src="../../../docs/images/genstats_grouping_grouped.png" alt="General Statistics table with sample grouping" width="500"/>
+![Table: General Statistics table with sample grouping](../../../docs/images/genstats_grouping_grouped.png)
 
 Clicking on the row header will expand the row to show the individual chunks data:
 
-<img src="../../../docs/images/genstats_grouping_expanded.png" alt="General Statistics table with sample grouping" width="500"/>
+![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
 
 More sofisticated patterns are supported, for example, listing options, or using regular expression with `regex`:
 
@@ -1044,9 +1044,9 @@ The format of supported types is the same as for [Cleaning extensions](../gettin
 - "regex_keep": Match a regular expression pattern and keep only the matched part.
 
 :::note
-This only works for the General Statistics table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](./customisation.md#running-modules-multiple-times) for each groupping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+Only a handful of modules are supported (like FastQC and Cutadapt). If you'd like to add support for more modules, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
 :::
 
-:::note
-Only a handful of modules are supported (like FastQC and Cutadapt). If you'd like to add support for more modules, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
+:::tip
+This only works for the _General Statistics_ table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](./customisation.md#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
