@@ -1022,7 +1022,7 @@ Clicking on the row header will expand the row to show the individual chunks dat
 
 ![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
 
-More sofisticated patterns are supported, for example, listing options, or using regular expression with `regex`:
+More sofisticated patterns are supported, for example, listing options, or using regular expression with `type: regex`:
 
 ```yaml
 generalstats_sample_merge_groups:
