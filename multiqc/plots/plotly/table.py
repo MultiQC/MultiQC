@@ -61,12 +61,12 @@ def make_table(
         if header.shared_key is not None:
             shared_key = f" data-shared-key={header.shared_key}"
 
-        hide = ""
-        muted = ""
+        td_hide_cls = ""
+        tr_muted_cls = ""
         checked = ' checked="checked"'
         if header.hidden:
-            hide = "hidden"
-            muted = " text-muted"
+            td_hide_cls = " column-hidden"
+            tr_muted_cls = " text-muted"
             checked = ""
             hidden_cols += 1
 
@@ -80,7 +80,7 @@ def make_table(
         )
 
         col_to_th[col_anchor] = (
-            f'<th id="header_{col_anchor}" class="{col_anchor} {hide}" {data_attr}>{cell_contents}</th>'
+            f'<th id="header_{col_anchor}" class="{col_anchor}{td_hide_cls}" {data_attr}>{cell_contents}</th>'
         )
         col_to_hidden[col_anchor] = header.hidden
 
@@ -89,7 +89,7 @@ def make_table(
         if violin_anchor:
             data += f" data-violin-anchor='{violin_anchor}'"
         col_to_modal_headers[col_anchor] = f"""
-        <tr class="{col_anchor}{muted}" style="background-color: rgba({header.color}, 0.15);">
+        <tr class="{col_anchor}{tr_muted_cls}" style="background-color: rgba({header.color}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{col_anchor}" {data}>
@@ -239,7 +239,7 @@ def make_table(
                 if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}" {col}>{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}" {col}>{valstr}</td>'
                     )
 
                 # Build table cell background colour bar
@@ -255,13 +255,13 @@ def make_table(
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {hide}">{wrapper_html}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {td_hide_cls}">{wrapper_html}</td>'
                     )
 
                 # Scale / background colours are disabled
                 else:
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}">{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}">{valstr}</td>'
                     )
 
                 # Is this cell hidden or empty?
@@ -434,9 +434,11 @@ def make_table(
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
-                    hide = "hide" if col_to_hidden[col_anchor] else ""
+                    td_hide_cls = "hide" if col_to_hidden[col_anchor] else ""
                     sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
-                    cell_html = f'<td class="data-coloured {col_anchor} {hide}" data-sorting-val="{sorting_val}"></td>'
+                    cell_html = (
+                        f'<td class="data-coloured {col_anchor} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
+                    )
                 html += cell_html
             html += "</tr>"
     html += "</tbody></table></div>"
