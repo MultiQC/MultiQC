@@ -1038,10 +1038,10 @@ generalstats_sample_merge_groups:
 
 The format of supported types is the same as for [Cleaning extensions](../getting_started/config.md#cleaning-extensions):
 
-- "truncate": The default mode. To get the group name, remove the pattern from the end of the string.
-- "remove": Remove the pattern from the middle.
-- "regex": Match a regular expression pattern and remove the matched part.
-- "regex_keep": Match a regular expression pattern and keep only the matched part.
+- `"truncate"`: The default mode. To get the group name, remove the pattern from the end of the string.
+- `"remove"`: Remove the pattern from the middle.
+- `"regex"`: Match a regular expression pattern and remove the matched part.
+- `"regex_keep"`: Match a regular expression pattern and keep only the matched part.
 
 :::note
 Only a handful of modules are supported (like FastQC and Cutadapt). If you'd like to add support for more modules, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
