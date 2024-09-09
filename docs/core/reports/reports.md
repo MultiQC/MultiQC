@@ -51,6 +51,23 @@ plus options to show/hide and change the order of columns.
 
 ![genstats_config_cols](../../../docs/images/genstats_config_cols.png)
 
+### Sample grouping
+
+For certain modules, samples could be grouped, if configured. For example, FastQC and Cutadapt can group forward and reverse reads and a "virtual" sample representing the merged stats for the group:
+
+![genstats_grouped_samples](../../../docs/images/genstats_grouping_grouped.png)
+
+If a FastQC report was available both for `SAMPLE_R1` and `SAMPLE_R1`, FastQC would add a "virtual" sample `SAMPLE` by "merging" the available metrics:
+
+- The resulting `Seqs` (number of sequences) will be the sum of `Seq` of `SAMPLE_R1` and `SAMPLE_R2`,
+- `GC%`, `Dups`, `Median Len`, and `Mean cov` will be the weighted average using `Seqs` as a weight.
+
+Cutadapt will average `% BP Trimmed` using the number of processed base pairs as weigth.
+
+You can inspect the individual samples within a group by clicking on the arrow:
+
+![genstats_grouped_samples_expanded](../../../docs/images/genstats_grouping_expanded.png)
+
 ## Plots
 
 MultiQC modules can take plot more extensive data in the sections below
