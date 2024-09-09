@@ -1006,12 +1006,12 @@ MultiQC aims at having one row per sample in the General Statistics table. Some 
 
 ![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
-For those modules that support this, MultiQC offers a config option `generalstats_sample_merge_groups` that maps chunk labels to file name patterns. For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
+For those modules that support this, MultiQC offers a config option `generalstats_merge` that maps chunk labels to file name patterns. For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
 
 ```yaml
-generalstats_sample_merge_groups:
-  "R1": ["_R1"]
-  "R2": ["_R2"]
+generalstats_merge:
+  "R1": "_R1"
+  "R2": "_R2"
 ```
 
 FastQC will try trim to `_R1` and `_R1` from each sample name ending, and on success, will map them to the trimmed group name. Specifically, it will merge stats for `SAMPLE_R1` and `SAMPLE_R2` into a new virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
@@ -1025,7 +1025,7 @@ Clicking on the row header will expand the row to show the individual chunks dat
 More sofisticated patterns are supported, for example, listing options, or using regular expression with `type: regex`:
 
 ```yaml
-generalstats_sample_merge_groups:
+generalstats_merge:
   "Read 1":
     - "_R1"
     - type: regex
