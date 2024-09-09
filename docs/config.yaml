@@ -1,5 +1,5 @@
 nav:
-  - Getting Started:
+  - Getting started:
       - index.mdx
       - getting_started/quick_start.md
       - getting_started/installation.md
@@ -8,7 +8,7 @@ nav:
   - Reports:
       - reports/reports.md
       - reports/customisation.md
-  - Custom Content:
+  - Custom content:
       - custom_content/index.md
   - Usage:
       - usage/downstream.md
