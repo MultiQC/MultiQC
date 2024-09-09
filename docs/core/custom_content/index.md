@@ -1,5 +1,5 @@
 ---
-title: Custom Content
+title: Custom content
 description: Report on your data, even without a MultiQC module
 ---
 
