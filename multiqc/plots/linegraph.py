@@ -69,17 +69,15 @@ def plot(
 
     # Add on annotation data series
     if pconf.extra_series:
-        ess: Union[SeriesT, List[SeriesT], List[List[SeriesT]]] = pconf.extra_series or {}
+        ess: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
         list_of_list_of_series: List[List[Series]]
         if isinstance(ess, list):
             if isinstance(ess[0], list):
-                list_of_list_of_series = [
-                    [Series(**s) if isinstance(s, dict) else cast(Series, s) for s in es] for es in ess
-                ]
+                list_of_list_of_series = cast(List[List[Series]], ess)
             else:
-                list_of_list_of_series = [[Series(**s) if isinstance(s, dict) else cast(Series, s) for s in ess]]
+                list_of_list_of_series = [cast(List[Series], ess)]
         else:
-            list_of_list_of_series = [[Series(**ess) if isinstance(ess, dict) else ess]]
+            list_of_list_of_series = [[ess]]
 
         for i, list_of_raw_series in enumerate(list_of_list_of_series):
             assert isinstance(list_of_raw_series, list)

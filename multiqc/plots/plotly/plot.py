@@ -7,7 +7,7 @@ import re
 import string
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -89,7 +89,7 @@ class PConfig(ValidatedConfig):
                 title=cls.__name__,
             )
         elif isinstance(pconfig, PConfig):
-            return cls(**pconfig.model_dump())
+            return pconfig
         else:
             return cls(**pconfig)
 

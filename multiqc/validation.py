@@ -97,6 +97,9 @@ class ValidatedConfig(BaseModel):
             if k.endswith("_") and k[:-1] in values:
                 values[k] = values.pop(k[:-1])
 
+        # Remove None values
+        values = {k: v for k, v in values.items() if v is not None}
+
         # Check unrecognized fields
         filtered_values = {}
         for name, val in values.items():

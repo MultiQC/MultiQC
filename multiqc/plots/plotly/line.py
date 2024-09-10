@@ -117,7 +117,7 @@ class LinePlotConfig(PConfig):
     categories: bool = False
     smooth_points: Optional[int] = 500
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
-    extra_series: Optional[Union[SeriesT, List[SeriesT], List[List[SeriesT]]]] = None
+    extra_series: Optional[Union[Series, List[Series], List[List[Series]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
