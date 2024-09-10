@@ -1006,7 +1006,9 @@ MultiQC does its best to have one row per sample in the General Statistics table
 
 ![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
-For those modules that support this, MultiQC offers a config option `generalstats_merge` that maps chunk labels to file name patterns. For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
+To improve how these samples are shown, MultiQC attempts to [group such samples](../reports/#sample-grouping). For modules that support this option, MultiQC offers a config option `generalstats_merge` that maps chunk labels to file name patterns.
+
+For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
 
 ```yaml
 generalstats_merge:
