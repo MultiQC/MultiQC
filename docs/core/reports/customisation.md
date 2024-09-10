@@ -1002,7 +1002,7 @@ if myvar is none # Note - Lower case!
 
 ## Sample grouping in the General Statistics table
 
-MultiQC aims at having one row per sample in the General Statistics table. Some modules, however, work with chunks of a sample, a prominent example being FastQC that can be run separately for forward and reverse reads, resulting in half-empty rows like as following:
+MultiQC does its best to have one row per sample in the General Statistics table. Some modules, however, may produce multiple results per sample. These will be treated as separate samples alongside the shorter "merged" samplename from downstream steps, resulting in half-empty rows. A prominent example of this is FastQC, that can be run separately for forward and reverse reads:
 
 ![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
