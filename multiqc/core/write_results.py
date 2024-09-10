@@ -23,8 +23,8 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import ColumnKeyT
-from multiqc.types import AnchorT
+from multiqc.plots.table_object import ColumnKey
+from multiqc.types import Anchor
 from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
@@ -312,8 +312,8 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0 and not all_hidden:
         # Clean previous general stats table if running write_report interactively second time
-        if AnchorT("general_stats_table") in report.html_ids_by_scope[None]:
-            report.html_ids_by_scope[None].remove(AnchorT("general_stats_table"))
+        if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))
             del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",

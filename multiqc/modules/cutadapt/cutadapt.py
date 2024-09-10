@@ -1,16 +1,16 @@
 import functools
+import json
 import logging
 import os
 import re
 import shlex
-import json
 from typing import Dict
 
 from packaging import version
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph, linegraph
-from multiqc.types import ColumnKeyT, AnchorT, SampleNameT
+from multiqc.types import Anchor, ColumnKey, SampleName
 
 log = logging.getLogger(__name__)
 
@@ -39,17 +39,17 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Cutadapt",
-            anchor=AnchorT("cutadapt"),
+            anchor=Anchor("cutadapt"),
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data: Dict[SampleNameT, Dict] = dict()
-        self.cutadapt_length_counts: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
-        self.cutadapt_length_exp: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
-        self.cutadapt_length_obsexp: Dict[str, Dict[SampleNameT, Dict]] = {"default": dict()}
+        self.cutadapt_data: Dict[SampleName, Dict] = dict()
+        self.cutadapt_length_counts: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
+        self.cutadapt_length_exp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
+        self.cutadapt_length_obsexp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        s_name = SampleNameT(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f=f))
+        s_name = SampleName(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f=f))
         if s_name in self.cutadapt_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -250,10 +250,10 @@ class MultiqcModule(BaseMultiqcModule):
                     ):
                         input_fqs.append(x)
                 if input_fqs:
-                    s_name = SampleNameT(self.clean_s_name(input_fqs, f))
+                    s_name = SampleName(self.clean_s_name(input_fqs, f))
                 else:
                     # Manage case where sample name is '-' (reading from stdin)
-                    s_name = SampleNameT(f["s_name"])
+                    s_name = SampleName(f["s_name"])
 
                 if s_name in self.cutadapt_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -298,7 +298,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
-                        plot_sname = SampleNameT(f"{s_name} - {log_section}")
+                        plot_sname = SampleName(f"{s_name} - {log_section}")
                     self.cutadapt_length_counts[end][plot_sname] = dict()
                     self.cutadapt_length_exp[end][plot_sname] = dict()
                     self.cutadapt_length_obsexp[end][plot_sname] = dict()
@@ -342,9 +342,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Merge Read 1 + Read 2 data
         self.general_stats_addcols(
-            {s: {ColumnKeyT(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
+            {s: {ColumnKey(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
             {
-                ColumnKeyT("percent_trimmed"): {
+                ColumnKey("percent_trimmed"): {
                     "title": "% BP Trimmed",
                     "description": "% Total Base Pairs trimmed",
                     "max": 100,
@@ -355,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             group_samples_config=SampleGroupingConfig(
                 cols_to_weighted_average=[
-                    (ColumnKeyT("percent_trimmed"), ColumnKeyT("bp_processed")),
+                    (ColumnKey("percent_trimmed"), ColumnKey("bp_processed")),
                 ],
             ),
         )
