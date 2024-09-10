@@ -951,7 +951,6 @@ truvari/bench:
   fn: "log.txt"
   num_lines: 2
 umicollapse:
-  fn: "*_UMICollapse.log"
   num_lines: 100
   contents: "UMI collapsing finished in "
 umitools/extract:
