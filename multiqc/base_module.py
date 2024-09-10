@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypedDict, Union, cast
 
 import markdown
 import packaging.version
@@ -76,6 +76,12 @@ class SampleGroupingConfig:
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
 
 
+class LoadedFileDict(report.FileDict):
+    sp_key: str
+    s_name: str
+    f: Optional[Union[str, io.IOBase]]
+
+
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
@@ -83,7 +89,7 @@ class BaseMultiqcModule:
 
     def __init__(
         self,
-        name="base",
+        name: str = "base",
         anchor: Anchor = Anchor("base"),
         target=None,
         href: Union[str, List[str], None] = None,
@@ -95,7 +101,7 @@ class BaseMultiqcModule:
         doi: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        self.name = self.mod_cust_config.get("name", name)
+        self.name: str = self.mod_cust_config.get("name", name)
         # cannot be overwritten for repeated modules with path_filters:
         self.id: ModuleId = ModuleId(self.mod_id or anchor)
         self.anchor = self.mod_cust_config.get("anchor", anchor)
@@ -232,13 +238,9 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        if not isinstance(sp_key, str):
-            logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
-            return
-
-        for f in report.files.get(ModuleId(sp_key), []):
+        for found_file in report.files.get(ModuleId(sp_key), []):
             # Make a note of the filename so that we can report it if something crashes
-            last_found_file: str = os.path.join(f["root"], f["fn"])
+            last_found_file: str = os.path.join(found_file["root"], found_file["fn"])
             report.last_found_file = last_found_file
 
             # Filter out files based on exclusion patterns
@@ -281,8 +283,14 @@ class BaseMultiqcModule:
                     )
 
             # Make a sample name from the filename
-            f["sp_key"] = sp_key
-            f["s_name"] = self.clean_s_name(f["fn"], f)
+            f: LoadedFileDict = {
+                "root": found_file["root"],
+                "fn": found_file["fn"],
+                "sp_key": sp_key,
+                "s_name": self.clean_s_name(found_file["fn"]),
+                "f": None,
+            }
+
             if filehandles or filecontents:
                 try:
                     # Custom content module can now handle image files
@@ -622,7 +630,7 @@ class BaseMultiqcModule:
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[Dict, str]] = None,
+        f: Optional[Union[LoadedFileDict, str]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
@@ -889,7 +897,7 @@ class BaseMultiqcModule:
             namespace = _headers[col_id].get("namespace", namespace)
             _headers[col_id]["namespace"] = self.name
             if namespace:
-                _headers[col_id]["namespace"] = self.name + ": " + namespace
+                _headers[col_id]["namespace"] = self.name + ": " + str(namespace)
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _headers[col_id].get("title", col_id)
 
@@ -897,11 +905,12 @@ class BaseMultiqcModule:
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
 
-    def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
+    def add_data_source(self, f: Optional[LoadedFileDict] = None, s_name=None, source=None, module=None, section=None):
         if s_name is not None and self.is_ignore_sample(s_name):
             return
         if f is None:
             logger.warning(f"Tried to add data source for {self.name}, but missing file info")
+            return
         if module is None:
             module = self.name
         if section is None:
@@ -913,7 +922,10 @@ class BaseMultiqcModule:
         report.data_sources[module][section][s_name] = source
 
     def add_software_version(
-        self, version: Optional[str] = None, sample: Optional[str] = None, software_name: Optional[str] = None
+        self,
+        version: Optional[str] = None,
+        sample: Optional[str] = None,
+        software_name: Optional[str] = None,
     ):
         """Save software versions for module."""
         # Don't add if version is None. This allows every module to call this function

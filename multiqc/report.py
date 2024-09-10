@@ -70,11 +70,9 @@ class Runtimes:
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
 
 
-class FileDict(TypedDict, total=False):
+class FileDict(TypedDict):
     fn: str
     root: str
-    s_name: str
-    source: str
 
 
 # Uninitialised global variables for static typing
@@ -586,7 +584,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
                                 # Looks good! Remember this file
                                 if module_id not in files:
                                     files[module_id] = []
-                                files[module_id].append(FileDict(search_f.to_dict()))
+                                files[module_id].append(search_f.to_dict())
                                 file_search_stats[module_id] = file_search_stats.get(module_id, set()) | {path}
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {module_id}")
