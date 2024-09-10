@@ -6,21 +6,21 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import List, Dict, Union, Tuple, cast, Set, Optional, Any
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import yaml
 from pydantic import BaseModel
 
-from multiqc import config, report, Plot
+from multiqc import Plot, config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, heatmap, linegraph, scatter, table, box
+from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
+from multiqc.plots.plotly.bar import BarPlotConfig
+from multiqc.plots.plotly.box import BoxPlotConfig
+from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.plotly.line import LinePlotConfig
 from multiqc.plots.plotly.scatter import ScatterConfig
-from multiqc.plots.plotly.box import BoxPlotConfig
-from multiqc.plots.plotly.bar import BarPlotConfig
-from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.table_object import TableConfig
-from multiqc.types import ModuleIdT, AnchorT, SectionIdT
+from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.validation import ConfigValidationError
 
 # Initialise the logger
@@ -45,21 +45,21 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    ccdict_by_id: Dict[ModuleIdT, CcDict] = {}
+    ccdict_by_id: Dict[ModuleId, CcDict] = {}
 
     # Dictionary to hold search patterns - start with those defined in the config
-    search_pattern_keys: List[ModuleIdT] = [ModuleIdT("custom_content")]
+    search_pattern_keys: List[ModuleId] = [ModuleId("custom_content")]
 
     # First - find files using patterns described in the config
     mod_cust_config = {}
-    config_custom_data_id: ModuleIdT
+    config_custom_data_id: ModuleId
     for config_custom_data_id, config_custom_data_item in config.custom_data.items():
         # Check that we have a dictionary
         if not isinstance(config_custom_data_item, dict):
             log.debug(f"config.custom_data row was not a dictionary: {config_custom_data_id}")
             continue
-        cc_id: ModuleIdT = config_custom_data_item.get("id", config_custom_data_id)
-        cc_mod_anchor: AnchorT = config_custom_data_item.get("anchor", config_custom_data_id)
+        cc_id: ModuleId = config_custom_data_item.get("id", config_custom_data_id)
+        cc_mod_anchor: Anchor = config_custom_data_item.get("anchor", config_custom_data_id)
 
         # Data supplied in with config (e.g. from a multiqc_config.yaml file in working directory)
         if "data" in config_custom_data_item:
@@ -100,7 +100,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Must just be configuration for a separate custom-content class
         mod_cust_config[cc_id] = config_custom_data_item
 
-    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=AnchorT("custom_content"))
+    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=Anchor("custom_content"))
 
     # Now go through each of the file search patterns
     for config_custom_data_id in search_pattern_keys:
@@ -172,7 +172,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # Look for configuration details in the header
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
-                c_id: ModuleIdT
+                c_id: ModuleId
                 if m_config is not None:
                     c_id = m_config.get("id", config_custom_data_id)
                     # Update the base config with anything parsed from the file
@@ -215,7 +215,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 else:
                     # Did we get a new section id from the file?
                     if parsed_conf.get("id") is not None:
-                        c_id = ModuleIdT(parsed_conf["id"])
+                        c_id = ModuleId(parsed_conf["id"])
                     if c_id not in ccdict_by_id:
                         ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
@@ -249,8 +249,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         raise ModuleNoSamplesFound
 
     # Go through each data type
-    parsed_modules: Dict[ModuleIdT, MultiqcModule] = dict()
-    mod_id: ModuleIdT
+    parsed_modules: Dict[ModuleId, MultiqcModule] = dict()
+    mod_id: ModuleId
     for mod_id, ccdict in ccdict_by_id.items():
         # General Stats
         assert isinstance(ccdict.config, dict)
@@ -286,13 +286,13 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         else:
             # Is this file asking to be a sub-section under a parent section?
             mod_id = ccdict.config.get("parent_id", ccdict.config.get("id", mod_id))
-            section_id: SectionIdT = ccdict.config.get("section_id", mod_id)
+            section_id: SectionId = ccdict.config.get("section_id", mod_id)
 
-            mod_anchor: Optional[AnchorT] = None
+            mod_anchor: Optional[Anchor] = None
             if "parent_anchor" in ccdict.config:
                 mod_anchor = ccdict.config["parent_anchor"]
 
-            section_anchor: Optional[AnchorT] = None
+            section_anchor: Optional[Anchor] = None
             if "section_anchor" in ccdict.config:
                 section_anchor = ccdict.config["section_anchor"]
             elif "anchor" in ccdict.config:
@@ -300,11 +300,11 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
             # Assuring anchors are unique, but prioritizing section over module
             if not section_anchor:
-                section_anchor = AnchorT(section_id)
+                section_anchor = Anchor(section_id)
             if not mod_anchor:
-                mod_anchor = AnchorT(mod_id)
+                mod_anchor = Anchor(mod_id)
             if section_anchor == mod_anchor:
-                section_anchor = AnchorT(f"{section_anchor}-section")
+                section_anchor = Anchor(f"{section_anchor}-section")
 
             # If we have any custom configuration from a MultiQC config file, update here
             # This is done earlier for tsv files too, but we do it here so that it overwrites what was in the file
@@ -355,7 +355,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 class MultiqcModule(BaseMultiqcModule):
     """Module class, used for each custom content type"""
 
-    def __init__(self, id: ModuleIdT, anchor: AnchorT, cc_dict: CcDict):
+    def __init__(self, id: ModuleId, anchor: Anchor, cc_dict: CcDict):
         modname: str = id.replace("_", " ").title()
         if modname == "":
             modname = "Custom Content"
@@ -401,7 +401,7 @@ class MultiqcModule(BaseMultiqcModule):
         # This needs overwriting again as it has already run on init
         self.intro = self._get_intro()
 
-    def add_cc_section(self, section_id: SectionIdT, section_anchor: AnchorT, ccdict: CcDict):
+    def add_cc_section(self, section_id: SectionId, section_anchor: Anchor, ccdict: CcDict):
         plot: Optional[Union[Plot, str]] = None
         content = None
 

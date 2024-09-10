@@ -7,7 +7,7 @@ from multiqc import config, report
 from multiqc.core.file_search import file_search
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.modules.custom_content import custom_module_classes
-from multiqc.types import AnchorT
+from multiqc.types import Anchor
 from multiqc.validation import ConfigValidationError
 
 
@@ -51,7 +51,7 @@ def test_custom_content(tmp_path):
     report.search_files(["custom_content"])
     custom_module_classes()
 
-    anchor = AnchorT(f"{id}-section-plot")
+    anchor = Anchor(f"{id}-section-plot")
     assert len(report.plot_by_id) == 1
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
@@ -89,7 +89,7 @@ def test_deprecated_fields(tmp_path, capsys):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT(f"{id}-section-plot")
+    anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
     assert report.plot_by_id[anchor].plot_type == "xy_line"
@@ -146,7 +146,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
     if not strict:
         # Still should produce output unless strict mode:
         assert len(report.plot_by_id) == 1
-        anchor = AnchorT(f"{id}-section-plot")
+        anchor = Anchor(f"{id}-section-plot")
         assert anchor in report.plot_by_id
         assert report.plot_by_id[anchor].id == id
         assert report.plot_by_id[anchor].plot_type == "xy_line"
@@ -175,7 +175,7 @@ def test_missing_id_and_title(tmp_path):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT(f"{id}-section-plot")
+    anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == id
     assert report.plot_by_id[anchor].plot_type == "xy_line"
@@ -210,7 +210,7 @@ sp:
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT("concordance_heatmap")
+    anchor = Anchor("concordance_heatmap")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == anchor
     assert report.plot_by_id[anchor].plot_type == "heatmap"
@@ -295,7 +295,7 @@ sp:
 
     # Expecting to see only one table, and no bar plot from the _mqc file
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT("last_o2o-section-plot")
+    anchor = Anchor("last_o2o-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == "last_o2o"
     assert report.plot_by_id[anchor].plot_type == "violin"
@@ -367,7 +367,7 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
 
     custom_module_classes()
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT(f"{id}-section-plot")
+    anchor = Anchor(f"{id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].plot_type == "violin"
     assert len(report.plot_by_id[anchor].datasets) == 1
@@ -416,7 +416,7 @@ def test_heatmap_with_numerical_cats(tmp_path):
     custom_module_classes()
 
     assert len(report.plot_by_id) == 1
-    anchor = AnchorT(f"{plot_id}-section-plot")
+    anchor = Anchor(f"{plot_id}-section-plot")
     assert anchor in report.plot_by_id
     assert report.plot_by_id[anchor].id == plot_id
     assert report.plot_by_id[anchor].plot_type == "heatmap"

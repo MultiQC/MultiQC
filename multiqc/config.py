@@ -22,7 +22,7 @@ import pyaml_env  # type: ignore
 import yaml
 from importlib_metadata import EntryPoint
 
-from multiqc.types import AnchorT, ModuleIdT, SectionIdT
+from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -197,7 +197,7 @@ data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
 report_section_order: Dict[
-    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+    Union[SectionId, ModuleId, Anchor], Union[str, Dict[str, int], Dict[str, Union[SectionId, ModuleId, Anchor]]]
 ]
 output_fn: Optional[str]
 filename: Optional[str]

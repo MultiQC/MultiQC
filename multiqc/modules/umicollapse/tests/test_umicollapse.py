@@ -1,6 +1,6 @@
 from multiqc import report
 from multiqc.modules.umicollapse import MultiqcModule
-from multiqc.plots.table_object import InputRowT
+from multiqc.plots.table_object import InputRow
 
 
 def test_parse(tmp_path):
@@ -47,7 +47,7 @@ UMI collapsing finished in 1077.717 seconds!
     assert len(report.general_stats_data) > 0
     assert report.general_stats_data[-1] == {
         "SRR19887568": [
-            InputRowT(
+            InputRow(
                 sample="SRR19887568",
                 data={
                     "input_reads": 53490614,

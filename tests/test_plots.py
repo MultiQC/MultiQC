@@ -7,7 +7,7 @@ from multiqc import Plot, config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.plotly.line import LinePlotConfig, Series
-from multiqc.types import AnchorT
+from multiqc.types import Anchor
 from multiqc.validation import ConfigValidationError
 
 
@@ -371,7 +371,7 @@ def test_extra_series_multiple_datasets():
         )
     )
 
-    anchor = AnchorT(plot_id)
+    anchor = Anchor(plot_id)
     assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 2
     assert len(report.plot_data[anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
     assert len(report.plot_data[anchor]["datasets"][0]["lines"][1]["pairs"]) == 1
@@ -399,7 +399,7 @@ def test_multiple_extra_series():
         )
     )
 
-    anchor = AnchorT(plot_id)
+    anchor = Anchor(plot_id)
     assert len(report.plot_data[anchor]["datasets"]) == 1
     assert len(report.plot_data[anchor]["datasets"][0]["lines"]) == 3
     assert len(report.plot_data[anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
@@ -425,7 +425,7 @@ def test_extra_series_multiple_datasets_different_series():
         )
     )
 
-    anchor = AnchorT(plot_id)
+    anchor = Anchor(plot_id)
     assert len(report.plot_data[anchor]["datasets"]) == 2
     for ds in report.plot_data[anchor]["datasets"]:
         assert len(ds["lines"]) == 2
@@ -450,7 +450,7 @@ def test_extra_series_multiple_datasets_multiple_series():
         )
     )
 
-    anchor = AnchorT(plot_id)
+    anchor = Anchor(plot_id)
     assert len(report.plot_data[anchor]["datasets"]) == 2
     for ds in report.plot_data[anchor]["datasets"]:
         assert len(ds["lines"]) == 3
@@ -477,7 +477,7 @@ def test_dash_styles():
     data = {
         "Sample1": {0: 1, 1: 1},
     }
-    anchor = AnchorT(plot_id)
+    anchor = Anchor(plot_id)
     with patch("logging.Logger.warning") as log:
         _verify_rendered(linegraph.plot(data, pconfig=pconfig))
         warnings = [call.args[0] for call in log.mock_calls if call.args]
