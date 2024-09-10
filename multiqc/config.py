@@ -176,7 +176,7 @@ fn_ignore_files: List[str]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
-generalstats_merge: Dict[str, List[CleanPatternT]]
+table_sample_merge: Dict[str, List[CleanPatternT]]
 
 # Module filename search patterns
 sp: Dict = {}
