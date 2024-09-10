@@ -982,7 +982,7 @@ For categorical metrics that can take a value from a predefined set, use one of 
 
 ### Grouping samples
 
-If you have a set of samples that should be grouped together in the report (see [Sample grouping in the General Statistics table](../reports/customisation.md#sample-grouping) for details), you can use the `group_samples_config` parameter for the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
+If you have a set of samples that should be grouped together in the report using the [sample grouping configuration option](../reports/customisation.md#sample-grouping), you can include the `group_samples_config` parameter to the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
 
 ```python
 self.general_stats_addcols(
