@@ -980,6 +980,49 @@ The following scales are available:
 
 For categorical metrics that can take a value from a predefined set, use one of the categorical color scales: Set2, Accent, Set1, Set3, Dark2, Paired, Pastel2, Pastel1. For numerical metrics, consider one the "sequential" color scales from the table above.
 
+### Grouping samples
+
+If you have a set of samples that should be grouped together in the report (see [Sample grouping in the General Statistics table](../reports/customisation.md#sample-grouping) for details), you can use the `group_samples_config` parameter for the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
+
+```python
+self.general_stats_addcols(
+    ...,
+    group_samples_config=SampleGroupingConfig(
+        cols_to_sum=[ColumnKeyT("total_sequences")],
+        cols_to_weighted_average=[
+            (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),
+            (ColumnKeyT("avg_sequence_length"), ColumnKeyT("total_sequences")),
+            (ColumnKeyT("percent_duplicates"), ColumnKeyT("total_sequences")),
+            (ColumnKeyT("median_sequence_length"), ColumnKeyT("total_sequences")),
+        ],
+        extra_functions=[_summarize_statues],
+    )
+)
+```
+
+In this configuration, you can specify how to merge data for each column:
+
+- `cols_to_sum` - add up values for each sample in the group.
+- `cols_to_average` - take an average of all samples.
+- `cols_to_weighted_average` - take a weighed average, specifying the weight column in the the second tuple parameter.
+- `extra_functions` - list of functions to call to add extra data to the merged row, e.g. FastQC uses it to recalculate the `percent_fails` value:
+
+```python
+def _summarize_statues(
+    merged_row: InputRowT, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
+):
+    # Add count of fail statuses
+    _num_statuses = 0
+    _num_fails = 0
+    for _, _, original_sn in group_s_names:
+        for st in self.fastqc_data[original_sn]["statuses"].values():
+            _num_statuses += 1
+            if st == "fail":
+                _num_fails += 1
+    if _num_statuses > 0:
+        merged_row.data[ColumnKeyT("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
+```
+
 ## Step 4 - Writing data to a file
 
 In addition to printing data to the General Stats, MultiQC modules typically
@@ -1171,47 +1214,4 @@ self.css = {
 self.js = {
     "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
 }
-```
-
-### Grouping samples
-
-If you have a set of samples that should be grouped together in the report (see [Sample grouping in the General Statistics table](../reports/customisation.md#sample-grouping-in-the-general-statistics-table) for details), you can use the `group_samples_config` parameter for the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
-
-```python
-self.general_stats_addcols(
-    ...,
-    group_samples_config=SampleGroupingConfig(
-        cols_to_sum=[ColumnKeyT("total_sequences")],
-        cols_to_weighted_average=[
-            (ColumnKeyT("percent_gc"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("avg_sequence_length"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("percent_duplicates"), ColumnKeyT("total_sequences")),
-            (ColumnKeyT("median_sequence_length"), ColumnKeyT("total_sequences")),
-        ],
-        extra_functions=[_summarize_statues],
-    )
-)
-```
-
-In this configuration, you can specify how to merge data for each column:
-
-- `cols_to_sum` - add up values for each sample in the group.
-- `cols_to_average` - take an average of all samples.
-- `cols_to_weighted_average` - take a weighed average, specifying the weight column in the the second tuple parameter.
-- `extra_functions` - list of functions to call to add extra data to the merged row, e.g. FastQC uses it to recalculate the `percent_fails` value:
-
-```python
-def _summarize_statues(
-    merged_row: InputRowT, group_s_names: List[Tuple[Optional[str], SampleNameT, SampleNameT]]
-):
-    # Add count of fail statuses
-    _num_statuses = 0
-    _num_fails = 0
-    for _, _, original_sn in group_s_names:
-        for st in self.fastqc_data[original_sn]["statuses"].values():
-            _num_statuses += 1
-            if st == "fail":
-                _num_fails += 1
-    if _num_statuses > 0:
-        merged_row.data[ColumnKeyT("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
 ```

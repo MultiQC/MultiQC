@@ -53,7 +53,7 @@ plus options to show/hide and change the order of columns.
 
 ### Sample grouping
 
-For certain modules, samples could be grouped, if configured. For example, tools such as FastQC can group forward and reverse reads into a "virtual" sample representing the merged stats for the group:
+For certain modules, samples could be grouped in tables, if configured. For example, tools such as FastQC can group forward and reverse reads into a "virtual" sample representing the merged stats for the group:
 
 ![genstats_grouped_samples](../../../docs/images/genstats_grouping_grouped.png)
 

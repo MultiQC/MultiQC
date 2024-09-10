@@ -1050,5 +1050,5 @@ Each module must be configured to use this config option. If you find a MultiQC 
 :::
 
 :::tip
-This only works for the _General Statistics_ table, and wouldn't affect plots or any tables within sections. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
