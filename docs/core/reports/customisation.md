@@ -1046,7 +1046,7 @@ The format of supported types is the same as for [cleaning extensions](../gettin
 - `"regex_keep"`: Match a regular expression pattern and keep only the matched part.
 
 :::note
-Only a handful of modules are supported (like FastQC and Cutadapt). If you'd like to add support for more modules, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
+Each module must be configured to use this config option. If you find a MultiQC module that doesn't use this config yet, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
 :::
 
 :::tip
