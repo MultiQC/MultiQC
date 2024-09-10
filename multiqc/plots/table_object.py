@@ -6,7 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
-from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, Union
+from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union
 
 from pydantic import BaseModel, Field
 
@@ -36,6 +36,32 @@ class TableConfig(PConfig):
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
 
+class ColumnDict(TypedDict, total=False):
+    rid: ColumnAnchor
+    title: str
+    description: str
+    scale: Union[str, bool]
+    hidden: bool
+    placement: float
+    namespace: str
+    colour: Optional[str]
+    color: Optional[str]
+    max: Optional[float]
+    dmax: Optional[float]
+    min: Optional[float]
+    dmin: Optional[float]
+    ceiling: Optional[float]
+    floor: Optional[float]
+    minrange: Optional[float]
+    modify: Optional[Callable]
+    format: Optional[Union[str, Callable]]
+    suffix: Optional[str]
+    cond_formatting_colours: List[Dict[str, str]]
+    cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+    bgcols: Dict[str, str]
+    bars_zero_centrepoint: bool
+
+
 class ColumnMeta(ValidatedConfig):
     """
     Column model class. Holds configuration for a single column in a table.
@@ -48,7 +74,6 @@ class ColumnMeta(ValidatedConfig):
     hidden: bool
     placement: float
     namespace: str = ""
-    colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -57,7 +82,7 @@ class ColumnMeta(ValidatedConfig):
     ceiling: Optional[float] = None
     floor: Optional[float] = None
     minrange: Optional[float] = None
-    shared_key: Optional[str]
+    shared_key: Optional[str] = None
     tt_decimals: Optional[int] = None
     suffix: Optional[str] = None
     cond_formatting_colours: List[Dict[str, str]] = []
@@ -69,30 +94,36 @@ class ColumnMeta(ValidatedConfig):
 
     @staticmethod
     def create(
-        header_d: Dict[str, Union[str, ColumnAnchor, int, float, None, Callable]],
+        col_dict: ColumnDict,
         col_key: ColumnKey,  # to initialize rid
         sec_idx: int,  # to initialize the colour
         pconfig: TableConfig,  # plot config dictionary
         table_anchor: Anchor,
     ) -> "ColumnMeta":
-        ns = header_d.get("namespace", pconfig.namespace) or ""
+        ns = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(ns, str)
-        if ns:
-            header_d["namespace"] = ns
 
-        unclean_rid = header_d.get("rid") or col_key
+        unclean_rid = col_dict.get("rid") or col_key
         legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
         rid = legacy_short_rid
         # Prefixing with namepsace to get a unique column ID within a table across all sections
         if ns:
             ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
             rid = f"{ns}-{rid}"
-        header_d["rid"] = ColumnAnchor(report.save_htmlid(rid, scope=table_anchor))
+        rid = ColumnAnchor(report.save_htmlid(rid, scope=table_anchor))
+
+        modify = col_dict.get("modify")
+        if modify is not None and callable(modify):
+            modify = modify
+
+        min = col_dict.get("min", pconfig.min)
+        format = col_dict.get("format", None)
+        suffix = col_dict.get("suffix", None)
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
-        shared_key = header_d.get("shared_key", None)
-        shared_key_suffix = None
+        shared_key = col_dict.get("shared_key", None)
         if shared_key in ["read_count", "long_read_count", "base_count"]:
+            shared_key_suffix = None
             if shared_key == "read_count" and config.read_count_prefix:
                 multiplier = config.read_count_multiplier
                 shared_key_suffix = config.read_count_prefix
@@ -104,52 +135,56 @@ class ColumnMeta(ValidatedConfig):
                 shared_key_suffix = config.base_count_prefix
             else:
                 multiplier = 1
-            if "modify" not in header_d:
-                header_d["modify"] = lambda x: x * multiplier
-            if "min" not in header_d is None:
-                header_d["min"] = 0
-            if "format" not in header_d is None:
-                if multiplier == 1:
-                    header_d["format"] = "{:,d}"
-        if "suffix" not in header_d and shared_key_suffix is not None:
-            header_d["suffix"] = " " + shared_key_suffix
+            if modify is not None:
+                modify = lambda x: x * multiplier  # noqa: E731
+            if min is None:
+                min = 0
+            if format is None and multiplier == 1:
+                format = "{:,d}"
+            if suffix is None and shared_key_suffix is not None:
+                suffix = " " + shared_key_suffix
 
-        # Use defaults / data keys if headers not given
-        header_d["title"] = header_d.get("title", col_key)
-        header_d["description"] = header_d.get("description", header_d["title"])
-        header_d["scale"] = header_d.get("scale", pconfig.scale)
-        header_d["format"] = header_d.get("format")
-        header_d["color"] = header_d.get("colour", header_d.get("color"))
-        header_d["hidden"] = header_d.get("hidden", False)
-        header_d["max"] = header_d.get("max")
-        header_d["min"] = header_d.get("min", pconfig.min)
-        header_d["ceiling"] = header_d.get("ceiling")
-        header_d["floor"] = header_d.get("floor")
-        header_d["minrange"] = header_d.get("minrange", header_d.get("minRange"))
-        header_d["shared_key"] = header_d.get("shared_key")
-        modify = header_d.get("modify")
-        if modify is not None and callable(modify):
-            header_d["modify"] = modify
-        placement = header_d.get("placement")
-        if placement is not None and isinstance(placement, (str, float, int)):
-            header_d["placement"] = float(placement)
-        else:
-            header_d["placement"] = 1000  # default value
-
-        if header_d["color"] is None:
+        color = col_dict.get("colour", col_dict.get("color"))
+        if color is None:
             cidx = sec_idx
             while cidx >= len(SECTION_COLORS):
                 cidx -= len(SECTION_COLORS)
-            header_d["color"] = SECTION_COLORS[cidx]
+            color = SECTION_COLORS[cidx]
+
+        title = col_dict.get("title") or str(col_key)
+
+        placement = col_dict.get("placement")
+        if placement is not None and isinstance(placement, (str, float, int)):
+            placement = float(placement)
+        else:
+            placement = 1000  # default value
+
+        col: ColumnMeta = ColumnMeta(
+            rid=rid,
+            title=title,
+            description=col_dict.get("description", title),
+            scale=col_dict.get("scale", pconfig.scale),
+            hidden=col_dict.get("hidden", False),
+            namespace=ns,
+            color=color,
+            max=col_dict.get("max"),
+            min=min,
+            ceiling=col_dict.get("ceiling"),
+            floor=col_dict.get("floor"),
+            minrange=col_dict.get("minrange", col_dict.get("minRange")),
+            shared_key=shared_key,
+            placement=placement,
+            modify=modify,
+            suffix=suffix,
+            format=format,
+        )
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
         if pconfig.id in config.custom_plot_config:
             for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                if cpc_k in ColumnMeta.model_fields.keys():
-                    header_d[cpc_k] = cpc_v
-
-        col: ColumnMeta = ColumnMeta(**header_d)
+                if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                    col_dict[cpc_k] = cpc_v  # type: ignore
 
         def _ns_match(item_id: str) -> bool:
             return item_id.lower() in [
@@ -242,7 +277,6 @@ ColumnKeyT = Union[str, ColumnKey]
 GroupKeyT = Union[str, SampleGroup]
 GroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], InputRow, Sequence[InputRow]]
 SectionT = Mapping[GroupKeyT, GroupT]
-HeaderT = Mapping[ColumnKeyT, Mapping[str, Union[str, ColumnAnchor, int, float, None, Callable]]]
 
 
 class Row(BaseModel):
@@ -302,7 +336,7 @@ class DataTable(BaseModel):
         table_id: str,
         table_anchor: Anchor,
         pconfig: TableConfig,
-        headers: Optional[Union[List[HeaderT], HeaderT]] = None,
+        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         if headers is None:
@@ -339,15 +373,19 @@ class DataTable(BaseModel):
         # Go through each table section and create a list of Section objects
         sections: List[TableSection] = []
         for sec_idx, rows_by_sname__with_nulls in enumerate(unified_sections__with_nulls):
-            header_by_key: HeaderT = list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
+            header_by_key: Mapping[ColumnKeyT, ColumnDict] = (
+                list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
+            )
             if not header_by_key:
                 pconfig.only_defined_headers = False
 
             column_by_key: Dict[ColumnKey, ColumnMeta] = dict()
-            header_by_key_copy = _get_or_create_headers(rows_by_sname__with_nulls, header_by_key, pconfig)
-            for col_key, header_d in header_by_key_copy.items():
+            col_dict_by_key_copy: Dict[ColumnKey, ColumnDict] = _get_or_create_headers(
+                rows_by_sname__with_nulls, header_by_key, pconfig
+            )
+            for col_key, col_dict in col_dict_by_key_copy.items():
                 column_by_key[col_key] = ColumnMeta.create(
-                    header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig, table_anchor=table_anchor
+                    col_dict=col_dict, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig, table_anchor=table_anchor
                 )
 
             # Filter out null values and columns that are not present in column_by_key,
@@ -432,14 +470,14 @@ class DataTable(BaseModel):
 
 def _get_or_create_headers(
     rows_by_sample: Dict[SampleGroup, List[InputRow]],
-    header_by_key: HeaderT,
+    header_by_key: Mapping[ColumnKeyT, ColumnDict],
     pconfig,
-) -> Dict[ColumnKey, Dict[str, Union[str, int, float, None, Callable]]]:
+) -> Dict[ColumnKey, ColumnDict]:
     """
     Process and populate headers, if missing or incomplete.
     """
     # Make a copy to keep the input immutable.
-    header_by_key_copy = {ColumnKey(k): dict(h) for k, h in header_by_key.items()}
+    header_by_key_copy = {ColumnKey(k): h for k, h in header_by_key.items()}
     if not pconfig.only_defined_headers:
         # Get additional header keys from the data
         col_ids: List[ColumnKey] = list(header_by_key_copy.keys())
@@ -453,7 +491,7 @@ def _get_or_create_headers(
         # Create empty header configs for each new data key
         for col_id in col_ids:
             if col_id not in header_by_key:
-                header_by_key_copy[col_id] = dict()
+                header_by_key_copy[col_id] = {}
 
     # Check that we have some data in each column
     empties = list()

@@ -224,7 +224,7 @@ class Plot(BaseModel, Generic[T]):
 
         id = id or pconfig.id
         _anchor: Anchor = Anchor(anchor or pconfig.anchor or id)
-        _anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
+        _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
         add_log_tab: bool = pconfig.logswitch is True and plot_type in [PlotType.BAR, PlotType.LINE]

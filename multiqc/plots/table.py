@@ -7,8 +7,8 @@ from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import table
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import HeaderT, SectionT, TableConfig
-from multiqc.types import Anchor
+from multiqc.plots.table_object import ColumnDict, ColumnKeyT, SectionT, TableConfig
+from multiqc.types import Anchor, ColumnKey
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def get_template_mod():
 
 def plot(
     data: Union[SectionT, List[SectionT]],
-    headers: Optional[Union[List[HeaderT], HeaderT]] = None,
+    headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, Plot]:
     """Return HTML for a MultiQC table.

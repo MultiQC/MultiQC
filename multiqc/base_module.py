@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, TypedDict, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import markdown
 import packaging.version
@@ -23,15 +23,14 @@ from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
+    ColumnDict,
     ColumnKey,
-    HeaderT,
     InputRow,
     SampleGroup,
     SampleName,
-    SectionT,
     ValueT,
 )
-from multiqc.types import Anchor, ModuleId, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +73,6 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
-
-
-class LoadedFileDict(report.FileDict):
-    sp_key: str
-    s_name: str
-    f: Optional[Union[str, io.IOBase]]
 
 
 class BaseMultiqcModule:
@@ -839,7 +832,7 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
-        headers: Optional[HeaderT] = None,
+        headers: Optional[Dict[ColumnKey, ColumnDict]] = None,
         namespace=None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -877,7 +870,7 @@ class BaseMultiqcModule:
                 for sample, data in data_by_sample.items()
             }
 
-        _headers: Dict[ColumnKey, Dict[str, Union[str, int, float, None, Callable]]] = {}
+        _headers: Dict[ColumnKey, ColumnDict] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
@@ -889,7 +882,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKey(col_id): {k: v for k, v in col.items()} for col_id, col in headers.items()}
+            _headers = {ColumnKey(col_id): col_dict.copy() for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():

@@ -2,11 +2,12 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, Set, Union, Optional, List
+from typing import Dict, List, Optional, Set, Union
 
-from pydantic import BaseModel, model_validator, ValidationError as PydanticValidationError
-from typeguard import check_type, TypeCheckError
 from PIL import ImageColor
+from pydantic import BaseModel, model_validator
+from pydantic import ValidationError as PydanticValidationError
+from typeguard import TypeCheckError, check_type
 
 from multiqc import config
 
@@ -132,6 +133,9 @@ class ValidatedConfig(BaseModel):
         # Check types and validate specific fields
         corrected_values = {}
         for name, val in values.items():
+            if val is None:
+                continue
+
             field = cls.model_fields[name]
             expected_type = field.annotation
 

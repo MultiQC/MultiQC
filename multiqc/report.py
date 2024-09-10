@@ -47,8 +47,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import HeaderT, InputRow, SampleName
-from multiqc.types import Anchor, ModuleId, SampleGroup
+from multiqc.plots.table_object import ColumnDict, InputRow, SampleName
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
@@ -68,11 +68,6 @@ class Runtimes:
     total_compression: float = 0.0
     sp: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
-
-
-class FileDict(TypedDict):
-    fn: str
-    root: str
 
 
 # Uninitialised global variables for static typing
@@ -99,7 +94,7 @@ html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
 plot_data: Dict[Anchor, Dict] = dict()  # plot dumps to embed in html
 plot_by_id: Dict[Anchor, Plot] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
-general_stats_headers: List[HeaderT]
+general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
 
@@ -781,7 +776,7 @@ def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def clean_htmlid(html_id):
+def clean_htmlid(html_id: str) -> str:
     """
     Clean up an HTML ID to remove illegal characters.
     """

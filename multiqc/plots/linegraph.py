@@ -141,8 +141,8 @@ def _make_series_dict(
             xmax = _xmax
             xmin = _xmin
             _colors = dl.get("colors")
-            assert isinstance(_colors, dict)
-            colors = {**colors, **_colors}
+            if _colors and isinstance(_colors, dict):
+                colors = {**colors, **_colors}
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.

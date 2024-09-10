@@ -6,7 +6,7 @@ from importlib_metadata import EntryPoint
 from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import violin
-from multiqc.plots.table_object import HeaderT, SectionT, TableConfig
+from multiqc.plots.table_object import ColumnDict, ColumnKey, ColumnKeyT, SectionT, TableConfig
 from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def get_template_mod() -> EntryPoint:
 
 def plot(
     data: Union[List[SectionT], SectionT],
-    headers: Optional[Union[List[HeaderT], HeaderT]] = None,
+    headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
     pconfig: Union[Dict, TableConfig, None] = None,
 ) -> Union[str, violin.ViolinPlot]:
     """
