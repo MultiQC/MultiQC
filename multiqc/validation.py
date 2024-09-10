@@ -136,9 +136,6 @@ class ValidatedConfig(BaseModel):
         # Check types and validate specific fields
         corrected_values = {}
         for name, val in values.items():
-            if val is None:
-                continue
-
             field = cls.model_fields[name]
             expected_type = field.annotation
 

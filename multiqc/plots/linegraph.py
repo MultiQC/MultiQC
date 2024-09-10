@@ -75,9 +75,9 @@ def plot(
             if isinstance(ess[0], list):
                 list_of_list_of_series = cast(List[List[Series]], ess)
             else:
-                list_of_list_of_series = [cast(List[Series], ess)]
+                list_of_list_of_series = [cast(List[Series], ess) for _ in datasets]
         else:
-            list_of_list_of_series = [[ess]]
+            list_of_list_of_series = [[ess] for _ in datasets]
 
         for i, list_of_raw_series in enumerate(list_of_list_of_series):
             assert isinstance(list_of_raw_series, list)
