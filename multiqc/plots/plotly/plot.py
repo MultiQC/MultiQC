@@ -44,7 +44,7 @@ class PConfig(ValidatedConfig):
     yLog: Optional[bool] = Field(None, deprecated="ylog")
     xlog: bool = False
     ylog: bool = False
-    data_labels: List[Union[str, Dict[str, Union[str, Dict[str, str]]]]] = []
+    data_labels: List[Union[str, Dict[str, Any]]] = []
     xTitle: Optional[str] = Field(None, deprecated="xlab")
     yTitle: Optional[str] = Field(None, deprecated="ylab")
     xlab: Optional[str] = None
