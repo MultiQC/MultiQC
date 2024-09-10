@@ -1,11 +1,11 @@
 ---
-title: Using Reports
+title: Using reports
 description: Getting to grips with MultiQC reports
 ---
 
-# Using MultiQC Reports
+# Using MultiQC reports
 
-Once MultiQC has finished, you should have a HTML report file called
+Once MultiQC has finished, you should have an HTML report file called
 `multiqc_report.html` (or something similar, depending on how you ran MultiQC).
 You can launch this report with `open multiqc_report.html` on the command
 line, or double clicking the file in a file browser.

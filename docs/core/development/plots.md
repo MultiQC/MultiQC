@@ -1,9 +1,9 @@
 ---
-title: Plotting Functions
+title: Plotting functions
 description: Visualising your data
 ---
 
-# Plotting Functions
+# Plotting functions
 
 MultiQC plotting functions are held within `multiqc.plots` submodules.
 To use them, simply import the modules you want, e.g.:

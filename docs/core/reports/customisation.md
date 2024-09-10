@@ -1,9 +1,9 @@
 ---
-title: Customising Reports
+title: Customising reports
 description: Making MultiQC reports bespoke for your use case
 ---
 
-# Customising Reports
+# Customising reports
 
 MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
@@ -35,7 +35,7 @@ string to use your own text.
 ### Report time and analysis paths
 
 It's not always appropriate to include the file paths that MultiQC was run with
-in a report, for example if sharing reports with others outside your organisation.
+in a report, for example, if sharing reports with others outside your organisation.
 
 If you wish, you can disable the analysis paths and/or time in the report header
 with the following config parameters:
@@ -94,7 +94,7 @@ Additionally, some situations may require bespoke version number reporting,
 for example if software is found within multiple scopes in an analysis pipeline.
 
 In these cases, you can manually add software version information to a report.
-This can be done in two different ways: by adding them in to the MultiQC configuration,
+This can be done in two different ways: by adding them into the MultiQC configuration,
 or by creating stand-alone YAML files with specific filenames and formats.
 
 Both methods have the same syntax for the YAML configuration, with the exception
@@ -110,7 +110,7 @@ This is the same behaviour as version numbers found within log files.
 
 ### Option 1: Dictionary of software name and version pairs
 
-The simplest way to provide version numbers to give names and versions:
+The simplest way to provide version numbers is to give names and versions:
 
 ```yaml
 software_versions:
@@ -119,7 +119,7 @@ software_versions:
 ```
 
 :::danger
-Make sure that you write the version in quotes to ensure it being
+Make sure that you write the version in quotes to ensure it is being
 interpreted as a string. For example, a version `1.10` without
 quotes would be parsed as a float and displayed as version `1.1`.
 :::
@@ -135,7 +135,7 @@ software_versions:
     - "5.1.0"
 ```
 
-### Option 2: Grouping softwares and versions
+### Option 2: Grouping software and versions
 
 In more complex scenarios, you may have multiple version _names_ that you
 want to group. For example, a tool that wraps other tools, or
@@ -446,7 +446,7 @@ remove_sections:
 The section ID is the string appended to the URL when clicking a report section in the navigation.
 
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
-in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
+in the report's left-hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 :::
 
