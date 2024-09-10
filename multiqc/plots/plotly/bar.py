@@ -19,7 +19,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from multiqc.types import SampleNameT
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +45,10 @@ class BarPlotConfig(PConfig):
         return values
 
 
-SampleName = Union[SampleNameT, str]
+SampleNameT = Union[SampleName, str]
 
 
-class InputCat(TypedDict):
+class CatDataDict(TypedDict):
     name: str
     color: str
     data: List[float]
@@ -56,8 +56,8 @@ class InputCat(TypedDict):
 
 
 def plot(
-    cats_lists: Sequence[Sequence[InputCat]],
-    samples_lists: Sequence[Sequence[SampleName]],
+    cats_lists: Sequence[Sequence[CatDataDict]],
+    samples_lists: Sequence[Sequence[SampleNameT]],
     pconfig: BarPlotConfig,
 ) -> "BarPlot":
     """
@@ -92,7 +92,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        cats: Sequence[InputCat],
+        cats: Sequence[CatDataDict],
         samples: Sequence[str],
     ) -> "Dataset":
         # Need to reverse samples as the bar plot will show them reversed
@@ -176,8 +176,8 @@ class BarPlot(Plot[Dataset]):
     @staticmethod
     def create(
         pconfig: BarPlotConfig,
-        cats_lists: Sequence[Sequence[InputCat]],
-        samples_lists: Sequence[Sequence[SampleName]],
+        cats_lists: Sequence[Sequence[CatDataDict]],
+        samples_lists: Sequence[Sequence[SampleNameT]],
     ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")

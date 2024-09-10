@@ -999,3 +999,56 @@ my_var: null
 # Jinja2
 if myvar is none # Note - Lower case!
 ```
+
+## Sample grouping
+
+MultiQC does its best to have one row per sample in the General Statistics table. Some modules, however, may produce multiple results per sample. These will be treated as separate samples alongside the shorter "merged" samplename from downstream steps, resulting in half-empty rows. A prominent example of this is FastQC, that can be run separately for forward and reverse reads:
+
+![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
+
+To improve how these samples are shown, MultiQC attempts to [group such samples](../reports/#sample-grouping). For modules that support this option, MultiQC offers a config option `table_sample_merge` that maps chunk labels to file name patterns.
+
+For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
+
+```yaml
+table_sample_merge:
+  "R1": "_R1"
+  "R2": "_R2"
+```
+
+FastQC will try trim to `_R1` and `_R1` from each sample name ending, and on success, will map them to the trimmed group name. Specifically, it will merge stats for `SAMPLE_R1` and `SAMPLE_R2` into a new virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
+
+![Table: General Statistics table with sample grouping](../../../docs/images/genstats_grouping_grouped.png)
+
+Clicking on the row header will expand the row to show the individual chunks data:
+
+![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
+
+More sophisticated patterns are supported such as listing multiple strings, or using regular expression with `type: regex`:
+
+```yaml
+table_sample_merge:
+  "Read 1":
+    - "_R1"
+    - type: regex
+      pattern: "[_.-][rR]?1$"
+  "Read 2":
+    - "_R2"
+    - type: regex
+      pattern: "[_.-][rR]?2$"
+```
+
+The format of supported types is the same as for [cleaning extensions](../getting_started/config.md#cleaning-extensions) option:
+
+- `"truncate"`: The default mode. To get the group name, remove the pattern from the end of the string.
+- `"remove"`: Remove the pattern from the middle.
+- `"regex"`: Match a regular expression pattern and remove the matched part.
+- `"regex_keep"`: Match a regular expression pattern and keep only the matched part.
+
+:::note
+Each module must be configured to use this config option. If you find a MultiQC module that doesn't use this config yet, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
+:::
+
+:::tip
+This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+:::

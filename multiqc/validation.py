@@ -2,11 +2,12 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, Set, Union, Optional, List
+from typing import Dict, List, Optional, Set, Union
 
-from pydantic import BaseModel, model_validator, ValidationError as PydanticValidationError
-from typeguard import check_type, TypeCheckError
 from PIL import ImageColor
+from pydantic import BaseModel, model_validator
+from pydantic import ValidationError as PydanticValidationError
+from typeguard import TypeCheckError, check_type
 
 from multiqc import config
 
@@ -95,6 +96,9 @@ class ValidatedConfig(BaseModel):
         for k, v in cls.model_fields.items():
             if k.endswith("_") and k[:-1] in values:
                 values[k] = values.pop(k[:-1])
+
+        # Remove None values
+        values = {k: v for k, v in values.items() if v is not None}
 
         # Check unrecognized fields
         filtered_values = {}

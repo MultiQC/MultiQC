@@ -22,7 +22,7 @@ import pyaml_env  # type: ignore
 import yaml
 from importlib_metadata import EntryPoint
 
-from multiqc.types import AnchorT, ModuleIdT, SectionIdT
+from multiqc.types import Anchor, ModuleId, SectionId
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -176,7 +176,7 @@ fn_ignore_files: List[str]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
-generalstats_sample_merge_groups: Dict[str, List[CleanPatternT]]
+table_sample_merge: Dict[str, List[CleanPatternT]]
 
 # Module filename search patterns
 sp: Dict = {}
@@ -197,7 +197,7 @@ data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
 report_section_order: Dict[
-    Union[SectionIdT, ModuleIdT, AnchorT], Union[str, Dict[str, int], Dict[str, Union[SectionIdT, ModuleIdT, AnchorT]]]
+    Union[SectionId, ModuleId, Anchor], Union[str, Dict[str, int], Dict[str, Union[SectionId, ModuleId, Anchor]]]
 ]
 output_fn: Optional[str]
 filename: Optional[str]
