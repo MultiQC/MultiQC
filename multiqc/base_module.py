@@ -455,13 +455,13 @@ class BaseMultiqcModule:
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
         """
-        if not config.generalstats_merge:
+        if not config.table_sample_merge:
             return SampleGroup(s_name), None
 
         matched_label: Optional[str] = None
         grouping_exts: List[CleanPatternT]
         group_name = SampleGroup(s_name)
-        for label, grouping_exts in config.generalstats_merge.items():
+        for label, grouping_exts in config.table_sample_merge.items():
             if isinstance(grouping_exts, (str, dict)):
                 grouping_exts = [grouping_exts]
             if grouping_exts:
@@ -854,7 +854,7 @@ class BaseMultiqcModule:
             return
 
         rows_by_group: Dict[SampleGroup, List[InputRow]]
-        if config.generalstats_merge:
+        if config.table_sample_merge:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
