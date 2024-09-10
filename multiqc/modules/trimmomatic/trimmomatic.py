@@ -5,7 +5,7 @@ from typing import Dict
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.types import Anchor
+from multiqc.types import Anchor, ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(
             self.trimmomatic,
             {
-                "dropped_pct": {
+                ColumnKey("dropped_pct"): {
                     "title": "% Dropped",
                     "description": "% Dropped reads",
                     "max": 100,
