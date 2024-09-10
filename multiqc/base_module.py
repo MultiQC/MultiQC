@@ -500,7 +500,9 @@ class BaseMultiqcModule:
             group_name: [
                 (
                     label,
-                    SampleNameT(group_name) if len(group) == 1 else SampleNameT(f"{group_name} ({label})"),
+                    SampleNameT(group_name)
+                    if (len(group) == 1 or not label)
+                    else SampleNameT(group_name + " " + label),
                     original_name,
                 )
                 for (label, original_name) in group
