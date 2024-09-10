@@ -53,16 +53,13 @@ plus options to show/hide and change the order of columns.
 
 ### Sample grouping
 
-For certain modules, samples could be grouped, if configured. For example, FastQC and Cutadapt can group forward and reverse reads and a "virtual" sample representing the merged stats for the group:
+For certain modules, samples could be grouped, if configured. For example, tools such as FastQC can group forward and reverse reads into a "virtual" sample representing the merged stats for the group:
 
 ![genstats_grouped_samples](../../../docs/images/genstats_grouping_grouped.png)
 
-If a FastQC report was available both for `SAMPLE_R1` and `SAMPLE_R1`, FastQC would add a "virtual" sample `SAMPLE` by "merging" the available metrics:
+The top-level metrics may be generated as a sum, average or weighted average. Any other tool outputs that match the merged sample name are shown in-line as normal.
 
-- The resulting `Seqs` (number of sequences) will be the sum of `Seq` of `SAMPLE_R1` and `SAMPLE_R2`,
-- `GC%`, `Dups`, `Median Len`, and `Mean cov` will be the weighted average using `Seqs` as a weight.
-
-Cutadapt will average `% BP Trimmed` using the number of processed base pairs as weigth.
+In the above example, `Seqs` (number of sequences) is the sum of `Seq` for both reads. `GC%`, `Dups`, `Median Len`, and `Mean cov` are the weighted average, using `Seqs` as a weight.
 
 You can inspect the individual samples within a group by clicking on the arrow:
 
