@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.types import AnchorT
+from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -27,7 +27,7 @@ check_plotly_version()
 
 class PConfig(ValidatedConfig):
     id: str
-    anchor: Optional[AnchorT] = None  # unlike id, has to be globally unique
+    anchor: Optional[Anchor] = None  # unlike id, has to be globally unique
     table_title: Optional[str] = Field(None, deprecated="title")
     title: str
     height: Optional[int] = None
@@ -44,7 +44,7 @@ class PConfig(ValidatedConfig):
     yLog: Optional[bool] = Field(None, deprecated="ylog")
     xlog: bool = False
     ylog: bool = False
-    data_labels: List[Union[str, Dict[str, Any]]] = []
+    data_labels: List[Union[str, Dict[str, Union[str, Dict[str, str]]]]] = []
     xTitle: Optional[str] = Field(None, deprecated="xlab")
     yTitle: Optional[str] = Field(None, deprecated="ylab")
     xlab: Optional[str] = None
@@ -89,7 +89,7 @@ class PConfig(ValidatedConfig):
                 title=cls.__name__,
             )
         elif isinstance(pconfig, PConfig):
-            return pconfig
+            return cls(**pconfig.model_dump())
         else:
             return cls(**pconfig)
 
@@ -162,7 +162,7 @@ class Plot(BaseModel, Generic[T]):
     """
 
     id: str
-    anchor: AnchorT  # unlike id, has to be unique
+    anchor: Anchor  # unlike id, has to be unique
     plot_type: PlotType
     layout: go.Layout
     datasets: List[T]
@@ -177,7 +177,7 @@ class Plot(BaseModel, Generic[T]):
     flat: bool = False
     defer_render: bool = False
 
-    model_config = dict(
+    model_config = ConfigDict(
         arbitrary_types_allowed=True,
         use_enum_values=True,
     )
@@ -223,12 +223,12 @@ class Plot(BaseModel, Generic[T]):
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
-        anchor = anchor or pconfig.anchor or id
-        anchor = report.save_htmlid(anchor)  # make sure it's unique
+        _anchor: Anchor = Anchor(anchor or pconfig.anchor or id)
+        _anchor = Anchor(report.save_htmlid(anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
-        add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
-        add_pct_tab = pconfig.cpswitch is not False and plot_type == PlotType.BAR
+        add_log_tab: bool = pconfig.logswitch is True and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_pct_tab: bool = pconfig.cpswitch is not False and plot_type == PlotType.BAR
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
 
@@ -266,7 +266,7 @@ class Plot(BaseModel, Generic[T]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        layout = go.Layout(
+        layout: go.Layout = go.Layout(
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
@@ -339,7 +339,6 @@ class Plot(BaseModel, Generic[T]):
             for axis in axis_controlled_by_switches:
                 layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.data_labels
         datasets = []
         for idx, n_samples in enumerate(n_samples_per_dataset):
             dataset = BaseDataset(
@@ -358,15 +357,15 @@ class Plot(BaseModel, Generic[T]):
             if len(n_samples_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
-            if idx < len(dconfigs):
-                dconfig = dconfigs[idx]
-            else:
-                dconfig = {}
-
-            if not isinstance(dconfig, (str, dict)):
-                logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
-            dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
-            dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+            data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
+                pconfig.data_labels[idx] if idx < len(pconfig.data_labels) else {}
+            )
+            dconfig: Dict[str, Union[str, Dict[str, str]]] = (
+                data_label if isinstance(data_label, dict) else {"name": data_label}
+            )
+            label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+            assert isinstance(label, str)
+            dataset.label = label
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
 
@@ -378,7 +377,10 @@ class Plot(BaseModel, Generic[T]):
             if n_samples > 1:
                 subtitles += [f"{n_samples} samples"]
             if subtitles:
-                dconfig["title"] += f"<br><sup>{', '.join(subtitles)}</sup>"
+                title = dconfig.get("title", "")
+                assert isinstance(title, str)
+                title += f"<br><sup>{', '.join(subtitles)}</sup>"
+                dconfig["title"] = title
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -388,7 +390,7 @@ class Plot(BaseModel, Generic[T]):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
-            anchor=anchor,
+            anchor=_anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -432,7 +434,7 @@ class Plot(BaseModel, Generic[T]):
             return fig
 
     @staticmethod
-    def _proc_save_args(filename: str, flat: bool) -> Tuple[str, bool]:
+    def _proc_save_args(filename: str, flat: Optional[bool]) -> Tuple[str, bool]:
         if isinstance(filename, (Path, str)):
             if Path(filename).suffix.lower() == ".html":
                 if flat is not None and flat is True:

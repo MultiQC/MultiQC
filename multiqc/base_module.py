@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
 
 import markdown
 import packaging.version
@@ -23,15 +23,15 @@ from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
-    ColumnKeyT,
-    InputHeaderT,
-    InputRowT,
-    InputSectionT,
-    SampleGroupT,
-    SampleNameT,
+    ColumnKey,
+    HeaderT,
+    InputRow,
+    SampleGroup,
+    SampleName,
+    SectionT,
     ValueT,
 )
-from multiqc.types import AnchorT, ModuleIdT, SectionIdT
+from multiqc.types import Anchor, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -42,18 +42,18 @@ class ModuleNoSamplesFound(Exception):
 
 @dataclasses.dataclass
 class SampleNameMeta:
-    original_name: SampleNameT
-    trimmed_name: Optional[SampleNameT] = None
+    original_name: SampleName
+    trimmed_name: Optional[SampleName] = None
     trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
-    group: Optional[SampleGroupT] = None
+    group: Optional[SampleGroup] = None
     labels: List[str] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass
 class Section:
     name: str
-    anchor: AnchorT
-    id: SectionIdT  # unlike anchor, doesn't have to be different from the module or plot ids
+    anchor: Anchor
+    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
     description: str
     module: str
     comment: str = ""
@@ -62,29 +62,29 @@ class Section:
     content: str = ""
     plot: str = ""
     print_section: bool = True
-    plot_anchor: Optional[AnchorT] = None
+    plot_anchor: Optional[Anchor] = None
 
 
-ExtraFunctionType = Callable[[InputRowT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]], None]
+ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
 
 
 @dataclasses.dataclass
 class SampleGroupingConfig:
-    cols_to_weighted_average: Optional[List[Tuple[ColumnKeyT, ColumnKeyT]]] = None
-    cols_to_average: Optional[List[ColumnKeyT]] = None
-    cols_to_sum: Optional[List[ColumnKeyT]] = None
+    cols_to_weighted_average: Optional[List[Tuple[ColumnKey, ColumnKey]]] = None
+    cols_to_average: Optional[List[ColumnKey]] = None
+    cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: Dict = {}
-    mod_id: Optional[ModuleIdT] = None
+    mod_id: Optional[ModuleId] = None
 
     def __init__(
         self,
         name="base",
-        anchor: AnchorT = AnchorT("base"),
+        anchor: Anchor = Anchor("base"),
         target=None,
         href: Union[str, List[str], None] = None,
         info=None,
@@ -97,7 +97,7 @@ class BaseMultiqcModule:
         # Custom options from user config that can overwrite base module values
         self.name = self.mod_cust_config.get("name", name)
         # cannot be overwritten for repeated modules with path_filters:
-        self.id: ModuleIdT = ModuleIdT(self.mod_id or anchor)
+        self.id: ModuleId = ModuleId(self.mod_id or anchor)
         self.anchor = self.mod_cust_config.get("anchor", anchor)
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
@@ -236,7 +236,7 @@ class BaseMultiqcModule:
             logger.warning(f"The find_log_files() search key must be a string, got {type(sp_key)}: {sp_key}")
             return
 
-        for f in report.files.get(ModuleIdT(sp_key), []):
+        for f in report.files.get(ModuleId(sp_key), []):
             # Make a note of the filename so that we can report it if something crashes
             last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
@@ -325,9 +325,9 @@ class BaseMultiqcModule:
 
     def add_section(
         self,
-        name=None,
-        anchor=None,
-        id=None,
+        name: Optional[str] = None,
+        anchor: Optional[Union[str, Anchor]] = None,
+        id: Optional[Union[str, SectionId]] = None,
         description="",
         comment="",
         helptext="",
@@ -399,9 +399,9 @@ class BaseMultiqcModule:
         helptext = helptext.strip()
 
         section = Section(
-            name=name,
-            anchor=anchor,
-            id=id,
+            name=name or "",
+            anchor=Anchor(anchor),
+            id=SectionId(id),
             description=description,
             module=self.name,
             comment=comment,
@@ -449,35 +449,35 @@ class BaseMultiqcModule:
 
         return None
 
-    def groups_for_sample(self, s_name: SampleNameT) -> Tuple[SampleGroupT, Optional[str]]:
+    def groups_for_sample(self, s_name: SampleName) -> Tuple[SampleGroup, Optional[str]]:
         """
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
         """
-        if not config.generalstats_sample_merge_groups:
-            return SampleGroupT(s_name), None
+        if not config.generalstats_merge:
+            return SampleGroup(s_name), None
 
         matched_label: Optional[str] = None
         grouping_exts: List[CleanPatternT]
-        group_name = SampleGroupT(s_name)
-        for label, grouping_exts in config.generalstats_sample_merge_groups.items():
+        group_name = SampleGroup(s_name)
+        for label, grouping_exts in config.generalstats_merge.items():
             if isinstance(grouping_exts, (str, dict)):
                 grouping_exts = [grouping_exts]
             if grouping_exts:
-                s_name_without_ext = SampleNameT(
+                s_name_without_ext = SampleName(
                     self.clean_s_name(s_name, fn_clean_exts=grouping_exts, fn_clean_trim=[], prepend_dirs=False)
                 )
                 if s_name_without_ext != s_name:  # matched the label
                     matched_label = label
                     # Clean the rest of the name
-                    group_name = SampleGroupT(self.clean_s_name(s_name_without_ext))
+                    group_name = SampleGroup(self.clean_s_name(s_name_without_ext))
                     break
 
         return group_name, matched_label
 
     def group_samples_names(
-        self, samples: Iterable[SampleNameT]
-    ) -> Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT, SampleNameT]]]:
+        self, samples: Iterable[SampleName]
+    ) -> Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
@@ -485,12 +485,12 @@ class BaseMultiqcModule:
         :return: a dict where the keys are group names, and the values are lists of tuples,
             of cleaned base names according to the cleaning rules and the original sample names
         """
-        group_by_label: Dict[Optional[str], List[Tuple[SampleGroupT, SampleNameT]]] = defaultdict(list)
+        group_by_label: Dict[Optional[str], List[Tuple[SampleGroup, SampleName]]] = defaultdict(list)
         for original_name in sorted(samples):
             group_name, label = self.groups_for_sample(original_name)
             group_by_label[label].append((group_name, original_name))
 
-        group_by_merged_name: Dict[SampleGroupT, List[Tuple[Optional[str], SampleNameT]]] = defaultdict(list)
+        group_by_merged_name: Dict[SampleGroup, List[Tuple[Optional[str], SampleName]]] = defaultdict(list)
         for label, group in group_by_label.items():
             for group_name, original_name in group:
                 group_by_merged_name[group_name].append((label, original_name))
@@ -500,9 +500,7 @@ class BaseMultiqcModule:
             group_name: [
                 (
                     label,
-                    SampleNameT(group_name)
-                    if (len(group) == 1 or not label)
-                    else SampleNameT(group_name + " " + label),
+                    SampleName(group_name) if (len(group) == 1 or not label) else SampleName(group_name + " " + label),
                     original_name,
                 )
                 for (label, original_name) in group
@@ -512,38 +510,37 @@ class BaseMultiqcModule:
 
     def group_samples_and_average_metrics(
         self,
-        data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
+        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
         grouping_config: SampleGroupingConfig,
-    ) -> Dict[SampleGroupT, List[InputRowT]]:
+    ) -> Dict[SampleGroup, List[InputRow]]:
         """
         Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
         """
 
-        rows_by_grouped_samples: Dict[SampleGroupT, List[InputRowT]] = defaultdict(list)
+        rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
         for g_name, labels_s_names in self.group_samples_names(list(data_by_sample.keys())).items():
             if len(labels_s_names) == 0:
-                continue
-            if g_name is None:
-                # Ungrouped samples, adding them separately one by one
-                for _, (label, s_name, _) in labels_s_names:
-                    rows_by_grouped_samples[s_name] = [InputRowT(sample=s_name, data=data_by_sample[s_name])]
                 continue
 
             # We do not want "merged sample" clash with other real samples if the group is non-trivial,
             # so appending an ending to the "merged sample" name:
-            if len(labels_s_names) > 1 and SampleNameT(g_name) in data_by_sample:
-                g_name = SampleGroupT(f"{g_name} (grouped)")
+            if len(labels_s_names) > 1 and SampleName(g_name) in data_by_sample:
+                g_name = SampleGroup(f"{g_name} (grouped)")
 
             # Just a single row for a trivial group
             if len(labels_s_names) == 1:
                 _, s_name, original_s_name = labels_s_names[0]
-                rows_by_grouped_samples[g_name] = [InputRowT(sample=s_name, data=data_by_sample[original_s_name])]
+                rows_by_grouped_samples[g_name] = [
+                    InputRow(
+                        sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name])
+                    )
+                ]
                 continue
 
-            merged_row = InputRowT(sample=g_name, data={})
+            merged_row = InputRow(sample=SampleName(g_name), data={})
 
             # Init a dictionary of all cols that would be summed to serve as weights
-            sum_by_col: Dict[ColumnKeyT, float] = dict()
+            sum_by_col: Dict[ColumnKey, float] = dict()
 
             if grouping_config.cols_to_weighted_average:
                 for _, weight_col_key in grouping_config.cols_to_weighted_average:
@@ -616,7 +613,7 @@ class BaseMultiqcModule:
                     fn(merged_row, labels_s_names)
 
             rows_by_grouped_samples[g_name] = [merged_row] + [
-                InputRowT(sample=s_name, data=data_by_sample[original_s_name])
+                InputRow(sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name]))
                 for _, s_name, original_s_name in labels_s_names
             ]
 
@@ -673,8 +670,8 @@ class BaseMultiqcModule:
             # Couldn't clean as FASTQ. Just concatenating the clean names.
             return "_".join(clean_names)
 
-        sn = SampleNameMeta(original_name=SampleNameT(s_name))
-        trimmed_name: SampleNameT = sn.original_name
+        sn = SampleNameMeta(original_name=SampleName(s_name))
+        trimmed_name: SampleName = sn.original_name
 
         # Backwards compatability - if f is a string, it's probably the root (this used to be the second argument)
         if isinstance(f, str):
@@ -700,11 +697,11 @@ class BaseMultiqcModule:
                 and search_pattern_key in config.use_filename_as_sample_name
             )
         ):
-            trimmed_name = SampleNameT(filename)
+            trimmed_name = SampleName(filename)
 
         # if s_name comes from file contents, it may have a file path
         # For consistency with other modules, we keep just the basename
-        trimmed_name = SampleNameT(os.path.basename(trimmed_name))
+        trimmed_name = SampleName(os.path.basename(trimmed_name))
 
         if fn_clean_exts is None:
             fn_clean_exts = config.fn_clean_exts
@@ -724,7 +721,7 @@ class BaseMultiqcModule:
                 else:
                     dirs = dirs[:d_idx]
             if len(dirs) > 0:
-                trimmed_name = SampleNameT(f"{sep.join(dirs)}{sep}{trimmed_name}")
+                trimmed_name = SampleName(f"{sep.join(dirs)}{sep}{trimmed_name}")
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
@@ -747,19 +744,19 @@ class BaseMultiqcModule:
                 pattern = ext.get("pattern", "")
                 assert isinstance(pattern, str)
                 if ext.get("type") == "truncate":
-                    trimmed_name = SampleNameT(str(trimmed_name).split(pattern, 1)[0])
+                    trimmed_name = SampleName(str(trimmed_name).split(pattern, 1)[0])
                 elif ext.get("type") in ("remove", "replace"):
                     if ext["type"] == "replace":
                         logger.warning(
                             "use 'config.fn_clean_sample_names.remove' instead "
                             "of 'config.fn_clean_sample_names.replace' [deprecated]"
                         )
-                    trimmed_name = SampleNameT(str(trimmed_name).replace(pattern, ""))
+                    trimmed_name = SampleName(str(trimmed_name).replace(pattern, ""))
                 elif ext.get("type") == "regex":
-                    trimmed_name = SampleNameT(re.sub(pattern, "", str(trimmed_name)))
+                    trimmed_name = SampleName(re.sub(pattern, "", str(trimmed_name)))
                 elif ext.get("type") == "regex_keep":
                     match = re.search(pattern, str(trimmed_name))
-                    trimmed_name = SampleNameT(match.group()) if match else trimmed_name
+                    trimmed_name = SampleName(match.group()) if match else trimmed_name
                 elif ext.get("type") is None:
                     logger.error(f'config.fn_clean_exts config was missing "type" key: {ext}')
                 else:
@@ -767,12 +764,12 @@ class BaseMultiqcModule:
             # Trim off characters at the end of names
             for characters in fn_clean_trim:
                 if trimmed_name.endswith(characters):
-                    trimmed_name = SampleNameT(str(trimmed_name)[: -len(characters)])
+                    trimmed_name = SampleName(str(trimmed_name)[: -len(characters)])
                 if trimmed_name.startswith(characters):
-                    trimmed_name = SampleNameT(str(trimmed_name)[len(characters) :])
+                    trimmed_name = SampleName(str(trimmed_name)[len(characters) :])
 
         # Remove trailing whitespace
-        trimmed_name = SampleNameT(str(trimmed_name).strip())
+        trimmed_name = SampleName(str(trimmed_name).strip())
 
         # If we cleaned back to an empty string, just use the original value
         if trimmed_name == "":
@@ -792,16 +789,16 @@ class BaseMultiqcModule:
                             continue
                     # Replace - regex
                     if config.sample_names_replace_regex:
-                        trimmed_name = SampleNameT(re.sub(s_name_search, s_name_replace, str(trimmed_name)))
+                        trimmed_name = SampleName(re.sub(s_name_search, s_name_replace, str(trimmed_name)))
                     # Replace - simple string
                     else:
                         # Complete name swap
                         if config.sample_names_replace_complete:
                             if s_name_search in trimmed_name:
-                                trimmed_name = SampleNameT(s_name_replace)
+                                trimmed_name = SampleName(s_name_replace)
                         # Partial substring replace
                         else:
-                            trimmed_name = SampleNameT(str(trimmed_name).replace(s_name_search, s_name_replace))
+                            trimmed_name = SampleName(str(trimmed_name).replace(s_name_search, s_name_replace))
                 except re.error as e:
                     logger.error(f"Error with sample name replacement regex: {e}")
 
@@ -833,8 +830,8 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data_by_sample: Dict[SampleNameT, Dict[ColumnKeyT, ValueT]],
-        headers: Optional[InputHeaderT] = None,
+        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
+        headers: Optional[HeaderT] = None,
         namespace=None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
@@ -855,16 +852,16 @@ class BaseMultiqcModule:
         if self.skip_generalstats:
             return
 
-        rows_by_group: Dict[SampleGroupT, List[InputRowT]]
-        if config.generalstats_sample_merge_groups:
+        rows_by_group: Dict[SampleGroup, List[InputRow]]
+        if config.generalstats_merge:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
             )
         else:
             rows_by_group = {
-                SampleGroupT(sample): [
-                    InputRowT(
+                SampleGroup(sample): [
+                    InputRow(
                         sample=sample,
                         data={k: v for k, v in data.items() if isinstance(v, (int, float, str, bool)) or v is None},
                     )
@@ -872,11 +869,11 @@ class BaseMultiqcModule:
                 for sample, data in data_by_sample.items()
             }
 
-        _headers: Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]] = {}
+        _headers: Dict[ColumnKey, Dict[str, Union[str, int, float, None, Callable]]] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
-            column_ids: Set[ColumnKeyT] = set()
+            column_ids: Set[ColumnKey] = set()
             for rows in rows_by_group.values():
                 for row in rows:
                     column_ids.update(row.data.keys())
@@ -884,7 +881,7 @@ class BaseMultiqcModule:
                 _headers[col_id] = {}
         else:
             # Make a copy
-            _headers = {ColumnKeyT(col_id): {k: v for k, v in col.items()} for col_id, col in headers.items()}
+            _headers = {ColumnKey(col_id): {k: v for k, v in col.items()} for col_id, col in headers.items()}
 
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
@@ -903,18 +900,17 @@ class BaseMultiqcModule:
     def add_data_source(self, f=None, s_name=None, source=None, module=None, section=None):
         if s_name is not None and self.is_ignore_sample(s_name):
             return
-        try:
-            if module is None:
-                module = self.name
-            if section is None:
-                section = "all_sections"
-            if s_name is None:
-                s_name = f["s_name"]
-            if source is None:
-                source = os.path.abspath(os.path.join(f["root"], f["fn"]))
-            report.data_sources[module][section][s_name] = source
-        except AttributeError:
-            logger.warning(f"Tried to add data source for {self.name}, but was missing fields data")
+        if f is None:
+            logger.warning(f"Tried to add data source for {self.name}, but missing file info")
+        if module is None:
+            module = self.name
+        if section is None:
+            section = "all_sections"
+        if s_name is None:
+            s_name = f["s_name"]
+        if source is None:
+            source = os.path.abspath(os.path.join(f["root"], f["fn"]))
+        report.data_sources[module][section][s_name] = source
 
     def add_software_version(
         self, version: Optional[str] = None, sample: Optional[str] = None, software_name: Optional[str] = None

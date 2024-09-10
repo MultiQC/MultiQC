@@ -25,7 +25,7 @@ from multiqc.plots.plotly.line import LinePlot
 from multiqc.plots.plotly.plot import Plot, PlotType
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import AnchorT, ModuleIdT
+from multiqc.types import Anchor, ModuleId
 
 logger = logging.getLogger("multiqc")
 
@@ -190,7 +190,7 @@ def list_plots() -> Dict:
     @return: Dict of plot names indexed by module and section
     """
 
-    result: Dict[ModuleIdT, List] = {}
+    result: Dict[ModuleId, List] = {}
     for module in report.modules:
         result[module.id] = list()
         for section in module.sections:
@@ -366,13 +366,13 @@ def add_custom_content_section(
 
     module = BaseMultiqcModule(
         name=name,
-        anchor=AnchorT(f"{anchor}-module"),
+        anchor=Anchor(f"{anchor}-module"),
         info=description,
         comment=comment,
     )
     module.add_section(
         name=name,
-        anchor=AnchorT(anchor),
+        anchor=Anchor(anchor),
         description=description,
         helptext=helptext,
         content_before_plot=content_before_plot,

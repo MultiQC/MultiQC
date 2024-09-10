@@ -11,17 +11,17 @@ from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
-from multiqc.types import SampleNameT
+from multiqc.types import SampleName
 from multiqc.utils.util_functions import update_dict
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
 
-KeyT = TypeVar("KeyT", int, str, float)
-ValueT = TypeVar("ValueT", int, str, float, None)
-XToYDictT = Mapping[KeyT, ValueT]
-DatasetT = Mapping[Union[str, SampleNameT], XToYDictT]
+KeyTV = TypeVar("KeyTV", int, str, float)
+ValueTV = TypeVar("ValueTV", int, str, float, None)
+XToYDictT = Mapping[KeyTV, ValueTV]
+DatasetT = Mapping[Union[str, SampleName], XToYDictT]
 
 
 class Marker(BaseModel):
@@ -32,9 +32,9 @@ class Marker(BaseModel):
     width: int = 1
 
 
-class Series(ValidatedConfig, Generic[KeyT, ValueT]):
+class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
     name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
-    pairs: List[Tuple[KeyT, ValueT]]
+    pairs: List[Tuple[KeyTV, ValueTV]]
     color: Optional[str] = None
     width: int = 2
     dash: Optional[str] = None
@@ -50,7 +50,7 @@ class Series(ValidatedConfig, Generic[KeyT, ValueT]):
         elif "dash" in data:
             data["dash"] = convert_dash_style(Series, data["dash"])
 
-        tuples: List[Tuple[KeyT, ValueT]] = []
+        tuples: List[Tuple[KeyTV, ValueTV]] = []
         if "data" in data:
             add_validation_warning([LinePlotConfig, Series], "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
@@ -108,7 +108,7 @@ class LineBand(ValidatedConfig):
         super().__init__(**data, _parent_class=LinePlotConfig)
 
 
-SeriesConf = Union[Series, Dict]
+SeriesT = Union[Series, Dict]
 
 
 class LinePlotConfig(PConfig):
@@ -117,7 +117,7 @@ class LinePlotConfig(PConfig):
     categories: bool = False
     smooth_points: Optional[int] = 500
     smooth_points_sumcounts: Union[bool, List[bool], None] = None
-    extra_series: Optional[Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]] = None
+    extra_series: Optional[Union[SeriesT, List[SeriesT], List[List[SeriesT]]]] = None
     xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
     yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
     x_minrange: Optional[Union[float, int]] = None
@@ -136,7 +136,7 @@ class LinePlotConfig(PConfig):
     colors: Dict[str, str] = {}
 
     @classmethod
-    def parse_extra_series(cls, data: Union[SeriesConf, List[SeriesConf], List[List[SeriesConf]]]):
+    def parse_extra_series(cls, data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]]):
         if isinstance(data, list):
             if isinstance(data[0], list):
                 return [[Series(**d) if isinstance(d, dict) else d for d in ds] for ds in data]

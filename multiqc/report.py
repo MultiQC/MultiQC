@@ -18,7 +18,21 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Set, TextIO, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    TextIO,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 import yaml
 from pydantic import BaseModel, Field
@@ -33,8 +47,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import InputHeaderT, InputRowT, InputSectionT, SampleNameT
-from multiqc.types import AnchorT, ModuleIdT, SampleGroupT
+from multiqc.plots.table_object import HeaderT, InputRow, SampleName
+from multiqc.types import Anchor, ModuleId, SampleGroup
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
@@ -56,6 +70,13 @@ class Runtimes:
     mods: Dict[str, float] = dataclasses.field(default_factory=lambda: defaultdict())
 
 
+class FileDict(TypedDict, total=False):
+    fn: str
+    root: str
+    s_name: str
+    source: str
+
+
 # Uninitialised global variables for static typing
 multiqc_command: str
 top_modules: List[Dict[str, Dict[str, str]]]
@@ -66,21 +87,21 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[SampleNameT, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[SampleName, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
-files: Dict[ModuleIdT, List[Dict]]
+files: Dict[ModuleId, List[FileDict]]
 
 # Fields below are kept between interactive runs
 data_sources: Dict[str, Dict[str, Dict]]
-html_ids_by_scope: Dict[Optional[str], Set[AnchorT]] = defaultdict(set)
-plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict[SampleGroupT, List[InputRowT]]]
-general_stats_headers: List[InputHeaderT]
+html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
+plot_data: Dict[Anchor, Dict] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[Anchor, Plot] = dict()  # plot objects for interactive use
+general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: List[HeaderT]
 software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
 plot_compressed_json: str
 
@@ -328,7 +349,7 @@ class SearchFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> FileDict:
         return {"fn": self.filename, "root": str(self.root)}
 
 
@@ -401,14 +422,14 @@ class SearchPattern(BaseModel):
 
 
 def prep_ordered_search_files_list(
-    sp_keys: List[ModuleIdT],
-) -> Tuple[List[Dict[ModuleIdT, List[SearchPattern]]], List[Path]]:
+    sp_keys: List[ModuleId],
+) -> Tuple[List[Dict[ModuleId, List[SearchPattern]]], List[Path]]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
     """
 
-    spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     searchfiles: List[Path] = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
@@ -478,7 +499,7 @@ def prep_ordered_search_files_list(
         else:
             spatterns[0][key] = sps
 
-    def _sort_by_key(_sps: Dict[ModuleIdT, List[SearchPattern]], _key: str) -> Dict[ModuleIdT, List[SearchPattern]]:
+    def _sort_by_key(_sps: Dict[ModuleId, List[SearchPattern]], _key: str) -> Dict[ModuleId, List[SearchPattern]]:
         """Sort search patterns dict by key like num_lines or max_filesize."""
 
         def _sort_key(kv) -> int:
@@ -490,7 +511,7 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -517,7 +538,7 @@ def prep_ordered_search_files_list(
     return spatterns, searchfiles
 
 
-def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], searchfiles: List[Path]):
+def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searchfiles: List[Path]):
     runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
@@ -565,7 +586,7 @@ def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], sear
                                 # Looks good! Remember this file
                                 if module_id not in files:
                                     files[module_id] = []
-                                files[module_id].append(search_f.to_dict())
+                                files[module_id].append(FileDict(search_f.to_dict()))
                                 file_search_stats[module_id] = file_search_stats.get(module_id, set()) | {path}
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {module_id}")
@@ -614,7 +635,7 @@ def search_files(sp_keys):
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is_ignore_file: bool = False):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
     """
     Function to search a single file for a single search pattern.
     """
@@ -782,7 +803,7 @@ def clean_htmlid(html_id):
     return html_id_clean
 
 
-def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
+def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None) -> str:
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
     global html_ids_by_scope
@@ -800,8 +821,9 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
                 modname = f">{callpath}< "
-                if isinstance(n[4], str):
-                    codeline = n[4][0].strip()
+                code = n[4]
+                if isinstance(code, str):
+                    codeline = code[0].strip()
                 break
         if html_id != html_id_clean:
             errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
@@ -811,7 +833,7 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
     # Check for duplicates
     i = 1
     html_id_base = html_id_clean
-    while AnchorT(html_id_clean) in html_ids_by_scope[scope]:
+    while Anchor(html_id_clean) in html_ids_by_scope[scope]:
         if html_id_clean == "general_stats_table":
             raise ValueError("HTML ID 'general_stats_table' is reserved and cannot be used")
         html_id_clean = f"{html_id_base}-{i}"
@@ -822,7 +844,7 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
             lint_errors.append(errmsg)
 
     # Remember and return
-    html_ids_by_scope[scope].add(AnchorT(html_id_clean))
+    html_ids_by_scope[scope].add(Anchor(html_id_clean))
     return html_id_clean
 
 
@@ -901,6 +923,7 @@ def write_data_file(
             for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
+                    assert isinstance(d, dict)
                     line = [str(d.get(h, "")) for h in headers]
                 else:
                     line = [

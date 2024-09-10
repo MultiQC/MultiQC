@@ -1,9 +1,9 @@
 from typing import NewType
 
-AnchorT = NewType("AnchorT", str)
-ModuleIdT = NewType("ModuleIdT", str)
-SectionIdT = NewType("SectionIdT", str)
+Anchor = NewType("Anchor", str)
+ModuleId = NewType("ModuleId", str)
+SectionId = NewType("SectionId", str)
 
-ColumnKeyT = NewType("ColumnKeyT", str)
-SampleNameT = NewType("SampleNameT", str)
-SampleGroupT = NewType("SampleGroupT", str)
+ColumnKey = NewType("ColumnKey", str)
+SampleName = NewType("SampleName", str)
+SampleGroup = NewType("SampleGroup", str)
