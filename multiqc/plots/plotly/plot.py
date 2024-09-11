@@ -769,7 +769,9 @@ def fig_to_static_html(
             plot_path.parent.mkdir(parents=True, exist_ok=True)
 
             try:
-                logger.info(f"Exporting plot to {file_ext.upper()} image: {file_name}...")
+                logger.info(
+                    f"Running a slow process to export plot to {file_ext.upper()} image: {file_name} (set config.export_plots=False to disable)"
+                )
                 _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
             except Exception as e:
                 msg = f"Unable to export plot to {file_ext.upper()} image: {plot_path.name}"
