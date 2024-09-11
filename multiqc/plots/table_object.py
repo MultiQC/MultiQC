@@ -136,7 +136,7 @@ class ColumnMeta(ValidatedConfig):
                 shared_key_suffix = config.base_count_prefix
             else:
                 multiplier = 1
-            if modify is not None:
+            if modify is None:
                 modify = lambda x: x * multiplier  # noqa: E731
             if min is None:
                 min = 0
