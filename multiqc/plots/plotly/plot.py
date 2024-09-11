@@ -531,7 +531,7 @@ class Plot(BaseModel, Generic[T]):
             try:
                 html = self.flat_plot(plots_dir_name=plots_dir_name)
             except ValueError:
-                logger.error(f"Unable to export plot '{self.id}' to flat images, falling back to interactive plot")
+                logger.error(f"{self.id}: Unable to export plot to flat images, falling back to interactive plot")
                 html = self.interactive_plot()
         else:
             html = self.interactive_plot()
@@ -539,7 +539,7 @@ class Plot(BaseModel, Generic[T]):
                 try:
                     self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
                 except ValueError:
-                    logger.error(f"Unable to export plot '{self.id}' to flat images")
+                    logger.error(f"{self.id}: Unable to export plot to flat images")
 
         return html
 
@@ -770,12 +770,12 @@ def fig_to_static_html(
 
             try:
                 logger.info(
-                    f"Running a slow process to export plot to {file_ext.upper()} image: {file_name} (set config.export_plots=False to disable)"
+                    f"{file_name}: Running a slow process to export plot to {file_ext.upper()} image (set config.export_plots=False to disable)"
                 )
                 _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
             except Exception as e:
-                msg = f"Unable to export plot to {file_ext.upper()} image: {plot_path.name}"
-                logger.error(f"{msg}. Exception: {e}")
+                msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
+                logger.error(f"{msg}. {e}")
                 raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
             else:
                 if file_ext == "png":
@@ -819,7 +819,7 @@ def _run_in_thread(func, args, timeout=10) -> Any:
     thread.start()
     thread.join(timeout=timeout)
     if thread.is_alive():
-        raise ValueError(f"Error: function did not complete in {timeout} seconds")
+        raise ValueError(f"Function did not complete in {timeout} seconds")
         thread.join()  # Continue without blocking
         return None
     else:
