@@ -692,7 +692,7 @@ class Plot(BaseModel, Generic[T]):
 
 # Run in a subprocess to avoid Kaleido freezing entire MultiQC process in a Docker container on MacOS
 # e.g. https://github.com/MultiQC/MultiQC/issues/2667
-def _export_plot_worker(q, fig, file_ext, plot_path, write_kwargs):
+def _export_plot_worker(q: queue.Queue, fig, file_ext, plot_path, write_kwargs):
     try:
         if file_ext == "svg":
             # Cannot add logo to SVGs
@@ -711,7 +711,7 @@ def _export_plot_worker(q, fig, file_ext, plot_path, write_kwargs):
         q.put(plot_path)
 
 
-def _export_plot_to_buffer_worker(q, fig, write_kwargs):
+def _export_plot_to_buffer_worker(q: queue.Queue, fig, write_kwargs):
     try:
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
@@ -820,7 +820,7 @@ def fig_to_static_html(
 
 def _run_in_thread(func, args, timeout=60) -> Any:
     """Run function in a thread and return its result, assuming it puts the result in a queue."""
-    q = queue.Queue()
+    q: queue.Queue = queue.Queue()
     thread = threading.Thread(target=func, args=(q, *args))
     thread.start()
     thread.join(timeout=timeout)
