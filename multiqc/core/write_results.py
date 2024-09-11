@@ -280,7 +280,7 @@ def render_and_export_plots(plots_dir_name: str):
         update_fn=update_fn,
         item_to_str_fn=lambda s: f"{s.module}/{s.name}" if s.name else s.module,
         desc="rendering plots",
-        disable_progress=not show_progress,
+        disable_progress=True,
     )
 
     report.some_plots_are_deferred = any(

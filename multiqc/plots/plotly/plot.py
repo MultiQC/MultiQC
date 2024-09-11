@@ -2,9 +2,11 @@ import base64
 import io
 import logging
 import math
+import queue
 import random
 import re
 import string
+import threading
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union, cast
@@ -688,6 +690,43 @@ class Plot(BaseModel, Generic[T]):
         return html
 
 
+# Run in a subprocess to avoid Kaleido freezing entire MultiQC process in a Docker container on MacOS
+# e.g. https://github.com/MultiQC/MultiQC/issues/2667
+def _export_plot_worker(q, fig, file_ext, plot_path, write_kwargs):
+    try:
+        if file_ext == "svg":
+            # Cannot add logo to SVGs
+            fig.write_image(plot_path, **write_kwargs)
+        else:
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = add_logo(img_buffer, format=file_ext)
+            with open(plot_path, "wb") as f:
+                f.write(img_buffer.getvalue())
+            img_buffer.close()
+    except Exception as e:
+        logger.error(f"Unable to export plot to {file_ext.upper()} image: {e}")
+        q.put(None)
+    else:
+        q.put(plot_path)
+
+
+def _export_plot_to_buffer_worker(q, fig, write_kwargs):
+    try:
+        img_buffer = io.BytesIO()
+        fig.write_image(img_buffer, **write_kwargs)
+        img_buffer = add_logo(img_buffer, format="PNG")
+        # Convert to a base64 encoded string
+        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+        img_src = f"data:image/png;base64,{b64_img}"
+        img_buffer.close()
+    except Exception as e:
+        logger.error(f"Unable to export PNG figure to static image: {e}")
+        q.put(None)
+    else:
+        q.put(img_src)
+
+
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
@@ -721,27 +760,21 @@ def fig_to_static_html(
 
     # Save the plot to the data directory if export is requested
     png_is_written = False
+
     if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in formats:
+            plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
+            plot_path.parent.mkdir(parents=True, exist_ok=True)
+
             try:
-                plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
-                plot_path.parent.mkdir(parents=True, exist_ok=True)
-                if file_ext == "svg":
-                    # Cannot add logo to SVGs
-                    fig.write_image(plot_path, **write_kwargs)
-                else:
-                    img_buffer = io.BytesIO()
-                    fig.write_image(img_buffer, **write_kwargs)
-                    img_buffer = add_logo(img_buffer, format=file_ext)
-                    with open(plot_path, "wb") as f:
-                        f.write(img_buffer.getvalue())
-                    img_buffer.close()
+                logger.info(f"Exporting plot to {file_ext.upper()} image: {file_name}...")
+                _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
             except Exception as e:
-                logger.error(
-                    f"Error: Unable to export {file_ext} figure to static image at {plot_path}. Exception: {e}"
-                )
+                msg = f"Unable to export plot to {file_ext.upper()} image: {plot_path.name}"
+                logger.error(f"{msg}. Exception: {e}")
+                raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
             else:
                 if file_ext == "png":
                     png_is_written = True
@@ -755,17 +788,13 @@ def fig_to_static_html(
         # Using file written in the config.export_plots block above
         img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
         if not png_is_written:  # Could not write in the block above
-            raise ValueError(f"Unable to export plot to PNG plot image: {file_name}")
+            raise ValueError(f"Unable to export plot to PNG image: {file_name}")
         img_src = str(img_path)
     else:
         try:
-            img_buffer = io.BytesIO()
-            fig.write_image(img_buffer, **write_kwargs)
-            img_buffer = add_logo(img_buffer, format="PNG")
-            # Convert to a base64 encoded string
-            b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-            img_src = f"data:image/png;base64,{b64_img}"
-            img_buffer.close()
+            logger.info("Exporting plot to PNG image" + (": " + file_name if file_name else "") + "...")
+            img_src = _run_in_thread(_export_plot_to_buffer_worker, (fig, write_kwargs))
+
         except Exception as e:
             logger.error(f"Unable to export PNG figure to static image: {e}")
             raise ValueError("Unable to export PNG figure to static image")
@@ -779,6 +808,20 @@ def fig_to_static_html(
             "</div>",
         ]
     )
+
+
+def _run_in_thread(func, args, timeout=10) -> Any:
+    """Run function in a thread and return its result, assuming it puts the result in a queue."""
+    q = queue.Queue()
+    thread = threading.Thread(target=func, args=(q, *args))
+    thread.start()
+    thread.join(timeout=timeout)
+    if thread.is_alive():
+        raise ValueError(f"Error: function did not complete in {timeout} seconds")
+        thread.join()  # Continue without blocking
+        return None
+    else:
+        return q.get()
 
 
 def add_logo(
