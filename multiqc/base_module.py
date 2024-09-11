@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import markdown
 import packaging.version
@@ -832,7 +832,7 @@ class BaseMultiqcModule:
     def general_stats_addcols(
         self,
         data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
-        headers: Optional[Dict[ColumnKey, ColumnDict]] = None,
+        headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
         namespace=None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
