@@ -531,7 +531,7 @@ class Plot(BaseModel, Generic[T]):
             try:
                 html = self.flat_plot(plots_dir_name=plots_dir_name)
             except ValueError:
-                logger.error(f"{self.id}: Unable to export plot to flat images, falling back to interactive plot")
+                logger.error(f"Unable to export plot to flat images: {self.id}, falling back to interactive plot")
                 html = self.interactive_plot()
         else:
             html = self.interactive_plot()
@@ -539,7 +539,7 @@ class Plot(BaseModel, Generic[T]):
                 try:
                     self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
                 except ValueError:
-                    logger.error(f"{self.id}: Unable to export plot to flat images")
+                    logger.error(f"Unable to export plot to flat images: {self.id}")
 
         return html
 
@@ -727,6 +727,9 @@ def _export_plot_to_buffer_worker(q, fig, write_kwargs):
         q.put(img_src)
 
 
+can_export_plots: bool = True
+
+
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
@@ -738,6 +741,10 @@ def fig_to_static_html(
     """
     Build one static image, return an HTML wrapper.
     """
+    global can_export_plots
+    if not can_export_plots:
+        raise ValueError("Could not previously export a plots, so stop trying again")
+
     embed_in_html = embed_in_html if embed_in_html is not None else not config.development
     export_plots = export_plots if export_plots is not None else config.export_plots
 
@@ -769,13 +776,13 @@ def fig_to_static_html(
             plot_path.parent.mkdir(parents=True, exist_ok=True)
 
             try:
-                logger.info(
-                    f"{file_name}: Running a slow process to export plot to {file_ext.upper()} image (set config.export_plots=False to disable)"
-                )
-                _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
+                if can_export_plots:
+                    # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
+                    _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
             except Exception as e:
                 msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
                 logger.error(f"{msg}. {e}")
+                can_export_plots = False
                 raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
             else:
                 if file_ext == "png":
@@ -790,11 +797,10 @@ def fig_to_static_html(
         # Using file written in the config.export_plots block above
         img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
         if not png_is_written:  # Could not write in the block above
-            raise ValueError(f"Unable to export plot to PNG image: {file_name}")
+            raise ValueError(f"Unable to export plot to PNG image {file_name}")
         img_src = str(img_path)
     else:
         try:
-            logger.info("Exporting plot to PNG image" + (": " + file_name if file_name else "") + "...")
             img_src = _run_in_thread(_export_plot_to_buffer_worker, (fig, write_kwargs))
 
         except Exception as e:
@@ -812,7 +818,7 @@ def fig_to_static_html(
     )
 
 
-def _run_in_thread(func, args, timeout=10) -> Any:
+def _run_in_thread(func, args, timeout=60) -> Any:
     """Run function in a thread and return its result, assuming it puts the result in a queue."""
     q = queue.Queue()
     thread = threading.Thread(target=func, args=(q, *args))

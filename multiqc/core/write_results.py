@@ -264,23 +264,47 @@ def render_and_export_plots(plots_dir_name: str):
 
     sections = report.get_all_sections()
 
+    show_progress = False
+    msg = "Rendering plots"
     # Show progress bar if writing any flat images, i.e. export_plots requested, or at least one plot is flat
-    show_progress = config.export_plots
-    if not show_progress:
+    if config.export_plots:
+        show_progress = True
+        msg += (
+            f". Export plots to formats {', '.join(config.export_plot_formats)} is requested, so"
+            + " it might take a while. To disable plot export, set `export_plots: false` in config,"
+            + " or remove the `--export-plots` command line flag"
+        )
+    elif config.plots_force_flat:
+        show_progress = True
+        msg += (
+            ". Plots are requested to be rendered flat with `--flat` or `plots_force_flat: true` in config,"
+            + " and rendering might take a while. To disable, remove or override that flag"
+        )
+    else:
         for s in sections:
             if s.plot_anchor:
                 plot = report.plot_by_id[s.plot_anchor]
                 if isinstance(plot, Plot) and plot.flat:
                     show_progress = True
+                    msg += (
+                        f". Some plots rendered flat because the number of series exceeds {config.plots_flat_numseries},"
+                        + " and this rendering might take a while. To disable, set `--interactive`"
+                        + " (`plots_force_interactive: true` in config), or change the `plots_flat_numseries`"
+                        + " to a higher value"
+                    )
                     break
 
-    logger.debug("Rendering plots" + (". This may take a while..." if show_progress else ""))
+    if show_progress:
+        logger.info(msg)
+    else:
+        logger.debug(msg)
+
     iterate_using_progress_bar(
         items=sections,
         update_fn=update_fn,
         item_to_str_fn=lambda s: f"{s.module}/{s.name}" if s.name else s.module,
         desc="rendering plots",
-        disable_progress=True,
+        disable_progress=not show_progress,
     )
 
     report.some_plots_are_deferred = any(
