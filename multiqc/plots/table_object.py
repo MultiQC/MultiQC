@@ -37,14 +37,13 @@ ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
 
 class ColumnDict(TypedDict, total=False):
-    rid: ColumnAnchor
+    rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
     title: str
     description: str
     scale: Union[str, bool]
     hidden: bool
     placement: float
     namespace: str
-    colour: Optional[str]
     color: Optional[str]
     max: Optional[float]
     dmax: Optional[float]
@@ -53,13 +52,15 @@ class ColumnDict(TypedDict, total=False):
     ceiling: Optional[float]
     floor: Optional[float]
     minrange: Optional[float]
-    modify: Optional[Callable]
-    format: Optional[Union[str, Callable]]
+    shared_key: Optional[str]
+    tt_decimals: Optional[int]
     suffix: Optional[str]
     cond_formatting_colours: List[Dict[str, str]]
     cond_formatting_rules: Dict[str, List[Dict[str, str]]]
     bgcols: Dict[str, str]
     bars_zero_centrepoint: bool
+    modify: Optional[Callable]
+    format: Optional[Union[str, Callable]]
 
 
 class ColumnMeta(ValidatedConfig):
@@ -71,8 +72,8 @@ class ColumnMeta(ValidatedConfig):
     title: str
     description: str
     scale: Union[str, bool]
-    hidden: bool
-    placement: float
+    hidden: bool = False
+    placement: float = 1000
     namespace: str = ""
     color: Optional[str] = None
     max: Optional[float] = None
@@ -157,7 +158,7 @@ class ColumnMeta(ValidatedConfig):
         if placement is not None and isinstance(placement, (str, float, int)):
             placement = float(placement)
         else:
-            placement = 1000  # default value
+            placement = 1000
 
         col: ColumnMeta = ColumnMeta(
             rid=rid,
