@@ -116,7 +116,7 @@ class BaseMultiqcModule:
 
         # See if we have a user comment in the config
         if str(self.anchor) in config.section_comments:
-            self.comment: str = config.section_comments[str(self.anchor)]
+            self.comment = config.section_comments[str(self.anchor)]
 
         if self.info is None:
             self.info = ""
