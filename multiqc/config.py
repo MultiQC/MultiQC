@@ -132,8 +132,8 @@ table_cond_formatting_colours: List[Dict[str, str]]
 table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str
 thousandsSep_format: str
-remove_sections: List
-section_comments: Dict
+remove_sections: List[str]
+section_comments: Dict[str, str]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
