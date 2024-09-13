@@ -22,7 +22,7 @@ dependencies = [
     "rich-click",
     "coloredlogs",  # logging in notebooks
     "spectra>=0.0.10",
-    "pydantic>=2.7.1",
+    "pydantic>=2.7.*",
     "typeguard",
     "tqdm",  # progress bar in notebooks
 ]
