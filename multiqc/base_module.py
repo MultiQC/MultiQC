@@ -100,7 +100,7 @@ class BaseMultiqcModule:
         self.anchor = Anchor(self.mod_cust_config.get("anchor", anchor))
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
-        self.comment = self.mod_cust_config.get("comment", comment)
+        self.comment: str = str(self.mod_cust_config.get("comment", comment))
         self.extra = self.mod_cust_config.get("extra", extra)
         self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
         self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
@@ -112,11 +112,11 @@ class BaseMultiqcModule:
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
+        self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
 
         # See if we have a user comment in the config
-        if self.anchor in config.section_comments:
-            self.comment = config.section_comments[self.anchor]
+        if str(self.anchor) in config.section_comments:
+            self.comment = config.section_comments[str(self.anchor)]
 
         if self.info is None:
             self.info = ""
@@ -339,11 +339,11 @@ class BaseMultiqcModule:
         autoformat_type="markdown",
     ):
         """Add a section to the module report output"""
-        if id is None:
-            id = anchor
+        if id is None and anchor is not None:
+            id = str(anchor)
 
-        if anchor is None:
-            anchor = id
+        if anchor is None and id is not None:
+            anchor = str(id)
 
         if id is None:
             if name is not None:
@@ -352,7 +352,11 @@ class BaseMultiqcModule:
             else:
                 sl = len(self.sections) + 1
                 id = f"{self.anchor}-section-{sl}"
-            anchor = id
+            if anchor is None:
+                anchor = id
+
+        assert anchor is not None
+        assert id is not None
 
         # Prepend custom module anchor to the section if set
         cust_anchor = self.mod_cust_config.get("anchor")
@@ -364,20 +368,20 @@ class BaseMultiqcModule:
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
-        if anchor in config.remove_sections:
+        if str(anchor) in config.remove_sections:
             logger.debug(f"Skipping section with anchor '{anchor}' because specified in user config")
             return
 
         # Skip if user has a config to remove this module section
-        if id in config.remove_sections:
+        if str(id) in config.remove_sections:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
         # See if we have a user comment in the config
-        if id in config.section_comments:
-            comment = config.section_comments[id]
-        elif anchor in config.section_comments:
-            comment = config.section_comments[anchor]
+        if str(id) in config.section_comments:
+            comment = config.section_comments[str(id)]
+        elif str(anchor) in config.section_comments:
+            comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:
