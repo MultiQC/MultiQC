@@ -18,7 +18,6 @@ dependencies = [
     "Pillow>=10",  # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
-    "pyaml-env",
     "rich>=10",
     "rich-click",
     "coloredlogs",  # logging in notebooks
