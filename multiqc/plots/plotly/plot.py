@@ -825,9 +825,8 @@ def _run_in_thread(func, args, timeout=60) -> Any:
     thread.start()
     thread.join(timeout=timeout)
     if thread.is_alive():
+        # todo: switch to processes and kill the process
         raise ValueError(f"Function did not complete in {timeout} seconds")
-        thread.join()  # Continue without blocking
-        return None
     else:
         return q.get()
 
