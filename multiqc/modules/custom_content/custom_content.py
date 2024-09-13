@@ -148,9 +148,17 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 parsed_data.update(_find_html_file_header(f))
 
             if parsed_data is not None:
-                if isinstance(parsed_data.get("data"), dict):
+                parsed_item = parsed_data.get("data", {})
+                parsed_item_with_clean_sn = {}
+                if isinstance(parsed_item, dict):
                     # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+                    for sn, val_by_metric in parsed_item.items():
+                        sn = bm.clean_s_name(sn, f)
+                        if sn not in parsed_item_with_clean_sn:
+                            parsed_item_with_clean_sn[sn] = val_by_metric
+                        else:
+                            parsed_item_with_clean_sn[sn].update(val_by_metric)
+                    parsed_data["data"] = parsed_item_with_clean_sn
 
                 _c_id = parsed_data.get("id", config_custom_data_id)
                 parsed_item = parsed_data.get("data", {})
