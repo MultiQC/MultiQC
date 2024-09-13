@@ -83,7 +83,7 @@ class BaseMultiqcModule:
     def __init__(
         self,
         name: str = "base",
-        anchor: Anchor = Anchor("base"),
+        anchor: Union[Anchor, str] = Anchor("base"),
         target=None,
         href: Union[str, List[str], None] = None,
         info=None,
@@ -97,7 +97,7 @@ class BaseMultiqcModule:
         self.name: str = self.mod_cust_config.get("name", name)
         # cannot be overwritten for repeated modules with path_filters:
         self.id: ModuleId = ModuleId(self.mod_id or anchor)
-        self.anchor = self.mod_cust_config.get("anchor", anchor)
+        self.anchor = Anchor(self.mod_cust_config.get("anchor", anchor))
         self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
         self.info = self.mod_cust_config.get("info", info)
         self.comment = self.mod_cust_config.get("comment", comment)
