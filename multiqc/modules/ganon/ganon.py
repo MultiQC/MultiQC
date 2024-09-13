@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Union, Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -28,6 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ganon"):
             s_name, data = self.parse_log(f)
             if not s_name:
+                log.error(f"Could not parse sample name from supposedly ganon log file: {f['fn']}")
                 continue
             if s_name in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -64,6 +65,11 @@ class MultiqcModule(BaseMultiqcModule):
                     if s_name is not None:
                         log.debug(f"Duplicate sample name found within the same file {f['fn']}! Overwriting: {s_name}")
                     s_name = self.clean_s_name(line.split()[1])
+                    self.add_data_source(f, s_name=s_name)
+                    continue
+
+                if line.startswith("Ganon report output found:"):
+                    s_name = self.clean_s_name(line.split(":")[1])
                     self.add_data_source(f, s_name=s_name)
                     continue
 
@@ -108,12 +114,10 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def calculate_entry_remainder(data_by_sample):
         for s_name in data_by_sample:
-            data_by_sample[s_name]["taxonomic_entries_retained"] = data_by_sample[s_name][
-                "taxonomic_entries_reported"
-            ] - (
-                data_by_sample[s_name]["taxonomic_entries_removed_rank_filter"]
-                + data_by_sample[s_name]["taxonomic_entries_removed_mincount_filter"]
-            )
+            reported = data_by_sample[s_name].get("taxonomic_entries_reported", 0)
+            rank_filtered = data_by_sample[s_name].get("taxonomic_entries_removed_rank_filter", 0)
+            mincount_filtered = data_by_sample[s_name].get("taxonomic_entries_removed_mincount_filter", 0)
+            data_by_sample[s_name]["taxonomic_entries_retained"] = reported - (rank_filtered + mincount_filtered)
 
     def stats_table(self, data_by_sample):
         """Ganon general stats table"""
