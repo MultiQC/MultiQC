@@ -18,11 +18,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
-import pyaml_env  # type: ignore
 import yaml
 from importlib_metadata import EntryPoint
 
 from multiqc.types import Anchor, ModuleId, SectionId
+from multiqc.utils import pyaml_env
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
