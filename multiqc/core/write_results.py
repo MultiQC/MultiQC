@@ -101,7 +101,7 @@ def write_results() -> None:
             if pdf_path:
                 logger.info(f"Report      : {_maybe_relative_path(pdf_path)}")
 
-    if config.export_plots and paths.plots_dir:
+    if config.export_plot_formats and paths.plots_dir:
         # Copy across the static plot images if requested
         _move_exported_plots(paths.plots_dir)
         logger.info(
