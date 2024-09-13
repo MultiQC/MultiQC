@@ -29,9 +29,9 @@ check_plotly_version()
 
 class PConfig(ValidatedConfig):
     id: str
+    title: str
     anchor: Optional[Anchor] = None  # unlike id, has to be globally unique
     table_title: Optional[str] = Field(None, deprecated="title")
-    title: str
     height: Optional[int] = None
     width: Optional[int] = None
     square: bool = False
