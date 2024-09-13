@@ -338,7 +338,7 @@ def create(
     x_bands = pconfig.x_bands
     x_lines = pconfig.x_lines
     y_lines = pconfig.y_lines
-    if y_minrange or y_bands or y_lines:
+    if y_bands or y_lines or y_minrange:
         # We don't want the bands to affect the calculated axis range, so we
         # find the min and the max from data points, and manually set the range.
         for dataset in model.datasets:
@@ -364,7 +364,7 @@ def create(
                 maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
             dataset.layout["yaxis"]["range"] = [minval, maxval]
 
-    if not pconfig.categories and x_minrange or x_bands or x_lines:
+    if x_bands or x_lines or (x_minrange and not pconfig.categories):
         # same as above but for x-axis
         for dataset in model.datasets:
             minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]

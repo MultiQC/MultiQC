@@ -1,10 +1,9 @@
 import copy
-
+import fnmatch
+import logging
 from typing import Dict, Union
 
-import logging
-
-from multiqc import BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.plots import linegraph, table
 from multiqc.plots.table_object import TableConfig
 
@@ -60,7 +59,7 @@ def summary_table(module, data_by_sample):
         table_data[sample]["meanbaseq"] = sum([m["meanbaseq"] * m["size"] for m in vals]) / total_size
         table_data[sample]["meanmapq"] = sum([m["meanmapq"] * m["size"] for m in vals]) / total_size
 
-    headers: Dict[str, Dict[str, Union[str, bool, int]]] = {
+    headers = {
         "numreads": {
             "title": "Reads",
             "description": "Total number of mapped reads",
@@ -167,9 +166,47 @@ def lineplot_per_region(module, data_by_sample: Dict):
             "tt_suffix": "",
         },
     }
+
+    cfg = getattr(config, "samtools_coverage", dict())
+    cfg["include_contigs"] = cfg.get("include_contigs", [])
+    if not isinstance(cfg["include_contigs"], list):
+        cfg["include_contigs"] = []
+    cfg["exclude_contigs"] = cfg.get("exclude_contigs", [])
+    if not isinstance(cfg["exclude_contigs"], list):
+        cfg["exclude_contigs"] = []
+    if cfg["include_contigs"]:
+        log.debug(f"Trying to include these contigs: {', '.join(cfg['include_contigs'])}")
+    if cfg["exclude_contigs"]:
+        log.debug(f"Excluding these contigs: {', '.join(cfg['exclude_contigs'])}")
+    show_excluded_debug_logs = cfg.get("show_excluded_debug_logs") is True
+
+    excluded_contigs = set()
+    included_contigs = set()
+    for sample in data_by_sample:
+        for contig in data_by_sample[sample].keys():
+            if contig in excluded_contigs:
+                continue
+            if contig not in included_contigs:
+                if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in cfg["exclude_contigs"]):
+                    excluded_contigs.add(contig)
+                    if show_excluded_debug_logs:
+                        log.debug(f"Skipping excluded contig '{contig}'")
+                    continue
+
+                # filter out contigs based on inclusion patterns
+                if len(cfg["include_contigs"]) > 0 and not any(
+                    fnmatch.fnmatch(contig, pattern) for pattern in cfg["include_contigs"]
+                ):
+                    # Commented out since this could be many thousands of contigs!
+                    # log.debug(f"Skipping not included contig '{contig}'")
+                    continue
+                included_contigs.add(contig)
+
     datasets = [
         {
-            sample: {chrom: metrics[metric] for chrom, metrics in data_by_sample[sample].items()}
+            sample: {
+                chrom: metrics[metric] for chrom, metrics in data_by_sample[sample].items() if chrom in included_contigs
+            }
             for sample in data_by_sample
         }
         for metric in tabs
