@@ -18,7 +18,7 @@ from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc.types import Anchor
+from multiqc.types import Anchor, PlotType
 from multiqc.utils import mqc_colour
 from multiqc.validation import ValidatedConfig
 
@@ -105,19 +105,6 @@ class PConfig(ValidatedConfig):
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
-
-
-class PlotType(Enum):
-    """
-    Plot labels used in custom content, as well as in JS to load plot into Plotly-js
-    """
-
-    LINE = "xy_line"
-    VIOLIN = "violin"
-    BAR = "bar_graph"
-    SCATTER = "scatter"
-    HEATMAP = "heatmap"
-    BOX = "box"
 
 
 class BaseDataset(BaseModel):
