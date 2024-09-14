@@ -678,7 +678,11 @@ class Plot(BaseModel, Generic[T]):
 
         export_btn = ""
         if not flat:
-            export_btn = self._btn(cls="export-plot", label="Export Plot")
+            export_btn = self._btn(
+                cls="export-plot",
+                label="Export Plot",
+                data_attrs={"plot-anchor": str(self.anchor), "type": str(self.plot_type)},
+            )
         return [switch_buttons, export_btn]
 
     def __control_panel(self, flat: bool) -> str:
