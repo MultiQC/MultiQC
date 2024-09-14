@@ -229,14 +229,14 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     m_config["file_format"] = _guess_file_format(f)
 
                 # Parse data and optionally guess plot type from data
-                parsed_item, parsed_conf, plot_type = _parse_txt(f, m_config, non_header_lines)
-                parsed_conf["plot_type"] = plot_type
+                parsed_item, m_config, plot_type = _parse_txt(f, m_config, non_header_lines)
+                m_config["plot_type"] = plot_type
                 if parsed_item is None or len(parsed_item) == 0:
                     log.warning(f"Not able to parse custom data in {f['fn']}")
                 else:
                     # Did we get a new section id from the file?
-                    if parsed_conf.get("id") is not None:
-                        c_id = ModuleId(parsed_conf["id"])
+                    if m_config.get("id") is not None:
+                        c_id = ModuleId(m_config["id"])
                     if c_id not in ccdict_by_id:
                         ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
@@ -250,7 +250,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                         assert isinstance(d, dict), (c_id, f["fn"], f["root"])
                         d.update(parsed_item)
                     assert isinstance(ccdict_by_id[c_id].config, dict)
-                    ccdict_by_id[c_id].config.update(parsed_conf)
+                    ccdict_by_id[c_id].config.update(m_config)
 
         # Give log message if no files found for search pattern
         if num_sp_found_files == 0 and config_custom_data_id != "custom_content":
@@ -275,7 +275,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     for mod_id, ccdict in ccdict_by_id.items():
         # General Stats
         assert isinstance(ccdict.config, dict)
-        plot_type: Optional[PlotType] = PlotType.from_str(ccdict.config.get("plot_type"))
+        plot_type = PlotType.from_str(ccdict.config.get("plot_type"))
         if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
             gs_headers = ccdict.config.get("headers")
@@ -461,7 +461,7 @@ class MultiqcModule(BaseMultiqcModule):
         if _pt is None:
             log.warning(f"'plot_type' value is not sepcified for content ID '{section_id}'")
         else:
-            plot_type: Optional[PlotType] = PlotType.from_str(_pt)
+            plot_type = PlotType.from_str(_pt)
             if plot_type is None:
                 log.warning(f"Error: custom content plot type '{_pt}' not recognised for content ID {section_id}")
 
