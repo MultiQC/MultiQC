@@ -403,9 +403,13 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         if self.info is None or self.info == "":
-            self.info = ccdict.config.get("parent_description")
+            _cc_desc = ccdict.config.get("description")
+            if _cc_desc is not None:
+                self.info = str(_cc_desc)
         if self.extra is None or self.info == "":
-            self.extra = ccdict.config.get("extra", None)
+            _cc_extra = ccdict.config.get("extra")
+            if _cc_extra is not None:
+                self.extra = str(_cc_extra)
         # This needs overwriting again as it has already run on init
         self.intro = self._get_intro()
 
