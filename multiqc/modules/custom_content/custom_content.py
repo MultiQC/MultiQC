@@ -704,7 +704,7 @@ def _parse_txt(
                 return None, conf, plot_type
 
     # Convert values to floats if we can
-    first_row_str = 0
+    strings_in_first_row = 0
     for i, sections in enumerate(matrix):
         for j, v in enumerate(sections):
             try:
@@ -716,7 +716,7 @@ def _parse_txt(
                     v = v[1:-1]
                 # Count strings in first row (header?)
                 if i == 0:
-                    first_row_str += 1
+                    strings_in_first_row += 1
             matrix[i][j] = v
 
     all_numeric = all(isinstance(v, (float, int)) for s in matrix[1:] for v in s[1:])
@@ -731,8 +731,8 @@ def _parse_txt(
                 data_ddict[s_name][matrix[0][j]] = v
         return data_ddict, conf, plot_type
 
-    # Heatmap: Number of headers == number of lines
-    if plot_type is None and first_row_str == len(non_header_lines) and all_numeric:
+    # Heatmap: number of headers == number of lines
+    if plot_type is None and strings_in_first_row == len(non_header_lines) and all_numeric:
         plot_type = PlotType.HEATMAP
     if plot_type == PlotType.HEATMAP:
         conf["xcats"] = matrix[0][1:]
@@ -740,8 +740,21 @@ def _parse_txt(
         data_list: List = [s[1:] for s in matrix[1:]]
         return data_list, conf, plot_type
 
+    # Header row of strings box plot
+    if strings_in_first_row == len(matrix[0]) and plot_type == PlotType.BOX:
+        box_ddict: Dict[str, List[float]] = {str(v): [] for v in matrix[0]}
+        for sidx, s in enumerate(matrix[0]):
+            for row in matrix[1:]:
+                try:
+                    val = float(row[sidx])
+                except ValueError:
+                    pass
+                else:
+                    box_ddict[str(s)].append(val)
+        return box_ddict, conf, plot_type
+
     # Header row of strings, or configured as table
-    if first_row_str == len(matrix[0]) or plot_type == PlotType.TABLE:
+    if strings_in_first_row == len(matrix[0]) or plot_type == PlotType.TABLE:
         data_ddict = dict()
         for s in matrix[1:]:
             s_name = str(s[0])
@@ -771,7 +784,7 @@ def _parse_txt(
         else:
             data_ddict = dict()  # reset
 
-    # Scatter plot: First row is  str : num : num
+    # Scatter plot: first row is str : num : num
     if (
         plot_type is None
         and len(matrix[0]) == 3
@@ -790,30 +803,40 @@ def _parse_txt(
                 pass
         return dicts, conf, plot_type
 
-    # Single sample line / bar graph - first row has two columns
-    if len(matrix[0]) == 2:
-        # Line graph - num : num
-        if plot_type is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
-            plot_type = PlotType.LINE
-        # Bar graph - str : num
-        if plot_type is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
-            plot_type = PlotType.BAR
+    # Single-sample box/bar/line plot
+    if len(matrix[0]) == 2 or len(matrix[0]) == 1:
+        # Set section id based on directory if not known
+        if conf.get("id") is None:
+            conf["id"] = os.path.basename(f["root"])
 
-        # Data structure is the same
-        if plot_type in [PlotType.LINE, PlotType.BAR, PlotType.BOX]:
-            # Set section id based on directory if not known
-            if conf.get("id") is None:
-                conf["id"] = os.path.basename(f["root"])
-            data_dict: Dict = dict()
-            for s in matrix:
-                data_dict[s[0]] = s[1]
-            return {f["s_name"]: data_dict}, conf, plot_type
+        # Single-sample box plot
+        if len(matrix[0]) == 1:
+            if plot_type is None and isinstance(matrix[0][0], float):
+                plot_type = PlotType.BOX
+            if plot_type == PlotType.BOX:
+                return {f["s_name"]: [float(r[0]) for r in matrix]}, conf, plot_type
 
-    # Multi-sample line graph: No header row, str : lots of num columns
+        # Single sample line/bar plot - first row has two columns
+        if len(matrix[0]) == 2:
+            # Line graph - num : num
+            if plot_type is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+                plot_type = PlotType.LINE
+            # Bar graph - str : num
+            if plot_type is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+                plot_type = PlotType.BAR
+
+            # Data structure is the same
+            if plot_type in [PlotType.LINE, PlotType.BAR]:
+                data_dict: Dict = dict()
+                for s in matrix:
+                    data_dict[s[0]] = s[1]
+                return {f["s_name"]: data_dict}, conf, plot_type
+
+    # Multi-sample line graph: No header row, lots of num columns
     if plot_type is None and len(matrix[0]) > 4 and all_numeric:
         plot_type = PlotType.LINE
 
-    if plot_type in [PlotType.LINE, PlotType.BOX]:
+    if plot_type == PlotType.LINE:
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
@@ -839,6 +862,6 @@ def _parse_txt(
     # Got to the end and haven't returned. It's a mystery, capn'!
     log.debug(
         f"Not able to figure out a plot type for '{f['fn']}' "
-        + f"plot type = {plot_type}, all numeric = {all_numeric}, first row str = {first_row_str}"
+        + f"plot type = {plot_type}, all numeric = {all_numeric}, first row str = {strings_in_first_row}"
     )
     return None, conf, plot_type
