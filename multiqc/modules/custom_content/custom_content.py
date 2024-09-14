@@ -160,7 +160,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 parsed_dict.update(_find_html_file_header(f))
 
             if parsed_dict is not None:
-                parsed_item = parsed_dict.get("data", {})
+                parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
                 parsed_item_with_clean_sn: Dict[str, Dict[str, Any]] = {}
                 if isinstance(parsed_item, dict):
                     # Run sample-name cleaning on the data keys
@@ -190,6 +190,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
+                m_config: Optional[Dict]
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 c_id: ModuleId
@@ -756,10 +757,10 @@ def _parse_txt(
     # Header row of strings, or configured as table
     if strings_in_first_row == len(matrix[0]) or plot_type == PlotType.TABLE:
         data_ddict = dict()
-        for s in matrix[1:]:
-            s_name = str(s[0])
+        for row in matrix[1:]:
+            s_name = str(row[0])
             data_ddict[s_name] = dict()
-            for i, v in enumerate(s[1:]):
+            for i, v in enumerate(row[1:]):
                 cat = str(matrix[0][i + 1])
                 data_ddict[s_name][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
@@ -796,9 +797,9 @@ def _parse_txt(
 
     if plot_type == PlotType.SCATTER:
         dicts: Dict[str, Dict[str, float]] = dict()
-        for s in matrix:
+        for row in matrix:
             try:
-                dicts[str(s[0])] = {"x": float(s[1]), "y": float(s[2])}
+                dicts[str(row[0])] = {"x": float(row[1]), "y": float(row[2])}
             except (IndexError, ValueError):
                 pass
         return dicts, conf, plot_type
@@ -828,8 +829,8 @@ def _parse_txt(
             # Data structure is the same
             if plot_type in [PlotType.LINE, PlotType.BAR]:
                 data_dict: Dict = dict()
-                for s in matrix:
-                    data_dict[s[0]] = s[1]
+                for row in matrix:
+                    data_dict[row[0]] = row[1]
                 return {f["s_name"]: data_dict}, conf, plot_type
 
     # Multi-sample line graph: No header row, lots of num columns
@@ -844,10 +845,10 @@ def _parse_txt(
         if s_name.strip() == "":
             x_labels = matrix.pop(0)[1:]
         # Use 1..n range for x values
-        for s in matrix:
-            name = str(s[0])
+        for row in matrix:
+            name = str(row[0])
             data_ddict[name] = dict()
-            for i, v in enumerate(s[1:]):
+            for i, v in enumerate(row[1:]):
                 try:
                     x_val = x_labels[i]
                     try:
