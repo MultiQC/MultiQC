@@ -64,8 +64,7 @@ ignore_images: false
 
 If you can choose exactly how your data output looks, then the easiest way to parse it
 is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)`
-then it will be found by any standard MultiQC installation with no additional customisation
-required (v0.9 onwards).
+then it will be found by any standard MultiQC installation with no additional customisation required.
 
 These files contain configuration information specifying how the data should be parsed,
 alongside the data. If you want to use YAML, this is an example of how it should look:
