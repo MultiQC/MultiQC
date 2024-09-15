@@ -39,22 +39,23 @@ class FlatLine(ValidatedConfig):
     label: Optional[Union[str, Dict]] = None
 
     @classmethod
-    def parse_label(cls, value):
+    def parse_label(cls, value, _clss: List[Type]):
         if isinstance(value, dict):
             add_validation_warning(
-                [PConfig, FlatLine],
+                _clss,
                 "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
                 "Other fields other than 'text' are deprecated and will be ignored",
             )
             return value["text"]
         return value
 
-    def __init__(self, parent_cls: Optional[Type] = None, **data):
+    def __init__(self, _clss=None, **data):
+        _clss = _clss or []
         if "dashStyle" in data:
-            data["dash"] = convert_dash_style(FlatLine, data.pop("dashStyle"), parent_cls=parent_cls or PConfig)
+            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss + [self.__class__])
         if "dash" in data:
-            data["dash"] = convert_dash_style(FlatLine, data["dash"], parent_cls=parent_cls or PConfig)
-        super().__init__(**data, _parent_class=parent_cls or PConfig)
+            data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
+        super().__init__(**data, _clss=_clss)
 
 
 class LineBand(ValidatedConfig):
@@ -66,8 +67,8 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, parent_cls: Optional[Type] = None, **data):
-        super().__init__(**data, _parent_class=parent_cls or PConfig)
+    def __init__(self, _clss: Optional[List[Type]] = None, **data):
+        super().__init__(**data, _clss=_clss or [self.__class__])
 
 
 class PConfig(ValidatedConfig):
@@ -165,20 +166,20 @@ class PConfig(ValidatedConfig):
                 setattr(self, k, v)
 
     @classmethod
-    def parse_x_bands(cls, data):
-        return [LineBand(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_x_bands(cls, data, _clss: List[Type]):
+        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_y_bands(cls, data):
-        return [LineBand(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_y_bands(cls, data, _clss: List[Type]):
+        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_x_lines(cls, data):
-        return [FlatLine(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_x_lines(cls, data, _clss: List[Type]):
+        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
-    def parse_y_lines(cls, data):
-        return [FlatLine(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
+    def parse_y_lines(cls, data, _clss: List[Type]):
+        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):
@@ -1282,7 +1283,7 @@ def split_long_string(s: str, max_width=80) -> List[str]:
     return lines
 
 
-def convert_dash_style(cls: type, dash_style: Optional[str], parent_cls: Type = PConfig) -> Optional[str]:
+def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = None) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
     if dash_style is None:
         return None
@@ -1302,8 +1303,6 @@ def convert_dash_style(cls: type, dash_style: Optional[str], parent_cls: Type = 
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
-        add_validation_warning(
-            [parent_cls, cls], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
-        )
+        add_validation_warning(_clss or [], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
         return mapping[dash_style]
     return "solid"

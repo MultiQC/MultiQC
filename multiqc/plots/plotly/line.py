@@ -41,18 +41,19 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
     showlegend: bool = True
     marker: Optional[Marker] = None
 
-    def __init__(self, parent_cls: Type = PConfig, **data):
+    def __init__(self, _clss: Optional[List[Type]] = None, **data):
+        _clss = (_clss or []) + [self.__class__]
         if "dashStyle" in data:
             add_validation_warning(
                 [LinePlotConfig, Series], "'dashStyle' field is deprecated. Please use 'dash' instead"
             )
-            data["dash"] = convert_dash_style(Series, data.pop("dashStyle"), parent_cls=parent_cls)
+            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss)
         elif "dash" in data:
-            data["dash"] = convert_dash_style(Series, data["dash"], parent_cls=parent_cls)
+            data["dash"] = convert_dash_style(data["dash"], _clss=_clss)
 
         tuples: List[Tuple[KeyTV, ValueTV]] = []
         if "data" in data:
-            add_validation_warning([LinePlotConfig, Series], "'data' field is deprecated. Please use 'pairs' instead")
+            add_validation_warning(_clss, "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
                 tuples.append(tuple(p))
@@ -60,7 +61,7 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
                 tuples.append(p)
         data["pairs"] = tuples
 
-        super().__init__(**data, _parent_class=LinePlotConfig)
+        super().__init__(**data, _clss=_clss)
 
     def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         xs = [x[0] for x in self.pairs]
@@ -91,12 +92,12 @@ class LinePlotConfig(PConfig):
     colors: Dict[str, str] = {}
 
     @classmethod
-    def parse_extra_series(cls, data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]]):
+    def parse_extra_series(cls, data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]], _clss: List[Type]):
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(**d, parent_cls=cls) if isinstance(d, dict) else d for d in ds] for ds in data]
-            return [Series(**d, parent_cls=cls) if isinstance(d, dict) else d for d in data]
-        return Series(**data, parent_cls=cls) if isinstance(data, dict) else data
+                return [[Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in ds] for ds in data]
+            return [Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in data]
+        return Series(**data, _clss=_clss) if isinstance(data, dict) else data
 
 
 def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":
