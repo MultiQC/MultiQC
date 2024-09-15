@@ -260,6 +260,7 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
+package-data = {multiqc = ["py.typed"]}
 
 [tool.ruff]
 line-length = 120
