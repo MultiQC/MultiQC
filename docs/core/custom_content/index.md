@@ -369,12 +369,12 @@ section_extra: null # Custom HTML to add after the section description
 file_format: null # File format of the data (eg. csv / tsv)
 plot_type:
   null # The plot type to visualise the data with.
-  # generalstats | table | bargraph | linegraph | scatter | heatmap | beeswarm
+  # generalstats | table | bargraph | linegraph | boxplot | scatter | heatmap | violin
 pconfig: {} # Configuration for the plot.
 ```
 
 :::info
-Data types `generalstats` and `beeswarm` are _only_ possible by setting the above
+Data types `generalstats` and `violin` are _only_ possible by setting the above
 configuration keys (these can't be guessed by data format).
 :::
 
@@ -397,9 +397,10 @@ Configuration of specific plots follows the same syntax as used when writing mod
 To find out more, please see the later docs. Specifically, the plot config docs for
 [bar graphs](../development/plots.md#bar-graphs),
 [line graphs](../development/plots.md#line-graphs),
+[box plots](../development/plots.md#box-plots),
 [scatter plots](../development/plots.md#scatter-plots),
 [tables](../development/plots.md#creating-a-table),
-[beeswarm plots](../development/plots.md#beeswarm-plots-dot-plots) and
+[violin plots](../development/plots.md#violin-plots) and
 [heatmaps](../development/plots.md#heatmaps).
 
 Wherever you see `pconfig`, any key can be used within the above syntax.
