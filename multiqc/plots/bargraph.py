@@ -57,7 +57,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = BarPlotConfig.from_pconfig_dict(pconfig)
+    pconf = cast(BarPlotConfig, BarPlotConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     raw_datasets: List[DatasetT]

@@ -1,7 +1,7 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -36,17 +36,17 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf: HeatmapConfig = HeatmapConfig.from_pconfig_dict(pconfig)
+    pconf: HeatmapConfig = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
     if ycats is None:
         ycats = xcats
 
     # Make a plot
     mod = get_template_mod()
-    if "heatmap" in mod.__dict__ and callable(mod.heatmap):
+    if "heatmap" in mod.__dict__ and callable(mod.__dict__["heatmap"]):
         # noinspection PyBroadException
         try:
-            return mod.heatmap(data, xcats, ycats, pconf)
+            return mod.__dict__["heatmap"](data, xcats, ycats, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
