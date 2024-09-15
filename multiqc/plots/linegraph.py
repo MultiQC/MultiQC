@@ -7,7 +7,7 @@ from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import DatasetT, KeyTV, LinePlotConfig, Series, SeriesT, ValueTV, XToYDictT
+from multiqc.plots.plotly.line import DatasetT, KeyTV, LinePlotConfig, Series, ValueTV, XToYDictT
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf: LinePlotConfig = LinePlotConfig.from_pconfig_dict(pconfig)
+    pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     raw_dataset_list: List[DatasetT]

@@ -1,7 +1,7 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -32,7 +32,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = ScatterConfig.from_pconfig_dict(pconfig)
+    pconf = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
@@ -107,10 +107,10 @@ def plot(
 
     # Make a plot
     mod = get_template_mod()
-    if "scatter" in mod.__dict__ and callable(mod.scatter):
+    if "scatter" in mod.__dict__ and callable(mod.__dict__["scatter"]):
         # noinspection PyBroadException
         try:
-            return mod.scatter(plotdata, pconf)
+            return mod.__dict__["scatter"](plotdata, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive

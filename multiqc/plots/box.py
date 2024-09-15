@@ -1,7 +1,7 @@
 """MultiQC functions to plot a box plot"""
 
 import logging
-from typing import Dict, List, Optional, OrderedDict, Union
+from typing import Dict, List, Optional, OrderedDict, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -32,7 +32,7 @@ def plot(
     - a dict mapping sample names to data point lists or dicts,
     - a dict mapping sample names to a dict of statistics (e.g. {min, max, median, mean, std, q1, q3 etc.})
     """
-    pconf: BoxPlotConfig = BoxPlotConfig.from_pconfig_dict(pconfig)
+    pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     if not isinstance(list_of_data_by_sample, list):
@@ -49,10 +49,10 @@ def plot(
 
     # Make a plot - custom, interactive or flat
     mod = get_template_mod()
-    if "box" in mod.__dict__ and callable(mod.bargraph):
+    if "box" in mod.__dict__ and callable(mod.__dict__["box"]):
         # noinspection PyBroadException
         try:
-            return mod.box(list_of_data_by_sample, pconfig)
+            return mod.__dict__["box"](list_of_data_by_sample, pconfig)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
