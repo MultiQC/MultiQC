@@ -183,26 +183,26 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-    def get_x_range(self) -> Tuple[Optional[ValueT], Optional[ValueT]]:
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         if not self.points:
             return None, None
         xmax, xmin = None, None
         for point in self.points:
             x = point["x"]
             if x is not None:
-                xmax = x if xmax is None else max(xmax, x)
-                xmin = x if xmin is None else min(xmin, x)
+                xmax = x if xmax is None else max(xmax, x)  # type: ignore
+                xmin = x if xmin is None else min(xmin, x)  # type: ignore
         return xmin, xmax
 
-    def get_y_range(self) -> Tuple[Optional[ValueT], Optional[ValueT]]:
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         if not self.points:
             return None, None
         ymax, ymin = None, None
         for point in self.points:
             y = point["y"]
             if y is not None:
-                ymax = y if ymax is None else max(ymax, y)
-                ymin = y if ymin is None else min(ymin, y)
+                ymax = y if ymax is None else max(ymax, y)  # type: ignore
+                ymin = y if ymin is None else min(ymin, y)  # type: ignore
         return ymin, ymax
 
     def save_data_file(self) -> None:

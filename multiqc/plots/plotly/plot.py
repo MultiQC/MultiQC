@@ -66,8 +66,8 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, parent_cls: Type = "PConfig", **data):
-        super().__init__(**data, _parent_class=parent_cls)
+    def __init__(self, parent_cls: Optional[Type] = None, **data):
+        super().__init__(**data, _parent_class=parent_cls or PConfig)
 
 
 class PConfig(ValidatedConfig):

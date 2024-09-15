@@ -3,7 +3,7 @@ import logging
 import math
 import os
 import random
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, TypeVar, Union, Type
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
 from plotly.graph_objs.layout.shape import Label  # type: ignore
@@ -62,16 +62,16 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
 
         super().__init__(**data, _parent_class=LinePlotConfig)
 
-    def get_x_range(self) -> Tuple[Optional[KeyTV], Optional[KeyTV]]:
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         xs = [x[0] for x in self.pairs]
         if len(xs) > 0:
-            return min(xs), max(xs)
+            return min(xs), max(xs)  # type: ignore
         return None, None
 
-    def get_y_range(self) -> Tuple[Optional[ValueTV], Optional[ValueTV]]:
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         ys = [x[1] for x in self.pairs if x[1] is not None]
         if len(ys) > 0:
-            return min(ys), max(ys)
+            return min(ys), max(ys)  # type: ignore
         return None, None
 
 
@@ -119,28 +119,28 @@ def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePl
 class Dataset(BaseDataset):
     lines: List[Series]
 
-    def get_x_range(self) -> Tuple[Optional[KeyTV], Optional[KeyTV]]:
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         if not self.lines:
             return None, None
         xmax, xmin = None, None
         for line in self.lines:
             _xmin, _xmax = line.get_x_range()
             if _xmin is not None:
-                xmin = _xmin if xmin is None else min(xmin, _xmin)
+                xmin = min(xmin, _xmin) if xmin is not None else _xmin  # type: ignore
             if _xmax is not None:
-                xmax = _xmax if xmax is None else max(xmax, _xmax)
+                xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
         return xmin, xmax
 
-    def get_y_range(self) -> Tuple[Optional[ValueTV], Optional[ValueTV]]:
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         if not self.lines:
             return None, None
         ymax, ymin = None, None
         for line in self.lines:
             _ymin, _ymax = line.get_y_range()
             if _ymin is not None:
-                ymin = _ymin if ymin is None else min(ymin, _ymin)
+                ymin = min(ymin, _ymin) if ymin is not None else _ymin  # type: ignore
             if _ymax is not None:
-                ymax = _ymax if ymax is None else max(ymax, _ymax)
+                ymax = max(ymax, _ymax) if ymax is not None else _ymax  # type: ignore
         return ymin, ymax
 
     @staticmethod
