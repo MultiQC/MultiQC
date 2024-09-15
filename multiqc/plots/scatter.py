@@ -1,7 +1,7 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Dict, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -96,11 +96,13 @@ def plot(
     # noinspection PyBroadException
     try:
         if pconf.extra_series:
-            extra_series = pconf.extra_series
+            extra_series: List[List[Dict[str, Any]]] = []
             if isinstance(pconf.extra_series, dict):
                 extra_series = [[pconf.extra_series]]
             elif isinstance(pconf.extra_series, list) and isinstance(pconf.extra_series[0], dict):
-                extra_series = [pconf.extra_series]
+                extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
+            else:
+                extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)
             for i, es in enumerate(extra_series):
                 for s in es:
                     plotdata[i].append(s)
