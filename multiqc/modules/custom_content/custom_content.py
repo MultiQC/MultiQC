@@ -526,13 +526,13 @@ class MultiqcModule(BaseMultiqcModule):
             elif plot_type == PlotType.HTML:
                 if len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
-                content = ccdict.data[0]
+                content = ccdict.data
 
             # Raw image file as html
             elif plot_type == PlotType.IMAGE:
                 if len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
-                content = ccdict.data[0]
+                content = ccdict.data
 
         if plot is not None:
             for i, ds in enumerate(plot_datasets):
