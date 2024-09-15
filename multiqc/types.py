@@ -62,4 +62,6 @@ class PlotType(Enum):
             return PlotType.HTML
         elif val in ["image"]:
             return PlotType.IMAGE
+        elif val in ["generalstats"]:
+            return PlotType.GENERALSTATS
         return None
