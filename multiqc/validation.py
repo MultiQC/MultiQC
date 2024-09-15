@@ -91,7 +91,7 @@ class ValidatedConfig(BaseModel):
         if not isinstance(values, dict):
             return values
 
-        _clss = values.pop("_clss", [cls])
+        _clss = values.pop("_clss", None) or [cls]
 
         # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
         for k, v in cls.model_fields.items():
