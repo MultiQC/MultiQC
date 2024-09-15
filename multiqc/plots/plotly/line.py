@@ -3,7 +3,7 @@ import logging
 import math
 import os
 import random
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, TypeVar, Union, Type
 
 import plotly.graph_objects as go  # type: ignore
 from plotly.graph_objs.layout.shape import Label  # type: ignore
@@ -41,14 +41,14 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
     showlegend: bool = True
     marker: Optional[Marker] = None
 
-    def __init__(self, **data):
+    def __init__(self, parent_cls: Type = PConfig, **data):
         if "dashStyle" in data:
             add_validation_warning(
                 [LinePlotConfig, Series], "'dashStyle' field is deprecated. Please use 'dash' instead"
             )
-            data["dash"] = convert_dash_style(Series, data.pop("dashStyle"))
+            data["dash"] = convert_dash_style(Series, data.pop("dashStyle"), parent_cls=parent_cls)
         elif "dash" in data:
-            data["dash"] = convert_dash_style(Series, data["dash"])
+            data["dash"] = convert_dash_style(Series, data["dash"], parent_cls=parent_cls)
 
         tuples: List[Tuple[KeyTV, ValueTV]] = []
         if "data" in data:
@@ -94,9 +94,9 @@ class LinePlotConfig(PConfig):
     def parse_extra_series(cls, data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]]):
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(**d) if isinstance(d, dict) else d for d in ds] for ds in data]
-            return [Series(**d) if isinstance(d, dict) else d for d in data]
-        return Series(**data) if isinstance(data, dict) else data
+                return [[Series(**d, parent_cls=cls) if isinstance(d, dict) else d for d in ds] for ds in data]
+            return [Series(**d, parent_cls=cls) if isinstance(d, dict) else d for d in data]
+        return Series(**data, parent_cls=cls) if isinstance(data, dict) else data
 
 
 def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":

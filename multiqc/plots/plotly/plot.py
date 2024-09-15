@@ -7,7 +7,7 @@ import random
 import re
 import threading
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -49,12 +49,12 @@ class FlatLine(ValidatedConfig):
             return value["text"]
         return value
 
-    def __init__(self, **data):
+    def __init__(self, parent_cls: Optional[Type] = None, **data):
         if "dashStyle" in data:
-            data["dash"] = convert_dash_style(FlatLine, data.pop("dashStyle"))
+            data["dash"] = convert_dash_style(FlatLine, data.pop("dashStyle"), parent_cls=parent_cls or PConfig)
         if "dash" in data:
-            data["dash"] = convert_dash_style(FlatLine, data["dash"])
-        super().__init__(**data, _parent_class=PConfig)
+            data["dash"] = convert_dash_style(FlatLine, data["dash"], parent_cls=parent_cls or PConfig)
+        super().__init__(**data, _parent_class=parent_cls or PConfig)
 
 
 class LineBand(ValidatedConfig):
@@ -66,8 +66,8 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, **data):
-        super().__init__(**data, _parent_class=PConfig)
+    def __init__(self, parent_cls: Type = "PConfig", **data):
+        super().__init__(**data, _parent_class=parent_cls)
 
 
 class PConfig(ValidatedConfig):
@@ -136,6 +136,7 @@ class PConfig(ValidatedConfig):
     y_bands: Optional[List[LineBand]] = None
     x_lines: Optional[List[FlatLine]] = None
     y_lines: Optional[List[FlatLine]] = None
+    _actual_cls = None
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
@@ -153,6 +154,8 @@ class PConfig(ValidatedConfig):
     def __init__(self, **data):
         super().__init__(**data)
 
+        self._actual_cls = self.__class__
+
         if not self.id:
             self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
 
@@ -163,19 +166,19 @@ class PConfig(ValidatedConfig):
 
     @classmethod
     def parse_x_bands(cls, data):
-        return [LineBand(**d) for d in ([data] if isinstance(data, dict) else data)]
+        return [LineBand(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_y_bands(cls, data):
-        return [LineBand(**d) for d in ([data] if isinstance(data, dict) else data)]
+        return [LineBand(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_x_lines(cls, data):
-        return [FlatLine(**d) for d in ([data] if isinstance(data, dict) else data)]
+        return [FlatLine(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
 
     @classmethod
     def parse_y_lines(cls, data):
-        return [FlatLine(**d) for d in ([data] if isinstance(data, dict) else data)]
+        return [FlatLine(**d, parent_cls=cls) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):
@@ -1279,7 +1282,7 @@ def split_long_string(s: str, max_width=80) -> List[str]:
     return lines
 
 
-def convert_dash_style(cls: type, dash_style: Optional[str]) -> Optional[str]:
+def convert_dash_style(cls: type, dash_style: Optional[str], parent_cls: Type = PConfig) -> Optional[str]:
     """Convert dash style from Highcharts to Plotly"""
     if dash_style is None:
         return None
@@ -1300,7 +1303,7 @@ def convert_dash_style(cls: type, dash_style: Optional[str]) -> Optional[str]:
         return dash_style
     elif dash_style in mapping.keys():  # Highcharts style?
         add_validation_warning(
-            [PConfig, cls], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
+            [parent_cls, cls], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
         )
         return mapping[dash_style]
     return "solid"
