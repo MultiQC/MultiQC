@@ -1,19 +1,18 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Dict, List, Union, Optional, Any, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 from plotly import graph_objects as go  # type: ignore
 
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot, PConfig
 from multiqc import report
+from multiqc.plots.plotly.plot import BaseDataset, PConfig, Plot, PlotType
 
 logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    ylab: str
     categories: Optional[List[str]] = None
     extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
     marker_size: Optional[int] = None
@@ -23,7 +22,8 @@ class ScatterConfig(PConfig):
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
-PointT = Dict[str, Union[str, float, int]]
+ValueT = Union[str, float, int]
+PointT = Dict[str, ValueT]
 
 
 def plot(points_lists: List[List[PointT]], pconfig: ScatterConfig) -> "ScatterPlot":
@@ -183,6 +183,28 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
+    def get_x_range(self) -> Tuple[Optional[ValueT], Optional[ValueT]]:
+        if not self.points:
+            return None, None
+        xmax, xmin = None, None
+        for point in self.points:
+            x = point["x"]
+            if x is not None:
+                xmax = x if xmax is None else max(xmax, x)
+                xmin = x if xmin is None else min(xmin, x)
+        return xmin, xmax
+
+    def get_y_range(self) -> Tuple[Optional[ValueT], Optional[ValueT]]:
+        if not self.points:
+            return None, None
+        ymax, ymin = None, None
+        for point in self.points:
+            y = point["y"]
+            if y is not None:
+                ymax = y if ymax is None else max(ymax, y)
+                ymin = y if ymin is None else min(ymin, y)
+        return ymin, ymax
+
     def save_data_file(self) -> None:
         data = [
             {
@@ -208,6 +230,9 @@ class ScatterPlot(Plot):
         )
 
         model.datasets = [Dataset.create(d, points, pconfig) for d, points in zip(model.datasets, points_lists)]
+
+        model._set_x_bands_and_range(pconfig)
+        model._set_y_bands_and_range(pconfig)
 
         # Make a tooltip always show on hover over nearest point on plot
         model.layout.hoverdistance = -1

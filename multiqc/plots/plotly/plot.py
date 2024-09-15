@@ -18,11 +18,56 @@ from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
 from multiqc.types import Anchor, PlotType
 from multiqc.utils import mqc_colour
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
+
+
+class FlatLine(ValidatedConfig):
+    """
+    Extra X=const or Y=const line added to the plot
+    """
+
+    value: Union[float, int]
+    colour: Optional[str] = Field(None, deprecated="color")
+    color: Optional[str] = None
+    width: int = 2
+    dashStyle: Optional[str] = Field(None, deprecated="dash")
+    dash: Optional[str] = None
+    label: Optional[Union[str, Dict]] = None
+
+    @classmethod
+    def parse_label(cls, value):
+        if isinstance(value, dict):
+            add_validation_warning(
+                [PConfig, FlatLine],
+                "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
+                "Other fields other than 'text' are deprecated and will be ignored",
+            )
+            return value["text"]
+        return value
+
+    def __init__(self, **data):
+        if "dashStyle" in data:
+            data["dash"] = convert_dash_style(FlatLine, data.pop("dashStyle"))
+        if "dash" in data:
+            data["dash"] = convert_dash_style(FlatLine, data["dash"])
+        super().__init__(**data, _parent_class=PConfig)
+
+
+class LineBand(ValidatedConfig):
+    """
+    Extra X1-X2 or Y1-Y2 band added to the plot
+    """
+
+    from_: Union[float, int]
+    to: Union[float, int]
+    color: Optional[str] = None
+
+    def __init__(self, **data):
+        super().__init__(**data, _parent_class=PConfig)
 
 
 class PConfig(ValidatedConfig):
@@ -79,6 +124,18 @@ class PConfig(ValidatedConfig):
     y_clipmax: Optional[Union[float, int]] = None
     save_data_file: bool = True
     showlegend: Optional[bool] = None
+    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
+    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
+    x_minrange: Optional[Union[float, int]] = None
+    y_minrange: Optional[Union[float, int]] = None
+    xPlotBands: Optional[List[LineBand]] = Field(None, deprecated="x_bands")
+    yPlotBands: Optional[List[LineBand]] = Field(None, deprecated="y_bands")
+    xPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="x_lines")
+    yPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="y_lines")
+    x_bands: Optional[List[LineBand]] = None
+    y_bands: Optional[List[LineBand]] = None
+    x_lines: Optional[List[FlatLine]] = None
+    y_lines: Optional[List[FlatLine]] = None
 
     @classmethod
     def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
@@ -103,6 +160,22 @@ class PConfig(ValidatedConfig):
         if self.id in config.custom_plot_config:
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
+
+    @classmethod
+    def parse_x_bands(cls, data):
+        return [LineBand(**d) for d in ([data] if isinstance(data, dict) else data)]
+
+    @classmethod
+    def parse_y_bands(cls, data):
+        return [LineBand(**d) for d in ([data] if isinstance(data, dict) else data)]
+
+    @classmethod
+    def parse_x_lines(cls, data):
+        return [FlatLine(**d) for d in ([data] if isinstance(data, dict) else data)]
+
+    @classmethod
+    def parse_y_lines(cls, data):
+        return [FlatLine(**d) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):
@@ -138,6 +211,12 @@ class BaseDataset(BaseModel):
         Save dataset to disk.
         """
         raise NotImplementedError
+
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        return None, None
+
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        return None, None
 
 
 T = TypeVar("T", bound="BaseDataset")
@@ -181,6 +260,11 @@ class Plot(BaseModel, Generic[T]):
             return go.Layout(**d)
         return d
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._set_x_bands_and_range(self.pconfig)
+        self._set_y_bands_and_range(self.pconfig)
+
     @staticmethod
     def initialize(
         plot_type: PlotType,
@@ -194,7 +278,7 @@ class Plot(BaseModel, Generic[T]):
         flat_if_very_large: bool = True,
     ):
         """
-        Initialize a plot model with the given configuration.
+        Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
@@ -389,6 +473,145 @@ class Plot(BaseModel, Generic[T]):
             square=pconfig.square,
             flat=flat,
             defer_render=defer_render,
+        )
+
+    def _set_x_bands_and_range(self, pconfig: PConfig):
+        x_minrange = pconfig.x_minrange
+        x_bands = pconfig.x_bands
+        x_lines = pconfig.x_lines
+
+        if x_bands or x_lines or x_minrange:
+            # same as above but for x-axis
+            for dataset in self.datasets:
+                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+                dminval, dmaxval = dataset.get_x_range()
+                if dminval is not None:
+                    minval = min(minval, dminval) if minval is not None else dminval
+                if dmaxval is not None:
+                    maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if x_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + x_minrange)
+                if self.layout.xaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["xaxis"]["range"] = [minval, maxval]
+
+        if not self.layout.shapes:
+            self.layout.shapes = []
+        self.layout.shapes = (
+            list(self.layout.shapes)
+            + [
+                dict(
+                    type="rect",
+                    x0=band.from_,
+                    x1=band.to,
+                    y0=0,
+                    y1=1,
+                    yref="paper",  # make y coords are relative to the plot paper [0,1]
+                    fillcolor=band.color,
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in (x_bands or [])
+            ]
+            + [
+                dict(
+                    type="line",
+                    yref="paper",
+                    xref="x",
+                    x0=line.value,
+                    y0=0,
+                    x1=line.value,
+                    y1=1,
+                    line={
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
+                    },
+                    label=dict(text=line.label, font=dict(color=line.color)),
+                )
+                for line in (x_lines or [])
+            ]
+        )
+
+    def _set_y_bands_and_range(self, pconfig: PConfig):
+        y_minrange = pconfig.y_minrange
+        y_bands = pconfig.y_bands
+        y_lines = pconfig.y_lines
+
+        if y_bands or y_lines or y_minrange:
+            # We don't want the bands to affect the calculated axis range, so we
+            # find the min and the max from data points, and manually set the range.
+            for dataset in self.datasets:
+                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+                dminval, dmaxval = dataset.get_y_range()
+                if dminval is not None:
+                    minval = min(minval, dminval) if minval is not None else dminval
+                if dmaxval is not None:
+                    maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+                if maxval is not None and minval is not None:
+                    maxval += (maxval - minval) * 0.05
+                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if y_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + y_minrange)
+                if self.layout.yaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["yaxis"]["range"] = [minval, maxval]
+
+        if not self.layout.shapes:
+            self.layout.shapes = []
+        self.layout.shapes = (
+            list(self.layout.shapes)
+            + [
+                dict(
+                    type="rect",
+                    y0=band.from_,
+                    y1=band.to,
+                    x0=0,
+                    x1=1,
+                    xref="paper",  # make x coords are relative to the plot paper [0,1]
+                    fillcolor=band.color,
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in (y_bands or [])
+            ]
+            + [
+                dict(
+                    type="line",
+                    xref="paper",
+                    yref="y",
+                    x0=0,
+                    y0=line.value,
+                    x1=1,
+                    y1=line.value,
+                    line={
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
+                    },
+                    label=dict(text=line.label, font=dict(color=line.color)),
+                )
+                for line in (y_lines or [])
+            ]
         )
 
     def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
@@ -1054,3 +1277,30 @@ def split_long_string(s: str, max_width=80) -> List[str]:
         lines.append(current_line)
 
     return lines
+
+
+def convert_dash_style(cls: type, dash_style: Optional[str]) -> Optional[str]:
+    """Convert dash style from Highcharts to Plotly"""
+    if dash_style is None:
+        return None
+    mapping = {
+        "Solid": "solid",
+        "ShortDash": "dash",
+        "ShortDot": "dot",
+        "ShortDashDot": "dashdot",
+        "ShortDashDotDot": "dashdot",
+        "Dot": "dot",
+        "Dash": "dash",
+        "DashDot": "dashdot",
+        "LongDash": "longdash",
+        "LongDashDot": "longdashdot",
+        "LongDashDotDot": "longdashdot",
+    }
+    if dash_style in mapping.values():  # Plotly style?
+        return dash_style
+    elif dash_style in mapping.keys():  # Highcharts style?
+        add_validation_warning(
+            [PConfig, cls], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'"
+        )
+        return mapping[dash_style]
+    return "solid"
