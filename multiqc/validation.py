@@ -37,9 +37,13 @@ def add_validation_warning(cls: Union[type, List[type]], warning: str):
 
 class ValidatedConfig(BaseModel):
     def __init__(self, _clss: Optional[List[Type]] = None, **data):
-        _clss = (_clss or []) + [self.__class__]
         _cls_name = self.__class__.__name__
-        _full_cls_name = ".".join(_c.__name__ for _c in _clss)
+        _classes = []
+        if _clss:
+            for _c in _clss:
+                _classes.append(_c)
+        _classes.append(self.__class__)
+        _full_cls_name = ".".join(_c.__name__ for _c in _classes)
 
         try:
             super().__init__(**data, _clss=_clss)

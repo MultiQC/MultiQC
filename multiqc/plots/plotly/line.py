@@ -42,18 +42,18 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
     marker: Optional[Marker] = None
 
     def __init__(self, _clss: Optional[List[Type]] = None, **data):
-        _clss = (_clss or []) + [self.__class__]
+        _clss = _clss or []
         if "dashStyle" in data:
             add_validation_warning(
                 [LinePlotConfig, Series], "'dashStyle' field is deprecated. Please use 'dash' instead"
             )
-            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss)
+            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss + [self.__class__])
         elif "dash" in data:
-            data["dash"] = convert_dash_style(data["dash"], _clss=_clss)
+            data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
 
         tuples: List[Tuple[KeyTV, ValueTV]] = []
         if "data" in data:
-            add_validation_warning(_clss, "'data' field is deprecated. Please use 'pairs' instead")
+            add_validation_warning(_clss + [self.__class__], "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
             if isinstance(p, list):
                 tuples.append(tuple(p))
