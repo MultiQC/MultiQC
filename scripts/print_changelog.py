@@ -91,11 +91,11 @@ def main():
         "documentation": "Chores",
     }
     sections_to_prs: Dict[str, List[PullRequest]] = {
-        "Fixes": [],
-        "Updates": [],
         "New modules": [],
-        "Module fixes": [],
+        "Updates": [],
         "Module updates": [],
+        "Fixes": [],
+        "Module fixes": [],
         "Refactoring": [],
         "Infrastructure": [],
         "Chores": [],
