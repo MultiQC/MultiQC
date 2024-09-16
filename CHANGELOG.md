@@ -97,7 +97,7 @@ Another worthy addition is the box plot support in custom content, see [2847](ht
 - Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
 - Remove `pyaml_env` dependency and apply the fix for the `SyntaxWarning` ([#2837](https://github.com/MultiQC/MultiQC/pull/2837))
 
-### Infrastructure
+### Infrastructure and packaging
 
 - Add `py.typed` to mark package as providing type information ([#2846](https://github.com/MultiQC/MultiQC/pull/2846))
 
