@@ -102,9 +102,8 @@ def make_table(
         </tr>"""
 
         # Make a colour scale
-        if header.scale is False:
-            c_scale = None
-        else:
+        c_scale = None
+        if isinstance(header.scale, str):
             c_scale = mqc_colour.mqc_colour_scale(
                 name=header.scale,
                 minval=header.dmin,
