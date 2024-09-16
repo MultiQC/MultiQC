@@ -734,7 +734,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("sequence_content not found in FastQC reports")
             return None
 
-        html = """<div id="{id}_div">
+        # Generate unique plot ID, needed in mqc_export_selectplots
+        anchor = report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot")
+        dump = json.dumps([self.anchor, data_by_sample])
+        html = f"""<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
@@ -748,22 +751,18 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
+                <div id="{anchor}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
             <div class="clearfix"></div>
         </div>
-        <script type="application/json" class="fastqc_seq_content">{d}</script>
-        """.format(
-            # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data_by_sample]),
-        )
+        <script type="application/json" class="fastqc_seq_content">{dump}</script>
+        """
 
         self.add_section(
             name="Per Base Sequence Content",
-            anchor="fastqc_per_base_sequence_content",
+            anchor=f"{self.anchor}_per_base_sequence_content",
             description="The proportion of each base position for which each of the four normal DNA bases has been called.",
             helptext="""
             To enable multiple samples to be shown in a single plot, the base composition data
