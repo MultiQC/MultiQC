@@ -306,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
         q_values: List[int] = []
         samples_with_same_q_values = []
         samples_with_other_q_values = []  # will be skipped
-        for s_name, data_dict in self.nanostat_data.items():
+        for s_name, data_dict in sorted(self.nanostat_data.items()):
             sample_q_vals = [
                 int(k.strip().replace(">Q", "").split("_")[0]) for k in data_dict.keys() if k.startswith(">Q")
             ]
