@@ -110,7 +110,7 @@ def plot(
                 else:
                     if "name" not in cat_props:
                         cat_props["name"] = cat_name
-                    ds_categories[cat_name] = CatConf(**cat_props, _parent_class=bar.BarPlot)
+                    ds_categories[cat_name] = CatConf(**cat_props, _clss=[bar.BarPlot])
         else:
             raise RunError(f"Invalid category type: {type(raw_ds_cats)}")
         categories_per_ds.append(ds_categories)
