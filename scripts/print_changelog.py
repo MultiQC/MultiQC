@@ -15,7 +15,6 @@ from typing import Dict, List
 from github import Github
 from github.PullRequest import PullRequest
 
-
 REPO_ID = "MultiQC/MultiQC"
 REPO_URL = f"https://github.com/{REPO_ID}"
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
@@ -72,12 +71,14 @@ def get_version_from_tag() -> str:
 
 def main():
     current_tag = f"v{get_version_from_tag()}"
-    previous_tag = run_cmd(f"cd {WORKSPACE_PATH} && git describe --tags --abbrev=0").stdout.strip()
+    previous_minor_tag = run_cmd(f"cd {WORKSPACE_PATH} && git describe --tags --abbrev=0").stdout.strip()
+    if previous_minor_tag.count(".") == 2:  # 1.24.1 -> 1.24
+        previous_minor_tag = previous_minor_tag.rsplit(".", 1)[0]
     repo = Github(login_or_token=GITHUB_TOKEN).get_repo(REPO_ID)
     milestones = repo.get_milestones(state="all")
     assert_milestone_exists(milestones, current_tag)
-    assert_milestone_exists(milestones, previous_tag)
-    prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_tag)
+    assert_milestone_exists(milestones, previous_minor_tag)
+    prs: List[PullRequest] = get_milestone_prs(repo, current_tag, previous_minor_tag)
 
     label_to_section: Dict[str, str] = {
         "module: new": "New modules",
