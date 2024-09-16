@@ -2,6 +2,8 @@
 
 ## [MultiQC v1.25](https://github.com/MultiQC/MultiQC/releases/tag/v1.25) - 2024-09-16
 
+### Highlights
+
 New feature: grouping samples in the General Statistics table.
 
 <img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
@@ -47,7 +49,7 @@ table_sample_merge:
       pattern: "[_.-][rR]?2$"
 ```
 
-Another worthy addition is the box plot support for custom content, see [2847](https://github.com/MultiQC/MultiQC/pull/2847) for details.
+Another worthy addition is the box plot support in custom content, see [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
 
 ### New modules
 
@@ -60,40 +62,40 @@ Another worthy addition is the box plot support for custom content, see [2847](h
 - Allow `x_band`, `x_lines`, `x_minrange` for any plot type (specifically, scatter plots) ([#2851](https://github.com/MultiQC/MultiQC/pull/2851))
 - When both `contents` and `contents_re` are specified in a search patterns, treat it as logical AND ([#2828](https://github.com/MultiQC/MultiQC/pull/2828))
 - Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814))
-- Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
-- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797))
 
 ### Fixes
 
 - Workaround for the hanging Kaleido duing plot export: run plot export in separate threads with a timeout and fallback on freezes, add try-catch for crashes ([#2836](https://github.com/MultiQC/MultiQC/pull/2836), [#2819](https://github.com/MultiQC/MultiQC/pull/2819))
-- Fix copy multiqc.log into multiqc_data output folder ([#2829](https://github.com/MultiQC/MultiQC/pull/2829))
+- Fix copying `multiqc.log` into the `multiqc_data` output folder ([#2829](https://github.com/MultiQC/MultiQC/pull/2829))
 - Fix applying `exclude_files` in search patterns ([#2804](https://github.com/MultiQC/MultiQC/pull/2804))
 - Fix bar plot export from toolbox ([#2845](https://github.com/MultiQC/MultiQC/pull/2845))
 - Fix autoselection in plot export toolbox ([#2844](https://github.com/MultiQC/MultiQC/pull/2844))
-- Fix replace_samples for custom content genstats table ([#2841](https://github.com/MultiQC/MultiQC/pull/2841))
-- Remove `pyaml_env` dependency and apply the fix for the `SyntaxWarning` ([#2837](https://github.com/MultiQC/MultiQC/pull/2837))
-
-### Module fixes
-
-- Fix FASTQC Per Base Sequence Content plot click when module run multiple times ([#2856](https://github.com/MultiQC/MultiQC/pull/2856))
-- Picard: fix parsing Sentieon IS metrics ([#2823](https://github.com/MultiQC/MultiQC/pull/2823))
-- Kraken: fix for empty top ranks. Also handle it in bargraph ([#2822](https://github.com/MultiQC/MultiQC/pull/2822))
-- Cellranger: fix data source tag ([#2821](https://github.com/MultiQC/MultiQC/pull/2821))
-- FastQC: fix calculating average read length ([#2817](https://github.com/MultiQC/MultiQC/pull/2817))
+- Fix `config.replace_samples` for custom content genstats table ([#2841](https://github.com/MultiQC/MultiQC/pull/2841))
 
 ### Module updates
 
 - NanoStat: support multi-sample logs ([#2852](https://github.com/MultiQC/MultiQC/pull/2852))
 - Samtools coverage: suppot `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
 - Ganon: support non-verbose output, fix missing `removed with --min-count` ([#2838](https://github.com/MultiQC/MultiQC/pull/2838))
-- fastp: support `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
-- Modify UMICollapse module to support FastQ mode. ([#2827](https://github.com/MultiQC/MultiQC/pull/2827))
-- Fix a search pattern of Picard CollectRnaSeqMetrics ([#2811](https://github.com/MultiQC/MultiQC/pull/2811))
+- fastp: support the `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
+- UMICollapse: support the FastQ mode. ([#2827](https://github.com/MultiQC/MultiQC/pull/2827))
 
-### Refactoring
+### Module fixes
 
+- Picard: fix parsing Sentieon insert size metrics ([#2823](https://github.com/MultiQC/MultiQC/pull/2823))
+- Picard: fix a search pattern of CollectRnaSeqMetrics ([#2811](https://github.com/MultiQC/MultiQC/pull/2811))
+- Kraken: fix for empty top ranks. Also handle it in bargraph ([#2822](https://github.com/MultiQC/MultiQC/pull/2822))
+- Cellranger: fix data source tag ([#2821](https://github.com/MultiQC/MultiQC/pull/2821))
+- FastQC: fix the `Per Base Sequence Content` detail plot click when a module was run multiple times ([#2856](https://github.com/MultiQC/MultiQC/pull/2856))
+- FastQC: fix calculating average read length ([#2817](https://github.com/MultiQC/MultiQC/pull/2817))
+
+### Refactoring and typing
+
+- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797))
 - Prefix table column IDs with namespace, but allow configuration to use both short and long anchors ([#2818](https://github.com/MultiQC/MultiQC/pull/2818))
 - More type hinting in plots ([#2816](https://github.com/MultiQC/MultiQC/pull/2816), [#2850](https://github.com/MultiQC/MultiQC/pull/2850))
+- Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
+- Remove `pyaml_env` dependency and apply the fix for the `SyntaxWarning` ([#2837](https://github.com/MultiQC/MultiQC/pull/2837))
 
 ### Infrastructure
 
