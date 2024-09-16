@@ -91,7 +91,7 @@ Another worthy addition is the box plot support in custom content, see [2847](ht
 
 ### Refactoring and typing
 
-- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797))
+- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797), [#2833](https://github.com/MultiQC/MultiQC/pull/2833))
 - Prefix table column IDs with namespace, but allow configuration to use both short and long anchors ([#2818](https://github.com/MultiQC/MultiQC/pull/2818))
 - More type hinting in plots ([#2816](https://github.com/MultiQC/MultiQC/pull/2816), [#2850](https://github.com/MultiQC/MultiQC/pull/2850))
 - Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
