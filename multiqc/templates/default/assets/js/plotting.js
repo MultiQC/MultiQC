@@ -351,7 +351,7 @@ function applyToolboxSettings(samples, plotAnchor) {
     // All series hidden. Hide the graph.
     if (nHidden === objects.length) {
       groupDiv.hide();
-      return null;
+      return objects;
     }
   }
 

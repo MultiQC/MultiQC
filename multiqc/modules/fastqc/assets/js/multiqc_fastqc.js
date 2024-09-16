@@ -558,13 +558,16 @@ function fastqc_module(module_element, module_key) {
     // Update the chart
     plot_single_seqcontent(s_name);
   });
-  module_element.on("click", "#" + module_key + "_sequence_content_single_back", function (e) {
+
+  function sequenceContentSingleClose(e) {
     e.preventDefault();
     module_element.find("#fastqc_per_base_sequence_content_plot_div").slideDown();
     module_element.find("#fastqc_sequence_content_single_wrapper").slideUp(function () {
       $(this).remove();
     });
-  });
+  }
+  module_element.on("click", "#" + module_key + "_sequence_content_single_back", sequenceContentSingleClose);
+  $(document).on("mqc_toolbox_open", sequenceContentSingleClose);
 
   // Highlight the custom heatmap
   $(document).on("mqc_highlights mqc_hidesamples mqc_renamesamples mqc_plotresize", function (e) {
