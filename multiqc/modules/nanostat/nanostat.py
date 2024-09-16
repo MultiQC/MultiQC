@@ -2,8 +2,6 @@ import logging
 from collections import defaultdict
 from typing import List
 
-from traitlets import default
-
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
