@@ -189,7 +189,7 @@ def _make_series_dict(
     if pconfig.smooth_points is not None:
         pairs = smooth_array(pairs, pconfig.smooth_points)
 
-    return Series(name=s, pairs=pairs, color=colors.get(s))
+    return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
 
 
 def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
