@@ -1002,13 +1002,13 @@ if myvar is none # Note - Lower case!
 
 ## Sample grouping
 
-MultiQC does its best to have one row per sample in the General Statistics table. Some modules, however, may produce multiple results per sample. These will be treated as separate samples alongside the shorter "merged" samplename from downstream steps, resulting in half-empty rows. A prominent example of this is FastQC, that can be run separately for forward and reverse reads:
+MultiQC does its best to have one row per sample in a table. Some modules, however, may produce multiple results per sample. These will be treated as separate samples alongside the shorter "merged" sample name from downstream steps, resulting in half-empty rows. A prominent example of this is FastQC, that can be run separately for forward and reverse reads:
 
 ![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
 
-To improve how these samples are shown, MultiQC attempts to [group such samples](../reports/#sample-grouping). For modules that support this option, MultiQC offers a config option `table_sample_merge` that maps chunk labels to file name patterns.
+To improve how these samples are shown, MultiQC attempts to [group such samples](../reports/reports.md#sample-grouping). For modules that support this option, MultiQC offers a config option `table_sample_merge` that maps chunk labels to file name patterns.
 
-For example, to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can use it as follows:
+For example, to tell MultiQC to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can specify the following section in the config:
 
 ```yaml
 table_sample_merge:
@@ -1016,7 +1016,7 @@ table_sample_merge:
   "R2": "_R2"
 ```
 
-FastQC will try trim to `_R1` and `_R1` from each sample name ending, and on success, will map them to the trimmed group name. Specifically, it will merge stats for `SAMPLE_R1` and `SAMPLE_R2` into a new virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
+For the modules that have only data for `SAMPLE_R1` and `SAMPLE_R2` - e.g. FastQC - MultiQC will try to trim `_R1` and `_R1` endings from each name, and merge together the data from both into a virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
 
 ![Table: General Statistics table with sample grouping](../../../docs/images/genstats_grouping_grouped.png)
 
