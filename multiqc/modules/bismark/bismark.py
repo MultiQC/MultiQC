@@ -3,7 +3,7 @@ import re
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph, violin, linegraph
+from multiqc.plots import bargraph, linegraph, violin
 
 log = logging.getLogger(__name__)
 
@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
             "bam2nuc": dict(),
         }
         headers["methextract"]["percent_cpg_meth"] = {
-            "title": "% mCpG",
+            "title": "mCpG",
             "description": "% Cytosines methylated in CpG context",
             "max": 100,
             "min": 0,
@@ -270,7 +270,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Greens",
         }
         headers["methextract"]["percent_chg_meth"] = {
-            "title": "% mCHG",
+            "title": "mCHG",
             "description": "% Cytosines methylated in CHG context",
             "max": 100,
             "min": 0,
@@ -278,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Oranges",
         }
         headers["methextract"]["percent_chh_meth"] = {
-            "title": "% mCHH",
+            "title": "mCHH",
             "description": "% Cytosines methylated in CHH context",
             "max": 100,
             "min": 0,
@@ -286,31 +286,31 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "Oranges",
         }
         headers["methextract"]["total_c"] = {
-            "title": "M C's",
+            "title": "C's",
             "description": "Total number of C's analysed, in millions",
             "min": 0,
             "scale": "Purples",
             "modify": lambda x: x / 1000000,
         }
         headers["bam2nuc"]["C_coverage"] = {
-            "title": "C Coverage",
-            "description": "Cyotosine Coverage",
+            "title": "C coverage",
+            "description": "Cyotosine coverage",
             "min": 0,
             "suffix": "X",
             "scale": "Greens",
             "format": "{:,.2f}",
         }
         headers["dedup"]["dup_reads_percent"] = {
-            "title": "% Dups",
-            "description": "Percent Duplicated Alignments",
+            "title": "Dups",
+            "description": "Percent duplicated alignments",
             "max": 100,
             "min": 0,
             "suffix": "%",
             "scale": "RdYlGn-rev",
         }
         headers["dedup"]["dedup_reads"] = {
-            "title": f"{config.read_count_prefix} Unique",
-            "description": f"Deduplicated Alignments ({config.read_count_desc})",
+            "title": "Unique",
+            "description": f"Deduplicated alignments ({config.read_count_desc})",
             "min": 0,
             "scale": "Greens",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -318,8 +318,8 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         headers["alignment"]["aligned_reads"] = {
-            "title": f"{config.read_count_prefix} Aligned",
-            "description": f"Total Aligned Sequences ({config.read_count_desc})",
+            "title": "Aligned",
+            "description": f"Total aligned sequences ({config.read_count_desc})",
             "min": 0,
             "scale": "PuRd",
             "modify": lambda x: x * config.read_count_multiplier,
@@ -327,8 +327,8 @@ class MultiqcModule(BaseMultiqcModule):
             "hidden": True,
         }
         headers["alignment"]["percent_aligned"] = {
-            "title": "% Aligned",
-            "description": "Percent Aligned Sequences",
+            "title": "Aligned",
+            "description": "Percent aligned sequences",
             "max": 100,
             "min": 0,
             "suffix": "%",

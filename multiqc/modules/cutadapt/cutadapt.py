@@ -345,8 +345,8 @@ class MultiqcModule(BaseMultiqcModule):
             {s: {ColumnKey(k): v for k, v in d.items()} for s, d in self.cutadapt_data.items()},
             {
                 ColumnKey("percent_trimmed"): {
-                    "title": "% BP Trimmed",
-                    "description": "% Total Base Pairs trimmed",
+                    "title": "Trimmed bases",
+                    "description": "% total base pairs trimmed",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -363,7 +363,11 @@ class MultiqcModule(BaseMultiqcModule):
     def cutadapt_filtered_barplot(self):
         """Bar plot showing proportion of reads trimmed"""
 
-        pconfig = {"id": "cutadapt_filtered_reads_plot", "title": "Cutadapt: Filtered Reads", "ylab": "Counts"}
+        pconfig = {
+            "id": "cutadapt_filtered_reads_plot",
+            "title": "Cutadapt: Filtered Reads",
+            "ylab": "Counts",
+        }
 
         # We just use all categories. If a report is generated with a mixture
         # of SE and PE data then this means quite a lot of categories.

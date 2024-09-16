@@ -474,7 +474,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers={
                 ColumnKey("percent_duplicates"): {
                     "title": "Dups",
-                    "description": "% Duplicate Reads",
+                    "description": "% duplicate reads",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -482,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("percent_gc"): {
                     "title": "GC",
-                    "description": "Average % GC Content",
+                    "description": "Average % GC content",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -490,8 +490,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,.1f}",
                 },
                 ColumnKey("avg_sequence_length"): {
-                    "title": "Avg Length",
-                    "description": "Average Read Length",
+                    "title": "Avg len",
+                    "description": "Average read length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -499,8 +499,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": True,
                 },
                 ColumnKey("median_sequence_length"): {
-                    "title": "Median Len",
-                    "description": "Median Read Length",
+                    "title": "Median len",
+                    "description": "Median read length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -519,9 +519,10 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("total_sequences"): {
                     "title": "Seqs",
-                    "description": f"Total Sequences ({config.read_count_desc})",
+                    "description": f"Total sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
+                    "suffix": "M",
                     "modify": lambda x: x * config.read_count_multiplier,
                 },
             },
