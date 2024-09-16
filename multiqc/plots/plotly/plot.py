@@ -841,13 +841,26 @@ class Plot(BaseModel, Generic[T]):
         html += "</div>"
         return html
 
-    def _btn(self, cls: str, label: str, data_attrs: Optional[Dict[str, str]] = None, pressed: bool = False) -> str:
-        """Build a switch button for the plot."""
+    def _btn(
+        self,
+        cls: str,
+        label: str,
+        data_attrs: Optional[Dict[str, str]] = None,
+        attrs: Optional[Dict[str, str]] = None,
+        pressed: bool = False,
+    ) -> str:
+        """
+        Build a switch button for the plot.
+        """
+        attrs = attrs.copy() if attrs else {}
+        attrs_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
+
         data_attrs = data_attrs.copy() if data_attrs else {}
         if "plot-anchor" not in data_attrs:
             data_attrs["plot-anchor"] = self.anchor
         data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
+
+        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
 
     def buttons(self, flat: bool) -> List[str]:
         """
