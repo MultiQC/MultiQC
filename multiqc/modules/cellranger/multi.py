@@ -621,8 +621,6 @@ def _parse_all_alerts(sample_alert_list: List, library_alert_list: List):
             total_alerts[sample_alert_key] = sample_alerts[sample_alert_key]
             total_headers[sample_alert_key] = sample_headers[sample_alert_key]
         else:
-            log.warn(f"Duplicate alert {sample_alert_key}")
-
             # ERROR > WARN > INFO
             remap = {"ERROR": 2, "WARN": 1, "INFO": 0}
             sample_alert_value = sample_alerts[sample_alert_key]
