@@ -27,6 +27,8 @@ jobs:
         run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
 
       - uses: actions/setup-python@v5
+        with:
+          check-latest: true
 
       - name: "Cache pip"
         uses: actions/cache@v3

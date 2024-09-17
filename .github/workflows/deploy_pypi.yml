@@ -11,8 +11,9 @@ jobs:
       - uses: actions/checkout@v4
         name: Check out source-code repository
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
+        with:
+          check-latest: true
 
       - name: Install python dependencies
         run: |

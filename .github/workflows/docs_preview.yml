@@ -5,9 +5,9 @@ on:
     paths: ["docs/**"]
 
 jobs:
-  deploy:
+  docs_preview:
     runs-on: ubuntu-latest
-    if: github.repository == 'MultiQC/MultiQC'
+    if: github.repository == "MultiQC/MultiQC"
     permissions:
       pull-requests: write
 
@@ -19,9 +19,10 @@ jobs:
           path: MultiQC
 
       - uses: actions/setup-python@v5
+        with:
+          check-latest: true
 
-      - name: Install MultiQC
-        run: pip install -e MultiQC
+      - run: pip install -e MultiQC
 
       - name: Download test data
         uses: actions/checkout@v4

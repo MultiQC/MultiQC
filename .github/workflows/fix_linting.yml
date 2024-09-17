@@ -25,6 +25,8 @@ jobs:
         run: gh pr checkout ${{ github.event.issue.number }}
 
       - uses: actions/setup-python@v5
+        with:
+          check-latest: true
 
       - name: Install pre-commit
         run: |
