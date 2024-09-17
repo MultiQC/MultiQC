@@ -73,7 +73,7 @@ samtools_coverage:
     - "chrEBV"
 ```
 
-Note that exclusion superseeds inclusion for the contig filters.
+Note that exclusion supersedes inclusion for the contig filters.
 
 If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
 
