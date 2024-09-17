@@ -549,7 +549,7 @@ class BaseMultiqcModule:
 
     def group_samples_and_average_metrics(
         self,
-        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
         grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroup, List[InputRow]]:
         """
@@ -557,7 +557,7 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names(list(data_by_sample.keys())).items():
+        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -869,7 +869,7 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
         headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
         namespace=None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
