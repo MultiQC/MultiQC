@@ -9,7 +9,7 @@ Makes the following available under the main multiqc namespace:
 
 import sys
 
-OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
 if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
     raise RuntimeError(
