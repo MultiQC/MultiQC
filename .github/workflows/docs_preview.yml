@@ -7,7 +7,7 @@ on:
 jobs:
   docs_preview:
     runs-on: ubuntu-latest
-    if: github.repository == "MultiQC/MultiQC"
+    if: github.repository == 'MultiQC/MultiQC'
     permissions:
       pull-requests: write
 
