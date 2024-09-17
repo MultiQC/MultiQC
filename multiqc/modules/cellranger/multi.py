@@ -401,11 +401,11 @@ def parse_multi_html(module: BaseMultiqcModule):
             (
                 gex_cells_metrics.data,
                 gex_cells_metrics.headers,
-                ["Cells", "Mean reads per Cell"]
+                ["Cells", "Mean reads per Cell", "Median reads per cell", "Median genes per cell"]
             ), (
                 gex_library_metrics_summary.data,
                 gex_library_metrics_summary.headers,
-                ["Q30 barcodes", "Sequencing saturation"],
+                ["Sequencing saturation"],
             )
         ]
     )
@@ -625,8 +625,7 @@ def _parse_all_alerts(sample_alert_list: List, library_alert_list: List):
             remap = {"ERROR": 2, "WARN": 1, "INFO": 0}
             sample_alert_value = sample_alerts[sample_alert_key]
             library_alert_value = total_alerts[sample_alert_key]
-            print(remap.get(sample_alert_value, 4), remap.get(library_alert_value, 4))
-
+            
             if remap.get(sample_alert_value, 3) > remap.get(library_alert_value, 3):
                 total_alerts[sample_alert_key] = library_alert_value
                 total_alerts[sample_alert_key] = library_headers[sample_alert_key]
