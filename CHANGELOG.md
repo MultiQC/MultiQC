@@ -20,7 +20,7 @@ The new box plot plot type, added in v1.21, are now available to use with custom
 
 ### New modules
 
-- Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814))
+- Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814), [#2827](https://github.com/MultiQC/MultiQC/pull/2827))
 
 ### Updates
 
@@ -28,7 +28,6 @@ The new box plot plot type, added in v1.21, are now available to use with custom
 - Support boxplot in custom content ([#2847](https://github.com/MultiQC/MultiQC/pull/2847))
 - Allow `x_band`, `x_lines`, `x_minrange` for any plot type (specifically, scatter plots) ([#2851](https://github.com/MultiQC/MultiQC/pull/2851))
 - When both `contents` and `contents_re` are specified in a search patterns, treat it as logical AND ([#2828](https://github.com/MultiQC/MultiQC/pull/2828))
-- Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814))
 
 ### Module updates
 
@@ -36,7 +35,6 @@ The new box plot plot type, added in v1.21, are now available to use with custom
 - Samtools coverage: support `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
 - Ganon: support non-verbose output, fix missing `removed with --min-count` ([#2838](https://github.com/MultiQC/MultiQC/pull/2838))
 - fastp: support the `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
-- UMICollapse: support the FastQ mode. ([#2827](https://github.com/MultiQC/MultiQC/pull/2827))
 
 ### Fixes
 
