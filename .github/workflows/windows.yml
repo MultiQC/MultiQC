@@ -26,10 +26,7 @@ jobs:
       - name: "Visual Studio Command Prompt tool"
         run: cmd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.platform-vcvars }}
 
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - uses: actions/setup-python@v5
 
       - name: "Cache pip"
         uses: actions/cache@v3
