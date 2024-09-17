@@ -36,13 +36,14 @@ def data_tmp_dir() -> Path:
     return path
 
 
-def plots_tmp_dir() -> Path:
+def plots_tmp_dir(create=True) -> Path:
     """
     Temporary directory to collect plot exports from running modules before copying to the final
     destination in multiqc.core.write_results
     """
     path = get_tmp_dir() / "multiqc_plots"
-    os.makedirs(path, exist_ok=True)
+    if create:
+        os.makedirs(path, exist_ok=True)
     return path
 
 

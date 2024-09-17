@@ -358,6 +358,9 @@ freyja:
   fn: "*.tsv"
   contents: "summarized\t["
   num_lines: 6
+ganon:
+  contents: ["(_|(_|| |(_)| |", "Classifying reads"]
+  num_lines: 10
 gatk/varianteval:
   contents: "#:GATKTable:TiTvVariantEvaluator"
 gatk/base_recalibrator:

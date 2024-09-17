@@ -110,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers: Dict[str, Dict] = {
             "total_reads": {
-                "title": "Total Reads",
+                "title": "Total reads",
                 "description": "Number of input reads",
                 "scale": "Blues",
                 "shared_key": "read_count",

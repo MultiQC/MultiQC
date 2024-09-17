@@ -10,8 +10,8 @@ import plotly.graph_objects as go  # type: ignore
 from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
-from multiqc.plots.table_object import ColumnAnchorT, ColumnMeta, DataTable, ValueT
-from multiqc.types import SampleNameT
+from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -56,25 +56,25 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
 class Dataset(BaseDataset):
-    metrics: List[ColumnAnchorT]
-    header_by_metric: Dict[ColumnAnchorT, ViolinColumn]
-    violin_value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
-    scatter_value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, Union[int, float, str, None]]]
-    all_samples: List[SampleNameT]  # unique list of all samples in this dataset
+    metrics: List[ColumnAnchor]
+    header_by_metric: Dict[ColumnAnchor, ViolinColumn]
+    violin_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
+    scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
+    all_samples: List[SampleName]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
     def values_and_headers_from_dt(
         dt: DataTable,
     ) -> Tuple[
-        Dict[ColumnAnchorT, Dict[SampleNameT, ValueT]],
-        Dict[ColumnAnchorT, ColumnMeta],
+        Dict[ColumnAnchor, Dict[SampleName, ValueT]],
+        Dict[ColumnAnchor, ColumnMeta],
     ]:
-        value_by_sample_by_metric: Dict[ColumnAnchorT, Dict[SampleNameT, ValueT]] = {}
-        dt_column_by_metric: Dict[ColumnAnchorT, ColumnMeta] = {}
+        value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, ValueT]] = {}
+        dt_column_by_metric: Dict[ColumnAnchor, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            value_by_sample: Dict[SampleNameT, ValueT] = {}
+            value_by_sample: Dict[SampleName, ValueT] = {}
             for group_name, group_rows in dt.sections[idx].rows_by_sgroup.items():
                 for row in group_rows:
                     try:
@@ -107,7 +107,7 @@ class Dataset(BaseDataset):
         all_samples = set()
         scatter_value_by_sample_by_metric = {}
         violin_value_by_sample_by_metric = {}
-        header_by_metric: Dict[ColumnAnchorT, ViolinColumn] = {}
+        header_by_metric: Dict[ColumnAnchor, ViolinColumn] = {}
         metrics = []
 
         for col_anchor, dt_column in dt_column_by_metric.items():
@@ -160,7 +160,7 @@ class Dataset(BaseDataset):
                     column.xaxis.range = [xmin, xmax]
 
             if not column.show_points:  # Do not add any interactive points
-                scatter_value_by_sample: Dict[SampleNameT, Union[int, float, str, None]] = {}
+                scatter_value_by_sample: Dict[SampleName, Union[int, float, str, None]] = {}
             elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
@@ -480,7 +480,7 @@ class ViolinPlot(Plot):
                 self._btn(
                     cls="mqc_table_config_modal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"{self.main_table_dt.anchor}_config_modal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.anchor}_config_modal"},
                 )
             )
         if self.show_table:

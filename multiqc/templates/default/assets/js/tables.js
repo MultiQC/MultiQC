@@ -130,26 +130,27 @@ $(function () {
 
       Object.entries(metricsHidden).map(([metric, hidden]) => {
         if (hidden) {
-          $(target + " ." + metric).addClass("hidden");
+          $(target + " ." + metric).addClass("column-hidden");
           $(target + "_config_modal_table ." + metric).addClass("text-muted");
         } else {
-          $(target + " ." + metric).removeClass("hidden");
+          $(target + " ." + metric).removeClass("column-hidden");
           $(target + "_config_modal_table ." + metric).removeClass("text-muted");
         }
       });
       // Hide empty rows
-      $(target + " tbody tr").show();
       $(target + " tbody tr").each(function () {
-        let hasVal = false;
-        $(this)
-          .find("td")
-          .each(function () {
-            if (!$(this).hasClass("sorthandle") && $(this).text() !== "") {
-              hasVal = true;
-            }
-          });
-        if (!hasVal) {
-          $(this).hide();
+        let trIsEmpty = true;
+        let tr = $(this);
+        tr.find("td").each(function () {
+          let td = $(this);
+          if (!td.hasClass("column-hidden") && !td.hasClass("sorthandle") && td.text() !== "") {
+            trIsEmpty = false;
+          }
+        });
+        if (trIsEmpty) {
+          tr.addClass("row-empty");
+        } else {
+          tr.removeClass("row-empty");
         }
       });
       // Update counts
@@ -287,8 +288,8 @@ $(function () {
       $(".mqc_per_sample_table").each(function () {
         let table = $(this);
         let gsthidx = 0;
-        table.find("thead th, tbody tr td").show();
         table.find("thead th").each(function () {
+          let th = $(this);
           if (gsthidx === 0) {
             gsthidx += 1;
             return true;
@@ -299,14 +300,15 @@ $(function () {
             .find("tbody tr td:nth-child(" + (gsthidx + 2) + ")")
             .filter(":visible")
             .each(function () {
+              let td = $(this);
               count += 1;
-              if ($(this).text() === "") {
+              if (td.text() === "") {
                 empties += 1;
               }
             });
           if (count > 0 && count === empties) {
-            $(this).hide();
-            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").hide();
+            th.addClass("column-hidden");
+            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").addClass("column-hidden");
           }
           gsthidx += 1;
         });

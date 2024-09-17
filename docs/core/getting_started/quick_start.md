@@ -1,5 +1,5 @@
 ---
-title: Quick Start
+title: Quick start
 description: A tutorial with a typical setup for people in a rush.
 ---
 

@@ -6,6 +6,7 @@ from typing import Dict, Optional, Tuple
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +61,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_qual_plotdata = dict()
         self.fastp_gc_content_data = dict()
         self.fastp_n_content_data = dict()
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             self.fastp_qual_plotdata[k] = dict()
             self.fastp_gc_content_data[k] = dict()
             self.fastp_n_content_data[k] = dict()
@@ -212,7 +219,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_duplication_plotdata[s_name] = {}
         self.fastp_insert_size_data[s_name] = {}
         self.fastp_all_data[s_name] = parsed_json
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             self.fastp_qual_plotdata[k][s_name] = {}
             self.fastp_gc_content_data[k][s_name] = {}
             self.fastp_n_content_data[k][s_name] = {}
@@ -303,7 +316,13 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug(f"No insert size plot data: {s_name}")
 
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             # Read quality data
             try:
                 for i, v in enumerate(parsed_json[k]["quality_curves"]["mean"]):
@@ -342,7 +361,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(
             data_by_sample,
-            {
+            headers={
                 "pct_duplication": {
                     "title": "% Duplication",
                     "description": "Duplication rate before filtering",
@@ -365,7 +384,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": True,
                 },
                 "filtering_result_passed_filter_reads": {
-                    "title": f"{config.read_count_prefix} Reads After Filtering",
+                    "title": "Reads After Filtering",
                     "description": f"Total reads after filtering ({config.read_count_desc})",
                     "scale": "Blues",
                     "shared_key": "read_count",
@@ -478,6 +497,10 @@ class MultiqcModule(BaseMultiqcModule):
             "read2_after_filtering": {
                 "name": "Read 2: After filtering",
                 "ylab": f"R2 After filtering: {label}",
+            },
+            "merged_and_filtered": {
+                "name": "Merged and filtered",
+                "ylab": f"{label}",
             },
         }.items():
             if sum([len(data[k][x]) for x in data[k]]) > 0:

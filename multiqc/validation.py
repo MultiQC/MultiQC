@@ -2,11 +2,12 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, Set, Union, Optional, List
+from typing import Dict, List, Optional, Set, Union, Type
 
-from pydantic import BaseModel, model_validator, ValidationError as PydanticValidationError
-from typeguard import check_type, TypeCheckError
 from PIL import ImageColor
+from pydantic import BaseModel, model_validator
+from pydantic import ValidationError as PydanticValidationError
+from typeguard import TypeCheckError, check_type
 
 from multiqc import config
 
@@ -35,13 +36,14 @@ def add_validation_warning(cls: Union[type, List[type]], warning: str):
 
 
 class ValidatedConfig(BaseModel):
-    def __init__(self, _parent_class: Optional[type] = None, **data):
-        _clss = [self.__class__]
+    def __init__(self, _clss: Optional[List[Type]] = None, **data):
         _cls_name = self.__class__.__name__
-        _full_cls_name = _cls_name
-        if _parent_class is not None:
-            _clss = [_parent_class] + _clss
-            _full_cls_name = f"{_parent_class.__name__}.{_cls_name}"
+        _classes = []
+        if _clss:
+            for _c in _clss:
+                _classes.append(_c)
+        _classes.append(self.__class__)
+        _full_cls_name = ".".join(_c.__name__ for _c in _classes)
 
         try:
             super().__init__(**data, _clss=_clss)
@@ -89,12 +91,15 @@ class ValidatedConfig(BaseModel):
         if not isinstance(values, dict):
             return values
 
-        _clss = values.pop("_clss", [cls])
+        _clss = values.pop("_clss", None) or [cls]
 
         # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
         for k, v in cls.model_fields.items():
             if k.endswith("_") and k[:-1] in values:
                 values[k] = values.pop(k[:-1])
+
+        # Remove None values
+        values = {k: v for k, v in values.items() if v is not None}
 
         # Check unrecognized fields
         filtered_values = {}
@@ -139,7 +144,7 @@ class ValidatedConfig(BaseModel):
             parse_method = getattr(cls, f"parse_{name}", None)
             if parse_method is not None:
                 try:
-                    val = parse_method(val)
+                    val = parse_method(val, _clss=_clss)
                 except Exception as e:
                     msg = f"'{name}': failed to parse value '{val}'"
                     add_validation_error(_clss, msg)
@@ -163,7 +168,7 @@ class ValidatedConfig(BaseModel):
         return values
 
     @classmethod
-    def parse_color(cls, val):
+    def parse_color(cls, val, _clss=None):
         if val is None:
             return None
         if re.match(r"\d+,\s*\d+,\s*\d+", val):
@@ -173,7 +178,7 @@ class ValidatedConfig(BaseModel):
         try:
             ImageColor.getrgb(val_correct)
         except ValueError:
-            add_validation_error(cls, f"invalid color value '{val}'")
+            add_validation_error(_clss or cls, f"invalid color value '{val}'")
             return None
         else:
             return val

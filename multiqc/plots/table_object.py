@@ -6,13 +6,13 @@ import logging
 import math
 import re
 from collections import defaultdict
-from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, Union
+from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union
 
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
 from multiqc.plots.plotly.plot import PConfig
-from multiqc.types import AnchorT, ColumnKeyT, SampleGroupT, SampleNameT
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SampleName
 from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,34 @@ class TableConfig(PConfig):
     min: Optional[Union[int, float]] = None
 
 
-ColumnAnchorT = NewType("ColumnAnchorT", str)  # Unique within a table
+ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
+
+
+class ColumnDict(TypedDict, total=False):
+    rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
+    title: str
+    description: str
+    scale: Union[str, bool]
+    hidden: bool
+    placement: float
+    namespace: str
+    color: Optional[str]
+    max: Optional[float]
+    dmax: Optional[float]
+    min: Optional[float]
+    dmin: Optional[float]
+    ceiling: Optional[float]
+    floor: Optional[float]
+    minrange: Optional[float]
+    shared_key: Optional[str]
+    tt_decimals: Optional[int]
+    suffix: Optional[str]
+    cond_formatting_colours: List[Dict[str, str]]
+    cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+    bgcols: Dict[str, str]
+    bars_zero_centrepoint: bool
+    modify: Optional[Callable]
+    format: Optional[Union[str, Callable]]
 
 
 class ColumnMeta(ValidatedConfig):
@@ -41,14 +68,13 @@ class ColumnMeta(ValidatedConfig):
     Column model class. Holds configuration for a single column in a table.
     """
 
-    rid: ColumnAnchorT  # namespace + short_rid = ID unique within a table
+    rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
     title: str
     description: str
     scale: Union[str, bool]
-    hidden: bool
-    placement: float
+    hidden: bool = False
+    placement: float = 1000
     namespace: str = ""
-    colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -57,7 +83,7 @@ class ColumnMeta(ValidatedConfig):
     ceiling: Optional[float] = None
     floor: Optional[float] = None
     minrange: Optional[float] = None
-    shared_key: Optional[str]
+    shared_key: Optional[str] = None
     tt_decimals: Optional[int] = None
     suffix: Optional[str] = None
     cond_formatting_colours: List[Dict[str, str]] = []
@@ -69,30 +95,36 @@ class ColumnMeta(ValidatedConfig):
 
     @staticmethod
     def create(
-        header_d: Dict[str, Union[str, int, float, None, Callable]],
-        col_key: ColumnKeyT,  # to initialize rid
+        col_dict: ColumnDict,
+        col_key: ColumnKey,  # to initialize rid
         sec_idx: int,  # to initialize the colour
         pconfig: TableConfig,  # plot config dictionary
-        table_anchor: AnchorT,
+        table_anchor: Anchor,
     ) -> "ColumnMeta":
-        ns = header_d.get("namespace", pconfig.namespace) or ""
-        assert isinstance(ns, str)
-        if ns:
-            header_d["namespace"] = ns
+        namespace = col_dict.get("namespace", pconfig.namespace) or ""
+        assert isinstance(namespace, str)
 
-        unclean_rid = header_d.get("rid") or col_key
+        unclean_rid = col_dict.get("rid") or col_key
         legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
         rid = legacy_short_rid
         # Prefixing with namepsace to get a unique column ID within a table across all sections
-        if ns:
-            ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
-            rid = f"{ns}-{rid}"
-        header_d["rid"] = ColumnAnchorT(report.save_htmlid(rid, scope=table_anchor))
+        if namespace:
+            ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
+            rid = f"{ns_slugified}-{rid}"
+        rid = ColumnAnchor(report.save_htmlid(rid, scope=table_anchor))
+
+        modify = col_dict.get("modify")
+        if modify is not None and callable(modify):
+            modify = modify
+
+        min = col_dict.get("min", pconfig.min)
+        format = col_dict.get("format", None)
+        suffix = col_dict.get("suffix", None)
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
-        shared_key = header_d.get("shared_key", None)
-        shared_key_suffix = None
+        shared_key = col_dict.get("shared_key", None)
         if shared_key in ["read_count", "long_read_count", "base_count"]:
+            shared_key_suffix = None
             if shared_key == "read_count" and config.read_count_prefix:
                 multiplier = config.read_count_multiplier
                 shared_key_suffix = config.read_count_prefix
@@ -104,52 +136,63 @@ class ColumnMeta(ValidatedConfig):
                 shared_key_suffix = config.base_count_prefix
             else:
                 multiplier = 1
-            if "modify" not in header_d:
-                header_d["modify"] = lambda x: x * multiplier
-            if "min" not in header_d is None:
-                header_d["min"] = 0
-            if "format" not in header_d is None:
-                if multiplier == 1:
-                    header_d["format"] = "{:,d}"
-        if "suffix" not in header_d and shared_key_suffix is not None:
-            header_d["suffix"] = " " + shared_key_suffix
+            if modify is None:
+                modify = lambda x: x * multiplier  # noqa: E731
+            if min is None:
+                min = 0
+            if format is None and multiplier == 1:
+                format = "{:,d}"
+            if suffix is None and shared_key_suffix is not None:
+                suffix = " " + shared_key_suffix
 
-        # Use defaults / data keys if headers not given
-        header_d["title"] = header_d.get("title", col_key)
-        header_d["description"] = header_d.get("description", header_d["title"])
-        header_d["scale"] = header_d.get("scale", pconfig.scale)
-        header_d["format"] = header_d.get("format")
-        header_d["color"] = header_d.get("colour", header_d.get("color"))
-        header_d["hidden"] = header_d.get("hidden", False)
-        header_d["max"] = header_d.get("max")
-        header_d["min"] = header_d.get("min", pconfig.min)
-        header_d["ceiling"] = header_d.get("ceiling")
-        header_d["floor"] = header_d.get("floor")
-        header_d["minrange"] = header_d.get("minrange", header_d.get("minRange"))
-        header_d["shared_key"] = header_d.get("shared_key")
-        modify = header_d.get("modify")
-        if modify is not None and callable(modify):
-            header_d["modify"] = modify
-        placement = header_d.get("placement")
-        if placement is not None and isinstance(placement, (str, float, int)):
-            header_d["placement"] = float(placement)
-        else:
-            header_d["placement"] = 1000  # default value
-
-        if header_d["color"] is None:
+        color = col_dict.get("colour", col_dict.get("color"))
+        if color is None:
             cidx = sec_idx
             while cidx >= len(SECTION_COLORS):
                 cidx -= len(SECTION_COLORS)
-            header_d["color"] = SECTION_COLORS[cidx]
+            color = SECTION_COLORS[cidx]
+
+        title = col_dict.get("title") or str(col_key)
+
+        placement = col_dict.get("placement")
+        if placement is not None and isinstance(placement, (str, float, int)):
+            placement = float(placement)
+        else:
+            placement = 1000
+
+        col: ColumnMeta = ColumnMeta(
+            rid=rid,
+            title=title,
+            description=col_dict.get("description", title),
+            scale=col_dict.get("scale", pconfig.scale),
+            hidden=col_dict.get("hidden", False),
+            placement=placement,
+            namespace=namespace,
+            color=color,
+            max=col_dict.get("max"),
+            min=min,
+            dmin=col_dict.get("dmin"),
+            dmax=col_dict.get("dmax"),
+            ceiling=col_dict.get("ceiling"),
+            floor=col_dict.get("floor"),
+            minrange=col_dict.get("minrange", col_dict.get("minRange")),
+            shared_key=shared_key,
+            tt_decimals=col_dict.get("tt_decimals"),
+            suffix=suffix,
+            cond_formatting_colours=col_dict.get("cond_formatting_colours", []),
+            cond_formatting_rules=col_dict.get("cond_formatting_rules", {}),
+            bgcols=col_dict.get("bgcols", {}),
+            bars_zero_centrepoint=col_dict.get("bars_zero_centrepoint", False),
+            modify=modify,
+            format=format,
+        )
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
         if pconfig.id in config.custom_plot_config:
             for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
-                if cpc_k in ColumnMeta.model_fields.keys():
-                    header_d[cpc_k] = cpc_v
-
-        col: ColumnMeta = ColumnMeta(**header_d)
+                if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                    col_dict[cpc_k] = cpc_v  # type: ignore
 
         def _ns_match(item_id: str) -> bool:
             return item_id.lower() in [
@@ -229,20 +272,19 @@ class ColumnMeta(ValidatedConfig):
 ValueT = Union[int, float, str, bool]
 
 
-class InputRowT(BaseModel):
+class InputRow(BaseModel):
     """
     Row class. Holds configuration for a single row in a table (can be multiple for one sample)
     """
 
-    sample: SampleNameT
-    data: Dict[ColumnKeyT, Optional[ValueT]] = dict()
+    sample: SampleName
+    data: Dict[ColumnKey, Optional[ValueT]] = dict()
 
 
-ColumnKey = Union[str, ColumnKeyT]
-SampleGroup = Union[str, SampleGroupT]
-InputGroupT = Union[Mapping[ColumnKey, Optional[ValueT]], InputRowT, Sequence[InputRowT]]
-InputSectionT = Mapping[SampleGroup, InputGroupT]
-InputHeaderT = Mapping[ColumnKey, Mapping[str, Union[str, int, float, None, Callable]]]
+ColumnKeyT = Union[str, ColumnKey]
+GroupKeyT = Union[str, SampleGroup]
+GroupT = Union[Mapping[ColumnKeyT, Optional[ValueT]], InputRow, Sequence[InputRow]]
+SectionT = Mapping[GroupKeyT, GroupT]
 
 
 class Row(BaseModel):
@@ -251,11 +293,11 @@ class Row(BaseModel):
     Contains raw, optionally modified, non-null values, and corresponding formatted values to display.
     """
 
-    sample: SampleNameT
+    sample: SampleName
     # rows with original, unformatted values coming from modules:
-    raw_data: Dict[ColumnKeyT, ValueT] = dict()
+    raw_data: Dict[ColumnKey, ValueT] = dict()
     # formatted rows (i.e. values are HTML strings to display in the table):
-    formatted_data: Dict[ColumnKeyT, str] = dict()
+    formatted_data: Dict[ColumnKey, str] = dict()
 
 
 class TableSection(BaseModel):
@@ -263,8 +305,8 @@ class TableSection(BaseModel):
     Table section class. Holds configuration for a single section in a table.
     """
 
-    column_by_key: Dict[ColumnKeyT, ColumnMeta]
-    rows_by_sgroup: Dict[SampleGroupT, List[Row]] = defaultdict(list)
+    column_by_key: Dict[ColumnKey, ColumnMeta]
+    rows_by_sgroup: Dict[SampleGroup, List[Row]] = defaultdict(list)
 
 
 SECTION_COLORS = [
@@ -280,7 +322,7 @@ SECTION_COLORS = [
 ]
 
 
-col_anchors_by_table: Dict[AnchorT, Set[ColumnAnchorT]] = defaultdict(set)
+col_anchors_by_table: Dict[Anchor, Set[ColumnAnchor]] = defaultdict(set)
 
 
 class DataTable(BaseModel):
@@ -290,63 +332,68 @@ class DataTable(BaseModel):
     """
 
     id: str
-    anchor: AnchorT
+    anchor: Anchor
     pconfig: TableConfig
 
     sections: List[TableSection]
-    headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]]
+    headers_in_order: Dict[float, List[Tuple[int, ColumnKey]]]
 
     @staticmethod
     def create(
-        data: Union[InputSectionT, Sequence[InputSectionT]],
+        data: Union[SectionT, List[SectionT]],
         table_id: str,
-        table_anchor: AnchorT,
+        table_anchor: Anchor,
         pconfig: TableConfig,
-        headers: Optional[Union[List[InputHeaderT], InputHeaderT]] = None,
+        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
 
         # Given one dataset - turn it into a list
-        input_sections__with_nulls = data if isinstance(data, list) else [data]
         list_of_headers = headers if isinstance(headers, list) else [headers]
-        del data
         del headers
 
         # Each section to have a list of groups (even if there is just one element in a group)
-        input_section: InputSectionT
-        input_group: InputGroupT
-        unified_sections__with_nulls: List[Dict[SampleGroupT, List[InputRowT]]] = []
-        for input_section in input_sections__with_nulls:
-            rows_by_group: Dict[SampleGroupT, List[InputRowT]] = {}
+        input_section: SectionT
+        input_group: GroupT
+        unified_sections__with_nulls: List[Dict[SampleGroup, List[InputRow]]] = []
+        for input_section in data if isinstance(data, list) else [data]:
+            rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
             for g_name, input_group in input_section.items():
-                g_name = SampleGroupT(str(g_name))  # Make sure sample names are strings
+                g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
                     # Remove non-scalar values for table cells
-                    input_group = {k: v for k, v in input_group.items() if isinstance(v, (int, float, str, bool))}
-                    rows_by_group[g_name] = [InputRowT(sample=g_name, data=input_group)]
+                    data_dict = {
+                        ColumnKey(k): v
+                        for k, v in input_group.items()
+                        if isinstance(v, (int, float, str, bool)) or v is None
+                    }
+                    rows_by_group[g_name] = [InputRow(sample=SampleName(g_name), data=data_dict)]
                 elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
                     rows_by_group[g_name] = input_group
                 else:
-                    assert isinstance(input_group, InputRowT)
+                    assert isinstance(input_group, InputRow)
                     rows_by_group[g_name] = [input_group]
             unified_sections__with_nulls.append(rows_by_group)
-
-        del input_sections__with_nulls
+        del data
 
         # Go through each table section and create a list of Section objects
         sections: List[TableSection] = []
         for sec_idx, rows_by_sname__with_nulls in enumerate(unified_sections__with_nulls):
-            header_by_key: InputHeaderT = list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
+            header_by_key: Mapping[ColumnKeyT, ColumnDict] = (
+                list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
+            )
             if not header_by_key:
                 pconfig.only_defined_headers = False
 
-            column_by_key: Dict[ColumnKeyT, ColumnMeta] = dict()
-            header_by_key_copy = _get_or_create_headers(rows_by_sname__with_nulls, header_by_key, pconfig)
-            for col_key, header_d in header_by_key_copy.items():
+            column_by_key: Dict[ColumnKey, ColumnMeta] = dict()
+            col_dict_by_key_copy: Dict[ColumnKey, ColumnDict] = _get_or_create_headers(
+                rows_by_sname__with_nulls, header_by_key, pconfig
+            )
+            for col_key, col_dict in col_dict_by_key_copy.items():
                 column_by_key[col_key] = ColumnMeta.create(
-                    header_d=header_d, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig, table_anchor=table_anchor
+                    col_dict=col_dict, col_key=col_key, sec_idx=sec_idx, pconfig=pconfig, table_anchor=table_anchor
                 )
 
             # Filter out null values and columns that are not present in column_by_key,
@@ -384,7 +431,7 @@ class DataTable(BaseModel):
         # So the final ordering is:
         #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
-        headers_in_order: Dict[float, List[Tuple[int, ColumnKeyT]]] = defaultdict(list)
+        headers_in_order: Dict[float, List[Tuple[int, ColumnKey]]] = defaultdict(list)
         for sec_idx, section in enumerate(sections):
             for col_key, column in section.column_by_key.items():
                 if column.shared_key is not None:
@@ -415,12 +462,12 @@ class DataTable(BaseModel):
             pconfig=pconfig,
         )
 
-    def get_headers_in_order(self) -> List[Tuple[int, ColumnKeyT, ColumnMeta]]:
+    def get_headers_in_order(self) -> List[Tuple[int, ColumnKey, ColumnMeta]]:
         """
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)
         """
-        res: List[Tuple[int, ColumnKeyT, ColumnMeta]] = list()
+        res: List[Tuple[int, ColumnKey, ColumnMeta]] = list()
         # Scan through self.headers_in_order and just bolt on the actual header info
         placement: float
         for placement in sorted(self.headers_in_order.keys()):
@@ -430,18 +477,18 @@ class DataTable(BaseModel):
 
 
 def _get_or_create_headers(
-    rows_by_sample: Dict[SampleGroupT, List[InputRowT]],
-    header_by_key: InputHeaderT,
+    rows_by_sample: Dict[SampleGroup, List[InputRow]],
+    header_by_key: Mapping[ColumnKeyT, ColumnDict],
     pconfig,
-) -> Dict[ColumnKeyT, Dict[str, Union[str, int, float, None, Callable]]]:
+) -> Dict[ColumnKey, ColumnDict]:
     """
     Process and populate headers, if missing or incomplete.
     """
     # Make a copy to keep the input immutable.
-    header_by_key_copy = {ColumnKeyT(k): dict(h) for k, h in header_by_key.items()}
+    header_by_key_copy = {ColumnKey(k): h for k, h in header_by_key.items()}
     if not pconfig.only_defined_headers:
         # Get additional header keys from the data
-        col_ids: List[ColumnKeyT] = list(header_by_key_copy.keys())
+        col_ids: List[ColumnKey] = list(header_by_key_copy.keys())
         # Get the keys from the data
         for sname, rows in rows_by_sample.items():
             for row in rows:
@@ -452,7 +499,7 @@ def _get_or_create_headers(
         # Create empty header configs for each new data key
         for col_id in col_ids:
             if col_id not in header_by_key:
-                header_by_key_copy[col_id] = dict()
+                header_by_key_copy[col_id] = {}
 
     # Check that we have some data in each column
     empties = list()
@@ -528,8 +575,8 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, 
 
 def _determine_dmin_and_dmax(
     column: ColumnMeta,
-    col_key: ColumnKeyT,
-    rows_by_sample: Dict[SampleGroupT, List[Row]],
+    col_key: ColumnKey,
+    rows_by_sample: Dict[SampleGroup, List[Row]],
 ) -> None:
     """
     Work out max and min value in a column if not given, to support color scale.

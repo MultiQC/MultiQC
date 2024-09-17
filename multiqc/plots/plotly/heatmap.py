@@ -1,16 +1,17 @@
 import logging
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
+
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
-from multiqc.plots.plotly.plot import (
-    PlotType,
-    BaseDataset,
-    split_long_string,
-    Plot,
-    PConfig,
-)
 from multiqc import report
+from multiqc.plots.plotly.plot import (
+    BaseDataset,
+    PConfig,
+    Plot,
+    PlotType,
+    split_long_string,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ class HeatmapConfig(PConfig):
     zlab: str = "z"
     min: Union[float, int, None] = None
     max: Union[float, int, None] = None
-    xcats_samples: bool = False
-    ycats_samples: bool = False
+    xcats_samples: bool = True
+    ycats_samples: bool = True
     square: bool = True
     colstops: List[List] = []
     reverseColors: bool = Field(False, deprecated="reverse_colors")

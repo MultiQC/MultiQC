@@ -1,12 +1,12 @@
 ---
-title: Common Problems
+title: Common problems
 description: Troubleshooting difficulties
 ---
 
 # Troubleshooting
 
-Hopefully MultiQC will be easy to use and run without any hitches. If you have
-any problems, please do get in touch with the developer
+Hopefully, MultiQC will be easy to use and run without any hitches. If you have
+any problems, please get in touch with the developer
 ([Phil Ewels](http://phil.ewels.co.uk)) by e-mail or by
 [submitting an issue](https://github.com/MultiQC/MultiQC/issues/new) on github.
 Before that, here are a few things previously encountered that may help...
@@ -114,7 +114,7 @@ There are a couple of things you can check here:
    expected by the module in question? Check the [module documentation](https://multiqc.info/modules/)
    and have a look at the [example data](https://github.com/MultiQC/test-data/tree/main/data/modules) used for CI tests.
 
-If everything looks fine, then MultiQC probably needs extending to support
+If everything looks fine, then MultiQC probably needs to be extended to support
 your data. Tools have different versions, different parameters and different
 output formats that can confuse the parsing code.
 Please [open an issue](https://github.com/MultiQC/MultiQC/issues/new) with
@@ -122,7 +122,7 @@ your log files and we can get it fixed.
 
 ## Locale Error Messages
 
-Click is know to throw this error when the locale isn't set:
+Click is known to throw this error when the locale isn't set:
 
 ```python
 # ..truncated traceback.. #
@@ -146,7 +146,7 @@ Other locale strings are also fine, as long as the variables are set and valid.
 ## No space left on device
 
 If you're running with very large datasets or have an unusually small temporary file
-storage location, you may run in to the following error:
+storage location, you may run into the following error:
 
 ```python
   File "/usr/local/lib/python3.8/site-packages/multiqc/utils/util_functions.py", line 71, in write_data_file

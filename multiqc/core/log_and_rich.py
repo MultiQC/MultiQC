@@ -12,11 +12,11 @@ from typing import List, Optional
 
 import coloredlogs  # type: ignore
 import rich
+import rich.jupyter
+import rich.progress
+import rich_click
 from rich.logging import RichHandler
 from rich.theme import Theme
-import rich.jupyter
-import rich_click
-import rich.progress
 from tqdm import tqdm
 
 from multiqc import config

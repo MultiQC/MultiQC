@@ -10,7 +10,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, table
 from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
-from multiqc.types import AnchorT, ColumnKeyT
+from multiqc.types import Anchor, ColumnKey
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             <a href="https://multiqc.info/docs/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
         super(MultiqcModule, self).__init__(
             name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
-            anchor=AnchorT("multiqc_runtime"),
+            anchor=Anchor("multiqc_runtime"),
             info=info,
         )
 
@@ -71,21 +71,21 @@ class MultiqcModule(BaseMultiqcModule):
             plot=table.plot(
                 table_data,
                 headers={
-                    ColumnKeyT("run_time"): {
+                    ColumnKey("run_time"): {
                         "title": "Run time",
                         "description": "Time spent running the module",
                         "suffix": "s",
                         "format": "{:.2f}",
                         "scale": "Oranges",
                     },
-                    ColumnKeyT("peak_mem"): {
+                    ColumnKey("peak_mem"): {
                         "title": "Peak memory",
                         "description": "Peak memory usage during module execution",
                         "suffix": " MB",
                         "format": "{:.2f}",
                         "scale": "Greys",
                     },
-                    ColumnKeyT("mem_change"): {
+                    ColumnKey("mem_change"): {
                         "title": "Memory change",
                         "description": "Change in memory usage during module execution",
                         "suffix": " MB",

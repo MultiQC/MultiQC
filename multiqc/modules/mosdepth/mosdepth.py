@@ -1,11 +1,10 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Dict, Union, Optional, Tuple, List, Mapping
+from typing import Dict, List, Mapping, Optional, Tuple, Union
 
-from multiqc import config, Plot
+from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.qualimap.QM_BamQC import coverage_histogram_helptext, genome_fraction_helptext
 from multiqc.plots import bargraph, linegraph
 from multiqc.plots.linegraph import smooth_array
@@ -484,7 +483,7 @@ class MultiqcModule(BaseMultiqcModule):
             cum_fraction_by_cov: Dict[int, float] = dict()
 
             for line in f["f"]:
-                contig, cutoff_reads, bases_fraction = line.split("\t")
+                contig, cutoff_reads, bases_fraction = str(line).split("\t")
                 if bases_fraction == "0.00\n":
                     continue
 

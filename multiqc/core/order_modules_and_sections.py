@@ -3,7 +3,7 @@ from typing import Dict, Union
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
-from multiqc.types import AnchorT, ModuleIdT, SectionIdT
+from multiqc.types import Anchor, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ def order_modules_and_sections():
                     sec_or_mod_id_or_anchor.endswith("-module")
                     and sec_or_mod_id_or_anchor[:-7] in module_id_order.keys()
                 ):  # back-compat with < 1.24
-                    sec_or_mod_id_or_anchor = ModuleIdT(sec_or_mod_id_or_anchor[:-7])
+                    sec_or_mod_id_or_anchor = ModuleId(sec_or_mod_id_or_anchor[:-7])
                 else:
                     logger.debug(f"config.report_section_order: module '{sec_or_mod_id_or_anchor}' not found.")
                     continue
@@ -78,7 +78,7 @@ def order_modules_and_sections():
     if len(config.report_section_order) > 0:
         # Go through each module
         for midx, mod in enumerate(report.modules):
-            section_id_order: Dict[Union[AnchorT, SectionIdT, ModuleIdT], int] = dict()
+            section_id_order: Dict[Union[Anchor, SectionId, ModuleId], int] = dict()
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:
@@ -105,5 +105,5 @@ def order_modules_and_sections():
             # Remove module sections
             section_id_order = {sec_id: order for sec_id, order in section_id_order.items() if order is not False}
             # Sort the module sections
-            sorted_ids = sorted(section_id_order.keys(), key=lambda sec_id: section_id_order[SectionIdT(sec_id)])
+            sorted_ids = sorted(section_id_order.keys(), key=lambda sec_id: section_id_order[SectionId(sec_id)])
             report.modules[midx].sections = [s for i in sorted_ids for s in mod.sections if s.anchor == i or s.id == i]

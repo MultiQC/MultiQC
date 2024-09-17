@@ -3,8 +3,8 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 from multiqc import config, report
-from multiqc.plots.table_object import ColumnAnchorT, DataTable, SampleGroupT, SampleNameT, ValueT
-from multiqc.types import AnchorT
+from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
+from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
@@ -28,20 +28,20 @@ def make_table(
     :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
-    col_to_th: Dict[ColumnAnchorT, str] = dict()
-    col_to_modal_headers: Dict[ColumnAnchorT, str] = dict()
-    col_to_hidden: Dict[ColumnAnchorT, bool] = dict()
-    group_to_sample_to_anchor_to_td: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, str]]] = defaultdict(
+    col_to_th: Dict[ColumnAnchor, str] = dict()
+    col_to_modal_headers: Dict[ColumnAnchor, str] = dict()
+    col_to_hidden: Dict[ColumnAnchor, bool] = dict()
+    group_to_sample_to_anchor_to_td: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, str]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_anchor_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, ValueT]]] = defaultdict(
+    group_to_sample_to_anchor_to_val: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_nice_name_to_val: Dict[SampleGroupT, Dict[SampleNameT, Dict[str, ValueT]]] = defaultdict(
+    group_to_sample_to_nice_name_to_val: Dict[SampleGroup, Dict[SampleName, Dict[str, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sorting_to_anchor_to_val: Dict[SampleGroupT, Dict[ColumnAnchorT, ValueT]] = defaultdict(dict)
-    group_to_sample_to_anchor_to_empty: Dict[SampleGroupT, Dict[SampleNameT, Dict[ColumnAnchorT, bool]]] = defaultdict(
+    group_to_sorting_to_anchor_to_val: Dict[SampleGroup, Dict[ColumnAnchor, ValueT]] = defaultdict(dict)
+    group_to_sample_to_anchor_to_empty: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, bool]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     # empty_cells: Dict[ColumnKeyT, str] = dict()
@@ -54,19 +54,19 @@ def make_table(
         return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
 
     for idx, col_key, header in dt.get_headers_in_order():
-        col_anchor: ColumnAnchorT = header.rid
+        col_anchor: ColumnAnchor = header.rid
 
         # Build the table header cell
         shared_key = ""
         if header.shared_key is not None:
             shared_key = f" data-shared-key={header.shared_key}"
 
-        hide = ""
-        muted = ""
+        td_hide_cls = ""
+        tr_muted_cls = ""
         checked = ' checked="checked"'
         if header.hidden:
-            hide = "hidden"
-            muted = " text-muted"
+            td_hide_cls = " column-hidden"
+            tr_muted_cls = " text-muted"
             checked = ""
             hidden_cols += 1
 
@@ -80,7 +80,7 @@ def make_table(
         )
 
         col_to_th[col_anchor] = (
-            f'<th id="header_{col_anchor}" class="{col_anchor} {hide}" {data_attr}>{cell_contents}</th>'
+            f'<th id="header_{col_anchor}" class="{col_anchor}{td_hide_cls}" {data_attr}>{cell_contents}</th>'
         )
         col_to_hidden[col_anchor] = header.hidden
 
@@ -89,7 +89,7 @@ def make_table(
         if violin_anchor:
             data += f" data-violin-anchor='{violin_anchor}'"
         col_to_modal_headers[col_anchor] = f"""
-        <tr class="{col_anchor}{muted}" style="background-color: rgba({header.color}, 0.15);">
+        <tr class="{col_anchor}{tr_muted_cls}" style="background-color: rgba({header.color}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{col_anchor}" {data}>
@@ -102,9 +102,8 @@ def make_table(
         </tr>"""
 
         # Make a colour scale
-        if header.scale is False:
-            c_scale = None
-        else:
+        c_scale = None
+        if isinstance(header.scale, str):
             c_scale = mqc_colour.mqc_colour_scale(
                 name=header.scale,
                 minval=header.dmin,
@@ -239,7 +238,7 @@ def make_table(
                 if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}" {col}>{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}" {col}>{valstr}</td>'
                     )
 
                 # Build table cell background colour bar
@@ -255,13 +254,13 @@ def make_table(
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {hide}">{wrapper_html}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {td_hide_cls}">{wrapper_html}</td>'
                     )
 
                 # Scale / background colours are disabled
                 else:
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {hide}">{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}">{valstr}</td>'
                     )
 
                 # Is this cell hidden or empty?
@@ -434,9 +433,11 @@ def make_table(
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
-                    hide = "hide" if col_to_hidden[col_anchor] else ""
+                    td_hide_cls = "hide" if col_to_hidden[col_anchor] else ""
                     sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
-                    cell_html = f'<td class="data-coloured {col_anchor} {hide}" data-sorting-val="{sorting_val}"></td>'
+                    cell_html = (
+                        f'<td class="data-coloured {col_anchor} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
+                    )
                 html += cell_html
             html += "</tr>"
     html += "</tbody></table></div>"
@@ -447,7 +448,7 @@ def make_table(
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
-        flatten_raw_vals: Dict[SampleNameT, Dict[ColumnAnchorT, ValueT]] = {}
+        flatten_raw_vals: Dict[SampleName, Dict[ColumnAnchor, ValueT]] = {}
         for g_name, g_data in group_to_sample_to_anchor_to_val.items():
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[s_name] = s_data
