@@ -8,15 +8,15 @@ New feature: grouping samples in the General Statistics table.
 
 <img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
 
-Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](docs/core/reports/customisation.md#sample-grouping) is introduced.
+Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](https://multiqc.info/docs/reports/customisation/#sample-grouping) is introduced.
 
-It's opt-in, but will be on by default in the future releases.
+This feature is currently opt-in, you'll need to set `table_sample_merge` in a MultiQC config file to use (see docs above). **We'd love to hear your feedback!** We hope to enable it by default for common file suffix patterns in a future release.
 
-Because MultiQC needs to know how to merge each column (sum, average, etc), each module must implement it independenly. Currently it's supported by the FastQC and Cutadapt modules. To add it into other modules, follow the [development documentation](docs/core/development/modules.md#grouping-samples).
+Because MultiQC needs to know how to merge each column (sum, average, etc), each module must implement it independently. Currently it's supported by the FastQC and Cutadapt modules. If you'd like support added to another module, please let us know in a GitHub issue. Details of how to add it into module code can be found in the [moduel development documentation](https://multiqc.info/docs/development/modules/#grouping-samples).
 
 ### Highlights - box plots in custom content
 
-Another worthy addition is the box plot support in custom content, see [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
+The new box plot plot type, added in v1.21, are now available to use with custom content! See [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
 
 ### New modules
 
