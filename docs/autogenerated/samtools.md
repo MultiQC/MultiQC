@@ -53,6 +53,35 @@ samtools_idxstats_xchr: myXchr
 samtools_idxstats_ychr: myYchr
 ```
 
+### coverage
+
+You can include and exclude contigs based on name or pattern.
+
+For example, you could add the following to your MultiQC config file:
+
+```yaml
+samtools_coverage:
+  include_contigs:
+    - "chr*"
+  exclude_contigs:
+    - "*_alt"
+    - "*_decoy"
+    - "*_random"
+    - "chrUn*"
+    - "HLA*"
+    - "chrM"
+    - "chrEBV"
+```
+
+Note that exclusion superseeds inclusion for the contig filters.
+
+If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+```yaml
+samtools_coverage:
+  show_excluded_debug_logs: True
+```
+
 ### File search patterns
 
 ```yaml
