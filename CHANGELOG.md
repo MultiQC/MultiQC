@@ -33,7 +33,7 @@ The new box plot plot type, added in v1.21, are now available to use with custom
 ### Module updates
 
 - NanoStat: support multi-sample logs ([#2852](https://github.com/MultiQC/MultiQC/pull/2852))
-- Samtools coverage: suppot `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
+- Samtools coverage: support `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
 - Ganon: support non-verbose output, fix missing `removed with --min-count` ([#2838](https://github.com/MultiQC/MultiQC/pull/2838))
 - fastp: support the `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
 - UMICollapse: support the FastQ mode. ([#2827](https://github.com/MultiQC/MultiQC/pull/2827))
