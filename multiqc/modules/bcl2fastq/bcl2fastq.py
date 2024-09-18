@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bcl2fastq_bylane: Dict = dict()
         self.bcl2fastq_bysample: Dict = dict()
         self.bcl2fastq_bysample_lane: Dict = dict()
-        self.source_files: Dict = dict()
+        self.source_files: dict[str, list[str]] = dict()
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
@@ -54,13 +54,14 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound
 
         # Print source files
-        for s in self.source_files.keys():
-            self.add_data_source(
-                s_name=s,
-                source=",".join(list(set(self.source_files[s]))),
-                module="bcl2fastq",
-                section="bcl2fastq-bysample",
-            )
+        for s, paths in self.source_files.items():
+            for path in paths:
+                self.add_data_source(
+                    s_name=s,
+                    path=path,
+                    module="bcl2fastq",
+                    section="bcl2fastq-bysample",
+                )
 
         # Add sample counts to general stats table
         self.add_general_stats()

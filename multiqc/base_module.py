@@ -21,6 +21,7 @@ import packaging.version
 from multiqc import config, report
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
+from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
@@ -936,21 +937,28 @@ class BaseMultiqcModule:
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
 
-    def add_data_source(self, f: Optional[LoadedFileDict] = None, s_name=None, source=None, module=None, section=None):
-        if s_name is not None and self.is_ignore_sample(s_name):
-            return
-        if f is None:
-            logger.warning(f"Tried to add data source for {self.name}, but missing file info")
+    def add_data_source(
+        self,
+        f: Optional[LoadedFileDict] = None,
+        s_name: Optional[str] = None,
+        path: Optional[str] = None,
+        module: Optional[str] = None,
+        section: Optional[str] = None,
+    ):
+        if f is None and path is None:
+            lint_error(f"add_data_source needs f or path to be set, got: {locals()}")
             return
         if module is None:
             module = self.name
         if section is None:
             section = "all_sections"
-        if s_name is None:
+        if s_name is None and f is not None:
             s_name = f["s_name"]
-        if source is None:
-            source = os.path.abspath(os.path.join(f["root"], f["fn"]))
-        report.data_sources[module][section][s_name] = source
+        if s_name is not None and self.is_ignore_sample(s_name):
+            return
+        if path is None and f is not None:
+            path = os.path.abspath(os.path.join(f["root"], f["fn"]))
+        report.data_sources[module][section][s_name] = path
 
     def add_software_version(
         self,
