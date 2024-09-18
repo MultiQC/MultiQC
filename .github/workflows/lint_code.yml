@@ -13,7 +13,8 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          check-latest: true
+          python-version: "3.12"
+          cache: "pip"
 
       - uses: pre-commit/action@v2.0.3
 
@@ -25,7 +26,8 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          check-latest: true
+          python-version: "3.12"
+          cache: "pip"
 
       - run: pip install rich
 

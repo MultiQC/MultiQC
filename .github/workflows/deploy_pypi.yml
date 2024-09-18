@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          check-latest: true
+          python-version: "3.12"
 
       - name: Install python dependencies
         run: |
