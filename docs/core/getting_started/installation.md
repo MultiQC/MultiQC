@@ -61,11 +61,11 @@ docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 MultiQC is written in Python and needs a Python installation to run.
 
 To run MultiQC manually install, you'll typically install it into a local Python environment.
-MultiQC requires Python version 3.8 or above.
+MultiQC requires Python version 3.9 or above.
 
 ### System Python
 
-Python comes installed on most operating systems. You can install MultiQC directly here, but it is _not_ recommended. This often causes problems and it's a little risky to mess with it.
+Python comes installed on most operating systems. You can install MultiQC directly here, but it is _not_ recommended. This often causes problems, and it's a little risky to mess with it.
 
 :::danger
 If you find yourself prepending `sudo` to any MultiQC commands, take a step back and think about Python virtual environments / conda instead.
@@ -74,21 +74,21 @@ If you find yourself prepending `sudo` to any MultiQC commands, take a step back
 ### Python with Conda
 
 To see if you have python installed, run `python --version` on the command line.
-MultiQC needs Python version 3.8+.
+MultiQC needs Python version 3.9+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
-You can installation instructions for Miniconda
+You can follow installation instructions for Miniconda
 [here](https://docs.conda.io/en/latest/miniconda.html).
 
 Once conda is installed, you can create a Python environment with the following commands:
 
 ```bash
-conda create --name py3.11 python=3.11
-conda activate py3.11
+conda create --name py3.13 python=3.13
+conda activate py3.13
 ```
 
-You'll want to add the `conda activate py3.11` line to your `.bashrc` file,
+You'll want to add the `conda activate py3.13` line to your `.bashrc` file,
 so that the environment is loaded every time you load the terminal.
 
 ### Using a specific python interpreter
