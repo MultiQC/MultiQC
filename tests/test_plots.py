@@ -281,7 +281,11 @@ def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, expo
             assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").stat().st_size > 0
 
 
-def test_missing_pconfig(capsys):
+def test_missing_pconfig(reset):
+    from multiqc import config
+
+    config.strict = True
+
     linegraph.plot({"Sample1": {0: 1, 1: 1}})
     assert report.lint_errors == [
         "pconfig with required fields 'id' and 'title' must be provided for plot LinePlotConfig",
@@ -293,7 +297,7 @@ def test_missing_pconfig(capsys):
 
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_incorrect_fields(strict):
+def test_incorrect_fields(strict, reset):
     from multiqc import config
 
     config.strict = strict
@@ -318,11 +322,9 @@ def test_incorrect_fields(strict):
             assert any(w for w in warnings if w.startswith("• unrecognized field 'unknown_field'"))
         assert "test_incorrect_fields" in report.plot_data
 
-    config.strict = False
-
 
 @pytest.mark.parametrize("strict", [True, False])
-def test_missing_id_and_title(strict):
+def test_missing_id_and_title(strict, reset):
     from multiqc import config
 
     config.strict = strict
@@ -337,8 +339,6 @@ def test_missing_id_and_title(strict):
             assert "• missing required field 'title'" in errs
         plot_id = list(report.plot_data.keys())[0]
         assert plot_id.startswith("lineplot-")
-
-    config.strict = False
 
 
 def test_incorrect_color():
