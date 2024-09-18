@@ -9,7 +9,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 from multiqc.plots.table_object import ColumnDict, ValueT
-from multiqc.types import ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -33,14 +32,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Gather data from all json files
-        self.bcl2fastq_data: Dict[str, Dict[str, Dict]] = dict()
+        self.bcl2fastq_data: dict[str, dict[str, dict]] = dict()
         for f in self.find_log_files("bcl2fastq"):
             self.parse_file_as_json(f)
 
         # Collect counts by lane and sample (+source_files)
-        self.bcl2fastq_bylane: Dict = dict()
-        self.bcl2fastq_bysample: Dict = dict()
-        self.bcl2fastq_bysample_lane: Dict = dict()
+        self.bcl2fastq_bylane: dict = dict()
+        self.bcl2fastq_bysample: dict = dict()
+        self.bcl2fastq_bysample_lane: dict = dict()
         self.source_files: dict[str, list[str]] = dict()
         self.split_data_by_lane_and_sample()
 
@@ -104,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Add section for counts by sample
         # get cats for per-lane tab
-        lcats_set = set()
+        lcats_set: set[str] = set()
         for s_name in self.bcl2fastq_bysample_lane:
             lcats_set.update(self.bcl2fastq_bysample_lane[s_name].keys())
         lcats = sorted(list(lcats_set))
@@ -389,15 +388,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers: Dict[str, ColumnDict] = {
             "total": {
-                "title": f"{config.read_count_prefix} Clusters",
-                "description": "Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})".format(
-                    config.read_count_desc
-                ),
+                "title": "Clusters",
+                "description": f"Total number of reads for this sample as determined by bcl2fastq demultiplexing ("
+                f"{config.read_count_desc})",
                 "scale": "Blues",
                 "shared_key": "read_count",
             },
             "yieldQ30": {
-                "title": f"Yield ({config.base_count_prefix}) ≥ Q30",
+                "title": "Yield ≥ Q30",
                 "description": f"Number of bases with a Phred score of 30 or higher ({config.base_count_desc})",
                 "scale": "Greens",
                 "shared_key": "base_count",
@@ -406,7 +404,7 @@ class MultiqcModule(BaseMultiqcModule):
         # If no data for a column, header will be automatically ignored
         for r in range(1, 5):
             headers[f"percent_R{r}_Q30"] = {
-                "title": f"% R{r} Yield ≥ Q30",
+                "title": f"R{r} yield ≥ Q30",
                 "description": f"Percent of bases in R{r} with a Phred score of 30 or higher",
                 "scale": "RdYlGn",
                 "max": 100,
@@ -414,7 +412,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "suffix": "%",
             }
         headers["perfectPercent"] = {
-            "title": "% Perfect Index",
+            "title": "Perfect index",
             "description": "Percent of reads with perfect index (0 mismatches)",
             "max": 100,
             "min": 0,
@@ -423,11 +421,11 @@ class MultiqcModule(BaseMultiqcModule):
         }
         # If no data for a column, header will be automatically ignored
         for r in range(1, 5):
-            hideCol = True
-            for s in data:
+            hide_col = True
+            for sname in data:
                 try:
-                    if data[s][f"R{r}_trimmed_bases"] > 0:
-                        hideCol = False
+                    if data[sname][f"R{r}_trimmed_bases"] > 0:
+                        hide_col = False
                 except KeyError:
                     pass
             try:
@@ -436,7 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": f"Number of bases trimmed ({config.base_count_desc})",
                     "scale": "RdYlBu",
                     "modify": lambda x: x * 0.000001,
-                    "hidden": hideCol,
+                    "hidden": hide_col,
                 }
             except KeyError:
                 pass
@@ -444,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def lane_stats_table(self):
         """Return a table with overview stats for each bcl2fastq lane for a single flow cell"""
-        headers = {
+        headers: dict[str, ColumnDict] = {
             "total_yield": {
                 "title": f"{config.base_count_prefix} Total Yield",
                 "description": f"Number of bases ({config.base_count_desc})",
@@ -467,7 +465,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "mean_qscore": {
                 "title": "Mean Quality",
-                "description": "Average phred qualty score",
+                "description": "Average phred quality score",
                 "min": 0,
                 "scale": "Spectral",
             },
@@ -489,8 +487,8 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.bcl2fastq_bylane, headers, table_config)
 
     @staticmethod
-    def prepend_runid(runId, rest):
-        return str(runId) + " - " + str(rest)
+    def prepend_runid(run_id: str, rest: str) -> str:
+        return str(run_id) + " - " + str(rest)
 
     @staticmethod
     def get_bar_data_from_counts(data_by_flowcell):
@@ -507,7 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def get_bar_data_from_undetermined(data_by_flowcell):
         """Get data to plot for undetermined barcodes."""
-        bar_data = defaultdict(dict)
+        bar_data: dict[str, dict[str, int]] = defaultdict(dict)
         # get undetermined barcodes for each lanes
         for flowcell_id, data in data_by_flowcell.items():
             try:
