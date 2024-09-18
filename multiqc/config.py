@@ -18,11 +18,11 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
-import pyaml_env  # type: ignore
 import yaml
 from importlib_metadata import EntryPoint
 
 from multiqc.types import Anchor, ModuleId, SectionId
+from multiqc.utils import pyaml_env
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -132,8 +132,8 @@ table_cond_formatting_colours: List[Dict[str, str]]
 table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str
 thousandsSep_format: str
-remove_sections: List
-section_comments: Dict
+remove_sections: List[str]
+section_comments: Dict[str, str]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool

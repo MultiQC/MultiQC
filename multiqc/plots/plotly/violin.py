@@ -480,7 +480,7 @@ class ViolinPlot(Plot):
                 self._btn(
                     cls="mqc_table_config_modal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"{self.main_table_dt.anchor}_config_modal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.anchor}_config_modal"},
                 )
             )
         if self.show_table:

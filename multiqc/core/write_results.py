@@ -101,7 +101,7 @@ def write_results() -> None:
             if pdf_path:
                 logger.info(f"Report      : {_maybe_relative_path(pdf_path)}")
 
-    if config.export_plots and paths.plots_dir:
+    if paths.plots_dir and tmp_dir.plots_tmp_dir(create=False).exists():
         # Copy across the static plot images if requested
         _move_exported_plots(paths.plots_dir)
         logger.info(
@@ -199,7 +199,7 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
     if (
         (config.make_report and isinstance(paths.report_path, Path) and paths.report_path.exists())
         or (config.make_data_dir and paths.data_dir and paths.data_dir.exists())
-        or (config.export_plots and paths.plots_dir and paths.plots_dir.exists())
+        or (paths.plots_dir and paths.plots_dir.exists())
     ):
         if config.force:
             if config.make_report and isinstance(paths.report_path, Path) and paths.report_path.exists():
@@ -208,7 +208,7 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
             if config.make_data_dir and paths.data_dir and paths.data_dir.exists():
                 paths.data_dir_overwritten = True
                 shutil.rmtree(paths.data_dir)
-            if config.export_plots and paths.plots_dir and paths.plots_dir.exists():
+            if paths.plots_dir and paths.plots_dir.exists():
                 paths.plots_dir_overwritten = True
                 shutil.rmtree(paths.plots_dir)
         else:

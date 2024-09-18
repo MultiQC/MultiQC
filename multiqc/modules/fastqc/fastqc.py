@@ -474,7 +474,7 @@ class MultiqcModule(BaseMultiqcModule):
             headers={
                 ColumnKey("percent_duplicates"): {
                     "title": "Dups",
-                    "description": "% Duplicate Reads",
+                    "description": "% duplicate reads",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -482,7 +482,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("percent_gc"): {
                     "title": "GC",
-                    "description": "Average % GC Content",
+                    "description": "Average % GC content",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -490,8 +490,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,.1f}",
                 },
                 ColumnKey("avg_sequence_length"): {
-                    "title": "Avg Length",
-                    "description": "Average Read Length",
+                    "title": "Avg len",
+                    "description": "Average read length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -499,8 +499,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "hidden": True,
                 },
                 ColumnKey("median_sequence_length"): {
-                    "title": "Median Len",
-                    "description": "Median Read Length",
+                    "title": "Median len",
+                    "description": "Median read length",
                     "min": 0,
                     "suffix": " bp",
                     "scale": "RdYlGn",
@@ -519,9 +519,10 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("total_sequences"): {
                     "title": "Seqs",
-                    "description": f"Total Sequences ({config.read_count_desc})",
+                    "description": f"Total sequences ({config.read_count_desc})",
                     "min": 0,
                     "scale": "Blues",
+                    "suffix": "M",
                     "modify": lambda x: x * config.read_count_multiplier,
                 },
             },
@@ -734,7 +735,10 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug("sequence_content not found in FastQC reports")
             return None
 
-        html = """<div id="{id}_div">
+        # Generate unique plot ID, needed in mqc_export_selectplots
+        anchor = report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot")
+        dump = json.dumps([self.anchor, data_by_sample])
+        html = f"""<div id="fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
                <span class="glyphicon glyphicon-hand-up"></span>
                Click a sample row to see a line plot for that dataset.
@@ -748,22 +752,18 @@ class MultiqcModule(BaseMultiqcModule):
                 <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
             </div>
             <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{id}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
+                <div id="{anchor}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
                     <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
                 </div>
             </div>
             <div class="clearfix"></div>
         </div>
-        <script type="application/json" class="fastqc_seq_content">{d}</script>
-        """.format(
-            # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data_by_sample]),
-        )
+        <script type="application/json" class="fastqc_seq_content">{dump}</script>
+        """
 
         self.add_section(
             name="Per Base Sequence Content",
-            anchor="fastqc_per_base_sequence_content",
+            anchor=f"{self.anchor}_per_base_sequence_content",
             description="The proportion of each base position for which each of the four normal DNA bases has been called.",
             helptext="""
             To enable multiple samples to be shown in a single plot, the base composition data

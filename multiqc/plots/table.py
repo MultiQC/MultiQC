@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -35,16 +35,14 @@ def plot(
     :param pconfig: plot config dict
     :return: HTML ready to be inserted into the page
     """
-    assert pconfig is not None, "pconfig must be provided"
-    if isinstance(pconfig, dict):
-        pconfig = TableConfig(**pconfig)
+    pconf = cast(TableConfig, TableConfig.from_pconfig_dict(pconfig))
 
     # Make a datatable object
-    table_id = pconfig.id
-    table_anchor = Anchor(f"{pconfig.anchor or table_id}_table")
+    table_id = pconf.id
+    table_anchor = Anchor(f"{pconf.anchor or table_id}_table")
     table_anchor = Anchor(report.save_htmlid(table_anchor))  # make sure it's unique
     dt = table_object.DataTable.create(
-        data, table_id=table_id, table_anchor=table_anchor, pconfig=pconfig.model_copy(), headers=headers
+        data, table_id=table_id, table_anchor=table_anchor, pconfig=pconf.model_copy(), headers=headers
     )
 
     return plot_dt(dt)

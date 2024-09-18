@@ -101,16 +101,16 @@ class ColumnMeta(ValidatedConfig):
         pconfig: TableConfig,  # plot config dictionary
         table_anchor: Anchor,
     ) -> "ColumnMeta":
-        ns = col_dict.get("namespace", pconfig.namespace) or ""
-        assert isinstance(ns, str)
+        namespace = col_dict.get("namespace", pconfig.namespace) or ""
+        assert isinstance(namespace, str)
 
         unclean_rid = col_dict.get("rid") or col_key
         legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
         rid = legacy_short_rid
         # Prefixing with namepsace to get a unique column ID within a table across all sections
-        if ns:
-            ns = re.sub(r"\W+", "_", str(ns)).strip().strip("_").lower()
-            rid = f"{ns}-{rid}"
+        if namespace:
+            ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
+            rid = f"{ns_slugified}-{rid}"
         rid = ColumnAnchor(report.save_htmlid(rid, scope=table_anchor))
 
         modify = col_dict.get("modify")
@@ -166,17 +166,24 @@ class ColumnMeta(ValidatedConfig):
             description=col_dict.get("description", title),
             scale=col_dict.get("scale", pconfig.scale),
             hidden=col_dict.get("hidden", False),
-            namespace=ns,
+            placement=placement,
+            namespace=namespace,
             color=color,
             max=col_dict.get("max"),
             min=min,
+            dmin=col_dict.get("dmin"),
+            dmax=col_dict.get("dmax"),
             ceiling=col_dict.get("ceiling"),
             floor=col_dict.get("floor"),
             minrange=col_dict.get("minrange", col_dict.get("minRange")),
             shared_key=shared_key,
-            placement=placement,
-            modify=modify,
+            tt_decimals=col_dict.get("tt_decimals"),
             suffix=suffix,
+            cond_formatting_colours=col_dict.get("cond_formatting_colours", []),
+            cond_formatting_rules=col_dict.get("cond_formatting_rules", {}),
+            bgcols=col_dict.get("bgcols", {}),
+            bars_zero_centrepoint=col_dict.get("bars_zero_centrepoint", False),
+            modify=modify,
             format=format,
         )
 

@@ -83,26 +83,61 @@ class BaseMultiqcModule:
     def __init__(
         self,
         name: str = "base",
-        anchor: Anchor = Anchor("base"),
+        anchor: Union[Anchor, str] = Anchor("base"),
         target=None,
         href: Union[str, List[str], None] = None,
-        info=None,
-        comment=None,
-        extra=None,
-        autoformat=True,
-        autoformat_type="markdown",
+        info: Optional[str] = None,
+        comment: Optional[str] = None,
+        extra: Optional[str] = None,
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
     ):
         # Custom options from user config that can overwrite base module values
-        self.name: str = self.mod_cust_config.get("name", name)
+        self.name: str = name
+        _cust_name = self.mod_cust_config.get("name")
+        if _cust_name is not None:
+            self.name = str(_cust_name)
+
         # cannot be overwritten for repeated modules with path_filters:
         self.id: ModuleId = ModuleId(self.mod_id or anchor)
-        self.anchor = self.mod_cust_config.get("anchor", anchor)
-        self.href = self.mod_cust_config.get("href", [href] if isinstance(href, str) else href or [])
-        self.info = self.mod_cust_config.get("info", info)
-        self.comment = self.mod_cust_config.get("comment", comment)
-        self.extra = self.mod_cust_config.get("extra", extra)
-        self.doi = self.mod_cust_config.get("doi", [doi] if isinstance(doi, str) else doi or [])
+
+        self.anchor: Anchor = Anchor(anchor)
+        _cust_anchor = self.mod_cust_config.get("anchor")
+        if _cust_anchor is not None:
+            self.anchor = Anchor(str(_cust_anchor))
+
+        self.info: str = info or ""
+        _cust_info = self.mod_cust_config.get("info")
+        if _cust_info is not None:
+            self.info = str(_cust_info)
+
+        self.comment: str = comment or ""
+        _cust_comment = self.mod_cust_config.get("comment")
+        if _cust_comment is not None:
+            self.comment = str(_cust_comment)
+
+        self.extra: str = extra or ""
+        _cust_extra = self.mod_cust_config.get("extra")
+        if _cust_extra is not None:
+            self.extra = str(_cust_extra)
+
+        self.href: List[str] = [href] if isinstance(href, str) else href or []
+        _cust_href = self.mod_cust_config.get("href")
+        if _cust_href is not None:
+            if isinstance(_cust_href, str):
+                self.href = [_cust_href]
+            elif isinstance(_cust_href, list):
+                self.href = [str(h) for h in _cust_href]
+
+        self.doi: List[str] = [doi] if isinstance(doi, str) else doi or []
+        _cust_doi = self.mod_cust_config.get("doi")
+        if _cust_doi is not None:
+            if isinstance(_cust_doi, str):
+                self.doi = [_cust_doi]
+            elif isinstance(_cust_doi, list):
+                self.doi = [str(d) for d in _cust_doi]
+
         self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
@@ -112,14 +147,13 @@ class BaseMultiqcModule:
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
 
         # Sanitise anchor ID and check for duplicates
-        self.anchor = report.save_htmlid(self.anchor)
+        self.anchor = Anchor(report.save_htmlid(str(self.anchor)))
 
         # See if we have a user comment in the config
-        if self.anchor in config.section_comments:
-            self.comment = config.section_comments[self.anchor]
+        _config_section_comment = config.section_comments.get(str(self.anchor))
+        if _config_section_comment:
+            self.comment = _config_section_comment
 
-        if self.info is None:
-            self.info = ""
         self.info = self.info.strip().strip(".")
         # Legacy: if self.info starts with a lowercase letter, prepend the module name to it
         if self.info and self.info[0].islower():
@@ -339,11 +373,11 @@ class BaseMultiqcModule:
         autoformat_type="markdown",
     ):
         """Add a section to the module report output"""
-        if id is None:
-            id = anchor
+        if id is None and anchor is not None:
+            id = str(anchor)
 
-        if anchor is None:
-            anchor = id
+        if anchor is None and id is not None:
+            anchor = str(id)
 
         if id is None:
             if name is not None:
@@ -352,7 +386,11 @@ class BaseMultiqcModule:
             else:
                 sl = len(self.sections) + 1
                 id = f"{self.anchor}-section-{sl}"
-            anchor = id
+            if anchor is None:
+                anchor = id
+
+        assert anchor is not None
+        assert id is not None
 
         # Prepend custom module anchor to the section if set
         cust_anchor = self.mod_cust_config.get("anchor")
@@ -364,20 +402,20 @@ class BaseMultiqcModule:
         anchor = report.save_htmlid(anchor)
 
         # Skip if user has a config to remove this module section
-        if anchor in config.remove_sections:
+        if str(anchor) in config.remove_sections:
             logger.debug(f"Skipping section with anchor '{anchor}' because specified in user config")
             return
 
         # Skip if user has a config to remove this module section
-        if id in config.remove_sections:
+        if str(id) in config.remove_sections:
             logger.debug(f"Skipping section with id '{id}' because specified in user config")
             return
 
         # See if we have a user comment in the config
-        if id in config.section_comments:
-            comment = config.section_comments[id]
-        elif anchor in config.section_comments:
-            comment = config.section_comments[anchor]
+        if str(id) in config.section_comments:
+            comment = config.section_comments[str(id)]
+        elif str(anchor) in config.section_comments:
+            comment = config.section_comments[str(anchor)]
 
         # Format the content
         if autoformat:

@@ -65,6 +65,8 @@ You can inspect the individual samples within a group by clicking on the arrow:
 
 ![genstats_grouped_samples_expanded](../../../docs/images/genstats_grouping_expanded.png)
 
+To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping).
+
 ## Plots
 
 MultiQC modules can take plot more extensive data in the sections below

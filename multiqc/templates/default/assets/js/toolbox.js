@@ -491,7 +491,7 @@ $(function () {
   $(".export-plot").click(function (e) {
     e.preventDefault();
     // Get the id of the span element that was clicked
-    let id = e.target.dataset.pid;
+    let id = e.target.dataset.plotAnchor;
     let isTable = e.target.dataset.type === "table";
     // Tick only this plot in the toolbox and slide out
     $("#mqc_export_selectplots input").prop("checked", false);

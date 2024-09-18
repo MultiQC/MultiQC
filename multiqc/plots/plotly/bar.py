@@ -4,7 +4,7 @@ import copy
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, TypedDict, Union
+from typing import Dict, List, Literal, Optional, Sequence, TypedDict, Union
 
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore

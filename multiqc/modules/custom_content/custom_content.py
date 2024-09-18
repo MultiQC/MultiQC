@@ -6,7 +6,8 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from token import OP
+from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union, cast
 
 import yaml
 from pydantic import BaseModel
@@ -18,6 +19,7 @@ from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.plotly.box import BoxPlotConfig
 from multiqc.plots.plotly.heatmap import HeatmapConfig
 from multiqc.plots.plotly.line import LinePlotConfig
+from multiqc.plots.plotly.plot import PlotType
 from multiqc.plots.plotly.scatter import ScatterConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.types import Anchor, ModuleId, SectionId
@@ -30,6 +32,14 @@ log = logging.getLogger(__name__)
 class CcDict(BaseModel):
     config: Dict = {}
     data: Union[Dict, List, str] = {}
+
+
+class ParsedDict(TypedDict, total=False):
+    id: str
+    plot_type: Optional[str]
+    data: Union[str, Dict[str, Dict[str, Any]]]
+    config: Dict[str, Any]
+    section_name: Optional[str]
 
 
 def custom_module_classes() -> List[BaseMultiqcModule]:
@@ -111,30 +121,32 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             f_extension = os.path.splitext(f["fn"])[1]
 
             # YAML and JSON files are the easiest
-            parsed_data = None
+            parsed_dict: Optional[ParsedDict] = None
             if f_extension == ".yaml" or f_extension == ".yml":
                 try:
-                    parsed_data = yaml.safe_load(f["f"])
+                    parsed_dict = yaml.safe_load(f["f"])
                 except Exception as e:
                     log.warning(f"Error parsing YAML file '{f['fn']}' (probably invalid YAML)")
                     log.debug(f"YAML error: {e}", exc_info=True)
                     break
-                parsed_data["id"] = parsed_data.get("id", f["s_name"])
+                assert parsed_dict is not None
+                parsed_dict["id"] = parsed_dict.get("id", f["s_name"])
             elif f_extension == ".json":
                 try:
-                    parsed_data = json.loads(f["f"])
+                    parsed_dict = json.loads(f["f"])
                 except Exception as e:
                     log.warning(f"Error parsing JSON file '{f['fn']}' (probably invalid JSON)")
                     log.warning(f"JSON error: {e}")
                     break
-                parsed_data["id"] = parsed_data.get("id", f["s_name"])
+                assert parsed_dict is not None
+                parsed_dict["id"] = parsed_dict.get("id", f["s_name"])
             elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
                 image_string = base64.b64encode(f["f"].read()).decode("utf-8")
                 image_format = "png" if f_extension == ".png" else "jpg"
                 img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
                     image_format, image_string
                 )
-                parsed_data = {
+                parsed_dict = {
                     "id": f["s_name"],
                     "plot_type": "image",
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
@@ -142,34 +154,43 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 }
                 # # If the search pattern 'k' has an associated custom content section config, use it:
                 # if config_custom_data_id in ccdict_by_id:
-                #     parsed_data.update(ccdict_by_id[config_custom_data_id].config)
+                #     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)
             elif f_extension == ".html":
-                parsed_data = {"id": f["s_name"], "plot_type": "html", "data": f["f"]}
-                parsed_data.update(_find_html_file_header(f))
+                parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
+                parsed_dict.update(_find_html_file_header(f))
 
-            if parsed_data is not None:
-                if isinstance(parsed_data.get("data"), dict):
+            if parsed_dict is not None:
+                parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
+                parsed_item_with_clean_sn: Dict[str, Dict[str, Any]] = {}
+                if isinstance(parsed_item, dict):
                     # Run sample-name cleaning on the data keys
-                    parsed_data["data"] = {bm.clean_s_name(k, f): v for k, v in parsed_data["data"].items()}
+                    for sn, val_by_metric in parsed_item.items():
+                        sn = bm.clean_s_name(sn, f)
+                        if sn not in parsed_item_with_clean_sn:
+                            parsed_item_with_clean_sn[sn] = val_by_metric
+                        else:
+                            parsed_item_with_clean_sn[sn].update(val_by_metric)
+                    parsed_dict["data"] = parsed_item_with_clean_sn
 
-                _c_id = parsed_data.get("id", config_custom_data_id)
-                parsed_item = parsed_data.get("data", {})
+                _c_id = parsed_dict.get("id", config_custom_data_id)
+                parsed_item = parsed_dict.get("data", {})
                 if parsed_item:
                     if _c_id not in ccdict_by_id:
-                        ccdict_by_id[_c_id] = CcDict()
-                    _ccdict = ccdict_by_id[_c_id]
+                        ccdict_by_id[ModuleId(_c_id)] = CcDict()
+                    _ccdict = ccdict_by_id[ModuleId(_c_id)]
                     if isinstance(parsed_item, dict) and isinstance(_ccdict.data, dict):
                         _ccdict.data.update(parsed_item)
                     else:
                         _ccdict.data = parsed_item
                     assert isinstance(_ccdict.config, dict)
-                    _ccdict.config.update({j: k for j, k in parsed_data.items() if j != "data"})
+                    _ccdict.config.update({j: k for j, k in parsed_dict.items() if j != "data"})
                 else:
                     log.warning(f"No data found in {f['fn']}")
 
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
+                m_config: Optional[Dict]
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 c_id: ModuleId
@@ -192,7 +213,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
                 # Guess c_id if no information known
                 if config_custom_data_id == "custom_content":
-                    c_id = s_name
+                    c_id = ModuleId(s_name)
                     if not m_config.get("id"):
                         m_config["id"] = c_id
 
@@ -208,28 +229,29 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 if m_config.get("file_format") is None:
                     m_config["file_format"] = _guess_file_format(f)
 
-                # Parse data
-                parsed_data, parsed_conf = _parse_txt(f, m_config, non_header_lines)
-                if parsed_data is None or len(parsed_data) == 0:
+                # Parse data and optionally guess plot type from data
+                parsed_item, m_config, plot_type = _parse_txt(f, m_config, non_header_lines)
+                m_config["plot_type"] = plot_type
+                if parsed_item is None or len(parsed_item) == 0:
                     log.warning(f"Not able to parse custom data in {f['fn']}")
                 else:
                     # Did we get a new section id from the file?
-                    if parsed_conf.get("id") is not None:
-                        c_id = ModuleId(parsed_conf["id"])
+                    if m_config.get("id") is not None:
+                        c_id = ModuleId(m_config["id"])
                     if c_id not in ccdict_by_id:
                         ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
-                    if isinstance(parsed_data, list):
-                        ccdict_by_id[c_id].data = parsed_data
-                    elif parsed_conf.get("plot_type") == "html":
-                        ccdict_by_id[c_id].data = parsed_data
+                    if isinstance(parsed_item, list):
+                        ccdict_by_id[c_id].data = parsed_item
+                    elif plot_type == PlotType.HTML:
+                        ccdict_by_id[c_id].data = parsed_item
                     else:
-                        assert isinstance(parsed_data, dict)
+                        assert isinstance(parsed_item, dict)
                         d = ccdict_by_id[c_id].data
                         assert isinstance(d, dict), (c_id, f["fn"], f["root"])
-                        d.update(parsed_data)
+                        d.update(parsed_item)
                     assert isinstance(ccdict_by_id[c_id].config, dict)
-                    ccdict_by_id[c_id].config.update(parsed_conf)
+                    ccdict_by_id[c_id].config.update(m_config)
 
         # Give log message if no files found for search pattern
         if num_sp_found_files == 0 and config_custom_data_id != "custom_content":
@@ -254,7 +276,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     for mod_id, ccdict in ccdict_by_id.items():
         # General Stats
         assert isinstance(ccdict.config, dict)
-        if ccdict.config.get("plot_type") == "generalstats":
+        plot_type = PlotType.from_str(ccdict.config.get("plot_type"))
+        if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
             gs_headers = ccdict.config.get("headers")
             if gs_headers is None:
@@ -319,12 +342,12 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
             parsed_modules[mod_id].add_cc_section(section_id, section_anchor=section_anchor, ccdict=ccdict)
 
-            if ccdict.config.get("plot_type") == "html":
+            if plot_type == PlotType.HTML:
                 log.info(f"{section_id}: Found 1 sample (html)")
-            elif ccdict.config.get("plot_type") == "image":
+            elif plot_type == PlotType.IMAGE:
                 log.info(f"{section_id}: Found 1 sample (image)")
             else:
-                log.info(f"{section_id}: Found {len(ccdict.data)} samples ({ccdict.config.get('plot_type')})")
+                log.info(f"{section_id}: Found {len(ccdict.data)} samples ({plot_type})")
 
     # Sort sections if we have a config option for order
     mod_order = getattr(config, "custom_content", {}).get("order", [])
@@ -344,7 +367,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         for ccdict in ccdict_by_id.values():
             assert isinstance(ccdict.config, dict)
             cfgs.append(ccdict.config)
-        if len(ccdict_by_id) >= 1 and all(cfg.get("plot_type") == "generalstats" for cfg in cfgs):
+        if len(ccdict_by_id) >= 1 and all(
+            PlotType.from_str(cfg.get("plot_type")) == PlotType.GENERALSTATS for cfg in cfgs
+        ):
             sorted_modules = [bm]
         else:
             raise ModuleNoSamplesFound
@@ -395,9 +420,13 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         if self.info is None or self.info == "":
-            self.info = ccdict.config.get("parent_description")
+            _cc_desc = ccdict.config.get("description")
+            if _cc_desc is not None:
+                self.info = str(_cc_desc)
         if self.extra is None or self.info == "":
-            self.extra = ccdict.config.get("extra", None)
+            _cc_extra = ccdict.config.get("extra")
+            if _cc_extra is not None:
+                self.extra = str(_cc_extra)
         # This needs overwriting again as it has already run on init
         self.intro = self._get_intro()
 
@@ -428,11 +457,19 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == self.name:
             section_name = ""
 
-        plot_type = ccdict.config.get("plot_type")
+        plot_type: Optional[PlotType] = None
+        _pt = ccdict.config.get("plot_type")
+        if _pt is None:
+            log.warning(f"'plot_type' value is not sepcified for content ID '{section_id}'")
+        else:
+            plot_type = PlotType.from_str(_pt)
+            if plot_type is None:
+                log.warning(f"Error: custom content plot type '{_pt}' not recognised for content ID {section_id}")
+
         plot_datasets: List  # to save after rendering
 
         # Heatmap
-        if plot_type == "heatmap":
+        if plot_type == PlotType.HEATMAP:
             plot = heatmap.plot(
                 ccdict.data,
                 ccdict.config.get("xcats"),
@@ -444,14 +481,14 @@ class MultiqcModule(BaseMultiqcModule):
             plot_datasets = [ccdict.data] if not isinstance(ccdict.data, list) else ccdict.data
 
             # Try to coerce x-axis to numeric
-            if plot_type in ["linegraph", "scatter"]:
+            if plot_type in [PlotType.LINE, PlotType.SCATTER]:
                 try:
                     ccdict.data = [{k: {float(x): v[x] for x in v} for k, v in ds.items()} for ds in plot_datasets]
                 except ValueError:
                     pass
 
             # Table
-            if plot_type == "table":
+            if plot_type == PlotType.TABLE:
                 headers = ccdict.config.get("headers")
 
                 # handle some legacy fields for backwards compat
@@ -465,49 +502,37 @@ class MultiqcModule(BaseMultiqcModule):
                 plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)
 
             # Bar plot
-            elif plot_type == "bargraph":
+            elif plot_type == PlotType.BAR:
                 ccdict.data = [{str(k): v for k, v in ds.items()} for ds in plot_datasets]
                 plot = bargraph.plot(plot_datasets, ccdict.config.get("categories"), pconfig=BarPlotConfig(**pconfig))
 
             # Line plot
-            elif plot_type == "linegraph":
+            elif plot_type == PlotType.LINE:
                 plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))
 
             # Scatter plot
-            elif plot_type == "scatter":
+            elif plot_type == PlotType.SCATTER:
                 plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))
 
             # Box plot
-            elif plot_type == "box":
+            elif plot_type == PlotType.BOX:
                 plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))
 
             # Violin plot
-            elif plot_type in ["violin", "beeswarm"]:
+            elif plot_type == PlotType.VIOLIN:
                 plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))
 
             # Raw HTML
-            elif plot_type == "html":
+            elif plot_type == PlotType.HTML:
                 if len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
-                content = ccdict.data[0]
+                content = ccdict.data
 
             # Raw image file as html
-            elif plot_type == "image":
+            elif plot_type == PlotType.IMAGE:
                 if len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
-                content = ccdict.data[0]
-
-            # Not supplied
-            elif plot_type is None:
-                log.warning(f"Plot type not found for content ID '{section_id}'")
-
-            # Not recognised
-            else:
-                log.warning(
-                    "Error - custom content plot type '{}' not recognised for content ID {}".format(
-                        ccdict.config.get("plot_type"), section_id
-                    )
-                )
+                content = ccdict.data
 
         if plot is not None:
             for i, ds in enumerate(plot_datasets):
@@ -519,13 +544,14 @@ class MultiqcModule(BaseMultiqcModule):
                     self.write_data_file(ds, f"multiqc_{did}")
                     plot.pconfig.save_data_file = False
 
-        self.add_section(
-            name=section_name,
-            anchor=section_anchor,
-            id=section_id,
-            plot=plot,
-            content=content,
-        )
+        if plot is not None or content:
+            self.add_section(
+                name=section_name,
+                anchor=section_anchor,
+                id=section_id,
+                plot=plot,
+                content=content or "",
+            )
 
 
 def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
@@ -638,21 +664,32 @@ def _guess_file_format(f):
     return "spaces"
 
 
-def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, Dict, List, None], Dict]:
+def _parse_txt(
+    f, conf: Dict, non_header_lines: List[str]
+) -> Tuple[Union[str, Dict, List, None], Dict, Optional[PlotType]]:
+    """
+    Parse data and optionally guess plot type
+    """
+
     # Split the data into a list of lists by column
     sep = None
-    if conf["file_format"] == "csv":
+    if conf.get("file_format") == "csv":
         sep = ","
-    if conf["file_format"] == "tsv":
+    if conf.get("file_format") == "tsv":
         sep = "\t"
 
+    plot_type: Optional[PlotType] = None
+    _pt: Optional[str] = conf.get("plot_type")
+    if _pt is not None:
+        plot_type = PlotType.from_str(_pt)
+
     # Check for special case - HTML
-    if conf.get("plot_type") == "html":
+    if plot_type == PlotType.HTML:
         lines: List[str] = []
         for line in non_header_lines:
             if line:
                 lines.append(line)
-        return "\n".join(lines), conf
+        return "\n".join(lines), conf, plot_type
 
     # Not HTML, need to parse data
     matrix: List[List[Union[str, float, int]]] = []
@@ -665,10 +702,10 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
                 ncols = len(sections)
             elif ncols != len(sections):
                 log.warning(f"Inconsistent number of columns found in {f['fn']}! Skipping..")
-                return None, conf
+                return None, conf, plot_type
 
     # Convert values to floats if we can
-    first_row_str = 0
+    strings_in_first_row = 0
     for i, sections in enumerate(matrix):
         for j, v in enumerate(sections):
             try:
@@ -680,49 +717,62 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
                     v = v[1:-1]
                 # Count strings in first row (header?)
                 if i == 0:
-                    first_row_str += 1
+                    strings_in_first_row += 1
             matrix[i][j] = v
 
     all_numeric = all(isinstance(v, (float, int)) for s in matrix[1:] for v in s[1:])
 
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
-    if conf.get("plot_type") == "generalstats" and len(matrix) >= 2 and ncols and ncols >= 2:
+    if plot_type == PlotType.GENERALSTATS and len(matrix) >= 2 and ncols and ncols >= 2:
         data_ddict: Dict[str, Dict] = defaultdict(dict)
         for i, section in enumerate(matrix[1:], 1):
             for j, v in enumerate(section[1:], 1):
                 s_name = str(section[0])
                 data_ddict[s_name][matrix[0][j]] = v
-        return data_ddict, conf
+        return data_ddict, conf, plot_type
 
-    # Heatmap: Number of headers == number of lines
-    if conf.get("plot_type") is None and first_row_str == len(non_header_lines) and all_numeric:
-        conf["plot_type"] = "heatmap"
-    if conf.get("plot_type") == "heatmap":
+    # Heatmap: number of headers == number of lines
+    if plot_type is None and strings_in_first_row == len(non_header_lines) and all_numeric:
+        plot_type = PlotType.HEATMAP
+    if plot_type == PlotType.HEATMAP:
         conf["xcats"] = matrix[0][1:]
         conf["ycats"] = [s[0] for s in matrix[1:]]
         data_list: List = [s[1:] for s in matrix[1:]]
-        return data_list, conf
+        return data_list, conf, plot_type
+
+    # Header row of strings box plot
+    if strings_in_first_row == len(matrix[0]) and plot_type == PlotType.BOX:
+        box_ddict: Dict[str, List[float]] = {str(v): [] for v in matrix[0]}
+        for sidx, s in enumerate(matrix[0]):
+            for row in matrix[1:]:
+                try:
+                    val = float(row[sidx])
+                except ValueError:
+                    pass
+                else:
+                    box_ddict[str(s)].append(val)
+        return box_ddict, conf, plot_type
 
     # Header row of strings, or configured as table
-    if first_row_str == len(matrix[0]) or conf.get("plot_type") == "table":
+    if strings_in_first_row == len(matrix[0]) or plot_type == PlotType.TABLE:
         data_ddict = dict()
-        for s in matrix[1:]:
-            s_name = str(s[0])
+        for row in matrix[1:]:
+            s_name = str(row[0])
             data_ddict[s_name] = dict()
-            for i, v in enumerate(s[1:]):
+            for i, v in enumerate(row[1:]):
                 cat = str(matrix[0][i + 1])
                 data_ddict[s_name][cat] = v
         # Bar graph or table - if numeric data, go for bar graph
-        if conf.get("plot_type") is None:
+        if plot_type is None:
             allfloats = True
             for r in matrix[1:]:
                 for v in r[1:]:
                     allfloats = allfloats and isinstance(v, float)
             if allfloats:
-                conf["plot_type"] = "bargraph"
+                plot_type = PlotType.BAR
             else:
-                conf["plot_type"] = "table"
+                plot_type = PlotType.TABLE
         # Set table col_1 header
         col_name = str(matrix[0][0])
         if conf.get("plot_type") == "table" and col_name.strip() != "":
@@ -730,54 +780,64 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
             if not conf["pconfig"].get("col1_header"):
                 conf["pconfig"]["col1_header"] = col_name.strip()
         # Return parsed data
-        if conf.get("plot_type") == "bargraph" or conf.get("plot_type") == "table":
-            return data_ddict, conf
+        if plot_type == PlotType.BAR or plot_type == PlotType.TABLE:
+            return data_ddict, conf, plot_type
         else:
             data_ddict = dict()  # reset
 
-    # Scatter plot: First row is  str : num : num
+    # Scatter plot: first row is str : num : num
     if (
-        conf.get("plot_type") is None
+        plot_type is None
         and len(matrix[0]) == 3
         and not isinstance(matrix[0][0], float)
         and isinstance(matrix[0][1], float)
         and isinstance(matrix[0][2], float)
     ):
-        conf["plot_type"] = "scatter"
+        plot_type = PlotType.SCATTER
 
-    if conf.get("plot_type") == "scatter":
+    if plot_type == PlotType.SCATTER:
         dicts: Dict[str, Dict[str, float]] = dict()
-        for s in matrix:
+        for row in matrix:
             try:
-                dicts[str(s[0])] = {"x": float(s[1]), "y": float(s[2])}
+                dicts[str(row[0])] = {"x": float(row[1]), "y": float(row[2])}
             except (IndexError, ValueError):
                 pass
-        return dicts, conf
+        return dicts, conf, plot_type
 
-    # Single sample line / bar graph - first row has two columns
-    if len(matrix[0]) == 2:
-        # Line graph - num : num
-        if conf.get("plot_type") is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
-            conf["plot_type"] = "linegraph"
-        # Bar graph - str : num
-        if conf.get("plot_type") is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
-            conf["plot_type"] = "bargraph"
+    # Single-sample box/bar/line plot
+    if len(matrix[0]) == 2 or len(matrix[0]) == 1:
+        # Set section id based on directory if not known
+        if conf.get("id") is None:
+            conf["id"] = os.path.basename(f["root"])
 
-        # Data structure is the same
-        if conf.get("plot_type") == "linegraph" or conf.get("plot_type") == "bargraph":
-            # Set section id based on directory if not known
-            if conf.get("id") is None:
-                conf["id"] = os.path.basename(f["root"])
-            data_dict: Dict = dict()
-            for s in matrix:
-                data_dict[s[0]] = s[1]
-            return {f["s_name"]: data_dict}, conf
+        # Single-sample box plot
+        if len(matrix[0]) == 1:
+            if plot_type is None and isinstance(matrix[0][0], float):
+                plot_type = PlotType.BOX
+            if plot_type == PlotType.BOX:
+                return {f["s_name"]: [float(r[0]) for r in matrix]}, conf, plot_type
 
-    # Multi-sample line graph: No header row, str : lots of num columns
-    if conf.get("plot_type") is None and len(matrix[0]) > 4 and all_numeric:
-        conf["plot_type"] = "linegraph"
+        # Single sample line/bar plot - first row has two columns
+        if len(matrix[0]) == 2:
+            # Line graph - num : num
+            if plot_type is None and isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+                plot_type = PlotType.LINE
+            # Bar graph - str : num
+            if plot_type is None and not isinstance(matrix[0][0], float) and isinstance(matrix[0][1], float):
+                plot_type = PlotType.BAR
 
-    if conf.get("plot_type") == "linegraph":
+            # Data structure is the same
+            if plot_type in [PlotType.LINE, PlotType.BAR]:
+                data_dict: Dict = dict()
+                for row in matrix:
+                    data_dict[row[0]] = row[1]
+                return {f["s_name"]: data_dict}, conf, plot_type
+
+    # Multi-sample line graph: No header row, lots of num columns
+    if plot_type is None and len(matrix[0]) > 4 and all_numeric:
+        plot_type = PlotType.LINE
+
+    if plot_type == PlotType.LINE:
         data_ddict = dict()
         # If the first row has no header, use it as axis labels
         x_labels = []
@@ -785,10 +845,10 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
         if s_name.strip() == "":
             x_labels = matrix.pop(0)[1:]
         # Use 1..n range for x values
-        for s in matrix:
-            name = str(s[0])
+        for row in matrix:
+            name = str(row[0])
             data_ddict[name] = dict()
-            for i, v in enumerate(s[1:]):
+            for i, v in enumerate(row[1:]):
                 try:
                     x_val = x_labels[i]
                     try:
@@ -798,13 +858,11 @@ def _parse_txt(f, conf: Dict, non_header_lines: List[str]) -> Tuple[Union[str, D
                 except IndexError:
                     x_val = i + 1
                 data_ddict[name][x_val] = v
-        return data_ddict, conf
+        return data_ddict, conf, plot_type
 
     # Got to the end and haven't returned. It's a mystery, capn'!
     log.debug(
         f"Not able to figure out a plot type for '{f['fn']}' "
-        + "plot type = {}, all numeric = {}, first row str = {}".format(
-            conf.get("plot_type"), all_numeric, first_row_str
-        )
+        + f"plot type = {plot_type}, all numeric = {all_numeric}, first row str = {strings_in_first_row}"
     )
-    return None, conf
+    return None, conf, plot_type

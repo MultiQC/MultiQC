@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.24.1"
+version = "1.26dev"
 dependencies = [
     "click",
     "humanize",
@@ -18,16 +18,15 @@ dependencies = [
     "Pillow>=10",  # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
-    "pyaml-env",
     "rich>=10",
     "rich-click",
     "coloredlogs",  # logging in notebooks
     "spectra>=0.0.10",
-    "pydantic>=2.7.1",
+    "pydantic>=2.7.0",
     "typeguard",
     "tqdm",  # progress bar in notebooks
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
     {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
@@ -261,6 +260,7 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
+package-data = {multiqc = ["py.typed"]}
 
 [tool.ruff]
 line-length = 120
