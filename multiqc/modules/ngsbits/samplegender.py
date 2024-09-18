@@ -4,13 +4,25 @@ from multiqc.plots import table
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-class NgsbitsSampleGenderModule:
-    def parse_ngsbits_samplegender(self):
+
+from multiqc.base_module import BaseMultiqcModule
+ 
+class MultiqcModule(BaseMultiqcModule):
+    def __init__(self):
+        super(MultiqcModule, self).__init__(
+          name='ngs-bits SampleGender',
+          anchor='samplegender',
+          href="https://github.com/imgag/ngs-bits",
+          info="SampleGender determines the gender of a sample from the BAM/CRAM file.",
+          doi=[""],
+        )
+
+    def parse_reports(self):
         """Find and parse ngsbits SampleGender TSV output files."""
 
         self.samplegender_data = dict()
-        for f in self.find_log_files("ngsbits/samplegender", filehandles=True):
-            parsed_data = parse_samplegender_report(f["f"])
+        for f in self.find_log_files("ngsbits_samplegender", filehandles=True):
+            parsed_data = samplegender_parse_reports(f["f"])
             if parsed_data:
                 if f["s_name"] in self.samplegender_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
@@ -40,7 +52,7 @@ class NgsbitsSampleGenderModule:
         return n_reports_found
 
 
-def parse_samplegender_report(f):
+def samplegender_parse_reports(f):
     """Parse the ngsbits SampleGender TSV file for all samples."""
     
     data = dict()
