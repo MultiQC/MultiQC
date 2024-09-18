@@ -7,6 +7,7 @@ from multiqc.modules.ngsbits.samplegender import parse_reports as samplegender_p
 
 log = logging.getLogger(__name__)
 
+
 class MultiqcModule(BaseMultiqcModule):
     """
     The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
@@ -30,11 +31,11 @@ class MultiqcModule(BaseMultiqcModule):
         n["mappingqc"] = mappingqc_parse_reports(self)
         if n["mappingqc"] > 0:
             log.info(f"Found {n['mappingqc']} MappingQC reports")
-        
+
         n["readqc"] = readqc_parse_reports(self)
         if n["readqc"] > 0:
             log.info(f"Found {n['readqc']} ReadQC reports")
-        
+
         n["samplegender"] = samplegender_parse_reports(self)
         if n["samplegender"] > 0:
             log.info(f"Found {n['samplegender']} SampleGender reports")

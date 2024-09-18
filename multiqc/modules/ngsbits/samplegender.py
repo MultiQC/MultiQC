@@ -1,16 +1,15 @@
-import logging
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
+import logging
 
 log = logging.getLogger(__name__)
 
 
-from multiqc.base_module import BaseMultiqcModule
- 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
-            name='ngs-bits SampleGender',
-            anchor='samplegender',
+            name="ngs-bits SampleGender",
+            anchor="samplegender",
             href="https://github.com/imgag/ngs-bits",
             info="SampleGender determines the gender of a sample from the BAM/CRAM file.",
             doi=[""],
@@ -48,10 +47,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def samplegender_parse_reports(self, f):
         """Parse the ngsbits SampleGender TSV file for all samples."""
-        
+
         data = dict()
         headers = None
-        
+
         for line in f:
             if line.startswith("#"):  # Skip header or comment lines
                 continue
@@ -68,13 +67,12 @@ class MultiqcModule(BaseMultiqcModule):
                     "ratio_chry_chrx": float(parts[4]),
                 }
                 data[parts[0]] = sample_data  # Use the file name as the key
-    
-        return data
 
+        return data
 
     def samplegender_table(self, data):
         """Build a table from the parsed SampleGender output."""
-    
+
         headers = {
             "file": {
                 "title": "File Name",
