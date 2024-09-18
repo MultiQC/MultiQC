@@ -126,7 +126,7 @@ def update_data_and_header(data: Dict, header: Dict, color_dict: Dict, logger: l
     """Transform data and headers of a table"""
     for key in data:
         if key not in color_dict:
-            logger.warning(f'Unexpected key {key} - applying defaults')
+            logger.warning(f"Unexpected key {key} - applying defaults")
 
         new_header = {"scale": color_dict.get(key, "GnBu")}
         value = data[key].replace(",", "")
