@@ -21,6 +21,7 @@ import packaging.version
 from multiqc import config, report
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
+from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import (
     ColumnDict,
@@ -549,7 +550,7 @@ class BaseMultiqcModule:
 
     def group_samples_and_average_metrics(
         self,
-        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
         grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroup, List[InputRow]]:
         """
@@ -557,7 +558,7 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names(list(data_by_sample.keys())).items():
+        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -869,7 +870,7 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data_by_sample: Dict[SampleName, Dict[ColumnKey, ValueT]],
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
         headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
         namespace=None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
@@ -936,21 +937,28 @@ class BaseMultiqcModule:
         report.general_stats_data.append(rows_by_group)
         report.general_stats_headers.append(_headers)  # type: ignore
 
-    def add_data_source(self, f: Optional[LoadedFileDict] = None, s_name=None, source=None, module=None, section=None):
-        if s_name is not None and self.is_ignore_sample(s_name):
-            return
-        if f is None:
-            logger.warning(f"Tried to add data source for {self.name}, but missing file info")
+    def add_data_source(
+        self,
+        f: Optional[LoadedFileDict] = None,
+        s_name: Optional[str] = None,
+        path: Optional[str] = None,
+        module: Optional[str] = None,
+        section: Optional[str] = None,
+    ):
+        if f is None and path is None:
+            lint_error(f"add_data_source needs f or path to be set, got: {locals()}")
             return
         if module is None:
             module = self.name
         if section is None:
             section = "all_sections"
-        if s_name is None:
+        if s_name is None and f is not None:
             s_name = f["s_name"]
-        if source is None:
-            source = os.path.abspath(os.path.join(f["root"], f["fn"]))
-        report.data_sources[module][section][s_name] = source
+        if s_name is not None and self.is_ignore_sample(s_name):
+            return
+        if path is None and f is not None:
+            path = os.path.abspath(os.path.join(f["root"], f["fn"]))
+        report.data_sources[module][section][s_name] = path
 
     def add_software_version(
         self,
