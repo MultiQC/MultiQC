@@ -8,6 +8,8 @@ from typing import Dict
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.plots.table_object import ColumnDict, ValueT
+from multiqc.types import ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -304,10 +306,10 @@ class MultiqcModule(BaseMultiqcModule):
                             "yieldQ30": 0,
                             "qscore_sum": 0,
                         }
-                        for r in range(1, 5):
-                            self.bcl2fastq_bysample[sample_id][f"R{r}_yield"] = 0
-                            self.bcl2fastq_bysample[sample_id][f"R{r}_Q30"] = 0
-                            self.bcl2fastq_bysample[sample_id][f"R{r}_trimmed_bases"] = 0
+                        for r_num in range(1, 5):
+                            self.bcl2fastq_bysample[sample_id][f"R{r_num}_yield"] = 0
+                            self.bcl2fastq_bysample[sample_id][f"R{r_num}_Q30"] = 0
+                            self.bcl2fastq_bysample[sample_id][f"R{r_num}_trimmed_bases"] = 0
                     s = self.bcl2fastq_bysample[sample_id]
                     s["total"] += sample["total"]
                     s["total_yield"] += sample["total_yield"]
@@ -315,11 +317,11 @@ class MultiqcModule(BaseMultiqcModule):
                     s["yieldQ30"] += sample["yieldQ30"]
                     s["qscore_sum"] += sample["qscore_sum"]
                     # Undetermined samples did not have R1 and R2 information
-                    for r in range(1, 5):
+                    for r_num in range(1, 5):
                         try:
-                            s[f"R{r}_yield"] += sample[f"R{r}_yield"]
-                            s[f"R{r}_Q30"] += sample[f"R{r}_Q30"]
-                            s[f"R{r}_trimmed_bases"] += sample[f"R{r}_trimmed_bases"]
+                            s[f"R{r}_yield"] += sample[f"R{r_num}_yield"]
+                            s[f"R{r}_Q30"] += sample[f"R{r_num}_Q30"]
+                            s[f"R{r}_trimmed_bases"] += sample[f"R{r_num}_trimmed_bases"]
                         except KeyError:
                             pass
                     try:
@@ -340,21 +342,21 @@ class MultiqcModule(BaseMultiqcModule):
                         self.source_files[sample_id].append(sample["filename"])
                 # Remove unpopulated read keys
                 for sample_id, sample in lane["samples"].items():
-                    for r in range(1, 5):
+                    for r_num in range(1, 5):
                         try:
                             if (
                                 not self.bcl2fastq_bysample[sample_id][f"R{r}_yield"]
-                                and not self.bcl2fastq_bysample[sample_id][f"R{r}_Q30"]
-                                and not self.bcl2fastq_bysample[sample_id][f"R{r}_trimmed_bases"]
+                                and not self.bcl2fastq_bysample[sample_id][f"R{r_num}_Q30"]
+                                and not self.bcl2fastq_bysample[sample_id][f"R{r_num}_trimmed_bases"]
                             ):
-                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_yield")
-                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_Q30")
-                                self.bcl2fastq_bysample[sample_id].pop(f"R{r}_trimmed_bases")
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r_num}_yield")
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r_num}_Q30")
+                                self.bcl2fastq_bysample[sample_id].pop(f"R{r_num}_trimmed_bases")
                         except KeyError:
                             pass
 
     def add_general_stats(self):
-        data = dict()
+        data: dict[str, dict[str, ValueT]] = dict()
         for sample_id, sample in self.bcl2fastq_bysample.items():
             percent_R_Q30 = dict()
             for r in range(1, 5):
@@ -384,7 +386,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
 
-        headers = {
+        headers: Dict[str, ColumnDict] = {
             "total": {
                 "title": f"{config.read_count_prefix} Clusters",
                 "description": "Total number of reads for this sample as determined by bcl2fastq demultiplexing ({})".format(
