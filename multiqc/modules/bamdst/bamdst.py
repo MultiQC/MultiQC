@@ -228,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_by_contig[contig][k.strip()] = v
 
         if data_by_contig:
-            self.add_data_source(source=path, s_name=s_name, section="per-chromosome")
+            self.add_data_source(path=path, s_name=s_name, section="per-chromosome")
         return data_by_contig
 
     def build_tables(self, data_by_sample):
