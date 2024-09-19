@@ -13,15 +13,10 @@ def parse_reports(self) -> int:
     samplegender_data: Dict[str, Dict[str, Union[float, int]]] = dict()
     for f in self.find_log_files("ngsbits/samplegender"):
         self.add_data_source(f)
-        print(f["f"])  # File contents
-        print(f["s_name"])  # Sample name (from cleaned filename)
-        print(f["fn"])  # Filename
-        print(f["root"])  # Directory file was in
         s_name = f["s_name"]
         if s_name in samplegender_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         samplegender_data[s_name] = parse_file(f["f"])
-        print(samplegender_data)
         # Filter to strip out ignored sample names
         samplegender_data = self.ignore_samples(samplegender_data)
 
@@ -85,19 +80,18 @@ def parse_reports(self) -> int:
 
 
 def parse_file(f) -> Dict[str, Union[float, int, str]]:
-    data = {}
+    parsed_data = {}
+    headers = None
     lines = f.splitlines()
-
-    # Use the first line as the header (column names)
-    headers = lines[0].strip().split("\t")
-
-    # Process the second line, using the headers as key names
-    values = lines[1].strip().split("\t")
-
-    # Create a dictionary where headers[i] are the keys and values[i] are the corresponding values
-    data = {
-        headers[i]: float(values[i]) if i > 1 else values[i]  # Convert only numeric columns to float
-        for i in range(1, len(values))
-    }
-
-    return data
+    for line in lines:
+        s = line.strip().split("\t")
+        if headers is None:
+            headers = s
+        else:
+            for i, v in enumerate(s):
+                key = headers[i]
+                try:
+                    parsed_data[key] = float(v)
+                except ValueError:
+                    parsed_data[key] = v
+    return parsed_data if parsed_data else None
