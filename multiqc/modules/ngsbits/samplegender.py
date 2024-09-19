@@ -7,29 +7,33 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def parse_reports(module: BaseMultiqcModule) -> int:
+def parse_reports(self) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
     samplegender_data = dict()
-    for f in module.find_log_files("ngsbits_sex"):
+    for f in self.find_log_files("ngsbits/samplegender"):
+        print(f["f"])  # File contents
+        print(f["s_name"])  # Sample name (from cleaned filename)
+        print(f["fn"])  # Filename
+        print(f["root"])  # Directory file was in
         parsed_data = samplegender_parse_reports(f["f"])
         if parsed_data:
             if f["s_name"] in samplegender_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            module.add_data_source(f, section="samplegender")
+            self.add_data_source(f, section="samplegender")
             samplegender_data[f["s_name"]] = parsed_data
-
+        print(parsed_data)
     # Filter to strip out ignored sample names
-    samplegender_data = module.ignore_samples(samplegender_data)
+    #    samplegender_data = self.ignore_samples(samplegender_data)
 
     n_reports_found = len(samplegender_data)
     if n_reports_found == 0:
         return 0
 
     # Write parsed report data to a file
-    module.write_data_file(samplegender_data, "multiqc_ngsbits_samplegender.txt")
+    self.write_data_file(samplegender_data, "multiqc_ngsbits_samplegender.txt")
 
-    module.add_software_version(None)
+    self.add_software_version(None)
 
     # Add SampleGender Table
     config_table = {
@@ -70,7 +74,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         },
     }
 
-    module.add_section(
+    self.add_section(
         name="ngs-bits SampleGender",
         anchor="samplegender",
         description="SampleGender determines the gender of a sample from the BAM/CRAM file.",
@@ -80,7 +84,6 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     return len(samplegender_data)
 
 
-@staticmethod
 def samplegender_parse_reports(f):
     data = dict()
     headers = None

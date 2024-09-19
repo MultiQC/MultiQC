@@ -10,7 +10,7 @@ sample_sorted_md.bam        male    3872086 14244970        0.2718
 """)
 
     report.analysis_files = [f1]
-    report.search_files(["ngsbits_sex"])
+    report.search_files(["*ngsbits_sex.tsv"])
     m = MultiqcModule()
     assert len(m.saved_raw_data) == 1
     print(m.saved_raw_data)
