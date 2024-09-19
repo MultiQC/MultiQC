@@ -82,6 +82,9 @@ bbmap/qhist:
 bbmap/rpkm:
   contents: "#File	"
   num_lines: 1
+bbmap/refstats:
+  contents: "#name	%unambiguousReads	unambiguousMB	%ambiguousReads	ambiguousMB	unambiguousReads	ambiguousReads	assignedReads	assignedBases"
+  num_lines: 1
 bbmap/statsfile_machine:
   contents: "Reads Used="
   num_lines: 1
