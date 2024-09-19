@@ -9,7 +9,7 @@ Makes the following available under the main multiqc namespace:
 
 import sys
 
-OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
 if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
     raise RuntimeError(
@@ -19,25 +19,28 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
     )
 
 # Load config and report before anything else:
-from multiqc import config  # noqa: E402
-from multiqc import report  # noqa: E402
-from multiqc.multiqc import run  # noqa: E402
+from multiqc import (  # noqa: E402
+    config,
+    report,
+)
 from multiqc.base_module import BaseMultiqcModule  # noqa: E402
 from multiqc.interactive import (  # noqa: E402
-    parse_logs,
+    ClConfig,
+    add_custom_content_section,
+    get_general_stats_data,
+    get_module_data,
+    get_plot,
     list_data_sources,
     list_modules,
-    list_samples,
     list_plots,
-    get_plot,
-    get_module_data,
-    get_general_stats_data,
+    list_samples,
+    load_config,
+    parse_logs,
     reset,
     write_report,
-    add_custom_content_section,
-    load_config,
 )
-from multiqc.plots.plotly.plot import Plot, PConfig  # noqa: E402
+from multiqc.multiqc import run  # noqa: E402
+from multiqc.plots.plotly.plot import PConfig, Plot  # noqa: E402
 
 __version__ = config.version
 
@@ -62,4 +65,5 @@ __all__ = [
     "add_custom_content_section",
     "BaseMultiqcModule",
     "load_config",
+    "ClConfig",
 ]

@@ -10,17 +10,17 @@ import subprocess
 import sys
 import time
 import traceback
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 import rich_click as click
 
 from multiqc import config, report
-from multiqc.core import plugin_hooks, log_and_rich
-from multiqc.core.exceptions import RunError, NoAnalysisFound
+from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
 from multiqc.core.file_search import file_search
 from multiqc.core.order_modules_and_sections import order_modules_and_sections
-from multiqc.core.update_config import update_config, ClConfig
+from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
 from multiqc.validation import ConfigValidationError
@@ -401,6 +401,7 @@ click.rich_click.OPTION_GROUPS = {
 )
 @click.option(
     NO_ANSI_FLAG,
+    "no_ansi",
     is_flag=True,
     default=None,
     help="Disable coloured log output",

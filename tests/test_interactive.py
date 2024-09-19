@@ -6,6 +6,7 @@ import multiqc
 from multiqc import report
 from multiqc.core.update_config import ClConfig
 from multiqc.plots import table
+from multiqc.types import Anchor
 
 
 def test_multiqc_run(data_dir, tmp_path):
@@ -68,7 +69,7 @@ def test_parse_logs_ignore_samples(data_dir):
 
 
 def test_custom_module(tmp_path):
-    module = multiqc.BaseMultiqcModule(name="my-module", anchor="custom_data")
+    module = multiqc.BaseMultiqcModule(name="my-module", anchor=Anchor("custom_data"))
     module.add_section(
         name="Custom Section",
         description="Custom description",

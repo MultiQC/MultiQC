@@ -3,16 +3,16 @@ import sys
 import time
 import traceback
 import tracemalloc
-from importlib.metadata import EntryPoint
-from typing import Dict, Union, Callable, List
+from typing import Callable, Dict, List, Union
 
 import rich
+from importlib_metadata import EntryPoint
 from rich.syntax import Syntax
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks, software_versions
-from multiqc.core.exceptions import RunError, NoAnalysisFound
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ import hashlib
 # Default logger will be replaced by caller
 import logging
 import re
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import spectra  # type: ignore
@@ -329,20 +329,34 @@ class mqc_colour_scale(object):
         ],
     }
 
-    def __init__(self, name="GnBu", minval=0, maxval=100, id=None):
+    def __init__(
+        self,
+        name="GnBu",
+        minval: Optional[Union[float, int, str]] = None,
+        maxval: Optional[Union[float, int, str]] = None,
+        id=None,
+    ):
         """Initialise class with a colour scale"""
 
-        self.name = name
-        self.id = id
-        self.colours = self.get_colours(name)
+        if minval is None:
+            minval = 0.0
+        if maxval is None:
+            maxval = 100.0
+        assert minval is not None
+        assert maxval is not None
 
         # Sanity checks
         minval = re.sub(r"[^0-9\.\-e]", "", str(minval))
         maxval = re.sub(r"[^0-9\.\-e]", "", str(maxval))
         if minval == "":
-            minval = 0
+            minval = 0.0
         if maxval == "":
-            maxval = 100
+            maxval = 100.0
+
+        self.name = name
+        self.id = id
+        self.colours = self.get_colours(name)
+
         if float(minval) == float(maxval):
             self.minval = float(minval)
             self.maxval = float(minval) + 1.0
@@ -353,7 +367,7 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3, source=None):
+    def get_colour(self, val, colformat="hex", lighten=0.3, source=None) -> str:
         """Given a value, return a colour within the colour scale"""
 
         if val is None:
@@ -421,7 +435,7 @@ class mqc_colour_scale(object):
         except Exception as e:
             # Shouldn't crash all of MultiQC just for colours
             logger.warning(f"{self.id + ': ' if self.id else ''}Error getting colour: {e}")
-            return ""
+        return ""
 
     def get_colours(self, name="GnBu"):
         """Function to get a colour scale by name

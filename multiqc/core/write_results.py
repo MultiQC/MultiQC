@@ -11,18 +11,20 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Dict, List, Optional, Union, cast
 
 import jinja2
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.table_object import ColumnKey
+from multiqc.types import Anchor
 from multiqc.utils import megaqc, util_functions
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,7 @@ def write_results() -> None:
         _write_data_files(paths.data_dir)
         logger.info(
             "Data        : {}{}".format(
-                paths.data_dir,
+                _maybe_relative_path(paths.data_dir),
                 "   (overwritten)" if paths.data_dir_overwritten else "",
             )
         )
@@ -90,21 +92,21 @@ def write_results() -> None:
         if paths.report_path and not config.make_pdf:
             logger.info(
                 "Report      : {}{}".format(
-                    paths.report_path,
+                    _maybe_relative_path(paths.report_path),
                     "   (overwritten)" if paths.report_overwritten else "",
                 )
             )
         elif paths.report_path and config.make_pdf:
             pdf_path = _write_pdf(paths.report_path)
             if pdf_path:
-                logger.info(f"Report      : {pdf_path}")
+                logger.info(f"Report      : {_maybe_relative_path(pdf_path)}")
 
-    if config.export_plots and paths.plots_dir:
+    if paths.plots_dir and tmp_dir.plots_tmp_dir(create=False).exists():
         # Copy across the static plot images if requested
         _move_exported_plots(paths.plots_dir)
         logger.info(
             "Plots       : {}{}".format(
-                paths.plots_dir,
+                _maybe_relative_path(paths.plots_dir),
                 "   (overwritten)" if paths.plots_dir_overwritten else "",
             )
         )
@@ -113,6 +115,19 @@ def write_results() -> None:
     if config.zip_data_dir and paths.data_dir is not None:
         shutil.make_archive(str(paths.data_dir), format="zip", root_dir=str(paths.data_dir))
         tmp_dir.rmtree_with_retries(paths.data_dir)
+
+    if paths.report_path:
+        logger.debug(f"Report HTML written to {paths.report_path}")
+
+
+def _maybe_relative_path(path: Path) -> Path:
+    """
+    If the path is relative to CWD, return the relative path; otherwise, return the full path
+    """
+    try:
+        return path.relative_to(os.getcwd())
+    except ValueError:  # could call path.is_relative_to() here, but it's new in Py 3.9
+        return path
 
 
 def _set_output_names() -> OutputNames:
@@ -184,7 +199,7 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
     if (
         (config.make_report and isinstance(paths.report_path, Path) and paths.report_path.exists())
         or (config.make_data_dir and paths.data_dir and paths.data_dir.exists())
-        or (config.export_plots and paths.plots_dir and paths.plots_dir.exists())
+        or (paths.plots_dir and paths.plots_dir.exists())
     ):
         if config.force:
             if config.make_report and isinstance(paths.report_path, Path) and paths.report_path.exists():
@@ -193,7 +208,7 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
             if config.make_data_dir and paths.data_dir and paths.data_dir.exists():
                 paths.data_dir_overwritten = True
                 shutil.rmtree(paths.data_dir)
-            if config.export_plots and paths.plots_dir and paths.plots_dir.exists():
+            if paths.plots_dir and paths.plots_dir.exists():
                 paths.plots_dir_overwritten = True
                 shutil.rmtree(paths.plots_dir)
         else:
@@ -236,8 +251,8 @@ def render_and_export_plots(plots_dir_name: str):
     """
 
     def update_fn(_, s: Section):
-        if s.plot_id:
-            _plot = report.plot_by_id[s.plot_id]
+        if s.plot_anchor:
+            _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
                 s.plot = _plot.add_to_report(plots_dir_name=plots_dir_name)
             elif isinstance(_plot, str):
@@ -249,17 +264,41 @@ def render_and_export_plots(plots_dir_name: str):
 
     sections = report.get_all_sections()
 
+    show_progress = False
+    msg = "Rendering plots"
     # Show progress bar if writing any flat images, i.e. export_plots requested, or at least one plot is flat
-    show_progress = config.export_plots
-    if not show_progress:
+    if config.export_plots:
+        show_progress = True
+        msg += (
+            f". Export plots to formats {', '.join(config.export_plot_formats)} is requested, so"
+            + " it might take a while. To disable plot export, set `export_plots: false` in config,"
+            + " or remove the `--export-plots` command line flag"
+        )
+    elif config.plots_force_flat:
+        show_progress = True
+        msg += (
+            ". Plots are requested to be rendered flat with `--flat` or `plots_force_flat: true` in config,"
+            + " and rendering might take a while. To disable, remove or override that flag"
+        )
+    else:
         for s in sections:
-            if s.plot_id:
-                plot = report.plot_by_id[s.plot_id]
+            if s.plot_anchor:
+                plot = report.plot_by_id[s.plot_anchor]
                 if isinstance(plot, Plot) and plot.flat:
                     show_progress = True
+                    msg += (
+                        f". Some plots rendered flat because the number of series exceeds {config.plots_flat_numseries},"
+                        + " and this rendering might take a while. To disable, set `--interactive`"
+                        + " (`plots_force_interactive: true` in config), or change the `plots_flat_numseries`"
+                        + " to a higher value"
+                    )
                     break
 
-    logger.debug("Rendering plots" + (". This may take a while..." if show_progress else ""))
+    if show_progress:
+        logger.info(msg)
+    else:
+        logger.debug(msg)
+
     iterate_using_progress_bar(
         items=sections,
         update_fn=update_fn,
@@ -269,9 +308,9 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
     report.some_plots_are_deferred = any(
-        isinstance(report.plot_by_id[s.plot_id], Plot) and report.plot_by_id[s.plot_id].defer_render
+        isinstance(report.plot_by_id[s.plot_anchor], Plot) and report.plot_by_id[s.plot_anchor].defer_render
         for s in sections
-        if s.plot_id
+        if s.plot_anchor
     )
 
 
@@ -287,18 +326,6 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
         del report.general_stats_data[i]
         del report.general_stats_headers[i]
 
-    # Add general-stats IDs to table row headers
-    for idx, h in enumerate(report.general_stats_headers):
-        for k in h.keys():
-            unclean_rid = h[k].get("rid", k)
-            rid = re.sub(r"\W+", "_", unclean_rid).strip().strip("_")
-            h[k]["rid"] = report.save_htmlid(report.clean_htmlid(rid), skiplint=True)
-
-            ns_html = re.sub(r"\W+", "_", h[k]["namespace"]).strip().strip("_").lower()
-            report.general_stats_headers[idx][k]["rid"] = report.save_htmlid(
-                f"mqc-generalstats-{ns_html}-{h[k]['rid']}"
-            )
-
     all_hidden = True
     for headers in report.general_stats_headers:
         for h in headers.values():
@@ -309,8 +336,8 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
     # Generate the General Statistics HTML & write to file
     if len(report.general_stats_data) > 0 and not all_hidden:
         # Clean previous general stats table if running write_report interactively second time
-        if "general_stats_table" in report.html_ids:
-            report.html_ids.remove("general_stats_table")
+        if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
+            report.html_ids_by_scope[None].remove(Anchor("general_stats_table"))
             del report.general_stats_html
         pconfig = {
             "id": "general_stats_table",
@@ -318,7 +345,7 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         }
-        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)
+        p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
@@ -332,11 +359,16 @@ def _write_data_files(data_dir: Path) -> None:
     # Exporting plots to files if requested
     logger.debug("Exporting plot data to files")
     for s in report.get_all_sections():
-        if s.plot_id and isinstance(report.plot_by_id.get(s.plot_id), Plot):
-            report.plot_by_id[s.plot_id].save_data_files()
+        if s.plot_anchor and isinstance(report.plot_by_id.get(s.plot_anchor), Plot):
+            report.plot_by_id[s.plot_anchor].save_data_files()
 
     # Modules have run, so data directory should be complete by now. Move its contents.
     logger.debug(f"Moving data file from '{report.data_tmp_dir()}' to '{data_dir}'")
+
+    # Copy log to the multiqc_data dir. Keeping it in the tmp dir in case if it's an interactive session
+    # that goes beyond this write_results run.
+    if log_and_rich.log_tmp_fn:
+        shutil.copy2(log_and_rich.log_tmp_fn, report.data_tmp_dir())
 
     shutil.copytree(
         report.data_tmp_dir(),

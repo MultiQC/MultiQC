@@ -10,7 +10,7 @@ the output from each module and print it in sections.
 {% for m in report.modules %}
   {% if not m.hidden %}
     {% if m.sections | length > 0 %}
-    <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section">
+    <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section" data-module-anchor="{{ m.anchor }}">
       {% for s in m.sections %}
         {% if loop.first %}
         <div class="mqc-module-section-first">

@@ -6,6 +6,7 @@ from typing import Dict, Optional, Tuple
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -60,7 +61,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_qual_plotdata = dict()
         self.fastp_gc_content_data = dict()
         self.fastp_n_content_data = dict()
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             self.fastp_qual_plotdata[k] = dict()
             self.fastp_gc_content_data[k] = dict()
             self.fastp_n_content_data[k] = dict()
@@ -71,7 +78,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.fastp_all_data, "multiqc_fastp")
 
         # General Stats Table
-        self.fastp_general_stats_table()
+        self.fastp_general_stats_table(self.fastp_data)
 
         # Filtering statistics bar plot
         self.add_section(
@@ -212,7 +219,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.fastp_duplication_plotdata[s_name] = {}
         self.fastp_insert_size_data[s_name] = {}
         self.fastp_all_data[s_name] = parsed_json
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             self.fastp_qual_plotdata[k][s_name] = {}
             self.fastp_gc_content_data[k][s_name] = {}
             self.fastp_n_content_data[k][s_name] = {}
@@ -303,7 +316,13 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             log.debug(f"No insert size plot data: {s_name}")
 
-        for k in ["read1_before_filtering", "read2_before_filtering", "read1_after_filtering", "read2_after_filtering"]:
+        for k in [
+            "read1_before_filtering",
+            "read2_before_filtering",
+            "read1_after_filtering",
+            "read2_after_filtering",
+            "merged_and_filtered",
+        ]:
             # Read quality data
             try:
                 for i, v in enumerate(parsed_json[k]["quality_curves"]["mean"]):
@@ -336,74 +355,61 @@ class MultiqcModule(BaseMultiqcModule):
         if "fastp_version" in parsed_json["summary"]:
             self.add_software_version(parsed_json["summary"]["fastp_version"], s_name)
 
-    def fastp_general_stats_table(self):
+    def fastp_general_stats_table(self, data_by_sample):
         """Take the parsed stats from the fastp report and add it to the
         General Statistics table at the top of the report"""
 
-        headers = {
-            "pct_duplication": {
-                "title": "% Duplication",
-                "description": "Duplication rate before filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
+        self.general_stats_addcols(
+            data_by_sample,
+            headers={
+                "pct_duplication": {
+                    "title": "% Duplication",
+                    "description": "Duplication rate before filtering",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
+                "after_filtering_q30_rate": {
+                    "title": "% > Q30",
+                    "description": "Percentage of reads > Q30 after filtering",
+                    "modify": lambda x: x * 100.0,
+                    "scale": "GnBu",
+                    "suffix": "%",
+                    "hidden": True,
+                },
+                "after_filtering_q30_bases": {
+                    "title": f"{config.base_count_prefix} Q30 bases",
+                    "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
+                    "scale": "GnBu",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "filtering_result_passed_filter_reads": {
+                    "title": "Reads After Filtering",
+                    "description": f"Total reads after filtering ({config.read_count_desc})",
+                    "scale": "Blues",
+                    "shared_key": "read_count",
+                },
+                "after_filtering_gc_content": {
+                    "title": "GC content",
+                    "description": "GC content after filtering",
+                    "suffix": "%",
+                    "scale": "Blues",
+                    "modify": lambda x: x * 100.0,
+                },
+                "pct_surviving": {
+                    "title": "% PF",
+                    "description": "Percent reads passing filter",
+                    "suffix": "%",
+                    "scale": "BuGn",
+                },
+                "pct_adapter": {
+                    "title": "% Adapter",
+                    "description": "Percentage adapter-trimmed reads",
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
+                },
             },
-            "after_filtering_q30_rate": {
-                "title": "% > Q30",
-                "description": "Percentage of reads > Q30 after filtering",
-                "min": 0,
-                "max": 100,
-                "modify": lambda x: x * 100.0,
-                "scale": "GnBu",
-                "suffix": "%",
-                "hidden": True,
-            },
-            "after_filtering_q30_bases": {
-                "title": f"{config.base_count_prefix} Q30 bases",
-                "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
-                "min": 0,
-                "modify": lambda x: x * config.base_count_multiplier,
-                "scale": "GnBu",
-                "shared_key": "base_count",
-                "hidden": True,
-            },
-            "filtering_result_passed_filter_reads": {
-                "title": f"{config.read_count_prefix} Reads After Filtering",
-                "description": f"Total reads after filtering ({config.read_count_desc})",
-                "min": 0,
-                "scale": "Blues",
-                "modify": lambda x: x * config.read_count_multiplier,
-                "shared_key": "read_count",
-            },
-            "after_filtering_gc_content": {
-                "title": "GC content",
-                "description": "GC content after filtering",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "Blues",
-                "modify": lambda x: x * 100.0,
-            },
-            "pct_surviving": {
-                "title": "% PF",
-                "description": "Percent reads passing filter",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "BuGn",
-            },
-            "pct_adapter": {
-                "title": "% Adapter",
-                "description": "Percentage adapter-trimmed reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn-rev",
-            },
-        }
-
-        self.general_stats_addcols(self.fastp_data, headers)
+        )
 
     def fastp_filtered_reads_chart(self):
         """Function to generate the fastp filtered reads bar plot"""
@@ -491,6 +497,10 @@ class MultiqcModule(BaseMultiqcModule):
             "read2_after_filtering": {
                 "name": "Read 2: After filtering",
                 "ylab": f"R2 After filtering: {label}",
+            },
+            "merged_and_filtered": {
+                "name": "Merged and filtered",
+                "ylab": f"{label}",
             },
         }.items():
             if sum([len(data[k][x]) for x in data[k]]) > 0:

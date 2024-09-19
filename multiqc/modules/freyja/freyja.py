@@ -24,76 +24,69 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the summary data
-        self.freyja_data: Dict = dict()
+        data_by_sample: Dict[str, Dict] = dict()
 
-        # Parse the output files
-        self.parse_summ_files()
+        for f in self.find_log_files("freyja", filehandles=True):
+            # Freyja has multiple summary files, but we only need to parse the one from the demix command.
+            # More specifically, we only need the line that starts with "summarized".
+            # ...
+            # summarized	[('BQ.1*', 0.983), ('Omicron', 0.011), ('key', value)]
+            # ...
+
+            s_name: str = f["s_name"]
+
+            # This will not raise because the search pattern requires it to be there:
+            summarized_line = next(line for line in f["f"] if line.startswith("summarized\t"))
+            dict_str = summarized_line.split("\t")[1].strip()
+            try:
+                sample_dict: Dict[str, float] = dict(eval(dict_str))
+            except ValueError:
+                log.error(f"Error parsing 'summarized' line for '{s_name}': {dict_str}, skipping sample")
+                continue
+            if not sample_dict:
+                log.debug(f"No data in the 'summarized' line for '{s_name}': {dict_str}, skipping sample")
+                continue
+
+            if s_name in data_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            data_by_sample[s_name] = sample_dict
+            self.add_data_source(f, s_name)
 
         # Remove filtered samples
-        self.freyja_data = self.ignore_samples(self.freyja_data)
+        data_by_sample = self.ignore_samples(data_by_sample)
 
         # Let MultiQC know this module found no data
-        if len(self.freyja_data) == 0:
+        if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.freyja_data)} reports")
+        log.info(f"Found {len(data_by_sample)} reports")
 
         # Superfluous function call to confirm that it is used in this module
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        self.write_data_file(self.freyja_data, "multiqc_freyja")
+        self.write_data_file(data_by_sample, "multiqc_freyja")
+
+        # sort data_by_sample to keep the reproducible order - as the files are discovered in a non-deterministic order
+        data_by_sample = dict(sorted(data_by_sample.items()))
 
         top_lineages_dict = {}
         all_lineages = set()
-        for s_name, sub_dict in self.freyja_data.items():
-            top_lineage = max(sub_dict, key=sub_dict.get)
-            top_lineage_value = sub_dict[top_lineage]
+        for s_name, sample_data in data_by_sample.items():
+            top_lineage, top_lineage_value = max(sample_data.items(), key=lambda xv: xv[1])
             top_lineages_dict[s_name] = {
                 "Top_lineage_freyja": top_lineage,
                 "Top_lineage_freyja_percentage": top_lineage_value,
             }
             all_lineages.add(top_lineage)
-        for s_name, sub_dict in self.freyja_data.items():
-            for lineage, val in sub_dict.items():
-                if val not in all_lineages:
+        for s_name, sample_data in data_by_sample.items():
+            for lineage, val in sorted(sample_data.items(), key=lambda xv: xv[1], reverse=True):
+                if lineage not in all_lineages:
                     all_lineages.add(lineage)
 
         self.scale = mqc_colour.mqc_colour_scale("plot_defaults")
         self.general_stats_cols(top_lineages_dict, all_lineages)
-        self.add_freyja_section(all_lineages)
-
-    def parse_summ_files(self):
-        """
-        Parse the summary file.
-        Freyja has multiple summary files, but we only need to parse the one from the demix command.
-        More specifically, we only need the line that starts with "summarized".
-        ...
-        summarized	[('BQ.1*', 0.983), ('Omicron', 0.011), ('key', value)]
-        ...
-        """
-        for f in self.find_log_files("freyja", filehandles=True):
-            s_name = f["s_name"]
-            # Read the statistics from file
-            d = {}
-            for line in f["f"]:
-                try:
-                    if line.startswith("summarized"):
-                        summarized_line = line
-                        summarized_line = summarized_line.strip().split("\t")[1]
-                        d = eval(
-                            summarized_line
-                        )  # Make sure no input is corrupted and does not contain any malicious code
-                        d = dict(d)
-                except ValueError:
-                    pass
-
-            # There is no sample name in the log, so we use the root of the
-            # file as sample name (since the filename is always stats.dat
-            if s_name in self.freyja_data:
-                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-            self.freyja_data[s_name] = d
-            self.add_data_source(f, s_name)
+        self.add_freyja_section(all_lineages, data_by_sample)
 
     def general_stats_cols(self, top_lineages_dict, all_lineages):
         """Add a single column displaying the most abundant lineage to the General Statistics table"""
@@ -116,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(top_lineages_dict, headers)
 
-    def add_freyja_section(self, lineages):
+    def add_freyja_section(self, lineages, data_by_sample):
         pconfig = {
             "id": "Freyja_plot",
             "title": "Freyja: Top lineages",
@@ -140,5 +133,5 @@ class MultiqcModule(BaseMultiqcModule):
 
                 > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time. 
                 """,
-            plot=bargraph.plot(self.freyja_data, cats, pconfig),
+            plot=bargraph.plot(data_by_sample, cats, pconfig),
         )

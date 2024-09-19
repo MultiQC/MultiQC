@@ -1,9 +1,9 @@
 ---
-title: Plotting Functions
+title: Plotting functions
 description: Visualising your data
 ---
 
-# Plotting Functions
+# Plotting functions
 
 MultiQC plotting functions are held within `multiqc.plots` submodules.
 To use them, simply import the modules you want, e.g.:
@@ -392,7 +392,7 @@ html = box.plot(data, pconfig=...)
 Similarly to other plot types, multiple datasets can be passed as `data`, along with
 dataset-specific configurations provided with the `pconfig["data_labels"]` option.
 
-## Scatter Plots
+## Scatter plots
 
 Scatter plots work in almost exactly the same way as line plots. Most (if not all)
 config options are shared between the two. The data structure is similar but not identical:

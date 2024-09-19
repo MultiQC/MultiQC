@@ -5,6 +5,7 @@ from typing import Dict
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
+from multiqc.types import Anchor, ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="Trimmomatic",
-            anchor="trimmomatic",
+            anchor=Anchor("trimmomatic"),
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
@@ -55,17 +56,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Add drop rate to the general stats table
-        headers = {
-            "dropped_pct": {
-                "title": "% Dropped",
-                "description": "% Dropped reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "OrRd",
-            }
-        }
-        self.general_stats_addcols(self.trimmomatic, headers)
+        self.general_stats_addcols(
+            self.trimmomatic,
+            {
+                ColumnKey("dropped_pct"): {
+                    "title": "% Dropped",
+                    "description": "% Dropped reads",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "OrRd",
+                }
+            },
+        )
 
         # Make barplot
         self.trimmomatic_barplot()

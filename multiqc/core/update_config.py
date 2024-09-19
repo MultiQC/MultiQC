@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Set
 
 from pydantic import BaseModel
 
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
-from multiqc.core import log_and_rich, plugin_hooks, strict_helpers
+from multiqc.core import log_and_rich, plugin_hooks
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +93,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     logger.debug("Running Python " + sys.version.replace("\n", " "))
 
     plugin_hooks.mqc_trigger("before_config")
+
+    config.loaded_user_files = set()
 
     # Re-finding implicit configs
     config.find_user_files()
@@ -217,14 +219,6 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     # Prep module configs
     report.top_modules = [m if isinstance(m, dict) else {m: {}} for m in config.top_modules]
     report.module_order = [m if isinstance(m, dict) else {m: {}} for m in config.module_order]
-    # Lint the module config
-    mod_keys = [list(m.keys())[0] for m in report.module_order]
-    if config.strict:
-        for m in config.avail_modules.keys():
-            if m not in mod_keys:
-                errmsg = f"LINT: Module '{m}' not found in config.module_order"
-                logger.error(errmsg)
-                report.lint_errors.append(errmsg)
 
     if cfg.unknown_options:
         config.kwargs = cfg.unknown_options  # plug in command line options

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  docs_deploy:
     name: "Request deployment"
     runs-on: ubuntu-latest
     if: github.repository == 'MultiQC/MultiQC'

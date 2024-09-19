@@ -1,24 +1,27 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import List, Dict, Union, Tuple, Sequence, Any, Iterable, TypeVar, Generator
+from typing import Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import LinePlotConfig, Series, ValueT, DatasetT, SeriesConf, XToYDictT, KeyT
+from multiqc.plots.plotly.line import DatasetT, KeyTV, LinePlotConfig, Series, ValueTV, XToYDictT
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
-def get_template_mod():
+def get_template_mod() -> EntryPoint:
     global _template_mod
     if not _template_mod:
         _template_mod = config.avail_templates[config.template].load()
+    assert _template_mod is not None
     return _template_mod
 
 
@@ -32,7 +35,7 @@ def plot(
     :param pconfig: optional dict with config key:value pairs. See CONTRIBUTING.md
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf = LinePlotConfig.from_pconfig_dict(pconfig)
+    pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
 
     # Given one dataset - turn it into a list
     raw_dataset_list: List[DatasetT]
@@ -54,11 +57,6 @@ def plot(
     else:
         pconf.data_labels = []
 
-    # Smooth dataset if requested in config
-    if pconf.smooth_points is not None:
-        for i, raw_data_by_sample in enumerate(raw_dataset_list):
-            raw_dataset_list[i] = smooth_line_data(raw_data_by_sample, pconf.smooth_points)
-
     datasets: List[List[Series]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
         list_of_series: List[Series] = []
@@ -70,17 +68,16 @@ def plot(
         datasets.append(list_of_series)
 
     # Add on annotation data series
-    # noinspection PyBroadException
     if pconf.extra_series:
-        pconf_es: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
+        ess: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
         list_of_list_of_series: List[List[Series]]
-        if isinstance(pconf_es, list):
-            if isinstance(pconf_es[0], list):
-                list_of_list_of_series = pconf_es  # type: ignore
+        if isinstance(ess, list):
+            if isinstance(ess[0], list):
+                list_of_list_of_series = cast(List[List[Series]], ess)
             else:
-                list_of_list_of_series = [pconf_es for _ in datasets]  # type: ignore
+                list_of_list_of_series = [cast(List[Series], ess) for _ in datasets]
         else:
-            list_of_list_of_series = [[pconf_es] for _ in datasets]
+            list_of_list_of_series = [[ess] for _ in datasets]
 
         for i, list_of_raw_series in enumerate(list_of_list_of_series):
             assert isinstance(list_of_raw_series, list)
@@ -96,10 +93,10 @@ def plot(
 
     # Make a plot - template custom, or interactive or flat
     mod = get_template_mod()
-    if "linegraph" in mod.__dict__ and callable(mod.linegraph):
+    if "linegraph" in mod.__dict__ and callable(mod.__dict__["linegraph"]):
         # noinspection PyBroadException
         try:
-            return mod.linegraph(datasets, pconf)
+            return mod.__dict__["linegraph"](datasets, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive
@@ -113,9 +110,9 @@ def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: XToYDictT[KeyT, ValueT],
+    y_by_x: XToYDictT[KeyTV, ValueTV],
 ) -> Series:
-    pairs: List[Tuple[KeyT, ValueT]] = []
+    pairs: List[Tuple[KeyTV, ValueTV]] = []
 
     x_are_categories = pconfig.categories
     ymax = pconfig.ymax
@@ -126,12 +123,24 @@ def _make_series_dict(
     if pconfig.data_labels:
         dl = pconfig.data_labels[ds_idx]
         if isinstance(dl, dict):
-            x_are_categories = dl.get("categories", x_are_categories)
-            ymax = dl.get("ymax", ymax)
-            ymin = dl.get("ymin", ymin)
-            xmax = dl.get("xmax", xmax)
-            xmin = dl.get("xmin", xmin)
-            colors = dl.get("colors", colors)
+            _x_are_categories = dl.get("categories", x_are_categories)
+            assert isinstance(_x_are_categories, bool)
+            x_are_categories = _x_are_categories
+            _ymax = dl.get("ymax", ymax)
+            _ymin = dl.get("ymin", ymin)
+            _xmax = dl.get("xmax", xmax)
+            _xmin = dl.get("xmin", xmin)
+            assert isinstance(_ymax, (int, float, type(None)))
+            assert isinstance(_ymin, (int, float, type(None)))
+            assert isinstance(_xmax, (int, float, type(None)))
+            assert isinstance(_xmin, (int, float, type(None)))
+            ymax = _ymax
+            ymin = _ymin
+            xmax = _xmax
+            xmin = _xmin
+            _colors = dl.get("colors")
+            if _colors and isinstance(_colors, dict):
+                colors = {**colors, **_colors}
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
@@ -176,7 +185,11 @@ def _make_series_dict(
                 continue
         pairs.append((x, y))
 
-    return Series(name=s, pairs=pairs, color=colors.get(s))
+    # Smooth dataset if requested in config
+    if pconfig.smooth_points is not None:
+        pairs = smooth_array(pairs, pconfig.smooth_points)
+
+    return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
 
 
 def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:

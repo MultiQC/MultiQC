@@ -14,7 +14,7 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
 
-FastQC generates a HTML report which is what most people use when
+FastQC generates an HTML report which is what most people use when
 they run the program. However, it also helpfully generates a file
 called `fastqc_data.txt` which is relatively easy to parse.
 

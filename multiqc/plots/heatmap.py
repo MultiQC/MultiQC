@@ -1,7 +1,9 @@
 """MultiQC functions to plot a heatmap"""
 
 import logging
-from typing import Union, Dict
+from typing import Dict, List, Optional, Union, cast
+
+from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import heatmap
@@ -11,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Load the template so that we can access its configuration
 # Do this lazily to mitigate import-spaghetti when running unit tests
-_template_mod = None
+_template_mod: Optional[EntryPoint] = None
 
 
 def get_template_mod():
@@ -23,8 +25,8 @@ def get_template_mod():
 
 def plot(
     data,
-    xcats=None,
-    ycats=None,
+    xcats: Optional[List[Union[str, int]]] = None,
+    ycats: Optional[List[Union[str, int]]] = None,
     pconfig: Union[Dict, HeatmapConfig, None] = None,
 ) -> Union[heatmap.HeatmapPlot, str]:
     """Plot a 2D heatmap.
@@ -34,17 +36,17 @@ def plot(
     :param pconfig: optional dict with config key:value pairs.
     :return: HTML and JS, ready to be inserted into the page
     """
-    pconf: HeatmapConfig = HeatmapConfig.from_pconfig_dict(pconfig)
+    pconf: HeatmapConfig = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
     if ycats is None:
         ycats = xcats
 
     # Make a plot
     mod = get_template_mod()
-    if "heatmap" in mod.__dict__ and callable(mod.heatmap):
+    if "heatmap" in mod.__dict__ and callable(mod.__dict__["heatmap"]):
         # noinspection PyBroadException
         try:
-            return mod.heatmap(data, xcats, ycats, pconf)
+            return mod.__dict__["heatmap"](data, xcats, ycats, pconf)
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive

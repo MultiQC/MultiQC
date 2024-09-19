@@ -1,5 +1,192 @@
 # MultiQC Version History
 
+## [MultiQC v1.25](https://github.com/MultiQC/MultiQC/releases/tag/v1.25) - 2024-09-16
+
+### Highlights - sample grouping
+
+New feature: grouping samples in the General Statistics table.
+
+<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
+
+Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](https://multiqc.info/docs/reports/customisation/#sample-grouping) is introduced.
+
+This feature is currently opt-in, you'll need to set `table_sample_merge` in a MultiQC config file to use (see docs above). **We'd love to hear your feedback!** We hope to enable it by default for common file suffix patterns in a future release.
+
+Because MultiQC needs to know how to merge each column (sum, average, etc), each module must implement it independently. Currently it's supported by the FastQC and Cutadapt modules. If you'd like support added to another module, please let us know in a GitHub issue. Details of how to add it into module code can be found in the [moduel development documentation](https://multiqc.info/docs/development/modules/#grouping-samples).
+
+### Highlights - box plots in custom content
+
+The new box plot plot type, added in v1.21, are now available to use with custom content! See [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
+
+### New modules
+
+- Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814), [#2827](https://github.com/MultiQC/MultiQC/pull/2827))
+
+### Updates
+
+- Group read pairs in general stats ([#2794](https://github.com/MultiQC/MultiQC/pull/2794), [#2848](https://github.com/MultiQC/MultiQC/pull/2848))
+- Support boxplot in custom content ([#2847](https://github.com/MultiQC/MultiQC/pull/2847))
+- Allow `x_band`, `x_lines`, `x_minrange` for any plot type (specifically, scatter plots) ([#2851](https://github.com/MultiQC/MultiQC/pull/2851))
+- When both `contents` and `contents_re` are specified in a search patterns, treat it as logical AND ([#2828](https://github.com/MultiQC/MultiQC/pull/2828))
+
+### Module updates
+
+- NanoStat: support multi-sample logs ([#2852](https://github.com/MultiQC/MultiQC/pull/2852))
+- Samtools coverage: support `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
+- Ganon: support non-verbose output, fix missing `removed with --min-count` ([#2838](https://github.com/MultiQC/MultiQC/pull/2838))
+- fastp: support the `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
+
+### Fixes
+
+- Workaround for the hanging Kaleido duing plot export: run plot export in separate threads with a timeout and fallback on freezes, add try-catch for crashes ([#2836](https://github.com/MultiQC/MultiQC/pull/2836), [#2819](https://github.com/MultiQC/MultiQC/pull/2819))
+- Fix copying `multiqc.log` into the `multiqc_data` output folder ([#2829](https://github.com/MultiQC/MultiQC/pull/2829))
+- Fix applying `exclude_files` in search patterns ([#2804](https://github.com/MultiQC/MultiQC/pull/2804))
+- Fix bar plot export from toolbox ([#2845](https://github.com/MultiQC/MultiQC/pull/2845))
+- Fix autoselection in plot export toolbox ([#2844](https://github.com/MultiQC/MultiQC/pull/2844))
+- Fix `config.replace_samples` for custom content genstats table ([#2841](https://github.com/MultiQC/MultiQC/pull/2841))
+
+### Module fixes
+
+- Picard: fix parsing Sentieon insert size metrics ([#2823](https://github.com/MultiQC/MultiQC/pull/2823))
+- Picard: fix a search pattern of CollectRnaSeqMetrics ([#2811](https://github.com/MultiQC/MultiQC/pull/2811))
+- Kraken: fix for empty top ranks. Also handle it in bargraph ([#2822](https://github.com/MultiQC/MultiQC/pull/2822))
+- Cellranger: fix data source tag ([#2821](https://github.com/MultiQC/MultiQC/pull/2821))
+- FastQC: fix the `Per Base Sequence Content` detail plot click when a module was run multiple times ([#2856](https://github.com/MultiQC/MultiQC/pull/2856))
+- FastQC: fix calculating average read length ([#2817](https://github.com/MultiQC/MultiQC/pull/2817))
+
+### Refactoring and typing
+
+- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797), [#2833](https://github.com/MultiQC/MultiQC/pull/2833))
+- Prefix table column IDs with namespace, but allow configuration to use both short and long anchors ([#2818](https://github.com/MultiQC/MultiQC/pull/2818))
+- More type hinting in plots ([#2816](https://github.com/MultiQC/MultiQC/pull/2816), [#2850](https://github.com/MultiQC/MultiQC/pull/2850))
+- Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
+- Remove `pyaml_env` dependency and apply the fix for the `SyntaxWarning` ([#2837](https://github.com/MultiQC/MultiQC/pull/2837))
+
+### Infrastructure and packaging
+
+- Add `py.typed` to mark package as providing type information ([#2846](https://github.com/MultiQC/MultiQC/pull/2846))
+
+## [MultiQC v1.24.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.24.1) - 2024-08-21
+
+A bug fix release mainly to restore compatibility with Python 3.8. Aside from that, few other minor bug fixes:
+
+- FastQC: fix long-standing issue misplacing status labels when `anchor` is specified in the custom config ([#2790](https://github.com/MultiQC/MultiQC/pull/2791))
+- Freyja: handle empty inputs, and ensure deterministic sample order ([#2788](https://github.com/MultiQC/MultiQC/pull/2788))
+- Allow numeric xcats and ycats for the heatmap plot ([#2787](https://github.com/MultiQC/MultiQC/pull/2787))
+- Make sure that config's `extra_fn_clean_exts` and `fn_clean_exts` don't conflict when both specified ([#2783](https://github.com/MultiQC/MultiQC/pull/2783))
+
+## [MultiQC v1.24](https://github.com/MultiQC/MultiQC/releases/tag/v1.24) - 2024-08-19
+
+Mostly a maintenance release, containing several bugfixes, performance improvements,
+plus 6 new modules, along with improvements of the existing modules.
+
+The most significant performance boost got the Kraken and Mosdepth modules, that now don't
+take way more memory and CPU than any other typical module:
+
+| Tool     | Data Set       | Memory - Before | CPU - Before | Memory - After | CPU - After |
+| -------- | -------------- | --------------- | ------------ | -------------- | ----------- |
+| mosdepth | 1 set of files | 196 Mb          | 3.04s        | 129 Mb         | 2.27s       |
+|          | 10             | 464 Mb          | 8.48s        | 131 Mb         | 6.11s       |
+|          | 100            | 3,719 Mb        | 63.19s       | 172 Mb         | 43.12s      |
+| kraken   | 1 set of files | 155 Mb          | 2.07s        | 132 Mb         | 2.20s       |
+|          | 10             | 606 Mb          | 8.39s        | 180 Mb         | 3.47s       |
+|          | 100            | 4,970 Mb        | 71.89s       | 809 Mb         | 14.53s      |
+
+Large plots that may hang browser are now not loaded by default, and the user can click
+a button to load, so the heavy plots don't slow down the initial report rendering. This
+is controlled by the `config.plots_defer_loading_numseries: 100` option.
+
+### Updates
+
+- Search patterns: allow multiple values for `contents` ([#2696](https://github.com/MultiQC/MultiQC/pull/2696))
+- Custom content:
+  - Allow dict input to heatmap ([#2761](https://github.com/MultiQC/MultiQC/pull/2761))
+  - Allow multiple custom content to general stats table ([#2727](https://github.com/MultiQC/MultiQC/pull/2727))
+- Plots:
+  - Defer render of plots if number of samples > `config.plots_defer_loading_numseries` ([#2759](https://github.com/MultiQC/MultiQC/pull/2759), [#2777](https://github.com/MultiQC/MultiQC/pull/2777), [#2773](https://github.com/MultiQC/MultiQC/pull/2773), [#2774](https://github.com/MultiQC/MultiQC/pull/2774))
+  - Line plot: show markers when num of data points < `config.lineplot_number_of_points_to_hide_markers` (=50) ([#2760](https://github.com/MultiQC/MultiQC/pull/2760)). As a nice consequence, trivial lines of a single data point become visible.
+  - Line plot: smooth by default to 500 points on the X axis to avoid inflating the report file size ([#2776](https://github.com/MultiQC/MultiQC/pull/2776))
+  - Allow to configure the scale of the exported plot fonts through the config option `config.plots_export_font_scale` ([#2758](https://github.com/MultiQC/MultiQC/pull/2758))
+  - Improve the performance of loading large tables in browser ([#2737](https://github.com/MultiQC/MultiQC/pull/2737))
+  - Fix the toolbox highlight of the line plots ([#2724](https://github.com/MultiQC/MultiQC/pull/2724))
+- The function that returns built plots in an interactive session now uses the module anchor (or lowercase module name) to key the results ([#2741](https://github.com/MultiQC/MultiQC/pull/2741))
+- More helpful config validation error: print the parent model name, if applicable ([#2709](https://github.com/MultiQC/MultiQC/pull/2709))
+
+### New modules
+
+- [VG](https://github.com/vgteam/vg) ([#2690](https://github.com/MultiQC/MultiQC/pull/2690)), a toolkit to manipulate graphical genomes. The module parses [vg-stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats) reports that summarize alignment stats from a GAM file.
+- [ngs-bits](<(https://github.com/imgag/ngs-bits)>) ([#2231](https://github.com/MultiQC/MultiQC/pull/2231)). A tool that calculating statistics from FASTQ, BAM, and VCF files. The module parses XML output generated for two tools in the ngs-bits collection:
+  - [ReadQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md) for FastQ file stats
+  - [MappingQC](https://github.com/imgag/ngs-bits/blob/master/doc/tools/MappingQC.md) for BAM file stats
+- [Pairtools](https://github.com/mirnylab/pairtools) ([#1148](https://github.com/MultiQC/MultiQC/pull/1148)). A toolkit for Chromatin Conformation Capture experiments. Handles short-reads paired reference alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, and deduplication. The module parses summary statistics generated by pairtools's `dedup` and `stats` tools.
+- [nanoq](https://github.com/nerdna/nanoq/) ([#2723](https://github.com/MultiQC/MultiQC/pull/2723)). A tool that reports read quality and length from nanopore sequencing data.
+- [Ganon](https://pirovc.github.io/ganon/) ([#1935](https://github.com/MultiQC/MultiQC/pull/1935)). A tool for metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
+
+### Fixes
+
+- Fix `--pdf` option to generate `multiqc_report.pdf` ([#2733](https://github.com/MultiQC/MultiQC/pull/2733))
+- Fix saving table plots to file ([#2735](https://github.com/MultiQC/MultiQC/pull/2735))
+- Fix adding software versions when `config.run_modules` is set ([#2755](https://github.com/MultiQC/MultiQC/pull/2755))
+- Fix toolbox highlight in line plots ([#2724](https://github.com/MultiQC/MultiQC/pull/2724))
+- Refactor `write_results` to avoid dynamically overriding `config`, fixes `module.write_data_file` ([#2722](https://github.com/MultiQC/MultiQC/pull/2722))
+- Search stats: do not double-count ignored files ([#2708](https://github.com/MultiQC/MultiQC/pull/2708))
+- Escape values passed to HTML properties (e.g. `val` in tables) ([#2706](https://github.com/MultiQC/MultiQC/pull/2706))
+- Fix re-loading explicit user configs in interactive sessions ([#2704](https://github.com/MultiQC/MultiQC/pull/2704))
+- Fix file search performance regression ([#2762](https://github.com/MultiQC/MultiQC/pull/2762))
+- Fix handling module href string ([#2739](https://github.com/MultiQC/MultiQC/pull/2739))
+- Custom content:
+  - Cast names to strings instead of asserting (allows numerical sample names) ([#2769](https://github.com/MultiQC/MultiQC/pull/2769))
+  - Fix parsing custom content tables with numerical samples ([#2705](https://github.com/MultiQC/MultiQC/pull/2705))
+  - Section order and custom content order: allow skip the `*-module` suffix from anchors ([#2770](https://github.com/MultiQC/MultiQC/pull/2770))
+
+### Module updates
+
+- Kraken: optimize memory and runtime ([#2756](https://github.com/MultiQC/MultiQC/pull/2756))
+- Mosdepth: optimize memory and runtime ([#2748](https://github.com/MultiQC/MultiQC/pull/2748), [#2749](https://github.com/MultiQC/MultiQC/pull/2749))
+- Abstract `config.get_cov_thresholds` function for `mosdepth` and `qualimap` ([#2707](https://github.com/MultiQC/MultiQC/pull/2707))
+- Anglerfish: adjust for version 0.6.1 ([#2757](https://github.com/MultiQC/MultiQC/pull/2757))
+- Umitools: prefer output for sample name, handle the `<stdin>`/`<stdout>` placeholders ([#2698](https://github.com/MultiQC/MultiQC/pull/2698))
+- Kraken: fix top % calculation, more efficient total read count calculation ([#2744](https://github.com/MultiQC/MultiQC/pull/2744))
+- Bracken: when printing number of found samples, indicate that running Bracken not Kraken ([#2743](https://github.com/MultiQC/MultiQC/pull/2743))
+- Nonpareil: Update docs about new version that generates the JSON file ([#2734](https://github.com/MultiQC/MultiQC/pull/2734))
+- STAR: add all alignment summary metrics into a new separate table ([#1828](https://github.com/MultiQC/MultiQC/pull/1828))
+- Pairtools: fix typos and grammar, remove redundancies ([#2711](https://github.com/MultiQC/MultiQC/pull/2711))
+- Peddy sex plot: color predicted sex ([#2778](https://github.com/MultiQC/MultiQC/pull/2778))
+- FastQC: for plots with bp on the X axis, use the interval start instead of average ([#2790](https://github.com/MultiQC/MultiQC/pull/2790))
+
+### Module fixes
+
+- Cellranger: fix for missing `analysis_tab` data ([#2771](https://github.com/MultiQC/MultiQC/pull/2771))
+- Fix setting coverage thresholds for `mosdepth` and `qualimap` ([#2754](https://github.com/MultiQC/MultiQC/pull/2754))
+- Nonpareil: fix running with >12 samples ([#2752](https://github.com/MultiQC/MultiQC/pull/2752))
+- Bracken: fix bug when direct reads not classified ([#2738](https://github.com/MultiQC/MultiQC/pull/2738))
+- ngsderive: fix ValueError in the `encoding` submodule ([#2740](https://github.com/MultiQC/MultiQC/pull/2740))
+- RSeQC: fix duplicated namespace ([#2732](https://github.com/MultiQC/MultiQC/pull/2732))
+- Glimpse: fix parsing data, add proper type hints ([#2721](https://github.com/MultiQC/MultiQC/pull/2721))
+- Fix ignoring samples in `spaceranger`, `ngsbits`, `isoseq`, `dragen coverage` ([#2717](https://github.com/MultiQC/MultiQC/pull/2717))
+- Glimpse: clean and fix filtering samples ([#2716](https://github.com/MultiQC/MultiQC/pull/2716))
+- Spaceranger: fix ignoring samples ([#2714](https://github.com/MultiQC/MultiQC/pull/2714))
+
+### Refactoring
+
+- Refactor `write_results` to avoid dynamically overriding `config`, fixes `module.write_data_file` ([#2722](https://github.com/MultiQC/MultiQC/pull/2722))
+- Modules:
+  - isoseq and odgi: fix module warnings and error handling ([#2718](https://github.com/MultiQC/MultiQC/pull/2718))
+  - Qualimap: refactor and add type hints ([#2707](https://github.com/MultiQC/MultiQC/pull/2707))
+  - FastQC: refactor and add type hints ([#2763](https://github.com/MultiQC/MultiQC/pull/2763))
+  - Kraken: refactor and add type hints ([#2744](https://github.com/MultiQC/MultiQC/pull/2744))
+  - Cell Ranger: refactor, add type hints, get rid of module mixins and fields ([#2775](https://github.com/MultiQC/MultiQC/pull/2775))
+  - Spaceranger: refactor, add type hints, get rid of module mixins and fields ([#2714](https://github.com/MultiQC/MultiQC/pull/2714))
+  - RSeQC: refactor, add type hints, and remove `multiqc_rseqc.js` ([#2710](https://github.com/MultiQC/MultiQC/pull/2710))
+
+### Infrastructure
+
+- Split up the tests for sample versions discovery ([#2751](https://github.com/MultiQC/MultiQC/pull/2751))
+- Move integration test variations into unit tests, actually test them ([#2713](https://github.com/MultiQC/MultiQC/pull/2713))
+- Move module docs to the docstrings & generate `docs/modules/*.md` from the docstrings using a separate script ([#2703](https://github.com/MultiQC/MultiQC/pull/2703))
+- Embed the search patterns into the module docs ([#2765](https://github.com/MultiQC/MultiQC/pull/2765))
+- Dockerfile: use `COPY` instead of `ADD` to copy only relevant files, update base image to Python 3.12 ([#2700](https://github.com/MultiQC/MultiQC/pull/2700))
+
 ## [MultiQC v1.23](https://github.com/MultiQC/MultiQC/releases/tag/v1.23) - 2024-07-09
 
 Bug fixes, integration of `pytest` and `mypy`, and one new module.

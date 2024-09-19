@@ -1,16 +1,17 @@
 import logging
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
+
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
-from multiqc.plots.plotly.plot import (
-    PlotType,
-    BaseDataset,
-    split_long_string,
-    Plot,
-    PConfig,
-)
 from multiqc import report
+from multiqc.plots.plotly.plot import (
+    BaseDataset,
+    PConfig,
+    Plot,
+    PlotType,
+    split_long_string,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ class HeatmapConfig(PConfig):
     zlab: str = "z"
     min: Union[float, int, None] = None
     max: Union[float, int, None] = None
-    xcats_samples: bool = False
-    ycats_samples: bool = False
+    xcats_samples: bool = True
+    ycats_samples: bool = True
     square: bool = True
     colstops: List[List] = []
     reverseColors: bool = Field(False, deprecated="reverse_colors")
@@ -41,10 +42,10 @@ class HeatmapConfig(PConfig):
 
 
 def plot(
-    rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+    rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
     pconfig: HeatmapConfig,
-    xcats: Optional[List[str]] = None,
-    ycats: Optional[List[str]] = None,
+    xcats: Optional[List[Union[str, int]]] = None,
+    ycats: Optional[List[Union[str, int]]] = None,
 ) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -65,27 +66,32 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
-        xcats: Optional[List[str]] = None,
-        ycats: Optional[List[str]] = None,
+        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+        xcats: Optional[List[Union[str, int]]] = None,
+        ycats: Optional[List[Union[str, int]]] = None,
     ) -> "Dataset":
         if isinstance(rows, dict):
+            # Re-key the dict to be strings
+            rows_str: Dict[str, Dict[str, ElemT]] = {
+                str(y): {str(x): value for x, value in value_by_x.items()} for y, value_by_x in rows.items()
+            }
+
             # Convert dict to a list of lists
             if not ycats:
-                ycats = list(rows.keys())
+                ycats = list(rows_str.keys())
             if not xcats:
                 xcats = []
-                for y, value_by_x in rows.items():
+                for y, value_by_x in rows_str.items():
                     for x, value in value_by_x.items():
                         if x not in xcats:
                             xcats.append(x)
-            rows = [[rows.get(y, {}).get(x) for x in xcats] for y in ycats]
+            rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
 
         dataset = Dataset(
             **dataset.__dict__,
             rows=rows,
-            xcats=xcats,
-            ycats=ycats,
+            xcats=[str(x) for x in xcats] if xcats else None,
+            ycats=[str(y) for y in ycats] if ycats else None,
         )
         return dataset
 
@@ -131,10 +137,10 @@ class HeatmapPlot(Plot):
 
     @staticmethod
     def create(
-        rows: Union[List[List[ElemT]], Dict[str, Dict[str, ElemT]]],
+        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
         pconfig: HeatmapConfig,
-        xcats: Optional[List[str]],
-        ycats: Optional[List[str]],
+        xcats: Optional[List[Union[str, int]]],
+        ycats: Optional[List[Union[str, int]]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:
@@ -271,7 +277,7 @@ class HeatmapPlot(Plot):
             model.layout.xaxis.ticktext = xcats
         if not pconfig.angled_xticks and x_px_per_elem >= 40 and xcats:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
-            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(cat, 10)) for cat in xcats]
+            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(str(cat), 10)) for cat in xcats]
             # And leave x ticks horizontal:
             model.layout.xaxis.tickangle = 0
         else:
