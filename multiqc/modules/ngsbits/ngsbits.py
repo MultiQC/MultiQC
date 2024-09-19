@@ -3,7 +3,7 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.ngsbits.mappingqc import parse_reports as mappingqc_parse_reports
 from multiqc.modules.ngsbits.readqc import parse_reports as readqc_parse_reports
-from multiqc.modules.ngsbits.samplegender import parse_reports as samplegender_parse_reports  # Added import
+from multiqc.modules.ngsbits.samplegender import parse_reports as samplegender_parse_reports
 
 log = logging.getLogger(__name__)
 

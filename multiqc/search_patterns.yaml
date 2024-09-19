@@ -586,6 +586,8 @@ ngsbits/mappingqc:
   - fn: "*.qcML"
     contents: "MappingQC"
     num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
 ngsderive/strandedness:
   contents: "File	TotalReads	ForwardPct	ReversePct	Predicted"
   num_lines: 1

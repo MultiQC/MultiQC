@@ -11,7 +11,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
     samplegender_data = dict()
-    for f in module.find_log_files("ngsbits_samplegender"):
+    for f in module.find_log_files("ngsbits_sex"):
         parsed_data = samplegender_parse_reports(f["f"])
         if parsed_data:
             if f["s_name"] in samplegender_data:
