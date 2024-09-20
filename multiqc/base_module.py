@@ -941,7 +941,7 @@ class BaseMultiqcModule:
         self,
         f: Optional[LoadedFileDict] = None,
         s_name: Optional[str] = None,
-        path: Optional[str] = None,
+        path: Optional[Union[str, Path]] = None,
         module: Optional[str] = None,
         section: Optional[str] = None,
     ):
@@ -958,7 +958,7 @@ class BaseMultiqcModule:
             return
         if path is None and f is not None:
             path = os.path.abspath(os.path.join(f["root"], f["fn"]))
-        report.data_sources[module][section][s_name] = path
+        report.data_sources[module][section][s_name] = str(path)
 
     def add_software_version(
         self,
