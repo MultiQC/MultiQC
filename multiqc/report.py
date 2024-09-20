@@ -89,13 +89,13 @@ file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleId, List[FileDict]]
 
 # Fields below are kept between interactive runs
-data_sources: Dict[str, Dict[str, Dict]]
+data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[Anchor, Plot] = dict()  # plot objects for interactive use
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
-software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
+software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 
 
@@ -796,7 +796,7 @@ def clean_htmlid(html_id: str) -> str:
     return html_id_clean
 
 
-def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None) -> str:
+def save_htmlid(html_id: str, skiplint: bool = False, scope: Optional[str] = None) -> str:
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
     global html_ids_by_scope
@@ -858,13 +858,13 @@ def compress_json(data):
 
 def write_data_file(
     data: Union[
-        Mapping,
-        Sequence[Mapping],
-        Sequence[Sequence],
+        Mapping[str, Any],
+        Sequence[Mapping[str, Any]],
+        Sequence[Sequence[Any]],
     ],
     fn: str,
-    sort_cols=False,
-    data_format=None,
+    sort_cols: bool = False,
+    data_format: Optional[str] = None,
 ):
     """
     Write a data file to the report directory. Will do nothing

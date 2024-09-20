@@ -1,14 +1,14 @@
 import logging
-from typing import Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Dict, List, Optional, Set, Union, cast
 
 from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import table
-from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, ColumnKeyT, SectionT, TableConfig
-from multiqc.types import Anchor, ColumnKey
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ def get_template_mod():
 def plot(
     data: Union[SectionT, List[SectionT]],
     headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
-    pconfig: Union[Dict, TableConfig, None] = None,
-) -> Union[str, Plot]:
+    pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+) -> "ViolinPlot":
     """Return HTML for a MultiQC table.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
     :param headers: list of optional dicts with column config in key:value pairs.
@@ -48,11 +48,11 @@ def plot(
     return plot_dt(dt)
 
 
-def plot_dt(dt: table_object.DataTable) -> Union[str, Plot]:
+def plot_dt(dt: table_object.DataTable) -> "ViolinPlot":
     mod = get_template_mod()
     if "table" in mod.__dict__ and callable(mod.__dict__["table"]):
         # Collect unique sample names
-        s_names = set()
+        s_names: Set[str] = set()
         for section in dt.sections:
             for s_name in section.rows_by_sgroup.keys():
                 s_names.add(s_name)

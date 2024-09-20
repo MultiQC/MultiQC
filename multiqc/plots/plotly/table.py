@@ -4,13 +4,16 @@ from typing import Dict, List, Optional, Tuple
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
-from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # to avoid circular import
+    from multiqc.plots.plotly.violin import ViolinPlot
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable]):
+def plot(dt: List[DataTable]) -> "ViolinPlot":
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)

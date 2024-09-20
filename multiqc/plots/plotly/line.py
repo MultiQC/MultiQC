@@ -268,7 +268,7 @@ class Dataset(BaseDataset):
             report.write_data_file(y_by_x_by_sample, self.uid)
 
 
-class LinePlot(Plot[Dataset]):
+class LinePlot(Plot[Dataset, LinePlotConfig]):
     datasets: List[Dataset]
 
 

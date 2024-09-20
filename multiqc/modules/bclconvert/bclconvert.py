@@ -4,7 +4,7 @@ import logging
 from collections import defaultdict
 from itertools import islice
 from pathlib import Path
-from typing import Tuple, Dict, Optional, TypedDict
+from typing import Mapping, Tuple, Dict, Optional, TypedDict, Union
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
+from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import LoadedFileDict
 
@@ -25,14 +26,16 @@ class BaseMetrics(BaseModel):
     one_mismatch_index_reads: int = 0
     basesQ30: int = 0
     # used to re-calculate mean_quality
-    _quality_score_sum: float = 0
+    quality_score_sum: Optional[float] = None
     # re-calculated yield from demux stats where it is not provided explicitly and is calculated from # Reads
     # and Read Length:
-    _calculated_yield: int = 0
+    calculated_yield: int = 0
     # used to re-calculate mean_quality from demux stats where Yield is not provided explicitly and is
     # calculated from # Reads and Read Length
-    _calculated_quality_score_sum: float = 0
+    calculated_quality_score_sum: float = 0
+    mean_quality: float = 0
     depth: Optional[float] = None
+    yield_q30_percent: Optional[float] = None
     percent_Q30: Optional[float] = None
     percent_perfectIndex: Optional[float] = None
     percent_oneMismatch: Optional[float] = None
@@ -41,8 +44,6 @@ class BaseMetrics(BaseModel):
 
 
 class SampleMetrics(BaseMetrics):
-    mean_quality: float = 0
-    yield_q30_percent: float = 0
     perfect_percent: float = 0
     one_mismatch_percent: float = 0
     filename: Optional[Path] = None
@@ -111,7 +112,6 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        # Initialise the parent object
         super(MultiqcModule, self).__init__(
             name="BCL Convert",
             anchor="bclconvert",
@@ -127,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
         per_lane_undetermined_reads: Optional[Dict[str, int]] = dict()
         self.total_reads_in_lane_per_file: Dict[Path, Dict[str, int]] = dict()
 
-        bclconvert_data: Dict = dict()
+        bclconvert_data: Dict[str, Dict[str, LaneMetrics]] = dict()
         for demux in demuxes.values():
             self.parse_demux_data(demux, bclconvert_data, len(demuxes))
         for qmetric in qmetrics.values():
@@ -160,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         create_undetermined_barplots = (
             getattr(config, "bclconvert", {}).get("create_undetermined_barcode_barplots", False) or len(demuxes) == 1
         )
-        if create_undetermined_barplots:
+        if create_undetermined_barplots and last_run_id is not None:
             self._parse_top_unknown_barcodes(bclconvert_data, last_run_id)
 
         # Collect counts by lane and sample
@@ -181,15 +181,15 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"{len(bclconvert_by_lane)} lanes and {len(bclconvert_by_sample)} samples found")
 
         # Calculate mean quality scores
-        for sample_id, sample in bclconvert_by_sample.items():
-            if sample["yield"] > 0:
-                sample["mean_quality"] = sample["_quality_score_sum"] / sample["yield"]
-            del sample["_quality_score_sum"]
+        for _, sample in bclconvert_by_sample.items():
+            if sample.yield_ > 0 and sample.quality_score_sum is not None:
+                sample.mean_quality = sample.quality_score_sum / sample.yield_
+            sample.quality_score_sum = None
 
-        for lane_id, lane in bclconvert_by_lane.items():
-            if lane["yield"] > 0:
-                lane["mean_quality"] = lane["_quality_score_sum"] / lane["yield"]
-            del lane["_quality_score_sum"]
+        for _, lane in bclconvert_by_lane.items():
+            if lane.yield_ > 0 and lane.quality_score_sum is not None:
+                lane.mean_quality = lane.quality_score_sum / lane.yield_
+            del lane.quality_score_sum
 
         self.write_data_file(bclconvert_by_lane, "multiqc_bclconvert_bylane")
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
@@ -330,7 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
         return gs
 
     @staticmethod
-    def _is_single_end_reads(root):
+    def _is_single_end_reads(root: ElementTree.Element) -> bool:
         ncount = 0
         # we have single-end reads if we have exactly one IsIndexedRead=N element in our RunInfo.xml
         for element in root.findall("./Run/Reads/Read"):
@@ -341,7 +341,7 @@ class MultiqcModule(BaseMultiqcModule):
         return False
 
     @staticmethod
-    def _get_r2_length(root):
+    def _get_r2_length(root: ElementTree.Element) -> Optional[str]:
         for element in root.findall("./Run/Reads/Read"):
             if element.get("Number") != "1" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
@@ -355,10 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         # Find all reads with IsIndexedRead = N
         assert isinstance(runinfo_file["f"], str)
-        root = ElementTree.fromstring(runinfo_file["f"])
-        if root is None:
-            log.error("Could not parse RunInfo.xml")
-            raise ModuleNoSamplesFound
+        root: ElementTree.Element = ElementTree.fromstring(runinfo_file["f"])
         run = root.find("Run")
         if run is None:
             log.error("No Run element found in RunInfo.xml")
@@ -461,7 +458,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         return demuxes_by_root, qmetrics_by_root, multiple_sequencing_runs, last_run_id
 
-    def _recalculate_undetermined(self, bclconvert_data, last_run_id) -> Dict[str, int]:
+    def _recalculate_undetermined(
+        self, bclconvert_data: Dict[str, Dict[str, LaneMetrics]], last_run_id: Optional[str]
+    ) -> Dict[str, int]:
         # We have to calculate "corrected" unknown read counts when parsing more than
         # one bclconvert run. To do this: add up all the reads in a lane that were
         # assigned to samples, then take the total reads in a lane (which is taken
@@ -469,7 +468,7 @@ class MultiqcModule(BaseMultiqcModule):
         # latter, and use that as "undetermined samples in lane."
         total_reads_per_lane: Dict[str, int] = dict()
         per_lane_undetermined_reads: Dict[str, int] = dict()
-        for filename, lanedata in self.total_reads_in_lane_per_file.items():
+        for _, lanedata in self.total_reads_in_lane_per_file.items():
             for lane_id, reads in lanedata.items():
                 if lane_id not in total_reads_per_lane:
                     total_reads_per_lane[lane_id] = int()
@@ -480,12 +479,13 @@ class MultiqcModule(BaseMultiqcModule):
                     )
                 total_reads_per_lane[lane_id] = reads
 
-        run_data = bclconvert_data[last_run_id]  # in this situation we have only one run id
-        for lane_id, lane in run_data.items():
-            determined_reads = 0
-            for _, sample in lane["samples"].items():
-                determined_reads += sample["clusters"]
-            per_lane_undetermined_reads[lane_id] = total_reads_per_lane[lane_id] - determined_reads
+        if last_run_id is not None:
+            run_data = bclconvert_data[last_run_id]  # in this situation we have only one run id
+            for lane_id, lane in run_data.items():
+                determined_reads = 0
+                for _, sample in lane.samples.items():
+                    determined_reads += sample.clusters
+                per_lane_undetermined_reads[lane_id] = total_reads_per_lane[lane_id] - determined_reads
 
         return per_lane_undetermined_reads
 
@@ -506,7 +506,7 @@ class MultiqcModule(BaseMultiqcModule):
         run_data = bclconvert_data.get(run_id, dict())
         bclconvert_data[run_id] = run_data
         with demux_file.path.open() as fh:
-            reader: csv.DictReader = csv.DictReader(fh, delimiter=",")
+            reader: csv.DictReader[str] = csv.DictReader(fh, delimiter=",")
             for row in reader:
                 lane_id = f"L{row['Lane']}"
                 lane = run_data.get(lane_id)
@@ -532,14 +532,14 @@ class MultiqcModule(BaseMultiqcModule):
 
                     # total lane stats
                     lane.clusters += int(row["# Reads"])
-                    lane._calculated_yield += int(row["# Reads"]) * demux_file.cluster_length
+                    lane.calculated_yield += int(row["# Reads"]) * demux_file.cluster_length
                     lane.perfect_index_reads += int(row["# Perfect Index Reads"])
                     lane.one_mismatch_index_reads += int(row["# One Mismatch Index Reads"])
                     lane.basesQ30 += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
 
                     # stats for this sample in this lane
                     sample.clusters += int(row["# Reads"])
-                    sample._calculated_yield += int(row["# Reads"]) * demux_file.cluster_length
+                    sample.calculated_yield += int(row["# Reads"]) * demux_file.cluster_length
                     sample.perfect_index_reads += int(row["# Perfect Index Reads"])
                     sample.one_mismatch_index_reads += int(row["# One Mismatch Index Reads"])
                     sample.index = str(row["Index"])
@@ -553,10 +553,10 @@ class MultiqcModule(BaseMultiqcModule):
                     sample.basesQ30 += int(row.get("# of >= Q30 Bases (PF)", 0))
                     # Collecting to re-calculate mean_quality:
                     calculated_quality_score_sum = (
-                        float(row.get("Mean Quality Score (PF)", 0)) * sample._calculated_yield
+                        float(row.get("Mean Quality Score (PF)", 0)) * sample.calculated_yield
                     )
-                    sample._calculated_quality_score_sum += calculated_quality_score_sum
-                    lane._calculated_quality_score_sum += calculated_quality_score_sum
+                    sample.calculated_quality_score_sum += calculated_quality_score_sum
+                    lane.calculated_quality_score_sum += calculated_quality_score_sum
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
@@ -576,7 +576,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         self.total_reads_in_lane_per_file[qmetrics_file.path] = dict()
 
-        reader: csv.DictReader = csv.DictReader(qmetrics_file.path.open(), delimiter=",")
+        reader: csv.DictReader[str] = csv.DictReader(qmetrics_file.path.open(), delimiter=",")
         for row in reader:
             run_data: Dict[str, LaneMetrics] = bclconvert_data[qmetrics_file.run_id]
             lane_id = f"L{row['Lane']}"
@@ -603,10 +603,14 @@ class MultiqcModule(BaseMultiqcModule):
                 lane_sample.yield_ += int(row["Yield"])
                 lane_sample.basesQ30 += int(row["YieldQ30"])
                 # Collecting to re-calculate mean_quality:
-                lane._quality_score_sum += float(row["QualityScoreSum"])
-                lane_sample._quality_score_sum += float(row["QualityScoreSum"])
+                if lane.quality_score_sum is None:
+                    lane.quality_score_sum = 0
+                lane.quality_score_sum += float(row["QualityScoreSum"])
+                if lane_sample.quality_score_sum is None:
+                    lane_sample.quality_score_sum = 0
+                lane_sample.quality_score_sum += float(row["QualityScoreSum"])
 
-    def _parse_top_unknown_barcodes(self, bclconvert_data, last_run_id):
+    def _parse_top_unknown_barcodes(self, bclconvert_data: Dict[str, Dict[str, LaneMetrics]], last_run_id: str):
         run_data = bclconvert_data[last_run_id]
 
         for unknown_barcode_file in self.find_log_files("bclconvert/unknown_barcodes", filehandles=True):
@@ -614,24 +618,22 @@ class MultiqcModule(BaseMultiqcModule):
             barcode_reader = csv.DictReader(unknown_barcode_file["f"], delimiter=",")
             for unknown_barcode_row in barcode_reader:
                 thislane = "L" + str(unknown_barcode_row["Lane"])
-                if "top_unknown_barcodes" not in run_data[thislane]:
-                    run_data[thislane]["top_unknown_barcodes"] = {}
                 thisbarcode = str(unknown_barcode_row["index"]) + "-" + str(unknown_barcode_row["index2"])
-                run_data[thislane]["top_unknown_barcodes"][thisbarcode] = int(unknown_barcode_row["# Reads"])
+                run_data[thislane].top_unknown_barcodes[thisbarcode] = int(unknown_barcode_row["# Reads"])
 
     @staticmethod
-    def _total_reads_for_run(bclconvert_data, run_id):
+    def _total_reads_for_run(bclconvert_data: Dict[str, Dict[str, LaneMetrics]], run_id: str) -> int:
         totalreads = 0
-        for lane_id, lane in bclconvert_data[run_id].items():
-            totalreads += lane["clusters"]
+        for _, lane in bclconvert_data[run_id].items():
+            totalreads += lane.clusters
         return totalreads
 
     @staticmethod
-    def _total_reads_all_runs(bclconvert_data):
+    def _total_reads_all_runs(bclconvert_data: Dict[str, Dict[str, LaneMetrics]]) -> int:
         totalreads = 0
-        for key, run_data in bclconvert_data.items():
-            for lane_id, lane in run_data.items():
-                totalreads += lane["clusters"]
+        for _, run_data in bclconvert_data.items():
+            for _, lane in run_data.items():
+                totalreads += lane.clusters
         return totalreads
 
     def _set_lane_percentage_stats(self, data: LaneMetrics, cluster_length: int):
@@ -676,7 +678,7 @@ class MultiqcModule(BaseMultiqcModule):
                 bclconvert_by_lane[lane_key_name] = LaneMetrics(
                     depth=lane_data.depth,
                     clusters=lane_data.clusters,
-                    yield_=lane_data.yield_ or lane_data._calculated_yield,
+                    yield_=lane_data.yield_ or lane_data.calculated_yield,
                     perfect_index_reads=lane_data.perfect_index_reads,
                     one_mismatch_index_reads=lane_data.one_mismatch_index_reads,
                     basesQ30=lane_data.basesQ30,
@@ -684,7 +686,7 @@ class MultiqcModule(BaseMultiqcModule):
                     percent_perfectIndex=lane_data.percent_perfectIndex,
                     percent_oneMismatch=lane_data.percent_oneMismatch,
                     top_unknown_barcodes=lane_data.top_unknown_barcodes or {},
-                    _quality_score_sum=lane_data._quality_score_sum or lane_data._calculated_quality_score_sum,
+                    quality_score_sum=lane_data.quality_score_sum or lane_data.calculated_quality_score_sum,
                 )
 
                 # now set stats for each sample (across all lanes) in bclconvert_bysample dictionary
@@ -694,12 +696,14 @@ class MultiqcModule(BaseMultiqcModule):
 
                     s: SampleMetrics = bclconvert_by_sample[sample_id]
                     s.clusters += int(sample_data.clusters)
-                    s.yield_ += sample_data.yield_ or sample_data._calculated_yield
+                    s.yield_ += sample_data.yield_ or sample_data.calculated_yield
                     s.perfect_index_reads += sample_data.perfect_index_reads
                     s.one_mismatch_index_reads += sample_data.one_mismatch_index_reads
                     s.basesQ30 += sample_data.basesQ30
                     s.cluster_length = lane_data.cluster_length
-                    s._quality_score_sum += sample_data._quality_score_sum or sample_data._calculated_quality_score_sum
+                    if s.quality_score_sum is None:
+                        s.quality_score_sum = 0
+                    s.quality_score_sum += sample_data.quality_score_sum or sample_data.calculated_quality_score_sum
                     s.index = sample_data.index
                     try:
                         # Not all demux files have Sample_Project column
@@ -720,7 +724,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         bclconvert_data: Dict[str, Dict[str, LaneMetrics]],
         bclconvert_by_sample: Dict[str, SampleMetrics],
-    ):
+    ) -> ViolinPlot:
         sample_stats_data: Dict[str, SampleMetrics] = dict()
         total_reads = self._total_reads_all_runs(bclconvert_data)
         depth_available = False
@@ -771,7 +775,7 @@ class MultiqcModule(BaseMultiqcModule):
             if sample.sample_project:
                 sample_stats_data[sample_id].sample_project = sample.sample_project
 
-        headers = {}
+        headers: Dict[str, ColumnDict] = {}
         if depth_available:
             headers["depth"] = {
                 "title": "Coverage",
@@ -791,15 +795,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         headers["clusters"] = {
             "title": f"{config.read_count_prefix} Clusters",
-            "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert "
-            "demultiplexing ({})".format(config.read_count_desc),
+            "description": f"Total number of clusters (read pairs) for this sample as determined by bclconvert "
+            f"demultiplexing ({config.read_count_desc})",
             "scale": "Blues",
             "shared_key": "read_count",
         }
         headers["yield"] = {
             "title": f"Yield ({config.base_count_prefix})",
-            "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({"
-            "})".format(config.base_count_desc),
+            "description": f"Total number of bases for this sample as determined by bclconvert d"
+            f"emultiplexing ({config.base_count_desc})",
             "scale": "Greens",
             "shared_key": "base_count",
         }
@@ -822,17 +826,15 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["basesQ30"] = {
             "title": f"Bases ({config.base_count_prefix}) ≥ Q30 (PF)",
-            "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
-                config.base_count_desc
-            ),
+            "description": f"Number of bases with a Phred score of 30 or higher, p"
+            f"assing filter ({config.base_count_desc})",
             "scale": "Blues",
             "shared_key": "base_count",
         }
         headers["yield_q30_percent"] = {
             "title": "% Bases ≥ Q30 (PF)",
-            "description": "Percent of bases with a Phred score of 30 or higher, passing filter ({})".format(
-                config.base_count_desc
-            ),
+            "description": f"Percent of bases with a Phred score of 30 or higher, p"
+            f"assing filter ({config.base_count_desc})",
             "scale": "Greens",
             "max": 100,
             "min": 0,
@@ -883,15 +885,15 @@ class MultiqcModule(BaseMultiqcModule):
 
         return table.plot({sn: data.__dict__ for sn, data in sample_stats_data.items()}, headers, table_config)
 
-    def lane_stats_table(self, bclconvert_by_lane):
+    def lane_stats_table(self, bclconvert_by_lane: Dict[str, LaneMetrics]) -> ViolinPlot:
         depth_available = False
         for lane_id, lane in bclconvert_by_lane.items():
             try:
-                yield_q30_percent = f"{float(100.0 * (lane['basesQ30'] / lane['yield'])):.1f}"
+                yield_q30_percent = float(100.0 * (lane.basesQ30 / lane.yield_))
             except ZeroDivisionError:
-                yield_q30_percent = "0.0"
-            bclconvert_by_lane[lane_id]["yield_q30_percent"] = yield_q30_percent
-            if lane["depth"] != "NA":
+                yield_q30_percent = 0.0
+            bclconvert_by_lane[lane_id].yield_q30_percent = yield_q30_percent
+            if lane.depth is not None:
                 depth_available = True
 
         headers: Dict[str, ColumnDict] = {}
@@ -985,23 +987,23 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # new dict with matching keys for plotting (this avoids duplicate html id linting errors)
-        bclconvert_bylane_foroutput = dict()
-        for laneid, lanestats in bclconvert_by_lane.items():
+        bclconvert_bylane_foroutput: Dict[str, Dict[str, Union[int, float, str, None]]] = dict()
+        for laneid, lanedata in bclconvert_by_lane.items():
             if laneid not in bclconvert_bylane_foroutput:
                 bclconvert_bylane_foroutput[laneid] = dict()
-            for key, value in lanestats.items():
+            for key, value in lanedata.__dict__.items():
                 bclconvert_bylane_foroutput[laneid][key + "-lane"] = value
 
         return table.plot(bclconvert_bylane_foroutput, headers, table_config)
 
     @staticmethod
-    def prepend_runid(runid, rest):
+    def prepend_runid(runid: str, rest: str) -> str:
         return str(runid) + " - " + str(rest)
 
     def get_bar_data_from_counts(
         self,
         bclconvert_data: Dict[str, Dict[str, LaneMetrics]],
-        counts: Dict[str, Dict[str, int]],
+        counts: Mapping[str, BaseMetrics],
         last_run_id: Optional[str] = None,
         per_lane_undetermined_reads: Optional[Dict[str, int]] = None,
     ) -> Dict[str, Dict[str, int]]:
@@ -1009,8 +1011,8 @@ class MultiqcModule(BaseMultiqcModule):
         bar_data: Dict[str, Dict[str, int]] = {}
         for key, value in counts.items():
             bar_data[key] = {
-                "perfect": value["perfect_index_reads"],
-                "imperfect": value["clusters"] - value["perfect_index_reads"],
+                "perfect": value.perfect_index_reads,
+                "imperfect": value.clusters - value.perfect_index_reads,
             }
             if last_run_id is not None and per_lane_undetermined_reads is not None:
                 try:
@@ -1028,7 +1030,7 @@ class MultiqcModule(BaseMultiqcModule):
         return bar_data
 
     @staticmethod
-    def get_bar_data_from_undetermined(flowcells) -> Dict[str, Dict[str, int]]:
+    def get_bar_data_from_undetermined(flowcells: Dict[str, LaneMetrics]) -> Dict[str, Dict[str, int]]:
         """
         Get data to plot for undetermined barcodes.
         """
@@ -1037,7 +1039,7 @@ class MultiqcModule(BaseMultiqcModule):
         # get undetermined barcodes for each lanes
         for lane_id, lane in flowcells.items():
             try:
-                for barcode, count in islice(lane["top_unknown_barcodes"].items(), 20):
+                for barcode, count in islice(lane.top_unknown_barcodes.items(), 20):
                     bar_data[barcode][lane_id] = count
             except AttributeError:
                 pass

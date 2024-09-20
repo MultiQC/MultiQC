@@ -13,7 +13,7 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, TypeVar, Union, cast
 
 import markdown
 import packaging.version
@@ -78,14 +78,14 @@ class SampleGroupingConfig:
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
-    mod_cust_config: Dict = {}
+    mod_cust_config: Dict[str, Any] = {}
     mod_id: Optional[ModuleId] = None
 
     def __init__(
         self,
         name: str = "base",
         anchor: Union[Anchor, str] = Anchor("base"),
-        target=None,
+        target: Optional[str] = None,
         href: Union[str, List[str], None] = None,
         info: Optional[str] = None,
         comment: Optional[str] = None,
@@ -364,14 +364,14 @@ class BaseMultiqcModule:
         name: Optional[str] = None,
         anchor: Optional[Union[str, Anchor]] = None,
         id: Optional[Union[str, SectionId]] = None,
-        description="",
-        comment="",
-        helptext="",
-        content_before_plot="",
-        plot: Optional[Union[Plot, str]] = None,
-        content="",
-        autoformat=True,
-        autoformat_type="markdown",
+        description: str = "",
+        comment: str = "",
+        helptext: str = "",
+        content_before_plot: str = "",
+        plot: Optional[Union[Plot[Any, Any], str]] = None,
+        content: str = "",
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
     ):
         """Add a section to the module report output"""
         if id is None and anchor is not None:
@@ -845,13 +845,19 @@ class BaseMultiqcModule:
         sn.trimmed_name = trimmed_name
         return trimmed_name
 
-    def ignore_samples(self, data, sample_names_ignore=None, sample_names_ignore_re=None):
+    DataT = TypeVar("DataT")
+
+    def ignore_samples(
+        self,
+        data: Dict[str, DataT],
+        sample_names_ignore: Optional[List[str]] = None,
+        sample_names_ignore_re: Optional[List[str]] = None,
+    ) -> Dict[str, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if isinstance(data, dict):
-                new_data = dict()
-            else:
+            if not isinstance(data, dict):  # type: ignore
                 return data
+            new_data: Dict[str, Any] = dict()
             for s_name, v in data.items():
                 if not self.is_ignore_sample(s_name, sample_names_ignore, sample_names_ignore_re):
                     new_data[s_name] = v
@@ -860,7 +866,9 @@ class BaseMultiqcModule:
             return data
 
     @staticmethod
-    def is_ignore_sample(s_name, sample_names_ignore=None, sample_names_ignore_re=None):
+    def is_ignore_sample(
+        s_name: str, sample_names_ignore: Optional[List[str]] = None, sample_names_ignore_re: Optional[List[str]] = None
+    ) -> bool:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
         sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
@@ -1001,7 +1009,7 @@ class BaseMultiqcModule:
         group_name = self.name
         report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
 
-    def write_data_file(self, data, fn, sort_cols=False, data_format=None):
+    def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
         """Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory"""
 

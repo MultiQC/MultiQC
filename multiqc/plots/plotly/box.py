@@ -98,7 +98,7 @@ class Dataset(BaseDataset):
         report.write_data_file(vals_by_sample, self.uid)
 
 
-class BoxPlot(Plot[Dataset]):
+class BoxPlot(Plot[Dataset, BoxPlotConfig]):
     datasets: List[Dataset]
 
     @staticmethod

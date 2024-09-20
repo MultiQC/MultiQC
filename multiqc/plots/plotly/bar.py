@@ -170,7 +170,7 @@ class Dataset(BaseDataset):
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
 
-class BarPlot(Plot[Dataset]):
+class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
     @staticmethod
