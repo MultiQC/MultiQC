@@ -20,11 +20,12 @@ log = logging.getLogger(__name__)
 
 
 class BaseMetrics(BaseModel):
+    # only initialized when there is data:
     clusters: int = 0
     yield_: int = 0
     perfect_index_reads: int = 0
     one_mismatch_index_reads: int = 0
-    basesQ30: int = 0
+    basesQ30: Optional[int] = None
     # used to re-calculate mean_quality
     quality_score_sum: Optional[float] = None
     # re-calculated yield from demux stats where it is not provided explicitly and is calculated from # Reads
@@ -32,8 +33,8 @@ class BaseMetrics(BaseModel):
     calculated_yield: int = 0
     # used to re-calculate mean_quality from demux stats where Yield is not provided explicitly and is
     # calculated from # Reads and Read Length
-    calculated_quality_score_sum: float = 0
-    mean_quality: float = 0
+    calculated_qscore_sum: Optional[float] = None
+    mean_quality: Optional[float] = None
     depth: Optional[float] = None
     yield_q30_percent: Optional[float] = None
     percent_Q30: Optional[float] = None
@@ -44,8 +45,8 @@ class BaseMetrics(BaseModel):
 
 
 class SampleMetrics(BaseMetrics):
-    perfect_percent: float = 0
-    one_mismatch_percent: float = 0
+    perfect_percent: Optional[float] = None
+    one_mismatch_percent: Optional[float] = None
     filename: Optional[Path] = None
     index: Optional[str] = None
     sample_project: Optional[str] = None
@@ -189,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
         for _, lane in bclconvert_by_lane.items():
             if lane.yield_ > 0 and lane.quality_score_sum is not None:
                 lane.mean_quality = lane.quality_score_sum / lane.yield_
-            del lane.quality_score_sum
+            lane.quality_score_sum = None
 
         self.write_data_file(bclconvert_by_lane, "multiqc_bclconvert_bylane")
         self.write_data_file(bclconvert_by_sample, "multiqc_bclconvert_bysample")
@@ -444,13 +445,12 @@ class MultiqcModule(BaseMultiqcModule):
                 run_id=runinfo.run_id,
             )
             if _qmetrics_f := _qmetrics_by_root.get(root):
-                runinfos_by_root[root] = RunInfo(
+                qmetrics_by_root[root] = RunInfo(
                     s_name=_qmetrics_f["s_name"],
                     path=Path(_qmetrics_f["root"]) / _qmetrics_f["fn"],
                     cluster_length=runinfo.cluster_length,
                     run_id=runinfo.run_id,
                 )
-
             if last_run_id and runinfo.run_id != last_run_id:
                 # this will mean we supress unknown reads, since we can't do a recalculation
                 multiple_sequencing_runs = True
@@ -508,6 +508,9 @@ class MultiqcModule(BaseMultiqcModule):
         with demux_file.path.open() as fh:
             reader: csv.DictReader[str] = csv.DictReader(fh, delimiter=",")
             for row in reader:
+                # if row["SampleID"] != "PRJ200466_L2000821":
+                #     continue  # TODO: remove
+
                 lane_id = f"L{row['Lane']}"
                 lane = run_data.get(lane_id)
                 if lane is None:
@@ -535,7 +538,8 @@ class MultiqcModule(BaseMultiqcModule):
                     lane.calculated_yield += int(row["# Reads"]) * demux_file.cluster_length
                     lane.perfect_index_reads += int(row["# Perfect Index Reads"])
                     lane.one_mismatch_index_reads += int(row["# One Mismatch Index Reads"])
-                    lane.basesQ30 += int(row.get("# of >= Q30 Bases (PF)", "0"))  # Column only present pre v3.9.3
+                    if (basesQ30 := row.get("# of >= Q30 Bases (PF)")) is not None:
+                        lane.basesQ30 = (lane.basesQ30 or 0) + int(basesQ30)  # Column only present pre v3.9.3
 
                     # stats for this sample in this lane
                     sample.clusters += int(row["# Reads"])
@@ -543,20 +547,18 @@ class MultiqcModule(BaseMultiqcModule):
                     sample.perfect_index_reads += int(row["# Perfect Index Reads"])
                     sample.one_mismatch_index_reads += int(row["# One Mismatch Index Reads"])
                     sample.index = str(row["Index"])
-                    try:
+                    if (sproj := row.get("Sample_Project")) is not None:
                         # Not all demux files have Sample_Project column
-                        sample.sample_project = str(row["Sample_Project"])
-                    except KeyError:
-                        pass
+                        sample.sample_project = str(sproj)
 
                     # columns only present pre v3.9.3, after they moved to quality_metrics
-                    sample.basesQ30 += int(row.get("# of >= Q30 Bases (PF)", 0))
+                    if basesQ30 is not None:
+                        sample.basesQ30 = (sample.basesQ30 or 0) + int(basesQ30)
                     # Collecting to re-calculate mean_quality:
-                    calculated_quality_score_sum = (
-                        float(row.get("Mean Quality Score (PF)", 0)) * sample.calculated_yield
-                    )
-                    sample.calculated_quality_score_sum += calculated_quality_score_sum
-                    lane.calculated_quality_score_sum += calculated_quality_score_sum
+                    if (qscore := row.get("Mean Quality Score (PF)")) is not None:
+                        calc_qscore_sum = float(qscore) * sample.calculated_yield
+                        sample.calculated_qscore_sum = (sample.calculated_qscore_sum or 0) + calc_qscore_sum
+                        lane.calculated_qscore_sum = (lane.calculated_qscore_sum or 0) + calc_qscore_sum
 
                 if lane_id not in total_reads_in_lane:
                     total_reads_in_lane[lane_id] = 0
@@ -578,6 +580,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         reader: csv.DictReader[str] = csv.DictReader(qmetrics_file.path.open(), delimiter=",")
         for row in reader:
+            # if row["SampleID"] != "PRJ200466_L2000821":
+            #     continue  # TODO: remove
+
             run_data: Dict[str, LaneMetrics] = bclconvert_data[qmetrics_file.run_id]
             lane_id = f"L{row['Lane']}"
             if lane_id not in run_data:
@@ -599,16 +604,12 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Parse the stats that moved to this file in v3.9.3
                 lane.yield_ += int(row["Yield"])
-                lane.basesQ30 += int(row["YieldQ30"])
-                lane_sample.yield_ += int(row["Yield"])
-                lane_sample.basesQ30 += int(row["YieldQ30"])
+                lane.basesQ30 = (lane.basesQ30 or 0) + int(row["YieldQ30"])
+                lane_sample.yield_ = (lane_sample.yield_ or 0) + int(row["Yield"])
+                lane_sample.basesQ30 = (lane_sample.basesQ30 or 0) + int(row["YieldQ30"])
                 # Collecting to re-calculate mean_quality:
-                if lane.quality_score_sum is None:
-                    lane.quality_score_sum = 0
-                lane.quality_score_sum += float(row["QualityScoreSum"])
-                if lane_sample.quality_score_sum is None:
-                    lane_sample.quality_score_sum = 0
-                lane_sample.quality_score_sum += float(row["QualityScoreSum"])
+                lane.quality_score_sum = (lane.quality_score_sum or 0) + float(row["QualityScoreSum"])
+                lane_sample.quality_score_sum = (lane_sample.quality_score_sum or 0) + float(row["QualityScoreSum"])
 
     def _parse_top_unknown_barcodes(self, bclconvert_data: Dict[str, Dict[str, LaneMetrics]], last_run_id: str):
         run_data = bclconvert_data[last_run_id]
@@ -637,22 +638,13 @@ class MultiqcModule(BaseMultiqcModule):
         return totalreads
 
     def _set_lane_percentage_stats(self, data: LaneMetrics, cluster_length: int):
-        try:
-            data.percent_Q30 = (float(data.basesQ30) / float(data.clusters * cluster_length)) * 100.0
-        except ZeroDivisionError:
-            data.percent_Q30 = None
-        try:
-            data.percent_perfectIndex = (float(data.perfect_index_reads) / float(data.clusters)) * 100.0
-        except ZeroDivisionError:
-            data.percent_perfectIndex = None
-        try:
-            data.percent_oneMismatch = float(data.one_mismatch_index_reads) / float(data.clusters) * 100.0
-        except ZeroDivisionError:
-            data.percent_oneMismatch = None
-        if (gs := self._get_genome_size()) is not None:
+        if data.basesQ30 is not None and (data.clusters * cluster_length):
+            data.percent_Q30 = (float(data.basesQ30) / (data.clusters * cluster_length)) * 100.0
+        if data.clusters:
+            data.percent_perfectIndex = (float(data.perfect_index_reads) / data.clusters) * 100.0
+            data.percent_oneMismatch = float(data.one_mismatch_index_reads) / data.clusters * 100.0
+        if data.basesQ30 is not None and (gs := self._get_genome_size()) is not None:
             data.depth = float(data.basesQ30) / gs
-        else:
-            data.depth = None
 
     def _split_data_by_lane_and_sample(
         self,
@@ -686,7 +678,7 @@ class MultiqcModule(BaseMultiqcModule):
                     percent_perfectIndex=lane_data.percent_perfectIndex,
                     percent_oneMismatch=lane_data.percent_oneMismatch,
                     top_unknown_barcodes=lane_data.top_unknown_barcodes or {},
-                    quality_score_sum=lane_data.quality_score_sum or lane_data.calculated_quality_score_sum,
+                    quality_score_sum=lane_data.quality_score_sum or lane_data.calculated_qscore_sum,
                 )
 
                 # now set stats for each sample (across all lanes) in bclconvert_bysample dictionary
@@ -699,22 +691,18 @@ class MultiqcModule(BaseMultiqcModule):
                     s.yield_ += sample_data.yield_ or sample_data.calculated_yield
                     s.perfect_index_reads += sample_data.perfect_index_reads
                     s.one_mismatch_index_reads += sample_data.one_mismatch_index_reads
-                    s.basesQ30 += sample_data.basesQ30
+                    if sample_data.basesQ30 is not None:
+                        s.basesQ30 = (s.basesQ30 or 0) + sample_data.basesQ30
                     s.cluster_length = lane_data.cluster_length
-                    if s.quality_score_sum is None:
-                        s.quality_score_sum = 0
-                    s.quality_score_sum += sample_data.quality_score_sum or sample_data.calculated_quality_score_sum
+                    if (qscore_sum := sample_data.quality_score_sum or sample_data.calculated_qscore_sum) is not None:
+                        s.quality_score_sum = (s.quality_score_sum or 0) + qscore_sum
                     s.index = sample_data.index
-                    try:
-                        # Not all demux files have Sample_Project column
-                        s.sample_project = sample_data.sample_project
-                    except KeyError:
-                        pass
+                    s.sample_project = sample_data.sample_project  # Not all demux files have Sample_Project column
 
                     if not self._get_genome_size():
                         s.depth = None
-                    elif s.depth is not None and (gs := self._get_genome_size()) is not None:
-                        s.depth += float(sample_data.basesQ30) / gs
+                    elif sample_data.basesQ30 is not None and (gs := self._get_genome_size()) is not None:
+                        s.depth = (s.depth or 0) + sample_data.basesQ30 / gs
 
                     count_by_sample_by_lane[sample_id][lane_key_name] += sample_data.clusters
 
@@ -731,30 +719,24 @@ class MultiqcModule(BaseMultiqcModule):
 
         for sample_id, sample in bclconvert_by_sample.items():
             # Percent stats for bclconvert-bysample i.e. stats for sample across all lanes
-            try:
+            one_mismatch_percent = None
+            perfect_percent = None
+            if sample.clusters:
                 perfect_percent = float(sample.perfect_index_reads) / sample.clusters * 100.0
-            except ZeroDivisionError:
-                perfect_percent = 0.0
-            try:
                 one_mismatch_percent = float(sample.one_mismatch_index_reads) / sample.clusters * 100.0
 
-            except ZeroDivisionError:
-                one_mismatch_percent = 0.0
+            yield_q30_percent = None
+            if sample.yield_:
+                if sample.basesQ30 is not None:
+                    yield_q30_percent = float(sample.basesQ30) / sample.yield_ * 100.0
 
-            try:
-                yield_q30_percent = float(sample.basesQ30) / sample.yield_ * 100.0
-            except ZeroDivisionError:
-                yield_q30_percent = 0.0
+            percent_yield = None
+            if total_reads * sample.cluster_length:
+                percent_yield = float(sample.yield_) / (total_reads * sample.cluster_length) * 100.0
 
-            try:
-                percent_yield = float(sample.yield_) / float(total_reads * sample.cluster_length) * 100.0
-            except ZeroDivisionError:
-                percent_yield = None
-
-            try:
-                percent_reads = float(sample.clusters) / float(total_reads) * 100.0
-            except ZeroDivisionError:
-                percent_reads = None
+            percent_reads = None
+            if total_reads:
+                percent_reads = float(sample.clusters) / total_reads * 100.0
 
             sample_stats_data[sample_id] = SampleMetrics(
                 depth=sample.depth,
@@ -794,21 +776,21 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         headers["clusters"] = {
-            "title": f"{config.read_count_prefix} Clusters",
+            "title": "Clusters",
             "description": f"Total number of clusters (read pairs) for this sample as determined by bclconvert "
             f"demultiplexing ({config.read_count_desc})",
             "scale": "Blues",
             "shared_key": "read_count",
         }
         headers["yield"] = {
-            "title": f"Yield ({config.base_count_prefix})",
-            "description": f"Total number of bases for this sample as determined by bclconvert d"
-            f"emultiplexing ({config.base_count_desc})",
+            "title": "Yield",
+            "description": f"Total number of bases for this sample as determined by bclconvert demultiplexing ("
+            f"{config.base_count_desc})",
             "scale": "Greens",
             "shared_key": "base_count",
         }
         headers["percent_reads"] = {
-            "title": "% Clusters",
+            "title": "Clusters",
             "description": "Percentage of clusters (read pairs) for this sample in this run, as determined by "
             "bclconvert demultiplexing",
             "scale": "Blues",
@@ -817,7 +799,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["percent_yield"] = {
-            "title": "% Yield",
+            "title": "Yield",
             "description": "Percentage of sequenced bases for this sample in this run",
             "scale": "Greens",
             "max": 100,
@@ -825,14 +807,14 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["basesQ30"] = {
-            "title": f"Bases ({config.base_count_prefix}) ≥ Q30 (PF)",
-            "description": f"Number of bases with a Phred score of 30 or higher, p"
-            f"assing filter ({config.base_count_desc})",
+            "title": "Bases ≥ Q30 (PF)",
+            "description": f"Number of bases with a Phred score of 30 or higher, passing filter ("
+            f"{config.base_count_desc})",
             "scale": "Blues",
             "shared_key": "base_count",
         }
         headers["yield_q30_percent"] = {
-            "title": "% Bases ≥ Q30 (PF)",
+            "title": "Bases ≥ Q30 (PF)",
             "description": f"Percent of bases with a Phred score of 30 or higher, p"
             f"assing filter ({config.base_count_desc})",
             "scale": "Greens",
@@ -841,7 +823,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["perfect_percent"] = {
-            "title": "% Perfect Index",
+            "title": "Perfect index",
             "description": "Percent of reads with perfect index (0 mismatches)",
             "max": 100,
             "min": 0,
@@ -849,7 +831,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["one_mismatch_percent"] = {
-            "title": "% One Mismatch Index",
+            "title": "One mismatch index",
             "description": "Percent of reads with one mismatch index",
             "max": 100,
             "min": 0,
@@ -857,7 +839,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality"] = {
-            "title": "Mean Quality Score",
+            "title": "Mean quality sscore",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,
@@ -883,15 +865,18 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "bclconvert Sample Statistics",
         }
 
-        return table.plot({sn: data.__dict__ for sn, data in sample_stats_data.items()}, headers, table_config)
+        return table.plot(
+            {sn: {k.strip("_"): v for k, v in data.__dict__.items()} for sn, data in sample_stats_data.items()},
+            headers,
+            table_config,
+        )
 
     def lane_stats_table(self, bclconvert_by_lane: Dict[str, LaneMetrics]) -> ViolinPlot:
         depth_available = False
         for lane_id, lane in bclconvert_by_lane.items():
-            try:
+            yield_q30_percent = None
+            if lane.yield_ and lane.basesQ30 is not None:
                 yield_q30_percent = float(100.0 * (lane.basesQ30 / lane.yield_))
-            except ZeroDivisionError:
-                yield_q30_percent = 0.0
             bclconvert_by_lane[lane_id].yield_q30_percent = yield_q30_percent
             if lane.depth is not None:
                 depth_available = True
@@ -913,49 +898,49 @@ class MultiqcModule(BaseMultiqcModule):
             }
 
         headers["reads-lane"] = {
-            "title": f"{config.read_count_prefix} Clusters",
-            "description": "Total number of clusters (read pairs) for this sample as determined by bclconvert "
-            "demultiplexing ({})".format(config.read_count_desc),
+            "title": "Clusters",
+            "description": f"Total number of clusters (read pairs) for this sample as determined by bclconvert "
+            f"demultiplexing ({config.read_count_desc})",
             "scale": "Blues",
             "shared_key": "read_count",
         }
         headers["yield-lane"] = {
-            "title": f"Yield ({config.base_count_prefix})",
-            "description": "Total number of bases for this sample as determined by bclconvert demultiplexing ({"
-            "})".format(config.base_count_desc),
+            "title": "Yield",
+            "description": f"Total number of bases for this sample as determined by bclconvert demultiplexing ("
+            f"{config.base_count_desc})",
             "scale": "Greens",
             "shared_key": "base_count",
         }
         headers["basesQ30-lane"] = {
-            "title": f"Bases ({config.base_count_prefix}) ≥ Q30 (PF)",
-            "description": "Number of bases with a Phred score of 30 or higher, passing filter ({})".format(
-                config.base_count_desc
-            ),
+            "title": "Bases ≥ Q30 (PF)",
+            "description": f"Number of bases with a Phred score of 30 or higher, p"
+            f"assing filter ({config.base_count_desc})",
             "scale": "Blues",
             "shared_key": "base_count",
         }
         headers["yield_q30_percent-lane"] = {
-            "title": "% Bases ≥ Q30 (PF)",
+            "title": "Bases ≥ Q30 (PF)",
             "description": "Percent of bases with a Phred score of 30 or higher, passing filter",
             "max": 100,
             "min": 0,
+            "suffix": "%",
             "scale": "Greens",
         }
         headers["perfect_index_reads-lane"] = {
-            "title": f"{config.read_count_prefix} Perfect Index",
+            "title": "Perfect index",
             "description": f"Reads with perfect index - 0 mismatches ({config.read_count_desc})",
             "scale": "Blues",
             "shared_key": "read_count",
         }
 
         headers["one_mismatch_index_reads-lane"] = {
-            "title": f"{config.read_count_prefix} One Mismatch",
+            "title": "One mismatch",
             "description": f"Reads with one mismatch index ({config.read_count_desc})",
             "scale": "Spectral",
             "shared_key": "read_count",
         }
         headers["percent_perfectIndex-lane"] = {
-            "title": "% Perfect Index",
+            "title": "Perfect index",
             "description": "Percent of reads with perfect index - 0 mismatches",
             "max": 100,
             "min": 0,
@@ -963,7 +948,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["percent_oneMismatch-lane"] = {
-            "title": "% One Mismatch",
+            "title": "One mismatch",
             "description": "Percent of reads with one mismatch",
             "max": 100,
             "min": 0,
@@ -971,7 +956,7 @@ class MultiqcModule(BaseMultiqcModule):
             "suffix": "%",
         }
         headers["mean_quality-lane"] = {
-            "title": "Mean Quality Score",
+            "title": "Mean quality score",
             "description": "Mean quality score of bases",
             "min": 0,
             "max": 40,
@@ -992,7 +977,7 @@ class MultiqcModule(BaseMultiqcModule):
             if laneid not in bclconvert_bylane_foroutput:
                 bclconvert_bylane_foroutput[laneid] = dict()
             for key, value in lanedata.__dict__.items():
-                bclconvert_bylane_foroutput[laneid][key + "-lane"] = value
+                bclconvert_bylane_foroutput[laneid][key.strip("_") + "-lane"] = value
 
         return table.plot(bclconvert_bylane_foroutput, headers, table_config)
 
