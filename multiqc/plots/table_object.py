@@ -45,6 +45,7 @@ class ColumnDict(TypedDict, total=False):
     placement: float
     namespace: str
     color: Optional[str]
+    colour: Optional[str]  # deprecated
     max: Optional[float]
     dmax: Optional[float]
     min: Optional[float]
@@ -52,6 +53,7 @@ class ColumnDict(TypedDict, total=False):
     ceiling: Optional[float]
     floor: Optional[float]
     minrange: Optional[float]
+    minRange: Optional[float]  # deprecated
     shared_key: Optional[str]
     tt_decimals: Optional[int]
     suffix: Optional[str]
@@ -145,7 +147,7 @@ class ColumnMeta(ValidatedConfig):
             if suffix is None and shared_key_suffix is not None:
                 suffix = " " + shared_key_suffix
 
-        color = col_dict.get("colour", col_dict.get("color"))
+        color = col_dict.get("color", col_dict.get("colour"))
         if color is None:
             cidx = sec_idx
             while cidx >= len(SECTION_COLORS):
