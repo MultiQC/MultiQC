@@ -508,9 +508,6 @@ class MultiqcModule(BaseMultiqcModule):
         with demux_file.path.open() as fh:
             reader: csv.DictReader[str] = csv.DictReader(fh, delimiter=",")
             for row in reader:
-                # if row["SampleID"] != "PRJ200466_L2000821":
-                #     continue  # TODO: remove
-
                 lane_id = f"L{row['Lane']}"
                 lane = run_data.get(lane_id)
                 if lane is None:
@@ -580,9 +577,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         reader: csv.DictReader[str] = csv.DictReader(qmetrics_file.path.open(), delimiter=",")
         for row in reader:
-            # if row["SampleID"] != "PRJ200466_L2000821":
-            #     continue  # TODO: remove
-
             run_data: Dict[str, LaneMetrics] = bclconvert_data[qmetrics_file.run_id]
             lane_id = f"L{row['Lane']}"
             if lane_id not in run_data:
