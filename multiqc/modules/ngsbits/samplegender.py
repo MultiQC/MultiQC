@@ -14,6 +14,8 @@ def parse_reports(self) -> int:
     for f in self.find_log_files("ngsbits/samplegender"):
         self.add_data_source(f)
         s_name = f["s_name"]
+        s_name = s_name.replace("_ngsbits_sex", "")
+
         if s_name in samplegender_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
         samplegender_data[s_name] = parse_file(f["f"])
@@ -36,11 +38,6 @@ def parse_reports(self) -> int:
     }
 
     headers = {
-        "file": {
-            "title": "File Name",
-            "description": "The name of the BAM file analyzed.",
-            "namespace": "ngsbits",
-        },
         "gender": {
             "title": "Predicted Gender",
             "description": "The predicted gender based on chromosome read ratios.",
@@ -79,19 +76,25 @@ def parse_reports(self) -> int:
     return len(samplegender_data)
 
 
-def parse_file(f) -> Dict[str, Union[float, int, str]]:
-    parsed_data = {}
-    headers = None
+def parse_file(f: str) -> Dict[str, Union[float, str]]:
+    """
+    Parses a single SampleGender TSV file content and returns a dictionary
+    with the relevant data from columns 2-5.
+    """
+    parsed_data: Dict[str, Union[float, str]] = {}
     lines = f.splitlines()
-    for line in lines:
-        s = line.strip().split("\t")
-        if headers is None:
-            headers = s
-        else:
-            for i, v in enumerate(s):
-                key = headers[i]
-                try:
-                    parsed_data[key] = float(v)
-                except ValueError:
-                    parsed_data[key] = v
-    return parsed_data if parsed_data else None
+
+    if len(lines) < 2:
+        # Not enough data, return an empty dictionary
+        return parsed_data
+
+    headers = lines[0].strip().split("\t")[1:5]
+    values = lines[1].strip().split("\t")[1:5]
+
+    for key, value in zip(headers, values):
+        try:
+            parsed_data[key] = float(value)
+        except ValueError:
+            parsed_data[key] = value
+
+    return parsed_data
