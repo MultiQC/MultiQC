@@ -13,7 +13,6 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from types import NoneType
 from typing import (
     Any,
     Callable,
@@ -266,11 +265,11 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[False] = False
-    ) -> Iterable[LoadedFileDict[NoneType]]: ...
+    ) -> Iterable[LoadedFileDict[None]]: ...
 
     def find_log_files(
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
-    ) -> Union[Iterable[LoadedFileDict[str]], Iterable[LoadedFileDict[io.IOBase]], Iterable[LoadedFileDict[NoneType]]]:
+    ) -> Union[Iterable[LoadedFileDict[str]], Iterable[LoadedFileDict[io.IOBase]], Iterable[LoadedFileDict[None]]]:
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -343,7 +342,7 @@ class BaseMultiqcModule:
                     )
 
             # Make a sample name from the filename
-            f: LoadedFileDict[NoneType] = {
+            f: LoadedFileDict[None] = {
                 "root": found_file["root"],
                 "fn": found_file["fn"],
                 "sp_key": sp_key,
