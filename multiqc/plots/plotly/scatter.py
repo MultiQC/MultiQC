@@ -189,8 +189,14 @@ class Dataset(BaseDataset):
         xmax, xmin = None, None
         for point in self.points:
             x = point["x"]
-            xmax = x if xmax is None else max(xmax, x)
-            xmin = x if xmin is None else min(xmin, x)
+            if xmax is not None:
+                xmax = max(xmax, x)
+            else:
+                xmax = x
+            if xmin is not None:
+                xmin = min(xmin, x)
+            else:
+                xmin = x
         return xmin, xmax
 
     def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
@@ -199,8 +205,14 @@ class Dataset(BaseDataset):
         ymax, ymin = None, None
         for point in self.points:
             y = point["y"]
-            ymax = y if ymax is None else max(ymax, y)
-            ymin = y if ymin is None else min(ymin, y)
+            if ymax is not None:
+                ymax = max(ymax, y)
+            else:
+                ymax = y
+            if ymin is not None:
+                ymin = min(ymin, y)
+            else:
+                ymin = y
         return ymin, ymax
 
     def save_data_file(self) -> None:

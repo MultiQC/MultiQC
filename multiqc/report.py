@@ -80,7 +80,7 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[SampleName, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
