@@ -948,7 +948,7 @@ class BaseMultiqcModule:
                 SampleGroup(sname): [
                     InputRow(
                         sample=SampleName(sname),
-                        data={ColumnKey(k): v for k, v in data.items()},
+                        data={ColumnKey(k): v for k, v in data.items() if isinstance(v, ValueT) or v is None},
                     )
                 ]
                 for sname, data in data_by_sample.items()
