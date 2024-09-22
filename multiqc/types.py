@@ -1,6 +1,7 @@
 import io
 from enum import Enum
-from typing import NewType, Optional, TypedDict, Union
+from types import NoneType
+from typing import Generic, NewType, Optional, TypeVar, TypedDict, Union
 
 Anchor = NewType("Anchor", str)
 ModuleId = NewType("ModuleId", str)
@@ -16,10 +17,13 @@ class FileDict(TypedDict):
     root: str
 
 
-class LoadedFileDict(FileDict):
+FT = TypeVar("FT", bound=Union[str, io.IOBase, NoneType])
+
+
+class LoadedFileDict(FileDict, Generic[FT]):
     sp_key: str
     s_name: str
-    f: Optional[Union[str, io.IOBase]]
+    f: FT
 
 
 class PlotType(Enum):

@@ -15,7 +15,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
@@ -592,7 +592,7 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 nondefault_config: Dict = {}
 
 
-def update(u):
+def update(u: Dict[str, Any]):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 

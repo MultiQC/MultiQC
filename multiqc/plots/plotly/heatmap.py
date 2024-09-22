@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
@@ -42,10 +42,10 @@ class HeatmapConfig(PConfig):
 
 
 def plot(
-    rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+    rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
     pconfig: HeatmapConfig,
-    xcats: Optional[List[Union[str, int]]] = None,
-    ycats: Optional[List[Union[str, int]]] = None,
+    xcats: Optional[Sequence[Union[str, int]]] = None,
+    ycats: Optional[Sequence[Union[str, int]]] = None,
 ) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -128,7 +128,7 @@ class Dataset(BaseDataset):
         report.write_data_file(data, self.uid)
 
 
-class HeatmapPlot(Plot):
+class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     datasets: List[Dataset]
     xcats_samples: bool
     ycats_samples: bool
@@ -137,10 +137,10 @@ class HeatmapPlot(Plot):
 
     @staticmethod
     def create(
-        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+        rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         pconfig: HeatmapConfig,
-        xcats: Optional[List[Union[str, int]]],
-        ycats: Optional[List[Union[str, int]]],
+        xcats: Optional[Sequence[Union[str, int]]],
+        ycats: Optional[Sequence[Union[str, int]]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:

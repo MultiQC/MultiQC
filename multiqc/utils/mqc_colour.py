@@ -367,7 +367,13 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3, source=None) -> str:
+    def get_colour(
+        self,
+        val: Optional[Union[float, str]],
+        colformat: str = "hex",
+        lighten: float = 0.3,
+        source: Optional[str] = None,
+    ) -> str:
         """Given a value, return a colour within the colour scale"""
 
         if val is None:
@@ -375,7 +381,7 @@ class mqc_colour_scale(object):
 
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        def rgb_converter(x):
+        def rgb_converter(x: float) -> float:
             return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:

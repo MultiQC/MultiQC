@@ -1,6 +1,5 @@
 import io
 import logging
-import math
 import os
 import random
 from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Tuple, Type, TypeVar, Union
@@ -18,10 +17,10 @@ from multiqc.validation import ValidatedConfig, add_validation_warning
 logger = logging.getLogger(__name__)
 
 
-KeyTV = TypeVar("KeyTV", int, str, float)
-ValueTV = TypeVar("ValueTV", int, str, float, None)
-XToYDictT = Mapping[KeyTV, ValueTV]
-DatasetT = Mapping[Union[str, SampleName], XToYDictT]
+KeyT = TypeVar("KeyT", int, str, float)
+ValT = TypeVar("ValT", int, str, float, None)
+XToYDictT = Mapping[KeyT, ValT]
+DatasetT = Mapping[Union[str, SampleName], XToYDictT[KeyT, ValT]]
 
 
 class Marker(BaseModel):
@@ -32,16 +31,16 @@ class Marker(BaseModel):
     width: int = 1
 
 
-class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
+class Series(ValidatedConfig, Generic[KeyT, ValT]):
     name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
-    pairs: List[Tuple[KeyTV, ValueTV]]
+    pairs: List[Tuple[KeyT, ValT]]
     color: Optional[str] = None
     width: int = 2
     dash: Optional[str] = None
     showlegend: bool = True
     marker: Optional[Marker] = None
 
-    def __init__(self, _clss: Optional[List[Type]] = None, **data):
+    def __init__(self, _clss: Optional[List[Type[Any]]] = None, **data):
         _clss = _clss or []
         if "dashStyle" in data:
             add_validation_warning(
@@ -51,7 +50,7 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
         elif "dash" in data:
             data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
 
-        tuples: List[Tuple[KeyTV, ValueTV]] = []
+        tuples: List[Tuple[KeyT, ValT]] = []
         if "data" in data:
             add_validation_warning(_clss + [self.__class__], "'data' field is deprecated. Please use 'pairs' instead")
         for p in data.pop("data") if "data" in data else data.get("pairs", []):
@@ -76,7 +75,7 @@ class Series(ValidatedConfig, Generic[KeyTV, ValueTV]):
         return None, None
 
 
-SeriesT = Union[Series, Dict]
+SeriesT = Union[Series, Dict[str, Any]]
 
 
 class LinePlotConfig(PConfig):
@@ -92,7 +91,11 @@ class LinePlotConfig(PConfig):
     colors: Dict[str, str] = {}
 
     @classmethod
-    def parse_extra_series(cls, data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]], _clss: List[Type]):
+    def parse_extra_series(
+        cls,
+        data: Union[SeriesT, List[SeriesT], List[List[SeriesT]]],
+        _clss: List[Type[Any]],
+    ) -> Union[Series, List[Series], List[List[Series]]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
                 return [[Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in ds] for ds in data]
@@ -100,7 +103,7 @@ class LinePlotConfig(PConfig):
         return Series(**data, _clss=_clss) if isinstance(data, dict) else data
 
 
-def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePlot":
+def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig) -> "LinePlot[KeyT, ValT]":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     :param lists_of_lines: each dataset is a 2D dict, first keys as sample names, then x:y data pairs
@@ -117,10 +120,10 @@ def plot(lists_of_lines: List[List[Series]], pconfig: LinePlotConfig) -> "LinePl
     return create(pconfig, lists_of_lines)
 
 
-class Dataset(BaseDataset):
-    lines: List[Series]
+class Dataset(BaseDataset, Generic[KeyT, ValT]):
+    lines: List[Series[KeyT, ValT]]
 
-    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+    def get_x_range(self) -> Tuple[Optional[KeyT], Optional[KeyT]]:
         if not self.lines:
             return None, None
         xmax, xmin = None, None
@@ -132,7 +135,7 @@ class Dataset(BaseDataset):
                 xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
         return xmin, xmax
 
-    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+    def get_y_range(self) -> Tuple[Optional[ValT], Optional[ValT]]:
         if not self.lines:
             return None, None
         ymax, ymin = None, None
@@ -147,9 +150,9 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        lines: List[Series],
+        lines: List[Series[KeyT, ValT]],
         pconfig: LinePlotConfig,
-    ) -> "Dataset":
+    ) -> "Dataset[KeyT, ValT]":
         dataset = Dataset(**dataset.model_dump(), lines=lines)
 
         # Prevent Plotly-JS from parsing strings as numbers
@@ -179,8 +182,8 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -230,7 +233,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        y_by_x_by_sample: Dict[str, Dict] = dict()
+        y_by_x_by_sample: Dict[str, Dict[Union[float, str], Any]] = dict()
         last_cats = None
         shared_cats = True
         for series in self.lines:
@@ -268,17 +271,17 @@ class Dataset(BaseDataset):
             report.write_data_file(y_by_x_by_sample, self.uid)
 
 
-class LinePlot(Plot[Dataset, LinePlotConfig]):
-    datasets: List[Dataset]
+class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
+    datasets: List[Dataset[KeyT, ValT]]
 
 
 def create(
     pconfig: LinePlotConfig,
-    lists_of_lines: List[List[Series]],
-) -> "LinePlot":
+    lists_of_lines: List[List[Series[KeyT, ValT]]],
+) -> "LinePlot[KeyT, ValT]":
     n_samples_per_dataset = [len(x) for x in lists_of_lines]
 
-    model = Plot.initialize(
+    model: Plot[Dataset[KeyT, ValT], LinePlotConfig] = Plot.initialize(
         plot_type=PlotType.LINE,
         pconfig=pconfig,
         n_samples_per_dataset=n_samples_per_dataset,
@@ -299,6 +302,6 @@ def create(
     return LinePlot(**model.__dict__)
 
 
-def remove_nones_and_empty_dicts(d: Mapping) -> Dict:
+def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> Dict[Any, Any]:
     """Remove None and empty dicts from a dict recursively."""
     return {k: remove_nones_and_empty_dicts(v) for k, v in d.items() if v is not None and v != {}}
