@@ -98,9 +98,9 @@ class LinePlotConfig(PConfig):
     ) -> Union[Series, List[Series], List[List[Series]]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
-                return [[Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in ds] for ds in data]
-            return [Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in data]
-        return Series(**data, _clss=_clss) if isinstance(data, dict) else data
+                return [[Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
+            return [Series(**d, _clss=_clss) if isinstance(d, dict) else d for d in data]  # type: ignore
+        return Series(**data, _clss=_clss) if isinstance(data, dict) else data  # type: ignore
 
 
 def plot(lists_of_lines: List[List[Series[KeyT, ValT]]], pconfig: LinePlotConfig) -> "LinePlot[KeyT, ValT]":
@@ -149,11 +149,11 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
 
     @staticmethod
     def create(
-        dataset: BaseDataset,
+        base_dataset: BaseDataset,
         lines: List[Series[KeyT, ValT]],
         pconfig: LinePlotConfig,
     ) -> "Dataset[KeyT, ValT]":
-        dataset = Dataset(**dataset.model_dump(), lines=lines)
+        dataset: Dataset[KeyT, ValT] = Dataset(**base_dataset.model_dump(), lines=lines)
 
         # Prevent Plotly-JS from parsing strings as numbers
         if pconfig.categories or dataset.dconfig.get("categories"):

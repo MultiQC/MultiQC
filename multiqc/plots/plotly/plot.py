@@ -7,7 +7,7 @@ import random
 import re
 import threading
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -140,7 +140,7 @@ class PConfig(ValidatedConfig):
     _actual_cls = None
 
     @classmethod
-    def from_pconfig_dict(cls, pconfig: Union[Dict[str, Any], "PConfig", None]):
+    def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
         if pconfig is None:
             lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
             return cls(

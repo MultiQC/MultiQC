@@ -8,6 +8,7 @@ from importlib_metadata import EntryPoint
 from multiqc import config
 from multiqc.plots.plotly import line
 from multiqc.plots.plotly.line import DatasetT, KeyT, LinePlotConfig, Series, ValT, XToYDictT
+from multiqc.types import SampleName
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ def get_template_mod() -> EntryPoint:
 def plot(
     data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
     pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
-) -> Union[line.LinePlot, str]:
+) -> Union[line.LinePlot[KeyT, ValT], str]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -192,7 +193,7 @@ def _make_series_dict(
     return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
 
 
-def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
+def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
@@ -216,9 +217,9 @@ def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
     indices: [0.0, 4.5, 9] -> [0, 5, 9]
     picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
     """
-    smoothed_data: DatasetT = dict()
+    smoothed_data: Dict[SampleName, Dict[KeyT, ValT]] = dict()
     for s_name, d in data_by_sample.items():
-        smoothed_data[s_name] = dict(smooth_array(list(d.items()), numpoints))
+        smoothed_data[SampleName(s_name)] = dict(smooth_array(list(d.items()), numpoints))
 
     return smoothed_data
 

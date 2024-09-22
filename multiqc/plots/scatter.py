@@ -1,7 +1,7 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -24,8 +24,8 @@ def get_template_mod():
 
 
 def plot(
-    data: Union[Dict[str, Any], List[Dict[str, Any]]],
-    pconfig: Union[Dict[str, Any], ScatterConfig, None] = None,
+    data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+    pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
 ) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -36,7 +36,7 @@ def plot(
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
-        data = [data]
+        data = [data]  # type: ignore
 
     plotdata: List[List[Dict[str, Any]]] = list()
     for data_index, ds in enumerate(data):

@@ -45,7 +45,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +260,7 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
-    ) -> Iterable[LoadedFileDict[io.IOBase]]: ...
+    ) -> Iterable[LoadedFileDict[io.BufferedReader]]: ...
 
     @overload
     def find_log_files(
@@ -269,7 +269,12 @@ class BaseMultiqcModule:
 
     def find_log_files(
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
-    ) -> Union[Iterable[LoadedFileDict[str]], Iterable[LoadedFileDict[io.IOBase]], Iterable[LoadedFileDict[None]]]:
+    ) -> Union[
+        Iterable[LoadedFileDict[str]],
+        Iterable[LoadedFileDict[io.BufferedReader]],
+        Iterable[LoadedFileDict[io.TextIOWrapper]],
+        Iterable[LoadedFileDict[None]],
+    ]:
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -346,21 +351,21 @@ class BaseMultiqcModule:
 
             if filehandles or filecontents:
                 try:
+                    fh: Union[io.BufferedReader, io.TextIOWrapper, None]
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-                    fh: io.IOBase
                     if ftype is not None and ftype.startswith("image"):
                         with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
-                            yield {**f, "s_name": s_name, "f": cast(io.IOBase, fh)}
+                            yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
                         with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
-                                yield {**f, "s_name": s_name, "f": cast(io.IOBase, fh)}
+                                yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
                                 try:
-                                    yield {**f, "s_name": s_name, "f": fh.read()}
+                                    contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
                                         f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
@@ -378,6 +383,8 @@ class BaseMultiqcModule:
                                         yield {**f, "s_name": s_name, "f": None}
                                     finally:
                                         fh.close()
+                                else:
+                                    yield {**f, "s_name": s_name, "f": str(contents)}
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
                     yield {**f, "s_name": s_name, "f": None}
