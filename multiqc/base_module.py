@@ -45,7 +45,7 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
 
 logger = logging.getLogger(__name__)
 
@@ -297,9 +297,9 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for found_file in report.files.get(ModuleId(sp_key), []):
+        for f in report.files.get(ModuleId(sp_key), []):
             # Make a note of the filename so that we can report it if something crashes
-            last_found_file: str = os.path.join(found_file["root"], found_file["fn"])
+            last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
 
             # Filter out files based on exclusion patterns
@@ -342,12 +342,7 @@ class BaseMultiqcModule:
                     )
 
             # Make a sample name from the filename
-            f: LoadedFileDict[None] = {
-                "root": found_file["root"],
-                "fn": found_file["fn"],
-                "sp_key": sp_key,
-                "s_name": self.clean_s_name(found_file["fn"]),
-            }
+            s_name = self.clean_s_name(f["fn"])
 
             if filehandles or filecontents:
                 try:
@@ -357,34 +352,37 @@ class BaseMultiqcModule:
                     if ftype is not None and ftype.startswith("image"):
                         with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
-                            yield {**f, "f": fh}
+                            yield {**f, "s_name": s_name, "f": cast(io.IOBase, fh)}
                     else:
                         # Everything else - should be all text files
                         with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
-                                yield {**f, "f": fh}
+                                yield {**f, "s_name": s_name, "f": cast(io.IOBase, fh)}
                             elif filecontents:
                                 try:
-                                    yield {**f, "f": fh.read()}
+                                    yield {**f, "s_name": s_name, "f": fh.read()}
                                 except UnicodeDecodeError as e:
                                     logger.debug(
                                         f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
                                     )
                                     try:
                                         with io.open(
-                                            os.path.join(f["root"], f["fn"]), "r", encoding="utf-8", errors="ignore"
+                                            os.path.join(f["root"], f["fn"]),
+                                            "r",
+                                            encoding="utf-8",
+                                            errors="ignore",
                                         ) as fh_ignoring:
-                                            yield {**f, "f": fh_ignoring.read()}
+                                            yield {**f, "s_name": s_name, "f": fh_ignoring.read()}
                                     except Exception as e:
                                         logger.debug(f"Still couldn't read file: {f['fn']}\n{e}")
-                                        yield {**f, "f": None}
+                                        yield {**f, "s_name": s_name, "f": None}
                                     finally:
                                         fh.close()
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
-                    yield {**f, "f": None}
+                    yield {**f, "s_name": s_name, "f": None}
             else:
-                yield {**f, "f": None}
+                yield {**f, "s_name": s_name, "f": None}
 
     def add_section(
         self,

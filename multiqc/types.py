@@ -1,6 +1,5 @@
 import io
 from enum import Enum
-from types import NoneType
 from typing import Generic, NewType, Optional, TypeVar, TypedDict, Union
 
 Anchor = NewType("Anchor", str)
@@ -15,13 +14,13 @@ SampleGroup = NewType("SampleGroup", str)
 class FileDict(TypedDict):
     fn: str
     root: str
+    sp_key: str
 
 
-FT = TypeVar("FT", bound=Union[str, io.IOBase, NoneType])
+FT = TypeVar("FT", bound=Union[str, io.IOBase, None])
 
 
 class LoadedFileDict(FileDict, Generic[FT]):
-    sp_key: str
     s_name: str
     f: FT
 

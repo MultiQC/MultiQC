@@ -42,7 +42,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        points: List[Dict],
+        points: List[Dict[str, Any]],
         pconfig: ScatterConfig,
     ) -> "Dataset":
         dataset = Dataset(
@@ -71,8 +71,8 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -98,7 +98,7 @@ class Dataset(BaseDataset):
                 if x_std == 0 and y_std == 0:
                     logger.warning(f"Scatter plot {self.plot_id}: all {len(points)} points have the same coordinates")
                     if len(points) == 1:  # Only single point - annotate it!
-                        for i, point in points:
+                        for _, point in points:
                             point["annotation"] = point["name"]
                 else:
                     x_z_scores = np.abs((x_values - np.mean(x_values)) / x_std) if x_std else np.zeros_like(x_values)
@@ -113,7 +113,7 @@ class Dataset(BaseDataset):
                         # If there are too many outliers, we increase the threshold until we have less than 10
                         threshold += 0.2
                     # 3. Annotate outliers that pass the threshold
-                    for (i, point), x_z_score, y_z_score in zip(points, x_z_scores, y_z_scores):
+                    for (_, point), x_z_score, y_z_score in zip(points, x_z_scores, y_z_scores):
                         # Check if point is an outlier or if total points are less than 10
                         if x_z_score > threshold or y_z_score > threshold:
                             point["annotation"] = point["name"]
@@ -129,7 +129,7 @@ class Dataset(BaseDataset):
             names_by_legend_key[legend_key].add(name)
         layout.showlegend = True
 
-        in_legend = set()
+        in_legend: Set[Tuple[Any, Any, Any, Any]] = set()
         for el in self.points:
             x = el["x"]
             name = el["name"]
@@ -189,9 +189,8 @@ class Dataset(BaseDataset):
         xmax, xmin = None, None
         for point in self.points:
             x = point["x"]
-            if x is not None:
-                xmax = x if xmax is None else max(xmax, x)  # type: ignore
-                xmin = x if xmin is None else min(xmin, x)  # type: ignore
+            xmax = x if xmax is None else max(xmax, x)
+            xmin = x if xmin is None else min(xmin, x)
         return xmin, xmax
 
     def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
@@ -200,9 +199,8 @@ class Dataset(BaseDataset):
         ymax, ymin = None, None
         for point in self.points:
             y = point["y"]
-            if y is not None:
-                ymax = y if ymax is None else max(ymax, y)  # type: ignore
-                ymin = y if ymin is None else min(ymin, y)  # type: ignore
+            ymax = y if ymax is None else max(ymax, y)
+            ymin = y if ymin is None else min(ymin, y)
         return ymin, ymax
 
     def save_data_file(self) -> None:
@@ -217,12 +215,12 @@ class Dataset(BaseDataset):
         report.write_data_file(data, self.uid)
 
 
-class ScatterPlot(Plot):
+class ScatterPlot(Plot[Dataset, ScatterConfig]):
     datasets: List[Dataset]
 
     @staticmethod
     def create(pconfig: ScatterConfig, points_lists: List[List[PointT]]) -> "ScatterPlot":
-        model = Plot.initialize(
+        model: Plot[Dataset, ScatterConfig] = Plot.initialize(
             plot_type=PlotType.SCATTER,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in points_lists],
