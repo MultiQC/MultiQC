@@ -320,11 +320,16 @@ $(function () {
     });
 
     // Support expanding grouped samples in table
-    $(".expandable-row-primary th").click(function (e) {
+    $(".expandable-row-primary").click(function (e) {
       e.preventDefault();
-      let th = $(this);
+
+      // if the user is selecting text, do not expand the row
+      if (window.getSelection().toString().length > 0) {
+        return;
+      }
+      // let th = $(this);
       // final most parent table object
-      let tr = th.closest("tr");
+      let tr = $(this);
       let table = tr.closest("table");
       let tableId = tr.data("table-id");
       // find all rows with the same data-group-id
@@ -340,7 +345,7 @@ $(function () {
     // We want to allow user select sample name text without expanding the row
     $(".th-sample-name").click(function (e) {
       // stop propagation to prevent row expansion
-      e.stopPropagation();
+      // e.stopPropagation();
     });
   } // End of check for table
 
