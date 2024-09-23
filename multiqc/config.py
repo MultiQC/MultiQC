@@ -15,7 +15,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
@@ -119,7 +119,7 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
-violin_downsample_after: int
+violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
 
@@ -592,7 +592,7 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 nondefault_config: Dict = {}
 
 
-def update(u):
+def update(u: Dict[str, Any]):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 

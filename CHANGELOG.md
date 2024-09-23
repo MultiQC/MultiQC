@@ -16,7 +16,7 @@ Because MultiQC needs to know how to merge each column (sum, average, etc), each
 
 ### Highlights - box plots in custom content
 
-The new box plot plot type, added in v1.21, are now available to use with custom content! See [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
+The new box plot type, added in v1.21, are now available to use with custom content! See [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
 
 ### New modules
 

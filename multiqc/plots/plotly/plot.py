@@ -7,7 +7,7 @@ import random
 import re
 import threading
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
@@ -140,7 +140,7 @@ class PConfig(ValidatedConfig):
     _actual_cls = None
 
     @classmethod
-    def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
+    def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
         if pconfig is None:
             lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
             return cls(
@@ -152,7 +152,7 @@ class PConfig(ValidatedConfig):
         else:
             return cls(**pconfig)
 
-    def __init__(self, **data):
+    def __init__(self, **data: Any):
         super().__init__(**data, _clss=[self.__class__])
 
         self._actual_cls = self.__class__
@@ -192,17 +192,17 @@ class BaseDataset(BaseModel):
     plot_id: str
     label: str
     uid: str
-    dconfig: Dict  # user dataset-specific configuration
-    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
-    trace_params: Dict
-    pct_range: Dict
+    dconfig: Dict[str, Any]  # user dataset-specific configuration
+    layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
+    trace_params: Dict[str, Any]
+    pct_range: Dict[str, Any]
     n_samples: int
 
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -223,10 +223,11 @@ class BaseDataset(BaseModel):
         return None, None
 
 
-T = TypeVar("T", bound="BaseDataset")
+DatasetT = TypeVar("DatasetT", bound="BaseDataset")
+PConfigT = TypeVar("PConfigT", bound="PConfig")
 
 
-class Plot(BaseModel, Generic[T]):
+class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
@@ -235,13 +236,13 @@ class Plot(BaseModel, Generic[T]):
     anchor: Anchor  # unlike id, has to be unique
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[T]
-    pconfig: PConfig
+    datasets: List[DatasetT]
+    pconfig: PConfigT
     add_log_tab: bool
     add_pct_tab: bool
     l_active: bool
     p_active: bool
-    pct_axis_update: Dict
+    pct_axis_update: Dict[str, Any]
     axis_controlled_by_switches: List[str] = []
     square: bool = False
     flat: bool = False
@@ -259,7 +260,7 @@ class Plot(BaseModel, Generic[T]):
     # noinspection PyNestedDecorators
     @field_validator("layout", mode="before")
     @classmethod
-    def parse_layout(cls, d):
+    def parse_layout(cls, d: Any):
         if isinstance(d, dict):
             return go.Layout(**d)
         return d
@@ -272,7 +273,7 @@ class Plot(BaseModel, Generic[T]):
     @staticmethod
     def initialize(
         plot_type: PlotType,
-        pconfig: PConfig,
+        pconfig: PConfigT,
         n_samples_per_dataset: List[int],
         id: Optional[str] = None,
         anchor: Optional[str] = None,
@@ -280,7 +281,7 @@ class Plot(BaseModel, Generic[T]):
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
         flat_if_very_large: bool = True,
-    ):
+    ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
@@ -294,7 +295,7 @@ class Plot(BaseModel, Generic[T]):
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
         :param flat_if_very_large: whether to render flat if the number of data points is very large
         """
-        if n_samples_per_dataset == 0:
+        if len(n_samples_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
@@ -479,7 +480,7 @@ class Plot(BaseModel, Generic[T]):
             defer_render=defer_render,
         )
 
-    def _set_x_bands_and_range(self, pconfig: PConfig):
+    def _set_x_bands_and_range(self, pconfig: PConfigT):
         x_minrange = pconfig.x_minrange
         x_bands = pconfig.x_bands
         x_lines = pconfig.x_lines
@@ -547,7 +548,7 @@ class Plot(BaseModel, Generic[T]):
             ]
         )
 
-    def _set_y_bands_and_range(self, pconfig: PConfig):
+    def _set_y_bands_and_range(self, pconfig: PConfigT):
         y_minrange = pconfig.y_minrange
         y_bands = pconfig.y_bands
         y_lines = pconfig.y_lines
@@ -618,7 +619,7 @@ class Plot(BaseModel, Generic[T]):
             ]
         )
 
-    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
+    def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 

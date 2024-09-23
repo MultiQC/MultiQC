@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Gather data from all json files
-        self.bcl2fastq_data: dict[str, dict[str, dict]] = dict()
+        self.bcl2fastq_data: Dict[str, Dict[str, dict]] = dict()
         for f in self.find_log_files("bcl2fastq"):
             self.parse_file_as_json(f)
 
@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.bcl2fastq_bylane: dict = dict()
         self.bcl2fastq_bysample: dict = dict()
         self.bcl2fastq_bysample_lane: dict = dict()
-        self.source_files: dict[str, list[str]] = dict()
+        self.source_files: Dict[str, list[str]] = dict()
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
@@ -356,7 +356,7 @@ class MultiqcModule(BaseMultiqcModule):
                             pass
 
     def add_general_stats(self):
-        data: dict[str, dict[str, ValueT]] = dict()
+        data: Dict[str, Dict[str, ValueT]] = dict()
         for sample_id, sample in self.bcl2fastq_bysample.items():
             percent_R_Q30 = dict()
             for r in range(1, 5):
@@ -442,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def lane_stats_table(self):
         """Return a table with overview stats for each bcl2fastq lane for a single flow cell"""
-        headers: dict[str, ColumnDict] = {
+        headers: Dict[str, ColumnDict] = {
             "total_yield": {
                 "title": f"{config.base_count_prefix} Total Yield",
                 "description": f"Number of bases ({config.base_count_desc})",
@@ -505,7 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def get_bar_data_from_undetermined(data_by_flowcell):
         """Get data to plot for undetermined barcodes."""
-        bar_data: dict[str, dict[str, int]] = defaultdict(dict)
+        bar_data: Dict[str, Dict[str, int]] = defaultdict(dict)
         # get undetermined barcodes for each lanes
         for flowcell_id, data in data_by_flowcell.items():
             try:

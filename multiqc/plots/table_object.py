@@ -6,7 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
-from typing import Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union
+from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union
 
 from pydantic import BaseModel, Field
 
@@ -36,6 +36,17 @@ class TableConfig(PConfig):
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
 
+ValueT = Union[int, float, str, bool]
+
+
+def is_valid_value(val: Union[ValueT, None]) -> bool:
+    """
+    Run time check if the value is valid for a table cell. Duplicates the type hint, but
+    used in case if a module ignores type checking.
+    """
+    return isinstance(val, (int, float, str, bool)) or val is None  # type: ignore
+
+
 class ColumnDict(TypedDict, total=False):
     rid: ColumnAnchor  # namespace + short_rid = ID unique within a table
     title: str
@@ -61,8 +72,8 @@ class ColumnDict(TypedDict, total=False):
     cond_formatting_rules: Dict[str, List[Dict[str, str]]]
     bgcols: Dict[str, str]
     bars_zero_centrepoint: bool
-    modify: Optional[Callable]
-    format: Optional[Union[str, Callable]]
+    modify: Optional[Callable[[ValueT], ValueT]]
+    format: Optional[Union[str, Callable[[ValueT], ValueT]]]
 
 
 class ColumnMeta(ValidatedConfig):
@@ -92,8 +103,8 @@ class ColumnMeta(ValidatedConfig):
     cond_formatting_rules: Dict[str, List[Dict[str, str]]] = {}
     bgcols: Dict[str, str] = {}
     bars_zero_centrepoint: bool = False
-    modify: Optional[Callable] = None
-    format: Optional[Union[str, Callable]] = None
+    modify: Optional[Callable[[ValueT], ValueT]] = None
+    format: Optional[Union[str, Callable[[ValueT], str]]] = None
 
     @staticmethod
     def create(
@@ -139,7 +150,7 @@ class ColumnMeta(ValidatedConfig):
             else:
                 multiplier = 1
             if modify is None:
-                modify = lambda x: x * multiplier  # noqa: E731
+                modify = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore  # noqa: E731
             if min is None:
                 min = 0
             if format is None and multiplier == 1:
@@ -271,9 +282,6 @@ class ColumnMeta(ValidatedConfig):
         return col
 
 
-ValueT = Union[int, float, str, bool]
-
-
 class InputRow(BaseModel):
     """
     Row class. Holds configuration for a single row in a table (can be multiple for one sample)
@@ -281,6 +289,12 @@ class InputRow(BaseModel):
 
     sample: SampleName
     data: Dict[ColumnKey, Optional[ValueT]] = dict()
+
+    def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
+        super().__init__(
+            sample=sample,
+            data={ColumnKey(k): v for k, v in data.items() if is_valid_value(v)},
+        )
 
 
 ColumnKeyT = Union[str, ColumnKey]
@@ -366,12 +380,7 @@ class DataTable(BaseModel):
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
                     # Remove non-scalar values for table cells
-                    data_dict = {
-                        ColumnKey(k): v
-                        for k, v in input_group.items()
-                        if isinstance(v, (int, float, str, bool)) or v is None
-                    }
-                    rows_by_group[g_name] = [InputRow(sample=SampleName(g_name), data=data_dict)]
+                    rows_by_group[g_name] = [InputRow(sample=SampleName(g_name), data=input_group)]
                 elif isinstance(input_group, list):  # multiple rows, each defined as a mapping from metric to value
                     rows_by_group[g_name] = input_group
                 else:
@@ -550,7 +559,7 @@ def _process_and_format_value(val: ValueT, column: ColumnMeta) -> Tuple[ValueT, 
 
     # Now also calculate formatted values
     valstr = str(val)
-    fmt: Union[None, str, Callable] = column.format
+    fmt: Union[None, str, Callable[[ValueT], str]] = column.format
     if fmt is None:
         if isinstance(val, float):
             fmt = "{:,.1f}"

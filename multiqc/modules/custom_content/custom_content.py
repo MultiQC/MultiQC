@@ -1,6 +1,7 @@
 """Core MultiQC module to parse output from custom script output"""
 
 import base64
+from io import BufferedReader
 import json
 import logging
 import os
@@ -22,7 +23,7 @@ from multiqc.plots.plotly.line import LinePlotConfig
 from multiqc.plots.plotly.plot import PlotType
 from multiqc.plots.plotly.scatter import ScatterConfig
 from multiqc.plots.table_object import TableConfig
-from multiqc.types import Anchor, ModuleId, SectionId
+from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
 from multiqc.validation import ConfigValidationError
 
 # Initialise the logger
@@ -30,8 +31,8 @@ log = logging.getLogger(__name__)
 
 
 class CcDict(BaseModel):
-    config: Dict = {}
-    data: Union[Dict, List, str] = {}
+    config: Dict[str, Any] = {}
+    data: Union[Dict[str, Any], List[Dict[str, Any]], str] = {}
 
 
 class ParsedDict(TypedDict, total=False):
@@ -141,7 +142,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 assert parsed_dict is not None
                 parsed_dict["id"] = parsed_dict.get("id", f["s_name"])
             elif f_extension == ".png" or f_extension == ".jpeg" or f_extension == ".jpg":
-                image_string = base64.b64encode(f["f"].read()).decode("utf-8")
+                # image is an exception - will return a file handler
+                image_string = base64.b64encode(cast(BufferedReader, f["f"]).read()).decode("utf-8")
                 image_format = "png" if f_extension == ".png" else "jpg"
                 img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
                     image_format, image_string
@@ -190,7 +192,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
-                m_config: Optional[Dict]
+                m_config: Optional[Dict[str, Any]]
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 c_id: ModuleId
@@ -260,7 +262,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # Filter to strip out ignored sample names
     for config_custom_data_id in ccdict_by_id:
         ccdict = ccdict_by_id[config_custom_data_id]
-        ccdict.data = bm.ignore_samples(ccdict.data)
+        if isinstance(ccdict.data, dict):
+            ccdict.data = bm.ignore_samples(ccdict.data)
 
     # Remove any configs that have no data
     remove_cids = [k for k in ccdict_by_id if len(ccdict_by_id[k].data) == 0]
@@ -431,7 +434,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro = self._get_intro()
 
     def add_cc_section(self, section_id: SectionId, section_anchor: Anchor, ccdict: CcDict):
-        plot: Optional[Union[Plot, str]] = None
+        plot: Optional[Union[Plot[Any, Any], str]] = None
         content = None
 
         # Set section and plot id and anchor
@@ -466,12 +469,12 @@ class MultiqcModule(BaseMultiqcModule):
             if plot_type is None:
                 log.warning(f"Error: custom content plot type '{_pt}' not recognised for content ID {section_id}")
 
-        plot_datasets: List  # to save after rendering
+        plot_datasets: List[Any]  # to save after rendering
 
         # Heatmap
         if plot_type == PlotType.HEATMAP:
             plot = heatmap.plot(
-                ccdict.data,
+                ccdict.data,  # type: ignore
                 ccdict.config.get("xcats"),
                 ccdict.config.get("ycats"),
                 pconfig=HeatmapConfig(**pconfig),
@@ -512,7 +515,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
-                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))
+                plot = scatter.plot(ccdict.data, pconfig=ScatterConfig(**pconfig))  # type: ignore
 
             # Box plot
             elif plot_type == PlotType.BOX:
@@ -526,13 +529,13 @@ class MultiqcModule(BaseMultiqcModule):
             elif plot_type == PlotType.HTML:
                 if len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
-                content = ccdict.data
+                content = cast(str, ccdict.data)
 
             # Raw image file as html
             elif plot_type == PlotType.IMAGE:
                 if len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
-                content = ccdict.data
+                content = cast(str, ccdict.data)
 
         if plot is not None:
             for i, ds in enumerate(plot_datasets):
@@ -554,10 +557,11 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
 
-def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
+def _find_file_header(f: LoadedFileDict[str]) -> Tuple[Optional[Dict[str, Any]], List[str]]:
     # Collect commented out header lines
-    hlines = []
-    other_lines = []
+    hlines: List[str] = []
+    other_lines: List[str] = []
+    line: str
     for line in f["f"].splitlines():
         if line.startswith("#"):
             hlines.append(line[1:])
@@ -591,14 +595,13 @@ def _find_file_header(f) -> Tuple[Optional[Dict], List[str]]:
             + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'.",
             "custom_content",
         )
-    else:
-        if not isinstance(hconfig, dict):
-            raise ConfigValidationError(
-                "Custom Content comment file header looked wrong. It's expected to "
-                + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
-                "custom_content",
-            )
-    return hconfig, other_lines
+    if not isinstance(hconfig, dict):
+        raise ConfigValidationError(
+            "Custom Content comment file header looked wrong. It's expected to "
+            + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
+            "custom_content",
+        )
+    return cast(Dict[str, Any], hconfig), other_lines
 
 
 def _find_html_file_header(f):
