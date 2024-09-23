@@ -20,7 +20,10 @@ class FileDict(TypedDict):
 FT = TypeVar("FT", bound=Union[str, io.IOBase, None])
 
 
-class LoadedFileDict(FileDict, Generic[FT]):
+class LoadedFileDict(Generic[FT]):
+    fn: str
+    root: str
+    sp_key: str
     s_name: str
     f: FT
 
