@@ -1,6 +1,7 @@
 import io
 from enum import Enum
-from typing import Generic, NewType, Optional, TypeVar, TypedDict, Union
+from typing import Generic, NewType, Optional, TypeVar, Union
+from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
 ModuleId = NewType("ModuleId", str)
@@ -20,7 +21,7 @@ class FileDict(TypedDict):
 FT = TypeVar("FT", bound=Union[str, io.IOBase, None])
 
 
-class LoadedFileDict(Generic[FT]):
+class LoadedFileDict(TypedDict, Generic[FT]):
     fn: str
     root: str
     sp_key: str
