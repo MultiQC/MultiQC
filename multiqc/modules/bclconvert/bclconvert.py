@@ -346,19 +346,14 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _write_data_files(self, data_by_sample: Dict[str, SampleSummary], data_by_run: Dict[str, RunSummary]):
-        data_by_sample_flat = {
-            sname: {k: v for k, v in data.model_dump().items() if isinstance(v, ValueT)}
-            for sname, data in data_by_sample.items()
-        }
+        data_by_sample_flat = {sname: data.model_dump() for sname, data in data_by_sample.items()}
 
         self.write_data_file(data_by_sample_flat, "multiqc_bclconvert_bysample")
 
         data_by_lane = {}
         for run_id, run in data_by_run.items():
             for lane_id, lane in run.lanes.items():
-                data_by_lane[f"{run_id} - {lane_id}"] = {
-                    k: v for k, v in lane.model_dump().items() if isinstance(v, ValueT)
-                }
+                data_by_lane[f"{run_id} - {lane_id}"] = lane.model_dump()
 
         self.write_data_file(data_by_lane, "multiqc_bclconvert_bylane")
 
@@ -810,11 +805,7 @@ class MultiqcModule(BaseMultiqcModule):
             rows = [
                 InputRow(
                     sample=SampleName(sname),
-                    data={
-                        ColumnKey(k.strip("_")): v
-                        for k, v in sample.__dict__.items()
-                        if v is None or isinstance(v, ValueT)
-                    },
+                    data={ColumnKey(k.strip("_")): v for k, v in sample.__dict__.items()},
                 )
             ]
             if len(sample.lanes) > 1:
@@ -822,11 +813,7 @@ class MultiqcModule(BaseMultiqcModule):
                     rows.append(
                         InputRow(
                             sample=SampleName(sname + " - " + lane_id),
-                            data={
-                                ColumnKey(k.strip("_")): v
-                                for k, v in lane.__dict__.items()
-                                if v is None or isinstance(v, ValueT)
-                            },
+                            data={ColumnKey(k.strip("_")): v for k, v in lane.__dict__.items()},
                         )
                     )
             else:
@@ -954,11 +941,7 @@ class MultiqcModule(BaseMultiqcModule):
                 rows = [
                     InputRow(
                         sample=SampleName(runlane_id),
-                        data={
-                            ColumnKey(k.strip("_")): v
-                            for k, v in lane.__dict__.items()
-                            if v is None or isinstance(v, ValueT)
-                        },
+                        data={ColumnKey(k.strip("_")): v for k, v in lane.__dict__.items()},
                     )
                 ]
                 if len(lane.samples) > 1:
@@ -966,11 +949,7 @@ class MultiqcModule(BaseMultiqcModule):
                         rows.append(
                             InputRow(
                                 sample=SampleName(runlane_id + " - " + sname),
-                                data={
-                                    ColumnKey(k.strip("_")): v
-                                    for k, v in sample.__dict__.items()
-                                    if v is None or isinstance(v, ValueT)
-                                },
+                                data={ColumnKey(k.strip("_")): v for k, v in sample.__dict__.items()},
                             )
                         )
                 else:
