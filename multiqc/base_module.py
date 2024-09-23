@@ -44,6 +44,7 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
+    is_valid_value,
 )
 from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
 
@@ -602,11 +603,7 @@ class BaseMultiqcModule:
             # Just a single row for a trivial group
             if len(labels_s_names) == 1:
                 _, s_name, original_s_name = labels_s_names[0]
-                rows_by_grouped_samples[g_name] = [
-                    InputRow(
-                        sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name])
-                    )
-                ]
+                rows_by_grouped_samples[g_name] = [InputRow(sample=s_name, data=data_by_sample[original_s_name])]
                 continue
 
             merged_row = InputRow(sample=SampleName(g_name), data={})
@@ -685,7 +682,7 @@ class BaseMultiqcModule:
                     fn(merged_row, labels_s_names)
 
             rows_by_grouped_samples[g_name] = [merged_row] + [
-                InputRow(sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name]))
+                InputRow(sample=s_name, data=data_by_sample[original_s_name])
                 for _, s_name, original_s_name in labels_s_names
             ]
 
@@ -945,12 +942,7 @@ class BaseMultiqcModule:
             )
         else:
             rows_by_group = {
-                SampleGroup(sname): [
-                    InputRow(
-                        sample=SampleName(sname),
-                        data={ColumnKey(k): v for k, v in data.items() if isinstance(v, ValueT) or v is None},
-                    )
-                ]
+                SampleGroup(sname): [InputRow(sample=SampleName(sname), data=data)]
                 for sname, data in data_by_sample.items()
             }
 
