@@ -367,18 +367,26 @@ class mqc_colour_scale(object):
             self.minval = float(minval)
             self.maxval = float(maxval)
 
-    def get_colour(self, val, colformat="hex", lighten=0.3, source=None) -> str:
+    def get_colour(
+        self,
+        val: Optional[Union[float, str]],
+        colformat: str = "hex",
+        lighten: float = 0.3,
+        source: Optional[str] = None,
+    ) -> str:
         """Given a value, return a colour within the colour scale"""
 
         if val is None:
             return ""
+        assert val is not None
 
         # Ported from the original JavaScript for continuity
         # Seems to work better than adjusting brightness / saturation / luminosity
-        def rgb_converter(x):
+        def rgb_converter(x: float) -> float:
             return max(0, min(1, 1 + ((x - 1) * lighten)))
 
         try:
+            thecolour: spectra.Color
             if self.name in mqc_colour_scale.qualitative_scales and isinstance(val, float):
                 if config.strict:
                     sequential_scales = [
@@ -397,15 +405,15 @@ class mqc_colour_scale(object):
                     # scale (Set1, Set3, etc.), we don't want to attempt to parse numbers, otherwise we might end up with all
                     # values assigned with the same color. But instead we will get a hash from a string to hope to assign
                     # a unique color for each possible enumeration value.
-                    val = deterministic_hash(val)
+                    val = deterministic_hash(str(val))
                 thecolour = spectra.html(self.colours[val % len(self.colours)])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
                 return thecolour.hexcode
 
             # When there is only 1 color in scale, spectra.scale() will crash with DivisionByZero
             elif len(self.colours) == 1:
                 thecolour = spectra.html(self.colours[0])
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in thecolour.rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in thecolour.rgb])
                 return thecolour.hexcode
 
             else:
@@ -428,7 +436,7 @@ class mqc_colour_scale(object):
                 my_scale = my_spectra_scale.domain(domain_nums)
 
                 # Lighten colours
-                thecolour = spectra.rgb(*[rgb_converter(v) for v in my_scale(val_float).rgb])
+                thecolour = spectra.rgb(*[rgb_converter(float(v)) for v in my_scale(val_float).rgb])
 
                 return thecolour.hexcode
 
@@ -625,7 +633,7 @@ class mqc_colour_scale(object):
     }
 
 
-def deterministic_hash(x):
+def deterministic_hash(x: str) -> int:
     """
     Deterministic hash function for strings. This is useful for assigning a unique color
     to each possible value of a categorical variable.

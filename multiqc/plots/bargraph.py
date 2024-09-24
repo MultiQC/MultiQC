@@ -3,7 +3,7 @@
 import logging
 import math
 from collections import OrderedDict
-from typing import Dict, List, Mapping, Optional, Sequence, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -46,7 +46,7 @@ CategoriesT = Union[Sequence[str], Mapping[str, Union[Mapping[str, str], CatConf
 def plot(
     data: Union[InputDatasetT, Sequence[InputDatasetT]],
     cats: Optional[Union[CategoriesT, Sequence[CategoriesT]]] = None,
-    pconfig: Optional[Union[Dict, BarPlotConfig]] = None,
+    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
 ) -> Union[bar.BarPlot, str]:
     """Plot a horizontal bar graph. Expects a 2D dict of sample
     data. Also, can take info about categories. There are quite a

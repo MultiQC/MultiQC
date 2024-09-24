@@ -4,13 +4,16 @@ from typing import Dict, List, Optional, Tuple
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
-from multiqc.types import Anchor
 from multiqc.utils import mqc_colour
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # to avoid circular import
+    from multiqc.plots.plotly.violin import ViolinPlot
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dt: List[DataTable]):
+def plot(dt: List[DataTable]) -> "ViolinPlot":
     from multiqc.plots.plotly import violin
 
     return violin.plot(dt, show_table_by_default=True)
@@ -287,7 +290,7 @@ def make_table(
     html = ""
     if not config.simple_output and add_control_panel:
         # Copy Table Button
-        buttons = []
+        buttons: List[str] = []
 
         buttons.append(
             f"""
@@ -405,7 +408,7 @@ def make_table(
     non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 
     for g_name in t_row_group_names:
-        group_classes = []
+        group_classes: List[str] = []
         # Hide the row if all cells are empty or hidden
         all_samples_empty = True
         for s_name in group_to_sample_to_anchor_to_td[g_name]:
@@ -415,7 +418,7 @@ def make_table(
         if all_samples_empty:
             group_classes.append("row-empty")
         for number_in_group, s_name in enumerate(group_to_sample_to_anchor_to_td[g_name]):
-            tr_classes = []
+            tr_classes: List[str] = []
             prefix = ""
             if non_trivial_groups_present:
                 caret_cls = ""
@@ -448,10 +451,10 @@ def make_table(
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
-        flatten_raw_vals: Dict[SampleName, Dict[ColumnAnchor, ValueT]] = {}
+        flatten_raw_vals: Dict[str, Dict[str, ValueT]] = {}
         for g_name, g_data in group_to_sample_to_anchor_to_val.items():
             for s_name, s_data in g_data.items():
-                flatten_raw_vals[s_name] = s_data
+                flatten_raw_vals[str(s_name)] = {str(k): v for k, v in s_data.items()}
         report.write_data_file(flatten_raw_vals, fname)
         report.saved_raw_data[fname] = flatten_raw_vals
 
@@ -531,7 +534,7 @@ def _get_sortlist(dt: DataTable) -> str:
         return ""
 
     headers = dt.get_headers_in_order()
-    sortlist = []
+    sortlist: List[Tuple[int, int]] = []
 
     # defaultsort is a list of {column, direction} objects
     for d in defaultsort:
@@ -552,7 +555,7 @@ def _get_sortlist(dt: DataTable) -> str:
             return ""
         idx += 1  # to account for col1_header
         direction = 0 if d.get("direction", "").startswith("asc") else 1
-        sortlist.append([idx, direction])
+        sortlist.append((idx, direction))
 
     return str(sortlist)
 

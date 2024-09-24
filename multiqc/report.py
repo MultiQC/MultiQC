@@ -80,7 +80,7 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[SampleName, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
@@ -89,13 +89,13 @@ file_search_stats: Dict[str, Set[Path]]
 files: Dict[ModuleId, List[FileDict]]
 
 # Fields below are kept between interactive runs
-data_sources: Dict[str, Dict[str, Dict]]
+data_sources: Dict[str, Dict[str, Dict[str, Any]]]
 html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
-plot_data: Dict[Anchor, Dict] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[Anchor, Plot] = dict()  # plot objects for interactive use
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
 general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
-software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
+software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 
 
@@ -342,8 +342,8 @@ class SearchFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def to_dict(self) -> FileDict:
-        return {"fn": self.filename, "root": str(self.root)}
+    def to_dict(self, sp_key: str) -> FileDict:
+        return {"fn": self.filename, "root": str(self.root), "sp_key": sp_key}
 
 
 def is_searching_in_source_dir(path: Path) -> bool:
@@ -579,7 +579,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
                                 # Looks good! Remember this file
                                 if module_id not in files:
                                     files[module_id] = []
-                                files[module_id].append(search_f.to_dict())
+                                files[module_id].append(search_f.to_dict(sp_key=module_id))
                                 file_search_stats[module_id] = file_search_stats.get(module_id, set()) | {path}
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {module_id}")
@@ -607,7 +607,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
         logger.info(f"Profile-runtime: Searching files took {runtimes.total_sp:.2f}s")
 
     # Debug log summary about what we skipped
-    summaries = []
+    summaries: List[str] = []
     for key in sorted(file_search_stats, key=lambda x: file_search_stats[x], reverse=True):
         if "skipped_" in key and file_search_stats[key]:
             summaries.append(f"{key}: {len(file_search_stats[key])}")
@@ -615,7 +615,7 @@ def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searc
         logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
-def search_files(sp_keys):
+def search_files(sp_keys: List[str]):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -623,7 +623,7 @@ def search_files(sp_keys):
     if not analysis_files:
         raise NoAnalysisFound("No analysis files found to search")
 
-    spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
+    spatterns, searchfiles = prep_ordered_search_files_list([ModuleId(k) for k in sp_keys])
 
     run_search_files(spatterns, searchfiles)
 
@@ -796,7 +796,7 @@ def clean_htmlid(html_id: str) -> str:
     return html_id_clean
 
 
-def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None) -> str:
+def save_htmlid(html_id: str, skiplint: bool = False, scope: Optional[str] = None) -> str:
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
     global html_ids_by_scope
@@ -858,13 +858,13 @@ def compress_json(data):
 
 def write_data_file(
     data: Union[
-        Mapping,
-        Sequence[Mapping],
-        Sequence[Sequence],
+        Mapping[str, Any],
+        Sequence[Mapping[str, Any]],
+        Sequence[Sequence[Any]],
     ],
     fn: str,
-    sort_cols=False,
-    data_format=None,
+    sort_cols: bool = False,
+    data_format: Optional[str] = None,
 ):
     """
     Write a data file to the report directory. Will do nothing
