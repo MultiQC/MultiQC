@@ -277,7 +277,8 @@ class ColumnMeta(ValidatedConfig):
 
         # Overwrite any header config if set in config
         for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            setattr(col, custom_k, custom_v)
+            if custom_k in col.model_fields:
+                setattr(col, custom_k, custom_v)
 
         return col
 
