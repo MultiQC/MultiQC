@@ -1,10 +1,11 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
+from multiqc.plots.table_object import ColumnDict
 
 log = logging.getLogger(__name__)
 
@@ -52,13 +53,13 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(
         self,
-        name="Kraken",
-        anchor="kraken",
-        href="https://ccb.jhu.edu/software/kraken/",
-        info="Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor "
+        name: str = "Kraken",
+        anchor: str = "kraken",
+        href: str = "https://ccb.jhu.edu/software/kraken/",
+        info: str = "Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor "
         "(LCA) of a given sequence.",
-        doi="10.1186/gb-2014-15-3-r46",
-        sp_key="kraken",
+        doi: str = "10.1186/gb-2014-15-3-r46",
+        sp_key: str = "kraken",
     ):
         super(MultiqcModule, self).__init__(
             name=name,
@@ -150,15 +151,15 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a couple of columns to the General Statistics table"""
 
         # Get top taxa in most specific taxa rank that we have
-        top_taxa = []
-        top_rank_code = None
-        top_rank_name = None
+        top_taxa: List[str] = []
+        top_rank_code: Optional[str] = None
+        top_rank_name: Optional[str] = None
         for rank_code, rank_name in MultiqcModule.T_RANKS.items():
             if rank_code not in pct_by_taxon_by_rank:
                 continue
 
             sorted_items = sorted(pct_by_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True)
-            for taxon, pct_sum in sorted_items[: MultiqcModule.TOP_N]:
+            for taxon, _ in sorted_items[: MultiqcModule.TOP_N]:
                 top_taxa.append(taxon)
             top_rank_code = rank_code
             top_rank_name = rank_name
@@ -169,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Column headers
-        headers = dict()
+        headers: Dict[str, ColumnDict] = dict()
 
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
@@ -223,22 +224,22 @@ class MultiqcModule(BaseMultiqcModule):
     ):
         """Add a bar plot showing the top-N from each taxa rank"""
 
-        rank_datasets = []
-        cats = list()
+        rank_datasets: List[Dict[str, Dict[str, int]]] = []
+        cats: List[Dict[str, Dict[str, str]]] = []
         # Keeping track of encountered codes to display only tabs with available data
-        found_rank_codes = set()
+        found_rank_codes: Set[str] = set()
 
-        for rank_code in [r for r in MultiqcModule.T_RANKS if r not in ["U", "R"]]:
+        for rank_code in [r for r in MultiqcModule.T_RANKS if r not in ["R"]]:
             if rank_code not in pct_by_top_taxon_by_rank:
                 # Taxa rank not found in this dataset
                 continue
 
-            rank_cats = dict()
+            rank_cats: Dict[str, Dict[str, str]] = dict()
             rank_cnt_data_by_taxon_by_sample: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
             rank_counts_shown: Dict[str, int] = defaultdict(int)
             i = 0
             # Loop through the summed tax percentages to get the top-N across all samples
-            for taxon, pct_sum in sorted(pct_by_top_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True):
+            for taxon, _ in sorted(pct_by_top_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True):
                 i += 1
                 if i > MultiqcModule.TOP_N:
                     break
@@ -255,14 +256,15 @@ class MultiqcModule(BaseMultiqcModule):
                     rank_cnt_data_by_taxon_by_sample[s_name][taxon] += cnt
                     rank_counts_shown[s_name] += cnt
 
-            # Add unclassified count to each rank-level dataset
-            for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
-                cnt = cnt_by_top_taxon_by_rank_by_sample[s_name].get("U", {}).get("unclassified", 0)
-                rank_cnt_data_by_taxon_by_sample[s_name]["U"] = cnt
-                rank_counts_shown[s_name] += cnt
+            if rank_code != "U":
+                # Add unclassified count to each rank-level dataset
+                for s_name, _ in cnt_by_top_taxon_by_rank_by_sample.items():
+                    cnt = cnt_by_top_taxon_by_rank_by_sample[s_name].get("U", {}).get("unclassified", 0)
+                    rank_cnt_data_by_taxon_by_sample[s_name]["unclassified"] = cnt
+                    rank_counts_shown[s_name] += cnt
 
             # Add in unclassified reads and "other" - we presume from other species etc.
-            for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+            for s_name, _ in cnt_by_top_taxon_by_rank_by_sample.items():
                 rank_cnt_data_by_taxon_by_sample[s_name]["other"] = (
                     total_cnt_by_sample[s_name] - rank_counts_shown[s_name]
                 )
@@ -271,14 +273,15 @@ class MultiqcModule(BaseMultiqcModule):
                 if rank_cnt_data_by_taxon_by_sample[s_name]["other"] < 0:
                     log.debug(
                         "Found negative 'other' count for {} ({}): {}".format(
-                            s_name, MultiqcModule.T_RANKS[rank_code], rank_cnt_data_by_taxon_by_sample[s_name]["other"]
+                            s_name,
+                            MultiqcModule.T_RANKS[rank_code],
+                            rank_cnt_data_by_taxon_by_sample[s_name]["other"],
                         )
                     )
                     rank_cnt_data_by_taxon_by_sample[s_name]["other"] = 0
 
             rank_cats["other"] = {"name": "Other", "color": "#cccccc"}
-            rank_cats["U"] = {"name": "Unclassified", "color": "#d4949c"}
-
+            rank_cats["unclassified"] = {"name": "Unclassified", "color": "#d4949c"}
             cats.append(rank_cats)
             rank_datasets.append(rank_cnt_data_by_taxon_by_sample)
 
