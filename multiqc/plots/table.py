@@ -7,7 +7,7 @@ from multiqc import config, report
 from multiqc.plots import table_object
 from multiqc.plots.plotly import table
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.plots.table_object import ColumnDict, ColumnKeyT, SectionT, TableConfig
+from multiqc.plots.table_object import ColumnDict, ColumnKey, SectionT, TableConfig
 from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,14 @@ def get_template_mod():
 
 def plot(
     data: Union[SectionT, List[SectionT]],
-    headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+    headers: Optional[
+        Union[
+            List[Dict[ColumnKey, ColumnDict]],
+            List[Dict[str, ColumnDict]],
+            Dict[ColumnKey, ColumnDict],
+            Dict[str, ColumnDict],
+        ]
+    ] = None,
     pconfig: Union[Dict[str, Any], TableConfig, None] = None,
 ) -> "ViolinPlot":
     """Return HTML for a MultiQC table.

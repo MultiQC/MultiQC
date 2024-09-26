@@ -4,6 +4,8 @@ import re
 from typing import Dict, List, Optional, Union
 
 from multiqc import config
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.types import LoadedFileDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -107,9 +109,9 @@ def is_line_right_before_table(
 
 
 def extract_sample_name(
-    mod,
+    mod: BaseMultiqcModule,
     line: str,
-    f: Dict,
+    f: LoadedFileDict[str],
     picard_tool: Union[str, List[str]],
     sentieon_algo: Optional[str] = None,
     picard_opt: Union[None, str, List[str]] = None,
@@ -166,7 +168,7 @@ def extract_sample_name(
     return None
 
 
-def multiply_hundred(val):
+def multiply_hundred(val: Union[str, float]) -> Union[str, float]:
     try:
         val = float(val) * 100
     except ValueError:
