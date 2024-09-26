@@ -28,9 +28,7 @@ def plot(
     data: Union[SectionT, List[SectionT]],
     headers: Optional[
         Union[
-            List[Dict[ColumnKey, ColumnDict]],
             List[Dict[str, ColumnDict]],
-            Dict[ColumnKey, ColumnDict],
             Dict[str, ColumnDict],
         ]
     ] = None,
