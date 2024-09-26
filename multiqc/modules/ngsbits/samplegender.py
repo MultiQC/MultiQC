@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def parse_reports(self) -> int:
+def parse_reports(self: BaseMultiqcModule) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
     samplegender_data: Dict[str, Dict[str, Union[float, int]]] = dict()
