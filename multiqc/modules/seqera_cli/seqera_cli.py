@@ -114,9 +114,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name=d["id_repository"])
                 data_by_run[d["id_repository"]].update(d)
                 if os.path.isfile(load_path):
-                    self.add_data_source(source=load_path, s_name=d["id_repository"])
+                    self.add_data_source(path=load_path, s_name=d["id_repository"])
                 if os.path.isfile(service_info_path):
-                    self.add_data_source(source=service_info_path, s_name=d["id_repository"])
+                    self.add_data_source(path=service_info_path, s_name=d["id_repository"])
 
         # Figure out the org/workspace and save as a separate field
         # Needed so that we can have it as a separate column in the table

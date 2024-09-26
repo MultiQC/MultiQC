@@ -1,11 +1,11 @@
 ---
-title: Using Reports
+title: Using reports
 description: Getting to grips with MultiQC reports
 ---
 
-# Using MultiQC Reports
+# Using MultiQC reports
 
-Once MultiQC has finished, you should have a HTML report file called
+Once MultiQC has finished, you should have an HTML report file called
 `multiqc_report.html` (or something similar, depending on how you ran MultiQC).
 You can launch this report with `open multiqc_report.html` on the command
 line, or double clicking the file in a file browser.
@@ -50,6 +50,22 @@ will launch a modal window with more detailed information about each column,
 plus options to show/hide and change the order of columns.
 
 ![genstats_config_cols](../../../docs/images/genstats_config_cols.png)
+
+### Sample grouping
+
+For certain modules, samples could be grouped in tables, if configured. For example, tools such as FastQC can group forward and reverse reads into a "virtual" sample representing the merged stats for the group:
+
+![genstats_grouped_samples](../../../docs/images/genstats_grouping_grouped.png)
+
+The top-level metrics may be generated as a sum, average or weighted average. Any other tool outputs that match the merged sample name are shown in-line as normal.
+
+In the above example, `Seqs` (number of sequences) is the sum of `Seq` for both reads. `GC%`, `Dups`, `Median Len`, and `Mean cov` are the weighted average, using `Seqs` as a weight.
+
+You can inspect the individual samples within a group by clicking on the arrow:
+
+![genstats_grouped_samples_expanded](../../../docs/images/genstats_grouping_expanded.png)
+
+To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping).
 
 ## Plots
 

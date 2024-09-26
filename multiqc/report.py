@@ -18,7 +18,22 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from typing import Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence, Set, TextIO, Tuple, Union
+from tkinter import N
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    TextIO,
+    Tuple,
+    TypedDict,
+    Union,
+)
 
 import yaml
 from pydantic import BaseModel, Field
@@ -33,8 +48,8 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import InputHeaderT, InputRowT, InputSectionT, SampleNameT
-from multiqc.types import AnchorT, ModuleIdT, SampleGroupT
+from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
@@ -66,22 +81,22 @@ general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-saved_raw_data: Dict[str, Dict[SampleNameT, Any]]  # indexed by unique key, then sample name
+saved_raw_data: Dict[str, Dict[str, Any]]  # indexed by unique key, then sample name
 last_found_file: Optional[str]
 runtimes: Runtimes
 peak_memory_bytes_per_module: Dict[str, int]
 diff_memory_bytes_per_module: Dict[str, int]
 file_search_stats: Dict[str, Set[Path]]
-files: Dict[ModuleIdT, List[Dict]]
+files: Dict[ModuleId, List[FileDict]]
 
 # Fields below are kept between interactive runs
-data_sources: Dict[str, Dict[str, Dict]]
-html_ids_by_scope: Dict[Optional[str], Set[AnchorT]] = defaultdict(set)
-plot_data: Dict[AnchorT, Dict] = dict()  # plot dumps to embed in html
-plot_by_id: Dict[AnchorT, Plot] = dict()  # plot objects for interactive use
-general_stats_data: List[Dict[SampleGroupT, List[InputRowT]]]
-general_stats_headers: List[InputHeaderT]
-software_versions: Dict[str, Dict[str, List]]  # map software tools to unique versions
+data_sources: Dict[str, Dict[str, Dict[str, Any]]]
+html_ids_by_scope: Dict[Optional[str], Set[Anchor]] = defaultdict(set)
+plot_data: Dict[Anchor, Dict[str, Any]] = dict()  # plot dumps to embed in html
+plot_by_id: Dict[Anchor, Plot[Any, Any]] = dict()  # plot objects for interactive use
+general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
+general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
+software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 
 
@@ -328,8 +343,8 @@ class SearchFile:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def to_dict(self) -> Dict:
-        return {"fn": self.filename, "root": str(self.root)}
+    def to_dict(self, sp_key: str) -> FileDict:
+        return {"fn": self.filename, "root": str(self.root), "sp_key": sp_key}
 
 
 def is_searching_in_source_dir(path: Path) -> bool:
@@ -401,14 +416,14 @@ class SearchPattern(BaseModel):
 
 
 def prep_ordered_search_files_list(
-    sp_keys: List[ModuleIdT],
-) -> Tuple[List[Dict[ModuleIdT, List[SearchPattern]]], List[Path]]:
+    sp_keys: List[ModuleId],
+) -> Tuple[List[Dict[ModuleId, List[SearchPattern]]], List[Path]]:
     """
     Prepare the searchfiles list in desired order, from easy to difficult;
     apply ignore_dirs and ignore_paths filters.
     """
 
-    spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     searchfiles: List[Path] = []
 
     def _maybe_add_path_to_searchfiles(item: Path):
@@ -478,7 +493,7 @@ def prep_ordered_search_files_list(
         else:
             spatterns[0][key] = sps
 
-    def _sort_by_key(_sps: Dict[ModuleIdT, List[SearchPattern]], _key: str) -> Dict[ModuleIdT, List[SearchPattern]]:
+    def _sort_by_key(_sps: Dict[ModuleId, List[SearchPattern]], _key: str) -> Dict[ModuleId, List[SearchPattern]]:
         """Sort search patterns dict by key like num_lines or max_filesize."""
 
         def _sort_key(kv) -> int:
@@ -490,7 +505,7 @@ def prep_ordered_search_files_list(
 
     # Sort patterns for faster access. File searches with fewer lines or
     # smaller file sizes go first.
-    sorted_spatterns: List[Dict[ModuleIdT, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
+    sorted_spatterns: List[Dict[ModuleId, List[SearchPattern]]] = [{}, {}, {}, {}, {}, {}, {}]
     sorted_spatterns[0] = spatterns[0]  # Only filename matching
     sorted_spatterns[1] = _sort_by_key(spatterns[1], "num_lines")
     sorted_spatterns[2] = _sort_by_key(spatterns[2], "max_filesize")
@@ -517,7 +532,7 @@ def prep_ordered_search_files_list(
     return spatterns, searchfiles
 
 
-def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], searchfiles: List[Path]):
+def run_search_files(spatterns: List[Dict[ModuleId, List[SearchPattern]]], searchfiles: List[Path]):
     runtimes.sp = defaultdict()
     total_sp_starttime = time.time()
 
@@ -565,7 +580,7 @@ def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], sear
                                 # Looks good! Remember this file
                                 if module_id not in files:
                                     files[module_id] = []
-                                files[module_id].append(search_f.to_dict())
+                                files[module_id].append(search_f.to_dict(sp_key=module_id))
                                 file_search_stats[module_id] = file_search_stats.get(module_id, set()) | {path}
                                 file_matched = True
                                 # logger.debug(f"File {f.path} matched {module_id}")
@@ -593,7 +608,7 @@ def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], sear
         logger.info(f"Profile-runtime: Searching files took {runtimes.total_sp:.2f}s")
 
     # Debug log summary about what we skipped
-    summaries = []
+    summaries: List[str] = []
     for key in sorted(file_search_stats, key=lambda x: file_search_stats[x], reverse=True):
         if "skipped_" in key and file_search_stats[key]:
             summaries.append(f"{key}: {len(file_search_stats[key])}")
@@ -601,7 +616,7 @@ def run_search_files(spatterns: List[Dict[ModuleIdT, List[SearchPattern]]], sear
         logger.debug(f"Summary of files that were skipped by the search: |{'|, |'.join(summaries)}|")
 
 
-def search_files(sp_keys):
+def search_files(sp_keys: List[str]):
     """
     Go through all supplied search directories and assembly a master
     list of files to search. Then fire search functions for each file.
@@ -609,12 +624,12 @@ def search_files(sp_keys):
     if not analysis_files:
         raise NoAnalysisFound("No analysis files found to search")
 
-    spatterns, searchfiles = prep_ordered_search_files_list(sp_keys)
+    spatterns, searchfiles = prep_ordered_search_files_list([ModuleId(k) for k in sp_keys])
 
     run_search_files(spatterns, searchfiles)
 
 
-def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is_ignore_file: bool = False):
+def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_ignore_file: bool = False):
     """
     Function to search a single file for a single search pattern.
     """
@@ -654,6 +669,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleIdT, is
     query_re_patterns = pattern.contents_re
     match_strings: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+
     try:
         for line_count, block in f.line_block_iterator():
             for q_string in query_strings:
@@ -762,7 +778,7 @@ def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)
 
 
-def clean_htmlid(html_id):
+def clean_htmlid(html_id: str) -> str:
     """
     Clean up an HTML ID to remove illegal characters.
     """
@@ -782,7 +798,7 @@ def clean_htmlid(html_id):
     return html_id_clean
 
 
-def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
+def save_htmlid(html_id: str, skiplint: bool = False, scope: Optional[str] = None) -> str:
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
     global html_ids_by_scope
@@ -800,8 +816,9 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
             if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
                 callpath = n[1].split("multiqc/modules/", 1)[-1]
                 modname = f">{callpath}< "
-                if isinstance(n[4], str):
-                    codeline = n[4][0].strip()
+                code = n[4]
+                if isinstance(code, str):
+                    codeline = code[0].strip()
                 break
         if html_id != html_id_clean:
             errmsg = f"LINT: {modname}HTML ID was not clean ('{html_id}' -> '{html_id_clean}') ## {codeline}"
@@ -811,7 +828,7 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
     # Check for duplicates
     i = 1
     html_id_base = html_id_clean
-    while AnchorT(html_id_clean) in html_ids_by_scope[scope]:
+    while Anchor(html_id_clean) in html_ids_by_scope[scope]:
         if html_id_clean == "general_stats_table":
             raise ValueError("HTML ID 'general_stats_table' is reserved and cannot be used")
         html_id_clean = f"{html_id_base}-{i}"
@@ -822,7 +839,7 @@ def save_htmlid(html_id, skiplint=False, scope: Optional[str] = None):
             lint_errors.append(errmsg)
 
     # Remember and return
-    html_ids_by_scope[scope].add(AnchorT(html_id_clean))
+    html_ids_by_scope[scope].add(Anchor(html_id_clean))
     return html_id_clean
 
 
@@ -843,13 +860,13 @@ def compress_json(data):
 
 def write_data_file(
     data: Union[
-        Mapping,
-        Sequence[Mapping],
-        Sequence[Sequence],
+        Mapping[str, Any],
+        Sequence[Mapping[str, Any]],
+        Sequence[Sequence[Any]],
     ],
     fn: str,
-    sort_cols=False,
-    data_format=None,
+    sort_cols: bool = False,
+    data_format: Optional[str] = None,
 ):
     """
     Write a data file to the report directory. Will do nothing
@@ -901,6 +918,7 @@ def write_data_file(
             for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
+                    assert isinstance(d, dict)
                     line = [str(d.get(h, "")) for h in headers]
                 else:
                     line = [
@@ -940,7 +958,7 @@ def multiqc_dump_json():
     Used for MegaQC and other data export.
     WARNING: May be depreciated and removed in future versions.
     """
-    exported_data = dict()
+    exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
             "data_sources",
@@ -970,13 +988,26 @@ def multiqc_dump_json():
             try:
                 d = None
                 if pymod == "config":
-                    v = getattr(config, name)
-                    v = str(v) if isinstance(v, PosixPath) else v
-                    if isinstance(v, list):
-                        v = [str(el) if isinstance(el, PosixPath) else el for el in v]
-                    d = {f"{pymod}_{name}": v}
+                    val: Any = getattr(config, name)
+                    val = str(val) if isinstance(val, PosixPath) else val
+                    if isinstance(val, list):
+                        val = [str(el) if isinstance(el, PosixPath) else el for el in val]
+                    d = {f"{pymod}_{name}": val}
                 elif pymod == "report":
-                    d = {f"{pymod}_{name}": getattr(sys.modules[__name__], name)}
+                    val = getattr(sys.modules[__name__], name)
+                    if name == "general_stats_data":
+                        # val == general_stats_data
+                        # List[Dict[SampleGroup, List[InputRow]]]
+                        # flattening sample groups for export
+                        flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
+                        for section in general_stats_data:
+                            fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
+                            for _, rows in section.items():
+                                for row in rows:
+                                    fl_sec[row.sample] = row.data
+                            flattened_sections.append(fl_sec)
+                        val = flattened_sections
+                    d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
                         # Test that exporting to JSON works. Write to
@@ -986,12 +1017,13 @@ def multiqc_dump_json():
             except (TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
         # Get the absolute paths of analysis directories
-        exported_data["config_analysis_dir_abs"] = list()
+        config_analysis_dir_abs: List[str] = list()
         for config_analysis_dir in exported_data.get("config_analysis_dir", []):
             try:
-                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(config_analysis_dir)))
+                config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
             except Exception:
                 pass
+        exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
     return exported_data
 
 

@@ -288,8 +288,8 @@ $(function () {
       $(".mqc_per_sample_table").each(function () {
         let table = $(this);
         let gsthidx = 0;
-        table.find("thead th, tbody tr td").show();
         table.find("thead th").each(function () {
+          let th = $(this);
           if (gsthidx === 0) {
             gsthidx += 1;
             return true;
@@ -300,14 +300,15 @@ $(function () {
             .find("tbody tr td:nth-child(" + (gsthidx + 2) + ")")
             .filter(":visible")
             .each(function () {
+              let td = $(this);
               count += 1;
-              if ($(this).text() === "") {
+              if (td.text() === "") {
                 empties += 1;
               }
             });
           if (count > 0 && count === empties) {
-            $(this).hide();
-            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").hide();
+            th.addClass("column-hidden");
+            table.find("tbody tr td:nth-child(" + (gsthidx + 2) + ")").addClass("column-hidden");
           }
           gsthidx += 1;
         });
@@ -319,11 +320,16 @@ $(function () {
     });
 
     // Support expanding grouped samples in table
-    $(".expandable-row-primary th").click(function (e) {
+    $(".expandable-row-primary").click(function (e) {
       e.preventDefault();
-      let th = $(this);
+
+      // if the user is selecting text, do not expand the row
+      if (window.getSelection().toString().length > 0) {
+        return;
+      }
+      // let th = $(this);
       // final most parent table object
-      let tr = th.closest("tr");
+      let tr = $(this);
       let table = tr.closest("table");
       let tableId = tr.data("table-id");
       // find all rows with the same data-group-id
@@ -339,7 +345,7 @@ $(function () {
     // We want to allow user select sample name text without expanding the row
     $(".th-sample-name").click(function (e) {
       // stop propagation to prevent row expansion
-      e.stopPropagation();
+      // e.stopPropagation();
     });
   } // End of check for table
 

@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
-from multiqc.types import AnchorT, ColumnKeyT
+from multiqc.types import Anchor, ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="featureCounts",
-            anchor=AnchorT("featurecounts"),
+            anchor=Anchor("featurecounts"),
             target="Subread featureCounts",
             href="http://subread.sourceforge.net/",
             info="Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, "
@@ -159,14 +159,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(
             data_by_sample,
             {
-                ColumnKeyT("Assigned"): {
+                ColumnKey("Assigned"): {
                     "title": "Assigned",
                     "description": f"Assigned reads ({config.read_count_desc})",
                     "scale": "PuBu",
                     "shared_key": "read_count",
                     "hidden": True,
                 },
-                ColumnKeyT("percent_assigned"): {
+                ColumnKey("percent_assigned"): {
                     "title": "Assigned",
                     "description": "% Assigned reads",
                     "max": 100,

@@ -21,7 +21,6 @@ The module takes summary statistics from a file containing stdout from `ganon cl
 ```yaml
 ganon:
   contents:
-    - (_|(_|| |(_)| |
-    - Classifying reads
-  num_lines: 10
+    - ganon-classify processed
+  num_lines: 100
 ```

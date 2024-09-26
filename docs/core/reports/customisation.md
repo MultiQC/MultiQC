@@ -1,9 +1,9 @@
 ---
-title: Customising Reports
+title: Customising reports
 description: Making MultiQC reports bespoke for your use case
 ---
 
-# Customising Reports
+# Customising reports
 
 MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
@@ -35,7 +35,7 @@ string to use your own text.
 ### Report time and analysis paths
 
 It's not always appropriate to include the file paths that MultiQC was run with
-in a report, for example if sharing reports with others outside your organisation.
+in a report, for example, if sharing reports with others outside your organisation.
 
 If you wish, you can disable the analysis paths and/or time in the report header
 with the following config parameters:
@@ -94,7 +94,7 @@ Additionally, some situations may require bespoke version number reporting,
 for example if software is found within multiple scopes in an analysis pipeline.
 
 In these cases, you can manually add software version information to a report.
-This can be done in two different ways: by adding them in to the MultiQC configuration,
+This can be done in two different ways: by adding them into the MultiQC configuration,
 or by creating stand-alone YAML files with specific filenames and formats.
 
 Both methods have the same syntax for the YAML configuration, with the exception
@@ -110,7 +110,7 @@ This is the same behaviour as version numbers found within log files.
 
 ### Option 1: Dictionary of software name and version pairs
 
-The simplest way to provide version numbers to give names and versions:
+The simplest way to provide version numbers is to give names and versions:
 
 ```yaml
 software_versions:
@@ -119,7 +119,7 @@ software_versions:
 ```
 
 :::danger
-Make sure that you write the version in quotes to ensure it being
+Make sure that you write the version in quotes to ensure it is being
 interpreted as a string. For example, a version `1.10` without
 quotes would be parsed as a float and displayed as version `1.1`.
 :::
@@ -135,7 +135,7 @@ software_versions:
     - "5.1.0"
 ```
 
-### Option 2: Grouping softwares and versions
+### Option 2: Grouping software and versions
 
 In more complex scenarios, you may have multiple version _names_ that you
 want to group. For example, a tool that wraps other tools, or
@@ -446,7 +446,7 @@ remove_sections:
 The section ID is the string appended to the URL when clicking a report section in the navigation.
 
 For example, the GATK module has a section with the title _"Compare Overlap"_. When clicking that
-in the report's left hand side navigation, the web browser URL has `#gatk-compare-overlap`
+in the report's left-hand side navigation, the web browser URL has `#gatk-compare-overlap`
 appended. Here, you would add `gatk-compare-overlap` to the `remove_sections` config.
 :::
 
@@ -999,3 +999,56 @@ my_var: null
 # Jinja2
 if myvar is none # Note - Lower case!
 ```
+
+## Sample grouping
+
+MultiQC does its best to have one row per sample in a table. Some modules, however, may produce multiple results per sample. These will be treated as separate samples alongside the shorter "merged" sample name from downstream steps, resulting in half-empty rows. A prominent example of this is FastQC, that can be run separately for forward and reverse reads:
+
+![Table: General Statistics table without sample grouping](../../../docs/images/genstats_grouping_ungrouped.png)
+
+To improve how these samples are shown, MultiQC attempts to [group such samples](../reports/reports.md#sample-grouping). For modules that support this option, MultiQC offers a config option `table_sample_merge` that maps chunk labels to file name patterns.
+
+For example, to tell MultiQC to group `SAMPLE_R1` and `SAMPLE_R2` together as `SAMPLE`, you can specify the following section in the config:
+
+```yaml
+table_sample_merge:
+  "R1": "_R1"
+  "R2": "_R2"
+```
+
+For the modules that have only data for `SAMPLE_R1` and `SAMPLE_R2` - e.g. FastQC - MultiQC will try to trim `_R1` and `_R1` endings from each name, and merge together the data from both into a virtual sample `SAMPLE`. It will sum up or weighted average, whatever is relevant for each given statistic.
+
+![Table: General Statistics table with sample grouping](../../../docs/images/genstats_grouping_grouped.png)
+
+Clicking on the row header will expand the row to show the individual chunks data:
+
+![Table: General Statistics table with sample groups expanded](../../../docs/images/genstats_grouping_expanded.png)
+
+More sophisticated patterns are supported such as listing multiple strings, or using regular expression with `type: regex`:
+
+```yaml
+table_sample_merge:
+  "Read 1":
+    - "_R1"
+    - type: regex
+      pattern: "[_.-][rR]?1$"
+  "Read 2":
+    - "_R2"
+    - type: regex
+      pattern: "[_.-][rR]?2$"
+```
+
+The format of supported types is the same as for [cleaning extensions](../getting_started/config.md#cleaning-extensions) option:
+
+- `"truncate"`: The default mode. To get the group name, remove the pattern from the end of the string.
+- `"remove"`: Remove the pattern from the middle.
+- `"regex"`: Match a regular expression pattern and remove the matched part.
+- `"regex_keep"`: Match a regular expression pattern and keep only the matched part.
+
+:::note
+Each module must be configured to use this config option. If you find a MultiQC module that doesn't use this config yet, please help us by [implementing it for a new module](../development/modules.md#grouping-samples) and submitting a pull request, or create an issue.
+:::
+
+:::tip
+This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
+:::

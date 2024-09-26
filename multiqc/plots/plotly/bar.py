@@ -4,7 +4,7 @@ import copy
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence, TypedDict, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, TypedDict, Union
 
 import plotly.graph_objects as go  # type: ignore
 import spectra  # type: ignore
@@ -19,7 +19,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from multiqc.types import SampleNameT
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class BarPlotConfig(PConfig):
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
     @classmethod
-    def validate_fields(cls, values):
+    def validate_fields(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if "suffix" in values:
             values["ysuffix"] = values["suffix"]
             del values["suffix"]
@@ -45,10 +45,10 @@ class BarPlotConfig(PConfig):
         return values
 
 
-SampleName = Union[SampleNameT, str]
+SampleNameT = Union[SampleName, str]
 
 
-class InputCat(TypedDict):
+class CatDataDict(TypedDict):
     name: str
     color: str
     data: List[float]
@@ -56,8 +56,8 @@ class InputCat(TypedDict):
 
 
 def plot(
-    cats_lists: Sequence[Sequence[InputCat]],
-    samples_lists: Sequence[Sequence[SampleName]],
+    cats_lists: Sequence[Sequence[CatDataDict]],
+    samples_lists: Sequence[Sequence[SampleNameT]],
     pconfig: BarPlotConfig,
 ) -> "BarPlot":
     """
@@ -92,7 +92,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        cats: Sequence[InputCat],
+        cats: Sequence[CatDataDict],
         samples: Sequence[str],
     ) -> "Dataset":
         # Need to reverse samples as the bar plot will show them reversed
@@ -107,7 +107,7 @@ class Dataset(BaseDataset):
 
             # Reformat color to be ready to add alpha in Plotly-JS
             color = spectra.html(input_cat["color"])
-            color_str = ",".join([f"{int(x * 256)}" for x in color.rgb])
+            color_str = ",".join([f"{int(float(x) * 256)}" for x in color.rgb])
 
             # Reverse the data to match the reversed samples
             cat: Category = Category(
@@ -170,19 +170,19 @@ class Dataset(BaseDataset):
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
 
-class BarPlot(Plot[Dataset]):
+class BarPlot(Plot[Dataset, BarPlotConfig]):
     datasets: List[Dataset]
 
     @staticmethod
     def create(
         pconfig: BarPlotConfig,
-        cats_lists: Sequence[Sequence[InputCat]],
-        samples_lists: Sequence[Sequence[SampleName]],
+        cats_lists: Sequence[Sequence[CatDataDict]],
+        samples_lists: Sequence[Sequence[SampleNameT]],
     ) -> "BarPlot":
         if len(cats_lists) != len(samples_lists):
             raise ValueError("Number of datasets and samples lists do not match")
 
-        model = Plot.initialize(
+        model: Plot[Dataset, BarPlotConfig] = Plot.initialize(
             plot_type=PlotType.BAR,
             pconfig=pconfig,
             n_samples_per_dataset=[len(x) for x in samples_lists],
@@ -329,9 +329,9 @@ class BarPlot(Plot[Dataset]):
 
         # Calculate and save percentages
         if model.add_pct_tab:
-            for pidx, dataset in enumerate(model.datasets):
+            for _, dataset in enumerate(model.datasets):
                 # Count totals for each category
-                sums = [0 for _ in dataset.cats[0].data]
+                sums: List[float] = [0 for _ in dataset.cats[0].data]
                 for cat in dataset.cats:
                     for sample_idx, val in enumerate(cat.data):
                         if not math.isnan(val):
