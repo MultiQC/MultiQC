@@ -116,15 +116,13 @@ class Stats:
                 line_list = [
                     {
                         "color": "#5D4B87",
-                        "width": 1.5,
+                        "width": 1,
                         "value": (midpoint - 1) / 2,
                         "dashStyle": "shortdash",
-                        "zIndex": 4,
                     }
                 ]
 
-                config["xPlotLines"] = line_list
-                # samp_config["xPlotLines"] = line_list
+                config["x_lines"] = line_list
 
         # Data list and dictionaries for line graphs
         line_data = {}
@@ -179,13 +177,12 @@ class Stats:
 
             # If uniform, add line
             if midpoint != -1:
-                line_config["xPlotLines"] = [
+                line_config["x_lines"] = [
                     {
                         "color": "#5D4B87",
-                        "width": 1.5,
+                        "width": 1,
                         "value": (midpoint - 1) / 2,
                         "dashStyle": "shortdash",
-                        "zIndex": 4,
                     }
                 ]
 
