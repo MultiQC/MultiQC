@@ -1,7 +1,7 @@
 """MultiQC functions to plot a box plot"""
 
 import logging
-from typing import Dict, List, Optional, OrderedDict, Union, cast
+from typing import Any, Dict, List, Optional, OrderedDict, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -25,7 +25,7 @@ def get_template_mod():
 
 def plot(
     list_of_data_by_sample: Union[Dict[str, BoxT], List[Dict[str, BoxT]]],
-    pconfig: Union[Dict, BoxPlotConfig, None],
+    pconfig: Union[Dict[str, Any], BoxPlotConfig, None],
 ) -> Union[str, box.BoxPlot]:
     """
     Plot a box plot. Expects either:

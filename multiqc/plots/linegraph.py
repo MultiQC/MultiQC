@@ -1,13 +1,14 @@
 """MultiQC functions to plot a linegraph"""
 
 import logging
-from typing import Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Tuple, TypeVar, Union, cast
 
 from importlib_metadata import EntryPoint
 
 from multiqc import config
 from multiqc.plots.plotly import line
-from multiqc.plots.plotly.line import DatasetT, KeyTV, LinePlotConfig, Series, ValueTV, XToYDictT
+from multiqc.plots.plotly.line import DatasetT, KeyT, LinePlotConfig, Series, ValT, XToYDictT
+from multiqc.types import SampleName
 from multiqc.utils import mqc_colour
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,9 @@ def get_template_mod() -> EntryPoint:
 
 
 def plot(
-    data: Union[DatasetT, Sequence[DatasetT]],
-    pconfig: Union[Dict, LinePlotConfig, None] = None,
-) -> Union[line.LinePlot, str]:
+    data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
+    pconfig: Union[Dict[str, Any], LinePlotConfig, None] = None,
+) -> Union[line.LinePlot[KeyT, ValT], str]:
     """
     Plot a line graph with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -57,11 +58,11 @@ def plot(
     else:
         pconf.data_labels = []
 
-    datasets: List[List[Series]] = []
+    datasets: List[List[Series[KeyT, ValT]]] = []
     for ds_idx, raw_data_by_sample in enumerate(raw_dataset_list):
-        list_of_series: List[Series] = []
+        list_of_series: List[Series[Any, Any]] = []
         for s in sorted(raw_data_by_sample.keys()):
-            series: Series = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
+            series: Series[Any, Any] = _make_series_dict(pconf, ds_idx, s, raw_data_by_sample[s])
             if pconf.hide_empty and not series.pairs:
                 continue
             list_of_series.append(series)
@@ -69,13 +70,13 @@ def plot(
 
     # Add on annotation data series
     if pconf.extra_series:
-        ess: Union[Series, List[Series], List[List[Series]]] = pconf.extra_series
-        list_of_list_of_series: List[List[Series]]
+        ess: Union[Series[Any, Any], List[Series[Any, Any]], List[List[Series[Any, Any]]]] = pconf.extra_series
+        list_of_list_of_series: List[List[Series[Any, Any]]]
         if isinstance(ess, list):
             if isinstance(ess[0], list):
-                list_of_list_of_series = cast(List[List[Series]], ess)
+                list_of_list_of_series = cast(List[List[Series[Any, Any]]], ess)
             else:
-                list_of_list_of_series = [cast(List[Series], ess) for _ in datasets]
+                list_of_list_of_series = [cast(List[Series[Any, Any]], ess) for _ in datasets]
         else:
             list_of_list_of_series = [[ess] for _ in datasets]
 
@@ -86,7 +87,7 @@ def plot(
                     datasets[i].append(series)
 
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
-    for di, series_by_sample in enumerate(datasets):
+    for _, series_by_sample in enumerate(datasets):
         for si, series in enumerate(series_by_sample):
             if not series.color:
                 series.color = scale.get_colour(si, lighten=1)
@@ -110,9 +111,9 @@ def _make_series_dict(
     pconfig: LinePlotConfig,
     ds_idx: int,
     s: str,
-    y_by_x: XToYDictT[KeyTV, ValueTV],
-) -> Series:
-    pairs: List[Tuple[KeyTV, ValueTV]] = []
+    y_by_x: XToYDictT[KeyT, ValT],
+) -> Series[KeyT, ValT]:
+    pairs: List[Tuple[KeyT, ValT]] = []
 
     x_are_categories = pconfig.categories
     ymax = pconfig.ymax
@@ -140,7 +141,7 @@ def _make_series_dict(
             xmin = _xmin
             _colors = dl.get("colors")
             if _colors and isinstance(_colors, dict):
-                colors = {**colors, **_colors}
+                colors = {**colors, **cast(Dict[str, str], _colors)}
 
     # Discard > ymax or just hide?
     # If it never comes back into the plot, discard. If it goes above then comes back, just hide.
@@ -192,7 +193,7 @@ def _make_series_dict(
     return Series(name=s, pairs=pairs, color=colors.get(s), _clss=[LinePlotConfig])
 
 
-def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
+def smooth_line_data(data_by_sample: DatasetT[KeyT, ValT], numpoints: int) -> Dict[SampleName, Dict[KeyT, ValT]]:
     """
     Function to take an x-y dataset and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
@@ -216,9 +217,9 @@ def smooth_line_data(data_by_sample: DatasetT, numpoints: int) -> DatasetT:
     indices: [0.0, 4.5, 9] -> [0, 5, 9]
     picking up the elements: [0 _ _ _ _ 5 _ _ _ 9]
     """
-    smoothed_data = dict()
+    smoothed_data: Dict[SampleName, Dict[KeyT, ValT]] = dict()
     for s_name, d in data_by_sample.items():
-        smoothed_data[s_name] = dict(smooth_array(list(d.items()), numpoints))
+        smoothed_data[SampleName(s_name)] = dict(smooth_array(list(d.items()), numpoints))
 
     return smoothed_data
 
@@ -235,7 +236,7 @@ def smooth_array(items: List[T], numpoints: int) -> List[T]:
     if len(items) <= numpoints or len(items) == 0:
         return items
 
-    result = []
+    result: List[T] = []
     binsize = (len(items) - 1) / (numpoints - 1)
     first_element_indices = {round(binsize * i) for i in range(numpoints)}
     for i, y in enumerate(items):

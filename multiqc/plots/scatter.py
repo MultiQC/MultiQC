@@ -1,7 +1,7 @@
 """MultiQC functions to plot a scatter plot"""
 
 import logging
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union, cast
 
 from importlib_metadata import EntryPoint
 
@@ -24,8 +24,8 @@ def get_template_mod():
 
 
 def plot(
-    data,
-    pconfig: Union[Dict, ScatterConfig, None] = None,
+    data: Union[Mapping[str, Any], Sequence[Mapping[str, Any]]],
+    pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
 ) -> Union[scatter.ScatterPlot, str]:
     """Plot a scatter plot with X,Y data.
     :param data: 2D dict, first keys as sample names, then x:y data pairs
@@ -36,11 +36,11 @@ def plot(
 
     # Given one dataset - turn it into a list
     if not isinstance(data, list):
-        data = [data]
+        data = [data]  # type: ignore
 
-    plotdata = list()
+    plotdata: List[List[Dict[str, Any]]] = list()
     for data_index, ds in enumerate(data):
-        d = list()
+        d: List[Dict[str, Any]] = list()
         for s_name in ds:
             # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
             series_config: ScatterConfig = pconf.model_copy()
@@ -99,7 +99,7 @@ def plot(
             extra_series: List[List[Dict[str, Any]]] = []
             if isinstance(pconf.extra_series, dict):
                 extra_series = [[pconf.extra_series]]
-            elif isinstance(pconf.extra_series, list) and isinstance(pconf.extra_series[0], dict):
+            elif isinstance(pconf.extra_series[0], dict):
                 extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
             else:
                 extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)

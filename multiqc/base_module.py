@@ -13,7 +13,21 @@ import re
 import textwrap
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 import markdown
 import packaging.version
@@ -30,6 +44,7 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
+    is_valid_value,
 )
 from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
 
@@ -68,6 +83,10 @@ class Section:
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
 
 
+DataT = TypeVar("DataT")
+SampleNameT = TypeVar("SampleNameT", str, SampleName)
+
+
 @dataclasses.dataclass
 class SampleGroupingConfig:
     cols_to_weighted_average: Optional[List[Tuple[ColumnKey, ColumnKey]]] = None
@@ -78,14 +97,14 @@ class SampleGroupingConfig:
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
-    mod_cust_config: Dict = {}
+    mod_cust_config: Dict[str, Any] = {}
     mod_id: Optional[ModuleId] = None
 
     def __init__(
         self,
         name: str = "base",
         anchor: Union[Anchor, str] = Anchor("base"),
-        target=None,
+        target: Optional[str] = None,
         href: Union[str, List[str], None] = None,
         info: Optional[str] = None,
         comment: Optional[str] = None,
@@ -160,9 +179,6 @@ class BaseMultiqcModule:
         if self.info and self.info[0].islower():
             self.info = f"{self.name} {self.info}"
 
-        if self.extra is None:
-            self.extra = ""
-
         if isinstance(self.href, str):
             self.href = [self.href]
         self.href = [i for i in self.href if i != ""]
@@ -174,11 +190,10 @@ class BaseMultiqcModule:
         self.intro = self._get_intro()
 
         # Format the markdown strings
-        if autoformat:
-            if self.comment is not None:
-                self.comment = textwrap.dedent(self.comment)
-                if autoformat_type == "markdown":
-                    self.comment = markdown.markdown(self.comment)
+        if autoformat and self.comment:
+            self.comment = textwrap.dedent(self.comment)
+            if autoformat_type == "markdown":
+                self.comment = markdown.markdown(self.comment)
 
         self.sections: List[Section] = []
 
@@ -197,7 +212,7 @@ class BaseMultiqcModule:
     def _get_intro(self):
         doi_html = ""
         if len(self.doi) > 0:
-            doi_links = []
+            doi_links: List[str] = []
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
@@ -209,7 +224,7 @@ class BaseMultiqcModule:
 
         url_link = ""
         if len(self.href) > 0:
-            url_links = []
+            url_links: List[str] = []
             for url in self.href:
                 url_links.append(f'<a href="{url}" target="_blank">{url.strip("/")}</a>')
             url_link = '<em class="text-muted small" style="margin-left: 1rem;">URL: {}</em>'.format(
@@ -238,7 +253,29 @@ class BaseMultiqcModule:
         """
         return self.__saved_raw_data
 
-    def find_log_files(self, sp_key: str, filecontents=True, filehandles=False):
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[True] = True, filehandles: bool = False
+    ) -> Iterable[LoadedFileDict[str]]: ...
+
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
+    ) -> Iterable[LoadedFileDict[io.BufferedReader]]: ...
+
+    @overload
+    def find_log_files(
+        self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[False] = False
+    ) -> Iterable[LoadedFileDict[None]]: ...
+
+    def find_log_files(
+        self, sp_key: str, filecontents: bool = True, filehandles: bool = False
+    ) -> Union[
+        Iterable[LoadedFileDict[str]],
+        Iterable[LoadedFileDict[io.BufferedReader]],
+        Iterable[LoadedFileDict[io.TextIOWrapper]],
+        Iterable[LoadedFileDict[None]],
+    ]:
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -255,7 +292,7 @@ class BaseMultiqcModule:
         def get_path_filters(key: str) -> List[str]:
             pfs: List[str] = []
             val = self.mod_cust_config.get(key, [])
-            values = val if isinstance(val, list) else [val]
+            values: List[str] = val if isinstance(val, list) else [val]
             pf: str
             for pf in values:
                 if pf.startswith("./"):
@@ -266,9 +303,9 @@ class BaseMultiqcModule:
         path_filters: List[str] = get_path_filters("path_filters")
         path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
 
-        for found_file in report.files.get(ModuleId(sp_key), []):
+        for f in report.files.get(ModuleId(sp_key), []):
             # Make a note of the filename so that we can report it if something crashes
-            last_found_file: str = os.path.join(found_file["root"], found_file["fn"])
+            last_found_file: str = os.path.join(f["root"], f["fn"])
             report.last_found_file = last_found_file
 
             # Filter out files based on exclusion patterns
@@ -311,67 +348,63 @@ class BaseMultiqcModule:
                     )
 
             # Make a sample name from the filename
-            f: LoadedFileDict = {
-                "root": found_file["root"],
-                "fn": found_file["fn"],
-                "sp_key": sp_key,
-                "s_name": self.clean_s_name(found_file["fn"]),
-                "f": None,
-            }
+            s_name = self.clean_s_name(f["fn"])
 
             if filehandles or filecontents:
                 try:
+                    fh: Union[io.BufferedReader, io.TextIOWrapper, None]
                     # Custom content module can now handle image files
-                    (ftype, encoding) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
-                    fh: io.IOBase  # make mypy happy
+                    (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
                         with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
-                            f["f"] = fh
-                            yield f
+                            yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
                         with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
-                                f["f"] = fh
-                                yield f
+                                yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
                                 try:
-                                    f["f"] = fh.read()
+                                    contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
                                         f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
                                     )
                                     try:
                                         with io.open(
-                                            os.path.join(f["root"], f["fn"]), "r", encoding="utf-8", errors="ignore"
+                                            os.path.join(f["root"], f["fn"]),
+                                            "r",
+                                            encoding="utf-8",
+                                            errors="ignore",
                                         ) as fh_ignoring:
-                                            f["f"] = fh_ignoring.read()
+                                            yield {**f, "s_name": s_name, "f": fh_ignoring.read()}
                                     except Exception as e:
                                         logger.debug(f"Still couldn't read file: {f['fn']}\n{e}")
-                                        f["f"] = None
+                                        yield {**f, "s_name": s_name, "f": None}
                                     finally:
                                         fh.close()
-                                yield f
+                                else:
+                                    yield {**f, "s_name": s_name, "f": str(contents)}
                 except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
                     logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
-                    f["f"] = None
+                    yield {**f, "s_name": s_name, "f": None}
             else:
-                yield f
+                yield {**f, "s_name": s_name, "f": None}
 
     def add_section(
         self,
         name: Optional[str] = None,
         anchor: Optional[Union[str, Anchor]] = None,
         id: Optional[Union[str, SectionId]] = None,
-        description="",
-        comment="",
-        helptext="",
-        content_before_plot="",
-        plot: Optional[Union[Plot, str]] = None,
-        content="",
-        autoformat=True,
-        autoformat_type="markdown",
+        description: str = "",
+        comment: str = "",
+        helptext: str = "",
+        content_before_plot: str = "",
+        plot: Optional[Union[Plot[Any, Any], str]] = None,
+        content: str = "",
+        autoformat: bool = True,
+        autoformat_type: str = "markdown",
     ):
         """Add a section to the module report output"""
         if id is None and anchor is not None:
@@ -456,7 +489,7 @@ class BaseMultiqcModule:
                 section.plot_anchor = plot.anchor
                 # separately keeping track of Plot objects to be rendered further
                 report.plot_by_id[plot.anchor] = plot
-            elif isinstance(plot, str):
+            else:  # str
                 section.plot = plot
 
         # self.sections is passed into Jinja template:
@@ -570,11 +603,7 @@ class BaseMultiqcModule:
             # Just a single row for a trivial group
             if len(labels_s_names) == 1:
                 _, s_name, original_s_name = labels_s_names[0]
-                rows_by_grouped_samples[g_name] = [
-                    InputRow(
-                        sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name])
-                    )
-                ]
+                rows_by_grouped_samples[g_name] = [InputRow(sample=s_name, data=data_by_sample[original_s_name])]
                 continue
 
             merged_row = InputRow(sample=SampleName(g_name), data={})
@@ -653,7 +682,7 @@ class BaseMultiqcModule:
                     fn(merged_row, labels_s_names)
 
             rows_by_grouped_samples[g_name] = [merged_row] + [
-                InputRow(sample=s_name, data=cast(Dict[ColumnKey, Optional[ValueT]], data_by_sample[original_s_name]))
+                InputRow(sample=s_name, data=data_by_sample[original_s_name])
                 for _, s_name, original_s_name in labels_s_names
             ]
 
@@ -662,7 +691,7 @@ class BaseMultiqcModule:
     def clean_s_name(
         self,
         s_name: Union[str, List[str]],
-        f: Optional[Union[LoadedFileDict, str]] = None,
+        f: Optional[Union[LoadedFileDict[Any], str]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
@@ -719,13 +748,17 @@ class BaseMultiqcModule:
             f = None
 
         # Set string variables from f if it was a dict from find_log_files()
-        if isinstance(f, dict):
+        elif f is not None:
             if "root" in f and root is None:
                 root = f["root"]
             if "fn" in f and filename is None:
                 filename = f["fn"]
             if "sp_key" in f and search_pattern_key is None:
                 search_pattern_key = f["sp_key"]
+        else:
+            root = None
+            filename = None
+            search_pattern_key = None
 
         # For modules setting s_name from file contents, set s_name back to the filename
         # (if wanted in the config)
@@ -753,7 +786,8 @@ class BaseMultiqcModule:
         # Prepend sample name with directory
         if prepend_dirs:
             sep = config.prepend_dirs_sep
-            dirs = [d.strip() for d in (Path(root).parts if root else []) if d.strip() != ""]
+            parts: Tuple[str, ...] = Path(root).parts if root else ()
+            dirs: List[str] = [d.strip() for d in parts if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
                 if config.prepend_dirs_depth > 0:
@@ -845,13 +879,17 @@ class BaseMultiqcModule:
         sn.trimmed_name = trimmed_name
         return trimmed_name
 
-    def ignore_samples(self, data, sample_names_ignore=None, sample_names_ignore_re=None):
+    def ignore_samples(
+        self,
+        data: Dict[SampleNameT, DataT],
+        sample_names_ignore: Optional[List[str]] = None,
+        sample_names_ignore_re: Optional[List[str]] = None,
+    ) -> Dict[SampleNameT, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
-            if isinstance(data, dict):
-                new_data = dict()
-            else:
+            if not isinstance(data, dict):  # type: ignore
                 return data
+            new_data: Dict[SampleNameT, DataT] = dict()
             for s_name, v in data.items():
                 if not self.is_ignore_sample(s_name, sample_names_ignore, sample_names_ignore_re):
                     new_data[s_name] = v
@@ -860,7 +898,11 @@ class BaseMultiqcModule:
             return data
 
     @staticmethod
-    def is_ignore_sample(s_name, sample_names_ignore=None, sample_names_ignore_re=None):
+    def is_ignore_sample(
+        s_name: Union[str, SampleName],
+        sample_names_ignore: Optional[List[str]] = None,
+        sample_names_ignore_re: Optional[List[str]] = None,
+    ) -> bool:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
         sample_names_ignore_re = sample_names_ignore_re or config.sample_names_ignore_re
@@ -872,7 +914,7 @@ class BaseMultiqcModule:
         self,
         data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
         headers: Optional[Dict[Union[ColumnKey, str], ColumnDict]] = None,
-        namespace=None,
+        namespace: Optional[str] = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
     ):
         """Helper function to add to the General Statistics variable.
@@ -900,13 +942,8 @@ class BaseMultiqcModule:
             )
         else:
             rows_by_group = {
-                SampleGroup(sample): [
-                    InputRow(
-                        sample=sample,
-                        data={k: v for k, v in data.items() if isinstance(v, (int, float, str, bool)) or v is None},
-                    )
-                ]
-                for sample, data in data_by_sample.items()
+                SampleGroup(sname): [InputRow(sample=SampleName(sname), data=data)]
+                for sname, data in data_by_sample.items()
             }
 
         _headers: Dict[ColumnKey, ColumnDict] = {}
@@ -926,12 +963,13 @@ class BaseMultiqcModule:
         # Add the module name to the description if not already done
         for col_id in _headers.keys():
             # Prepend the namespace displayed in the table with the module name
-            namespace = _headers[col_id].get("namespace", namespace)
+            _col = _headers[col_id]
+            namespace = _col["namespace"] if "namespace" in _col else namespace
             _headers[col_id]["namespace"] = self.name
             if namespace:
                 _headers[col_id]["namespace"] = self.name + ": " + str(namespace)
             if "description" not in _headers[col_id]:
-                _headers[col_id]["description"] = _headers[col_id].get("title", col_id)
+                _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
         # Append to report.general_stats for later assembly into table
         report.general_stats_data.append(rows_by_group)
@@ -939,9 +977,9 @@ class BaseMultiqcModule:
 
     def add_data_source(
         self,
-        f: Optional[LoadedFileDict] = None,
+        f: Optional[LoadedFileDict[Any]] = None,
         s_name: Optional[str] = None,
-        path: Optional[str] = None,
+        path: Optional[Union[str, Path]] = None,
         module: Optional[str] = None,
         section: Optional[str] = None,
     ):
@@ -954,11 +992,13 @@ class BaseMultiqcModule:
             section = "all_sections"
         if s_name is None and f is not None:
             s_name = f["s_name"]
-        if s_name is not None and self.is_ignore_sample(s_name):
+        if s_name is None:
+            return
+        if self.is_ignore_sample(s_name):
             return
         if path is None and f is not None:
             path = os.path.abspath(os.path.join(f["root"], f["fn"]))
-        report.data_sources[module][section][s_name] = path
+        report.data_sources[module][section][s_name] = str(path)
 
     def add_software_version(
         self,
@@ -1001,7 +1041,7 @@ class BaseMultiqcModule:
         group_name = self.name
         report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
 
-    def write_data_file(self, data, fn, sort_cols=False, data_format=None):
+    def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
         """Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory"""
 
