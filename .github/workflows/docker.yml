@@ -1,15 +1,22 @@
-name: Publish Docker image
+name: "Build Docker image"
 
 on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   release:
     types: [published]
 
 jobs:
-  push_to_registry:
+  build_image:
+    name: "Build Docker image"
     if: github.repository == 'MultiQC/MultiQC'
-    name: Build + Push Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -39,7 +46,7 @@ jobs:
 
       - name: Push dev image
         uses: docker/build-push-action@v3
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
