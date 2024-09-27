@@ -8,6 +8,9 @@ Makes the following available under the main multiqc namespace:
 """
 
 import sys
+import warnings
+
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
