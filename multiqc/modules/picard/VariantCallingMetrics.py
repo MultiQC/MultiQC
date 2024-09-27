@@ -77,9 +77,7 @@ def parse_reports(module):
             "hidden": True,
         },
     }
-    module.general_stats_addcols(
-        data_by_sample, headers, namespace="VariantCallingMetrics"
-    )
+    module.general_stats_addcols(data_by_sample, headers, namespace="VariantCallingMetrics")
 
     # Variant Calling Metrics Table
     module.add_section(
@@ -134,9 +132,7 @@ def collect_data(module):
             if header == "SAMPLE_ALIAS":
                 s_name = value
                 if s_name in data:
-                    log.debug(
-                        f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}"
-                    )
+                    log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 data[s_name] = dict()
             else:
                 data[s_name][header] = value
@@ -187,20 +183,14 @@ def derive_data(data):
             "NUM_IN_DB_SNP_COMPLEX_INDELS",
             "NUM_IN_DB_SNP_MULTIALLELIC",
         ]:
-            total_called_variants_known = total_called_variants_known + int(
-                values[value_name]
-            )
+            total_called_variants_known = total_called_variants_known + int(values[value_name])
         total_called_variants_known = (
-            total_called_variants_known
-            + int(values["TOTAL_INDELS"])
-            - int(values["NOVEL_INDELS"])
+            total_called_variants_known + int(values["TOTAL_INDELS"]) - int(values["NOVEL_INDELS"])
         )
         values["total_called_variants_known"] = total_called_variants_known
 
         # Extrapolate the total novel variants
-        values["total_called_variants_novel"] = (
-            total_called_variants - total_called_variants_known
-        )
+        values["total_called_variants_novel"] = total_called_variants - total_called_variants_known
 
 
 def stripped(iterator):
@@ -354,10 +344,8 @@ def compare_variant_type_plot(data):
         novel_variants[s_name] = {
             "snps": values["NOVEL_SNPS"],
             "indels": values["NOVEL_INDELS"],
-            "multiallelic_snps": int(values["TOTAL_MULTIALLELIC_SNPS"])
-            - int(values["NUM_IN_DB_SNP_MULTIALLELIC"]),
-            "complex_indels": int(values["TOTAL_COMPLEX_INDELS"])
-            - int(values["NUM_IN_DB_SNP_COMPLEX_INDELS"]),
+            "multiallelic_snps": int(values["TOTAL_MULTIALLELIC_SNPS"]) - int(values["NUM_IN_DB_SNP_MULTIALLELIC"]),
+            "complex_indels": int(values["TOTAL_COMPLEX_INDELS"]) - int(values["NUM_IN_DB_SNP_COMPLEX_INDELS"]),
         }
 
     plot_conf = {
