@@ -2,7 +2,7 @@ import inspect
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Union, Type
+from typing import Any, Dict, List, Optional, Set, Union, Type, cast
 
 from PIL import ImageColor
 from pydantic import BaseModel, model_validator
@@ -36,9 +36,9 @@ def add_validation_warning(cls: Union[type, List[type]], warning: str):
 
 
 class ValidatedConfig(BaseModel):
-    def __init__(self, _clss: Optional[List[Type]] = None, **data):
+    def __init__(self, _clss: Optional[List[Type["ValidatedConfig"]]] = None, **data: Any):
         _cls_name = self.__class__.__name__
-        _classes = []
+        _classes: List[Type["ValidatedConfig"]] = []
         if _clss:
             for _c in _clss:
                 _classes.append(_c)
@@ -86,15 +86,15 @@ class ValidatedConfig(BaseModel):
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
     @classmethod
-    def validate_fields(cls, values):
+    def validate_fields(cls, values: Any) -> Dict[str, Any]:
         # Check unrecognized fields
         if not isinstance(values, dict):
             return values
-
-        _clss = values.pop("_clss", None) or [cls]
+        values = cast(Dict[str, Any], values)
+        _clss = cast(List[Type[ValidatedConfig]], values.pop("_clss", None) or [cls])
 
         # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
-        for k, v in cls.model_fields.items():
+        for k in cls.model_fields.keys():
             if k.endswith("_") and k[:-1] in values:
                 values[k] = values.pop(k[:-1])
 

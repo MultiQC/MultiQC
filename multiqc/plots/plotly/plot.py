@@ -36,10 +36,10 @@ class FlatLine(ValidatedConfig):
     width: int = 2
     dashStyle: Optional[str] = Field(None, deprecated="dash")
     dash: Optional[str] = None
-    label: Optional[Union[str, Dict]] = None
+    label: Optional[Union[str, Dict[str, Any]]] = None
 
     @classmethod
-    def parse_label(cls, value, _clss: List[Type]):
+    def parse_label(cls, value: Any, _clss: List[Type[Any]]) -> Any:
         if isinstance(value, dict):
             add_validation_warning(
                 _clss,
@@ -67,7 +67,7 @@ class LineBand(ValidatedConfig):
     to: Union[float, int]
     color: Optional[str] = None
 
-    def __init__(self, _clss: Optional[List[Type]] = None, **data):
+    def __init__(self, _clss: Optional[List[Type[ValidatedConfig]]] = None, **data: Any):
         super().__init__(**data, _clss=_clss or [self.__class__])
 
 
@@ -690,7 +690,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             )
         logger.info(f"Plot saved to {filename}")
 
-    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def get_figure(
+        self,
+        dataset_id: Union[int, str],
+        is_log: bool = False,
+        is_pct: bool = False,
+        flat: bool = False,
+        **kwargs,
+    ) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
@@ -920,9 +927,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return html
 
 
-# Run in a subprocess to avoid Kaleido freezing entire MultiQC process in a Docker container on MacOS
-# e.g. https://github.com/MultiQC/MultiQC/issues/2667
-def _export_plot_worker(q: queue.Queue, fig, file_ext, plot_path, write_kwargs):
+def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
     try:
         if file_ext == "svg":
             # Cannot add logo to SVGs
@@ -936,12 +941,16 @@ def _export_plot_worker(q: queue.Queue, fig, file_ext, plot_path, write_kwargs):
             img_buffer.close()
     except Exception as e:
         logger.error(f"Unable to export plot to {file_ext.upper()} image: {e}")
-        q.put(None)
+        return None
     else:
-        q.put(plot_path)
+        return plot_path
 
 
-def _export_plot_to_buffer_worker(q: queue.Queue, fig, write_kwargs):
+def _export_plot_worker(q: queue.Queue, fig, file_ext, plot_path, write_kwargs):
+    q.put(_export_plot(fig, file_ext, plot_path, write_kwargs))
+
+
+def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
         img_buffer = io.BytesIO()
         fig.write_image(img_buffer, **write_kwargs)
@@ -952,9 +961,13 @@ def _export_plot_to_buffer_worker(q: queue.Queue, fig, write_kwargs):
         img_buffer.close()
     except Exception as e:
         logger.error(f"Unable to export PNG figure to static image: {e}")
-        q.put(None)
+        return None
     else:
-        q.put(img_src)
+        return img_src
+
+
+def _export_plot_to_buffer_worker(q: queue.Queue, fig, write_kwargs):
+    q.put(_export_plot_to_buffer(fig, write_kwargs))
 
 
 can_export_plots: bool = True
@@ -986,6 +999,7 @@ def fig_to_static_html(
         # for the flat plots we explicitly set width
         height=fig.layout.height / config.plots_export_font_scale,
         scale=scale,  # higher detail (retina display)
+        # engine="orca",  # kaleido gets frozen in docker environments
     )
 
     formats = set(config.export_plot_formats) if export_plots else set()
@@ -1008,7 +1022,7 @@ def fig_to_static_html(
             try:
                 if can_export_plots:
                     # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
-                    _run_in_thread(_export_plot_worker, (fig, file_ext, plot_path, write_kwargs))
+                    _export_plot(fig, file_ext, plot_path, write_kwargs)
             except Exception as e:
                 msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
                 logger.error(f"{msg}. {e}")
@@ -1031,7 +1045,8 @@ def fig_to_static_html(
         img_src = str(img_path)
     else:
         try:
-            img_src = _run_in_thread(_export_plot_to_buffer_worker, (fig, write_kwargs))
+            # img_src = _run_in_thread(_export_plot_to_buffer_worker, (fig, write_kwargs))
+            img_src = _export_plot_to_buffer(fig, write_kwargs)
 
         except Exception as e:
             logger.error(f"Unable to export PNG figure to static image: {e}")
@@ -1049,7 +1064,11 @@ def fig_to_static_html(
 
 
 def _run_in_thread(func, args, timeout=60) -> Any:
-    """Run function in a thread and return its result, assuming it puts the result in a queue."""
+    """
+    Run function in a thread and return its result, assuming it puts the result in a queue.
+    The usecase if to run in a subprocess to avoid Kaleido freezing entire MultiQC process in a
+    Docker container on MacOS e.g. https://github.com/MultiQC/MultiQC/issues/2667
+    """
     q: queue.Queue = queue.Queue()
     thread = threading.Thread(target=func, args=(q, *args))
     thread.start()
