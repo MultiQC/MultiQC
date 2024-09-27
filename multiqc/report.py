@@ -18,10 +18,8 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from tkinter import N
 from typing import (
     Any,
-    Callable,
     Dict,
     Iterator,
     List,
@@ -31,7 +29,6 @@ from typing import (
     Set,
     TextIO,
     Tuple,
-    TypedDict,
     Union,
 )
 
