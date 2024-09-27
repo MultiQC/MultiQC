@@ -954,10 +954,6 @@ def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
         return plot_path
 
 
-def _export_plot_worker(q: queue.Queue, fig, file_ext, plot_path, write_kwargs):
-    q.put(_export_plot(fig, file_ext, plot_path, write_kwargs))
-
-
 def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
     try:
         img_buffer = io.BytesIO()
@@ -1054,12 +1050,10 @@ def fig_to_static_html(
             raise ValueError(f"Unable to export plot to PNG image {file_name}")
         img_src = str(img_path)
     else:
-        try:
-            img_src = _export_plot_to_buffer(fig, write_kwargs)
-
-        except Exception as e:
-            logger.error(f"Unable to export PNG figure to static image: {e}")
+        _img_src = _export_plot_to_buffer(fig, write_kwargs)
+        if _img_src is None:
             raise ValueError("Unable to export PNG figure to static image")
+        img_src = _img_src
 
     # Should this plot be hidden on report load?
     style = "" if active else "display:none;"
