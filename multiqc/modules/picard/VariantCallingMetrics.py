@@ -89,7 +89,7 @@ def parse_reports(module):
             data=data_by_sample,
             headers=get_table_headers(),
             pconfig={
-                "id": f"{module.id}_variantcallingmetrics",
+                "id": f"{module.id}_variantcallingmetrics_table",
                 "namespace": "VariantCallingMetrics",
                 "title": "Variant Calling Metrics",
             },
