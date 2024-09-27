@@ -1,4 +1,4 @@
-name: "Build Docker image"
+name: "Docker image"
 
 on:
   pull_request:
@@ -14,8 +14,7 @@ on:
     types: [published]
 
 jobs:
-  build_image:
-    name: "Build Docker image"
+  build:
     if: github.repository == 'MultiQC/MultiQC'
     runs-on: ubuntu-latest
     steps:
