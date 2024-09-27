@@ -1,12 +1,14 @@
 import base64
+from functools import lru_cache
 import io
 import logging
 import math
+import platform
 import queue
 import random
 import re
-import threading
 from pathlib import Path
+import subprocess
 from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
 import plotly.graph_objects as go  # type: ignore
@@ -748,6 +750,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
+            if is_running_under_rosetta():
+                # Kaleido is unstable under rosetata, falling back to interactive plots
+                return self.interactive_plot()
             try:
                 html = self.flat_plot(plots_dir_name=plots_dir_name)
             except ValueError:
@@ -755,7 +760,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 html = self.interactive_plot()
         else:
             html = self.interactive_plot()
-            if config.export_plots:
+            if config.export_plots and not is_running_under_rosetta():
                 try:
                     self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
                 except ValueError:
@@ -928,6 +933,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
 
 def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
+    if is_running_under_rosetta():
+        return None
+
     try:
         if file_ext == "svg":
             # Cannot add logo to SVGs
@@ -966,11 +974,7 @@ def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
         return img_src
 
 
-def _export_plot_to_buffer_worker(q: queue.Queue, fig, write_kwargs):
-    q.put(_export_plot_to_buffer(fig, write_kwargs))
-
-
-can_export_plots: bool = True
+plot_export_has_failed: bool = False
 
 
 def fig_to_static_html(
@@ -984,9 +988,15 @@ def fig_to_static_html(
     """
     Build one static image, return an HTML wrapper.
     """
-    global can_export_plots
-    if not can_export_plots:
-        raise ValueError("Could not previously export a plots, so stop trying again")
+    if is_running_under_rosetta():
+        raise ValueError(
+            "Detected Rosetta process, meaning running in an x86_64 container hosted by Apple Silicon. "
+            "Plot export is unstable and will be skipped"
+        )
+
+    global plot_export_has_failed
+    if plot_export_has_failed:
+        raise ValueError("Could not previously export a plots, so won't try again")
 
     embed_in_html = embed_in_html if embed_in_html is not None else not config.development
     export_plots = export_plots if export_plots is not None else config.export_plots
@@ -1020,13 +1030,13 @@ def fig_to_static_html(
             plot_path.parent.mkdir(parents=True, exist_ok=True)
 
             try:
-                if can_export_plots:
+                if not plot_export_has_failed:
                     # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
                     _export_plot(fig, file_ext, plot_path, write_kwargs)
             except Exception as e:
                 msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
                 logger.error(f"{msg}. {e}")
-                can_export_plots = False
+                plot_export_has_failed = True
                 raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
             else:
                 if file_ext == "png":
@@ -1045,7 +1055,6 @@ def fig_to_static_html(
         img_src = str(img_path)
     else:
         try:
-            # img_src = _run_in_thread(_export_plot_to_buffer_worker, (fig, write_kwargs))
             img_src = _export_plot_to_buffer(fig, write_kwargs)
 
         except Exception as e:
@@ -1061,24 +1070,6 @@ def fig_to_static_html(
             "</div>",
         ]
     )
-
-
-def _run_in_thread(func, args, timeout=60) -> Any:
-    """
-    Run function in a thread and return its result, assuming it puts the result in a queue.
-    The usecase if to run in a subprocess to avoid Kaleido freezing entire MultiQC process in a
-    Docker container on MacOS e.g. https://github.com/MultiQC/MultiQC/issues/2667
-    """
-    q: queue.Queue = queue.Queue()
-    thread = threading.Thread(target=func, args=(q, *args))
-    thread.start()
-    thread.join(timeout=timeout)
-    if thread.is_alive():
-        raise ValueError(f"Function did not complete in {timeout} seconds")
-        thread.join()  # Continue without blocking
-        return None
-    else:
-        return q.get()
 
 
 def add_logo(
@@ -1339,3 +1330,40 @@ def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = 
         add_validation_warning(_clss or [], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
         return mapping[dash_style]
     return "solid"
+
+
+ROSETTA_WARNING = (
+    "\n===========================\n"
+    "WARNING: Detected a Rosetta process, implying that MultiQC is running inside an x86_64 container, but hosted "
+    "by Apple Silicon.\n\nStatic plot export uses Kaleido - a tool that is unstable under conflicting architectures, so "
+    "MultiQC will not save static PNG/PDF/SVG plots to disk. If you still need those, please use a container with "
+    "a compatible architecture. The official Dockerhub image multiqc/multiqc:latest is available for both "
+    "platforms, and can be pulled with:\n\n"
+    "docker pull multiqc/multiqc:latest\n"
+    "==========================="
+)
+
+
+@lru_cache()
+def is_running_under_rosetta() -> bool:
+    """
+    Detect if running in an x86_64 container hosted by Apple Silicon. Kaleido often freezes in such containers:
+    https://github.com/MultiQC/MultiQC/issues/2667
+    https://github.com/MultiQC/MultiQC/issues/2812
+    https://github.com/MultiQC/MultiQC/issues/2867
+    So we have to know when to disable plot export and show a warning.
+    """
+    # If not x86_64 architecture, rosetta wouldn't be needed
+    if platform.machine() != "x86_64":
+        return False
+
+    # Check for Rosetta processes
+    try:
+        output = subprocess.check_output(["ps", "aux"], universal_newlines=True)
+        if "/run/rosetta/rosetta" in output:
+            logger.warning(ROSETTA_WARNING)
+            return True
+    except subprocess.CalledProcessError:
+        pass
+
+    return False
