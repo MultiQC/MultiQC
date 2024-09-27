@@ -18,6 +18,7 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
+from tkinter import N
 from typing import (
     Any,
     Callable,
@@ -47,7 +48,7 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import ColumnDict, InputRow, SampleName
+from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
 from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
 from multiqc.utils.util_functions import (
     dump_json,
@@ -668,6 +669,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_
     query_re_patterns = pattern.contents_re
     match_strings: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+
     try:
         for line_count, block in f.line_block_iterator():
             for q_string in query_strings:
@@ -956,7 +958,7 @@ def multiqc_dump_json():
     Used for MegaQC and other data export.
     WARNING: May be depreciated and removed in future versions.
     """
-    exported_data = dict()
+    exported_data: Dict[str, Any] = dict()
     export_vars = {
         "report": [
             "data_sources",
@@ -986,13 +988,26 @@ def multiqc_dump_json():
             try:
                 d = None
                 if pymod == "config":
-                    v = getattr(config, name)
-                    v = str(v) if isinstance(v, PosixPath) else v
-                    if isinstance(v, list):
-                        v = [str(el) if isinstance(el, PosixPath) else el for el in v]
-                    d = {f"{pymod}_{name}": v}
+                    val: Any = getattr(config, name)
+                    val = str(val) if isinstance(val, PosixPath) else val
+                    if isinstance(val, list):
+                        val = [str(el) if isinstance(el, PosixPath) else el for el in val]
+                    d = {f"{pymod}_{name}": val}
                 elif pymod == "report":
-                    d = {f"{pymod}_{name}": getattr(sys.modules[__name__], name)}
+                    val = getattr(sys.modules[__name__], name)
+                    if name == "general_stats_data":
+                        # val == general_stats_data
+                        # List[Dict[SampleGroup, List[InputRow]]]
+                        # flattening sample groups for export
+                        flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
+                        for section in general_stats_data:
+                            fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
+                            for _, rows in section.items():
+                                for row in rows:
+                                    fl_sec[row.sample] = row.data
+                            flattened_sections.append(fl_sec)
+                        val = flattened_sections
+                    d = {f"{pymod}_{name}": val}
                 if d:
                     with open(os.devnull, "wt") as f:
                         # Test that exporting to JSON works. Write to
@@ -1002,12 +1017,13 @@ def multiqc_dump_json():
             except (TypeError, KeyError, AttributeError) as e:
                 logger.warning(f"Couldn't export data key '{pymod}.{name}': {e}")
         # Get the absolute paths of analysis directories
-        exported_data["config_analysis_dir_abs"] = list()
+        config_analysis_dir_abs: List[str] = list()
         for config_analysis_dir in exported_data.get("config_analysis_dir", []):
             try:
-                exported_data["config_analysis_dir_abs"].append(str(os.path.abspath(config_analysis_dir)))
+                config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
             except Exception:
                 pass
+        exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
     return exported_data
 
 

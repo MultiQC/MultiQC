@@ -6,7 +6,7 @@ import logging
 import math
 import re
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union
+from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
 
 from pydantic import BaseModel, Field
 
@@ -277,7 +277,8 @@ class ColumnMeta(ValidatedConfig):
 
         # Overwrite any header config if set in config
         for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            setattr(col, custom_k, custom_v)
+            if custom_k in col.model_fields:
+                setattr(col, custom_k, custom_v)
 
         return col
 
@@ -360,14 +361,24 @@ class DataTable(BaseModel):
         table_id: str,
         table_anchor: Anchor,
         pconfig: TableConfig,
-        headers: Optional[Union[List[Dict[ColumnKeyT, ColumnDict]], Dict[ColumnKeyT, ColumnDict]]] = None,
+        headers: Optional[
+            Union[
+                List[Dict[ColumnKey, ColumnDict]],
+                List[Dict[str, ColumnDict]],
+                Dict[ColumnKey, ColumnDict],
+                Dict[str, ColumnDict],
+            ]
+        ] = None,
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         if headers is None:
             headers = []
 
         # Given one dataset - turn it into a list
-        list_of_headers = headers if isinstance(headers, list) else [headers]
+        list_of_headers = cast(
+            Union[List[Dict[ColumnKey, ColumnDict]], List[Dict[str, ColumnDict]]],
+            headers if isinstance(headers, list) else [headers],
+        )
         del headers
 
         # Each section to have a list of groups (even if there is just one element in a group)
@@ -392,7 +403,7 @@ class DataTable(BaseModel):
         # Go through each table section and create a list of Section objects
         sections: List[TableSection] = []
         for sec_idx, rows_by_sname__with_nulls in enumerate(unified_sections__with_nulls):
-            header_by_key: Mapping[ColumnKeyT, ColumnDict] = (
+            header_by_key: Union[Dict[ColumnKey, ColumnDict], Dict[str, ColumnDict]] = (
                 list_of_headers[sec_idx] if sec_idx < len(list_of_headers) else dict()
             )
             if not header_by_key:
@@ -446,8 +457,8 @@ class DataTable(BaseModel):
         for sec_idx, section in enumerate(sections):
             for col_key, column in section.column_by_key.items():
                 if column.shared_key is not None:
-                    column.dmax = shared_keys[column.shared_key]["dmax"]
-                    column.dmin = shared_keys[column.shared_key]["dmin"]
+                    column.dmax = shared_keys[column.shared_key].get("dmax")
+                    column.dmin = shared_keys[column.shared_key].get("dmin")
 
                 headers_in_order[column.placement].append((sec_idx, col_key))
 
@@ -489,8 +500,8 @@ class DataTable(BaseModel):
 
 def _get_or_create_headers(
     rows_by_sample: Dict[SampleGroup, List[InputRow]],
-    header_by_key: Mapping[ColumnKeyT, ColumnDict],
-    pconfig,
+    header_by_key: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+    pconfig: TableConfig,
 ) -> Dict[ColumnKey, ColumnDict]:
     """
     Process and populate headers, if missing or incomplete.
@@ -501,7 +512,7 @@ def _get_or_create_headers(
         # Get additional header keys from the data
         col_ids: List[ColumnKey] = list(header_by_key_copy.keys())
         # Get the keys from the data
-        for sname, rows in rows_by_sample.items():
+        for _, rows in rows_by_sample.items():
             for row in rows:
                 for col_id in row.data.keys():
                     if col_id not in col_ids:
@@ -513,10 +524,10 @@ def _get_or_create_headers(
                 header_by_key_copy[col_id] = {}
 
     # Check that we have some data in each column
-    empties = list()
+    empties: List[ColumnKey] = list()
     for col_id in header_by_key_copy.keys():
         n = 0
-        for sname, rows in rows_by_sample.items():
+        for _, rows in rows_by_sample.items():
             for row in rows:
                 if col_id in row.data.keys():
                     n += 1
@@ -609,7 +620,7 @@ def _determine_dmin_and_dmax(
 
     # Figure out the min / max if not supplied
     if set_dmax or set_dmin:
-        for s_name, rows in rows_by_sample.items():
+        for _, rows in rows_by_sample.items():
             v_by_col = rows[0].raw_data
             try:
                 val = v_by_col[col_key]
@@ -632,19 +643,27 @@ def _determine_dmin_and_dmax(
                 column.dmax = column.dmin + float(column.minrange)
 
 
-def _collect_shared_keys(sections) -> Dict[str, Dict[str, Union[int, float]]]:
+def _collect_shared_keys(sections: List[TableSection]) -> Dict[str, Dict[str, Union[int, float]]]:
     # Collect settings for shared keys
     shared_keys: Dict[str, Dict[str, Union[int, float]]] = defaultdict(lambda: dict())
-    for sec_idx, section in enumerate(sections):
+    for _, section in enumerate(sections):
         for _, column in section.column_by_key.items():
-            sk: str = column.shared_key
+            sk: Optional[str] = column.shared_key
             if sk is not None:
-                shared_keys[sk]["dmax"] = max(
-                    column.dmax,
-                    shared_keys[sk].get("dmax", column.dmax),
-                )
-                shared_keys[sk]["dmin"] = min(
-                    column.dmin,
-                    shared_keys[sk].get("dmin", column.dmin),
-                )
+                sk_dmax: Optional[float] = shared_keys[sk].get("dmax")
+                if sk_dmax is not None and column.dmax is not None:
+                    shared_keys[sk]["dmax"] = max(column.dmax, sk_dmax)
+                elif sk_dmax is None and column.dmax is not None:
+                    shared_keys[sk]["dmax"] = column.dmax
+                else:
+                    pass
+
+                sk_dmin: Optional[float] = shared_keys[sk].get("dmin")
+                if sk_dmin is not None and column.dmin is not None:
+                    shared_keys[sk]["dmin"] = min(column.dmin, sk_dmin)
+                elif sk_dmin is None and column.dmin is not None:
+                    shared_keys[sk]["dmin"] = column.dmin
+                else:
+                    pass
+
     return shared_keys
