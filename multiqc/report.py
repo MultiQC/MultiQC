@@ -669,6 +669,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_
     query_re_patterns = pattern.contents_re
     match_strings: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+
     try:
         for line_count, block in f.line_block_iterator():
             for q_string in query_strings:
