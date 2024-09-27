@@ -18,10 +18,8 @@ import sys
 import time
 from collections import defaultdict
 from pathlib import Path, PosixPath
-from tkinter import N
 from typing import (
     Any,
-    Callable,
     Dict,
     Iterator,
     List,
@@ -31,7 +29,6 @@ from typing import (
     Set,
     TextIO,
     Tuple,
-    TypedDict,
     Union,
 )
 
@@ -669,6 +666,7 @@ def search_file(pattern: SearchPattern, f: SearchFile, module_key: ModuleId, is_
     query_re_patterns = pattern.contents_re
     match_strings: Set[str] = set()
     match_re_patterns: Set[re.Pattern] = set()
+
     try:
         for line_count, block in f.line_block_iterator():
             for q_string in query_strings:

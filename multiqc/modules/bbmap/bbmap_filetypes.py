@@ -366,12 +366,17 @@ file_types: Dict = {
             "Read1_linear": float,
             "Read1_log": float,
             "Read1_measured": float,
+        },
+        "extracols": {
             "Read2_linear": float,
             "Read2_log": float,
             "Read2_measured": float,
         },
         "plot_func": plot_qhist,
         "plot_params": {},
+        "kv_descriptions": {
+            "Deviation": ("", {}),
+        },
     },
     "rpkm": {
         "title": "RPKM/FPKM",
