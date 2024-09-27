@@ -46,7 +46,7 @@ jobs:
 
       - name: Push dev image
         uses: docker/build-push-action@v3
-        if: github.event_name == 'push'
+        if: github.event_name != 'release'
         with:
           # All available with python:3.X-slim are:
           # platforms: linux/386,linux/amd64,linux/arm/v5,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
