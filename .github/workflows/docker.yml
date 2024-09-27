@@ -19,32 +19,32 @@ jobs:
     if: github.repository == 'MultiQC/MultiQC'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repo
+      - name: "Check out the repo"
         uses: actions/checkout@v4
 
       # https://github.com/docker/setup-qemu-action
-      - name: Set up QEMU
+      - name: "Set up QEMU"
         uses: docker/setup-qemu-action@v2
 
       # https://github.com/docker/setup-buildx-action
-      - name: Set up Docker Buildx
+      - name: "Set up Docker Buildx"
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Log in to Docker Hub
+      - name: "Log in to Docker Hub"
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GitHub Container Registry
+      - name: "Login to GitHub Container Registry"
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push dev image
+      - name: "Build dev"
         uses: docker/build-push-action@v3
         if: github.event_name != 'release'
         with:
@@ -57,7 +57,7 @@ jobs:
             multiqc/multiqc:dev
             ghcr.io/multiqc/multiqc:dev
 
-      - name: Push release image
+      - name: "Build release"
         uses: docker/build-push-action@v3
         if: github.event_name == 'release'
         with:
