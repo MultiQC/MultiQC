@@ -1,5 +1,5 @@
 name: Request
-description: Suggest a feature/idea for MultiQC or for a specific module
+description: Suggest a feature/idea for MultiQC or for an existing module
 body:
   - type: textarea
     id: description
