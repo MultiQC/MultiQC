@@ -56,9 +56,8 @@ for mod_id, entry_point in config.avail_modules.items():
 
     text = f"""\
 ---
-name: {module.name}
-urls: {module.href}
-summary: >
+title: {module.name}
+description: >
   {module.info}
 ---
 
@@ -70,6 +69,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+{module.info}
+
+{", ".join([f"[{href}]({href})" for href in module.href])}
+:::
 
 {extra}{dedent(docstring)}
 
