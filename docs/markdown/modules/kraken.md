@@ -1,7 +1,7 @@
 ---
 title: Kraken
 description: >
-  Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+  Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
 ---
 
 <!--
@@ -14,12 +14,12 @@ File path for the source of this content: multiqc/modules/kraken/kraken.py
 -->
 
 :::note
-Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
 
 [https://ccb.jhu.edu/software/kraken/](https://ccb.jhu.edu/software/kraken/)
 :::
 
-The MultiQC module supports outputs from both Kraken and Kraken 2.
+The MultiQC module supports outputs from Kraken.
 
 It works with report files generated using the `--report` flag, that look like the following:
 
@@ -42,10 +42,12 @@ kraken:
   top_n: 5
 ```
 
+The module also handles [Bracken](https://ccb.jhu.edu/software/bracken/) outputs, which uses Kraken internally.
+
 ### File search patterns
 
 ```yaml
 kraken:
-  contents_re: ^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)unclassified
-  num_lines: 1
+  contents_re: ^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]
+  num_lines: 2
 ```
