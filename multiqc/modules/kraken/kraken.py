@@ -324,7 +324,6 @@ class MultiqcModule(BaseMultiqcModule):
     ):
         """Add a heatmap showing the minimizer duplication of the top taxa"""
 
-        duplication = list()
         pconfig = {
             "id": f"{self.anchor}-top-duplication_plot",
             "title": f"{self.name}: Top {MultiqcModule.TOP_N} species duplication",
@@ -341,14 +340,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         dup_by_taxon_by_sample: Dict[str, Dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
-        sorted_items = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
-        top_sorted_items = sorted_items[: MultiqcModule.TOP_N]
-        for taxon, pct_sum in top_sorted_items:
+        # not all samples have minimizers data, and we want to find top 5 species across those that have
+        _taxa_in_samples_with_minimizers = set()
+        taxa_sorted_by_pct = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
+        for taxon, pct_sum in taxa_sorted_by_pct:
             # Pull out counts for this rank + classif from each sample
             for s_name, dup_by_taxon in species_minimizer_duplication_by_top_taxon_by_sample.items():
                 minimizer_duplication = dup_by_taxon.get(taxon, None)
                 if minimizer_duplication:
                     dup_by_taxon_by_sample[s_name][taxon] = int(minimizer_duplication)
+                    _taxa_in_samples_with_minimizers.add(taxon)
+            if len(_taxa_in_samples_with_minimizers) >= 5:
+                break
 
         # Strip empty samples
         for sample, vals in dict(dup_by_taxon_by_sample).items():
@@ -357,12 +360,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not dup_by_taxon_by_sample:
             return
-
-        # Build data structures for heatmap
-        samples = list(dup_by_taxon_by_sample.keys())
-        top_taxa = list(dict(top_sorted_items).keys())
-        for sample in dup_by_taxon_by_sample:
-            duplication.append(list(dup_by_taxon_by_sample[sample].values()))
 
         self.add_section(
             name="Duplication rate of top species",
@@ -376,9 +373,7 @@ class MultiqcModule(BaseMultiqcModule):
                 A low coverage and high duplication rate (`>> 1`) is often sign of read stacking, which probably indicates of false positive hit.
             """,
             plot=heatmap.plot(
-                duplication,
-                xcats=samples,
-                ycats=top_taxa,
+                dup_by_taxon_by_sample,
                 pconfig=pconfig,
             ),
         )
@@ -428,7 +423,6 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
             return {}, {}
 
-        minimizer: Optional[str] = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (
