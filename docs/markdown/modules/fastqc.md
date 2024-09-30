@@ -87,10 +87,10 @@ column 2 = % of genome):
 
 ```bash
 # FastQC theoretical GC content curve: YOUR REFERENCE NAME
-0	0.005311768
-1	0.004108502
-2	0.004060371
-3	0.005066476
+0   0.005311768
+1   0.004108502
+2   0.004060371
+3   0.005066476
 [...]
 ```
 
