@@ -12,7 +12,7 @@ import warnings
 
 warnings.filterwarnings("ignore", category=SyntaxWarning)
 
-OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
+OLDEST_SUPPORTED_PYTHON_VERSION = "3.8"
 
 if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
     raise RuntimeError(

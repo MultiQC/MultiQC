@@ -28,7 +28,7 @@ dependencies = [
     "typeguard",
     "tqdm",  # progress bar in notebooks
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 authors = [
     {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
     {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
