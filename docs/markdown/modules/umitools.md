@@ -19,17 +19,17 @@ Currently, `dedup` and `extract` commands are supported.
 Sample names are extracted from log files if possible. In logs, input and output file paths are printed.
 However, either can be redirected from stdin/stdout:
 
-```
+```bash
 $ umi_tools extract -I input.fastq > result.fastq
 stdin : <_io.TextIOWrapper name='input.fastq' mode='r' encoding='UTF-8'>
 stdout : <_io.TextIOWrapper name='<stdout>' encoding='ascii'>
 ```
 
+```bash
 $ cat input.fastq | umi_tools extract -S output.fastq
-stdin : <\_io.TextIOWrapper name='<stdin>' mode='r' encoding='UTF-8'>
-stdout : <\_io.TextIOWrapper name='result.fastq' encoding='ascii'>
-
-````
+stdin : <_io.TextIOWrapper name='<stdin>' mode='r' encoding='UTF-8'>
+stdout : <_io.TextIOWrapper name='result.fastq' encoding='ascii'>
+```
 
 `umi_tools` requires at least one of the -I or -S options to be specified, so we can expect either
 one of those to be present in the log file, and we guess prioritizing the output file name. If this
