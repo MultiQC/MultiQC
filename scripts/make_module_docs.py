@@ -14,9 +14,13 @@ import yaml
 
 import argparse
 from pathlib import Path
-from textwrap import dedent, indent
+from textwrap import dedent
 
 from multiqc import config, report, BaseMultiqcModule
+
+test_data_dir = Path("test-data")
+if not test_data_dir.exists():
+    raise RuntimeError("Please clone https://github.com/MultiQC/test-data into test-data/")
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("module", help="Generate for a specific module", nargs="?")
@@ -38,7 +42,7 @@ for mod_id, entry_point in config.avail_modules.items():
     if mod_id == "custom_content":
         continue
 
-    mod_data_dir = Path("test-data") / "data" / "modules" / mod_id
+    mod_data_dir = test_data_dir / "data" / "modules" / mod_id
     assert mod_data_dir.exists() and mod_data_dir.is_dir(), mod_data_dir
     report.analysis_files = [mod_data_dir]
     report.search_files([mod_id])
