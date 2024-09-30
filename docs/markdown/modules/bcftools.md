@@ -26,7 +26,7 @@ Supported commands: `stats`
 In non-strand-specific data, reporting the total numbers of occurences for both changes
 in a comlementary pair - like `A>C` and `T>G` - might not bring any additional information.
 To collapse such statistics in the substitutions plot, you can add the following section into
-[your configuration](http://multiqc.info/docs/#configuring-multiqc):
+[your configuration](../getting_started/config.md):
 
 ```yaml
 bcftools:

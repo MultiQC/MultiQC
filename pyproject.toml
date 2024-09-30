@@ -62,7 +62,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
     "mypy",
     "types-PyYAML",
@@ -77,7 +77,7 @@ dev = [
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
@@ -246,7 +246,7 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
+### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
 #my-new-option = "myplugin.cli:new_option"
 #

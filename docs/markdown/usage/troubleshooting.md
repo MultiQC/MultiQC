@@ -111,7 +111,7 @@ There are a couple of things you can check here:
    files from the tool were empty or incomplete. If your data is missing,
    take a look and the raw files and make sure that there's something to see!
 3. Did you make sure that the logs you're trying to run MultiQC on are the ones
-   expected by the module in question? Check the [module documentation](https://multiqc.info/modules/)
+   expected by the module in question? Check the [module documentation](../modules/)
    and have a look at the [example data](https://github.com/MultiQC/test-data/tree/main/data/modules) used for CI tests.
 
 If everything looks fine, then MultiQC probably needs to be extended to support

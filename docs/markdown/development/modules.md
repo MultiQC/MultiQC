@@ -114,7 +114,7 @@ You can alternatively enable the strict mode using an environment variable:
 export MULTIQC_STRICT=true
 ```
 
-Or set it in the [config](http://multiqc.info/docs/#configuring-multiqc):
+Or set it in the [config](../getting_started/config.md):
 
 ```yaml
 # In multiqc_config.yaml
