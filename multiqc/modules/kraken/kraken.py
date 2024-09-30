@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
             total_cnt = (
-                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # bracken doesn't have unclassified
+                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # unclassified can be missing
                 + sample_cnt_by_taxon_by_rank["R"]["root"]
             )
             if total_cnt == 0:
