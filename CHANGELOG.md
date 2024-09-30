@@ -1,5 +1,28 @@
 # MultiQC Version History
 
+## [MultiQC v1.25.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.1) - 2024-09-30
+
+A few bugs fixed, improved the sample grouping UI, and handling freezes in containers with incompatible architectures.
+
+### Fixes
+
+- Fix export general stats to `multiqc_data.json`: flatten row groups for back-compatibility ([#2879](https://github.com/MultiQC/MultiQC/pull/2879))
+- Custom tables: ignore unrecognized fields instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
+- Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
+- Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
+
+### Modules
+
+- Kraken: re-add the "Unclassified" tab to the "Top taxa" barplot ([#2881](https://github.com/MultiQC/MultiQC/pull/2881))
+- bbmap: support qhist outputs with only R1 and extra header ([#2882](https://github.com/MultiQC/MultiQC/pull/2882))
+- Picard HsMetrics: fix collecting data sources ([#2880](https://github.com/MultiQC/MultiQC/pull/2880))
+
+### Refactoring & infrastructure
+
+- Test Docker image builds on every PR commit ([#2886](https://github.com/MultiQC/MultiQC/pull/2886))
+- Suppress "SyntaxWarning: invalid escape sequence" warnings from `colormath` ([#2889](https://github.com/MultiQC/MultiQC/pull/2889))
+- Check the `add_data_source` args (either `path` or `f` should be specified), use `strict_helpers.lint_error` ([#2865](https://github.com/MultiQC/MultiQC/pull/2865))
+
 ## [MultiQC v1.25](https://github.com/MultiQC/MultiQC/releases/tag/v1.25) - 2024-09-16
 
 ### Highlights - sample grouping
