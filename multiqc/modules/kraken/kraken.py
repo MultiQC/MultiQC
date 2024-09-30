@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
             total_cnt = (
-                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # bracken doesn't have unclassified
+                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # unclassified can be missing
                 + sample_cnt_by_taxon_by_rank["R"]["root"]
             )
             if total_cnt == 0:
@@ -423,6 +423,7 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
             return {}, {}
 
+        minimizer: Optional[str] = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (
