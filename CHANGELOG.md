@@ -13,7 +13,10 @@ A few bugs fixed, improved the sample grouping UI, and handling freezes in conta
 
 ### Modules
 
-- Kraken: re-add the "Unclassified" tab to the "Top taxa" barplot ([#2881](https://github.com/MultiQC/MultiQC/pull/2881))
+- Kraken:
+  - Re-add the "Unclassified" tab to the "Top taxa" barplot ([#2881](https://github.com/MultiQC/MultiQC/pull/2881))
+  - Fix the minimizers heatmap ([#2895](https://github.com/MultiQC/MultiQC/pull/2895))
+  - Remove the separate Bracken module as it's just Kraken internally. Fixes the issues when Kraken reports without unclassified are misidentified for Bracken reports ([#2894](https://github.com/MultiQC/MultiQC/pull/2894))
 - bbmap: support qhist outputs with only R1 and extra header ([#2882](https://github.com/MultiQC/MultiQC/pull/2882))
 - Picard HsMetrics: fix collecting data sources ([#2880](https://github.com/MultiQC/MultiQC/pull/2880))
 
