@@ -448,7 +448,7 @@ this in quotes. If MultiQC is unable to understand your config you will get an e
 saying `Could not parse command line config`.
 
 As an example, the following command configures the coverage levels to use for the
-Qualimap module: _(as [described in the docs](https://multiqc.info/modules/qualimap/))_
+Qualimap module: _(as [described in the docs](../modules/qualimap.md))_
 
 ```bash
 multiqc ./datadir --cl-config "qualimap_config: { general_stats_coverage: [20,40,200] }"
@@ -618,7 +618,7 @@ Usually it's better to just [specify which modules you want to run](#be-picky-wi
 ### Force interactive plots
 
 One step that can take some time is generating static-image plots
-(see [Flat / interactive plots](https://multiqc.info/docs/development/plots/#interactive--flat-image-plots)).
+(see [Flat / interactive plots](../development/plots.md#interactive--flat-image-plots)).
 You can force MultiQC to skip this and only use interactive plots by using the `--interactive`
 command line option (`config.plots_force_interactive`).
 

@@ -438,7 +438,7 @@ multiqc --strict test-data
 ```
 
 You can alternatively enable the strict mode by setting the environment variable
-`MULTIQC_STRICT`, or by setting it into the [config](http://multiqc.info/docs/#configuring-multiqc): `strict: true`.
+`MULTIQC_STRICT`, or by setting it into the [config](../getting_started/config.md): `strict: true`.
 
 # Examples
 

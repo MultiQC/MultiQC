@@ -32,7 +32,7 @@ sp:
     contents: "cutadapt version"
 ```
 
-See the [module search patterns](http://multiqc.info/docs/#module-search-patterns)
+See the [module search patterns](../getting_started/config.md#module-search-patterns)
 section of the MultiQC documentation for more information.
 
 The module also understands logs saved by Trim Galore, which contain cutadapt logs.

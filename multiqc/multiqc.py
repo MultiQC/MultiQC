@@ -548,7 +548,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
                 log_and_rich.rich_console_print(
                     "[blue]|           multiqc[/] | "
                     "Flat-image plots used. Disable with '--interactive'. "
-                    "See [link=https://multiqc.info/docs/#flat--interactive-plots]docs[/link]."
+                    "See [link=https://docs.seqera.io/multiqc/#flat--interactive-plots]docs[/link]."
                 )
 
         sys_exit_code = 0

@@ -30,7 +30,7 @@ If you have BISCUIT data from before this, please use MultiQC v1.8.
 The second tab of this plot uses the config option `read_count_multiplier`,
 so if millions of reads is not useful for your data you can customise this.
 
-See [Number base (multiplier)](https://multiqc.info/docs/#number-base-multiplier)
+See [Number base (multiplier)](../reports/customisation.md#number-base-multiplier)
 in the documentation.
 
 ### File search patterns

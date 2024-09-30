@@ -41,7 +41,7 @@ quast_config:
 ```
 
 The default module values are shown above. See the
-[main MultiQC documentation](http://multiqc.info/docs/#configuring-multiqc)
+[main MultiQC documentation](../getting_started/config.md)
 for more information about how to configure MultiQC.
 
 #### MetaQUAST

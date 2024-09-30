@@ -70,7 +70,7 @@ Sample names are discovered by parsing the line beginning
 It is possible to plot a dashed line showing the theoretical GC content for a
 reference genome. MultiQC comes with genome and transcriptome guides for Human
 and Mouse. You can use these in your reports by adding the following MultiQC
-config keys (see [Configuring MultiQC](http://multiqc.info/docs/#configuring-multiqc)):
+config keys (see [Configuring MultiQC](../getting_started/config.md)):
 
 ```yaml
 fastqc_config:
@@ -146,7 +146,7 @@ fastqc_config:
 
 Remember that it is possible to customise the order in which the different module sections appear
 in the report if you wish.
-See [the docs](https://multiqc.info/docs/#order-of-module-and-module-subsection-output) for more information.
+See [the docs](../reports/customisation.md#order-of-module-and-module-subsection-output) for more information.
 
 For example, to show the _Status Checks_ section at the top, use the following config:
 
