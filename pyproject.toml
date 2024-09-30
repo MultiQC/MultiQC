@@ -64,6 +64,7 @@ dev = [
     "pytest-xdist",  # for parallel testing with `pytest -n`
     "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
+    "pygithub",  # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
