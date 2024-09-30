@@ -1,7 +1,6 @@
 ---
-name: mirtop
-urls: ["https://github.com/miRTop/mirtop/"]
-summary: >
+title: mirtop
+description: >
   Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/mirtop/mirtop.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format
+
+[https://github.com/miRTop/mirtop/](https://github.com/miRTop/mirtop/)
+:::
 
 This tool is dedicated to the creation and management of miRNA alignment output using the standardized
 GFF3 format (see [miRTop/mirGFF3](https://github.com/miRTop/mirGFF3)).

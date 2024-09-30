@@ -1,7 +1,6 @@
 ---
-name: VG
-urls: ["https://github.com/vgteam/vg"]
-summary: >
+title: VG
+description: >
   Toolkit to manipulate and analyze graphical genomes, including read alignment
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/vg/vg.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Toolkit to manipulate and analyze graphical genomes, including read alignment
+
+[https://github.com/vgteam/vg](https://github.com/vgteam/vg)
+:::
 
 The module parses the
 [vg stats](https://github.com/vgteam/vg/wiki/Mapping-short-reads-with-Giraffe#evaluating-with-vg-stats)

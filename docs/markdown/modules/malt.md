@@ -1,7 +1,6 @@
 ---
-name: MALT
-urls: ["http://ab.inf.uni-tuebingen.de/software/malt/"]
-summary: >
+title: MALT
+description: >
   Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/malt/malt.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Aligns of metagenomic reads to a database of reference sequences (such as NR, GenBank or Silva) and outputs a MEGAN RMA file
+
+[http://ab.inf.uni-tuebingen.de/software/malt/](http://ab.inf.uni-tuebingen.de/software/malt/)
+:::
 
 The MALT MultiQC module reads the header of the MALT log files and produces three MultiQC sections:
 

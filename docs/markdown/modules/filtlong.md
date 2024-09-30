@@ -1,7 +1,6 @@
 ---
-name: Filtlong
-urls: ["https://github.com/rrwick/Filtlong"]
-summary: >
+title: Filtlong
+description: >
   Filters long reads by quality
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/filtlong/filtlong.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Filters long reads by quality
+
+[https://github.com/rrwick/Filtlong](https://github.com/rrwick/Filtlong)
+:::
 
 It can take a set of long reads and produce a smaller, better subset. It uses both read length (longer is better) and read identity (higher is better) when choosing which reads pass the filter.
 

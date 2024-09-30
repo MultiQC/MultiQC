@@ -1,7 +1,6 @@
 ---
-name: methylQA
-urls: ["http://methylqa.sourceforge.net/"]
-summary: >
+title: methylQA
+description: >
   Methylation sequencing data quality assessment tool
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/methylqa/methylqa.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Methylation sequencing data quality assessment tool
+
+[http://methylqa.sourceforge.net/](http://methylqa.sourceforge.net/)
+:::
 
 ### File search patterns
 

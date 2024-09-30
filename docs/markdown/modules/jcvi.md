@@ -1,7 +1,6 @@
 ---
-name: JCVI Genome Annotation
-urls: ["https://pypi.org/project/jcvi/"]
-summary: >
+title: JCVI Genome Annotation
+description: >
   Computes statistics on genome annotation
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/jcvi/jcvi.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Computes statistics on genome annotation
+
+[https://pypi.org/project/jcvi/](https://pypi.org/project/jcvi/)
+:::
 
 The JCVI module parses the output of `python -m jcvi.annotation.stats genestats <input.gff>`.
 The file name is used as the sample name.

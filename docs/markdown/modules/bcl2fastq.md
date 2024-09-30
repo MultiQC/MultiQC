@@ -1,7 +1,6 @@
 ---
-name: bcl2fastq
-urls: ["https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html"]
-summary: >
+title: bcl2fastq
+description: >
   Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bcl2fastq/bcl2fastq.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+
+[https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html](https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html)
+:::
 
 There are two versions of this software: `bcl2fastq` for MiSeq and HiSeq
 sequencing systems running RTA versions earlier than 1.8, and `bcl2fastq2` for

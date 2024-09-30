@@ -1,7 +1,6 @@
 ---
-name: STAR
-urls: ["https://github.com/alexdobin/STAR"]
-summary: >
+title: STAR
+description: >
   Universal RNA-seq aligner
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/star/star.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Universal RNA-seq aligner
+
+[https://github.com/alexdobin/STAR](https://github.com/alexdobin/STAR)
+:::
 
 This module parses summary statistics from the `Log.final.out` log files.
 Sample names are taken either from the filename prefix (`sampleNameLog.final.out`)

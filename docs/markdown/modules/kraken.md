@@ -1,7 +1,6 @@
 ---
-name: Kraken
-urls: ["https://ccb.jhu.edu/software/kraken/"]
-summary: >
+title: Kraken
+description: >
   Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/kraken/kraken.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence
+
+[https://ccb.jhu.edu/software/kraken/](https://ccb.jhu.edu/software/kraken/)
+:::
 
 The MultiQC module supports outputs from both Kraken and Kraken 2.
 

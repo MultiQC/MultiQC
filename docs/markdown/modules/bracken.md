@@ -1,7 +1,6 @@
 ---
-name: Bracken
-urls: ["https://ccb.jhu.edu/software/bracken/"]
-summary: >
+title: Bracken
+description: >
   Computes the abundance of species in DNA sequences from a metagenomics sample
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bracken/bracken.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Computes the abundance of species in DNA sequences from a metagenomics sample
+
+[https://ccb.jhu.edu/software/bracken/](https://ccb.jhu.edu/software/bracken/)
+:::
 
 This module works with Bracken output files that resemble Kraken reports. They look like the following:
 

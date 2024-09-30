@@ -1,7 +1,6 @@
 ---
-name: QoRTs
-urls: ["http://hartleys.github.io/QoRTs/"]
-summary: >
+title: QoRTs
+description: >
   Toolkit for analysis, QC, and data management of RNA-Seq datasets
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/qorts/qorts.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Toolkit for analysis, QC, and data management of RNA-Seq datasets
+
+[http://hartleys.github.io/QoRTs/](http://hartleys.github.io/QoRTs/)
+:::
 
 Aids in the detection and identification of errors, biases, and artifacts produced by paired-end high-throughput RNA-Seq technology. In addition, it can produce count data designed for use with differential expression and differential exon usage tools, as well as individual-sample and/or group-summary genome track files suitable for use with the UCSC genome browser.
 

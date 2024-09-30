@@ -1,7 +1,6 @@
 ---
-name: FastQC
-urls: ["http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"]
-summary: >
+title: FastQC
+description: >
   Quality control tool for high throughput sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quality control tool for high throughput sequencing data
+
+[http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+:::
 
 FastQC generates an HTML report which is what most people use when
 they run the program. However, it also helpfully generates a file

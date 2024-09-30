@@ -1,7 +1,6 @@
 ---
-name: Truvari
-urls: ["https://github.com/ACEnglish/truvari"]
-summary: >
+title: Truvari
+description: >
   Benchmarking, merging, and annotating structural variants
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/truvari/truvari.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Benchmarking, merging, and annotating structural variants
+
+[https://github.com/ACEnglish/truvari](https://github.com/ACEnglish/truvari)
+:::
 
 Supported commands:
 

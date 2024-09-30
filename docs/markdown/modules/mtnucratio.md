@@ -1,7 +1,6 @@
 ---
-name: mtnucratio
-urls: ["http://www.github.com/apeltzer/MTNucRatioCalculator"]
-summary: >
+title: mtnucratio
+description: >
   Computes mitochondrial to nuclear genome ratios in NGS datasets
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/mtnucratio/mtnucratio.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Computes mitochondrial to nuclear genome ratios in NGS datasets
+
+[http://www.github.com/apeltzer/MTNucRatioCalculator](http://www.github.com/apeltzer/MTNucRatioCalculator)
+:::
 
 ### File search patterns
 

@@ -1,7 +1,6 @@
 ---
-name: Bowtie 1
-urls: ["http://bowtie-bio.sourceforge.net/"]
-summary: >
+title: Bowtie 1
+description: >
   Ultrafast, memory-efficient short read aligner
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bowtie1/bowtie1.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Ultrafast, memory-efficient short read aligner
+
+[http://bowtie-bio.sourceforge.net/](http://bowtie-bio.sourceforge.net/)
+:::
 
 ### File search patterns
 

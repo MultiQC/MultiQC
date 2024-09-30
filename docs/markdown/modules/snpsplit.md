@@ -1,7 +1,6 @@
 ---
-name: SNPsplit
-urls: ["https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/"]
-summary: >
+title: SNPsplit
+description: >
   Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/snpsplit/snpsplit.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions
+
+[https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/)
+:::
 
 Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.
 

@@ -1,7 +1,6 @@
 ---
-name: HiC-Pro
-urls: ["https://github.com/nservant/HiC-Pro"]
-summary: >
+title: HiC-Pro
+description: >
   Pipeline for Hi-C data processing
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/hicpro/hicpro.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Pipeline for Hi-C data processing
+
+[https://github.com/nservant/HiC-Pro](https://github.com/nservant/HiC-Pro)
+:::
 
 **Note** - because this module shares sample identifiers across multiple files,
 the `--fn_as_s_name` / `config.use_filename_as_sample_name` functionality has been disabled and has no effect.

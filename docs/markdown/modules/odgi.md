@@ -1,7 +1,6 @@
 ---
-name: ODGI
-urls: ["https://github.com/pangenome/odgi"]
-summary: >
+title: ODGI
+description: >
   Analysis and manipulation of pangenome graphs structured in the variation graph model
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/odgi/odgi.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Analysis and manipulation of pangenome graphs structured in the variation graph model
+
+[https://github.com/pangenome/odgi](https://github.com/pangenome/odgi)
+:::
 
 The odgi module parses [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html) reports.
 It is specifically designed to parse the output of a command like:

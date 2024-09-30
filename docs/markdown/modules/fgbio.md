@@ -1,7 +1,6 @@
 ---
-name: fgbio
-urls: ["http://fulcrumgenomics.github.io/fgbio/"]
-summary: >
+title: fgbio
+description: >
   Processing and evaluating data containing UMIs
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/fgbio/fgbio.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Processing and evaluating data containing UMIs
+
+[http://fulcrumgenomics.github.io/fgbio/](http://fulcrumgenomics.github.io/fgbio/)
+:::
 
 The module currently supports tool the following outputs:
 

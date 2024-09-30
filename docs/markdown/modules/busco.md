@@ -1,7 +1,6 @@
 ---
-name: BUSCO
-urls: ["http://busco.ezlab.org/"]
-summary: >
+title: BUSCO
+description: >
   Assesses genome assembly and annotation completeness
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/busco/busco.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Assesses genome assembly and annotation completeness
+
+[http://busco.ezlab.org/](http://busco.ezlab.org/)
+:::
 
 BUSCO v2 provides quantitative measures for the assessment of genome
 assembly, gene set, and transcriptome completeness, based on

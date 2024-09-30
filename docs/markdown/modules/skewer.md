@@ -1,7 +1,6 @@
 ---
-name: Skewer
-urls: ["https://github.com/relipmoc/skewer"]
-summary: >
+title: Skewer
+description: >
   Adapter trimming tool for NGS paired-end sequences
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/skewer/skewer.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Adapter trimming tool for NGS paired-end sequences
+
+[https://github.com/relipmoc/skewer](https://github.com/relipmoc/skewer)
+:::
 
 ### File search patterns
 

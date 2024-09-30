@@ -1,7 +1,6 @@
 ---
-name: VCFTools
-urls: ["https://vcftools.github.io"]
-summary: >
+title: VCFTools
+description: >
   Program to analyse and reporting on VCF files
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/vcftools/vcftools.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Program to analyse and reporting on VCF files
+
+[https://vcftools.github.io](https://vcftools.github.io)
+:::
 
 #### Important General Note
 

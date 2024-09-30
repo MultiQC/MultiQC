@@ -1,7 +1,6 @@
 ---
-name: ClipAndMerge
-urls: ["http://www.github.com/apeltzer/ClipAndMerge"]
-summary: >
+title: ClipAndMerge
+description: >
   Adapter clipping and read merging for ancient DNA data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/clipandmerge/clipandmerge.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Adapter clipping and read merging for ancient DNA data
+
+[http://www.github.com/apeltzer/ClipAndMerge](http://www.github.com/apeltzer/ClipAndMerge)
+:::
 
 Note that the versions < 1.7.8 use the basename of the file path to distinguish samples, whereas newer
 versions produce logfiles with a sample identifer that gets parsed by MultiQC.

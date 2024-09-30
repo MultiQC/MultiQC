@@ -1,7 +1,6 @@
 ---
-name: qc3C
-urls: ["http://github.com/cerebis/qc3C"]
-summary: >
+title: qc3C
+description: >
   Reference-free and BAM based quality control for Hi-C data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/qc3C/qc3C.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Reference-free and BAM based quality control for Hi-C data
+
+[http://github.com/cerebis/qc3C](http://github.com/cerebis/qc3C)
+:::
 
 qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product
 of proximity ligation -- in effect the Hi-C signal strength. Using a k-mer based approach, signal strength

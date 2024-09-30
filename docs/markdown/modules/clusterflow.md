@@ -1,7 +1,6 @@
 ---
-name: Cluster Flow
-urls: ["http://clusterflow.io"]
-summary: >
+title: Cluster Flow
+description: >
   Simple and flexible bioinformatics pipeline tool
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/clusterflow/clusterflow.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Simple and flexible bioinformatics pipeline tool
+
+[http://clusterflow.io](http://clusterflow.io)
+:::
 
 The module for Cluster Flow parses `*_clusterflow.txt` logs
 and finds consensus commands executed by modules in each pipeline run.

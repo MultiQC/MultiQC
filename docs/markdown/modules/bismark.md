@@ -1,7 +1,6 @@
 ---
-name: Bismark
-urls: ["http://www.bioinformatics.babraham.ac.uk/projects/bismark/"]
-summary: >
+title: Bismark
+description: >
   Maps bisulfite converted sequence reads and determine cytosine methylation states
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bismark/bismark.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Maps bisulfite converted sequence reads and determine cytosine methylation states
+
+[http://www.bioinformatics.babraham.ac.uk/projects/bismark/](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+:::
 
 ### File search patterns
 

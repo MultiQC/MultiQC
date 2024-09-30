@@ -1,7 +1,6 @@
 ---
-name: Sambamba
-urls: ["https://lomereiter.github.io/sambamba/"]
-summary: >
+title: Sambamba
+description: >
   Toolkit for interacting with BAM/CRAM files
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sambamba/sambamba.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Toolkit for interacting with BAM/CRAM files
+
+[https://lomereiter.github.io/sambamba/](https://lomereiter.github.io/sambamba/)
+:::
 
 It is functionally similar to Samtools, but the source code is written in the D Language. It allows for faster performance while still being easy to use.
 

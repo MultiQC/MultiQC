@@ -1,7 +1,6 @@
 ---
-name: HUMID
-urls: ["https://github.com/jfjlaros/HUMID"]
-summary: >
+title: HUMID
+description: >
   Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/humid/humid.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs
+
+[https://github.com/jfjlaros/HUMID](https://github.com/jfjlaros/HUMID)
+:::
 
 ### File search patterns
 

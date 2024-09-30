@@ -1,7 +1,6 @@
 ---
-name: Tophat
-urls: ["https://ccb.jhu.edu/software/tophat/"]
-summary: >
+title: Tophat
+description: >
   Splice junction RNA-Seq reads mapper for mammalian-sized genomes
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/tophat/tophat.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Splice junction RNA-Seq reads mapper for mammalian-sized genomes
+
+[https://ccb.jhu.edu/software/tophat/](https://ccb.jhu.edu/software/tophat/)
+:::
 
 ### File search patterns
 

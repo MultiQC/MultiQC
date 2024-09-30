@@ -1,7 +1,6 @@
 ---
-name: eigenstratdatabasetools
-urls: ["https://github.com/TCLamnidis/EigenStratDatabaseTools"]
-summary: >
+title: eigenstratdatabasetools
+description: >
   Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/eigenstratdatabasetools/eigenstratdatabasetools.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tools to compare and manipulate the contents of EingenStrat databases, and to calculate SNP coverage statistics in such databases
+
+[https://github.com/TCLamnidis/EigenStratDatabaseTools](https://github.com/TCLamnidis/EigenStratDatabaseTools)
+:::
 
 ### File search patterns
 

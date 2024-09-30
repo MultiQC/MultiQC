@@ -1,7 +1,6 @@
 ---
-name: Porechop
-urls: ["https://github.com/rrwick/Porechop"]
-summary: >
+title: Porechop
+description: >
   Finds and removes adapters from Oxford Nanopore reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/porechop/porechop.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Finds and removes adapters from Oxford Nanopore reads
+
+[https://github.com/rrwick/Porechop](https://github.com/rrwick/Porechop)
+:::
 
 Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle,
 it is treated as chimeric and chopped into separate reads. Porechop performs thorough alignments to

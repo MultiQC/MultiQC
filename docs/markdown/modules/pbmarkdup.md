@@ -1,7 +1,6 @@
 ---
-name: pbmarkdup
-urls: ["https://github.com/PacificBiosciences/pbmarkdup"]
-summary: >
+title: pbmarkdup
+description: >
   Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/pbmarkdup/pbmarkdup.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates
+
+[https://github.com/PacificBiosciences/pbmarkdup](https://github.com/PacificBiosciences/pbmarkdup)
+:::
 
 The module adds the **% Unique Molecules** and **%Duplicate Reads** (hidden) to the General Statistics
 table.

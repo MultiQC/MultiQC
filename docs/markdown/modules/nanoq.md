@@ -1,7 +1,6 @@
 ---
-name: nanoq
-urls: ["https://github.com/nerdna/nanoq/"]
-summary: >
+title: nanoq
+description: >
   Reports read quality and length from nanopore sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/nanoq/nanoq.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Reports read quality and length from nanopore sequencing data
+
+[https://github.com/nerdna/nanoq/](https://github.com/nerdna/nanoq/)
+:::
 
 ### File search patterns
 

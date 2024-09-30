@@ -1,7 +1,6 @@
 ---
-name: GATK
-urls: ["https://www.broadinstitute.org/gatk/"]
-summary: >
+title: GATK
+description: >
   Wide variety of tools with a primary focus on variant discovery and genotyping
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/gatk/gatk.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Wide variety of tools with a primary focus on variant discovery and genotyping
+
+[https://www.broadinstitute.org/gatk/](https://www.broadinstitute.org/gatk/)
+:::
 
 Supported tools:
 

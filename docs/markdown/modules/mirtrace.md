@@ -1,7 +1,6 @@
 ---
-name: miRTrace
-urls: ["https://github.com/friedlanderlab/mirtrace"]
-summary: >
+title: miRTrace
+description: >
   Quality control for small RNA sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/mirtrace/mirtrace.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quality control for small RNA sequencing data
+
+[https://github.com/friedlanderlab/mirtrace](https://github.com/friedlanderlab/mirtrace)
+:::
 
 miRTrace performs adapter trimming and discards the reads that fail to pass
 the QC filters. miRTrace specifically addresses sequencing quality, read length,

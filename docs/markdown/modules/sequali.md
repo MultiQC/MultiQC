@@ -1,7 +1,6 @@
 ---
-name: Sequali
-urls: ["https://github.com/rhpvorderman/sequali"]
-summary: >
+title: Sequali
+description: >
   Sequencing quality control for both long-read and short-read data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sequali/sequali.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Sequencing quality control for both long-read and short-read data
+
+[https://github.com/rhpvorderman/sequali](https://github.com/rhpvorderman/sequali)
+:::
 
 Features adapter search, overrepresented sequence analysis and duplication analysis and supports
 FASTQ and uBAM inputs.

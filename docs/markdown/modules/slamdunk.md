@@ -1,7 +1,6 @@
 ---
-name: Slamdunk
-urls: ["http://t-neumann.github.io/slamdunk/"]
-summary: >
+title: Slamdunk
+description: >
   Tool to analyze SLAM-Seq data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/slamdunk/slamdunk.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tool to analyze SLAM-Seq data
+
+[http://t-neumann.github.io/slamdunk/](http://t-neumann.github.io/slamdunk/)
+:::
 
 This module should be able to parse logs from v0.2.2-dev onwards.
 

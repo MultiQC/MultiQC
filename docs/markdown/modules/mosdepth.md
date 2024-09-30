@@ -1,7 +1,6 @@
 ---
-name: Mosdepth
-urls: ["https://github.com/brentp/mosdepth"]
-summary: >
+title: Mosdepth
+description: >
   Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/mosdepth/mosdepth.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing
+
+[https://github.com/brentp/mosdepth](https://github.com/brentp/mosdepth)
+:::
 
 Mosdepth can generate several output files all with a common prefix and different endings:
 

@@ -1,7 +1,6 @@
 ---
-name: Lima
-urls: ["https://github.com/PacificBiosciences/barcoding"]
-summary: >
+title: Lima
+description: >
   Demultiplex PacBio single-molecule sequencing reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/lima/lima.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Demultiplex PacBio single-molecule sequencing reads
+
+[https://github.com/PacificBiosciences/barcoding](https://github.com/PacificBiosciences/barcoding)
+:::
 
 Lima, the PacBio barcode demultiplexer, is the standard tool to identify barcode sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the tool that powers the Demultiplex Barcodes GUI-based analysis application.
 

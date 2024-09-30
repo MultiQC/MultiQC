@@ -1,7 +1,6 @@
 ---
-name: Sickle
-urls: ["https://github.com/najoshi/sickle"]
-summary: >
+title: Sickle
+description: >
   A windowed adaptive trimming tool for FASTQ files using quality
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sickle/sickle.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+A windowed adaptive trimming tool for FASTQ files using quality
+
+[https://github.com/najoshi/sickle](https://github.com/najoshi/sickle)
+:::
 
 The `stdout` can be captured by directing it to a file e.g. `sickle command 2> sickle_out.log`
 

@@ -1,7 +1,6 @@
 ---
-name: Salmon
-urls: ["https://combine-lab.github.io/salmon/"]
-summary: >
+title: Salmon
+description: >
   Quantifies expression of transcripts using RNA-seq data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/salmon/salmon.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quantifies expression of transcripts using RNA-seq data
+
+[https://combine-lab.github.io/salmon/](https://combine-lab.github.io/salmon/)
+:::
 
 The Salmon module parses `meta_info.json`, `lib_format_counts.json` and `flenDist.txt` files, if found.
 

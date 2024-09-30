@@ -1,7 +1,6 @@
 ---
-name: Snippy
-urls: ["https://github.com/tseemann/snippy"]
-summary: >
+title: Snippy
+description: >
   Rapid haploid variant calling and core genome alignment
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/snippy/snippy.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Rapid haploid variant calling and core genome alignment
+
+[https://github.com/tseemann/snippy](https://github.com/tseemann/snippy)
+:::
 
 The following commands are implemented:
 

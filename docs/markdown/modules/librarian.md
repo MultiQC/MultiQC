@@ -1,7 +1,6 @@
 ---
-name: Librarian
-urls: ["https://github.com/DesmondWillowbrook/Librarian"]
-summary: >
+title: Librarian
+description: >
   Predicts the sequencing library type from the base composition of a FastQ file
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/librarian/librarian.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Predicts the sequencing library type from the base composition of a FastQ file
+
+[https://github.com/DesmondWillowbrook/Librarian](https://github.com/DesmondWillowbrook/Librarian)
+:::
 
 Librarian reads from high throughput sequencing experiments show base compositions that are
 characteristic for their library type. For example, data from RNA-seq and WGBS-seq libraries show markedly

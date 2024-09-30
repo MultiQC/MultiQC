@@ -1,7 +1,6 @@
 ---
-name: Prokka
-urls: ["http://www.vicbioinformatics.com/software.prokka.shtml"]
-summary: >
+title: Prokka
+description: >
   Rapid annotation of prokaryotic genomes
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/prokka/prokka.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Rapid annotation of prokaryotic genomes
+
+[http://www.vicbioinformatics.com/software.prokka.shtml](http://www.vicbioinformatics.com/software.prokka.shtml)
+:::
 
 The Prokka module accepts two configuration options:
 

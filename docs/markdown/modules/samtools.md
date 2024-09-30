@@ -1,7 +1,6 @@
 ---
-name: Samtools
-urls: ["http://www.htslib.org"]
-summary: >
+title: Samtools
+description: >
   Toolkit for interacting with BAM/CRAM files
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/samtools/samtools.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Toolkit for interacting with BAM/CRAM files
+
+[http://www.htslib.org](http://www.htslib.org)
+:::
 
 Supported commands:
 

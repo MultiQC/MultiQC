@@ -1,7 +1,6 @@
 ---
-name: Sargasso
-urls: ["http://biomedicalinformaticsgroup.github.io/Sargasso/"]
-summary: >
+title: Sargasso
+description: >
   Separates mixed-species RNA-seq reads according to their species of origin
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sargasso/sargasso.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Separates mixed-species RNA-seq reads according to their species of origin
+
+[http://biomedicalinformaticsgroup.github.io/Sargasso/](http://biomedicalinformaticsgroup.github.io/Sargasso/)
+:::
 
 ### File search patterns
 

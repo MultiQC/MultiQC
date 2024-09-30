@@ -1,7 +1,6 @@
 ---
-name: HOMER
-urls: ["http://homer.ucsd.edu/homer/"]
-summary: >
+title: HOMER
+description: >
   Motif discovery and next-gen sequencing analysis
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/homer/homer.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Motif discovery and next-gen sequencing analysis
+
+[http://homer.ucsd.edu/homer/](http://homer.ucsd.edu/homer/)
+:::
 
 HOMER contains many useful tools for analyzing ChIP-Seq, GRO-Seq, RNA-Seq, DNase-Seq, Hi-C and numerous
 other types of functional genomics sequencing data sets. The module currently only parses output from the

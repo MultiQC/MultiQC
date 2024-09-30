@@ -1,7 +1,6 @@
 ---
-name: NanoStat
-urls: ["https://github.com/wdecoster/nanostat/", "https://github.com/wdecoster/nanoplot/"]
-summary: >
+title: NanoStat
+description: >
   Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/nanostat/nanostat.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp)
+
+[https://github.com/wdecoster/nanostat/](https://github.com/wdecoster/nanostat/), [https://github.com/wdecoster/nanoplot/](https://github.com/wdecoster/nanoplot/)
+:::
 
 Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore methods (MinION, PromethION etc.)
 

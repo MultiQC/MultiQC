@@ -1,7 +1,6 @@
 ---
-name: Nextclade
-urls: ["https://github.com/nextstrain/nextclade"]
-summary: >
+title: Nextclade
+description: >
   Viral genome alignment, clade assignment, mutation calling, and quality checks
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/nextclade/nextclade.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Viral genome alignment, clade assignment, mutation calling, and quality checks
+
+[https://github.com/nextstrain/nextclade](https://github.com/nextstrain/nextclade)
+:::
 
 Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences
 and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of

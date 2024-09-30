@@ -1,7 +1,6 @@
 ---
-name: SexDetErrmine
-urls: ["https://github.com/TCLamnidis/Sex.DetERRmine"]
-summary: >
+title: SexDetErrmine
+description: >
   Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sexdeterrmine/sexdeterrmine.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Calculates relative coverage of X and Y chromosomes and their associated error bars from the depth of coverage at specified SNPs
+
+[https://github.com/TCLamnidis/Sex.DetERRmine](https://github.com/TCLamnidis/Sex.DetERRmine)
+:::
 
 ### File search patterns
 

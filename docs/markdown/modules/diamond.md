@@ -1,7 +1,6 @@
 ---
-name: DIAMOND
-urls: ["https://github.com/bbuchfink/diamond"]
-summary: >
+title: DIAMOND
+description: >
   Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/diamond/diamond.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Sequence aligner for protein and translated DNA searches, a drop-in replacement for the NCBI BLAST
+
+[https://github.com/bbuchfink/diamond](https://github.com/bbuchfink/diamond)
+:::
 
 Key features are:
 

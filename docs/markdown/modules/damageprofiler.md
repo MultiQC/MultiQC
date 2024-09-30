@@ -1,7 +1,6 @@
 ---
-name: DamageProfiler
-urls: ["https://github.com/Integrative-Transcriptomics/DamageProfiler"]
-summary: >
+title: DamageProfiler
+description: >
   DNA damage pattern retrieval for ancient DNA analysis
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/damageprofiler/damageprofiler.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+DNA damage pattern retrieval for ancient DNA analysis
+
+[https://github.com/Integrative-Transcriptomics/DamageProfiler](https://github.com/Integrative-Transcriptomics/DamageProfiler)
+:::
 
 ### File search patterns
 

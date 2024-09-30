@@ -1,7 +1,6 @@
 ---
-name: BBTools
-urls: ["http://jgi.doe.gov/data-and-tools/bbtools/"]
-summary: >
+title: BBTools
+description: >
   Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bbmap/bbmap.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads
+
+[http://jgi.doe.gov/data-and-tools/bbtools/](http://jgi.doe.gov/data-and-tools/bbtools/)
+:::
 
 The module produces summary statistics from the
 [BBMap](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.

@@ -1,7 +1,6 @@
 ---
-name: GffCompare
-urls: ["https://ccb.jhu.edu/software/stringtie/gffcompare.shtml"]
-summary: >
+title: GffCompare
+description: >
   Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/gffcompare/gffcompare.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format
+
+[https://ccb.jhu.edu/software/stringtie/gffcompare.shtml](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+:::
 
 The program `gffcompare` can be used to compare, merge, annotate and estimate accuracy
 of one or more GFF files (the "query" files), when compared with a reference annotation (also provided as GFF).

@@ -1,7 +1,6 @@
 ---
-name: DRAGEN
-urls: ["https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html"]
-summary: >
+title: DRAGEN
+description: >
   Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/dragen/dragen.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+
+[https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+:::
 
 DRAGEN has a number of different pipelines and outputs, including base calling, DNA and RNA alignment,
 post-alignment processing and variant calling, covering virtually all stages of typical NGS data processing.

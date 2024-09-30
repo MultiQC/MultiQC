@@ -1,7 +1,6 @@
 ---
-name: biobambam2
-urls: ["https://gitlab.com/german.tischler/biobambam2"]
-summary: >
+title: biobambam2
+description: >
   Tools for early stage alignment file processing
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/biobambam2/biobambam2.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tools for early stage alignment file processing
+
+[https://gitlab.com/german.tischler/biobambam2](https://gitlab.com/german.tischler/biobambam2)
+:::
 
 Currently, the biobambam2 module only processes output from the `bamsormadup` command.
 Not only that, but it cheats by using the module code from Picard/MarkDuplicates.

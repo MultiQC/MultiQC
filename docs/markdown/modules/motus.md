@@ -1,7 +1,6 @@
 ---
-name: Motus
-urls: ["https://motu-tool.org/"]
-summary: >
+title: Motus
+description: >
   Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/motus/motus.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs)
+
+[https://motu-tool.org/](https://motu-tool.org/)
+:::
 
 The module takes as input in the stdout of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.
 

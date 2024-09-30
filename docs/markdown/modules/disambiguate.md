@@ -1,7 +1,6 @@
 ---
-name: Disambiguate
-urls: ["https://github.com/AstraZeneca-NGS/disambiguate"]
-summary: >
+title: Disambiguate
+description: >
   Disambiguate reads aligned to two different species (e.g. human and mouse)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/disambiguate/disambiguate.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Disambiguate reads aligned to two different species (e.g. human and mouse)
+
+[https://github.com/AstraZeneca-NGS/disambiguate](https://github.com/AstraZeneca-NGS/disambiguate)
+:::
 
 ### File search patterns
 

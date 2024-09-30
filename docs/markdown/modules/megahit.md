@@ -1,7 +1,6 @@
 ---
-name: MEGAHIT
-urls: ["https://github.com/voutcn/megahit"]
-summary: >
+title: MEGAHIT
+description: >
   NGS read assembler
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/megahit/megahit.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+NGS read assembler
+
+[https://github.com/voutcn/megahit](https://github.com/voutcn/megahit)
+:::
 
 MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
 name (e.g. `sample1.log` will yield a sample name of `sample1`).

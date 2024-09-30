@@ -1,7 +1,6 @@
 ---
-name: MinIONQC
-urls: ["https://github.com/roblanf/minion_qc"]
-summary: >
+title: MinIONQC
+description: >
   Quality control for ONT (Oxford Nanopore) long reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/minionqc/minionqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quality control for ONT (Oxford Nanopore) long reads
+
+[https://github.com/roblanf/minion_qc](https://github.com/roblanf/minion_qc)
+:::
 
 It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies)
 long-read base-callers to perform QC on the reads. It allows quick-and-easy comparison of data from

@@ -1,7 +1,6 @@
 ---
-name: Bamdst
-urls: ["https://https://github.com/shiquan/bamdst"]
-summary: >
+title: Bamdst
+description: >
   Lightweight tool to stat the depth coverage of target regions of BAM file(s)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bamdst/bamdst.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Lightweight tool to stat the depth coverage of target regions of BAM file(s)
+
+[https://https://github.com/shiquan/bamdst](https://https://github.com/shiquan/bamdst)
+:::
 
 The module reads data from two types of Bamdst logs:
 

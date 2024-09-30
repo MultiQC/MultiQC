@@ -1,7 +1,6 @@
 ---
-name: goleft indexcov
-urls: ["https://github.com/brentp/goleft/tree/master/indexcov"]
-summary: >
+title: goleft indexcov
+description: >
   Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/goleft_indexcov/goleft_indexcov.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution
+
+[https://github.com/brentp/goleft/tree/master/indexcov](https://github.com/brentp/goleft/tree/master/indexcov)
+:::
 
 This is useful as a quick QC to get coverage values across the genome.
 

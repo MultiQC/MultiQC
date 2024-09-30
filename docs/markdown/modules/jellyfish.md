@@ -1,7 +1,6 @@
 ---
-name: Jellyfish
-urls: ["https://github.com/gmarcais/Jellyfish"]
-summary: >
+title: Jellyfish
+description: >
   Counting k-mers in DNA
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/jellyfish/jellyfish.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Counting k-mers in DNA
+
+[https://github.com/gmarcais/Jellyfish](https://github.com/gmarcais/Jellyfish)
+:::
 
 A k-mer is a substring of length k, and counting the occurrences of all such substrings
 is a central step in many analyses of DNA sequence. JELLYFISH can count k-mers using an order of

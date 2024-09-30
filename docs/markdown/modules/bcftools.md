@@ -1,7 +1,6 @@
 ---
-name: Bcftools
-urls: ["https://samtools.github.io/bcftools/"]
-summary: >
+title: Bcftools
+description: >
   Utilities for variant calling and manipulating VCFs and BCFs
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bcftools/bcftools.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Utilities for variant calling and manipulating VCFs and BCFs
+
+[https://samtools.github.io/bcftools/](https://samtools.github.io/bcftools/)
+:::
 
 Supported commands: `stats`
 

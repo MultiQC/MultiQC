@@ -1,7 +1,6 @@
 ---
-name: Cutadapt
-urls: ["https://cutadapt.readthedocs.io/"]
-summary: >
+title: Cutadapt
+description: >
   Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/cutadapt/cutadapt.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences
+
+[https://cutadapt.readthedocs.io/](https://cutadapt.readthedocs.io/)
+:::
 
 This module should be able to parse logs from a wide range of versions of Cutadapt.
 It works with both the regular Cutadapt report output and also with

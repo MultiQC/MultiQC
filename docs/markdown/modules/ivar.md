@@ -1,7 +1,6 @@
 ---
-name: iVar
-urls: ["https://github.com/andersen-lab/ivar"]
-summary: >
+title: iVar
+description: >
   Functions for viral amplicon-based sequencing
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/ivar/ivar.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Functions for viral amplicon-based sequencing
+
+[https://github.com/andersen-lab/ivar](https://github.com/andersen-lab/ivar)
+:::
 
 This module parses the output from the `ivar trim` command and creates a table view.
 Both output from V1 and V2 of the tool are supported and parsed accordingly.

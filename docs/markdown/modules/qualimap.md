@@ -1,7 +1,6 @@
 ---
-name: QualiMap
-urls: ["http://qualimap.bioinfo.cipf.es/"]
-summary: >
+title: QualiMap
+description: >
   Quality control of alignment data and its derivatives like feature counts
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/qualimap/qualimap.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quality control of alignment data and its derivatives like feature counts
+
+[http://qualimap.bioinfo.cipf.es/](http://qualimap.bioinfo.cipf.es/)
+:::
 
 The module supports the Qualimap commands `BamQC` and `RNASeq`.
 Note that Qualimap must be run with the `-outdir` option as well as

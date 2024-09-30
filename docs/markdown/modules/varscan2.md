@@ -1,7 +1,6 @@
 ---
-name: VarScan2
-urls: ["http://dkoboldt.github.io/varscan/"]
-summary: >
+title: VarScan2
+description: >
   Variant detection in massively parallel sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/varscan2/varscan2.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Variant detection in massively parallel sequencing data
+
+[http://dkoboldt.github.io/varscan/](http://dkoboldt.github.io/varscan/)
+:::
 
 VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome
 resequencing data generated on Illumina, SOLiD, Life/PGM, Roche/454, and similar instruments.

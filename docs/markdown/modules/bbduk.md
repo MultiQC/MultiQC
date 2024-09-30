@@ -1,7 +1,6 @@
 ---
-name: BBDuk
-urls: ["https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/"]
-summary: >
+title: BBDuk
+description: >
   Common data-quality-related trimming, filtering, and masking operations with a kmer based approach
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bbduk/bbduk.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Common data-quality-related trimming, filtering, and masking operations with a kmer based approach
+
+[https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/](https://jgi.doe.gov/data-and-tools/software-tools/bbtools/bb-tools-user-guide/bbduk-guide/)
+:::
 
 The module produces summary statistics from the stdout logging information from the BBDuk tool of the
 [BBTools](http://jgi.doe.gov/data-and-tools/bbtools/bb-tools-user-guide/) suite of tools.

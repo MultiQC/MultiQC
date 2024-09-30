@@ -1,7 +1,6 @@
 ---
-name: Samblaster
-urls: ["https://github.com/GregoryFaust/samblaster"]
-summary: >
+title: Samblaster
+description: >
   Marks duplicates and extracts discordant and split reads from sam files
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/samblaster/samblaster.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Marks duplicates and extracts discordant and split reads from sam files
+
+[https://github.com/GregoryFaust/samblaster](https://github.com/GregoryFaust/samblaster)
+:::
 
 ### File search patterns
 

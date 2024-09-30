@@ -1,7 +1,6 @@
 ---
-name: PRINSEQ++
-urls: ["https://github.com/Adrian-Cantu/PRINSEQ-plus-plus"]
-summary: >
+title: PRINSEQ++
+description: >
   C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/prinseqplusplus/prinseqplusplus.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads
+
+[https://github.com/Adrian-Cantu/PRINSEQ-plus-plus](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus)
+:::
 
 This module requires that PRINSEQ++ has been run with the flag `-VERBOSE 1`.
 

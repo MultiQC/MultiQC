@@ -1,7 +1,6 @@
 ---
-name: THetA2
-urls: ["http://compbio.cs.brown.edu/projects/theta/"]
-summary: >
+title: THetA2
+description: >
   Estimates tumour purity and clonal / subclonal copy number
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/theta2/theta2.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Estimates tumour purity and clonal / subclonal copy number
+
+[http://compbio.cs.brown.edu/projects/theta/](http://compbio.cs.brown.edu/projects/theta/)
+:::
 
 The module plots the % germline and % tumour subclone for each sample.
 Note that each sample can have multiple maximum likelihood solutions - the MultiQC

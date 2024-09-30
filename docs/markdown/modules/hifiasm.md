@@ -1,7 +1,6 @@
 ---
-name: HiFiasm
-urls: ["https://github.com/chhylp123/hifiasm"]
-summary: >
+title: HiFiasm
+description: >
   Haplotype-resolved assembler for accurate Hifi reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/hifiasm/hifiasm.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Haplotype-resolved assembler for accurate Hifi reads
+
+[https://github.com/chhylp123/hifiasm](https://github.com/chhylp123/hifiasm)
+:::
 
 ### File search patterns
 

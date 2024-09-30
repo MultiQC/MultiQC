@@ -1,7 +1,6 @@
 ---
-name: Picard
-urls: ["http://broadinstitute.github.io/picard/"]
-summary: >
+title: Picard
+description: >
   Tools for manipulating high-throughput sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/picard/picard.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tools for manipulating high-throughput sequencing data
+
+[http://broadinstitute.github.io/picard/](http://broadinstitute.github.io/picard/)
+:::
 
 Supported commands:
 

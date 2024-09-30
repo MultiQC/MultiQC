@@ -1,7 +1,6 @@
 ---
-name: ngsderive
-urls: ["https://github.com/stjudecloud/ngsderive"]
-summary: >
+title: ngsderive
+description: >
   Forensic tool for by backwards computing library information in sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/ngsderive/ngsderive.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Forensic tool for by backwards computing library information in sequencing data
+
+[https://github.com/stjudecloud/ngsderive](https://github.com/stjudecloud/ngsderive)
+:::
 
 Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results
 should be considered with that understanding. Please see the documentation for more information.

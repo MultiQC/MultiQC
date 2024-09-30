@@ -1,7 +1,6 @@
 ---
-name: mapDamage
-urls: ["https://github.com/ginolhac/mapDamage"]
-summary: >
+title: mapDamage
+description: >
   Tracks and quantifies damage patterns in ancient DNA sequences
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/mapdamage/mapdamage.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Tracks and quantifies damage patterns in ancient DNA sequences
+
+[https://github.com/ginolhac/mapDamage](https://github.com/ginolhac/mapDamage)
+:::
 
 This module parses the base `misincorporation` output.
 

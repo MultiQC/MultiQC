@@ -1,7 +1,6 @@
 ---
-name: Pangolin
-urls: ["https://github.com/cov-lineages/pangolin"]
-summary: >
+title: Pangolin
+description: >
   Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/pangolin/pangolin.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages
+
+[https://github.com/cov-lineages/pangolin](https://github.com/cov-lineages/pangolin)
+:::
 
 Implements the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature.
 It allows a user to assign a SARS-CoV-2 genome sequence the most likely lineage (Pango lineage)

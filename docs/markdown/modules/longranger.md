@@ -1,7 +1,6 @@
 ---
-name: Long Ranger
-urls: ["https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger"]
-summary: >
+title: Long Ranger
+description: >
   Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/longranger/longranger.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling
+
+[https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
+:::
 
 Currently supported Longranger pipelines:
 

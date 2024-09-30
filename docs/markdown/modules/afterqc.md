@@ -1,7 +1,6 @@
 ---
-name: AfterQC
-urls: ["https://github.com/OpenGene/AfterQC"]
-summary: >
+title: AfterQC
+description: >
   Automatic filtering, trimming, error removing, and quality control for FastQ data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/afterqc/afterqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Automatic filtering, trimming, error removing, and quality control for FastQ data
+
+[https://github.com/OpenGene/AfterQC](https://github.com/OpenGene/AfterQC)
+:::
 
 AfterQC goes through all FastQ files in a folder and outputs three folders: good, bad and QC folders,
 which contains good reads, bad reads and the QC results of each fastq file/pair.

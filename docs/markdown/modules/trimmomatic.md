@@ -1,7 +1,6 @@
 ---
-name: Trimmomatic
-urls: ["http://www.usadellab.org/cms/?page=trimmomatic"]
-summary: >
+title: Trimmomatic
+description: >
   Read trimming tool for Illumina NGS data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/trimmomatic/trimmomatic.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Read trimming tool for Illumina NGS data
+
+[http://www.usadellab.org/cms/?page=trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
+:::
 
 The module parses the stderr output, that can be captured by directing it to a file e.g.:
 

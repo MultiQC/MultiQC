@@ -1,7 +1,6 @@
 ---
-name: WhatsHap
-urls: ["https://whatshap.readthedocs.io/"]
-summary: >
+title: WhatsHap
+description: >
   Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/whatshap/whatshap.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)
+
+[https://whatshap.readthedocs.io/](https://whatshap.readthedocs.io/)
+:::
 
 The module is currently restricted to the output from `whatshap stats --tsv`.
 

@@ -1,7 +1,6 @@
 ---
-name: GLIMPSE
-urls: ["https://odelaneau.github.io/GLIMPSE/"]
-summary: >
+title: GLIMPSE
+description: >
   Low-coverage whole genome sequencing imputation
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/glimpse/glimpse.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Low-coverage whole genome sequencing imputation
+
+[https://odelaneau.github.io/GLIMPSE/](https://odelaneau.github.io/GLIMPSE/)
+:::
 
 The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing
 hundreds of thousands of reference samples, with a special focus on rare variants.

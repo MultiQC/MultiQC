@@ -1,7 +1,6 @@
 ---
-name: UMICollapse
-urls: ["https://github.com/Daniel-Liu-c0deb0t/UMICollapse"]
-summary: >
+title: UMICollapse
+description: >
   Algorithms for efficiently collapsing reads with Unique Molecular Identifiers
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/umicollapse/umicollapse.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Algorithms for efficiently collapsing reads with Unique Molecular Identifiers
+
+[https://github.com/Daniel-Liu-c0deb0t/UMICollapse](https://github.com/Daniel-Liu-c0deb0t/UMICollapse)
+:::
 
 Sample names are extracted from log files if possible. In logs, the command
 line arguments are printed, which must have both the input and output

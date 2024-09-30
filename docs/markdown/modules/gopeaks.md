@@ -1,7 +1,6 @@
 ---
-name: GoPeaks
-urls: ["https://github.com/maxsonBraunLab/gopeaks"]
-summary: >
+title: GoPeaks
+description: >
   Calls peaks in CUT&TAG/CUT&RUN datasets
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/gopeaks/gopeaks.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Calls peaks in CUT&TAG/CUT&RUN datasets
+
+[https://github.com/maxsonBraunLab/gopeaks](https://github.com/maxsonBraunLab/gopeaks)
+:::
 
 Gopeaks uses a binomial distribution to model the read counts in sliding windows across
 the genome and calculate peak regions that are enriched over the background.

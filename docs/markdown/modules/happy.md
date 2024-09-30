@@ -1,7 +1,6 @@
 ---
-name: hap.py
-urls: ["https://github.com/Illumina/hap.py"]
-summary: >
+title: hap.py
+description: >
   Benchmarks variant calls against gold standard truth datasets
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/happy/happy.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Benchmarks variant calls against gold standard truth datasets
+
+[https://github.com/Illumina/hap.py](https://github.com/Illumina/hap.py)
+:::
 
 Som.py output not currently supported.
 

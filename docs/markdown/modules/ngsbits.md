@@ -1,7 +1,6 @@
 ---
-name: ngs-bits
-urls: ["https://github.com/imgag/ngs-bits"]
-summary: >
+title: ngs-bits
+description: >
   Calculating statistics from FASTQ, BAM, and VCF
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/ngsbits/ngsbits.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Calculating statistics from FASTQ, BAM, and VCF
+
+[https://github.com/imgag/ngs-bits](https://github.com/imgag/ngs-bits)
+:::
 
 The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
 

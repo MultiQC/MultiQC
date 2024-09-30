@@ -1,7 +1,6 @@
 ---
-name: Illumina InterOp Statistics
-urls: ["http://illumina.github.io/interop/index.html"]
-summary: >
+title: Illumina InterOp Statistics
+description: >
   Reading and writing InterOp metric files
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/interop/interop.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Reading and writing InterOp metric files
+
+[http://illumina.github.io/interop/index.html](http://illumina.github.io/interop/index.html)
+:::
 
 The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.
 These metric files are binary files produced during a run providing detailed statistics about a run. In a few

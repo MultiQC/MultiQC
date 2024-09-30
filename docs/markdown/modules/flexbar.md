@@ -1,7 +1,6 @@
 ---
-name: Flexbar
-urls: ["https://github.com/seqan/flexbar"]
-summary: >
+title: Flexbar
+description: >
   Barcode and adapter removal tool
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/flexbar/flexbar.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Barcode and adapter removal tool
+
+[https://github.com/seqan/flexbar](https://github.com/seqan/flexbar)
+:::
 
 Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes
 barcoded runs and removes adapter sequences. Moreover, trimming and filtering features are provided.

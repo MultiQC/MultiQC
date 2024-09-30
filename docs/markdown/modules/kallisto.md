@@ -1,7 +1,6 @@
 ---
-name: Kallisto
-urls: ["http://pachterlab.github.io/kallisto/"]
-summary: >
+title: Kallisto
+description: >
   Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/kallisto/kallisto.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data
+
+[http://pachterlab.github.io/kallisto/](http://pachterlab.github.io/kallisto/)
+:::
 
 **Note** - MultiQC parses the standard out from Kallisto, _not_ any of its output files
 (`abundance.h5`, `abundance.tsv`, and `run_info.json`). As such, you must capture the

@@ -1,7 +1,6 @@
 ---
-name: OptiType
-urls: ["https://github.com/FRED-2/OptiType"]
-summary: >
+title: OptiType
+description: >
   Precision HLA typing from next-generation sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/optitype/optitype.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Precision HLA typing from next-generation sequencing data
+
+[https://github.com/FRED-2/OptiType](https://github.com/FRED-2/OptiType)
+:::
 
 Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit
 HLA genotyping predictions from NGS data by simultaneously selecting all major and minor HLA Class I alleles.

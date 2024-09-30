@@ -1,7 +1,6 @@
 ---
-name: Sourmash
-urls: ["https://github.com/sourmash-bio/sourmash"]
-summary: >
+title: Sourmash
+description: >
   Quickly searches, compares, and analyzes genomic and metagenomic data sets
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sourmash/sourmash.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quickly searches, compares, and analyzes genomic and metagenomic data sets
+
+[https://github.com/sourmash-bio/sourmash](https://github.com/sourmash-bio/sourmash)
+:::
 
 The module can summarise data from the following sourmash output files
 (descriptions from command line help output):

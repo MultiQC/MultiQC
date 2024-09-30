@@ -1,7 +1,6 @@
 ---
-name: MetaPhlAn
-urls: ["https://github.com/biobakery/MetaPhlAn"]
-summary: >
+title: MetaPhlAn
+description: >
   Profiles the composition of microbial communities from metagenomic shotgun sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/metaphlan/metaphlan.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Profiles the composition of microbial communities from metagenomic shotgun sequencing data
+
+[https://github.com/biobakery/MetaPhlAn](https://github.com/biobakery/MetaPhlAn)
+:::
 
 The module supports outputs from MetaPhlAn, that look like the following:
 

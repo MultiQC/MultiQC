@@ -1,7 +1,6 @@
 ---
-name: Preseq
-urls: ["http://smithlabresearch.org/software/preseq/"]
-summary: >
+title: Preseq
+description: >
   Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/preseq/preseq.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Estimates library complexity, showing how many additional unique reads are sequenced for increasing total read count
+
+[http://smithlabresearch.org/software/preseq/](http://smithlabresearch.org/software/preseq/)
+:::
 
 A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library where total reads = unique reads.
 

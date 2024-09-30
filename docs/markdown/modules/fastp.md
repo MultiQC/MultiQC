@@ -1,7 +1,6 @@
 ---
-name: fastp
-urls: ["https://github.com/OpenGene/fastp"]
-summary: >
+title: fastp
+description: >
   All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/fastp/fastp.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
+
+[https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp)
+:::
 
 Fastp goes through fastq files in a folder and perform a series of quality control and filtering.
 Quality control and reporting are displayed both before and after filtering, allowing for a clear

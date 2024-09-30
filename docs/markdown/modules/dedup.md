@@ -1,7 +1,6 @@
 ---
-name: DeDup
-urls: ["http://www.github.com/apeltzer/DeDup"]
-summary: >
+title: DeDup
+description: >
   Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/dedup/dedup.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis
+
+[http://www.github.com/apeltzer/DeDup](http://www.github.com/apeltzer/DeDup)
+:::
 
 By default, tables show read counts in thousands.
 To customise this, you can set the following MultiQC config variables:

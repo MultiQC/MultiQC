@@ -1,7 +1,6 @@
 ---
-name: HiCUP
-urls: ["http://www.bioinformatics.babraham.ac.uk/projects/hicup/"]
-summary: >
+title: HiCUP
+description: >
   Mapping and quality control on Hi-C data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/hicup/hicup.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Mapping and quality control on Hi-C data
+
+[http://www.bioinformatics.babraham.ac.uk/projects/hicup/](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
+:::
 
 ### File search patterns
 

@@ -1,7 +1,6 @@
 ---
-name: HTSeq Count
-urls: ["https://htseq.readthedocs.io/en/master/htseqcount.html"]
-summary: >
+title: HTSeq Count
+description: >
   Part of the HTSeq package: counts reads covering specified genomic features
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/htseq/htseq.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Part of the HTSeq package: counts reads covering specified genomic features
+
+[https://htseq.readthedocs.io/en/master/htseqcount.html](https://htseq.readthedocs.io/en/master/htseqcount.html)
+:::
 
 HTSeq is a general purpose Python package that provides infrastructure to
 process data from high-throughput sequencing assays. `htseq-count` is a tool

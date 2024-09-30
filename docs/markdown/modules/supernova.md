@@ -1,7 +1,6 @@
 ---
-name: Supernova
-urls: ["https://www.10xgenomics.com/"]
-summary: >
+title: Supernova
+description: >
   De novo genome assembler of 10X Genomics linked-reads
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/supernova/supernova.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+De novo genome assembler of 10X Genomics linked-reads
+
+[https://www.10xgenomics.com/](https://www.10xgenomics.com/)
+:::
 
 The module parses the reports from an assembly run. As a bare minimum it requires the file `report.txt`,
 found in the folder `sampleID/outs/`, to function. Note! If you are anything like the author (@remiolsen),

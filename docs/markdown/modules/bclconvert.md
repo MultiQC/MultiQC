@@ -1,7 +1,6 @@
 ---
-name: BCL Convert
-urls: ["https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html"]
-summary: >
+title: BCL Convert
+description: >
   Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bclconvert/bclconvert.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis
+
+[https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html](https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html)
+:::
 
 This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple
 bclconvert run outputs as long as they are from the same sequencing run. When doing this,

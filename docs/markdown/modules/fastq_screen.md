@@ -1,7 +1,6 @@
 ---
-name: FastQ Screen
-urls: ["http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/"]
-summary: >
+title: FastQ Screen
+description: >
   Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/fastq_screen/fastq_screen.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect
+
+[http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
+:::
 
 By default, the module creates a plot that emulates the FastQ Screen output
 with blue and red stacked bars showing unique and multimapping read counts.

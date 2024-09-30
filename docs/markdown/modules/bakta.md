@@ -1,7 +1,6 @@
 ---
-name: Bakta
-urls: ["https://github.com/oschwengers/bakta"]
-summary: >
+title: Bakta
+description: >
   Rapid & standardized annotation of bacterial genomes, MAGs & plasmids
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/bakta/bakta.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Rapid & standardized annotation of bacterial genomes, MAGs & plasmids
+
+[https://github.com/oschwengers/bakta](https://github.com/oschwengers/bakta)
+:::
 
 The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
 summary text file used is included in the Bakta output since v1.3.0. The MultiQC module was written for

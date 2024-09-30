@@ -1,7 +1,6 @@
 ---
-name: RSEM
-urls: ["https://deweylab.github.io/RSEM/"]
-summary: >
+title: RSEM
+description: >
   Estimates gene and isoform expression levels from RNA-Seq data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/rsem/rsem.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Estimates gene and isoform expression levels from RNA-Seq data
+
+[https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
+:::
 
 Supported scripts:
 

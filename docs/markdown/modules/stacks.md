@@ -1,7 +1,6 @@
 ---
-name: Stacks
-urls: ["http://catchenlab.life.illinois.edu/stacks/"]
-summary: >
+title: Stacks
+description: >
   Analyzes restriction enzyme-based data (e.g. RAD-seq)
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/stacks/stacks.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Analyzes restriction enzyme-based data (e.g. RAD-seq)
+
+[http://catchenlab.life.illinois.edu/stacks/](http://catchenlab.life.illinois.edu/stacks/)
+:::
 
 This module is designed to only parse some of the output from the Stacks `denovo_map` pipeline.
 

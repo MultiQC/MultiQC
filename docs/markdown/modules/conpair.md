@@ -1,7 +1,6 @@
 ---
-name: Conpair
-urls: ["https://github.com/nygenome/Conpair"]
-summary: >
+title: Conpair
+description: >
   Estimates concordance and contamination for tumor–normal pairs
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/conpair/conpair.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Estimates concordance and contamination for tumor–normal pairs
+
+[https://github.com/nygenome/Conpair](https://github.com/nygenome/Conpair)
+:::
 
 Useful for tumor-normal studies. Performs concordance verification (= samples coming from the same individual), and cross-individual contamination level estimation in WGS and WES sequencing experiments
 

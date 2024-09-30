@@ -1,7 +1,6 @@
 ---
-name: VEP
-urls: ["https://www.ensembl.org/info/docs/tools/vep/index.html"]
-summary: >
+title: VEP
+description: >
   Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/vep/vep.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions
+
+[https://www.ensembl.org/info/docs/tools/vep/index.html](https://www.ensembl.org/info/docs/tools/vep/index.html)
+:::
 
 MultiQC parses the Ensembl VEP summary statistics stored in either HTML or plain text format.
 

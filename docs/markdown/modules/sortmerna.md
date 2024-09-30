@@ -1,7 +1,6 @@
 ---
-name: SortMeRNA
-urls: ["http://bioinfo.lifl.fr/RNA/sortmerna/"]
-summary: >
+title: SortMeRNA
+description: >
   Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/sortmerna/sortmerna.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data
+
+[http://bioinfo.lifl.fr/RNA/sortmerna/](http://bioinfo.lifl.fr/RNA/sortmerna/)
+:::
 
 The core algorithm is based on approximate seeds and allows for fast and sensitive analyses of nucleotide sequences. The main application of SortMeRNA is filtering ribosomal RNA from metatranscriptomic data.
 

@@ -1,7 +1,6 @@
 ---
-name: featureCounts
-urls: ["http://subread.sourceforge.net/"]
-summary: >
+title: featureCounts
+description: >
   Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/featurecounts/featurecounts.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations
+
+[http://subread.sourceforge.net/](http://subread.sourceforge.net/)
+:::
 
 As of MultiQC v1.10, the module should also work with output from
 [Rsubread](https://bioconductor.org/packages/release/bioc/html/Rsubread.html).

@@ -1,7 +1,6 @@
 ---
-name: CheckQC
-urls: ["https://github.com/Molmed/checkQC"]
-summary: >
+title: CheckQC
+description: >
   Checks a set of quality criteria against an Illumina runfolder
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/checkqc/checkqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Checks a set of quality criteria against an Illumina runfolder
+
+[https://github.com/Molmed/checkQC](https://github.com/Molmed/checkQC)
+:::
 
 The module parses a CheckQC JSON file, so make sure to use CheckQC with the `--json` flag and collect the stdout in a file.
 

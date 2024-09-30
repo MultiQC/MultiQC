@@ -1,7 +1,6 @@
 ---
-name: Ganon
-urls: ["https://pirovc.github.io/ganon/"]
-summary: >
+title: Ganon
+description: >
   Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/ganon/ganon.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers
+
+[https://pirovc.github.io/ganon/](https://pirovc.github.io/ganon/)
+:::
 
 The module takes summary statistics from a file containing stdout from `ganon classify`.
 

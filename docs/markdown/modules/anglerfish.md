@@ -1,7 +1,6 @@
 ---
-name: Anglerfish
-urls: ["https://github.com/remiolsen/anglerfish"]
-summary: >
+title: Anglerfish
+description: >
   Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/anglerfish/anglerfish.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells
+
+[https://github.com/remiolsen/anglerfish](https://github.com/remiolsen/anglerfish)
+:::
 
 Assessment of pool balancing, contamination, and insert sizes are currently supported
 

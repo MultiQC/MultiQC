@@ -1,7 +1,6 @@
 ---
-name: FLASh
-urls: ["https://ccb.jhu.edu/software/FLASH/"]
-summary: >
+title: FLASh
+description: >
   Merges paired-end reads from next-generation sequencing experiments
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/flash/flash.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Merges paired-end reads from next-generation sequencing experiments
+
+[https://ccb.jhu.edu/software/FLASH/](https://ccb.jhu.edu/software/FLASH/)
+:::
 
 To create a log file suitable for the module, you can use `tee`. From the FLASh help:
 

@@ -1,7 +1,6 @@
 ---
-name: BioBloom Tools
-urls: ["https://github.com/bcgsc/biobloom/"]
-summary: >
+title: BioBloom Tools
+description: >
   Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/biobloomtools/biobloomtools.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection
+
+[https://github.com/bcgsc/biobloom/](https://github.com/bcgsc/biobloom/)
+:::
 
 BioBloom tools (BBT) create filters for a given reference and then to categorize sequences.
 This methodology is faster than alignment but does not provide mapping locations. BBT was initially intended to

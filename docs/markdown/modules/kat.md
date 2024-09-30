@@ -1,7 +1,6 @@
 ---
-name: K-mer Analysis Toolkit
-urls: ["https://github.com/TGAC/KAT"]
-summary: >
+title: K-mer Analysis Toolkit
+description: >
   Analyses sequencing data via its k-mer spectra
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/kat/kat.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Analyses sequencing data via its k-mer spectra
+
+[https://github.com/TGAC/KAT](https://github.com/TGAC/KAT)
+:::
 
 The KAT multiqc module interprets output from KAT distribution analysis json files, which typically
 contain information such as estimated genome size and heterozygosity rates from your k-mer spectra.

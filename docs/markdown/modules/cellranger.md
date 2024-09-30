@@ -1,7 +1,6 @@
 ---
-name: Cell Ranger
-urls: ["https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger"]
-summary: >
+title: Cell Ranger
+description: >
   Analyzes single cell expression or VDJ data produced by 10X Genomics
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/cellranger/cellranger.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Analyzes single cell expression or VDJ data produced by 10X Genomics
+
+[https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
+:::
 
 The module summarizes the main information useful for QC, including:
 

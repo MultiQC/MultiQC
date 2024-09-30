@@ -1,7 +1,6 @@
 ---
-name: SeqWho
-urls: ["https://daehwankimlab.github.io/seqwho/"]
-summary: >
+title: SeqWho
+description: >
   Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/seqwho/seqwho.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Determines FASTQ(A) sequencing file source protocol and the species of origin, to check that the composition of the library is expected
+
+[https://daehwankimlab.github.io/seqwho/](https://daehwankimlab.github.io/seqwho/)
+:::
 
 ### File search patterns
 

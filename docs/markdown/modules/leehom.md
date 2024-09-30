@@ -1,7 +1,6 @@
 ---
-name: leeHom
-urls: ["https://github.com/grenaud/leeHom"]
-summary: >
+title: leeHom
+description: >
   Bayesian reconstruction of ancient DNA
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/leehom/leehom.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Bayesian reconstruction of ancient DNA
+
+[https://github.com/grenaud/leeHom](https://github.com/grenaud/leeHom)
+:::
 
 leeHom is a Bayesian maximum a posteriori algorithm for stripping
 sequencing adapters and merging overlapping portions of reads.

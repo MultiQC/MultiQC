@@ -1,7 +1,6 @@
 ---
-name: DRAGEN-FastQC
-urls: ["https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html"]
-summary: >
+title: DRAGEN-FastQC
+description: >
   Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/dragen_fastqc/dragen_fastqc.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data
+
+[https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html](https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html)
+:::
 
 DRAGEN has a number of different pipelines and outputs, including base calling, DNA and RNA alignment, and
 many others. Starting with the release of DRAGEN v3.6, it also supports primary analysis of sequencing

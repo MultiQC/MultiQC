@@ -1,7 +1,6 @@
 ---
-name: PURPLE
-urls: ["https://github.com/hartwigmedical/hmftools/"]
-summary: >
+title: PURPLE
+description: >
   A purity, ploidy and copy number estimator for whole genome tumor data
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/purple/purple.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+A purity, ploidy and copy number estimator for whole genome tumor data
+
+[https://github.com/hartwigmedical/hmftools/](https://github.com/hartwigmedical/hmftools/)
+:::
 
 PURPLE combines B-allele frequency (BAF), read depth ratios, somatic variants and
 structural variant breakpoints to estimate the purity and copy number profile

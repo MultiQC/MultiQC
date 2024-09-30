@@ -1,7 +1,6 @@
 ---
-name: VerifyBAMID
-urls: ["https://genome.sph.umich.edu/wiki/VerifyBamID"]
-summary: >
+title: VerifyBAMID
+description: >
   Detects sample contamination and/or sample swaps
 ---
 
@@ -13,6 +12,12 @@ Do not edit the markdown, it will be overwritten.
 File path for the source of this content: multiqc/modules/verifybamid/verifybamid.py
 ~~~~~~~~~~~~~~~~~~~~~~~
 -->
+
+:::note
+Detects sample contamination and/or sample swaps
+
+[https://genome.sph.umich.edu/wiki/VerifyBamID](https://genome.sph.umich.edu/wiki/VerifyBamID)
+:::
 
 VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
 A key step in any genetic analysis is to verify whether data being generated matches expectations.
