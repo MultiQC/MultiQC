@@ -176,26 +176,24 @@ class MultiqcModule(BaseMultiqcModule):
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one = f"% {top_taxa[0]}"
+            top_one = f"{top_taxa[0]}"
             headers["pct_top_one"] = {
                 "title": top_one,
-                "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                    top_rank_name, top_taxa[0]
-                ),
+                "description": f"Percentage of reads that were the top {top_rank_name.lower()} over all samples ({top_taxa[0]})",
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBuGn",
             }
             headers["pct_top_n"] = {
-                "title": f"% Top {MultiqcModule.TOP_N} {top_rank_name}",
-                "description": f"Percentage of reads that were classified by one of the top-{MultiqcModule.TOP_N} {top_rank_name} ({', '.join(top_taxa)})",
+                "title": f"Top {MultiqcModule.TOP_N} {top_rank_name.lower()}",
+                "description": f"Percentage of reads that were classified by one of the top-{MultiqcModule.TOP_N} {top_rank_name.lower()} ({', '.join(top_taxa)})",
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBu",
             }
 
         headers["pct_unclassified"] = {
-            "title": "% Unclassified",
+            "title": "Unclassified",
             "description": "Percentage of reads that were unclassified",
             "suffix": "%",
             "max": 100,
