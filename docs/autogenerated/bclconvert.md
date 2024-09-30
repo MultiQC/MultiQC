@@ -17,14 +17,15 @@ File path for the source of this content: multiqc/modules/bclconvert/bclconvert.
 This BclConvert module is based on the bcl2fastq multiqc module. It can parse multiple
 bclconvert run outputs as long as they are from the same sequencing run. When doing this,
 the undetermined reads will be 'corrected' and re-calculated (as an unknown read from
-one bclcovnert run might not be truly unknown, but simply from another run).
+one run might not be truly unknown, but simply from another run).
 
 #### Calculate estimated depth
 
 You can specify a genome size in config
 
 It's often useful to talk about sequencing yield in terms of estimated depth of coverage.
-In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
+In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in
+your [MultiQC configuration](http://multiqc.info/docs/#configuring-multiqc):
 
 ```yaml
 bclconvert:

@@ -20,7 +20,7 @@ file paths.
 
 ```
 umicollapse bam -i SRR19887568.sorted.bam -o SRR19887568.umi_dedup.sorted.bam
-Arguments	[bam, -i, SRR19887568.sorted.bam, -o, SRR19887568.umi_dedup.sorted.bam]
+Arguments   [bam, -i, SRR19887568.sorted.bam, -o, SRR19887568.umi_dedup.sorted.bam]
 ```
 
 `umicollapse` requires both -i and -o flags as valid file paths. Process

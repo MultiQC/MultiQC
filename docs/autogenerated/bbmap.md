@@ -64,65 +64,83 @@ Additional information on the BBMap tools is available on
 ```yaml
 bbmap/aqhist:
   contents: "#Quality\tcount1\tfraction1\tcount2\tfraction2"
-  num_lines: 1
+  num_lines: 10
 bbmap/bhist:
   contents: "#Pos\tA\tC\tG\tT\tN"
-  num_lines: 1
+  num_lines: 10
 bbmap/bincov:
   contents: "#RefName\tCov\tPos\tRunningPos"
-  num_lines: 3
+  num_lines: 10
 bbmap/bqhist:
   contents: "#BaseNum\tcount_1\tmin_1\tmax_1\tmean_1\tQ1_1\tmed_1\tQ3_1\tLW_1\tRW_1\t\
     count_2\tmin_2\tmax_2\tmean_2\tQ1_2\tmed_2\tQ3_2\tLW_2\tRW_2"
-  num_lines: 1
+  num_lines: 10
 bbmap/covhist:
   contents: "#Coverage\tnumBases"
-  num_lines: 1
+  num_lines: 10
 bbmap/covstats:
   contents: "#ID\tAvg_fold"
-  num_lines: 1
+  num_lines: 10
 bbmap/ehist:
   contents: "#Errors\tCount"
-  num_lines: 1
+  num_lines: 10
 bbmap/gchist:
-  contents: "#GC\tCount"
-  num_lines: 5
+  contents:
+    - "#Mean\t"
+    - "#GC\tCount"
+  num_lines: 10
 bbmap/idhist:
-  contents: "#Mean_reads"
-  num_lines: 1
+  contents:
+    - "#Mean_reads"
+    - "#Identity\tReads\tBases"
+  num_lines: 10
 bbmap/ihist:
-  contents: "#InsertSize\tCount"
-  num_lines: 6
+  contents:
+    - "#Mean\t"
+    - "#InsertSize\tCount"
+  num_lines: 10
 bbmap/indelhist:
   contents: "#Length\tDeletions\tInsertions"
-  num_lines: 1
+  num_lines: 10
 bbmap/lhist:
   contents: "#Length\tCount"
-  num_lines: 1
+  num_lines: 10
 bbmap/mhist:
   contents: "#BaseNum\tMatch1\tSub1\tDel1\tIns1\tN1\tOther1\tMatch2\tSub2\tDel2\t\
     Ins2\tN2\tOther2"
-  num_lines: 1
+  num_lines: 10
 bbmap/qahist:
-  contents: "#Deviation"
-  num_lines: 1
+  contents: "#Quality\tMatch\tSub\tIns\tDel"
+  num_lines: 10
 bbmap/qchist:
   contents_re: "#Quality\tcount1\tfraction1$"
-  num_lines: 1
+  num_lines: 10
 bbmap/qhist:
-  contents: "#BaseNum\tRead1_linear\tRead1_log\tRead1_measured\tRead2_linear\tRead2_log\t\
-    Read2_measured"
-  num_lines: 1
+  contents: "#BaseNum\tRead1_linear\tRead1_log\tRead1_measured"
+  num_lines: 10
 bbmap/rpkm:
-  contents: "#File\t"
-  num_lines: 1
+  contents:
+    - "#File\t"
+    - "#Reads\t"
+    - "#Mapped\t"
+    - "#RefSequences\t"
+    - "#Name Length"
+  num_lines: 10
 bbmap/stats:
-  contents: "#Name\tReads\tReadsPct"
-  num_lines: 4
+  contents:
+    - "#File"
+    - "#Total"
+    - "#Matched"
+    - "#Name\tReads\tReadsPct"
+  num_lines: 10
 bbmap/statsfile:
-  contents: "Reads Used:"
-  num_lines: 1
+  contents:
+    - "Reads Used:"
+    - "Mapping:"
+    - "Reads/sec:"
+    - "kBases/sec:"
+  num_lines: 10
 bbmap/statsfile_machine:
   contents: Reads Used=
-  num_lines: 1
+  num_lines: 10
 ```
