@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module supports outputs from both Kraken and Kraken 2.
+    The MultiQC module supports outputs from Kraken.
 
     It works with report files generated using the `--report` flag, that look like the following:
 
@@ -34,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
     kraken:
       top_n: 5
     ```
+
+    The module also handles [Bracken](https://ccb.jhu.edu/software/bracken/) outputs, which uses Kraken internally.
     """
 
     T_RANKS = {
@@ -56,8 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         name: str = "Kraken",
         anchor: str = "kraken",
         href: str = "https://ccb.jhu.edu/software/kraken/",
-        info: str = "Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor "
-        "(LCA) of a given sequence.",
+        info: str = "Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
         doi: str = "10.1186/gb-2014-15-3-r46",
         sp_key: str = "kraken",
     ):
@@ -386,7 +387,7 @@ class MultiqcModule(BaseMultiqcModule):
 def parse_logs(
     f,
 ) -> Tuple[
-    Dict[str, Dict[str, Union[int]]],
+    Dict[str, Dict[str, int]],
     Dict[str, float],
 ]:
     """
@@ -427,6 +428,7 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
             return {}, {}
 
+        minimizer: Optional[str] = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (
@@ -461,7 +463,7 @@ def parse_logs(
         # num_spaces = len(classif) - len(classif_stripped)
 
         cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
-        if minimizer_distinct is not None and rank_code == "S":
+        if minimizer_distinct is not None and minimizer is not None and rank_code == "S":
             minimizer_duplication = int(minimizer) / int(minimizer_distinct) if minimizer_distinct != 0 else 0.0
             min_dup_by_taxon[taxon] = minimizer_duplication
 
