@@ -45,7 +45,9 @@ def get_milestone_prs(repo, current_tag: str, previous_tag: str, limit=100) -> L
                 print(f"Reached limit of {limit} PRs")
                 return all_pulls
         else:
-            print(f"PR not in milestone '{p.milestone.title}': {p.number} {p.title}")
+            print(
+                f"The PR is not in the previous miletone {previous_tag} nor the current milestone {current_tag}: '{p.milestone.title}': {p.number} {p.title}"
+            )
 
     return all_pulls
 
