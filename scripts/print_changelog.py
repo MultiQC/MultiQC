@@ -65,7 +65,7 @@ def get_version_from_tag() -> str:
         for line in f:
             if line.startswith("version ="):
                 version = line.split(" = ")[1].strip().strip('"')
-                return version
+                return version.removesuffix("dev")
     raise ValueError("Could not find version in pyproject.toml")
 
 
@@ -96,8 +96,8 @@ def main():
         "Module updates": [],
         "Fixes": [],
         "Module fixes": [],
-        "Refactoring": [],
-        "Infrastructure": [],
+        "Refactoring and typing": [],
+        "Infrastructure and packaging": [],
         "Chores": [],
     }
     for pr in prs:
