@@ -205,138 +205,134 @@ def get_table_headers():
         "HET_HOMVAR_RATIO": {
             "title": "Het/Hom Ratio",
             "description": "(count of hets)/(count of homozygous non-ref) for this sample",
-            "hidden": False
+            "hidden": False,
         },
         "PCT_GQ0_VARIANTS": {
             "title": "%GQ0",
             "description": "The percentage of variants in a particular sample that have a GQ score of 0.",
-            "hidden": True
+            "hidden": True,
         },
         "TOTAL_GQ0_VARIANTS": {
             "title": "Total GQ0",
             "description": "The total number of variants in a particular sample that have a GQ score of 0.",
-            "hidden": True
+            "hidden": True,
         },
         "TOTAL_HET_DEPTH": {
             "title": "Total Het Depth",
             "description": "total number of reads (from AD field) for passing bi-allelic SNP hets for this sample",
-            "hidden": True
+            "hidden": True,
         },
         "TOTAL_SNPS": {
             "title": "Total SNPs",
             "description": "	The number of passing bi-allelic SNPs calls (i.e. non-reference genotypes) that were examined",
-            "hidden": False
+            "hidden": False,
         },
         "NUM_IN_DB_SNP": {
             "title": "dbSNP SNP count",
             "description": "The number of passing bi-allelic SNPs found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "NOVEL_SNPS": {
             "title": "Novel SNPs",
             "description": "The number of passing bi-allelic SNPS called that were not found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "FILTERED_SNPS": {
             "title": "Filtered SNPs",
             "description": "The number of SNPs that are filtered",
-            "hidden": True
+            "hidden": True,
         },
         "PCT_DBSNP": {
             "title": "Fraction in dbSNP (SNPs)",
             "description": "The fraction of passing bi-allelic SNPs in dbSNP",
-            "hidden": False
+            "hidden": False,
         },
         "DBSNP_TITV": {
             "title": "Ti/Tv ratio (dbSNP)",
             "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at dbSNP sites",
-            "hidden": False
+            "hidden": False,
         },
         "NOVEL_TITV": {
             "title": "Ti/Tv ratio (Novel)",
             "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at non-dbSNP sites",
-            "hidden": False
+            "hidden": False,
         },
         "TOTAL_INDELS": {
             "title": "Indels (Total)",
             "description": "The number of passing indel calls that were examined",
-            "hidden": True
+            "hidden": True,
         },
         "NOVEL_INDELS": {
             "title": "Indels (Novel)",
             "description": "The number of passing indels called that were not found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "FILTERED_INDELS": {
             "title": "Indels (Filtered)",
             "description": "The number of indels that are filtered",
-            "hidden": True
+            "hidden": True,
         },
         "PCT_DBSNP_INDELS": {
             "title": "% in dbSNP (Indels)",
             "description": "The fraction of passing indels in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "NUM_IN_DB_SNP_INDELS": {
             "title": "Indels (dbSNP)",
             "description": "The number of passing indels found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "DBSNP_INS_DEL_RATIO": {
             "title": "Indel Ratio (dbSNP)",
             "description": "The Insertion/Deletion ratio of the indel calls made at dbSNP sites",
-            "hidden": False
+            "hidden": False,
         },
         "NOVEL_INS_DEL_RATIO": {
             "title": "Indel Ratio (Novel)",
             "description": "The Insertion/Deletion ratio of the indel calls made at non-dbSNP sites",
-            "hidden": False
+            "hidden": False,
         },
         "TOTAL_MULTIALLELIC_SNPS": {
             "title": "Multiallelic SNPs (Total)",
             "description": "The number of passing multi-allelic SNP calls that were examined",
-            "hidden": True
+            "hidden": True,
         },
         "NUM_IN_DB_SNP_MULTIALLELIC": {
             "title": "Multiallelic SNPs (dbSNP)",
             "description": "The number of passing multi-allelic SNPs found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "TOTAL_COMPLEX_INDELS": {
             "title": "Complex Indels (Total)",
             "description": "The number of passing complex indel calls that were examined",
-            "hidden": True
+            "hidden": True,
         },
         "NUM_IN_DB_SNP_COMPLEX_INDELS": {
             "title": "Complex Indels (dbSNP)",
             "description": "The number of passing complex indels found in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "SNP_REFERENCE_BIAS": {
             "title": "SNP Ref. Bias",
             "description": "The rate at which reference bases are observed at ref/alt heterozygous SNP sites",
-            "hidden": True
+            "hidden": True,
         },
         "NUM_SINGLETONS": {
             "title": "Singletons",
             "description": "For summary metrics, the number of variants that appear in only one sample. For detail metrics, the number of variants that appear only in the current sample.",
-            "hidden": True
+            "hidden": True,
         },
         # derived statistics
-        "total_called_variants": {
-            "title": "Total Called",
-            "description": "Total called variants",
-            "hidden": True 
-        },
+        "total_called_variants": {"title": "Total Called", "description": "Total called variants", "hidden": True},
         "total_called_variants_known": {
             "title": "Total Called (known)",
             "description": "Total called variants with membership in dbSNP",
-            "hidden": True
+            "hidden": True,
         },
         "total_called_variants_novel": {
             "title": "Total Called (novel)",
             "description": "Total called variants at non-dbSNP sites",
-            "hidden": True
+            "hidden": True,
         },
     }
     return headers
