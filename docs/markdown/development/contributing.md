@@ -43,11 +43,9 @@ was updated after the initial commit. And finally, if you forgot to initially ap
 `[skip changelog]` and you did it after the initial commit, triggering the bot with a
 comment will assure that the changelog line is removed.
 
-## Admonitions
+## Docs - Admonitions
 
 Admonitions, sometimes known as call-outs, can be used to highlight relevant information in the docs so that it stands out of the main flow of text.
-
-The MultiQC website uses [remark-directive](https://github.com/remarkjs/remark-directive) to add a set of custom styled admonition directives to markdown syntax, shown below.
 
 ### Notes
 
@@ -119,16 +117,4 @@ One of the troublesome circumstances was the Plural nature of this Galactic Sect
 
 :::danger
 One of the troublesome circumstances was the Plural nature of this Galactic Sector, where the possible `continually` interfered with the probable.
-:::
-
-### Custom titles
-
-```md
-:::note{title="Don't Panic"}
-Arthur Dent was grappling with his consciousness the way one grapples with a lost bar of soap in the bath. He lay, panting heavily in the wet air, and tried feeling bits of himself to see where he might be hurt. Wherever he touched himself, he encountered a pain. After a short while he worked out that this was because it was his hand that was hurting. Arthur nodded intelligently. Today was one of those bad days.
-:::
-```
-
-:::note{title="Don't Panic"}
-Arthur Dent was grappling with his consciousness the way one grapples with a lost bar of soap in the bath. He lay, panting heavily in the wet air, and tried feeling bits of himself to see where he might be hurt. Wherever he touched himself, he encountered a pain. After a short while he worked out that this was because it was his hand that was hurting. Arthur nodded intelligently. Today was one of those bad days.
 :::
