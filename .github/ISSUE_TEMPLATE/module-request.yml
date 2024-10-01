@@ -1,4 +1,4 @@
-name: Module request
+name: New module
 description: Request support for a new bioinformatics tool in MultiQC
 labels: ["module: new"]
 body:

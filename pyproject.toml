@@ -11,6 +11,8 @@ dependencies = [
     "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
+    # "orca",  # for flat plot export, alternative for kaleido
+    # "psutil",  # for flat plot export with orca
     "markdown",
     "numpy",
     "packaging",
@@ -26,7 +28,7 @@ dependencies = [
     "typeguard",
     "tqdm",  # progress bar in notebooks
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 authors = [
     {name = "Phil Ewels", email = "phil.ewels@seqera.io"},
     {name = "Vlad Savelyev", email = "vladislav.savelyev@seqera.io"},
@@ -60,8 +62,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
+    "pygithub",  # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
@@ -75,7 +78,7 @@ dev = [
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
@@ -99,7 +102,6 @@ biscuit = "multiqc.modules.biscuit:MultiqcModule"
 bismark = "multiqc.modules.bismark:MultiqcModule"
 bowtie1 = "multiqc.modules.bowtie1:MultiqcModule"
 bowtie2 = "multiqc.modules.bowtie2:MultiqcModule"
-bracken = "multiqc.modules.bracken:MultiqcModule"
 busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
@@ -244,7 +246,7 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
+### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
 #my-new-option = "myplugin.cli:new_option"
 #
