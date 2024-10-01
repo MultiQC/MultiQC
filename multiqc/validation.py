@@ -101,7 +101,7 @@ class ValidatedConfig(BaseModel):
             modname = get_current_module_name()
 
             if warnings:
-                msg = f"{modname}{len(warnings)} warnings while parsing {_full_cls_name} {data}:"
+                msg = f"{modname}warnings while parsing {_full_cls_name} {data} (total: {len(warnings)}):"
                 for warning in sorted(warnings):
                     msg += f"\n• {warning}"
                 _print_warning(msg)
@@ -111,7 +111,7 @@ class ValidatedConfig(BaseModel):
                 _warnings_by_cls[_full_cls_name].clear()
 
             if errors:
-                msg = f"{modname}{len(errors)} errors while parsing {_full_cls_name} {data}"
+                msg = f"{modname}errors while parsing {_full_cls_name} {data} (total: {len(errors)}):"
                 for err in sorted(errors):
                     msg += f"\n• {err}"
                 _print_error(msg)
