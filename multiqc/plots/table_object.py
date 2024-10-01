@@ -35,7 +35,6 @@ class TableConfig(PConfig):
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
-
 ValueT = Union[int, float, str, bool]
 
 
@@ -88,7 +87,7 @@ class ColumnMeta(ValidatedConfig):
     hidden: bool = False
     placement: float = 1000
     namespace: str = ""
-    colour: Optional[str] = Field(True, deprecated="color")
+    colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -118,7 +117,7 @@ class ColumnMeta(ValidatedConfig):
     ) -> "ColumnMeta":
         # Overwrite any header config if set in config
         for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            col_dict[custom_k] = custom_v
+            col_dict[custom_k] = custom_v  # type: ignore
 
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
@@ -301,7 +300,6 @@ SECTION_COLORS = [
     "247,129,191",  # Pink
     "153,153,153",  # Grey
 ]
-
 
 col_anchors_by_table: Dict[Anchor, Set[ColumnAnchor]] = defaultdict(set)
 
@@ -502,7 +500,8 @@ def _get_or_create_headers(
     # Remove empty columns
     for empty_col_id in empties:
         logger.debug(
-            f"Table key '{empty_col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
+            f"Table key '{empty_col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos "
+            f"between data keys and header keys"
         )
         del header_by_key_copy[empty_col_id]
 

@@ -14,7 +14,7 @@ from typing import Optional, Tuple
 
 import rich_click as click
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.core import log_and_rich, plugin_hooks
 from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
@@ -23,7 +23,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.validation import ConfigValidationError, print_validation_errors
+from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,11 @@ click.rich_click.HEADER_TEXT = (
     f"[dark_orange]///[/] [bold][link=https://multiqc.info]MultiQC[/link][/]{emoji} [dim]v{config.version}[/]"
 )
 click.rich_click.FOOTER_TEXT = "See [link=http://multiqc.info]http://multiqc.info[/] for more details."
-click.rich_click.ERRORS_SUGGESTION = f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, run '[yellow]multiqc --help[/]' or visit [link=http://multiqc.info]http://multiqc.info[/]"
+click.rich_click.ERRORS_SUGGESTION = (
+    f"This is MultiQC [cyan]v{config.version}[/]\nFor more help, "
+    f"run '[yellow]multiqc --help[/]' or visit ["
+    f"link=http://multiqc.info]http://multiqc.info[/]"
+)
 click.rich_click.STYLE_ERRORS_SUGGESTION = ""
 click.rich_click.OPTION_GROUPS = {
     "multiqc": [
@@ -348,7 +352,8 @@ click.rich_click.OPTION_GROUPS = {
     "make_pdf",
     is_flag=True,
     default=None,
-    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be installed.",
+    help="Creates PDF report with the [i]'simple'[/] template. Requires [link=https://pandoc.org/]Pandoc[/] to be "
+    "installed.",
 )
 @click.option(
     "--no-megaqc-upload",
@@ -397,7 +402,8 @@ click.rich_click.OPTION_GROUPS = {
     "profile_memory",
     is_flag=True,
     default=None,
-    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, so the runtime metrics could scale up a few times",
+    help="Add analysis of how much memory each module uses. Note that tracking memory will increase the runtime, "
+    "so the runtime metrics could scale up a few times",
 )
 @click.option(
     NO_ANSI_FLAG,
@@ -446,6 +452,8 @@ def run_cli(analysis_dir: Tuple[str], clean_up: bool, **kwargs):
     cl_config_kwargs = {k: v for k, v in kwargs.items() if k in ClConfig.model_fields}
     other_fields = {k: v for k, v in kwargs.items() if k not in ClConfig.model_fields}
     cfg = ClConfig(**cl_config_kwargs, unknown_options=other_fields)
+
+    validation.collapse_repeated_messages = True  # to avoid cluttering output
 
     # Pass on to a regular function that can be used easily without click
     result = run(*analysis_dir, clean_up=clean_up, cfg=cfg, interactive=False)
@@ -511,16 +519,16 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 
         write_results()
 
-        print_validation_errors()
-
     except NoAnalysisFound as e:
         logger.warning(f"{e.message}. Cleaning up…")
         return RunResult(message="No analysis results found", sys_exit_code=e.sys_exit_code)
 
-    except ConfigValidationError:
-        msg = "Config validation errors found. Exiting because strict mode is enabled. Cleaning up…"
-        logger.warning(msg)
-        return RunResult(message=msg, sys_exit_code=1)
+    except ModuleConfigValidationError as e:
+        logger.error(
+            "Config validation error. Exiting because the _strict_ mode is enabled. Please refer to the errors show "
+            "above. Cleaning up…"
+        )
+        return RunResult(message=e.message, sys_exit_code=1)
 
     except RunError as e:
         if e.message:
@@ -559,7 +567,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
             logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
-        logger.info("MultiQC complete")
+        logger.info("MultiQC complete") if sys_exit_code == 0 else logger.error("MultiQC complete with errors")
         return RunResult(sys_exit_code=sys_exit_code)
 
     finally:

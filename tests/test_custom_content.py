@@ -8,7 +8,7 @@ from multiqc.core.file_search import file_search
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.modules.custom_content import custom_module_classes
 from multiqc.types import Anchor
-from multiqc.validation import ConfigValidationError
+from multiqc.validation import ModuleConfigValidationError
 
 
 def test_custom_content(tmp_path):
@@ -97,9 +97,9 @@ def test_deprecated_fields(tmp_path, capsys):
     err = str(capsys.readouterr().err)
     assert "Line plot's x_lines or y_lines 'label' field is expected to be a string" in err
     assert "'LongDash' is a deprecated dash style, use 'longdash'" in err
-    assert "Deprecated field 'colour'. Use 'color' instead" in err
-    assert "Deprecated field 'xLog'. Use 'xlog' instead" in err
-    assert "Deprecated field 'xPlotLines'. Use 'x_lines' instead" in err
+    assert "deprecated field 'colour'. Use 'color' instead" in err
+    assert "deprecated field 'xLog'. Use 'xlog' instead" in err
+    assert "deprecated field 'xPlotLines'. Use 'x_lines' instead" in err
 
 
 @pytest.mark.parametrize("strict", [True, False])
@@ -131,17 +131,18 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
     report.search_files(["custom_content"])
 
     if strict:
-        with pytest.raises(ConfigValidationError):
+        with pytest.raises(ModuleConfigValidationError):
             custom_module_classes()
     else:
         custom_module_classes()
 
-    assert "unrecognized field 'y__lab'" in caplog.text
+    out = caplog.text
+    assert "unrecognized field 'y__lab'" in out
     assert (
-        "'xlab': expected type 'Optional[str]', got 'bool' True" in caplog.text
-        or "'xlab': expected type 'Union[str, NoneType]', got 'bool' True" in caplog.text
+        "'xlab': expected type 'Optional[str]', got 'bool' True" in out
+        or "'xlab': expected type 'Union[str, NoneType]', got 'bool' True" in out
     )
-    assert "'ymin': expected type 'Union[float, int, NoneType]', got 'str' '0'" in caplog.text
+    assert "'ymin': expected type 'Union[float, int, NoneType]', got 'str' '0'" in out
 
     if not strict:
         # Still should produce output unless strict mode:
@@ -277,15 +278,17 @@ target___test2	2
     )
 
     conf = tmp_path / "multiqc_config.yaml"
-    conf.write_text("""
-custom_data:
-  last_o2o:
-    plot_type: "table"
-
-sp:
-  last_o2o:
-    fn: "target__*tsv"
-""")
+    conf.write_text(
+        """
+        custom_data:
+          last_o2o:
+            plot_type: "table"
+        
+        sp:
+          last_o2o:
+            fn: "target__*tsv"
+        """
+    )
 
     report.analysis_files = [file1, file2]
     update_config(cfg=ClConfig(config_files=[conf], run_modules=["custom_content"]))
@@ -361,7 +364,7 @@ def test_from_tsv(tmp_path, section_name, is_good, contents):
 
     file_search()
     if not is_good:
-        with pytest.raises(ConfigValidationError):
+        with pytest.raises(ModuleConfigValidationError):
             custom_module_classes()
         return
 

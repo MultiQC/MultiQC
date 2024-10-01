@@ -14,12 +14,16 @@ from multiqc import config
 logger = logging.getLogger(__name__)
 
 
-class ConfigValidationError(Exception):
-    pass
+class ModuleConfigValidationError(Exception):
+    # Thrown in strict mode when some ValidatedConfig fails validation
+    def __init__(self, message: str, module_name: str):
+        self.message = message
+        self.module_name = module_name
+        super().__init__()
 
 
-_validation_errors_by_cls: Dict[str, Set[str]] = defaultdict(set)
-_validation_warnings_by_cls: Dict[str, Set[str]] = defaultdict(set)
+_errors_by_cls: Dict[str, Set[str]] = defaultdict(set)
+_warnings_by_cls: Dict[str, Set[str]] = defaultdict(set)
 
 
 def get_current_module_name() -> str:
@@ -33,38 +37,45 @@ def get_current_module_name() -> str:
 
 def add_validation_error(cls: Union[type, List[type]], error: str):
     cls_name = ".".join([c.__name__ for c in cls]) if isinstance(cls, list) else cls.__name__
-    modname = get_current_module_name()
-    _validation_errors_by_cls[cls_name].add(f"{modname}{error}")
+    _errors_by_cls[cls_name].add(error)
 
 
 def add_validation_warning(cls: Union[type, List[type]], warning: str):
     cls_name = ".".join([c.__name__ for c in cls]) if isinstance(cls, list) else cls.__name__
-    modname = get_current_module_name()
-    _validation_warnings_by_cls[cls_name].add(f"{modname}{warning}")
+    _warnings_by_cls[cls_name].add(warning)
 
 
-def print_validation_errors():
-    for cls_name, warnings in _validation_warnings_by_cls.items():
-        if warnings:
-            logger.warning(f"{len(warnings)} warnings while parsing {cls_name}:")
-            for warning in sorted(warnings):
-                logger.warning(f"• {warning}")
+# To avoid cluttering stdout with duplicated messages
+collapse_repeated_messages = False
+_printed_errors: Set[str] = set()
+_printed_warnings: Set[str] = set()
 
-    for cls_name, errors in _validation_errors_by_cls.items():
-        if errors:
-            msg = f"{len(errors)} errors parsing {cls_name}"
-            logger.error(msg)
-            for error in sorted(errors):
-                logger.error(f"• {error}")
-                msg += f"\n• {error}"
 
-    # Reset for interactive usage
-    _errors_found = len(_validation_errors_by_cls) > 0
-    _validation_errors_by_cls.clear()
-    _validation_warnings_by_cls.clear()
+def reset():
+    # Reset aggregating messages. Usually starts in the beginning of a module
+    global _errors_by_cls, _warnings_by_cls, _printed_errors, _printed_warnings
+    _errors_by_cls = defaultdict(set)
+    _warnings_by_cls = defaultdict(set)
+    _printed_errors = set()
+    _printed_warnings = set()
 
-    if _errors_found and config.strict:
-        raise ConfigValidationError()
+
+def _print_warning(msg: str):
+    if collapse_repeated_messages:
+        if msg in _printed_warnings:
+            return
+        else:
+            _printed_warnings.add(msg)
+    logger.warning(msg)
+
+
+def _print_error(msg: str):
+    if collapse_repeated_messages:
+        if msg in _printed_errors:
+            return
+        else:
+            _printed_errors.add(msg)
+    logger.error(msg)
 
 
 class ValidatedConfig(BaseModel):
@@ -80,9 +91,37 @@ class ValidatedConfig(BaseModel):
         try:
             super().__init__(**data, _clss=_clss)
         except PydanticValidationError:
-            if not _validation_errors_by_cls.get(_cls_name) or not _validation_errors_by_cls.get(_full_cls_name):
+            if not _errors_by_cls.get(_cls_name) or not _errors_by_cls.get(_full_cls_name):
                 # Unhandled PydanticValidationError
                 raise
+
+        errors = _errors_by_cls.get(_cls_name, set()) | _errors_by_cls.get(_full_cls_name, set())
+        warnings = _warnings_by_cls.get(_cls_name, set()) | _warnings_by_cls.get(_full_cls_name, set())
+        if errors or warnings:
+            modname = get_current_module_name()
+
+            if warnings:
+                msg = f"{modname}{len(warnings)} warnings while parsing {_full_cls_name} {data}:"
+                for warning in sorted(warnings):
+                    msg += f"\n• {warning}"
+                _print_warning(msg)
+
+                # Reset for interactive usage
+                _warnings_by_cls[_cls_name].clear()
+                _warnings_by_cls[_full_cls_name].clear()
+
+            if errors:
+                msg = f"{modname}{len(errors)} errors while parsing {_full_cls_name} {data}"
+                for err in sorted(errors):
+                    msg += f"\n• {err}"
+                _print_error(msg)
+
+                # Reset for interactive usage
+                _errors_by_cls[_cls_name].clear()
+                _errors_by_cls[_full_cls_name].clear()
+
+                if config.strict:
+                    raise ModuleConfigValidationError(message=msg, module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
@@ -109,7 +148,7 @@ class ValidatedConfig(BaseModel):
             if name not in cls.model_fields:
                 add_validation_warning(
                     _clss,
-                    f"unrecognized field '{name}'. Available fields: {', '.join(available_fields)}. Value: {values}",
+                    f"unrecognized field '{name}'. Available fields: {', '.join(available_fields)}",
                 )
             else:
                 filtered_values[name] = val
@@ -120,7 +159,7 @@ class ValidatedConfig(BaseModel):
         for name, val in values.items():
             if cls.model_fields[name].deprecated:
                 new_name = cls.model_fields[name].deprecated
-                add_validation_warning(_clss, f"Deprecated field '{name}'. Use '{new_name}' instead")
+                add_validation_warning(_clss, f"deprecated field '{name}'. Use '{new_name}' instead")
                 if new_name not in values:
                     values_without_deprecateds[new_name] = val
             else:
@@ -158,6 +197,8 @@ class ValidatedConfig(BaseModel):
                 check_type(val, expected_type)
             except TypeCheckError as e:
                 try:  # try casting to expected type?
+                    if expected_type is not None and expected_type.__name__ == "Optional":
+                        expected_type = expected_type.__args__[0]
                     val = expected_type(val)  # type: ignore
                 except Exception:
                     v_str = repr(val)

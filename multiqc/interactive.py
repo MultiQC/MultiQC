@@ -64,7 +64,8 @@ def parse_logs(
     @param prepend_dirs: Prepend directory to sample names
     @param dirs_depth: Prepend n directories to sample names. Negative number to take from start of path
     @param fn_clean_sample_names: Do not clean the sample names (leave as full file name)
-    @param require_logs: Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error
+    @param require_logs: Require all explicitly requested modules to have log files. If not, MultiQC will exit with
+    an error
     @param use_filename_as_sample_name: Use the log filename as the sample name
     @param strict: Don't catch exceptions, run additional code checks to help development
     @param quiet: Only show log warnings

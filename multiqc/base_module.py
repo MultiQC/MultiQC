@@ -32,7 +32,7 @@ from typing import (
 import markdown
 import packaging.version
 
-from multiqc import config, report
+from multiqc import config, report, validation
 from multiqc.config import CleanPatternT
 from multiqc.core import software_versions
 from multiqc.core.strict_helpers import lint_error
@@ -82,7 +82,6 @@ class Section:
 
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
 
-
 DataT = TypeVar("DataT")
 SampleNameT = TypeVar("SampleNameT", str, SampleName)
 
@@ -113,6 +112,8 @@ class BaseMultiqcModule:
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
     ):
+        validation.reset()
+
         # Custom options from user config that can overwrite base module values
         self.name: str = name
         _cust_name = self.mod_cust_config.get("name")
@@ -216,7 +217,8 @@ class BaseMultiqcModule:
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
-                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" target="_blank">{doi}</a>'
+                    f' <a class="module-doi" data-doi="{doi}" data-toggle="popover" href="https://doi.org/{doi}" '
+                    f'target="_blank">{doi}</a>'
                 )
             doi_html = '<em class="text-muted small" style="margin-left: 1rem;">DOI: {}</em>'.format(
                 "; ".join(doi_links)
@@ -323,7 +325,8 @@ class BaseMultiqcModule:
                 )
                 if any(exclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it matched the path_filters_exclude for "
+                        f"'{self.name}'"
                     )
                     continue
 
@@ -339,12 +342,14 @@ class BaseMultiqcModule:
                 )
                 if not any(inclusion_hits):
                     logger.debug(
-                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '{self.name}'"
+                        f"{sp_key} - Skipping '{report.last_found_file}' as it didn't match the path_filters for '"
+                        f"{self.name}'"
                     )
                     continue
                 else:
                     logger.debug(
-                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '{self.name}'"
+                        f"{sp_key} - Selecting '{report.last_found_file}' as it matched the path_filters for '"
+                        f"{self.name}'"
                     )
 
             # Make a sample name from the filename
@@ -369,7 +374,8 @@ class BaseMultiqcModule:
                                     contents = fh.read()
                                 except UnicodeDecodeError as e:
                                     logger.debug(
-                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode characters\n{e}"
+                                        f"Couldn't read file as utf-8: {f['fn']}, will attempt to skip non-unicode "
+                                        f"characters\n{e}"
                                     )
                                     try:
                                         with io.open(
@@ -501,8 +507,10 @@ class BaseMultiqcModule:
         Try trimming r1 and r2 as paired FASTQ file names.
         """
         # Try trimming the conventional illumina suffix with a tail 001 ending. Refs:
-        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/NamingConvention_FASTQ-files-swBS.htm
-        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text=10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
+        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS
+        # /NamingConvention_FASTQ-files-swBS.htm
+        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text
+        # =10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
         cleaned_r1 = re.sub(r"_R1_\d{3}$", "", r1)
         cleaned_r2 = re.sub(r"_R2_\d{3}$", "", r2)
         if cleaned_r1 == cleaned_r2:  # trimmed successfully
@@ -587,7 +595,8 @@ class BaseMultiqcModule:
         grouping_config: SampleGroupingConfig,
     ) -> Dict[SampleGroup, List[InputRow]]:
         """
-        Group samples and merges numeric metrics by averaging them, optionally normalizing using `normalization_metric_name`
+        Group samples and merges numeric metrics by averaging them, optionally normalizing using
+        `normalization_metric_name`
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
