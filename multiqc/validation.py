@@ -15,24 +15,56 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigValidationError(Exception):
-    def __init__(self, message: str, module_name: str):
-        self.message = message
-        self.module_name = module_name
-        super().__init__()
+    pass
 
 
 _validation_errors_by_cls: Dict[str, Set[str]] = defaultdict(set)
 _validation_warnings_by_cls: Dict[str, Set[str]] = defaultdict(set)
 
 
+def get_current_module_name() -> str:
+    callstack = inspect.stack()
+    for n in callstack:
+        if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
+            callpath = n[1].split("multiqc/modules/", 1)[-1]
+            return f"{callpath}: "
+    return ""
+
+
 def add_validation_error(cls: Union[type, List[type]], error: str):
     cls_name = ".".join([c.__name__ for c in cls]) if isinstance(cls, list) else cls.__name__
-    _validation_errors_by_cls[cls_name].add(error)
+    modname = get_current_module_name()
+    _validation_errors_by_cls[cls_name].add(f"{modname}{error}")
 
 
 def add_validation_warning(cls: Union[type, List[type]], warning: str):
     cls_name = ".".join([c.__name__ for c in cls]) if isinstance(cls, list) else cls.__name__
-    _validation_warnings_by_cls[cls_name].add(warning)
+    modname = get_current_module_name()
+    _validation_warnings_by_cls[cls_name].add(f"{modname}{warning}")
+
+
+def print_validation_errors():
+    for cls_name, warnings in _validation_warnings_by_cls.items():
+        if warnings:
+            logger.warning(f"{len(warnings)} warnings while parsing {cls_name}:")
+            for warning in sorted(warnings):
+                logger.warning(f"• {warning}")
+
+    for cls_name, errors in _validation_errors_by_cls.items():
+        if errors:
+            msg = f"{len(errors)} errors parsing {cls_name}"
+            logger.error(msg)
+            for error in sorted(errors):
+                logger.error(f"• {error}")
+                msg += f"\n• {error}"
+
+    # Reset for interactive usage
+    _errors_found = len(_validation_errors_by_cls) > 0
+    _validation_errors_by_cls.clear()
+    _validation_warnings_by_cls.clear()
+
+    if _errors_found and config.strict:
+        raise ConfigValidationError()
 
 
 class ValidatedConfig(BaseModel):
@@ -49,39 +81,8 @@ class ValidatedConfig(BaseModel):
             super().__init__(**data, _clss=_clss)
         except PydanticValidationError:
             if not _validation_errors_by_cls.get(_cls_name) or not _validation_errors_by_cls.get(_full_cls_name):
+                # Unhandled PydanticValidationError
                 raise
-
-        errors = _validation_errors_by_cls.get(_cls_name, set()) | _validation_errors_by_cls.get(_full_cls_name, set())
-        warnings = _validation_warnings_by_cls.get(_cls_name, set()) | _validation_warnings_by_cls.get(
-            _full_cls_name, set()
-        )
-
-        if errors or warnings:
-            modname = ""
-            callstack = inspect.stack()
-            for n in callstack:
-                if "multiqc/modules/" in n[1] and "base_module.py" not in n[1]:
-                    callpath = n[1].split("multiqc/modules/", 1)[-1]
-                    modname = f"{callpath}: "
-                    break
-
-            if warnings:
-                logger.warning(f"{modname}Warnings while parsing {_full_cls_name} {data}:")
-                for warning in sorted(warnings):
-                    logger.warning(f"• {warning}")
-                _validation_warnings_by_cls[_cls_name].clear()  # Reset for interactive usage
-                _validation_warnings_by_cls[_full_cls_name].clear()  # Reset for interactive usage
-
-            if errors:
-                msg = f"{modname}Errors parsing {_full_cls_name} {data}"
-                logger.error(msg)
-                for error in sorted(errors):
-                    logger.error(f"• {error}")
-                    msg += f"\n• {error}"
-                _validation_errors_by_cls[_cls_name].clear()  # Reset for interactive usage
-                _validation_errors_by_cls[_full_cls_name].clear()  # Reset for interactive usage
-                if config.strict:
-                    raise ConfigValidationError(message=msg, module_name=modname)
 
     # noinspection PyNestedDecorators
     @model_validator(mode="before")
@@ -103,10 +104,12 @@ class ValidatedConfig(BaseModel):
 
         # Check unrecognized fields
         filtered_values = {}
+        available_fields = [k for k, v in cls.model_fields.items() if not v.deprecated]
         for name, val in values.items():
             if name not in cls.model_fields:
                 add_validation_warning(
-                    _clss, f"unrecognized field '{name}'. Available fields: {', '.join(cls.model_fields.keys())}"
+                    _clss,
+                    f"unrecognized field '{name}'. Available fields: {', '.join(available_fields)}. Value: {values}",
                 )
             else:
                 filtered_values[name] = val
@@ -154,13 +157,18 @@ class ValidatedConfig(BaseModel):
             try:
                 check_type(val, expected_type)
             except TypeCheckError as e:
-                v_str = repr(val)
-                if len(v_str) > 20:
-                    v_str = v_str[:20] + "..."
-                expected_type_str = str(expected_type).replace("typing.", "")
-                msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
-                add_validation_error(_clss, msg)
-                logger.debug(f"{msg}: {e}")
+                try:  # try casting to expected type?
+                    val = expected_type(val)  # type: ignore
+                except Exception:
+                    v_str = repr(val)
+                    if len(v_str) > 20:
+                        v_str = v_str[:20] + "..."
+                    expected_type_str = str(expected_type).replace("typing.", "")
+                    msg = f"'{name}': expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
+                    add_validation_error(_clss, msg)
+                    logger.debug(f"{msg}: {e}")
+                else:
+                    corrected_values[name] = val
             else:
                 corrected_values[name] = val
 

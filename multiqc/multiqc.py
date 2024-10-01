@@ -23,7 +23,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.validation import ConfigValidationError
+from multiqc.validation import ConfigValidationError, print_validation_errors
 
 logger = logging.getLogger(__name__)
 
@@ -511,13 +511,16 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 
         write_results()
 
+        print_validation_errors()
+
     except NoAnalysisFound as e:
         logger.warning(f"{e.message}. Cleaning up…")
         return RunResult(message="No analysis results found", sys_exit_code=e.sys_exit_code)
 
-    except ConfigValidationError as e:
-        logger.warning("Config validation error. Exiting because strict mode is enabled. Cleaning up…")
-        return RunResult(message=e.message, sys_exit_code=1)
+    except ConfigValidationError:
+        msg = "Config validation errors found. Exiting because strict mode is enabled. Cleaning up…"
+        logger.warning(msg)
+        return RunResult(message=msg, sys_exit_code=1)
 
     except RunError as e:
         if e.message:
@@ -553,7 +556,7 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
 
         sys_exit_code = 0
         if config.strict and len(report.lint_errors) > 0:
-            logger.error(f"Found {len(report.lint_errors)} linting errors!\n" + "\n".join(report.lint_errors))
+            logger.error(f"{len(report.lint_errors)} linting errors:\n" + "\n".join(report.lint_errors))
             sys_exit_code = 1
 
         logger.info("MultiQC complete")
