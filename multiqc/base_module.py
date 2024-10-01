@@ -507,10 +507,8 @@ class BaseMultiqcModule:
         Try trimming r1 and r2 as paired FASTQ file names.
         """
         # Try trimming the conventional illumina suffix with a tail 001 ending. Refs:
-        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS
-        # /NamingConvention_FASTQ-files-swBS.htm
-        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text
-        # =10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
+        # https://support.illumina.com/help/BaseSpace_Sequence_Hub_OLH_009008_2/Source/Informatics/BS/NamingConvention_FASTQ-files-swBS.htm
+        # https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/using/fastq-input#:~:text=10x%20pipelines%20need%20files%20named,individual%20who%20demultiplexed%20your%20flowcell.
         cleaned_r1 = re.sub(r"_R1_\d{3}$", "", r1)
         cleaned_r2 = re.sub(r"_R2_\d{3}$", "", r2)
         if cleaned_r1 == cleaned_r2:  # trimmed successfully
