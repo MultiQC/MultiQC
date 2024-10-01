@@ -138,7 +138,10 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
 
     out = caplog.text
     assert "unrecognized field 'y__lab'" in out
-    assert "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
+    assert (
+        "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
+        or "• 'ymax': expected type 'Union[float, int, NoneType]', got 'list' [1, 2]" in out  # Python < 3.10
+    )
 
     if not strict:
         # Still should produce output unless strict mode:
@@ -148,10 +151,16 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
         assert report.plot_by_id[anchor].id == id
         assert report.plot_by_id[anchor].plot_type == "xy_line"
         assert report.plot_by_id[anchor].pconfig.title == "DupRadar General Linear Model"
-        assert report.plot_by_id[anchor].pconfig.xlab == "True"  # cast to string
+        assert (
+            report.plot_by_id[anchor].pconfig.xlab == "True"  # cast to string
+            or report.plot_by_id[anchor].pconfig.xlab is None  # Python < 3.10
+        )
         assert report.plot_by_id[anchor].pconfig.xlog is True
         assert report.plot_by_id[anchor].pconfig.ymax is None
-        assert report.plot_by_id[anchor].pconfig.ymin == 0  # cast to int
+        assert (
+            report.plot_by_id[anchor].pconfig.ymin == 0  # cast to int
+            or report.plot_by_id[anchor].pconfig.ymin is None  # Python < 3.10
+        )
 
 
 def test_missing_id_and_title(tmp_path):
