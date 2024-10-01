@@ -17,7 +17,7 @@ from github.PullRequest import PullRequest
 
 REPO_ID = "MultiQC/MultiQC"
 REPO_URL = f"https://github.com/{REPO_ID}"
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 WORKSPACE_PATH = Path(os.environ.get("GITHUB_WORKSPACE", "."))
 MODULES_SUBDIR = Path("multiqc/modules")
 

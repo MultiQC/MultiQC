@@ -7,9 +7,11 @@ A few bugs fixed, improved the sample grouping UI, and handling freezes in conta
 ### Fixes
 
 - Fix export general stats to `multiqc_data.json`: flatten row groups for back-compatibility ([#2879](https://github.com/MultiQC/MultiQC/pull/2879))
-- Custom tables: ignore unrecognized fields instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
 - Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
 - Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
+- Custom content:
+  - Fix generalstats `headers` key name in documentation ([#2901](https://github.com/MultiQC/MultiQC/pull/2901))
+  - Validate table header config instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
 
 ### Modules
 
