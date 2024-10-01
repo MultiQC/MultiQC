@@ -993,7 +993,6 @@ def multiqc_dump_json():
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # val == general_stats_data
                         # List[Dict[SampleGroup, List[InputRow]]]
                         # flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []
