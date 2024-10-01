@@ -209,7 +209,7 @@ Or to add data to the General Statistics table:
 custom_data:
   my_genstats:
     plot_type: "generalstats"
-    pconfig:
+    headers:
       - col_1:
           max: 100
           min: 0

@@ -282,7 +282,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         plot_type = PlotType.from_str(ccdict.config.get("plot_type"))
         if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
-            gs_headers = ccdict.config.get("headers")
+            gs_headers = ccdict.config.get("headers", ccdict.config.get("pconfig", {}))
             if gs_headers is None:
                 headers_set: Set[str] = set()
                 for _hd in ccdict.data.values():
