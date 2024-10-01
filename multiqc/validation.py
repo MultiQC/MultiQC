@@ -197,8 +197,9 @@ class ValidatedConfig(BaseModel):
                 check_type(val, expected_type)
             except TypeCheckError as e:
                 try:  # try casting to expected type?
-                    if expected_type is not None and expected_type.__name__ == "Optional":
-                        expected_type = expected_type.__args__[0]
+                    if expected_type is not None:
+                        if expected_type.__name__ in ["Optional", "Union"]:
+                            expected_type = expected_type.__args__[0]
                     val = expected_type(val)  # type: ignore
                 except Exception:
                     v_str = repr(val)
