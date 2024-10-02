@@ -2,9 +2,9 @@
 title: MultiQC Modules
 ---
 
-import ModulesList from '@site/src/components/ModulesList';
+import MultiqcModulesList from '@site/src/components/MultiqcModulesList';
 
-<ModulesList />
+<MultiqcModulesList />
 
 Missing something? If you would like another tool to to be support,
 please [open an issue](https://github.com/MultiQC/MultiQC/issues/new?labels=module%3A+new&template=module-request.yml).
