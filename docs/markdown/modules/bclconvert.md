@@ -30,7 +30,7 @@ You can specify a genome size in config
 
 It's often useful to talk about sequencing yield in terms of estimated depth of coverage.
 In order to make MultiQC show the estimated depth for each sample, specify the reference genome/target size in
-your [MultiQC configuration](../getting_started/config.md):
+your [MultiQC configuration](https://docs.seqera.io/multiqc/getting_started/config):
 
 ```yaml
 bclconvert:

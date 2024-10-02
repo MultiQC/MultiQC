@@ -35,10 +35,11 @@ with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
 
 os.makedirs("docs/markdown/modules", exist_ok=True)
 
+# Table in the index page
+table = "| Tool | Description |"
+table += "\n| --- | --- |"
 
 for mod_id, entry_point in config.avail_modules.items():
-    if args.module and args.module != mod_id:
-        continue
     if mod_id == "custom_content":
         continue
 
@@ -51,6 +52,10 @@ for mod_id, entry_point in config.avail_modules.items():
     docstring = module_cls.__doc__ or ""
 
     module: BaseMultiqcModule = module_cls()
+    table += f"\n| [{module.name}](modules/{mod_id}.md) | {module.info} |"
+
+    if args.module and args.module != mod_id:
+        continue
 
     if module.extra:
         extra = "\n".join(line.strip() for line in module.extra.split("\n") if line.strip())
@@ -98,3 +103,21 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
         fh.write(text)
 
     print(f"Generated {output_path}")
+
+
+with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
+    fh.write(f"""\
+---
+title: MultiQC Modules
+description: Tools supported by MultiQC
+---
+             
+MultiQC currently has modules to support {len(config.avail_modules)} bioinformatics tools, listed below.
+
+Click the tool name to go to the MultiQC documentation for that tool.
+
+{table}
+
+Missing something? If you would like another tool to to be support,
+please [open an issue](https://github.com/MultiQC/MultiQC/issues/new?labels=module%3A+new&template=module-request.yml).
+""")
