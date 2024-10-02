@@ -1,11 +1,10 @@
 ---
-title: Supported Tools
-sidebar_class_title: hidden
+title: MultiQC Modules
 ---
 
-MultiQC currently has modules to support 153 different bioinformatics tools, listed below.
+import ModulesList from '@site/src/components/ModulesList';
 
-Click the tool name to go to the MultiQC documentation for that tool.
+<ModulesList />
 
 Missing something? If you would like another tool to to be support,
 please [open an issue](https://github.com/MultiQC/MultiQC/issues/new?labels=module%3A+new&template=module-request.yml).
