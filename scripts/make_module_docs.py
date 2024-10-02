@@ -66,6 +66,7 @@ for mod_id, entry_point in config.avail_modules.items():
     text = f"""\
 ---
 title: {module.name}
+displayed_sidebar: multiqcSidebar
 description: >
   {module.info}
 ---
