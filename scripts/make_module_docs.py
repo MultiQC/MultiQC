@@ -110,6 +110,7 @@ with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
 ---
 title: MultiQC Modules
 description: Tools supported by MultiQC
+displayed_sidebar: multiqcSidebar
 ---
              
 MultiQC currently has modules to support {len(config.avail_modules)} bioinformatics tools, listed below.
