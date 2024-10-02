@@ -2,15 +2,19 @@
 
 ## [MultiQC v1.25.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.1) - 2024-09-30
 
-A few bugs fixed, improved the sample grouping UI, and handling freezes in containers with incompatible architectures.
+Python 3.13, bugs fixed, improved sample grouping UI, and handling freezes in containers with incompatible architectures.
+
+### Updates
+
+- Support Python 3.13 (officially to be released on Oct 7). Python 3.8 is supported for now, but might drop support in future releases, so make sure you update! ([#2871](https://github.com/MultiQC/MultiQC/pull/2862))
+- Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
+- Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
 
 ### Fixes
 
 - Fix export general stats to `multiqc_data.json`: flatten row groups for back-compatibility ([#2879](https://github.com/MultiQC/MultiQC/pull/2879))
-- Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
-- Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
 - Custom content:
-  - Fix generalstats `headers` key name in documentation ([#2901](https://github.com/MultiQC/MultiQC/pull/2901))
+  - Fix the generalstats `headers` key name in documentation ([#2901](https://github.com/MultiQC/MultiQC/pull/2901))
   - Validate table header config instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
 
 ### Modules
