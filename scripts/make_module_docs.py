@@ -116,6 +116,10 @@ MultiQC currently has modules to support {len(config.avail_modules)} bioinformat
 
 Click the tool name to go to the MultiQC documentation for that tool.
 
+:::tip[Missing something?]
+If you would like another tool to to be supported, please [open an issue](https://github.com/MultiQC/MultiQC/issues/new?labels=module%3A+new&template=module-request.yml).
+:::
+
 {table}
 
 Missing something? If you would like another tool to to be support,
