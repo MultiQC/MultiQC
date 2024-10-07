@@ -363,7 +363,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
 
     if len(filenames) > 0 and all([fn in filenames for fn in multiqc_installation_dir_files]):
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
-        logger.warning("Please see the docs for how to use MultiQC: https://multiqc.info/docs/#running-multiqc")
+        logger.warning("Please see the docs for how to use MultiQC: https://docs.seqera.io/multiqc/#running-multiqc")
         return True
     else:
         return False
@@ -993,7 +993,6 @@ def multiqc_dump_json():
                 elif pymod == "report":
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
-                        # val == general_stats_data
                         # List[Dict[SampleGroup, List[InputRow]]]
                         # flattening sample groups for export
                         flattened_sections: List[Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]]] = []

@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
     ```
 
     The default module values are shown above. See the
-    [main MultiQC documentation](http://multiqc.info/docs/#configuring-multiqc)
+    [main MultiQC documentation](https://docs.seqera.io/multiqc/getting_started/config)
     for more information about how to configure MultiQC.
 
     #### MetaQUAST

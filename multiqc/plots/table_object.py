@@ -35,7 +35,6 @@ class TableConfig(PConfig):
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
-
 ValueT = Union[int, float, str, bool]
 
 
@@ -73,7 +72,7 @@ class ColumnDict(TypedDict, total=False):
     bgcols: Dict[str, str]
     bars_zero_centrepoint: bool
     modify: Optional[Callable[[ValueT], ValueT]]
-    format: Optional[Union[str, Callable[[ValueT], ValueT]]]
+    format: Optional[Union[str, Callable[[ValueT], str]]]
 
 
 class ColumnMeta(ValidatedConfig):
@@ -88,6 +87,7 @@ class ColumnMeta(ValidatedConfig):
     hidden: bool = False
     placement: float = 1000
     namespace: str = ""
+    colour: Optional[str] = Field(None, deprecated="color")
     color: Optional[str] = None
     max: Optional[float] = None
     dmax: Optional[float] = None
@@ -95,6 +95,7 @@ class ColumnMeta(ValidatedConfig):
     dmin: Optional[float] = None
     ceiling: Optional[float] = None
     floor: Optional[float] = None
+    minRange: Optional[float] = Field(None, deprecated="minrange")
     minrange: Optional[float] = None
     shared_key: Optional[str] = None
     tt_decimals: Optional[int] = None
@@ -114,25 +115,21 @@ class ColumnMeta(ValidatedConfig):
         pconfig: TableConfig,  # plot config dictionary
         table_anchor: Anchor,
     ) -> "ColumnMeta":
+        # Overwrite any header config if set in config
+        for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
+            col_dict[custom_k] = custom_v  # type: ignore
+
         namespace = col_dict.get("namespace", pconfig.namespace) or ""
         assert isinstance(namespace, str)
 
         unclean_rid = col_dict.get("rid") or col_key
         legacy_short_rid = re.sub(r"\W+", "_", str(unclean_rid)).strip().strip("_")  # User configs can still use it
-        rid = legacy_short_rid
+        _rid = legacy_short_rid
         # Prefixing with namepsace to get a unique column ID within a table across all sections
         if namespace:
             ns_slugified = re.sub(r"\W+", "_", str(namespace)).strip().strip("_").lower()
-            rid = f"{ns_slugified}-{rid}"
-        rid = ColumnAnchor(report.save_htmlid(rid, scope=table_anchor))
-
-        modify = col_dict.get("modify")
-        if modify is not None and callable(modify):
-            modify = modify
-
-        min = col_dict.get("min", pconfig.min)
-        format = col_dict.get("format", None)
-        suffix = col_dict.get("suffix", None)
+            _rid = f"{ns_slugified}-{_rid}"
+        col_dict["rid"] = ColumnAnchor(report.save_htmlid(_rid, scope=table_anchor))
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = col_dict.get("shared_key", None)
@@ -149,56 +146,19 @@ class ColumnMeta(ValidatedConfig):
                 shared_key_suffix = config.base_count_prefix
             else:
                 multiplier = 1
-            if modify is None:
-                modify = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore  # noqa: E731
-            if min is None:
-                min = 0
-            if format is None and multiplier == 1:
-                format = "{:,d}"
-            if suffix is None and shared_key_suffix is not None:
-                suffix = " " + shared_key_suffix
+            if col_dict.get("modify") is None:
+                col_dict["modify"] = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore  # noqa: E731
+            if col_dict.get("min") is None:
+                col_dict["min"] = 0
+            if col_dict.get("format") is None and multiplier == 1:
+                col_dict["format"] = "{:,d}"
+            if col_dict.get("suffix") is None and shared_key_suffix is not None:
+                col_dict["suffix"] = " " + shared_key_suffix
 
-        color = col_dict.get("color", col_dict.get("colour"))
-        if color is None:
-            cidx = sec_idx
-            while cidx >= len(SECTION_COLORS):
-                cidx -= len(SECTION_COLORS)
-            color = SECTION_COLORS[cidx]
-
-        title = col_dict.get("title") or str(col_key)
-
-        placement = col_dict.get("placement")
-        if placement is not None and isinstance(placement, (str, float, int)):
-            placement = float(placement)
-        else:
-            placement = 1000
-
-        col: ColumnMeta = ColumnMeta(
-            rid=rid,
-            title=title,
-            description=col_dict.get("description", title),
-            scale=col_dict.get("scale", pconfig.scale),
-            hidden=col_dict.get("hidden", False),
-            placement=placement,
-            namespace=namespace,
-            color=color,
-            max=col_dict.get("max"),
-            min=min,
-            dmin=col_dict.get("dmin"),
-            dmax=col_dict.get("dmax"),
-            ceiling=col_dict.get("ceiling"),
-            floor=col_dict.get("floor"),
-            minrange=col_dict.get("minrange", col_dict.get("minRange")),
-            shared_key=shared_key,
-            tt_decimals=col_dict.get("tt_decimals"),
-            suffix=suffix,
-            cond_formatting_colours=col_dict.get("cond_formatting_colours", []),
-            cond_formatting_rules=col_dict.get("cond_formatting_rules", {}),
-            bgcols=col_dict.get("bgcols", {}),
-            bars_zero_centrepoint=col_dict.get("bars_zero_centrepoint", False),
-            modify=modify,
-            format=format,
-        )
+        col_dict.setdefault("min", pconfig.min)
+        col_dict.setdefault("scale", pconfig.scale)
+        col_dict.setdefault("description", col_dict.setdefault("title", str(col_key)))
+        col_dict.setdefault("placement", 1000)
 
         # Overwrite (2nd time) any given config with table-level user config
         # This is to override column-specific values set by modules
@@ -206,6 +166,14 @@ class ColumnMeta(ValidatedConfig):
             for cpc_k, cpc_v in config.custom_plot_config[pconfig.id].items():
                 if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
                     col_dict[cpc_k] = cpc_v  # type: ignore
+
+        col: ColumnMeta = ColumnMeta(**col_dict)
+
+        if col.color is None:
+            cidx = sec_idx
+            while cidx >= len(SECTION_COLORS):
+                cidx -= len(SECTION_COLORS)
+            col.color = SECTION_COLORS[cidx]
 
         def _ns_match(item_id: str) -> bool:
             return item_id.lower() in [
@@ -275,11 +243,6 @@ class ColumnMeta(ValidatedConfig):
             elif _col_match(item_id) and isinstance(item, (float, int)):
                 col.placement = float(item)
 
-        # Overwrite any header config if set in config
-        for custom_k, custom_v in config.custom_table_header_config.get(pconfig.id, {}).get(col_key, {}).items():
-            if custom_k in col.model_fields:
-                setattr(col, custom_k, custom_v)
-
         return col
 
 
@@ -337,7 +300,6 @@ SECTION_COLORS = [
     "247,129,191",  # Pink
     "153,153,153",  # Grey
 ]
-
 
 col_anchors_by_table: Dict[Anchor, Set[ColumnAnchor]] = defaultdict(set)
 
@@ -538,7 +500,8 @@ def _get_or_create_headers(
     # Remove empty columns
     for empty_col_id in empties:
         logger.debug(
-            f"Table key '{empty_col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos between data keys and header keys"
+            f"Table key '{empty_col_id}' not found in data for '{pconfig.id}'. Skipping. Check for possible typos "
+            f"between data keys and header keys"
         )
         del header_by_key_copy[empty_col_id]
 

@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             on different parts of the MultiQC execution. It is designed to help
             developers optimise how they run MultiQC, to get the most efficient
             and fastest configuration possible. For more information, see the
-            <a href="https://multiqc.info/docs/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
+            <a href="https://docs.seqera.io/multiqc/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
         super(MultiqcModule, self).__init__(
             name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
             anchor=Anchor("multiqc_runtime"),
@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
                 These work by matching either file names or file contents. Generally speaking, matching
                 filenames is super fast and matching file contents is slower.
 
-                Please see the [MultiQC Documentation](https://multiqc.info/docs/#optimising-run-time)
+                Please see the [MultiQC Documentation](https://docs.seqera.io/multiqc/#optimising-run-time)
                 for information on how to optimise MultiQC to speed this process up.
                 The plot below shows which search keys are running and how long each has taken to run in
                 total. This should help to guide you to where optimisation is most worthwhile.

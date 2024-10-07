@@ -52,7 +52,7 @@ body:
         Please ensure your bug report fulfills all of the following requirements.
       options:
         - label: >-
-            I have read the [troubleshooting documentation](https://multiqc.info/docs/usage/troubleshooting/).
+            I have read the [troubleshooting documentation](https://docs.seqera.io/multiqc/usage/troubleshooting/).
           required: true
         - label: >-
             I am using the latest release of MultiQC.

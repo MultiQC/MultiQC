@@ -785,8 +785,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         defer_render_style = "defer_render" if self.defer_render else ""
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.anchor}-wrapper" {height_style}>
-            <div 
-                id="{self.anchor}" 
+            <div
+                id="{self.anchor}"
                 class="hc-plot hc-{self.plot_type}-plot not_loaded not_rendered {defer_render_style}">
             </div>
             <div class="created-with-multiqc">Created with MultiQC</div>
@@ -807,7 +807,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 '<p class="text-info">',
                 "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]

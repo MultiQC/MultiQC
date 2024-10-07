@@ -24,7 +24,7 @@ from multiqc.plots.plotly.plot import PlotType
 from multiqc.plots.plotly.scatter import ScatterConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.types import Anchor, LoadedFileDict, ModuleId, SectionId
-from multiqc.validation import ConfigValidationError
+from multiqc.validation import ModuleConfigValidationError
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -282,7 +282,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         plot_type = PlotType.from_str(ccdict.config.get("plot_type"))
         if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
-            gs_headers = ccdict.config.get("headers")
+            gs_headers = ccdict.config.get("headers", ccdict.config.get("pconfig", {}))
             if gs_headers is None:
                 headers_set: Set[str] = set()
                 for _hd in ccdict.data.values():
@@ -589,14 +589,14 @@ def _find_file_header(f: LoadedFileDict[str]) -> Tuple[Optional[Dict[str, Any]],
     try:
         hconfig = yaml.safe_load("\n".join(hlines))
     except yaml.YAMLError:
-        raise ConfigValidationError(
+        raise ModuleConfigValidationError(
             f"Could not parse comment file header for MultiQC custom content: {f['fn']}. "
             + "Note that everything behind a comment character '#' is expected to in YAML format. "
             + "To provide column names in a TSV or CSV file, put them as the first raw without fencing it with a '#'.",
             "custom_content",
         )
     if not isinstance(hconfig, dict):
-        raise ConfigValidationError(
+        raise ModuleConfigValidationError(
             "Custom Content comment file header looked wrong. It's expected to "
             + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
             "custom_content",
