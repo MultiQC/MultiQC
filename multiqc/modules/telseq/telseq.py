@@ -49,11 +49,11 @@ class MultiqcModule(BaseMultiqcModule):
             # read lines until we get real header starting with ReadGroup
             for line in f["f"]:
                 tokens = line.split("\t")
-                if tokens[0] == "ReadGroup" :
+                if tokens[0] == "ReadGroup":
                     headers = tokens
                     break
             if headers is None:
-                log.debug(f"Not a telseq file (header not found)")
+                log.debug("Not a telseq file (header not found)")
                 return
             for line in f["f"]:
                 data = dict(zip(headers, line.strip().split("\t")))
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
                     tel_length = data["LENGTH_ESTIMATE"]
                 if s_name in self.telseq_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                self.telseq_data[s_name] = {"LENGTH_ESTIMATE":tel_length}
+                self.telseq_data[s_name] = {"LENGTH_ESTIMATE": tel_length}
                 self.add_data_source(f, s_name=s_name)
 
     def telseq_general_stats_table(self):
@@ -77,6 +77,6 @@ class MultiqcModule(BaseMultiqcModule):
             "title": "Telomere Length",
             "description": "Telomere length computed by telseq",
             "min": 0,
-            "scale": "PuRd"
+            "scale": "PuRd",
         }
         self.general_stats_addcols(self.telseq_data, headers)
