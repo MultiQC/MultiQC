@@ -4,13 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.24.1"
+version = "1.26dev"
 dependencies = [
     "click",
     "humanize",
     "importlib_metadata",
     "jinja2>=3.0.0",
     "kaleido",  # for flat plot export
+    # "orca",  # for flat plot export, alternative for kaleido
+    # "psutil",  # for flat plot export with orca
     "markdown",
     "numpy",
     "packaging",
@@ -18,12 +20,11 @@ dependencies = [
     "Pillow>=10",  # to add a logo into flat plots
     "plotly>=5.18",
     "pyyaml>=4",
-    "pyaml-env",
     "rich>=10",
     "rich-click",
     "coloredlogs",  # logging in notebooks
     "spectra>=0.0.10",
-    "pydantic>=2.7.1",
+    "pydantic>=2.7.0",
     "typeguard",
     "tqdm",  # progress bar in notebooks
 ]
@@ -61,9 +62,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-xdist",  # for parallel testing with `pytest -n`
-    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that 
+    "syrupy",  # to compare html snpashots, alternative to pytest-snapshot that
     # does work better with parametrized tests
-    "pytest-asyncio",  # for async tests
+    "pygithub",  # to generate changelog
     "mypy",
     "types-PyYAML",
     "types-tqdm",
@@ -77,7 +78,7 @@ dev = [
 Homepage = "https://multiqc.info"
 Repository = "https://github.com/MultiQC/MultiQC"
 Issues = "https://github.com/MultiQC/MultiQC/issues"
-Documentation = "https://multiqc.info/docs"
+Documentation = "https://docs.seqera.io/multiqc"
 Changelog = "https://github.com/MultiQC/MultiQC/blob/main/CHANGELOG.md"
 
 [project.entry-points.console_scripts]
@@ -101,7 +102,6 @@ biscuit = "multiqc.modules.biscuit:MultiqcModule"
 bismark = "multiqc.modules.bismark:MultiqcModule"
 bowtie1 = "multiqc.modules.bowtie1:MultiqcModule"
 bowtie2 = "multiqc.modules.bowtie2:MultiqcModule"
-bracken = "multiqc.modules.bracken:MultiqcModule"
 busco = "multiqc.modules.busco:MultiqcModule"
 bustools = "multiqc.modules.bustools:MultiqcModule"
 ccs = "multiqc.modules.ccs:MultiqcModule"
@@ -229,6 +229,7 @@ theta2 = "multiqc.modules.theta2:MultiqcModule"
 tophat = "multiqc.modules.tophat:MultiqcModule"
 trimmomatic = "multiqc.modules.trimmomatic:MultiqcModule"
 truvari = "multiqc.modules.truvari:MultiqcModule"
+umicollapse = "multiqc.modules.umicollapse:MultiqcModule"
 umitools = "multiqc.modules.umitools:MultiqcModule"
 varscan2 = "multiqc.modules.varscan2:MultiqcModule"
 vcftools = "multiqc.modules.vcftools:MultiqcModule"
@@ -246,7 +247,7 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 
-### See https://multiqc.info/docs/#multiqc-plugins for documentation
+### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]
 #my-new-option = "myplugin.cli:new_option"
 #
@@ -261,6 +262,7 @@ geo = "multiqc.templates.geo"
 
 [tool.setuptools]
 packages = ["multiqc"]
+package-data = {multiqc = ["py.typed"]}
 
 [tool.ruff]
 line-length = 120
@@ -271,4 +273,5 @@ lint.ignore = ["F401"]  # unused-import
 check_untyped_defs = true
 plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
+files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"

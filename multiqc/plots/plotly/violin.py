@@ -1,21 +1,22 @@
-import logging
-from dataclasses import dataclass
-from typing import Dict, List, Union, Any, Optional, Tuple, Set
 import copy
-
+import logging
 import math
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
+
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
-from multiqc.plots.table_object import DataTable, TableColumn
-from multiqc.plots.plotly.plot import PlotType, BaseDataset, Plot
+from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
+from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
 
-def plot(dts: List[DataTable], show_table_by_default=False) -> "ViolinPlot":
+def plot(dts: List[DataTable], show_table_by_default: bool = False) -> "ViolinPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
     """
@@ -44,7 +45,7 @@ class ViolinColumn:
     color: Optional[str] = None
     hoverformat: Optional[str] = None
 
-    def model_dump(self) -> Dict:
+    def model_dump(self) -> Dict[str, Any]:
         d = self.__dict__
         d["xaxis"] = self.xaxis.__dict__
         return d
@@ -55,36 +56,39 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
 class Dataset(BaseDataset):
-    metrics: List[str]
-    header_by_metric: Dict[str, ViolinColumn]
-    violin_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
-    scatter_value_by_sample_by_metric: Dict[str, Dict[str, Union[int, float, str, None]]]
-    all_samples: List[str]  # unique list of all samples in this dataset
+    metrics: List[ColumnAnchor]
+    header_by_metric: Dict[ColumnAnchor, ViolinColumn]
+    violin_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
+    scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
+    all_samples: List[SampleName]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
 
     @staticmethod
-    def values_and_headers_from_dt(dt: DataTable) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, TableColumn]]:
-        value_by_sample_by_metric = {}
-        dt_column_by_metric: Dict[str, TableColumn] = {}
+    def values_and_headers_from_dt(
+        dt: DataTable,
+    ) -> Tuple[
+        Dict[ColumnAnchor, Dict[SampleName, ValueT]],
+        Dict[ColumnAnchor, ColumnMeta],
+    ]:
+        value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, ValueT]] = {}
+        dt_column_by_metric: Dict[ColumnAnchor, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            full_metric_id = dt_column.rid
+            value_by_sample: Dict[SampleName, ValueT] = {}
+            for _, group_rows in dt.sections[idx].rows_by_sgroup.items():
+                for row in group_rows:
+                    try:
+                        v = row.raw_data[metric_name]
+                    except KeyError:
+                        pass
+                    else:
+                        assert v is not None and str(v).strip != "", v
+                        value_by_sample[row.sample] = v
 
-            value_by_sample = dict()
-            for s_name, val_by_metric in dt.raw_data[idx].items():
-                try:
-                    v = val_by_metric[metric_name]
-                except KeyError:
-                    pass
-                else:
-                    assert v is not None and str(v).strip != "", v
-                    value_by_sample[s_name] = v
-
-            value_by_sample_by_metric[full_metric_id] = value_by_sample
+            value_by_sample_by_metric[dt_column.rid] = value_by_sample
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            full_metric_id = dt_column.rid
-            dt_column_by_metric[full_metric_id] = dt_column
+            dt_column_by_metric[dt_column.rid] = dt_column
 
         # If all colors are the same, remove them
         if len(set([t_col.color for t_col in dt_column_by_metric.values()])) == 1:
@@ -100,13 +104,13 @@ class Dataset(BaseDataset):
     ) -> "Dataset":
         value_by_sample_by_metric, dt_column_by_metric = Dataset.values_and_headers_from_dt(dt)
 
-        all_samples = set()
-        scatter_value_by_sample_by_metric = {}
+        all_samples: Set[SampleName] = set()
+        scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]] = {}
         violin_value_by_sample_by_metric = {}
-        header_by_metric: Dict[str, ViolinColumn] = {}
-        metrics = []
+        header_by_metric: Dict[ColumnAnchor, ViolinColumn] = {}
+        metrics: List[ColumnAnchor] = []
 
-        for metric, dt_column in dt_column_by_metric.items():
+        for col_anchor, dt_column in dt_column_by_metric.items():
             column = ViolinColumn(
                 namespace=dt_column.namespace,
                 title=dt_column.title,
@@ -120,9 +124,9 @@ class Dataset(BaseDataset):
                 show_points=True,
                 show_only_outliers=False,
             )
-            header_by_metric[metric] = column
+            header_by_metric[col_anchor] = column
 
-            value_by_sample = value_by_sample_by_metric[metric]
+            value_by_sample = value_by_sample_by_metric[col_anchor]
             if not value_by_sample:
                 logger.debug(f"No non-empty values found for metric: {column.title}")
                 continue
@@ -156,7 +160,7 @@ class Dataset(BaseDataset):
                     column.xaxis.range = [xmin, xmax]
 
             if not column.show_points:  # Do not add any interactive points
-                scatter_value_by_sample: Dict[str, Union[int, float, str, None]] = {}
+                scatter_value_by_sample: Dict[SampleName, Union[int, float, str, None]] = {}
             elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
@@ -167,18 +171,21 @@ class Dataset(BaseDataset):
                 else:
                     # For numbers, finding outliers and adding only them as interactive points
                     samples = list(value_by_sample.keys())
-                    values = list(value_by_sample.values())
+                    numeric_values: List[Union[int, float]] = []
+                    for v in value_by_sample.values():
+                        assert isinstance(v, (int, float))  # values_are_numeric assures that all values are numeric
+                        numeric_values.append(v)
                     outlier_statuses = find_outliers(
-                        values,
+                        numeric_values,
                         minval=column.dmin,
                         maxval=column.dmax,
                         metric=column.title,
                     )
                     scatter_value_by_sample = {
-                        samples[idx]: values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
+                        samples[idx]: numeric_values[idx] for idx in range(len(samples)) if outlier_statuses[idx]
                     }
 
-            scatter_value_by_sample_by_metric[metric] = scatter_value_by_sample
+            scatter_value_by_sample_by_metric[col_anchor] = scatter_value_by_sample
 
             # Now sort and downsample values to keep max 2000 points for each metric
             violin_value_by_sample = value_by_sample
@@ -194,7 +201,7 @@ class Dataset(BaseDataset):
                 indices = indices[:: int(math.ceil(len(indices) / max_violin_points))]
                 violin_value_by_sample = {samples[idx]: values[idx] for idx in indices}
 
-            violin_value_by_sample_by_metric[metric] = violin_value_by_sample
+            violin_value_by_sample_by_metric[col_anchor] = violin_value_by_sample
 
             # Clean up the header
             if values_are_numeric and not values_are_integer:
@@ -203,7 +210,7 @@ class Dataset(BaseDataset):
 
             all_samples.update(set(list(scatter_value_by_sample.keys())))
             all_samples.update(set(list(violin_value_by_sample.keys())))
-            metrics.append(metric)
+            metrics.append(col_anchor)
 
         ds = Dataset(
             **dataset.model_dump(),
@@ -248,9 +255,9 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
-        add_scatter=True,
+        is_log: bool = False,
+        is_pct: bool = False,
+        add_scatter: bool = True,
         **kwargs,
     ) -> go.Figure:
         """
@@ -367,7 +374,7 @@ class Dataset(BaseDataset):
         report.write_data_file(data, self.uid)
 
 
-class ViolinPlot(Plot):
+class ViolinPlot(Plot[Dataset, TableConfig]):
     datasets: List[Dataset]
     violin_height: int = VIOLIN_HEIGHT  # single violin height
     extra_height: int = EXTRA_HEIGHT  # extra space for the title and footer
@@ -385,15 +392,15 @@ class ViolinPlot(Plot):
         assert len(dts) > 0, "No datasets to plot"
 
         samples_per_dataset: List[Set[str]] = []
-        for dt_idx, dt in enumerate(dts):
+        for _, dt in enumerate(dts):
             ds_samples: Set[str] = set()
-            for rd in dt.raw_data:
-                ds_samples.update(rd.keys())
+            for section in dt.sections:
+                ds_samples.update(section.rows_by_sgroup.keys())
             samples_per_dataset.append(ds_samples)
 
         main_table_dt: DataTable = dts[0]  # used for the table
 
-        model = Plot.initialize(
+        model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
             pconfig=main_table_dt.pconfig,
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
@@ -404,7 +411,7 @@ class ViolinPlot(Plot):
             flat_if_very_large=False,
         )
 
-        no_violin = model.pconfig.no_violin
+        no_violin: bool = model.pconfig.no_violin
         show_table_by_default = show_table_by_default or no_violin
 
         model.datasets = [
@@ -467,13 +474,13 @@ class ViolinPlot(Plot):
 
     def buttons(self, flat: bool) -> List[str]:
         """Add a control panel to the plot"""
-        buttons = []
+        buttons: List[str] = []
         if not flat and any(len(ds.metrics) > 1 for ds in self.datasets):
             buttons.append(
                 self._btn(
                     cls="mqc_table_config_modal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"{self.main_table_dt.anchor}_config_modal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.anchor}_config_modal"},
                 )
             )
         if self.show_table:
@@ -487,7 +494,14 @@ class ViolinPlot(Plot):
 
         return buttons + super().buttons(flat=flat)
 
-    def show(self, dataset_id: Union[int, str] = 0, flat=False, table=None, violin=None, **kwargs):
+    def show(
+        self,
+        dataset_id: Union[int, str] = 0,
+        flat: bool = False,
+        table: Optional[bool] = None,
+        violin: Optional[bool] = None,
+        **kwargs,
+    ):
         """
         Show the table or violin plot based on the input parameters.
         """
@@ -496,13 +510,13 @@ class ViolinPlot(Plot):
             # we only support one dataset, and the flat mode is not applicable.
 
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
-            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+            for idx, col_key, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.raw_data[idx].keys():
-                    if metric in self.main_table_dt.raw_data[idx][s_name]:
-                        val = self.main_table_dt.raw_data[idx][s_name][metric]
-                        if val is not None:
-                            data.setdefault(s_name, {})[rid] = val
+                for _, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                    for row in group_rows:
+                        if col_key in row.raw_data:
+                            val = row.raw_data[col_key]
+                            data.setdefault(row.sample, {})[rid] = val
 
             import pandas as pd  # type: ignore
 
@@ -516,9 +530,9 @@ class ViolinPlot(Plot):
         self,
         filename: str,
         dataset_id: Union[int, str] = 0,
-        flat=None,
-        table=None,
-        violin=None,
+        flat: Optional[bool] = None,
+        table: Optional[bool] = None,
+        violin: Optional[bool] = None,
         **kwargs,
     ):
         """
@@ -529,11 +543,11 @@ class ViolinPlot(Plot):
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
                 rid = header.rid
-                for s_name in self.main_table_dt.raw_data[idx].keys():
-                    if metric in self.main_table_dt.raw_data[idx][s_name]:
-                        val = self.main_table_dt.raw_data[idx][s_name][metric]
-                        if val is not None:
-                            data.setdefault(s_name, {})[rid] = val
+                for _, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                    for row in group_rows:
+                        if metric in row.raw_data:
+                            val = row.raw_data[metric]
+                            data.setdefault(row.sample, {})[rid] = val
 
             values: List[List[Any]] = [list(data.keys())]
             for idx, metric, header in self.main_table_dt.get_headers_in_order():
@@ -622,7 +636,7 @@ class ViolinPlot(Plot):
 
 
 def find_outliers(
-    values: Union[List[int], List[float]],
+    values: List[Union[int, float]],
     top_n: Optional[int] = None,
     z_cutoff: float = 2.0,
     minval: Optional[Union[float, int]] = None,
@@ -644,7 +658,7 @@ def find_outliers(
     if len(values) == 0 or (top_n is not None and top_n <= 0):
         return np.zeros(len(values), dtype=bool)
 
-    added_values = []
+    added_values: List[Union[int, float]] = []
     if minval is not None:
         added_values.append(minval)
     if maxval is not None:

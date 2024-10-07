@@ -1,10 +1,108 @@
 # MultiQC Version History
 
+## [MultiQC v1.25.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.25.1) - 2024-09-30
+
+Python 3.13, bugs fixed, improved sample grouping UI, and handling freezes in containers with incompatible architectures.
+
+### Updates
+
+- Support Python 3.13 (officially to be released on Oct 7). Python 3.8 is supported for now, but might drop support in future releases, so make sure you update! ([#2871](https://github.com/MultiQC/MultiQC/pull/2862))
+- Table sample groups UI: allow clicking the entire row to expand, add cursor pointer ([#2871](https://github.com/MultiQC/MultiQC/pull/2871))
+- Disable plot export in incompatible architecture containers (when running through rosetta) ([#2888](https://github.com/MultiQC/MultiQC/pull/2888))
+
+### Fixes
+
+- Fix export general stats to `multiqc_data.json`: flatten row groups for back-compatibility ([#2879](https://github.com/MultiQC/MultiQC/pull/2879))
+- Custom content:
+  - Fix the generalstats `headers` key name in documentation ([#2901](https://github.com/MultiQC/MultiQC/pull/2901))
+  - Validate table header config instead of failing ([#2875](https://github.com/MultiQC/MultiQC/pull/2875))
+
+### Modules
+
+- Kraken:
+  - Re-add the "Unclassified" tab to the "Top taxa" barplot ([#2881](https://github.com/MultiQC/MultiQC/pull/2881))
+  - Fix the minimizers heatmap ([#2895](https://github.com/MultiQC/MultiQC/pull/2895))
+  - Remove the separate Bracken module as it's just Kraken internally. Fixes the issues when Kraken reports without unclassified are misidentified for Bracken reports ([#2894](https://github.com/MultiQC/MultiQC/pull/2894))
+- bbmap: support qhist outputs with only R1 and extra header ([#2882](https://github.com/MultiQC/MultiQC/pull/2882))
+- Picard HsMetrics: fix collecting data sources ([#2880](https://github.com/MultiQC/MultiQC/pull/2880))
+
+### Refactoring & infrastructure
+
+- Test Docker image builds on every PR commit ([#2886](https://github.com/MultiQC/MultiQC/pull/2886))
+- Suppress "SyntaxWarning: invalid escape sequence" warnings from `colormath` ([#2889](https://github.com/MultiQC/MultiQC/pull/2889))
+- Check the `add_data_source` args (either `path` or `f` should be specified), use `strict_helpers.lint_error` ([#2865](https://github.com/MultiQC/MultiQC/pull/2865))
+
+## [MultiQC v1.25](https://github.com/MultiQC/MultiQC/releases/tag/v1.25) - 2024-09-16
+
+### Highlights - sample grouping
+
+New feature: grouping samples in the General Statistics table.
+
+<img width="400" src="docs/images/changelog/v1.25-grouping-samples.png">
+
+Some modules - prominently FastQC - may produce multiple results per sample, e.g. for the forward and the reverse reads. To group such results in the table together, a new [configuration option](https://multiqc.info/docs/reports/customisation/#sample-grouping) is introduced.
+
+This feature is currently opt-in, you'll need to set `table_sample_merge` in a MultiQC config file to use (see docs above). **We'd love to hear your feedback!** We hope to enable it by default for common file suffix patterns in a future release.
+
+Because MultiQC needs to know how to merge each column (sum, average, etc), each module must implement it independently. Currently it's supported by the FastQC and Cutadapt modules. If you'd like support added to another module, please let us know in a GitHub issue. Details of how to add it into module code can be found in the [moduel development documentation](https://multiqc.info/docs/development/modules/#grouping-samples).
+
+### Highlights - box plots in custom content
+
+The new box plot type, added in v1.21, are now available to use with custom content! See [2847](https://github.com/MultiQC/MultiQC/pull/2847) for configuration examples.
+
+### New modules
+
+- Add UMICollapse module ([#2814](https://github.com/MultiQC/MultiQC/pull/2814), [#2827](https://github.com/MultiQC/MultiQC/pull/2827))
+
+### Updates
+
+- Group read pairs in general stats ([#2794](https://github.com/MultiQC/MultiQC/pull/2794), [#2848](https://github.com/MultiQC/MultiQC/pull/2848))
+- Support boxplot in custom content ([#2847](https://github.com/MultiQC/MultiQC/pull/2847))
+- Allow `x_band`, `x_lines`, `x_minrange` for any plot type (specifically, scatter plots) ([#2851](https://github.com/MultiQC/MultiQC/pull/2851))
+- When both `contents` and `contents_re` are specified in a search patterns, treat it as logical AND ([#2828](https://github.com/MultiQC/MultiQC/pull/2828))
+
+### Module updates
+
+- NanoStat: support multi-sample logs ([#2852](https://github.com/MultiQC/MultiQC/pull/2852))
+- Samtools coverage: support `exclude_contigs` and `include_contigs` ([#2840](https://github.com/MultiQC/MultiQC/pull/2840))
+- Ganon: support non-verbose output, fix missing `removed with --min-count` ([#2838](https://github.com/MultiQC/MultiQC/pull/2838))
+- fastp: support the `--merged` flag ([#2834](https://github.com/MultiQC/MultiQC/pull/2834))
+
+### Fixes
+
+- Workaround for the hanging Kaleido duing plot export: run plot export in separate threads with a timeout and fallback on freezes, add try-catch for crashes ([#2836](https://github.com/MultiQC/MultiQC/pull/2836), [#2819](https://github.com/MultiQC/MultiQC/pull/2819))
+- Fix copying `multiqc.log` into the `multiqc_data` output folder ([#2829](https://github.com/MultiQC/MultiQC/pull/2829))
+- Fix applying `exclude_files` in search patterns ([#2804](https://github.com/MultiQC/MultiQC/pull/2804))
+- Fix bar plot export from toolbox ([#2845](https://github.com/MultiQC/MultiQC/pull/2845))
+- Fix autoselection in plot export toolbox ([#2844](https://github.com/MultiQC/MultiQC/pull/2844))
+- Fix `config.replace_samples` for custom content genstats table ([#2841](https://github.com/MultiQC/MultiQC/pull/2841))
+
+### Module fixes
+
+- Picard: fix parsing Sentieon insert size metrics ([#2823](https://github.com/MultiQC/MultiQC/pull/2823))
+- Picard: fix a search pattern of CollectRnaSeqMetrics ([#2811](https://github.com/MultiQC/MultiQC/pull/2811))
+- Kraken: fix for empty top ranks. Also handle it in bargraph ([#2822](https://github.com/MultiQC/MultiQC/pull/2822))
+- Cellranger: fix data source tag ([#2821](https://github.com/MultiQC/MultiQC/pull/2821))
+- FastQC: fix the `Per Base Sequence Content` detail plot click when a module was run multiple times ([#2856](https://github.com/MultiQC/MultiQC/pull/2856))
+- FastQC: fix calculating average read length ([#2817](https://github.com/MultiQC/MultiQC/pull/2817))
+
+### Refactoring and typing
+
+- Separate anchors and IDs for sections: use IDs for Python configation, and anchors in HTML ([#2797](https://github.com/MultiQC/MultiQC/pull/2797), [#2833](https://github.com/MultiQC/MultiQC/pull/2833))
+- Prefix table column IDs with namespace, but allow configuration to use both short and long anchors ([#2818](https://github.com/MultiQC/MultiQC/pull/2818))
+- More type hinting in plots ([#2816](https://github.com/MultiQC/MultiQC/pull/2816), [#2850](https://github.com/MultiQC/MultiQC/pull/2850))
+- Use `typing.NewType` for all Python versions ([#2820](https://github.com/MultiQC/MultiQC/pull/2820))
+- Remove `pyaml_env` dependency and apply the fix for the `SyntaxWarning` ([#2837](https://github.com/MultiQC/MultiQC/pull/2837))
+
+### Infrastructure and packaging
+
+- Add `py.typed` to mark package as providing type information ([#2846](https://github.com/MultiQC/MultiQC/pull/2846))
+
 ## [MultiQC v1.24.1](https://github.com/MultiQC/MultiQC/releases/tag/v1.24.1) - 2024-08-21
 
 A bug fix release mainly to restore compatibility with Python 3.8. Aside from that, few other minor bug fixes:
 
-- FastQC: fix long-standing issue misplacing status labels when `anchor` is specified in the custom config ([#2790](https://github.com/MultiQC/MultiQC/pull/2790))
+- FastQC: fix long-standing issue misplacing status labels when `anchor` is specified in the custom config ([#2790](https://github.com/MultiQC/MultiQC/pull/2791))
 - Freyja: handle empty inputs, and ensure deterministic sample order ([#2788](https://github.com/MultiQC/MultiQC/pull/2788))
 - Allow numeric xcats and ycats for the heatmap plot ([#2787](https://github.com/MultiQC/MultiQC/pull/2787))
 - Make sure that config's `extra_fn_clean_exts` and `fn_clean_exts` don't conflict when both specified ([#2783](https://github.com/MultiQC/MultiQC/pull/2783))

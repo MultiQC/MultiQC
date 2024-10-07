@@ -3,16 +3,16 @@ import sys
 import time
 import traceback
 import tracemalloc
-from importlib.metadata import EntryPoint
-from typing import Dict, Union, Callable, List
+from typing import Callable, Dict, List, Union
 
 import rich
+from importlib_metadata import EntryPoint
 from rich.syntax import Syntax
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks, software_versions
-from multiqc.core.exceptions import RunError, NoAnalysisFound
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 
 logger = logging.getLogger(__name__)
 
@@ -83,13 +83,15 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
             for prev_mod in report.modules:
                 if prev_mod.name in set(m.name for m in these_modules):
                     logger.info(
-                        f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new samples to a module with multiqc.parse_logs()'
+                        f'Previous "{prev_mod.name}" run will be overridden. It\'s not yet supported to add new '
+                        f"samples to a module with multiqc.parse_logs()"
                     )
                     report.modules.remove(prev_mod)
             report.modules.extend(these_modules)
 
         except ModuleNoSamplesFound:
             logger.debug(f"No samples found: {this_module}")
+
         except UserWarning:  # UserWarning deprecated from 1.16
             msg = f"DEPRECIATED: Please raise 'ModuleNoSamplesFound' instead of 'UserWarning' in module: {this_module}"
             if config.strict:
@@ -98,8 +100,10 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
             else:
                 logger.debug(msg)
             logger.debug(f"No samples found: {this_module}")
+
         except KeyboardInterrupt:
             raise
+
         except:  # noqa: E722
             if config.strict:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
@@ -110,7 +114,10 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
                 type, value, traceback = sys.exc_info()
 
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
-                    issue_url = f"https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title={this_module}%20module%20-%20{type.__name__}"
+                    issue_url = (
+                        f"https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title="
+                        f"{this_module}%20module%20-%20{type.__name__}"
+                    )
                     err_msg = (
                         f"Please copy this log and report it at [bright_blue][link={issue_url}]"
                         f"https://github.com/MultiQC/MultiQC/issues[/link][/] \n"

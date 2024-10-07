@@ -1,16 +1,17 @@
 import logging
-from typing import Dict, List, Union, Optional, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple, Union
+
 import plotly.graph_objects as go  # type: ignore
 from pydantic import Field
 
-from multiqc.plots.plotly.plot import (
-    PlotType,
-    BaseDataset,
-    split_long_string,
-    Plot,
-    PConfig,
-)
 from multiqc import report
+from multiqc.plots.plotly.plot import (
+    BaseDataset,
+    PConfig,
+    Plot,
+    PlotType,
+    split_long_string,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +27,8 @@ class HeatmapConfig(PConfig):
     zlab: str = "z"
     min: Union[float, int, None] = None
     max: Union[float, int, None] = None
-    xcats_samples: bool = False
-    ycats_samples: bool = False
+    xcats_samples: bool = True
+    ycats_samples: bool = True
     square: bool = True
     colstops: List[List] = []
     reverseColors: bool = Field(False, deprecated="reverse_colors")
@@ -41,10 +42,10 @@ class HeatmapConfig(PConfig):
 
 
 def plot(
-    rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+    rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
     pconfig: HeatmapConfig,
-    xcats: Optional[List[Union[str, int]]] = None,
-    ycats: Optional[List[Union[str, int]]] = None,
+    xcats: Optional[Sequence[Union[str, int]]] = None,
+    ycats: Optional[Sequence[Union[str, int]]] = None,
 ) -> "HeatmapPlot":
     """
     Build and add the plot data to the report, return an HTML wrapper.
@@ -59,15 +60,15 @@ def plot(
 
 class Dataset(BaseDataset):
     rows: List[List[ElemT]]
-    xcats: List[str]
-    ycats: List[str]
+    xcats: Optional[Sequence[str]]
+    ycats: Optional[Sequence[str]]
 
     @staticmethod
     def create(
         dataset: BaseDataset,
-        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
-        xcats: Optional[List[Union[str, int]]] = None,
-        ycats: Optional[List[Union[str, int]]] = None,
+        rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
+        xcats: Optional[Sequence[Union[str, int]]] = None,
+        ycats: Optional[Sequence[Union[str, int]]] = None,
     ) -> "Dataset":
         if isinstance(rows, dict):
             # Re-key the dict to be strings
@@ -80,8 +81,8 @@ class Dataset(BaseDataset):
                 ycats = list(rows_str.keys())
             if not xcats:
                 xcats = []
-                for y, value_by_x in rows_str.items():
-                    for x, value in value_by_x.items():
+                for _, value_by_x in rows_str.items():
+                    for x, _ in value_by_x.items():
                         if x not in xcats:
                             xcats.append(x)
             rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
@@ -97,8 +98,8 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: Optional[go.Layout] = None,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -116,18 +117,22 @@ class Dataset(BaseDataset):
 
     def save_data_file(self) -> None:
         row: List[ElemT] = ["."]
-        row += self.xcats
+        if self.xcats:
+            row += self.xcats
         data: List[List[ElemT]] = []
         data.append(row)
-        for ycat, row in zip(self.ycats, self.rows):
-            new_row: List[ElemT] = [ycat]
+        for i, row in enumerate(self.rows):
+            new_row: List[ElemT] = []
+            if self.ycats:
+                ycat = self.ycats[i]
+                new_row.append(ycat)
             new_row += row
             data.append(new_row)
 
         report.write_data_file(data, self.uid)
 
 
-class HeatmapPlot(Plot):
+class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     datasets: List[Dataset]
     xcats_samples: bool
     ycats_samples: bool
@@ -136,20 +141,20 @@ class HeatmapPlot(Plot):
 
     @staticmethod
     def create(
-        rows: Union[List[List[ElemT]], Dict[Union[str, int], Dict[Union[str, int], ElemT]]],
+        rows: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         pconfig: HeatmapConfig,
-        xcats: Optional[List[Union[str, int]]],
-        ycats: Optional[List[Union[str, int]]],
+        xcats: Optional[Sequence[Union[str, int]]],
+        ycats: Optional[Sequence[Union[str, int]]],
     ) -> "HeatmapPlot":
         max_n_samples = 0
         if rows:
             max_n_samples = len(rows)
             if isinstance(rows, list):
                 max_n_samples = max(max_n_samples, len(rows[0]))
-            else:
-                max_n_samples = max(max_n_samples, len(rows[next(iter(rows))]))
+            elif isinstance(rows, dict) and len(rows) > 0:
+                max_n_samples = max(max_n_samples, len(list(rows.values())[0]))
 
-        model = Plot.initialize(
+        model: Plot[Dataset, HeatmapConfig] = Plot.initialize(
             plot_type=PlotType.HEATMAP,
             pconfig=pconfig,
             n_samples_per_dataset=[max_n_samples],
@@ -182,8 +187,8 @@ class HeatmapPlot(Plot):
         )
 
         model.square = pconfig.square  # Keep heatmap cells square
-        xcats_samples = pconfig.xcats_samples
-        ycats_samples = pconfig.ycats_samples
+        xcats_samples: bool = pconfig.xcats_samples
+        ycats_samples: bool = pconfig.ycats_samples
 
         # Extend each dataset object with a list of samples
         model.datasets = [
@@ -213,8 +218,8 @@ class HeatmapPlot(Plot):
         # Determining the size of the plot to reasonably display data without cluttering it too much.
         # For flat plots, we try to make the image large enough to display all samples, but to a limit
         # For interactive plots, we set a lower default height, as it will possible to resize the plot
-        num_rows = len(model.datasets[0].ycats)
-        num_cols = len(model.datasets[0].xcats)
+        num_rows = len(model.datasets[0].ycats) if model.datasets[0].ycats else len(model.datasets[0].rows)
+        num_cols = len(model.datasets[0].xcats) if model.datasets[0].xcats else len(model.datasets[0].rows[0])
         MAX_HEIGHT = 900 if model.flat else 500  # smaller number for interactive, as it's resizable
         MAX_WIDTH = 900  # default interactive width can be bigger
 

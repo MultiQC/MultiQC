@@ -1,35 +1,83 @@
 import base64
+from functools import lru_cache
 import io
 import logging
+import math
+import platform
+import queue
 import random
 import re
-import string
-from enum import Enum
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Tuple, Any, TypeVar, Generic
+import subprocess
+from typing import Any, Dict, Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 
-import math
 import plotly.graph_objects as go  # type: ignore
-from pydantic import BaseModel, field_validator, field_serializer, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from multiqc import config, report
 from multiqc.core import tmp_dir
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.plotly import check_plotly_version
-from multiqc import config, report
-from multiqc.types import AnchorT
+from multiqc.types import Anchor, PlotType
 from multiqc.utils import mqc_colour
-from multiqc.validation import ValidatedConfig
+from multiqc.validation import ValidatedConfig, add_validation_warning
 
 logger = logging.getLogger(__name__)
 
 check_plotly_version()
 
 
+class FlatLine(ValidatedConfig):
+    """
+    Extra X=const or Y=const line added to the plot
+    """
+
+    value: Union[float, int]
+    colour: Optional[str] = Field(None, deprecated="color")
+    color: Optional[str] = None
+    width: int = 2
+    dashStyle: Optional[str] = Field(None, deprecated="dash")
+    dash: Optional[str] = None
+    label: Optional[Union[str, Dict[str, Any]]] = None
+
+    @classmethod
+    def parse_label(cls, value: Any, _clss: List[Type[Any]]) -> Any:
+        if isinstance(value, dict):
+            add_validation_warning(
+                _clss,
+                "Line plot's x_lines or y_lines 'label' field is expected to be a string. "
+                "Other fields other than 'text' are deprecated and will be ignored",
+            )
+            return value["text"]
+        return value
+
+    def __init__(self, _clss=None, **data):
+        _clss = _clss or []
+        if "dashStyle" in data:
+            data["dash"] = convert_dash_style(data.pop("dashStyle"), _clss=_clss + [self.__class__])
+        if "dash" in data:
+            data["dash"] = convert_dash_style(data["dash"], _clss=_clss + [self.__class__])
+        super().__init__(**data, _clss=_clss)
+
+
+class LineBand(ValidatedConfig):
+    """
+    Extra X1-X2 or Y1-Y2 band added to the plot
+    """
+
+    from_: Union[float, int]
+    to: Union[float, int]
+    color: Optional[str] = None
+
+    def __init__(self, _clss: Optional[List[Type[ValidatedConfig]]] = None, **data: Any):
+        super().__init__(**data, _clss=_clss or [self.__class__])
+
+
 class PConfig(ValidatedConfig):
     id: str
-    anchor: Optional[AnchorT] = None  # unlike id, has to be globally unique
-    table_title: Optional[str] = Field(None, deprecated="title")
     title: str
+    anchor: Optional[Anchor] = None  # unlike id, has to be globally unique
+    table_title: Optional[str] = Field(None, deprecated="title")
     height: Optional[int] = None
     width: Optional[int] = None
     square: bool = False
@@ -79,9 +127,22 @@ class PConfig(ValidatedConfig):
     y_clipmax: Optional[Union[float, int]] = None
     save_data_file: bool = True
     showlegend: Optional[bool] = None
+    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
+    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
+    x_minrange: Optional[Union[float, int]] = None
+    y_minrange: Optional[Union[float, int]] = None
+    xPlotBands: Optional[List[LineBand]] = Field(None, deprecated="x_bands")
+    yPlotBands: Optional[List[LineBand]] = Field(None, deprecated="y_bands")
+    xPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="x_lines")
+    yPlotLines: Optional[List[FlatLine]] = Field(None, deprecated="y_lines")
+    x_bands: Optional[List[LineBand]] = None
+    y_bands: Optional[List[LineBand]] = None
+    x_lines: Optional[List[FlatLine]] = None
+    y_lines: Optional[List[FlatLine]] = None
+    _actual_cls = None
 
     @classmethod
-    def from_pconfig_dict(cls, pconfig: Union[Dict, "PConfig", None]):
+    def from_pconfig_dict(cls, pconfig: Union[Mapping[str, Any], "PConfig", None]):
         if pconfig is None:
             lint_error(f"pconfig with required fields 'id' and 'title' must be provided for plot {cls.__name__}")
             return cls(
@@ -93,8 +154,10 @@ class PConfig(ValidatedConfig):
         else:
             return cls(**pconfig)
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def __init__(self, **data: Any):
+        super().__init__(**data, _clss=[self.__class__])
+
+        self._actual_cls = self.__class__
 
         if not self.id:
             self.id = f"{self.__class__.__name__.lower().replace('config', '')}-{random.randint(1000000, 9999999)}"
@@ -104,18 +167,21 @@ class PConfig(ValidatedConfig):
             for k, v in config.custom_plot_config[self.id].items():
                 setattr(self, k, v)
 
+    @classmethod
+    def parse_x_bands(cls, data, _clss: List[Type]):
+        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
-class PlotType(Enum):
-    """
-    Plot labels used in custom content, as well as in JS to load plot into Plotly-js
-    """
+    @classmethod
+    def parse_y_bands(cls, data, _clss: List[Type]):
+        return [LineBand(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
-    LINE = "xy_line"
-    VIOLIN = "violin"
-    BAR = "bar_graph"
-    SCATTER = "scatter"
-    HEATMAP = "heatmap"
-    BOX = "box"
+    @classmethod
+    def parse_x_lines(cls, data, _clss: List[Type]):
+        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
+
+    @classmethod
+    def parse_y_lines(cls, data, _clss: List[Type]):
+        return [FlatLine(**d, _clss=_clss) for d in ([data] if isinstance(data, dict) else data)]
 
 
 class BaseDataset(BaseModel):
@@ -128,17 +194,17 @@ class BaseDataset(BaseModel):
     plot_id: str
     label: str
     uid: str
-    dconfig: Dict  # user dataset-specific configuration
-    layout: Dict  # update when a datasets toggle is clicked, or percentage switch is unselected
-    trace_params: Dict
-    pct_range: Dict
+    dconfig: Dict[str, Any]  # user dataset-specific configuration
+    layout: Dict[str, Any]  # update when a datasets toggle is clicked, or percentage switch is unselected
+    trace_params: Dict[str, Any]
+    pct_range: Dict[str, Any]
     n_samples: int
 
     def create_figure(
         self,
         layout: go.Layout,
-        is_log=False,
-        is_pct=False,
+        is_log: bool = False,
+        is_pct: bool = False,
         **kwargs,
     ) -> go.Figure:
         """
@@ -152,32 +218,39 @@ class BaseDataset(BaseModel):
         """
         raise NotImplementedError
 
+    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        return None, None
 
-T = TypeVar("T", bound="BaseDataset")
+    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+        return None, None
 
 
-class Plot(BaseModel, Generic[T]):
+DatasetT = TypeVar("DatasetT", bound="BaseDataset")
+PConfigT = TypeVar("PConfigT", bound="PConfig")
+
+
+class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     """
     Plot model for serialisation to JSON. Contains enough data to recreate the plot (e.g. in Plotly-JS)
     """
 
     id: str
-    anchor: AnchorT  # unlike id, has to be unique
+    anchor: Anchor  # unlike id, has to be unique
     plot_type: PlotType
     layout: go.Layout
-    datasets: List[T]
-    pconfig: PConfig
+    datasets: List[DatasetT]
+    pconfig: PConfigT
     add_log_tab: bool
     add_pct_tab: bool
     l_active: bool
     p_active: bool
-    pct_axis_update: Dict
+    pct_axis_update: Dict[str, Any]
     axis_controlled_by_switches: List[str] = []
     square: bool = False
     flat: bool = False
     defer_render: bool = False
 
-    model_config = dict(
+    model_config = ConfigDict(
         arbitrary_types_allowed=True,
         use_enum_values=True,
     )
@@ -189,15 +262,20 @@ class Plot(BaseModel, Generic[T]):
     # noinspection PyNestedDecorators
     @field_validator("layout", mode="before")
     @classmethod
-    def parse_layout(cls, d):
+    def parse_layout(cls, d: Any):
         if isinstance(d, dict):
             return go.Layout(**d)
         return d
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        self._set_x_bands_and_range(self.pconfig)
+        self._set_y_bands_and_range(self.pconfig)
+
     @staticmethod
     def initialize(
         plot_type: PlotType,
-        pconfig: PConfig,
+        pconfig: PConfigT,
         n_samples_per_dataset: List[int],
         id: Optional[str] = None,
         anchor: Optional[str] = None,
@@ -205,9 +283,9 @@ class Plot(BaseModel, Generic[T]):
         default_tt_label: Optional[str] = None,
         defer_render_if_large: bool = True,
         flat_if_very_large: bool = True,
-    ):
+    ) -> "Plot[DatasetT, PConfigT]":
         """
-        Initialize a plot model with the given configuration.
+        Initialize a plot model with the given configuration, but without data.
         :param plot_type: plot type
         :param pconfig: plot configuration model
         :param n_samples_per_dataset: number of samples for each dataset, to pre-initialize the base dataset models
@@ -219,19 +297,16 @@ class Plot(BaseModel, Generic[T]):
         :param defer_render_if_large: whether to defer rendering if the number of data points is large
         :param flat_if_very_large: whether to render flat if the number of data points is very large
         """
-        if n_samples_per_dataset == 0:
+        if len(n_samples_per_dataset) == 0:
             raise ValueError("No datasets to plot")
 
         id = id or pconfig.id
-        if id is None:  # id of the plot group
-            uniq_suffix = "".join(random.sample(string.ascii_lowercase, 10))
-            id = f"mqc_plot_{uniq_suffix}"
-        anchor = anchor or pconfig.anchor or id
-        anchor = report.save_htmlid(anchor)  # make sure it's unique
+        _anchor: Anchor = Anchor(anchor or pconfig.anchor or id)
+        _anchor = Anchor(report.save_htmlid(_anchor))  # make sure it's unique
 
         # Counts / Percentages / Log10 switch
-        add_log_tab = pconfig.logswitch and plot_type in [PlotType.BAR, PlotType.LINE]
-        add_pct_tab = pconfig.cpswitch is not False and plot_type == PlotType.BAR
+        add_log_tab: bool = pconfig.logswitch is True and plot_type in [PlotType.BAR, PlotType.LINE]
+        add_pct_tab: bool = pconfig.cpswitch is not False and plot_type == PlotType.BAR
         l_active = add_log_tab and pconfig.logswitch_active
         p_active = add_pct_tab and not pconfig.cpswitch_c_active
 
@@ -269,7 +344,7 @@ class Plot(BaseModel, Generic[T]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        layout = go.Layout(
+        layout: go.Layout = go.Layout(
             title=go.layout.Title(
                 text=pconfig.title,
                 xanchor="center",
@@ -342,7 +417,6 @@ class Plot(BaseModel, Generic[T]):
             for axis in axis_controlled_by_switches:
                 layout[axis].type = "log"
 
-        dconfigs: List[Union[str, Dict[str, str]]] = pconfig.data_labels
         datasets = []
         for idx, n_samples in enumerate(n_samples_per_dataset):
             dataset = BaseDataset(
@@ -361,15 +435,15 @@ class Plot(BaseModel, Generic[T]):
             if len(n_samples_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
-            if idx < len(dconfigs):
-                dconfig = dconfigs[idx]
-            else:
-                dconfig = {}
-
-            if not isinstance(dconfig, (str, dict)):
-                logger.warning(f"Invalid data_labels type: {type(dconfig)}. Must be a string or a dict.")
-            dconfig = dconfig if isinstance(dconfig, dict) else {"name": dconfig}
-            dataset.label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+            data_label: Union[str, Dict[str, Union[str, Dict[str, str]]]] = (
+                pconfig.data_labels[idx] if idx < len(pconfig.data_labels) else {}
+            )
+            dconfig: Dict[str, Union[str, Dict[str, str]]] = (
+                data_label if isinstance(data_label, dict) else {"name": data_label}
+            )
+            label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
+            assert isinstance(label, str)
+            dataset.label = label
             if "ylab" not in dconfig and not pconfig.ylab:
                 dconfig["ylab"] = dconfig.get("name", dconfig.get("label", ""))
 
@@ -381,7 +455,10 @@ class Plot(BaseModel, Generic[T]):
             if n_samples > 1:
                 subtitles += [f"{n_samples} samples"]
             if subtitles:
-                dconfig["title"] += f"<br><sup>{', '.join(subtitles)}</sup>"
+                title = dconfig.get("title", "")
+                assert isinstance(title, str)
+                title += f"<br><sup>{', '.join(subtitles)}</sup>"
+                dconfig["title"] = title
 
             dataset.layout, dataset.trace_params = _dataset_layout(pconfig, dconfig, default_tt_label)
             dataset.dconfig = dconfig
@@ -391,7 +468,7 @@ class Plot(BaseModel, Generic[T]):
             plot_type=plot_type,
             pconfig=pconfig,
             id=id,
-            anchor=anchor,
+            anchor=_anchor,
             datasets=datasets,
             layout=layout,
             add_log_tab=add_log_tab,
@@ -405,7 +482,146 @@ class Plot(BaseModel, Generic[T]):
             defer_render=defer_render,
         )
 
-    def show(self, dataset_id: Union[int, str] = 0, flat=False, **kwargs):
+    def _set_x_bands_and_range(self, pconfig: PConfigT):
+        x_minrange = pconfig.x_minrange
+        x_bands = pconfig.x_bands
+        x_lines = pconfig.x_lines
+
+        if x_bands or x_lines or x_minrange:
+            # same as above but for x-axis
+            for dataset in self.datasets:
+                minval = dataset.layout["xaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["xaxis"]["autorangeoptions"]["maxallowed"]
+                dminval, dmaxval = dataset.get_x_range()
+                if dminval is not None:
+                    minval = min(minval, dminval) if minval is not None else dminval
+                if dmaxval is not None:
+                    maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+                clipmin = dataset.layout["xaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["xaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if x_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + x_minrange)
+                if self.layout.xaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["xaxis"]["range"] = [minval, maxval]
+
+        if not self.layout.shapes:
+            self.layout.shapes = []
+        self.layout.shapes = (
+            list(self.layout.shapes)
+            + [
+                dict(
+                    type="rect",
+                    x0=band.from_,
+                    x1=band.to,
+                    y0=0,
+                    y1=1,
+                    yref="paper",  # make y coords are relative to the plot paper [0,1]
+                    fillcolor=band.color,
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in (x_bands or [])
+            ]
+            + [
+                dict(
+                    type="line",
+                    yref="paper",
+                    xref="x",
+                    x0=line.value,
+                    y0=0,
+                    x1=line.value,
+                    y1=1,
+                    line={
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
+                    },
+                    label=dict(text=line.label, font=dict(color=line.color)),
+                )
+                for line in (x_lines or [])
+            ]
+        )
+
+    def _set_y_bands_and_range(self, pconfig: PConfigT):
+        y_minrange = pconfig.y_minrange
+        y_bands = pconfig.y_bands
+        y_lines = pconfig.y_lines
+
+        if y_bands or y_lines or y_minrange:
+            # We don't want the bands to affect the calculated axis range, so we
+            # find the min and the max from data points, and manually set the range.
+            for dataset in self.datasets:
+                minval = dataset.layout["yaxis"]["autorangeoptions"]["minallowed"]
+                maxval = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
+                dminval, dmaxval = dataset.get_y_range()
+                if dminval is not None:
+                    minval = min(minval, dminval) if minval is not None else dminval
+                if dmaxval is not None:
+                    maxval = max(maxval, dmaxval) if maxval is not None else dmaxval
+                if maxval is not None and minval is not None:
+                    maxval += (maxval - minval) * 0.05
+                clipmin = dataset.layout["yaxis"]["autorangeoptions"]["clipmin"]
+                clipmax = dataset.layout["yaxis"]["autorangeoptions"]["clipmax"]
+                if clipmin is not None and minval is not None and clipmin > minval:
+                    minval = clipmin
+                if clipmax is not None and maxval is not None and clipmax < maxval:
+                    maxval = clipmax
+                if y_minrange is not None and maxval is not None and minval is not None:
+                    maxval = max(maxval, minval + y_minrange)
+                if self.layout.yaxis.type == "log":
+                    minval = math.log10(minval) if minval is not None and minval > 0 else None
+                    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
+                dataset.layout["yaxis"]["range"] = [minval, maxval]
+
+        if not self.layout.shapes:
+            self.layout.shapes = []
+        self.layout.shapes = (
+            list(self.layout.shapes)
+            + [
+                dict(
+                    type="rect",
+                    y0=band.from_,
+                    y1=band.to,
+                    x0=0,
+                    x1=1,
+                    xref="paper",  # make x coords are relative to the plot paper [0,1]
+                    fillcolor=band.color,
+                    line={
+                        "width": 0,
+                    },
+                    layer="below",
+                )
+                for band in (y_bands or [])
+            ]
+            + [
+                dict(
+                    type="line",
+                    xref="paper",
+                    yref="y",
+                    x0=0,
+                    y0=line.value,
+                    x1=1,
+                    y1=line.value,
+                    line={
+                        "width": line.width,
+                        "dash": line.dash,
+                        "color": line.color,
+                    },
+                    label=dict(text=line.label, font=dict(color=line.color)),
+                )
+                for line in (y_lines or [])
+            ]
+        )
+
+    def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 
@@ -435,7 +651,7 @@ class Plot(BaseModel, Generic[T]):
             return fig
 
     @staticmethod
-    def _proc_save_args(filename: str, flat: bool) -> Tuple[str, bool]:
+    def _proc_save_args(filename: str, flat: Optional[bool]) -> Tuple[str, bool]:
         if isinstance(filename, (Path, str)):
             if Path(filename).suffix.lower() == ".html":
                 if flat is not None and flat is True:
@@ -476,7 +692,14 @@ class Plot(BaseModel, Generic[T]):
             )
         logger.info(f"Plot saved to {filename}")
 
-    def get_figure(self, dataset_id: Union[int, str], is_log=False, is_pct=False, flat=False, **kwargs) -> go.Figure:
+    def get_figure(
+        self,
+        dataset_id: Union[int, str],
+        is_log: bool = False,
+        is_pct: bool = False,
+        flat: bool = False,
+        **kwargs,
+    ) -> go.Figure:
         """
         Public method: create a Plotly Figure object.
         """
@@ -527,11 +750,21 @@ class Plot(BaseModel, Generic[T]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            html = self.flat_plot(plots_dir_name=plots_dir_name)
+            if is_running_under_rosetta():
+                # Kaleido is unstable under rosetata, falling back to interactive plots
+                return self.interactive_plot()
+            try:
+                html = self.flat_plot(plots_dir_name=plots_dir_name)
+            except ValueError:
+                logger.error(f"Unable to export plot to flat images: {self.id}, falling back to interactive plot")
+                html = self.interactive_plot()
         else:
             html = self.interactive_plot()
-            if config.export_plots:
-                self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+            if config.export_plots and not is_running_under_rosetta():
+                try:
+                    self.flat_plot(embed_in_html=False, plots_dir_name=plots_dir_name)
+                except ValueError:
+                    logger.error(f"Unable to export plot to flat images: {self.id}")
 
         return html
 
@@ -552,8 +785,8 @@ class Plot(BaseModel, Generic[T]):
         defer_render_style = "defer_render" if self.defer_render else ""
         html += f"""
         <div class="hc-plot-wrapper hc-{self.plot_type}-wrapper" id="{self.anchor}-wrapper" {height_style}>
-            <div 
-                id="{self.anchor}" 
+            <div
+                id="{self.anchor}"
                 class="hc-plot hc-{self.plot_type}-plot not_loaded not_rendered {defer_render_style}">
             </div>
             <div class="created-with-multiqc">Created with MultiQC</div>
@@ -574,7 +807,7 @@ class Plot(BaseModel, Generic[T]):
                 '<p class="text-info">',
                 "<small>" '<span class="glyphicon glyphicon-picture" aria-hidden="true"></span> ',
                 "Flat image plot. Toolbox functions such as highlighting / hiding samples will not work ",
-                '(see the <a href="https://multiqc.info/docs/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
+                '(see the <a href="https://docs.seqera.io/multiqc/development/plots/#interactive--flat-image-plots" target="_blank">docs</a>).',
                 "</small>",
                 "</p>",
             ]
@@ -621,13 +854,26 @@ class Plot(BaseModel, Generic[T]):
         html += "</div>"
         return html
 
-    def _btn(self, cls: str, label: str, data_attrs: Optional[Dict[str, str]] = None, pressed: bool = False) -> str:
-        """Build a switch button for the plot."""
+    def _btn(
+        self,
+        cls: str,
+        label: str,
+        data_attrs: Optional[Dict[str, str]] = None,
+        attrs: Optional[Dict[str, str]] = None,
+        pressed: bool = False,
+    ) -> str:
+        """
+        Build a switch button for the plot.
+        """
+        attrs = attrs.copy() if attrs else {}
+        attrs_str = " ".join([f'{k}="{v}"' for k, v in attrs.items()])
+
         data_attrs = data_attrs.copy() if data_attrs else {}
         if "plot-anchor" not in data_attrs:
             data_attrs["plot-anchor"] = self.anchor
         data_attrs_str = " ".join([f'data-{k}="{v}"' for k, v in data_attrs.items()])
-        return f'<button class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
+
+        return f'<button {attrs_str} class="btn btn-default btn-sm {cls} {"active" if pressed else ""}" {data_attrs_str}>{label}</button>\n'
 
     def buttons(self, flat: bool) -> List[str]:
         """
@@ -670,7 +916,11 @@ class Plot(BaseModel, Generic[T]):
 
         export_btn = ""
         if not flat:
-            export_btn = self._btn(cls="export-plot", label="Export Plot")
+            export_btn = self._btn(
+                cls="export-plot",
+                label="Export Plot",
+                data_attrs={"plot-anchor": str(self.anchor), "type": str(self.plot_type)},
+            )
         return [switch_buttons, export_btn]
 
     def __control_panel(self, flat: bool) -> str:
@@ -680,6 +930,47 @@ class Plot(BaseModel, Generic[T]):
         buttons = "\n".join(self.buttons(flat=flat))
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
+
+
+def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:
+    if is_running_under_rosetta():
+        return None
+
+    try:
+        if file_ext == "svg":
+            # Cannot add logo to SVGs
+            fig.write_image(plot_path, **write_kwargs)
+        else:
+            img_buffer = io.BytesIO()
+            fig.write_image(img_buffer, **write_kwargs)
+            img_buffer = add_logo(img_buffer, format=file_ext)
+            with open(plot_path, "wb") as f:
+                f.write(img_buffer.getvalue())
+            img_buffer.close()
+    except Exception as e:
+        logger.error(f"Unable to export plot to {file_ext.upper()} image: {e}")
+        return None
+    else:
+        return plot_path
+
+
+def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
+    try:
+        img_buffer = io.BytesIO()
+        fig.write_image(img_buffer, **write_kwargs)
+        img_buffer = add_logo(img_buffer, format="PNG")
+        # Convert to a base64 encoded string
+        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
+        img_src = f"data:image/png;base64,{b64_img}"
+        img_buffer.close()
+    except Exception as e:
+        logger.error(f"Unable to export PNG figure to static image: {e}")
+        return None
+    else:
+        return img_src
+
+
+plot_export_has_failed: bool = False
 
 
 def fig_to_static_html(
@@ -693,6 +984,16 @@ def fig_to_static_html(
     """
     Build one static image, return an HTML wrapper.
     """
+    if is_running_under_rosetta():
+        raise ValueError(
+            "Detected Rosetta process, meaning running in an x86_64 container hosted by Apple Silicon. "
+            "Plot export is unstable and will be skipped"
+        )
+
+    global plot_export_has_failed
+    if plot_export_has_failed:
+        raise ValueError("Could not previously export a plots, so won't try again")
+
     embed_in_html = embed_in_html if embed_in_html is not None else not config.development
     export_plots = export_plots if export_plots is not None else config.export_plots
 
@@ -704,6 +1005,7 @@ def fig_to_static_html(
         # for the flat plots we explicitly set width
         height=fig.layout.height / config.plots_export_font_scale,
         scale=scale,  # higher detail (retina display)
+        # engine="orca",  # kaleido gets frozen in docker environments
     )
 
     formats = set(config.export_plot_formats) if export_plots else set()
@@ -714,22 +1016,27 @@ def fig_to_static_html(
             formats.add("png")
 
     # Save the plot to the data directory if export is requested
+    png_is_written = False
+
     if formats:
         if file_name is None:
             raise ValueError("file_name is required for export_plots")
         for file_ext in formats:
             plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
             plot_path.parent.mkdir(parents=True, exist_ok=True)
-            if file_ext == "svg":
-                # Cannot add logo to SVGs
-                fig.write_image(plot_path, **write_kwargs)
+
+            try:
+                if not plot_export_has_failed:
+                    # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or now
+                    _export_plot(fig, file_ext, plot_path, write_kwargs)
+            except Exception as e:
+                msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
+                logger.error(f"{msg}. {e}")
+                plot_export_has_failed = True
+                raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
             else:
-                img_buffer = io.BytesIO()
-                fig.write_image(img_buffer, **write_kwargs)
-                img_buffer = add_logo(img_buffer, format=file_ext)
-                with open(plot_path, "wb") as f:
-                    f.write(img_buffer.getvalue())
-                img_buffer.close()
+                if file_ext == "png":
+                    png_is_written = True
 
     # Now writing the PNGs for the HTML
     if not embed_in_html:
@@ -738,15 +1045,15 @@ def fig_to_static_html(
         if plots_dir_name is None:
             raise ValueError("plots_dir_name is required for non-embedded plots")
         # Using file written in the config.export_plots block above
-        img_src = str(Path(plots_dir_name) / "png" / f"{file_name}.png")
+        img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
+        if not png_is_written:  # Could not write in the block above
+            raise ValueError(f"Unable to export plot to PNG image {file_name}")
+        img_src = str(img_path)
     else:
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        img_buffer = add_logo(img_buffer, format="PNG")
-        # Convert to a base64 encoded string
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_src = f"data:image/png;base64,{b64_img}"
-        img_buffer.close()
+        _img_src = _export_plot_to_buffer(fig, write_kwargs)
+        if _img_src is None:
+            raise ValueError("Unable to export PNG figure to static image")
+        img_src = _img_src
 
     # Should this plot be hidden on report load?
     style = "" if active else "display:none;"
@@ -992,3 +1299,65 @@ def split_long_string(s: str, max_width=80) -> List[str]:
         lines.append(current_line)
 
     return lines
+
+
+def convert_dash_style(dash_style: Optional[str], _clss: Optional[List[type]] = None) -> Optional[str]:
+    """Convert dash style from Highcharts to Plotly"""
+    if dash_style is None:
+        return None
+    mapping = {
+        "Solid": "solid",
+        "ShortDash": "dash",
+        "ShortDot": "dot",
+        "ShortDashDot": "dashdot",
+        "ShortDashDotDot": "dashdot",
+        "Dot": "dot",
+        "Dash": "dash",
+        "DashDot": "dashdot",
+        "LongDash": "longdash",
+        "LongDashDot": "longdashdot",
+        "LongDashDotDot": "longdashdot",
+    }
+    if dash_style in mapping.values():  # Plotly style?
+        return dash_style
+    elif dash_style in mapping.keys():  # Highcharts style?
+        add_validation_warning(_clss or [], f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
+        return mapping[dash_style]
+    return "solid"
+
+
+ROSETTA_WARNING = (
+    "\n===========================\n"
+    "WARNING: Detected a Rosetta process, implying that MultiQC is running inside an x86_64 container, but hosted "
+    "by Apple Silicon.\n\nStatic plot export uses Kaleido - a tool that is unstable under conflicting architectures, so "
+    "MultiQC will not save static PNG/PDF/SVG plots to disk. If you still need those, please use a container with "
+    "a compatible architecture. The official Dockerhub image multiqc/multiqc:latest is available for both "
+    "platforms, and can be pulled with:\n\n"
+    "docker pull multiqc/multiqc:latest\n"
+    "==========================="
+)
+
+
+@lru_cache()
+def is_running_under_rosetta() -> bool:
+    """
+    Detect if running in an x86_64 container hosted by Apple Silicon. Kaleido often freezes in such containers:
+    https://github.com/MultiQC/MultiQC/issues/2667
+    https://github.com/MultiQC/MultiQC/issues/2812
+    https://github.com/MultiQC/MultiQC/issues/2867
+    So we have to know when to disable plot export and show a warning.
+    """
+    # If not x86_64 architecture, rosetta wouldn't be needed
+    if platform.machine() != "x86_64":
+        return False
+
+    # Check for Rosetta processes
+    try:
+        output = subprocess.check_output(["ps", "aux"], universal_newlines=True)
+        if "/run/rosetta/rosetta" in output:
+            logger.warning(ROSETTA_WARNING)
+            return True
+    except subprocess.CalledProcessError:
+        pass
+
+    return False

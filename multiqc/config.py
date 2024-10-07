@@ -7,8 +7,6 @@ custom parameters, call load_user_config() from the user_config module
 """
 
 import itertools
-from pathlib import Path
-from typing import List, Dict, Optional, Union, Set, TextIO, Tuple
 
 # Default logger will be replaced by caller
 import logging
@@ -16,11 +14,15 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
-import pyaml_env  # type: ignore
+from importlib_metadata import EntryPoint
 
+from multiqc.types import Anchor, ModuleId, SectionId
+from multiqc.utils import pyaml_env
 from multiqc.utils.util_functions import strtobool, update_dict
 
 logger = logging.getLogger(__name__)
@@ -55,6 +57,8 @@ try:
         version = f"{version} ({git_hash_short})"
 except:  # noqa: E722
     pass
+
+CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
 
 
 title: str
@@ -115,21 +119,21 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
-violin_downsample_after: int
+violin_downsample_after: Optional[int]
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
 
 collapse_tables: bool
 max_table_rows: int
-table_columns_visible: Dict
-table_columns_placement: Dict
-table_columns_name: Dict
+table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
+table_columns_placement: Dict[str, Dict[str, float]]
+table_columns_name: Dict[str, Union[str, Dict[str, str]]]
 table_cond_formatting_colours: List[Dict[str, str]]
 table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]]
 decimalPoint_format: str
 thousandsSep_format: str
-remove_sections: List
-section_comments: Dict
+remove_sections: List[str]
+section_comments: Dict[str, str]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
@@ -143,7 +147,7 @@ fn_ignore_paths: List[str]
 sample_names_ignore: List[str]
 sample_names_ignore_re: List[str]
 sample_names_rename_buttons: List[str]
-sample_names_replace: Dict
+sample_names_replace: Dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
@@ -166,12 +170,13 @@ filesearch_file_shared: List[str]
 custom_content: Dict
 fn_clean_sample_names: bool
 use_filename_as_sample_name: bool
-fn_clean_exts: List
-fn_clean_trim: List
-fn_ignore_files: List
+fn_clean_exts: List[CleanPatternT]
+fn_clean_trim: List[str]
+fn_ignore_files: List[str]
 top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
 module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
 preserve_module_raw_data: Optional[bool]
+table_sample_merge: Dict[str, List[CleanPatternT]]
 
 # Module filename search patterns
 sp: Dict = {}
@@ -191,13 +196,15 @@ exclude_modules: List[str]
 data_dir: Optional[str]
 plots_dir: Optional[str]
 custom_data: Dict
-report_section_order: Dict
+report_section_order: Dict[
+    Union[SectionId, ModuleId, Anchor], Union[str, Dict[str, int], Dict[str, Union[SectionId, ModuleId, Anchor]]]
+]
 output_fn: Optional[str]
 filename: Optional[str]
 megaqc_upload: bool
 
-avail_modules: Dict
-avail_templates: Dict
+avail_modules: Dict[str, EntryPoint]
+avail_templates: Dict[str, EntryPoint]
 
 
 def load_defaults():
@@ -585,7 +592,7 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 nondefault_config: Dict = {}
 
 
-def update(u):
+def update(u: Dict[str, Any]):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 

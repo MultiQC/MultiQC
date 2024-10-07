@@ -3,12 +3,12 @@ from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .stats import parse_samtools_stats
+from .coverage import parse_samtools_coverage
 from .flagstat import parse_samtools_flagstat
 from .idxstats import parse_samtools_idxstats
-from .rmdup import parse_samtools_rmdup
-from .coverage import parse_samtools_coverage
 from .markdup import parse_samtools_markdup
+from .rmdup import parse_samtools_rmdup
+from .stats import parse_samtools_stats
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +52,36 @@ class MultiqcModule(BaseMultiqcModule):
     # names that look like x, y, chrx or chry (case-insensitive search)
     samtools_idxstats_xchr: myXchr
     samtools_idxstats_ychr: myYchr
+    ```
+
+    ### coverage
+
+    You can include and exclude contigs based on name or pattern.
+
+    For example, you could add the following to your MultiQC config file:
+
+
+    ```yaml
+    samtools_coverage:
+      include_contigs:
+        - "chr*"
+      exclude_contigs:
+        - "*_alt"
+        - "*_decoy"
+        - "*_random"
+        - "chrUn*"
+        - "HLA*"
+        - "chrM"
+        - "chrEBV"
+    ```
+
+    Note that exclusion supersedes inclusion for the contig filters.
+
+    If you want to see what is being excluded, you can set `show_excluded_debug_logs` to `True`:
+
+    ```yaml
+    samtools_coverage:
+      show_excluded_debug_logs: True
     ```
     """
 

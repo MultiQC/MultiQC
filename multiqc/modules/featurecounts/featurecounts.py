@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
+from multiqc.types import Anchor, ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super(MultiqcModule, self).__init__(
             name="featureCounts",
-            anchor="featurecounts",
+            anchor=Anchor("featurecounts"),
             target="Subread featureCounts",
             href="http://subread.sourceforge.net/",
             info="Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, "
@@ -145,21 +146,33 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the featureCounts report and add them to the
         basic stats table at the top of the report"""
 
-        headers = {
-            "Assigned": {
-                "title": "Assigned",
-                "description": f"Assigned reads ({config.read_count_desc})",
-                "scale": "PuBu",
-                "shared_key": "read_count",
-                "hidden": True,
+        # # Merge Read 1 + Read 2 data
+        # gen_stats_data_by_sample = self.group_samples_and_average_metrics(
+        #     {s: {ColumnKeyT(k): v for k, v in d.items()} for s, d in data_by_sample.items()},
+        #     grouping_criteria="read_pairs",
+        #     cols_to_sum=[ColumnKeyT("Assigned")],
+        #     cols_to_weighted_average=[
+        #         (ColumnKeyT("percent_assigned"), ColumnKeyT("Assigned")),
+        #     ],
+        # )
+
+        self.general_stats_addcols(
+            data_by_sample,
+            {
+                ColumnKey("Assigned"): {
+                    "title": "Assigned",
+                    "description": f"Assigned reads ({config.read_count_desc})",
+                    "scale": "PuBu",
+                    "shared_key": "read_count",
+                    "hidden": True,
+                },
+                ColumnKey("percent_assigned"): {
+                    "title": "Assigned",
+                    "description": "% Assigned reads",
+                    "max": 100,
+                    "min": 0,
+                    "suffix": "%",
+                    "scale": "RdYlGn",
+                },
             },
-            "percent_assigned": {
-                "title": "Assigned",
-                "description": "% Assigned reads",
-                "max": 100,
-                "min": 0,
-                "suffix": "%",
-                "scale": "RdYlGn",
-            },
-        }
-        self.general_stats_addcols(data_by_sample, headers)
+        )

@@ -104,7 +104,10 @@ class MultiqcModule(BaseMultiqcModule):
                         plot=self.plot(file_type),
                     )
 
-            if any(self.mod_data[file_type][sample]["kv"] for sample in self.mod_data[file_type]):
+            if (
+                any(self.mod_data[file_type][sample]["kv"] for sample in self.mod_data[file_type])
+                and "kv_descriptions" in file_types[file_type]
+            ):
                 self.add_section(
                     name=file_types[file_type]["title"] + " summary table",
                     anchor="bbmap-" + file_type + "-table",

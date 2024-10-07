@@ -7,31 +7,31 @@ import json
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Union, List, Optional, Sequence
+from typing import Dict, List, Optional, Sequence, Union
 
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core.order_modules_and_sections import order_modules_and_sections
-from multiqc.core.update_config import update_config, ClConfig
-from multiqc.core.file_search import file_search
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 from multiqc.core.exec_modules import exec_modules
+from multiqc.core.file_search import file_search
+from multiqc.core.order_modules_and_sections import order_modules_and_sections
+from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
-from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc.plots.plotly.bar import BarPlot
 from multiqc.plots.plotly.box import BoxPlot
 from multiqc.plots.plotly.heatmap import HeatmapPlot
 from multiqc.plots.plotly.line import LinePlot
-from multiqc.plots.plotly.plot import PlotType, Plot
+from multiqc.plots.plotly.plot import Plot, PlotType
 from multiqc.plots.plotly.scatter import ScatterPlot
 from multiqc.plots.plotly.violin import ViolinPlot
-from multiqc.types import ModuleIdT
+from multiqc.types import Anchor, ModuleId
 
 logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path],
+    *analysis_dir: Union[str, Path, List[Union[str, Path]]],
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -64,7 +64,8 @@ def parse_logs(
     @param prepend_dirs: Prepend directory to sample names
     @param dirs_depth: Prepend n directories to sample names. Negative number to take from start of path
     @param fn_clean_sample_names: Do not clean the sample names (leave as full file name)
-    @param require_logs: Require all explicitly requested modules to have log files. If not, MultiQC will exit with an error
+    @param require_logs: Require all explicitly requested modules to have log files. If not, MultiQC will exit with
+    an error
     @param use_filename_as_sample_name: Use the log filename as the sample name
     @param strict: Don't catch exceptions, run additional code checks to help development
     @param quiet: Only show log warnings
@@ -83,8 +84,12 @@ def parse_logs(
      later interactively. Defaults to `True`. Set to `False` to save memory.
     """
     assert isinstance(analysis_dir, tuple)
+    if len(analysis_dir) == 1 and isinstance(analysis_dir[0], list):
+        analysis_dir = tuple(analysis_dir[0])
     if not all(isinstance(d, (str, Path)) for d in analysis_dir):
-        raise ValueError("Path arguments should be path-like or strings, got:", analysis_dir)
+        raise ValueError(
+            "Path arguments should be path-like, strings, or list of path-like or strings, got:", analysis_dir
+        )
 
     update_config(*analysis_dir, cfg=ClConfig(**{k: v for k, v in locals().items() if k != "analysis_dir"}))
 
@@ -186,7 +191,7 @@ def list_plots() -> Dict:
     @return: Dict of plot names indexed by module and section
     """
 
-    result: Dict[ModuleIdT, List] = {}
+    result: Dict[ModuleId, List] = {}
     for module in report.modules:
         result[module.id] = list()
         for section in module.sections:
@@ -261,14 +266,14 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     """
 
     data: Dict[str, Dict] = defaultdict(dict)
-    for data_by_sample, header in zip(report.general_stats_data, report.general_stats_headers):
-        for s, val_by_key in data_by_sample.items():
+    for rows_by_group, header in zip(report.general_stats_data, report.general_stats_headers):
+        for s, rows in rows_by_group.items():
             if sample and s != sample:
                 continue
-            for key, val in val_by_key.items():
-                if key in header:
-                    key = f"{header[key].get('namespace', '')}.{key}"
-                    data[s][key] = val
+            for row in rows:
+                for key, val in row.data.items():
+                    if key in header:
+                        data[s][f"{header[key].get('namespace', '')}.{key}"] = val
     if sample:
         if not data:
             return {}
@@ -362,13 +367,13 @@ def add_custom_content_section(
 
     module = BaseMultiqcModule(
         name=name,
-        anchor=anchor,
+        anchor=Anchor(f"{anchor}-module"),
         info=description,
         comment=comment,
     )
     module.add_section(
         name=name,
-        anchor=anchor,
+        anchor=Anchor(anchor),
         description=description,
         helptext=helptext,
         content_before_plot=content_before_plot,

@@ -1,21 +1,26 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+import array
 import json
 import logging
+import math
 import shutil
 import sys
 import time
-from collections import defaultdict, OrderedDict
+from collections import OrderedDict, defaultdict
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, Optional, Union
 
-import array
-import math
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-def rmtree_with_retries(path, _logger=None, max_retries=10):
+def rmtree_with_retries(
+    path: Union[str, Path, None],
+    _logger: Optional[logging.Logger] = None,
+    max_retries: int = 10,
+):
     """
     Robustly tries to delete paths.
     Retries several times (with increasing delays) if an OSError
@@ -42,7 +47,7 @@ def rmtree_with_retries(path, _logger=None, max_retries=10):
     shutil.rmtree(path)
 
 
-def strtobool(val) -> bool:
+def strtobool(val: Any) -> bool:
     """
     Replaces deprecated https://docs.python.org/3.9/distutils/apiref.html#distutils.util.strtobool
     The deprecation recommendation is to re-implement the function https://peps.python.org/pep-0632/
@@ -64,12 +69,12 @@ def strtobool(val) -> bool:
         raise ValueError(f"invalid truth value {val!r}")
 
 
-def replace_defaultdicts(data):
+def replace_defaultdicts(data: Any) -> Any:
     """
     Recursively replace dict-likes as dicts for nice yaml representation.
     """
 
-    def _replace(obj):
+    def _replace(obj: Any) -> Any:
         if isinstance(obj, (defaultdict, OrderedDict, dict)):
             return {k: _replace(v) for k, v in obj.items()}
         elif isinstance(obj, list):
@@ -131,6 +136,8 @@ def dump_json(data, filehandle=None, **kwargs):
                 return replace_nan(o.tolist())
             if callable(o):
                 return None
+            if isinstance(o, BaseModel):  # special handling for pydantic models
+                return o.model_dump_json()
             return super().default(o)
 
     if filehandle:
@@ -204,7 +211,12 @@ def compress_number_lists_for_json(obj):
     return obj
 
 
-def update_dict(target: Dict, source: Dict, none_only=False, add_in_the_beginning=False):
+def update_dict(
+    target: Dict[Any, Any],
+    source: Dict[Any, Any],
+    none_only: bool = False,
+    add_in_the_beginning: bool = False,
+):
     """
     Recursively updates nested dict d from nested dict u
 
@@ -217,7 +229,6 @@ def update_dict(target: Dict, source: Dict, none_only=False, add_in_the_beginnin
     >>> update_dict({"existing": "v1"}, {"new": "v2"}, add_in_the_beginning=True)
     {'new': 'v2', 'existing': 'v1'}
     """
-    assert target is not None, source is not None
     for key, src_val in source.items():
         if isinstance(src_val, dict) and key in target and isinstance(target[key], dict):
             target[key] = update_dict(target[key], src_val, none_only=none_only)

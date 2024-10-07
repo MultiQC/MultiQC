@@ -314,6 +314,18 @@ fn_clean_exts:
   - ".error.grp"
   - ".vgstats"
 
+# Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
+# Affects all modules that support it (e.g. fastqc, cutadapt)
+table_sample_merge:
+#   "R1":
+#     - "_R1"
+#     - type: regex
+#       pattern: "[_.-][rR]?1$"
+#   "R2":
+#     - "_R2"
+#     - type: regex
+#       pattern: "[_.-][rR]?2$"
+
 # These are removed after the above, only if sample names
 # start or end with this string. Again, removed in order.
 fn_clean_trim:
@@ -456,6 +468,7 @@ module_order:
   - stacks
   - varscan2
   - snippy
+  - umicollapse
   - umitools
   - truvari
   - megahit
@@ -497,7 +510,6 @@ module_order:
   - flexbar
   - sourmash
   - kaiju
-  - bracken
   - kraken
   - malt
   - motus
