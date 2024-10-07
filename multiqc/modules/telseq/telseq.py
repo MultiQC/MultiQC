@@ -27,6 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse the output files
         self.parse_telseq_data()
 
+        # Superfluous function call to confirm that it is used in this module
+        # Replace None with actual version if it is available
+        self.add_software_version(None)
+
         # Filter to strip out ignored sample names
         self.telseq_data = self.ignore_samples(self.telseq_data)
 
