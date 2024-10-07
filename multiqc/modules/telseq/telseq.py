@@ -41,7 +41,6 @@ class MultiqcModule(BaseMultiqcModule):
         # Basic Stats Table
         self.telseq_general_stats_table()
 
-
     def parse_telseq_data(self):
         """Go through log file looking for telseq output"""
         for f in self.find_log_files("telseq", filehandles=True):
