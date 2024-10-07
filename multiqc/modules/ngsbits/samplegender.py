@@ -33,8 +33,8 @@ def parse_reports(self: BaseMultiqcModule) -> int:
 
     # Add SampleGender Table
     config_table = {
-        "id": "ngsbits_samplegender",
-        "title": "ngs-bits: SampleGender",
+        "id": "samplegender",
+        "title": "SampleGender",
     }
 
     headers = {
@@ -42,18 +42,21 @@ def parse_reports(self: BaseMultiqcModule) -> int:
             "title": "Predicted Gender",
             "description": "The predicted gender based on chromosome read ratios.",
             "namespace": "ngsbits",
+            "scale": "Set2",
         },
         "reads_chry": {
             "title": "Reads on ChrY",
             "description": "The number of reads mapped to the Y chromosome.",
             "namespace": "ngsbits",
             "min": 0,
+            "scale": "Blues",
         },
         "reads_chrx": {
             "title": "Reads on ChrX",
             "description": "The number of reads mapped to the X chromosome.",
             "namespace": "ngsbits",
             "min": 0,
+            "scale": "Reds",
         },
         "ratio_chry_chrx": {
             "title": "ChrY/ChrX Ratio",
@@ -61,13 +64,15 @@ def parse_reports(self: BaseMultiqcModule) -> int:
             "namespace": "ngsbits",
             "min": 0,
             "format": "{:.4f}",
+            "scale": "Purples",
         },
     }
 
     self.add_section(
-        name="ngs-bits SampleGender",
-        anchor="samplegender",
-        description="SampleGender determines the gender of a sample from the BAM/CRAM file.",
+        name="SampleGender",
+        anchor="ngsbits-samplegender",
+        description='<a href="https://github.com/imgag/ngs-bits/blob/master/doc/tools/SampleGender.md" target="_blank">SampleGender</a>'
+        " determines the gender of a sample from the BAM/CRAM file.",
         plot=table.plot(data=samplegender_data, headers=headers, pconfig=config_table),
     )
 
