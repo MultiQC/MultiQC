@@ -42,10 +42,19 @@ class MultiqcModule(BaseMultiqcModule):
         self.telseq_general_stats_table()
 
 
-   def parse_telseq_data(self):
+    def parse_telseq_data(self):
         """Go through log file looking for telseq output"""
-        for f in self.find_log_files("librarian", filehandles=True):
-            headers = f["f"].readline().strip().split("\t")
+        for f in self.find_log_files("telseq", filehandles=True):
+            headers = None
+            # read lines until we get real header starting with ReadGroup
+            for line in f["f"]:
+                tokens = line.split("\t")
+                if tokens[0] == "ReadGroup" :
+                    headers = tokens
+                    break
+            if headers is None:
+                log.debug(f"Not a telseq file (header not found)")
+                return
             for line in f["f"]:
                 data = dict(zip(headers, line.strip().split("\t")))
                 s_name = self.clean_s_name(data["Sample"], f)
@@ -54,9 +63,9 @@ class MultiqcModule(BaseMultiqcModule):
                     tel_length = float(data["LENGTH_ESTIMATE"])
                 except Exception:
                     tel_length = data["LENGTH_ESTIMATE"]
-                if s_name in self.librarian_data:
+                if s_name in self.telseq_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                self.telseq_data[s_name] = tel_length
+                self.telseq_data[s_name] = {"LENGTH_ESTIMATE":tel_length}
                 self.add_data_source(f, s_name=s_name)
 
     def telseq_general_stats_table(self):
@@ -64,20 +73,10 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {}
-        headers["merged_trimming"] = {
-            "title": f"{config.read_count_prefix} Merged (Trimming)",
-            "description": f"Merged clusters from trimming ({config.read_count_desc})",
+        headers["LENGTH_ESTIMATE"] = {
+            "title": "Telomere Length",
+            "description": "Telomere length computed by telseq",
             "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
-        }
-        headers["merged_overlap"] = {
-            "title": f"{config.read_count_prefix} Merged (Overlap)",
-            "description": f"Merged clusters from overlapping reads ({config.read_count_desc})",
-            "min": 0,
-            "scale": "PuRd",
-            "modify": lambda x: x * config.read_count_multiplier,
-            "shared_key": "read_count",
+            "scale": "PuRd"
         }
         self.general_stats_addcols(self.telseq_data, headers)
