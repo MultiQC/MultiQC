@@ -124,7 +124,7 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "shared_key": "read_count",
         },
         "insert_size_average": {
-            "title": "Mean Insert",
+            "title": "Mean insert",
             "description": "Average insert size",
             "suffix": "bp",
             "format": "{:,.1f}",
