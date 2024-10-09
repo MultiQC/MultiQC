@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 def parse_reports(self: BaseMultiqcModule) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
-    samplegender_data: Dict[str, Dict[str, Union[float, int]]] = dict()
+    samplegender_data: Dict[str, Dict[str, Union[float, str]]] = dict()
     for f in self.find_log_files("ngsbits/samplegender"):
         self.add_data_source(f)
         s_name = f["s_name"]
@@ -42,7 +42,7 @@ def parse_reports(self: BaseMultiqcModule) -> int:
             "title": "Predicted Gender",
             "description": "The predicted gender based on chromosome read ratios.",
             "namespace": "ngsbits",
-            "scale": "Set2",
+            "scale": False,
         },
         "reads_chry": {
             "title": "Reads on ChrY",
@@ -50,6 +50,7 @@ def parse_reports(self: BaseMultiqcModule) -> int:
             "namespace": "ngsbits",
             "min": 0,
             "scale": "Blues",
+            "format": "{:,.0f}",
         },
         "reads_chrx": {
             "title": "Reads on ChrX",
@@ -57,6 +58,7 @@ def parse_reports(self: BaseMultiqcModule) -> int:
             "namespace": "ngsbits",
             "min": 0,
             "scale": "Reds",
+            "format": "{:,.0f}",
         },
         "ratio_chry_chrx": {
             "title": "ChrY/ChrX Ratio",

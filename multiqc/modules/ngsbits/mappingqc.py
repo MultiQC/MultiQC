@@ -151,7 +151,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             "format": "{:,.2f}",
             "floor": 0,
             "ceiling": 10,
-            "minRange": 10,
+            "minrange": 10,
             "scale": "Greys",
             "hidden": True,
         }
