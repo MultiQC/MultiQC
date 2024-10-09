@@ -6,9 +6,6 @@ from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
 from multiqc.utils import mqc_colour
 from typing import TYPE_CHECKING
-from dotenv import load_dotenv
-
-load_dotenv()
 
 if TYPE_CHECKING:  # to avoid circular import
     from multiqc.plots.plotly.violin import ViolinPlot

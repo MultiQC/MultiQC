@@ -1,18 +1,22 @@
 import os
 from typing import List, Optional
-import openai
-from openai.types.chat.chat_completion_message import ChatCompletionMessage
+import openai  # type: ignore
+from openai.types.chat.chat_completion_message import ChatCompletionMessage  # type: ignore
 
 from multiqc import config
 from multiqc.plots.table_object import DataTable
 from multiqc.types import Section
+
+from dotenv import load_dotenv  # type: ignore
+
+load_dotenv()
 
 
 class LLMClient:
     def __init__(self, model: str):
         self.model = model
 
-    def chat(self, data_items: List[str]) -> str:
+    def chat(self, data_items: List[str]) -> Optional[str]:
         raise NotImplementedError("Not implemented")
 
 
@@ -76,7 +80,10 @@ class AnthropicClient(LLMClient):
         return ai_message.text
 
 
-def _get_llm_client() -> Optional[LLMClient]:
+def get_llm_client() -> Optional[LLMClient]:
+    if not config.ai_summary:
+        return None
+
     openai_token = os.environ.get("OPENAI_API_KEY")
     if openai_token:
         return OpenAIClient(
@@ -91,44 +98,3 @@ def _get_llm_client() -> Optional[LLMClient]:
         )
 
     return None
-
-
-def table_llm_summary(
-    dt: DataTable,
-    table_title: str,
-    report_section: Optional[Section] = None,
-) -> Optional[str]:
-    if not config.ai_summary:
-        return None
-
-    llm = _get_llm_client()
-    if not llm:
-        return None
-
-    prompt = f"""
-{TABLE_SUMMARY_INSTRUCTION}
-
-#Title: {table_title}
-"""
-    if report_section:
-        prompt += f"""\
-#Description:
-{report_section.description}
-"""
-    prompt += """\
-#Data:
-
-"""
-
-    for table_section in dt.sections:
-        for _, rows in table_section.rows_by_sgroup.items():
-            row = rows[0]  # take only the first row in a group
-            val_by_metric = {
-                header.description: row.formatted_data[metric]
-                for metric, header in table_section.column_by_key.items()
-                if metric in row.raw_data
-            }
-            prompt += f"{dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
-
-    summary = llm.chat([prompt])
-    return summary

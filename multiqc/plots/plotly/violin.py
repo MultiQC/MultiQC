@@ -589,9 +589,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(
-        self, plots_dir_name: Optional[str] = None, clean_html_id: bool = True, section: Optional[Section] = None
-    ) -> str:
+    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -638,14 +636,51 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
             html += configuration_modal
 
-        if ai_info := ai.table_llm_summary(
+        if ai_info := self.llm_summary(
             self.main_table_dt,
-            table_title=self.main_table_dt.pconfig.title,
             report_section=section,
         ):
             html = f'<div class="alert alert-info">{ai_info}</div>' + html
 
         return html
+
+    def llm_summary(
+        self,
+        dt: DataTable,
+        report_section: Optional[Section] = None,
+    ) -> Optional[str]:
+        if not (llm := ai.get_llm_client()):
+            return None
+
+        table_title = self.main_table_dt.pconfig.title
+
+        prompt = f"""
+    {ai.TABLE_SUMMARY_INSTRUCTION}
+
+    #Title: {table_title}
+    """
+        if report_section:
+            prompt += f"""\
+    #Description:
+    {report_section.description}
+    """
+        prompt += """\
+    #Data:
+
+    """
+
+        for table_section in dt.sections:
+            for _, rows in table_section.rows_by_sgroup.items():
+                row = rows[0]  # take only the first row in a group
+                val_by_metric = {
+                    header.description: row.formatted_data[metric]
+                    for metric, header in table_section.column_by_key.items()
+                    if metric in row.raw_data
+                }
+                prompt += f"{dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
+
+        summary = llm.chat([prompt])
+        return summary
 
 
 def find_outliers(

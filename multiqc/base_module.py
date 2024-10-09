@@ -237,7 +237,7 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
-    ) -> Iterable[LoadedFileDict[io.BufferedReader]]: ...
+    ) -> Union[Iterable[LoadedFileDict[io.TextIOWrapper]], Iterable[LoadedFileDict[io.BufferedReader]]]: ...
 
     @overload
     def find_log_files(
@@ -248,8 +248,8 @@ class BaseMultiqcModule:
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
     ) -> Union[
         Iterable[LoadedFileDict[str]],
-        Iterable[LoadedFileDict[io.BufferedReader]],
-        Iterable[LoadedFileDict[io.TextIOWrapper]],
+        Iterable[LoadedFileDict[io.BufferedReader]],  # image file
+        Iterable[LoadedFileDict[io.TextIOWrapper]],  # text file
         Iterable[LoadedFileDict[None]],
     ]:
         """
