@@ -43,6 +43,7 @@ class OpenAIClient(LLMClient):
         response = self.client.chat.completions.create(
             model=self.model,
             messages=self.history,
+            temperature=0.0,
         )
         ai_message: ChatCompletionMessage = response.choices[0].message
         self.history.append(ai_message)
@@ -65,7 +66,11 @@ class AnthropicClient(LLMClient):
     def chat(self, data_items: List[str]) -> Optional[str]:
         self.history += [{"role": "user", "content": data_item} for data_item in data_items]
 
-        response = self.client.messages.create(model=self.model, messages=self.history)
+        response = self.client.messages.create(
+            model=self.model,
+            messages=self.history,
+            temperature=0.0,
+        )
         ai_message = response.content[0]
         self.history.append(ai_message)
         return ai_message.text
@@ -118,7 +123,12 @@ def table_llm_summary(
     for table_section in dt.sections:
         for _, rows in table_section.rows_by_sgroup.items():
             row = rows[0]  # take only the first row in a group
-            prompt += f"{dt.pconfig.col1_header}: {row.sample}\n{row.raw_data}\n\n"
+            val_by_metric = {
+                header.description: row.formatted_data[metric]
+                for metric, header in table_section.column_by_key.items()
+                if metric in row.raw_data
+            }
+            prompt += f"{dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
 
     summary = llm.chat([prompt])
     return summary

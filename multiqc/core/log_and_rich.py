@@ -53,8 +53,9 @@ def init_log(log_to_file: bool = False):
         log_level = "WARNING"
     logger.setLevel(log_level)
 
-    # Remove DEBUG level for the PIL.PngImagePlugin logger
+    # Remove DEBUG level for the PIL.PngImagePlugin and other third-party dependency loggers
     logging.getLogger("PIL").setLevel(logging.INFO)
+    logging.getLogger("httpcore").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
     if config.no_ansi is False:
