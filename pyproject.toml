@@ -145,6 +145,7 @@ homer = "multiqc.modules.homer:MultiqcModule"
 hops = "multiqc.modules.hops:MultiqcModule"
 hostile = "multiqc.modules.hostile:MultiqcModule"
 htseq = "multiqc.modules.htseq:MultiqcModule"
+htstream = "multiqc.modules.htstream:MultiqcModule"
 humid = "multiqc.modules.humid:MultiqcModule"
 interop = "multiqc.modules.interop:MultiqcModule"
 isoseq = "multiqc.modules.isoseq:MultiqcModule"
@@ -266,6 +267,7 @@ package-data = {multiqc = ["py.typed"]}
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+
 lint.ignore = ["F401"]  # unused-import
 
 [tool.mypy]
@@ -274,3 +276,4 @@ plugins = ["pydantic.mypy"]
 # exclude all files in multiqc/modules
 files = ["multiqc", "tests"]
 exclude = "multiqc/modules/*"
+
