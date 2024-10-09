@@ -44,7 +44,6 @@ from multiqc.plots.table_object import (
     SampleGroup,
     SampleName,
     ValueT,
-    is_valid_value,
 )
 from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
 
@@ -555,10 +554,10 @@ class BaseMultiqcModule:
                     matched_label = label
                     # Clean the rest of the name
                     group_name = SampleGroup(
+                        # Leaving out fn_clean_exts and fn_clean_trim, so the default values are used, to make sure
+                        # all default extentions are trimmed after we trimmed the groupping pattern.
                         self._clean_s_name(
                             s_name_without_ext,
-                            fn_clean_exts=grouping_exts,
-                            fn_clean_trim=[],
                             prepend_dirs=False,
                         )
                     )
