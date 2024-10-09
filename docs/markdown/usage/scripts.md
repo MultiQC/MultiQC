@@ -8,7 +8,7 @@ description: Importing MultiQC as a library in scripts and notebooks
 Even though the primary way to run MultiQC is as a command line, it can also be imported
 like a Python module in order to build the report interactively,
 such as in custom Python scripts or in a Jupyter notebook environment
-(See an [example notebook](https://deploy-preview-94--multiqc.netlify.app/example-reports/jupyter/)).
+(See an [example notebook](https://multiqc.info/example-reports/jupyter/)).
 
 MultiQC provides a set of commands to iteratively parse logs and add sections to a report.
 All of them are available via importing MultiQC as a module:
@@ -20,7 +20,7 @@ import multiqc
 ## Parse logs
 
 Find files that MultiQC recognizes in `analysis_dir` and parse them, without generating a report.
-Data can be accessed with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
+Data can be accessed with other methods: `list_modules`, `list_plots`, etc.
 
 ```python
 def parse_logs(*analysis_dir, **kwargs)
