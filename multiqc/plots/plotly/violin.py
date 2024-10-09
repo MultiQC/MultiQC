@@ -8,10 +8,11 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 
 from multiqc import config, report
+from multiqc.core import ai
 from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
 from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
-from multiqc.types import SampleName
+from multiqc.types import SampleName, Section
 
 logger = logging.getLogger(__name__)
 
@@ -588,7 +589,9 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, clean_html_id: bool = True) -> str:
+    def add_to_report(
+        self, plots_dir_name: Optional[str] = None, clean_html_id: bool = True, section: Optional[Section] = None
+    ) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -634,6 +637,13 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             )
 
             html += configuration_modal
+
+        if ai_info := ai.table_llm_summary(
+            self.main_table_dt,
+            table_title=self.main_table_dt.pconfig.title,
+            report_section=section,
+        ):
+            html = f'<div class="alert alert-info">{ai_info}</div>' + html
 
         return html
 

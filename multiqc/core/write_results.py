@@ -254,7 +254,10 @@ def render_and_export_plots(plots_dir_name: str):
         if s.plot_anchor:
             _plot = report.plot_by_id[s.plot_anchor]
             if isinstance(_plot, Plot):
-                s.plot = _plot.add_to_report(plots_dir_name=plots_dir_name)
+                s.plot = _plot.add_to_report(
+                    plots_dir_name=plots_dir_name,
+                    section=s,
+                )
             elif isinstance(_plot, str):
                 s.plot = _plot
             else:

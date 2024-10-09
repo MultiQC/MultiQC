@@ -45,38 +45,13 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId
+from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SectionId, SampleNameMeta, Section
 
 logger = logging.getLogger(__name__)
 
 
 class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
-
-
-@dataclasses.dataclass
-class SampleNameMeta:
-    original_name: SampleName
-    trimmed_name: Optional[SampleName] = None
-    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
-    group: Optional[SampleGroup] = None
-    labels: List[str] = dataclasses.field(default_factory=list)
-
-
-@dataclasses.dataclass
-class Section:
-    name: str
-    anchor: Anchor
-    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
-    description: str
-    module: str
-    comment: str = ""
-    helptext: str = ""
-    content_before_plot: str = ""
-    content: str = ""
-    plot: str = ""
-    print_section: bool = True
-    plot_anchor: Optional[Anchor] = None
 
 
 ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
