@@ -2,7 +2,6 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
-from multiqc import config
 
 log = logging.getLogger(__name__)
 
@@ -124,8 +123,8 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
         headers = {
             "alignable_percent": {
-                "title": f"% Alignable, {config.read_count_prefix}",
-                "description": f"% Alignable reads, {config.read_count_desc}",
+                "title": "Alignable",
+                "description": "% Alignable reads",
                 "max": 100,
                 "min": 0,
                 "suffix": "%",
