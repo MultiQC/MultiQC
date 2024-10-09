@@ -75,6 +75,9 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
 ]
+anthropic = [
+    "anthropic",
+]
 
 [project.urls]
 Homepage = "https://multiqc.info"
