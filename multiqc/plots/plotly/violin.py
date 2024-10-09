@@ -520,8 +520,11 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
             import pandas as pd  # type: ignore
 
-            df = pd.DataFrame(data).T
-            return df  # Jupyter knows how to display dataframes
+            df = pd.DataFrame(data)
+            # Showing the first column header if it's not default
+            if self.pconfig.col1_header != TableConfig.model_fields["col1_header"].default:
+                df.index.name = self.pconfig.col1_header
+            return df.T  # Jupyter knows how to display dataframes
 
         else:
             return super().show(dataset_id, flat, **kwargs)
