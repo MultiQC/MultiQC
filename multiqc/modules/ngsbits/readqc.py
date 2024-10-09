@@ -1,15 +1,15 @@
 import logging
 import xml.etree.cElementTree
-from typing import Dict
+from typing import Dict, Tuple, Union
 
-from multiqc import config
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.ngsbits.utils import parse_qcml_by
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
 
 
-def check_paired_end(qcml_contents):
+def check_paired_end(qcml_contents: str) -> bool:
     """Check if both R1 and R2 are present in input files."""
     found_r1 = False
     found_r2 = False
@@ -25,20 +25,20 @@ def check_paired_end(qcml_contents):
     return found_r1 and found_r2
 
 
-def parse_reports(self):
+def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits ReadQC reports and parse their data"""
 
-    readqc: Dict = dict()
-    readqc_keys: Dict = dict()
+    readqc: Dict[str, Dict[str, Union[int, float, str, bool]]] = dict()
+    readqc_keys: Dict[str, Tuple[str, str]] = dict()
 
-    for f in self.find_log_files("ngsbits/readqc"):
+    for f in module.find_log_files("ngsbits/readqc"):
         values, params = parse_qcml_by(f["f"], "qualityParameter")
         is_pe = check_paired_end(f["f"])
 
         if len(values) > 0:
             if f["s_name"] in readqc:
                 log.debug(f'Duplicate sample name found! Overwriting: {f["s_name"]}')
-            self.add_data_source(f, section="readqc")
+            module.add_data_source(f, section="readqc")
             readqc[f["s_name"]] = values
             readqc_keys.update(params)
             readqc[f["s_name"]].update(
@@ -49,17 +49,17 @@ def parse_reports(self):
             )
 
     # Filter to strip out ignored sample names
-    readqc = self.ignore_samples(readqc)
+    readqc = module.ignore_samples(readqc)
 
     if len(readqc) == 0:
         return 0
 
     # Write to file
-    self.write_data_file(readqc, "multiqc_ngsbits_readqc")
+    module.write_data_file(readqc, "multiqc_ngsbits_readqc")
 
     # Superfluous function call to confirm that it is used in this module
     # Replace None with actual version if it is available
-    self.add_software_version(None)
+    module.add_software_version(None)
 
     # Convert numbers given in megabases to bases
     readqc_keys["bases sequenced"] = ("Bases sequenced in total.", "")
@@ -149,9 +149,15 @@ def parse_reports(self):
             "placement": 80,
         }
     )
+    readqc_keys_table["paired-end"].update(
+        {
+            "title": "Paired-end",
+            "placement": 90,
+        }
+    )
 
     # overview table with all values
-    self.add_section(
+    module.add_section(
         name="ReadQC",
         anchor="ngsbits-readqc",
         description='<a href="https://github.com/imgag/ngs-bits/blob/master/doc/tools/ReadQC.md" target="_blank">ReadQC</a>'
