@@ -999,8 +999,11 @@ def multiqc_dump_json():
                         for section in general_stats_data:
                             fl_sec: Dict[SampleName, Dict[ColumnKey, Optional[ValueT]]] = dict()
                             for _, rows in section.items():
-                                for row in rows:
-                                    fl_sec[row.sample] = row.data
+                                if isinstance(rows, list):
+                                    for row in rows:
+                                        fl_sec[row.sample] = row.data
+                                else:
+                                    fl_sec = rows  # old format without grouping, in case if use plugins override it
                             flattened_sections.append(fl_sec)
                         val = flattened_sections
                     d = {f"{pymod}_{name}": val}
