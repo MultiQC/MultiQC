@@ -149,6 +149,12 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             "placement": 80,
         }
     )
+    readqc_keys_table["paired-end"].update(
+        {
+            "title": "Paired-end",
+            "placement": 90,
+        }
+    )
 
     # overview table with all values
     module.add_section(
