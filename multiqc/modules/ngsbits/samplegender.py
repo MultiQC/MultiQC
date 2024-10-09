@@ -78,6 +78,10 @@ def parse_reports(self: BaseMultiqcModule) -> int:
         plot=table.plot(data=samplegender_data, headers=headers, pconfig=config_table),
     )
 
+    for header in headers.values():
+        header["hidden"] = True
+    headers["gender"]["hidden"] = False
+
     self.general_stats_addcols(samplegender_data, headers)
 
     return len(samplegender_data)
