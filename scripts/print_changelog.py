@@ -17,7 +17,7 @@ from github.PullRequest import PullRequest
 
 REPO_ID = "MultiQC/MultiQC"
 REPO_URL = f"https://github.com/{REPO_ID}"
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 WORKSPACE_PATH = Path(os.environ.get("GITHUB_WORKSPACE", "."))
 MODULES_SUBDIR = Path("multiqc/modules")
 
@@ -45,7 +45,9 @@ def get_milestone_prs(repo, current_tag: str, previous_tag: str, limit=100) -> L
                 print(f"Reached limit of {limit} PRs")
                 return all_pulls
         else:
-            print(f"PR not in milestone '{p.milestone.title}': {p.number} {p.title}")
+            print(
+                f"The PR is not in the previous miletone {previous_tag} nor the current milestone {current_tag}: '{p.milestone.title}': {p.number} {p.title}"
+            )
 
     return all_pulls
 
@@ -65,7 +67,7 @@ def get_version_from_tag() -> str:
         for line in f:
             if line.startswith("version ="):
                 version = line.split(" = ")[1].strip().strip('"')
-                return version
+                return version.removesuffix("dev")
     raise ValueError("Could not find version in pyproject.toml")
 
 
@@ -96,8 +98,8 @@ def main():
         "Module updates": [],
         "Fixes": [],
         "Module fixes": [],
-        "Refactoring": [],
-        "Infrastructure": [],
+        "Refactoring and typing": [],
+        "Infrastructure and packaging": [],
         "Chores": [],
     }
     for pr in prs:

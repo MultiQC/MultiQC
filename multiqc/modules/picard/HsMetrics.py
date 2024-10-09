@@ -10,7 +10,7 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
-from multiqc.plots.table_object import ColumnDict
+from multiqc.plots.table_object import ColumnDict, TableConfig
 from multiqc.types import ColumnKey
 
 # Initialise the logger
@@ -168,18 +168,19 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
 
     # Add report section
     module.add_section(
-        name="HSMetrics",
+        name="Hybrid-selection metrics",
         anchor=f"{module.id}_hsmetrics",
+        description="Parsed from Picard HsMetrics tool that takes a SAM/BAM file input and collects metrics that are specific for sequence datasets generated through hybrid-selection. Hybrid-selection (HS) is the most commonly used technique to capture exon-specific sequences for targeted sequencing experiments such as exome sequencing.",
         plot=table.plot(
             data_by_sample,
             _get_table_headers(),
-            {
-                "id": f"{module.id}_hsmetrics_table",
-                "namespace": "HsMetrics",
-                "scale": "RdYlGn",
-                "min": 0,
-                "title": "Picard HsMetrics",
-            },
+            pconfig=TableConfig(
+                id=f"{module.id}_hsmetrics_table",
+                namespace="HsMetrics",
+                scale="RdYlGn",
+                min=0,
+                title="Picard HsMetrics",
+            ),
         ),
     )
     tbases = _add_target_bases(module, data_by_sample)
@@ -192,7 +193,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     hs_pen_plot = hs_penalty_plot(module, data_by_sample)
     if hs_pen_plot is not None:
         module.add_section(
-            name="HS Penalty",
+            name="Hybrid-selection penalty",
             anchor=f"{module.id}_hsmetrics_hs_penalty",
             description='The "hybrid selection penalty" incurred to get 80% of target bases to a given coverage.',
             helptext="""
@@ -366,11 +367,11 @@ def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List
                 headers[ColumnKey(h)]["suffix"] = "%"
 
             elif h.find("READS") > -1:
-                headers[ColumnKey(h)]["title"] = f"{config.read_count_prefix} {headers[ColumnKey(h)]['title']}"
+                headers[ColumnKey(h)]["title"] = f"{headers[ColumnKey(h)]['title']}"
                 headers[ColumnKey(h)]["shared_key"] = "read_count"
 
             elif h.find("BASES") > -1:
-                headers[ColumnKey(h)]["title"] = f"{config.base_count_prefix} {headers[ColumnKey(h)]['title']}"
+                headers[ColumnKey(h)]["title"] = f"{headers[ColumnKey(h)]['title']}"
                 headers[ColumnKey(h)]["shared_key"] = "base_count"
 
             # Manual capitilisation for some strings
@@ -396,9 +397,9 @@ def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]
 
     pconfig = {
         "id": f"{module.anchor}_percentage_target_bases",
-        "title": f"{module.name}: Percentage of target bases",
-        "xlab": "Fold Coverage",
-        "ylab": "Pct of bases",
+        "title": f"{module.name} HSMetrics: percentage of target base pairs",
+        "xlab": "Fold coverage",
+        "ylab": "Percentage of base pairs",
         "ymax": 100,
         "ymin": 0,
         "xmin": 0,
@@ -406,7 +407,7 @@ def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]
         "tt_label": "<b>{point.x}X</b>: {point.y:.2f}%",
     }
     return {
-        "name": "Target Region Coverage",
+        "name": "Hybrid-selection target coverage",
         "anchor": f"{module.anchor}_hsmetrics_target_bases",
         "description": "The percentage of all target bases with at least <code>x</code> fold coverage.",
         "plot": linegraph.plot(data_clean, pconfig),
@@ -425,8 +426,8 @@ def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
 
     pconfig = {
         "id": f"{module.anchor}_hybrid_selection_penalty",
-        "title": f"{module.name}: Hybrid Selection Penalty",
-        "xlab": "Fold Coverage",
+        "title": f"{module.name}: Hybrid-selection penalty",
+        "xlab": "Fold coverage",
         "ylab": "Penalty",
         "ymin": 0,
         "xmin": 0,

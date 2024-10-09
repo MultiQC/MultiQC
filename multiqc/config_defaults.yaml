@@ -511,7 +511,6 @@ module_order:
   - flexbar
   - sourmash
   - kaiju
-  - bracken
   - kraken
   - malt
   - motus

@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    The MultiQC module supports outputs from both Kraken and Kraken 2.
+    The MultiQC module supports outputs from Kraken.
 
     It works with report files generated using the `--report` flag, that look like the following:
 
@@ -34,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
     kraken:
       top_n: 5
     ```
+
+    The module also handles [Bracken](https://ccb.jhu.edu/software/bracken/) outputs, which uses Kraken internally.
     """
 
     T_RANKS = {
@@ -56,8 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         name: str = "Kraken",
         anchor: str = "kraken",
         href: str = "https://ccb.jhu.edu/software/kraken/",
-        info: str = "Taxonomic classification tool that uses exact k-mer matches to find the lowest common ancestor "
-        "(LCA) of a given sequence.",
+        info: str = "Taxonomic classification using exact k-mer matches to find the lowest common ancestor (LCA) of a given sequence.",
         doi: str = "10.1186/gb-2014-15-3-r46",
         sp_key: str = "kraken",
     ):
@@ -78,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Sum the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
             total_cnt = (
-                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # bracken doesn't have unclassified
+                sample_cnt_by_taxon_by_rank.get("U", {}).get("unclassified", 0)  # unclassified can be missing
                 + sample_cnt_by_taxon_by_rank["R"]["root"]
             )
             if total_cnt == 0:
@@ -175,26 +176,24 @@ class MultiqcModule(BaseMultiqcModule):
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
         if top_rank_code != "U":
-            top_one = f"% {top_taxa[0]}"
+            top_one = f"{top_taxa[0]}"
             headers["pct_top_one"] = {
                 "title": top_one,
-                "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                    top_rank_name, top_taxa[0]
-                ),
+                "description": f"Percentage of reads that were the top {top_rank_name.lower()} over all samples ({top_taxa[0]})",
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBuGn",
             }
             headers["pct_top_n"] = {
-                "title": f"% Top {MultiqcModule.TOP_N} {top_rank_name}",
-                "description": f"Percentage of reads that were classified by one of the top-{MultiqcModule.TOP_N} {top_rank_name} ({', '.join(top_taxa)})",
+                "title": f"Top {MultiqcModule.TOP_N} {top_rank_name.lower()}",
+                "description": f"Percentage of reads that were classified by one of the top-{MultiqcModule.TOP_N} {top_rank_name.lower()} ({', '.join(top_taxa)})",
                 "suffix": "%",
                 "max": 100,
                 "scale": "PuBu",
             }
 
         headers["pct_unclassified"] = {
-            "title": "% Unclassified",
+            "title": "Unclassified",
             "description": "Percentage of reads that were unclassified",
             "suffix": "%",
             "max": 100,
@@ -323,7 +322,6 @@ class MultiqcModule(BaseMultiqcModule):
     ):
         """Add a heatmap showing the minimizer duplication of the top taxa"""
 
-        duplication = list()
         pconfig = {
             "id": f"{self.anchor}-top-duplication_plot",
             "title": f"{self.name}: Top {MultiqcModule.TOP_N} species duplication",
@@ -340,14 +338,18 @@ class MultiqcModule(BaseMultiqcModule):
 
         dup_by_taxon_by_sample: Dict[str, Dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
-        sorted_items = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
-        top_sorted_items = sorted_items[: MultiqcModule.TOP_N]
-        for taxon, pct_sum in top_sorted_items:
+        # not all samples have minimizers data, and we want to find top 5 species across those that have
+        _taxa_in_samples_with_minimizers = set()
+        taxa_sorted_by_pct = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
+        for taxon, pct_sum in taxa_sorted_by_pct:
             # Pull out counts for this rank + classif from each sample
             for s_name, dup_by_taxon in species_minimizer_duplication_by_top_taxon_by_sample.items():
                 minimizer_duplication = dup_by_taxon.get(taxon, None)
                 if minimizer_duplication:
                     dup_by_taxon_by_sample[s_name][taxon] = int(minimizer_duplication)
+                    _taxa_in_samples_with_minimizers.add(taxon)
+            if len(_taxa_in_samples_with_minimizers) >= 5:
+                break
 
         # Strip empty samples
         for sample, vals in dict(dup_by_taxon_by_sample).items():
@@ -356,12 +358,6 @@ class MultiqcModule(BaseMultiqcModule):
 
         if not dup_by_taxon_by_sample:
             return
-
-        # Build data structures for heatmap
-        samples = list(dup_by_taxon_by_sample.keys())
-        top_taxa = list(dict(top_sorted_items).keys())
-        for sample in dup_by_taxon_by_sample:
-            duplication.append(list(dup_by_taxon_by_sample[sample].values()))
 
         self.add_section(
             name="Duplication rate of top species",
@@ -375,9 +371,7 @@ class MultiqcModule(BaseMultiqcModule):
                 A low coverage and high duplication rate (`>> 1`) is often sign of read stacking, which probably indicates of false positive hit.
             """,
             plot=heatmap.plot(
-                duplication,
-                xcats=samples,
-                ycats=top_taxa,
+                dup_by_taxon_by_sample,
                 pconfig=pconfig,
             ),
         )
@@ -386,7 +380,7 @@ class MultiqcModule(BaseMultiqcModule):
 def parse_logs(
     f,
 ) -> Tuple[
-    Dict[str, Dict[str, Union[int]]],
+    Dict[str, Dict[str, int]],
     Dict[str, float],
 ]:
     """
@@ -427,6 +421,7 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i+1} has less than 6 fields: {line}")
             return {}, {}
 
+        minimizer: Optional[str] = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (
@@ -461,7 +456,7 @@ def parse_logs(
         # num_spaces = len(classif) - len(classif_stripped)
 
         cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
-        if minimizer_distinct is not None and rank_code == "S":
+        if minimizer_distinct is not None and minimizer is not None and rank_code == "S":
             minimizer_duplication = int(minimizer) / int(minimizer_distinct) if minimizer_distinct != 0 else 0.0
             min_dup_by_taxon[taxon] = minimizer_duplication
 
