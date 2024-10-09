@@ -22,7 +22,7 @@ def test_data_parsed(data_dir):
         report.search_files(["samtools"])
         m = MultiqcModule()
         assert len(m.saved_raw_data) > 0
-        assert m.clean_s_name(Path(path).name) in list(m.saved_raw_data.values())[0]
+        assert m._clean_s_name(Path(path).name) in list(m.saved_raw_data.values())[0]
 
 
 def slurp_file(data_dir, fname):

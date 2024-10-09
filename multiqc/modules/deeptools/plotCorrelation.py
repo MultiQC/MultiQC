@@ -68,7 +68,7 @@ class plotCorrelationMixin:
             if cols[0] == "#plotCorrelation --outFileCorMatrix":
                 continue
             elif cols[0] == "":
-                x_samples = [self.clean_s_name(s.strip("'")) for s in cols[1 : len(cols)]]
+                x_samples = [self.clean_s_name(s.strip("'"), f) for s in cols[1 : len(cols)]]
             else:
                 y_sample = str(cols[0]).strip("'")
                 y_sample = self.clean_s_name(y_sample, f)

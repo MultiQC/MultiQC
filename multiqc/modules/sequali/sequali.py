@@ -99,13 +99,13 @@ class MultiqcModule(BaseMultiqcModule):
         min_lengths = set()
         max_lengths = set()
         self.paired_end = False
-        for sample_file in self.find_log_files("sequali", filehandles=True):
-            sample_name = sample_file["s_name"]
+        for f in self.find_log_files("sequali", filehandles=True):
+            sample_name = f["s_name"]
             if self.is_ignore_sample(sample_name):
                 continue
-            self.add_data_source(sample_file)
-            filename = sample_file["fn"]
-            filehandle = sample_file["f"]
+            self.add_data_source(f)
+            filename = f["fn"]
+            filehandle = f["f"]
             try:
                 sample_dict = json.load(filehandle)
             except json.JSONDecodeError:
@@ -120,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if filename2:
                     if not self.paired_end:
                         self.paired_end = True
-                    sample_name = self.clean_s_name([filename1, filename2])
+                    sample_name = self.clean_s_name([filename1, filename2], f)
             except KeyError:
                 log.error("JSON file is not a proper Sequali report")
                 continue
