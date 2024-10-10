@@ -3,7 +3,7 @@
 import logging
 from typing import Dict
 
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -79,6 +79,21 @@ def parse_reports(module):
     }
     module.general_stats_addcols(data_by_sample, headers, namespace="VariantCallingMetrics")
 
+    # Variant Calling Metrics Table
+    module.add_section(
+        name="Variant Calling Metrics",
+        anchor=f"{module.id}_variantcallingmetrics",
+        plot=table.plot(
+            data=data_by_sample,
+            headers=get_table_headers(),
+            pconfig={
+                "id": f"{module.id}_variantcallingmetrics_table",
+                "namespace": "VariantCallingMetrics",
+                "title": "Variant Calling Metrics",
+            },
+        ),
+    )
+
     # Variant Counts Bargraph
     module.add_section(
         name="Variant Types",
@@ -152,13 +167,22 @@ def derive_data(data):
 
         # Sum all variants that have been called
         total_called_variants = 0
-        for value_name in ["TOTAL_SNPS", "TOTAL_COMPLEX_INDELS", "TOTAL_MULTIALLELIC_SNPS", "TOTAL_INDELS"]:
+        for value_name in [
+            "TOTAL_SNPS",
+            "TOTAL_COMPLEX_INDELS",
+            "TOTAL_MULTIALLELIC_SNPS",
+            "TOTAL_INDELS",
+        ]:
             total_called_variants = total_called_variants + int(values[value_name])
         values["total_called_variants"] = total_called_variants
 
         # Sum all variants that have been called and are known
         total_called_variants_known = 0
-        for value_name in ["NUM_IN_DB_SNP", "NUM_IN_DB_SNP_COMPLEX_INDELS", "NUM_IN_DB_SNP_MULTIALLELIC"]:
+        for value_name in [
+            "NUM_IN_DB_SNP",
+            "NUM_IN_DB_SNP_COMPLEX_INDELS",
+            "NUM_IN_DB_SNP_MULTIALLELIC",
+        ]:
             total_called_variants_known = total_called_variants_known + int(values[value_name])
         total_called_variants_known = (
             total_called_variants_known + int(values["TOTAL_INDELS"]) - int(values["NOVEL_INDELS"])
@@ -173,6 +197,145 @@ def stripped(iterator):
     """Generator to strip string of whitespace"""
     for item in iterator:
         yield item.strip()
+
+
+def get_table_headers():
+    """return metrics table header dictionary"""
+    headers = {
+        "HET_HOMVAR_RATIO": {
+            "title": "Het/Hom Ratio",
+            "description": "(count of hets)/(count of homozygous non-ref) for this sample",
+            "hidden": False,
+        },
+        "PCT_GQ0_VARIANTS": {
+            "title": "%GQ0",
+            "description": "The percentage of variants in a particular sample that have a GQ score of 0.",
+            "hidden": True,
+        },
+        "TOTAL_GQ0_VARIANTS": {
+            "title": "Total GQ0",
+            "description": "The total number of variants in a particular sample that have a GQ score of 0.",
+            "hidden": True,
+        },
+        "TOTAL_HET_DEPTH": {
+            "title": "Total Het Depth",
+            "description": "total number of reads (from AD field) for passing bi-allelic SNP hets for this sample",
+            "hidden": True,
+        },
+        "TOTAL_SNPS": {
+            "title": "Total SNPs",
+            "description": "	The number of passing bi-allelic SNPs calls (i.e. non-reference genotypes) that were examined",
+            "hidden": False,
+        },
+        "NUM_IN_DB_SNP": {
+            "title": "dbSNP SNP count",
+            "description": "The number of passing bi-allelic SNPs found in dbSNP",
+            "hidden": True,
+        },
+        "NOVEL_SNPS": {
+            "title": "Novel SNPs",
+            "description": "The number of passing bi-allelic SNPS called that were not found in dbSNP",
+            "hidden": True,
+        },
+        "FILTERED_SNPS": {
+            "title": "Filtered SNPs",
+            "description": "The number of SNPs that are filtered",
+            "hidden": True,
+        },
+        "PCT_DBSNP": {
+            "title": "Fraction in dbSNP (SNPs)",
+            "description": "The fraction of passing bi-allelic SNPs in dbSNP",
+            "hidden": False,
+        },
+        "DBSNP_TITV": {
+            "title": "Ti/Tv ratio (dbSNP)",
+            "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at dbSNP sites",
+            "hidden": False,
+        },
+        "NOVEL_TITV": {
+            "title": "Ti/Tv ratio (Novel)",
+            "description": "The Transition/Transversion ratio of the passing bi-allelic SNP calls made at non-dbSNP sites",
+            "hidden": False,
+        },
+        "TOTAL_INDELS": {
+            "title": "Indels (Total)",
+            "description": "The number of passing indel calls that were examined",
+            "hidden": True,
+        },
+        "NOVEL_INDELS": {
+            "title": "Indels (Novel)",
+            "description": "The number of passing indels called that were not found in dbSNP",
+            "hidden": True,
+        },
+        "FILTERED_INDELS": {
+            "title": "Indels (Filtered)",
+            "description": "The number of indels that are filtered",
+            "hidden": True,
+        },
+        "PCT_DBSNP_INDELS": {
+            "title": "% in dbSNP (Indels)",
+            "description": "The fraction of passing indels in dbSNP",
+            "hidden": True,
+        },
+        "NUM_IN_DB_SNP_INDELS": {
+            "title": "Indels (dbSNP)",
+            "description": "The number of passing indels found in dbSNP",
+            "hidden": True,
+        },
+        "DBSNP_INS_DEL_RATIO": {
+            "title": "Indel Ratio (dbSNP)",
+            "description": "The Insertion/Deletion ratio of the indel calls made at dbSNP sites",
+            "hidden": False,
+        },
+        "NOVEL_INS_DEL_RATIO": {
+            "title": "Indel Ratio (Novel)",
+            "description": "The Insertion/Deletion ratio of the indel calls made at non-dbSNP sites",
+            "hidden": False,
+        },
+        "TOTAL_MULTIALLELIC_SNPS": {
+            "title": "Multiallelic SNPs (Total)",
+            "description": "The number of passing multi-allelic SNP calls that were examined",
+            "hidden": True,
+        },
+        "NUM_IN_DB_SNP_MULTIALLELIC": {
+            "title": "Multiallelic SNPs (dbSNP)",
+            "description": "The number of passing multi-allelic SNPs found in dbSNP",
+            "hidden": True,
+        },
+        "TOTAL_COMPLEX_INDELS": {
+            "title": "Complex Indels (Total)",
+            "description": "The number of passing complex indel calls that were examined",
+            "hidden": True,
+        },
+        "NUM_IN_DB_SNP_COMPLEX_INDELS": {
+            "title": "Complex Indels (dbSNP)",
+            "description": "The number of passing complex indels found in dbSNP",
+            "hidden": True,
+        },
+        "SNP_REFERENCE_BIAS": {
+            "title": "SNP Ref. Bias",
+            "description": "The rate at which reference bases are observed at ref/alt heterozygous SNP sites",
+            "hidden": True,
+        },
+        "NUM_SINGLETONS": {
+            "title": "Singletons",
+            "description": "For summary metrics, the number of variants that appear in only one sample. For detail metrics, the number of variants that appear only in the current sample.",
+            "hidden": True,
+        },
+        # derived statistics
+        "total_called_variants": {"title": "Total Called", "description": "Total called variants", "hidden": True},
+        "total_called_variants_known": {
+            "title": "Total Called (known)",
+            "description": "Total called variants with membership in dbSNP",
+            "hidden": True,
+        },
+        "total_called_variants_novel": {
+            "title": "Total Called (novel)",
+            "description": "Total called variants at non-dbSNP sites",
+            "hidden": True,
+        },
+    }
+    return headers
 
 
 def compare_variant_type_plot(data):
@@ -216,7 +379,9 @@ def compare_variant_type_plot(data):
         "data_labels": [{"name": "Total"}, {"name": "Known"}, {"name": "Novel"}],
     }
     return bargraph.plot(
-        data=[total_variants, known_variants, novel_variants], cats=[keys, keys, keys], pconfig=plot_conf
+        data=[total_variants, known_variants, novel_variants],
+        cats=[keys, keys, keys],
+        pconfig=plot_conf,
     )
 
 
