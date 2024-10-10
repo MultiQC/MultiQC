@@ -122,3 +122,7 @@ was generated and the button that launches the welcome tour.
   <button id="mqc-render-all-plots" class="btn btn-default btn-sm">Render all plots</button>
 </div>
 {% endif %}
+
+{% if report.ai_summary | length > 0 %}
+<div class="alert alert-ai">{{ report.ai_summary }}</div>
+{% endif %}

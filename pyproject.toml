@@ -27,6 +27,8 @@ dependencies = [
     "pydantic>=2.7.0",
     "typeguard",
     "tqdm",  # progress bar in notebooks
+    "python-dotenv",
+    "openai",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -72,6 +74,9 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+]
+anthropic = [
+    "anthropic",
 ]
 
 [project.urls]

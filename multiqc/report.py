@@ -45,8 +45,9 @@ from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plotly.plot import Plot
+from multiqc.plots.plotly.violin import ViolinPlot
 from multiqc.plots.table_object import ColumnDict, InputRow, SampleName, ValueT
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup
+from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section
 from multiqc.utils.util_functions import (
     dump_json,
     replace_defaultdicts,
@@ -74,6 +75,7 @@ top_modules: List[Dict[str, Dict[str, str]]]
 module_order: List[Dict[str, Dict[str, Union[str, List[str]]]]]
 analysis_files: List[str]  # input files to search
 modules: List["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
+general_stats_plot: Optional[ViolinPlot]
 general_stats_html: str
 lint_errors: List[str]
 num_flat_plots: int
@@ -95,6 +97,7 @@ general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
+ai_summary: str
 
 
 def reset():
@@ -121,8 +124,10 @@ def reset():
     global plot_by_id
     global general_stats_data
     global general_stats_headers
+    global general_stats_plot
     global software_versions
     global plot_compressed_json
+    global ai_summary
 
     # Create new temporary directory for module data exports
     initialized = True
@@ -144,10 +149,12 @@ def reset():
     html_ids_by_scope = defaultdict(set)
     plot_data = dict()
     plot_by_id = dict()
+    general_stats_plot = None
     general_stats_data = []
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
+    ai_summary = ""
 
     reset_file_search()
     tmp_dir.new_tmp_dir()
@@ -1026,7 +1033,7 @@ def multiqc_dump_json():
     return exported_data
 
 
-def get_all_sections() -> List:
+def get_all_sections() -> List[Section]:
     return [s for mod in modules for s in mod.sections if not mod.hidden]
 
 

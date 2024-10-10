@@ -1056,3 +1056,15 @@ td.column-hidden {
 tr.row-empty {
   display: none;
 }
+
+.alert-ai {
+  background-color: #e1f3f7;
+  border-color: #99bfc7;
+  color: #052930;
+  padding: 15px;
+  padding-left: 30px; /* Add extra padding on the left */
+}
+
+.alert-ai .first-line {
+  text-indent: -20px;
+}

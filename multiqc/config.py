@@ -110,6 +110,7 @@ megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+ai_summary: bool
 
 plots_force_flat: bool
 plots_export_font_scale: float

@@ -11,6 +11,7 @@ import spectra  # type: ignore
 from pydantic import BaseModel, model_validator
 
 from multiqc import config, report
+from multiqc.core import ai
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import (
     BaseDataset,
@@ -19,7 +20,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from multiqc.types import SampleName
+from multiqc.types import SampleName, Section
 
 logger = logging.getLogger(__name__)
 
@@ -367,3 +368,13 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 model.layout.legend.traceorder = "reversed"
 
         return BarPlot(**model.__dict__)
+
+    def data_for_ai_prompt(self) -> str:
+        prompt = ""
+        ds = self.datasets[0]
+        for sample_idx, sample in enumerate(ds.samples):
+            prompt += f"Sample {sample}: "
+            for cat in ds.cats:
+                prompt += f"{cat.name} {cat.data[sample_idx]}"
+            prompt += "\n\n"
+        return prompt
