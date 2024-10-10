@@ -3,9 +3,10 @@ from typing import List, Optional
 import openai  # type: ignore
 from openai.types.chat.chat_completion_message import ChatCompletionMessage  # type: ignore
 
-from multiqc import config
+from multiqc import config, report
+from multiqc.plots.plotly.plot import Plot
 from multiqc.plots.table_object import DataTable
-from multiqc.types import Section
+from multiqc.types import Anchor, Section
 
 from dotenv import load_dotenv  # type: ignore
 
@@ -16,34 +17,35 @@ class LLMClient:
     def __init__(self, model: str):
         self.model = model
 
-    def chat(self, data_items: List[str]) -> Optional[str]:
+    def chat(self, prompt: str) -> Optional[str]:
         raise NotImplementedError("Not implemented")
 
 
-TABLE_SUMMARY_INSTRUCTION = """\
-You are an expert in bioinformatics, sequencing technologies, and genomics data analysis. \
-You are given quality control data from a bioinformatics workflow.
+SYSTEM_PROMPT = """\
+You are an expert in bioinformatics, sequencing technologies, and genomics data analysis. You are given a MultiQC summary of the quality control data from a bioinformatics workflow.
 
-Your task is to eyeball the data and give a very short and helpful summary of the results \
-to the customer. The summary should only warn about what a human would otherwise miss or leave unnoticed. \
-Be specific: it's okay to simply say that all data is good, if no items are found to stand out as problematic.
+Your task is to eyeball the data and give a very short and helpful summary of the results to the customer. The summary should only warn about what a human would otherwise miss or leave unnoticed.
 
-Please use HTML formatting to make the summary visually attractive. Use colors to bring user's attention \
-to really important pieces, but do not use a very bright color palette. Make highlighting very subtle.
+Be concise: only mention samples that stand out as problematic.
 
-Do no add a header or any other formatting apart from simple HTML.
+Point to the title of the section to give the reader context.
 
-The data is presented below."""
+Use HTML to format lists, paragraphs, and style to text, but not for anything else.
+
+Do no add any headers.
+
+The data is presented below.
+"""
 
 
 class OpenAIClient(LLMClient):
     def __init__(self, model: str, token: str):
         super().__init__(model)
         self.client = openai.OpenAI(api_key=token)
-        self.history: List = []
+        self.history: List = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    def chat(self, data_items: List[str]) -> Optional[str]:
-        self.history += [{"role": "user", "content": data_item} for data_item in data_items]
+    def chat(self, prompt: str) -> Optional[str]:
+        self.history.append({"role": "user", "content": prompt})
         response = self.client.chat.completions.create(
             model=self.model,
             messages=self.history,
@@ -67,8 +69,8 @@ class AnthropicClient(LLMClient):
         self.client = anthropic.Anthropic(api_key=token)
         self.history: List = []
 
-    def chat(self, data_items: List[str]) -> Optional[str]:
-        self.history += [{"role": "user", "content": data_item} for data_item in data_items]
+    def chat(self, prompt: str) -> Optional[str]:
+        self.history += {"role": "user", "content": prompt}
 
         response = self.client.messages.create(
             model=self.model,
@@ -98,3 +100,40 @@ def get_llm_client() -> Optional[LLMClient]:
         )
 
     return None
+
+
+def generate_ai_summary() -> Optional[str]:
+    if not (llm := get_llm_client()):
+        return None
+
+    prompt = ""
+    if report.general_stats_plot:
+        prompt += f"""
+**Title** MultiQC General Statistics
+**Description**: Overview of key QC metrics for each sample.
+**Data** {report.general_stats_plot.data_for_ai_prompt()}
+"""
+
+    for section in report.get_all_sections():
+        if section.plot_anchor and section.plot_anchor in report.plot_by_id:
+            plot = report.plot_by_id[section.plot_anchor]
+            if plot_prompt := plot.data_for_ai_prompt():
+                prompt += f"""
+----------------------
+
+**Tool**: {section.module}
+**Title** {plot.pconfig.title}
+**Description**: {section.description}
+{f"**Extra plot description**: {section.helptext}" if section.helptext else ""}
+**Data**
+{plot_prompt}
+                """
+
+    if not prompt:
+        return None
+
+    summary = llm.chat(prompt)
+    if summary:
+        # insert emoji inside the first paragraph of the summary
+        summary = summary.replace("<p>", "<p class='first-line'>✨ ", 1)
+    return summary

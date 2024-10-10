@@ -743,7 +743,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         d = {k: v for k, v in self.__dict__.items() if k not in ("datasets", "layout")}
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
+    def data_for_ai_prompt(self) -> str:
+        return ""
+
+    def add_to_report(self, plots_dir_name: Optional[str] = None) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
         """
@@ -933,6 +936,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         buttons = "\n".join(self.buttons(flat=flat))
         html = f"<div class='row'>\n<div class='col-xs-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
+
+    def print_class(self):
+        print("plot")
 
 
 def _export_plot(fig, file_ext, plot_path, write_kwargs) -> Optional[str]:

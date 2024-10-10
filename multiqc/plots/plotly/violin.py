@@ -589,7 +589,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
+    def _add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -636,40 +636,24 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
             html += configuration_modal
 
-        if ai_info := self.llm_summary(
-            self.main_table_dt,
-            report_section=section,
-        ):
-            html = f'<div class="alert alert-info">{ai_info}</div>' + html
-
         return html
 
-    def llm_summary(
-        self,
-        dt: DataTable,
-        report_section: Optional[Section] = None,
-    ) -> Optional[str]:
-        if not (llm := ai.get_llm_client()):
-            return None
+    def data_for_ai_prompt(self) -> str:
+        #         title = self.main_table_dt.pconfig.title
+        #         if title == "General Statistics":
+        #             description = "Overview of key QC metrics for each sample."
+        #         elif report_section is not None:
+        #             description = report_section.description
+        #         else:
+        #             description = ""
 
-        table_title = self.main_table_dt.pconfig.title
-
-        prompt = f"""
-    {ai.TABLE_SUMMARY_INSTRUCTION}
-
-    #Title: {table_title}
-    """
-        if report_section:
-            prompt += f"""\
-    #Description:
-    {report_section.description}
-    """
-        prompt += """\
-    #Data:
-
-    """
-
-        for table_section in dt.sections:
+        #         prompt = f"""\
+        # **Title**: {title}
+        # **Description**: {description}
+        # **Data**:
+        #         """
+        prompt = ""
+        for table_section in self.main_table_dt.sections:
             for _, rows in table_section.rows_by_sgroup.items():
                 row = rows[0]  # take only the first row in a group
                 val_by_metric = {
@@ -677,10 +661,9 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                     for metric, header in table_section.column_by_key.items()
                     if metric in row.raw_data
                 }
-                prompt += f"{dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
+                prompt += f"{self.main_table_dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
 
-        summary = llm.chat([prompt])
-        return summary
+        return prompt
 
 
 def find_outliers(
