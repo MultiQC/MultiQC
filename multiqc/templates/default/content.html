@@ -52,9 +52,6 @@ the output from each module and print it in sections.
               {% if s['name'] is not none and s['name'] | length > 0 %}
                 <h3 id="{{ s['anchor'] }}">
                     {{ s['name'] }}
-                    {% if s.ai_summary | length > 0 %}
-                    <div class="alert alert-ai">{{ s.ai_summary }}</div>
-                    {% endif %}
                     {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
                       <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
                         <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
@@ -62,6 +59,9 @@ the output from each module and print it in sections.
                       </button>
                     {% endif %}
                 </h3>
+              {% endif %}
+              {% if s.ai_summary | length > 0 %}
+              <div class="alert alert-ai">{{ s.ai_summary }}</div>
               {% endif %}
               {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
               {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}

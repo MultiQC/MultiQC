@@ -28,7 +28,7 @@ dependencies = [
     "typeguard",
     "tqdm",  # progress bar in notebooks
     "python-dotenv",
-    "openai",
+    "langchain-openai",
 ]
 requires-python = ">=3.8"
 authors = [
