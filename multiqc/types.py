@@ -1,8 +1,7 @@
 import dataclasses
 import io
 from enum import Enum
-from typing import Generic, List, NewType, Optional, TypeVar, Union
-from typing_extensions import TypedDict
+from typing import Generic, List, NewType, Optional, TypeVar, Union, TypedDict
 
 Anchor = NewType("Anchor", str)
 ModuleId = NewType("ModuleId", str)
@@ -91,6 +90,7 @@ class Section:
     id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
     description: str
     module: str
+    module_info: str = ""
     comment: str = ""
     helptext: str = ""
     content_before_plot: str = ""
@@ -98,3 +98,4 @@ class Section:
     plot: str = ""
     print_section: bool = True
     plot_anchor: Optional[Anchor] = None
+    ai_summary: str = ""

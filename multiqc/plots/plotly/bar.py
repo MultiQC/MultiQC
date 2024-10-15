@@ -20,7 +20,7 @@ from multiqc.plots.plotly.plot import (
     PlotType,
     split_long_string,
 )
-from multiqc.types import SampleName, Section
+from multiqc.types import SampleName
 
 logger = logging.getLogger(__name__)
 
@@ -373,8 +373,6 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         prompt = ""
         ds = self.datasets[0]
         for sample_idx, sample in enumerate(ds.samples):
-            prompt += f"Sample {sample}: "
-            for cat in ds.cats:
-                prompt += f"{cat.name} {cat.data[sample_idx]}"
-            prompt += "\n\n"
+            prompt += f"* {sample} "
+            prompt += "{" + ", ".join(f"{cat.name}: {cat.data[sample_idx]}" for cat in ds.cats) + "}\n"
         return prompt

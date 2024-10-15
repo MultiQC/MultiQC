@@ -73,7 +73,7 @@ def write_results() -> None:
         _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
     if config.ai_summary:
-        report.ai_summary = ai.generate_ai_summary() or ""
+        report.add_ai_summary()
 
     paths: OutputPaths = _create_or_override_dirs(output_file_names)
 

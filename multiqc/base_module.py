@@ -457,6 +457,7 @@ class BaseMultiqcModule:
             id=SectionId(id),
             description=description,
             module=self.name,
+            module_info=self.info,
             comment=comment,
             helptext=helptext,
             content_before_plot=content_before_plot,

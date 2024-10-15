@@ -639,19 +639,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         return html
 
     def data_for_ai_prompt(self) -> str:
-        #         title = self.main_table_dt.pconfig.title
-        #         if title == "General Statistics":
-        #             description = "Overview of key QC metrics for each sample."
-        #         elif report_section is not None:
-        #             description = report_section.description
-        #         else:
-        #             description = ""
-
-        #         prompt = f"""\
-        # **Title**: {title}
-        # **Description**: {description}
-        # **Data**:
-        #         """
         prompt = ""
         for table_section in self.main_table_dt.sections:
             for _, rows in table_section.rows_by_sgroup.items():
@@ -661,7 +648,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                     for metric, header in table_section.column_by_key.items()
                     if metric in row.raw_data
                 }
-                prompt += f"{self.main_table_dt.pconfig.col1_header}: {row.sample}\n{val_by_metric}\n\n"
+                prompt += f"* {row.sample} {val_by_metric}\n"
 
         return prompt
 

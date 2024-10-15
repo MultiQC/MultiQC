@@ -40,7 +40,7 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import log_and_rich, tmp_dir
+from multiqc.core import ai, log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
@@ -97,7 +97,8 @@ general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
-ai_summary: str
+general_stats_ai_summary: str = ""
+ai_summary: str = ""
 
 
 def reset():
@@ -127,6 +128,7 @@ def reset():
     global general_stats_plot
     global software_versions
     global plot_compressed_json
+    global general_stats_ai_summary
     global ai_summary
 
     # Create new temporary directory for module data exports
@@ -154,6 +156,7 @@ def reset():
     general_stats_headers = []
     software_versions = defaultdict(lambda: defaultdict(list))
     plot_compressed_json = ""
+    general_stats_ai_summary = ""
     ai_summary = ""
 
     reset_file_search()
@@ -1052,3 +1055,7 @@ def reset_tmp_dir():
     """
     remove_tmp_dir()
     tmp_dir.get_tmp_dir()
+
+
+def add_ai_summary():
+    ai.add_ai_summary_to_report()
