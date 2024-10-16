@@ -502,7 +502,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
 
-                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)
+                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)  # type: ignore
 
             # Bar plot
             elif plot_type == PlotType.BAR:
@@ -511,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Line plot
             elif plot_type == PlotType.LINE:
-                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))
+                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))  # type: ignore
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
@@ -519,11 +519,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))
+                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))  # type: ignore
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))
+                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:

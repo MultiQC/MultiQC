@@ -912,7 +912,7 @@ def write_data_file(
                 rows.append(sep.join(headers_str))
 
             # The rest of the rows
-            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):
+            for key, d in sorted(data.items()) if isinstance(data, dict) else enumerate(data):  # type: ignore
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
                     assert isinstance(d, dict)
