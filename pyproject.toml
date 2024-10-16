@@ -28,7 +28,6 @@ dependencies = [
     "typeguard",
     "tqdm",  # progress bar in notebooks
     "python-dotenv",
-    "langchain-openai",
 ]
 requires-python = ">=3.8"
 authors = [
@@ -75,8 +74,11 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
 ]
-anthropic = [
-    "anthropic",
+ai = [
+    "langchain",
+    "langsmith",
+    "langchain-anthropic",
+    "langchain-openai",
 ]
 
 [project.urls]

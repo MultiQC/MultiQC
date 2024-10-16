@@ -40,7 +40,7 @@ from multiqc import config
 # This does not cause circular imports because BaseMultiqcModule is used only in
 # quoted type hints, and quoted type hints are lazily evaluated:
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.core import ai, log_and_rich, tmp_dir
+from multiqc.core import log_and_rich, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import data_tmp_dir
@@ -1058,4 +1058,13 @@ def reset_tmp_dir():
 
 
 def add_ai_summary():
-    ai.add_ai_summary_to_report()
+    if config.ai_summary:
+        try:
+            from multiqc.core import ai
+        except ImportError:
+            logger.warning(
+                "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
+            )
+            return
+
+        ai.add_ai_summary_to_report()
