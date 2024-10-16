@@ -59,7 +59,7 @@ and put any additional analysis and recommendations in a following <p> element.
 Example of a nice output for the general stats section:
 
 <summary>
-    <b>AI ✨ Summary</b>
+    <b>✨ AI Summary</b>
     <ul>
         <li>
             <span class="good">11/13 samples</span> show consistent metrics within expected ranges.
@@ -217,4 +217,6 @@ def add_ai_summary_to_report():
         disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {config.ai_provider}"
         if client.model:
             disclaimer += f", model: {client.model}"
-        report.ai_summary = f'<details>{generated_content}<p style="color: gray">{disclaimer}</p></details>'
+        report.ai_summary = (
+            f'<details>{generated_content}<p style="color: gray; font-style: italic">{disclaimer}</p></details>'
+        )
