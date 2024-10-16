@@ -915,6 +915,8 @@ def write_data_file(
             # The rest of the rows
             if not isinstance(data, dict):
                 items = dict(enumerate(data))
+            else:
+                items = data
             for key, d in sorted(items.items()):
                 # Make a list starting with the sample name, then each field in order of the header cols
                 if headers:
