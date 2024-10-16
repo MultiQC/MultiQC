@@ -68,7 +68,7 @@ class ColumnDict(TypedDict, total=False):
     tt_decimals: Optional[int]
     suffix: Optional[str]
     cond_formatting_colours: List[Dict[str, str]]
-    cond_formatting_rules: Dict[str, List[Dict[str, str]]]
+    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]]
     bgcols: Dict[str, str]
     bars_zero_centrepoint: bool
     modify: Optional[Callable[[ValueT], ValueT]]
