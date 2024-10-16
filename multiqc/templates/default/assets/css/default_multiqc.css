@@ -1044,7 +1044,7 @@ tr.expandable-row-primary.expanded .expandable-row-caret {
   transform: rotate(0deg);
 }
 tr.expandable-row-secondary-hidden {
-  display: none;
+  visibility: collapse;
 }
 tr.sample-hidden {
   display: none;

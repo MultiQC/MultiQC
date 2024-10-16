@@ -435,7 +435,7 @@ def make_table(
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
-                    td_hide_cls = "hide" if col_to_hidden[col_anchor] else ""
+                    td_hide_cls = "column-hidden" if col_to_hidden[col_anchor] else ""
                     sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
                     cell_html = (
                         f'<td class="data-coloured {col_anchor} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
