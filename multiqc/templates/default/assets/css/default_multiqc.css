@@ -1108,3 +1108,6 @@ tr.row-empty {
   margin-top: 5px;
   padding: 0;
 }
+.ai-summary details .btn {
+  margin-bottom: 20px;
+}
