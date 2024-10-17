@@ -61,7 +61,7 @@ the output from each module and print it in sections.
                 </h3>
               {% endif %}
               {% if s.ai_summary | length > 0 %}
-              <div class="alert alert-ai">{{ s.ai_summary }}</div>
+              <div class="ai-summary">{{ s.ai_summary }}</div>
               {% endif %}
               {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
               {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}

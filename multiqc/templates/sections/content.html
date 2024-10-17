@@ -9,10 +9,6 @@ In this template, each section is hidden by default (unless it's the first modul
 
 #}
 
-{% if report.ai_summary is not none and report.ai_summary | length > 0 %}
-  <div class="mqc-ai-summary">{{ report.ai_summary }}</div>
-{% endif %}
-
 {% for m in report.modules %}
 <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section" style="display:none;">
   <h2 id="{{ m.anchor }}">{{ m.name }}</h2>

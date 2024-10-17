@@ -167,8 +167,6 @@ def get_llm_client() -> Optional[Client]:
             return None
         client = OpenAiClient()
 
-    if client:
-        report.ai_model = client.model
     return client
 
 
@@ -214,7 +212,7 @@ def add_ai_summary_to_report():
         generated_content = client.invoke([{"role": "user", "content": content}])
 
     if generated_content:
-        disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {config.ai_provider}"
+        disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {client.name}"
         if client.model:
             disclaimer += f", model: {client.model}"
         report.ai_summary = (

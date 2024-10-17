@@ -1056,21 +1056,46 @@ td.column-hidden {
 tr.row-empty {
   display: none;
 }
-
-.alert-ai {
-  background-color: #e1f3f7;
-  border-color: #99bfc7;
-  color: #052930;
-}
-.alert-ai .good {
+.ai-summary .good {
   color: rgb(9, 110, 9);
 }
-.alert-ai .warning {
+.ai-summary .warning {
   color: rgb(194, 166, 23);
 }
-.alert-ai .bad {
+.ai-summary .bad {
   color: rgb(234, 25, 25);
 }
-.alert-ai {
+.ai-summary {
+  background-color: #e7f6f9;
+  color: #052930;
+  position: relative;
+  overflow: hidden;
   cursor: pointer;
+  padding-top: 8px;
+  padding-left: 18px;
+  padding-right: 12px;
+  border-radius: 4px;
+  border: 1px solid #99bfc7;
+}
+.ai-summary::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px; /* Height of the fade-out area */
+  background: #99bfc7;
+  pointer-events: none;
+}
+.ai-summary:hover {
+  border-color: #7aa6af;
+}
+.ai-summary:hover::after {
+  background: #7aa6af;
+}
+.ai-summary ul {
+  margin-left: -39px;
+}
+.ai-summary li {
+  margin-top: 5px;
 }
