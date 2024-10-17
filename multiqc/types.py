@@ -1,7 +1,7 @@
+import dataclasses
 import io
 from enum import Enum
-from typing import Generic, NewType, Optional, TypeVar, Union
-from typing_extensions import TypedDict
+from typing import Generic, List, NewType, Optional, TypeVar, Union, TypedDict
 
 Anchor = NewType("Anchor", str)
 ModuleId = NewType("ModuleId", str)
@@ -72,3 +72,30 @@ class PlotType(Enum):
         elif val in ["generalstats"]:
             return PlotType.GENERALSTATS
         return None
+
+
+@dataclasses.dataclass
+class SampleNameMeta:
+    original_name: SampleName
+    trimmed_name: Optional[SampleName] = None
+    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
+    group: Optional[SampleGroup] = None
+    labels: List[str] = dataclasses.field(default_factory=list)
+
+
+@dataclasses.dataclass
+class Section:
+    name: str
+    anchor: Anchor
+    id: SectionId  # unlike anchor, doesn't have to be different from the module or plot ids
+    description: str
+    module: str
+    module_info: str = ""
+    comment: str = ""
+    helptext: str = ""
+    content_before_plot: str = ""
+    content: str = ""
+    plot: str = ""
+    print_section: bool = True
+    plot_anchor: Optional[Anchor] = None
+    ai_summary: str = ""
