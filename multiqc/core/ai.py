@@ -1,8 +1,11 @@
+import json
 import logging
 import os
 from abc import abstractmethod
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
+from langchain_core.language_models.chat_models import BaseChatModel
+from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
@@ -23,13 +26,10 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-# class SectionSummary(BaseModel):
-#     id: str
-#     summary: str
-
-
-# class SummaryResponse(BaseModel):
-#     section_summaries: List[SectionSummary]
+class InterpretationOutput(BaseModel):
+    summary: str = Field(description="A short and concise summary")
+    analysis: Optional[str] = Field(default=None, description="An analysis of the results")
+    recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
 
 prompt_template = ChatPromptTemplate.from_messages(
@@ -53,33 +53,40 @@ mention the sections that worth attention.
 Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists,
 and pre-defined .good, .bad, and .warning classes to highlight the severity of the issue.
 
-Do no add headers or intro words, but just get to the point. Put a short summary in a <summary> element,
-and put any additional analysis and recommendations in a following <p> element.
+Do no add headers or intro words, rather just get to the point. Separately add a short summary,
+your analysis, and your recommendations. Use lists to format analysis and recommendations as well!
 
-Example of a nice output for the general stats section:
+Example of summary of the general stats section:
 
-<summary>
-    <b>✨ AI Summary</b>
-    <ul>
-        <li>
-            <span class="good">11/13 samples</span> show consistent metrics within expected ranges.
-        </li>
-        <li>
-            <span class="bad">A1200.2003</span> and <span class="bad">A1200.2003</span> exhibit extremely 
-            high percentage of <span class="bad">duplicates</span> (<span class="bad">65.54%</span> and 
-            <span class="bad">83.14%</span>, respectively) and the percentage of <span class="bad">fails (33.33%)</span>. 
-            <span class="bad">A1200.2003</span> also registers a very low <span class="bad"> mapping rate (38.61%)</span>.
-        </li>
-        <li>
-            <span class="warning">Sample-1.007</span> displays a relatively low percentage of <span class="warning">valid pairs (48.08%)</span> 
-            and <span class="warning">passed Di-Tags (22.51%)</span>.   
-        </li>
-    </ul>
-</summary>
+<ul>
+    <li>
+        <span class="good">11/13 samples</span> show consistent metrics within expected ranges.
+    </li>
+    <li>
+        <span class="bad">A1001.2003</span> and <span class="bad">A1200.2004</span> exhibit extremely 
+        high percentage of <span class="bad">duplicates</span> (<span class="bad">65.54%</span> and 
+        <span class="bad">83.14%</span>, respectively) and the percentage of <span class="bad">fails (33.33%)</span>. 
+        <span class="bad">A1001.2003</span> also registers a very low <span class="bad"> mapping rate (38.61%)</span>.
+    </li>
+    <li>
+        <span class="warning">A1002-1007</span> displays a relatively low percentage of <span class="warning">valid pairs (48.08%)</span> 
+        and <span class="warning">passed Di-Tags (22.51%)</span>.   
+    </li>
+</ul>
+
+Analysis:
+
 <p>
-    FastQC results indicate that <span class="bad">A1200.2003</span> and <span class="bad">A1200.2003</span> 
+    FastQC results indicate that <span class="bad">A1001.2003</span> and <span class="bad">A1001.2004</span> 
     have a slight <span class="bad">GC content</span> bias: at 39.5% against most other samples having 38.0%, 
     which indicates a potential contamination that could be the source of other anomalities in quality metrics.
+</p>
+
+Recommendations:
+
+<p>
+    It is recommended to check the samples from the group <span class="bad">A1001</span> for contamination, 
+    and consider removing them from the analysis.
 </p>
 """,
         ),
@@ -92,12 +99,13 @@ class Client:
     def __init__(self):
         self.name: str
         self.model: Optional[str] = None
-        self.llm: BaseLanguageModel
+        self.llm: BaseChatModel
 
     @abstractmethod
-    def invoke(self, input: List[Dict[str, str]]) -> Optional[str]:
+    def invoke(self, input: List[Dict[str, str]]) -> InterpretationOutput:
+        structured_llm = self.llm.with_structured_output(InterpretationOutput)
         prompt = prompt_template.format_messages(input=input)
-        return self.llm.invoke(prompt).content
+        return cast(InterpretationOutput, structured_llm.invoke(prompt))
 
 
 class OpenAiClient(Client):
@@ -128,15 +136,20 @@ class SeqeraClient(Client):
     def __init__(self):
         super().__init__()
         self.name = "Seqera Chat"
+        self.url = os.environ.get("SEQERA_URL", "https://seqera.io")
         self.token = os.environ.get("SEQERA_API_KEY")
 
-    def invoke(self, input: List[Dict[str, str]]) -> Optional[str]:
+    def invoke(self, input: List[Dict[str, str]]) -> Optional[InterpretationOutput]:
         response = requests.post(
-            "https://api.seqera.io/v1/chat",
+            f"{self.url}/interpret-multiqc-report",
             headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
-            json={"messages": input},
+            json={"report": json.dumps(input)},
         )
-        return response.json()["message"]["content"]
+        if response.status_code == 200:
+            return InterpretationOutput(**response.json())
+        else:
+            logger.error(f"Failed to get a response from Seqera: {response.status_code} {response.text}")
+            return None
 
 
 def get_llm_client() -> Optional[Client]:
@@ -199,7 +212,7 @@ def add_ai_summary_to_report():
     if not content:
         return
 
-    if langsmith_project := os.environ.get("LANGCHAIN_PROJECT"):
+    if not isinstance(client, SeqeraClient) and (langsmith_project := os.environ.get("LANGCHAIN_PROJECT")):
         with tracing_v2_enabled(
             project_name=langsmith_project,
             client=LangSmithClient(
@@ -207,14 +220,28 @@ def add_ai_summary_to_report():
                 api_url=os.environ["LANGCHAIN_ENDPOINT"],
             ),
         ):
-            generated_content = client.invoke([{"role": "user", "content": content}])
+            interpretation = client.invoke([{"role": "user", "content": content}])
     else:
-        generated_content = client.invoke([{"role": "user", "content": content}])
+        interpretation = client.invoke([{"role": "user", "content": content}])
 
-    if generated_content:
-        disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {client.name}"
-        if client.model:
-            disclaimer += f", model: {client.model}"
-        report.ai_summary = (
-            f'<details>{generated_content}<p style="color: gray; font-style: italic">{disclaimer}</p></details>'
-        )
+    if not interpretation:
+        return None
+
+    disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {client.name}"
+    if client.model:
+        disclaimer += f", model: {client.model}"
+    report.ai_summary = f"""
+    <details>
+    <summary>
+    <b>✨ AI Summary</b>
+    {interpretation.summary}
+    </summary>
+    <p>
+    <b>Analysis</b> {interpretation.analysis}
+    </p>
+    <p>
+    <b>Recommendations</b> {interpretation.recommendations}
+    </p>
+    <p style="color: gray; font-style: italic">{disclaimer}</p>
+    </details>
+"""
