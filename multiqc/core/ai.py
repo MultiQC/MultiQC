@@ -212,7 +212,7 @@ def add_ai_summary_to_report():
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
             if plot_content := plot.data_for_ai_prompt():
-                content += dedent(f"""\
+                content += dedent(f"""
                     Tool: {section.module} ({section.module_info})
                     Section: {section.name} {f"({section.description})" if section.description else ""}
                     {f"\nMore detail about interpreting the data: {section.helptext}" if section.helptext else ""}
