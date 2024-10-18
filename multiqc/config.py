@@ -15,7 +15,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import importlib_metadata
 import yaml
@@ -110,6 +110,8 @@ megaqc_timeout: float
 export_plots: bool
 make_report: bool
 make_pdf: bool
+ai_summary: bool
+ai_provider: Literal["openai", "anthropic", "seqera"]
 
 plots_force_flat: bool
 plots_export_font_scale: float
