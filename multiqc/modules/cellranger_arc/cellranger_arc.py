@@ -43,8 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         warnings_by_sample: Dict[str, Dict] = dict()
         self.warnings_headers: Dict[str, Dict] = dict()
         self.headers: Dict[str, Dict] = dict()
-        data_by_sample: Dict[str, Dict] = dict()
-        plots_data_by_sample: Dict[str, Dict] = {
+        self.plots_data_by_sample: Dict[str, Dict] = {
             "tss": dict(),
             "insert_size": dict(),
             "saturation": dict(),
@@ -82,13 +81,13 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[s_name] = parsed_data
             if len(warnings) > 0:
                 warnings_by_sample[s_name] = warnings
-            for plot_type in plots_data_by_sample.keys():
-                plots_data_by_sample[plot_type][s_name] = plots_data_by_id[plot_type]
+            for plot_type in self.plots_data_by_sample.keys():
+                self.plots_data_by_sample[plot_type][s_name] = plots_data_by_id[plot_type]
 
         data_by_sample = self.ignore_samples(data_by_sample)
         warnings_by_sample = self.ignore_samples(warnings_by_sample)
-        for k in plots_data_by_sample.keys():
-            plots_data_by_sample[k] = self.ignore_samples(plots_data_by_sample[k])
+        for k in self.plots_data_by_sample.keys():
+            self.plots_data_by_sample[k] = self.ignore_samples(self.plots_data_by_sample[k])
 
         if len(data_by_sample) == 0:
             raise ModuleNoSamplesFound
@@ -120,9 +119,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.atac_summary_table(data_by_sample, self.headers)
         self.gex_summary_table(data_by_sample, self.headers)
-        if plots_data_by_sample:
-            self.atac_plots(plots_data_by_sample)
-            self.gex_plots(plots_data_by_sample)
+        if self.plots_data_by_sample:
+            self.atac_plots(self.plots_data_by_sample)
+            self.gex_plots(self.plots_data_by_sample)
 
     def parse_html_summary(self, summary):
         """
