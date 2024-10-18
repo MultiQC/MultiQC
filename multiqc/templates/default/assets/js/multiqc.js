@@ -101,3 +101,24 @@ $(function () {
     });
   });
 });
+
+$(document).ready(function () {
+  $("#continue-in-chat").click(function (e) {
+    e.preventDefault();
+    let el = $(this);
+    let url = el.data("url");
+    let messages = el.data("messages");
+    const chatWindow = window.open(url, "_blank");
+
+    function sendMessage() {
+      chatWindow.postMessage(
+        {
+          type: "chatInitialMessages",
+          content: messages,
+        },
+        "http://localhost:9000",
+      );
+    }
+    setTimeout(sendMessage, 1000);
+  });
+});

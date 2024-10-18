@@ -165,11 +165,10 @@ class SeqeraClient(Client):
             headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
             json={"report": content},
         )
-        if response.status_code == 200:
-            return InterpretationOutput(**response.json())
-        else:
+        if response.status_code != 200:
             logger.error(f"Failed to get a response from Seqera: {response.status_code} {response.text}")
             return None
+        return InterpretationOutput(**response.json())
 
 
 def get_llm_client() -> Optional[Client]:
@@ -250,11 +249,17 @@ def add_ai_summary_to_report():
 
     continue_chat = ""
     if url := os.environ.get("SEQERA_CHAT_URL"):
-        messages = client.history[-1:]  # trim to avoid running out of URL parameter lenght limit
+        messages = client.history  # [-1:]  # trim to avoid running out of URL parameter lenght limit
         history_json = json.dumps(messages)
-        history_base64 = base64.urlsafe_b64encode(history_json.encode("utf-8")).decode("utf-8")
-        url = f"{url}&messages={history_base64}"
-        continue_chat = f"<a class='btn btn-primary' role='button' href={url}>Continue with Seqera Chat</a>"
+        history_base64 = base64.b64encode(history_json.encode("utf-8")).decode("utf-8")
+        continue_chat = (
+            "<button class='btn btn-primary'"
+            + "id='continue-in-chat' "
+            + f"data-messages={history_base64} "
+            + f"data-url={url}>"
+            + "Continue with Seqera Chat"
+            "</button>"
+        )
 
     report.ai_summary = f"""
     <details>
