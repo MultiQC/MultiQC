@@ -149,8 +149,15 @@ class SeqeraClient(Client):
     def __init__(self):
         super().__init__()
         self.name = "Seqera Chat"
+        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        if not token:
+            logger.error(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
+                "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
+            )
+            return None
         self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
-        self.token = os.environ.get("SEQERA_API_KEY")
+        self.token = token
 
     def invoke(self, content: str) -> Optional[InterpretationOutput]:
         response = requests.post(
