@@ -256,7 +256,7 @@ def add_ai_summary_to_report():
                 content += dedent(f"""
                     Tool: {section.module} ({section.module_info})
                     Section: {section.name} {f"({section.description})" if section.description else ""}
-                    {f"\nMore detail about interpreting the data: {section.helptext}" if section.helptext else ""}
+                    {("\n" + f"More detail about interpreting the data: {section.helptext}") if section.helptext else ""}
 
                     {plot_content}
 
