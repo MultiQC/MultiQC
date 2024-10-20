@@ -114,7 +114,7 @@ $(document).ready(function () {
       chatWindow.postMessage(
         {
           type: "chatInitialMessages",
-          content: messages,
+          content: { chatMessages: messages, agent: "multiqc" },
         },
         "http://localhost:9000",
       );
