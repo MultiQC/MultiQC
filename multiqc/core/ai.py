@@ -241,11 +241,11 @@ def add_ai_summary_to_report():
 
     content: str = ""  # data formatted for the LLM
     if report.general_stats_plot:
-        content += dedent(f"""
-            Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
+        content += f"""
+Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
 
-            {report.general_stats_plot.data_for_ai_prompt()}
-            """)
+{report.general_stats_plot.data_for_ai_prompt()}
+"""
 
     for section in report.get_all_sections():
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
@@ -255,14 +255,14 @@ def add_ai_summary_to_report():
                     ("\n" + f"More detail about interpreting the data: {section.helptext}") if section.helptext else ""
                 )
                 description = f" ({section.description})" if section.description else ""
-                content += dedent(f"""
-                    Tool: {section.module} ({section.module_info})
-                    Section: {section.name}{description}{helptext}
+                content += f"""
+Tool: {section.module} ({section.module_info})
+Section: {section.name}{description}{helptext}
 
-                    {plot_content}
+{plot_content}
 
-                    ----------------------
-                """)
+----------------------
+"""
 
     if not content:
         return
