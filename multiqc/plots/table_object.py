@@ -101,7 +101,7 @@ class ColumnMeta(ValidatedConfig):
     tt_decimals: Optional[int] = None
     suffix: Optional[str] = None
     cond_formatting_colours: List[Dict[str, str]] = []
-    cond_formatting_rules: Dict[str, List[Dict[str, str]]] = {}
+    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]] = {}
     bgcols: Dict[str, str] = {}
     bars_zero_centrepoint: bool = False
     modify: Optional[Callable[[ValueT], ValueT]] = None
