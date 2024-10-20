@@ -1,11 +1,9 @@
-from ast import arg
 import base64
 import json
 import logging
 import os
-from abc import abstractmethod
 from textwrap import dedent
-from typing import Dict, List, Optional, cast
+from typing import Optional, cast
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel, Field
 import requests
@@ -253,10 +251,13 @@ def add_ai_summary_to_report():
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
             if plot_content := plot.data_for_ai_prompt():
+                helptext = (
+                    ("\n" + f"More detail about interpreting the data: {section.helptext}") if section.helptext else ""
+                )
+                description = f" ({section.description})" if section.description else ""
                 content += dedent(f"""
                     Tool: {section.module} ({section.module_info})
-                    Section: {section.name} {f"({section.description})" if section.description else ""}
-                    {("\n" + f"More detail about interpreting the data: {section.helptext}") if section.helptext else ""}
+                    Section: {section.name}{description}{helptext}
 
                     {plot_content}
 
