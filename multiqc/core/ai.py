@@ -4,11 +4,11 @@ import logging
 import os
 from textwrap import dedent
 from typing import Optional, cast
-from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
+from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
 from langchain_anthropic import ChatAnthropic  # type: ignore
 from langchain_openai import ChatOpenAI  # type: ignore
 from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
