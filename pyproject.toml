@@ -79,6 +79,7 @@ ai = [
     "langsmith",
     "langchain-anthropic",
     "langchain-openai",
+    "beautifulsoup4",
 ]
 
 [project.urls]
