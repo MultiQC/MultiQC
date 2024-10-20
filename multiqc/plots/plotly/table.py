@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from multiqc import config, report
 from multiqc.plots.table_object import ColumnAnchor, DataTable, SampleGroup, SampleName, ValueT
@@ -115,7 +115,7 @@ def make_table(
             )
 
         # Collect conditional formatting config
-        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]] = {}
         if header.cond_formatting_rules:
             cond_formatting_rules[col_anchor] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
