@@ -638,17 +638,31 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         return html
 
     def data_for_ai_prompt(self) -> str:
-        prompt = ""
-        for table_section in self.main_table_dt.sections:
-            for _, rows in table_section.rows_by_sgroup.items():
-                row = rows[0]  # take only the first row in a group
-                val_by_metric = {
-                    header.description: row.formatted_data[metric]
-                    for metric, header in table_section.column_by_key.items()
-                    if metric in row.raw_data
-                }
-                prompt += f"* {row.sample} {val_by_metric}\n"
+        """Format as a markdown table"""
+        dt = self.main_table_dt
 
+        headers = self.main_table_dt.get_headers_in_order()
+
+        value_by_sample_by_rid: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
+        for idx, metric_name, header in headers:
+            for _, group_rows in dt.sections[idx].rows_by_sgroup.items():
+                row = group_rows[0]  # take only the first row in a group
+                v = row.formatted_data.get(metric_name, "")
+                if header.suffix:
+                    v += header.suffix
+                value_by_sample_by_rid.setdefault(row.sample, {})[header.rid] = v
+
+        prompt = "| Sample | " + " | ".join(dt_column.description for (_, _, dt_column) in headers) + " |\n"
+        prompt += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+
+        for sample, val_by_rid in value_by_sample_by_rid.items():
+            prompt += (
+                f"| {sample} | "
+                + " | ".join(val_by_rid.get(dt_column.rid, "") for (_, _, dt_column) in headers)
+                + " |\n"
+            )
+
+        print(prompt)
         return prompt
 
 
