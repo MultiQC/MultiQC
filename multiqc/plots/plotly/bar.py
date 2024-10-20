@@ -11,7 +11,6 @@ import spectra  # type: ignore
 from pydantic import BaseModel, model_validator
 
 from multiqc import config, report
-from multiqc.core import ai
 from multiqc.plots.plotly import determine_barplot_height
 from multiqc.plots.plotly.plot import (
     BaseDataset,
