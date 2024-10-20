@@ -1,7 +1,10 @@
 import dataclasses
 import io
 from enum import Enum
-from typing import Generic, List, NewType, Optional, TypeVar, Union, TypedDict
+from typing import Generic, List, NewType, Optional, TypeVar, Union
+
+# Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
+from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
 ModuleId = NewType("ModuleId", str)
