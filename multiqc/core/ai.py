@@ -1,3 +1,4 @@
+from ast import arg
 import base64
 import json
 import logging
@@ -15,6 +16,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.tracers.context import tracing_v2_enabled
 from langsmith import Client as LangSmithClient
 
+from bs4 import BeautifulSoup
 
 from multiqc import config, report
 
@@ -30,6 +32,23 @@ class InterpretationOutput(BaseModel):
     analysis: Optional[str] = Field(default=None, description="An analysis of the results")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
+    def _html_to_markdown(self, text: str) -> str:
+        soup = BeautifulSoup(text, "html.parser")
+        for tag in soup.find_all(["ul", "li", "b", "p"]):
+            if tag.name == "ul":
+                tag.insert_before("\n")
+                tag.insert_after("\n")
+            elif tag.name == "li":
+                tag.insert_before("- ")
+                tag.insert_after("\n")
+            elif tag.name == "b":
+                tag.insert_before("**")
+                tag.insert_after("**")
+            elif tag.name == "p":
+                tag.insert_before("\n")
+                tag.insert_after("\n")
+        return soup.get_text()
+
     def format_html(self) -> str:
         return dedent(f"""
         <summary>
@@ -43,13 +62,15 @@ class InterpretationOutput(BaseModel):
         <b>Recommendations</b> {self.recommendations}
         </p>""")
 
-    def format_json(self) -> List[Dict[str, str]]:
-        # format to be compatible with Seqera Chat
-        return [
-            {"content": f"<p><b>Summary</b>: {self.summary}</p>"},
-            {"content": f"<p><b>Analysis</b>: {self.analysis}</p>"},
-            {"content": f"<p><b>Recommendations</b>: {self.recommendations}</p>"},
-        ]
+    def format_text(self) -> str:
+        """
+        Format to markdown to display in Seqera Chat
+        """
+        return (
+            f"## Summary\n{self._html_to_markdown(self.summary)}"
+            + (f"## Analysis\n{self._html_to_markdown(self.analysis)}" if self.analysis else "")
+            + (f"## Recommendations\n{self._html_to_markdown(self.recommendations)}" if self.recommendations else "")
+        )
 
 
 PROMPT = """\
@@ -259,9 +280,8 @@ def add_ai_summary_to_report():
     continue_chat = ""
     if url := os.environ.get("SEQERA_CHAT_URL"):
         messages = [
-            {"role": "system", "content": PROMPT},
             {"role": "user", "content": content},
-            {"role": "assistant", "content": interpretation.format_json()},
+            {"role": "assistant", "content": interpretation.format_text()},
         ]
         history_json = json.dumps(messages)
         history_base64 = base64.b64encode(history_json.encode("utf-8")).decode("utf-8")
