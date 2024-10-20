@@ -133,19 +133,22 @@ class Client:
         self.name: str
         self.model: Optional[str] = None
         self.llm: BaseChatModel
-        self.history: List[Dict[str, str]] = [{"role": "system", "content": PROMPT}]
 
-    def interpret_report(self, content: str) -> InterpretationOutput:
-        self.history.append({"role": "user", "content": content})
-        response = self.invoke(content)
-        if response:
-            self.history.append({"role": "assistant", "content": response.format_html()})
-        return response
+    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+        return _interpret_with_llm(self.llm, report_content)
 
-    @abstractmethod
-    def invoke(self, _: str) -> InterpretationOutput:
-        structured_llm = self.llm.with_structured_output(InterpretationOutput)
-        return cast(InterpretationOutput, structured_llm.invoke(self.history))
+
+def _interpret_with_llm(llm: BaseChatModel, report_content: str) -> Optional[InterpretationOutput]:
+    structured_llm = llm.with_structured_output(InterpretationOutput)
+    return cast(
+        InterpretationOutput,
+        structured_llm.invoke(
+            [
+                {"role": "system", "content": PROMPT},
+                {"role": "user", "content": report_content},
+            ]
+        ),
+    )
 
 
 class OpenAiClient(Client):
@@ -159,6 +162,9 @@ class OpenAiClient(Client):
             temperature=0.0,
         )
 
+    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+        return _interpret_with_llm(self.llm, report_content)
+
 
 class AnthropicClient(Client):
     def __init__(self):
@@ -170,6 +176,9 @@ class AnthropicClient(Client):
             api_key=SecretStr(os.environ["ANTHROPIC_API_KEY"]),
             temperature=0.0,
         )  # type: ignore
+
+    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+        return _interpret_with_llm(self.llm, report_content)
 
 
 class SeqeraClient(Client):
@@ -186,11 +195,11 @@ class SeqeraClient(Client):
         self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
         self.token = token
 
-    def invoke(self, content: str) -> Optional[InterpretationOutput]:
+    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
         response = requests.post(
             f"{self.url}/interpret-multiqc-report",
             headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
-            json={"report": content},
+            json={"report": report_content},
         )
         if response.status_code != 200:
             logger.error(f"Failed to get a response from Seqera: {response.status_code} {response.text}")
@@ -205,7 +214,6 @@ def get_llm_client() -> Optional[Client]:
     if config.ai_provider == "seqera":
         return SeqeraClient()
 
-    client = None
     if config.ai_provider == "anthropic":
         token = os.environ.get("ANTHROPIC_API_KEY")
         if not token:
@@ -214,7 +222,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        client = AnthropicClient()
+        return AnthropicClient()
 
     if config.ai_provider == "openai":
         token = os.environ.get("OPENAI_API_KEY")
@@ -224,9 +232,9 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        client = OpenAiClient()
+        return OpenAiClient()
 
-    return client
+    return None
 
 
 def add_ai_summary_to_report():
