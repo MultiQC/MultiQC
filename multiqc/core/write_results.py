@@ -11,19 +11,18 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union, cast
+from typing import Optional
 
 import jinja2
 
 from multiqc import config, report
 from multiqc.base_module import Section
-from multiqc.core import ai, log_and_rich, plugin_hooks, tmp_dir
+from multiqc.core import log_and_rich, plugin_hooks, tmp_dir
 from multiqc.core.exceptions import NoAnalysisFound
 from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import ColumnKey
 from multiqc.types import Anchor
 from multiqc.utils import megaqc, util_functions
 
