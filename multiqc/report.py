@@ -1061,7 +1061,7 @@ def add_ai_summary():
     if config.ai_summary:
         try:
             from multiqc.core import ai
-        except ImportError:
+        except ModuleNotFoundError:
             logger.warning(
                 "AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install multiqc[ai]`"
             )
