@@ -11,7 +11,7 @@ from multiqc import config, report
 from multiqc.plots.plotly.plot import BaseDataset, Plot, PlotType
 from multiqc.plots.plotly.table import make_table
 from multiqc.plots.table_object import ColumnAnchor, ColumnMeta, DataTable, ValueT, TableConfig
-from multiqc.types import SampleName
+from multiqc.types import SampleName, Section
 
 logger = logging.getLogger(__name__)
 
@@ -588,7 +588,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         else:
             super().save(filename, **kwargs)
 
-    def add_to_report(self, plots_dir_name: Optional[str] = None, clean_html_id: bool = True) -> str:
+    def add_to_report(self, plots_dir_name: Optional[str] = None, section: Optional[Section] = None) -> str:
         warning = ""
         if self.show_table_by_default and not self.show_table:
             warning = (
@@ -636,6 +636,34 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             html += configuration_modal
 
         return html
+
+    def data_for_ai_prompt(self) -> str:
+        """Format as a markdown table"""
+        dt = self.main_table_dt
+
+        headers = self.main_table_dt.get_headers_in_order()
+
+        value_by_sample_by_rid: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
+        for idx, metric_name, header in headers:
+            for _, group_rows in dt.sections[idx].rows_by_sgroup.items():
+                row = group_rows[0]  # take only the first row in a group
+                v = row.formatted_data.get(metric_name, "")
+                if header.suffix:
+                    v += header.suffix
+                value_by_sample_by_rid.setdefault(row.sample, {})[header.rid] = v
+
+        prompt = "| Sample | " + " | ".join(dt_column.description for (_, _, dt_column) in headers) + " |\n"
+        prompt += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+
+        for sample, val_by_rid in value_by_sample_by_rid.items():
+            prompt += (
+                f"| {sample} | "
+                + " | ".join(val_by_rid.get(dt_column.rid, "") for (_, _, dt_column) in headers)
+                + " |\n"
+            )
+
+        print(prompt)
+        return prompt
 
 
 def find_outliers(

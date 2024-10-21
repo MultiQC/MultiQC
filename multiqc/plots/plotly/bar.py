@@ -367,3 +367,11 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 model.layout.legend.traceorder = "reversed"
 
         return BarPlot(**model.__dict__)
+
+    def data_for_ai_prompt(self) -> str:
+        prompt = ""
+        ds = self.datasets[0]
+        for sample_idx, sample in enumerate(ds.samples):
+            prompt += f"* {sample} "
+            prompt += "{" + ", ".join(f"{cat.name}: {cat.data[sample_idx]}" for cat in ds.cats) + "}\n"
+        return prompt

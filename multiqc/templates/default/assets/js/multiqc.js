@@ -101,3 +101,30 @@ $(function () {
     });
   });
 });
+
+$(document).ready(function () {
+  $("#continue-in-chat").click(function (e) {
+    e.preventDefault();
+    let el = $(this);
+    let url = el.data("url");
+    let prompt = el.data("prompt");
+    let messages = el.data("messages");
+    const chatWindow = window.open(url, "_blank");
+
+    // strip until the first slash
+    // http://localhost:9000/intern/?key=f47ac10b-58cc-4372-a567-0e02b2c3d479 -> http://localhost:9000
+    const baseUrl = url.split("/").slice(0, 3).join("/");
+    console.log(baseUrl);
+
+    function sendMessage() {
+      chatWindow.postMessage(
+        {
+          type: "chatInitialMessages",
+          content: { chatMessages: messages, systemMessage: prompt },
+        },
+        baseUrl,
+      );
+    }
+    setTimeout(sendMessage, 1000);
+  });
+});

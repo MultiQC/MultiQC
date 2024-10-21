@@ -49,7 +49,8 @@ runTest.sh
 .direnv/*
 
 # Typical name for virtualenv
-venv/
+venv
+venv312/
 
 # Related repos
 /test-data/
@@ -59,3 +60,5 @@ venv/
 node_modules/
 package-lock.json
 package.json
+
+.env

@@ -11,7 +11,7 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union, cast
+from typing import Optional
 
 import jinja2
 
@@ -23,7 +23,6 @@ from multiqc.core.log_and_rich import iterate_using_progress_bar
 from multiqc.core.tmp_dir import rmtree_with_retries
 from multiqc.plots import table
 from multiqc.plots.plotly.plot import Plot
-from multiqc.plots.table_object import ColumnKey
 from multiqc.types import Anchor
 from multiqc.utils import megaqc, util_functions
 
@@ -65,14 +64,17 @@ def write_results() -> None:
     if len(report.modules) == 0:
         raise NoAnalysisFound("No analysis data for any module. Check that input files and directories exist")
 
-    output_names: OutputNames = _set_output_names()
+    output_file_names: OutputNames = _set_output_names()
 
-    render_and_export_plots(plots_dir_name=output_names.plots_dir_name)
+    render_and_export_plots(plots_dir_name=output_file_names.plots_dir_name)
 
     if not config.skip_generalstats:
-        _render_general_stats_table(plots_dir_name=output_names.plots_dir_name)
+        _render_general_stats_table(plots_dir_name=output_file_names.plots_dir_name)
 
-    paths: OutputPaths = _create_or_override_dirs(output_names)
+    if config.ai_summary:
+        report.add_ai_summary()
+
+    paths: OutputPaths = _create_or_override_dirs(output_file_names)
 
     if config.make_data_dir and not paths.to_stdout and paths.data_dir:
         _write_data_files(paths.data_dir)
@@ -233,9 +235,9 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
                 report_num += 1
             if config.make_report and isinstance(paths.report_path, Path):
                 output_names.output_fn_name = paths.report_path.name
-            if config.data_dir:
+            if config.data_dir and paths.data_dir:
                 output_names.data_dir_name = paths.data_dir.name
-            if config.plots_dir:
+            if config.plots_dir and paths.plots_dir:
                 output_names.plots_dir_name = paths.plots_dir.name
             logger.info("Existing reports found, adding suffix to filenames. Use '--force' to overwrite.")
 
@@ -314,7 +316,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
 
-def _render_general_stats_table(plots_dir_name: str) -> None:
+def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     """
     Construct HTML for the general stats table.
     """
@@ -346,9 +348,12 @@ def _render_general_stats_table(plots_dir_name: str) -> None:
             "raw_data_fn": "multiqc_general_stats",
         }
         p = table.plot(report.general_stats_data, report.general_stats_headers, pconfig)  # type: ignore
+        report.general_stats_plot = p
+        report.plot_by_id[p.anchor] = p
         report.general_stats_html = p.add_to_report(plots_dir_name=plots_dir_name) if isinstance(p, Plot) else p
     else:
         config.skip_generalstats = True
+    return None
 
 
 def _write_data_files(data_dir: Path) -> None:
