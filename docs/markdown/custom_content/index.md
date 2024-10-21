@@ -5,50 +5,31 @@ description: Report on your data, even without a MultiQC module
 
 # Introduction
 
-Bioinformatics projects often include non-standardised analyses, with results from custom
-scripts or in-house packages. It can be frustrating to have a MultiQC report describing
-results from 90% of your pipeline but missing the final key plot. To help with this,
-MultiQC has a special _"custom content"_ module.
+Bioinformatics projects often include non-standardised analyses, with results from custom scripts or in-house packages. It can be frustrating to have a MultiQC report describing
+results from 90% of your pipeline but missing the final key plot. To help with this, MultiQC has a special _"custom content"_ module.
 
 Custom content parsing is a little more restricted than standard modules. Specifically:
 
-- Only one plot per section is possible
-- Plot customisation is more limited
+- Only one plot per section is possible.
+- Plot customisation is more limited.
 
-All plot types can be generated using custom content - see the
-[test files](https://github.com/MultiQC/test-data/tree/main/data/custom_content)
-for examples of how data should be structured.
+All plot types can be generated using custom content - see the [test files](https://github.com/MultiQC/test-data/tree/main/data/custom_content) for examples of how data should be structured.
 
 :::note
-Use the name `custom_content` to refer to this module within configuration
-settings that require a module name, such as [`module_order`](../reports/customisation.md#order-of-modules) or
-[`run_modules`](../reports/customisation.md#removing-modules-or-sections).
+Use the name `custom_content` to refer to this module within configuration settings that require a module name, such as [`module_order`](../reports/customisation.md#order-of-modules) or [`run_modules`](../reports/customisation.md#removing-modules-or-sections).
 :::
 
 ## Data from a released tool
 
-If your data comes from a released bioinformatics tool, you shouldn't be using this
-feature of MultiQC! Sure, you can probably get it to work, but it's better if a
-fully-fledged core MultiQC module is written instead. That way, other users of MultiQC
-can also benefit from results parsing.
+If your data comes from a released bioinformatics tool, you shouldn't be using this feature of MultiQC! Sure, you can probably get it to work, but it's better if a fully-fledged core MultiQC module is written instead. That way, other users of MultiQC can also benefit from results parsing.
 
-Note that proper MultiQC modules are more robust and powerful than this custom-content
-feature. You can also [write modules](../development/modules.md)
-in [MultiQC plugins](../development/plugins.md) if they're not suitable for
-general release.
+Note that proper MultiQC modules are more robust and powerful than this custom-content feature. You can also [write modules](../development/modules.md) in [MultiQC plugins](../development/plugins.md) if they're not suitable for general release.
 
 ## Images
 
-As of MultiQC v1.7, you can import custom images into your MultiQC reports.
-Simply add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files, for example:
-`my_image_file_mqc.png` or `summmary_diagram.jpeg`.
+As of MultiQC v1.7, you can import custom images into your MultiQC reports. Simply add `_mqc` to the end of the filename for `.png`, `.jpg` or `.jpeg` files, for example: `my_image_file_mqc.png` or `summmary_diagram.jpeg`.
 
-Images will be embedded within the HTML file, so will be self contained.
-Note that this means that it's very possible to make the HTML file very very large if abused!
-
-The report section name and description will be automatically based on the filename.
-
-Note that if you are using `sp:` to take in images with a custom filename you need to also set `ignore_images: false` in your config. For example:
+Images will be embedded within the HTML file, so will be self contained. Note that this means that it's very possible to make the HTML file very very large if abused. The report section name and description will be automatically based on the filename. Note that if you are using `sp:` to take in images with a custom filename you need to also set `ignore_images: false` in your config. For example:
 
 ```yaml
 custom_data:
@@ -62,12 +43,9 @@ ignore_images: false
 
 ## MultiQC-specific data file
 
-If you can choose exactly how your data output looks, then the easiest way to parse it
-is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)`
-then it will be found by any standard MultiQC installation with no additional customisation required.
+If you can choose exactly how your data output looks, then the easiest way to parse it is to use a MultiQC-specific format. If the filename ends in `*_mqc.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|html)` then it will be found by any standard MultiQC installation with no additional customisation required.
 
-These files contain configuration information specifying how the data should be parsed,
-alongside the data. If you want to use YAML, this is an example of how it should look:
+These files contain configuration information specifying how the data should be parsed, alongside the data. If you want to use YAML, this is an example of how it should look:
 
 ```yaml
 id: "my_pca_section"
