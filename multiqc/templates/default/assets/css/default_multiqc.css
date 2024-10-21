@@ -1078,7 +1078,7 @@ tr.row-empty {
   border: 1px solid #99bfc7;
 }
 .ai-summary summary {
-  padding-bottom: 10px;
+  padding-bottom: 15px;
 }
 .ai-summary::after {
   content: "";
@@ -1096,7 +1096,6 @@ tr.row-empty {
 .ai-summary:hover::after {
   background: #7aa6af;
 }
-
 .ai-summary ul {
   margin: 0;
   margin-top: -5px;
