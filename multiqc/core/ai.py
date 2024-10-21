@@ -292,12 +292,15 @@ Section: {section.name}{description}{helptext}
             {"role": "user", "content": content},
             {"role": "assistant", "content": interpretation.format_text()},
         ]
-        history_json = json.dumps(messages)
-        history_base64 = base64.b64encode(history_json.encode("utf-8")).decode("utf-8")
+        messages_json = json.dumps(messages)
+        messages_base64 = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
+        prompt_base64 = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
+
         continue_chat = (
             "<button class='btn btn-primary'"
             + "id='continue-in-chat' "
-            + f"data-messages={history_base64} "
+            + f"data-prompt={prompt_base64} "
+            + f"data-messages={messages_base64} "
             + f"data-url={url}>"
             + "Continue with Seqera Chat"
             "</button>"
