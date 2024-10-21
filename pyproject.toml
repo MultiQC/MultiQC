@@ -73,13 +73,17 @@ dev = [
     "types-Markdown",
     "types-beautifulsoup4",
     "types-Pillow",
+    "beautifulsoup4",
 ]
-ai = [
+anthropic = [
     "langchain",
     "langsmith",
     "langchain-anthropic",
+]
+openai = [
+    "langchain",
+    "langsmith",
     "langchain-openai",
-    "beautifulsoup4",
 ]
 
 [project.urls]

@@ -3,22 +3,22 @@ import json
 import logging
 import os
 from textwrap import dedent
-from typing import Optional, cast
+from typing import Optional, cast, TYPE_CHECKING
 from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
-from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
-from langchain_anthropic import ChatAnthropic  # type: ignore
-from langchain_openai import ChatOpenAI  # type: ignore
-from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
-from langsmith import Client as LangSmithClient  # type: ignore
-
 from bs4 import BeautifulSoup
+from dotenv import load_dotenv  # type: ignore
 
 from multiqc import config, report
 
-from dotenv import load_dotenv  # type: ignore
+if TYPE_CHECKING:
+    from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
+    from langchain_openai import ChatOpenAI  # type: ignore
+    from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
+    from langsmith import Client as LangSmithClient  # type: ignore
+
 
 load_dotenv()
 
@@ -130,27 +130,44 @@ class Client:
     def __init__(self):
         self.name: str
         self.model: Optional[str] = None
+
+    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+        raise NotImplementedError
+
+
+class LangchainClient(Client):
+    def __init__(self):
+        self.name: str
+        self.model: str
         self.llm: BaseChatModel
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
-        return _interpret_with_llm(self.llm, report_content)
+        from langsmith import Client as LangSmithClient  # type: ignore
+        from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
+
+        with tracing_v2_enabled(
+            project_name=os.environ.get("LANGCHAIN_PROJECT"),
+            client=LangSmithClient(
+                api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+            ),
+        ):
+            structured_llm = self.llm.with_structured_output(InterpretationOutput)
+            return cast(
+                InterpretationOutput,
+                structured_llm.invoke(
+                    [
+                        {"role": "system", "content": PROMPT},
+                        {"role": "user", "content": report_content},
+                    ]
+                ),
+            )
 
 
-def _interpret_with_llm(llm: BaseChatModel, report_content: str) -> Optional[InterpretationOutput]:
-    structured_llm = llm.with_structured_output(InterpretationOutput)
-    return cast(
-        InterpretationOutput,
-        structured_llm.invoke(
-            [
-                {"role": "system", "content": PROMPT},
-                {"role": "user", "content": report_content},
-            ]
-        ),
-    )
-
-
-class OpenAiClient(Client):
+class OpenAiClient(LangchainClient):
     def __init__(self):
+        from langchain_openai import ChatOpenAI  # type: ignore
+
         super().__init__()
         self.name = "OpenAI"
         self.model = "gpt-4o"
@@ -160,13 +177,12 @@ class OpenAiClient(Client):
             temperature=0.0,
         )
 
-    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
-        return _interpret_with_llm(self.llm, report_content)
 
-
-class AnthropicClient(Client):
+class AnthropicClient(LangchainClient):
     def __init__(self):
         super().__init__()
+        from langchain_anthropic import ChatAnthropic  # type: ignore
+
         self.name = "Anthropic"
         self.model = "claude-3-5-sonnet-20240620"
         self.llm = ChatAnthropic(
@@ -174,9 +190,6 @@ class AnthropicClient(Client):
             api_key=SecretStr(os.environ["ANTHROPIC_API_KEY"]),
             temperature=0.0,
         )  # type: ignore
-
-    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
-        return _interpret_with_llm(self.llm, report_content)
 
 
 class SeqeraClient(Client):
@@ -197,7 +210,10 @@ class SeqeraClient(Client):
         response = requests.post(
             f"{self.url}/interpret-multiqc-report",
             headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
-            json={"report": report_content},
+            json={
+                "system_message": PROMPT,
+                "report": report_content,
+            },
         )
         if response.status_code != 200:
             logger.error(f"Failed to get a response from Seqera: {response.status_code} {response.text}")
@@ -267,17 +283,7 @@ Section: {section.name}{description}{helptext}
     if not content:
         return
 
-    if client.name != "Seqera Chat":
-        with tracing_v2_enabled(
-            project_name=os.environ.get("LANGCHAIN_PROJECT"),
-            client=LangSmithClient(
-                api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
-            ),
-        ):
-            interpretation = client.interpret_report(content)
-    else:
-        interpretation = client.interpret_report(content)
+    interpretation = client.interpret_report(content)
 
     if not interpretation:
         return None
