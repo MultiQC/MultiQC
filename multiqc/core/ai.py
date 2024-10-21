@@ -15,9 +15,6 @@ from multiqc import config, report
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
-    from langchain_openai import ChatOpenAI  # type: ignore
-    from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
-    from langsmith import Client as LangSmithClient  # type: ignore
 
 
 load_dotenv()
