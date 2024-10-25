@@ -5,8 +5,9 @@ from copy import deepcopy
 from typing import Dict, List, Any
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, linegraph
+from multiqc.plots import table, bargraph, linegraph
 from multiqc.plots.table_object import TableConfig
+from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
 
@@ -131,7 +132,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         general_stats_headers = deepcopy(headers)
-        for k, h in general_stats_headers.items():
+        for h in general_stats_headers.values():
             h["hidden"] = True
         general_stats_headers["Number of reads"]["hidden"] = False
         general_stats_headers["N50 read length"]["hidden"] = False
@@ -141,16 +142,39 @@ class MultiqcModule(BaseMultiqcModule):
 
     def reads_by_quality_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
         # Get data for plot
-        lineplot_data: Dict[str, Dict[int, float]] = defaultdict(dict)
+        barplot_data: Dict[str, Dict[str, float]] = defaultdict(dict)
+        min_quality = 10
+
         for name, d in data_by_sample.items():
-            reads_by_q = {k: v for k, v in d.items() if k.startswith("Reads > Q")}
-            if len(reads_by_q) == 0:
+            reads_by_q = {
+                int(k.split("> Q")[1]): v for k, v in d.items() if k.startswith("Reads > Q")
+            }
+            if not reads_by_q:
                 continue
 
-            total_reads = d["Number of reads"]
-            for k, v in reads_by_q.items():
-                threshold = int(k.split("> Q")[1])
-                lineplot_data[name][threshold] = v / total_reads * 100
+            thresholds = sorted(th for th in reads_by_q if th >= min_quality)
+            if not thresholds:
+                continue
+
+            keys = [f"<Q{min_quality}"]
+
+            for th, thn in zip(thresholds[:-1], thresholds[1:]):
+                key = f"Q{th}-{thn}"
+                keys.append(key)
+                barplot_data[name][key] = reads_by_q[th] - reads_by_q[thn]
+
+            last_key = f">Q{thresholds[-1]}"
+            keys.append(last_key)
+            barplot_data[name][f"<Q{min_quality}"] = (
+                d["Number of reads"] - reads_by_q[thresholds[0]]
+            )
+            barplot_data[name][last_key] = reads_by_q[thresholds[-1]]
+
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
+        cats = {
+            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)}
+            for idx, k in enumerate(keys[::-1])
+        }
 
         # Plot
         self.add_section(
@@ -163,9 +187,10 @@ class MultiqcModule(BaseMultiqcModule):
             The phred score represents the liklelyhood that a given read contains errors.
             High quality reads have a high score.
             """,
-            plot=linegraph.plot(
-                lineplot_data,
-                linegraph.LinePlotConfig(
+            plot=bargraph.plot(
+                barplot_data,
+                cats,
+                pconfig=dict(
                     id="nanoq_plot_quality_plot",
                     title="Nanoq: read qualities",
                 ),
@@ -173,6 +198,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def reads_by_length_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+        # sourcery skip: simplify-len-comparison
         # Get data for plot
         linegraph_data: Dict[str, Dict[int, float]] = defaultdict(dict)
         for name, d in data_by_sample.items():
@@ -235,12 +261,18 @@ def parse_nanoq_log(f) -> Dict[str, float]:
 
     # Helper function to parse thresholds part
     def parse_thresholds(lines: List[str], threshold_type: str) -> Dict[str, List[Any]]:
-        _thresholds: Dict[str, List[Any]] = {"Threshold": [], "Number of Reads": [], "Percentage": []}
+        _thresholds: Dict[str, List[Any]] = {
+            "Threshold": [],
+            "Number of Reads": [],
+            "Percentage": [],
+        }
         for _line in lines:
             match = re.match(r">\s*(\d+)\s+(\d+)\s+(\d+\.\d+)%", _line)
             if match:
                 _threshold, _num_reads, _percentage = match.groups()
-                _thresholds["Threshold"].append(_threshold + (threshold_type if threshold_type == "bp" else ""))
+                _thresholds["Threshold"].append(
+                    _threshold + (threshold_type if threshold_type == "bp" else "")
+                )
                 _thresholds["Number of Reads"].append(int(_num_reads))
                 _thresholds["Percentage"].append(float(_percentage))
         return _thresholds
@@ -248,10 +280,15 @@ def parse_nanoq_log(f) -> Dict[str, float]:
     read_length_thresholds = parse_thresholds(length_threshold_lines, "bp")
     read_quality_thresholds = parse_thresholds(quality_threshold_lines, "")
 
-    for threshold, num_reads in zip(read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]):
+    for threshold, num_reads in zip(
+        read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]
+    ):
         stats[f"Reads > {threshold}"] = num_reads
 
-    for threshold, num_reads in zip(read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]):
+    for threshold, num_reads in zip(
+        read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]
+    ):
         stats[f"Reads > Q{threshold}"] = num_reads
 
     return stats
+
