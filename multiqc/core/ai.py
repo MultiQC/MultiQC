@@ -2,9 +2,11 @@ import base64
 import json
 import logging
 import os
+import re
 from textwrap import dedent
 from typing import Optional, cast, TYPE_CHECKING
 import bs4
+from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
 
@@ -28,46 +30,58 @@ class InterpretationOutput(BaseModel):
     short_abstract: str = Field(description="Short abstract of the summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
-    def _html_to_markdown(self, text: str) -> str:
-        soup = BeautifulSoup(text, "html.parser")
-        tag: bs4.element.Tag
-        for tag in soup.find_all(["ul", "li", "b", "p", "sample", "span"]):
-            if tag.name == "ul":
-                tag.insert_before("\n")
-                tag.insert_after("\n")
-            elif tag.name == "li":
-                tag.insert_before("- ")
-                tag.insert_after("\n")
-            elif tag.name == "b":
-                tag.insert_before("**")
-                tag.insert_after("**")
-            elif tag.name == "p":
-                tag.insert_before("\n")
-                tag.insert_after("\n")
-            elif tag.name in ["sample", "span"]:
-                clz = tag.get("class")
-                if clz:
-                    try:
-                        tag.insert_before(":span[")
-                        tag.insert_after(f"]{{.{clz[0]}}}")
-                    except Exception as e:
-                        logger.error(f"Error inserting span for sample tag: {e}")
-        return soup.get_text()
+    def markdown_to_html(self, text: str) -> str:
+        """
+        Convert markdown to HTML. Convert directives like :sample[A1001.2003]{.text-yellow} to HTML tags <sample class="text-yellow">A1001.2003</sample>
+        """
+        html = markdown(text)
+        # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
+        html = re.sub(r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}", r"<span class='text-\2'>\1</span>", html)
+        html = re.sub(
+            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}", r"<sample class='text-\2'>\1</sample>", html
+        )
+        return html
+
+    # def _html_to_markdown(self, text: str) -> str:
+    #     soup = BeautifulSoup(text, "html.parser")
+    #     tag: bs4.element.Tag
+    #     for tag in soup.find_all(["ul", "li", "b", "p", "sample", "span"]):
+    #         if tag.name == "ul":
+    #             tag.insert_before("\n")
+    #             tag.insert_after("\n")
+    #         elif tag.name == "li":
+    #             tag.insert_before("- ")
+    #             tag.insert_after("\n")
+    #         elif tag.name == "b":
+    #             tag.insert_before("**")
+    #             tag.insert_after("**")
+    #         elif tag.name == "p":
+    #             tag.insert_before("\n")
+    #             tag.insert_after("\n")
+    #         elif tag.name in ["sample", "span"]:
+    #             clz = tag.get("class")
+    #             if clz:
+    #                 try:
+    #                     tag.insert_before(":span[")
+    #                     tag.insert_after(f"]{{.{clz[0]}}}")
+    #                 except Exception as e:
+    #                     logger.error(f"Error inserting span for sample tag: {e}")
+    #     return soup.get_text()
 
     def format_html(self) -> str:
         html = dedent(f"""
         <summary>
         <b>✨ AI Summary</b>
-        {self.short_abstract}
+        {self.markdown_to_html(self.short_abstract)}
         </summary>
         <p>
-        <b>Detailed summary</b> {self.summary}
+        <b>Detailed summary</b> {self.markdown_to_html(self.summary)}
         </p>
         """)
         if self.recommendations:
             html += dedent(f"""
             <p>
-            <b>Recommendations</b> {self.recommendations}
+            <b>Recommendations</b> {self.markdown_to_html(self.recommendations)}
             </p>""")
         return html
 
@@ -76,9 +90,9 @@ class InterpretationOutput(BaseModel):
         Format to markdown to display in Seqera Chat
         """
         return (
-            f"## Summary\n{self._html_to_markdown(self.short_abstract)}"
-            + (f"## Detailed summary\n{self._html_to_markdown(self.summary)}")
-            + (f"## Recommendations\n{self._html_to_markdown(self.recommendations)}" if self.recommendations else "")
+            f"## Summary\n{self.short_abstract}"
+            + (f"\n## Detailed summary\n{self.summary}")
+            + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
         )
 
 
@@ -96,73 +110,42 @@ give a short and concise overall summary for the results, followed by an even mo
 Don't waste words: mention only the important QC issues. Only mention the sections that worth 
 attention. If there are no issues, just say so.
 
-Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists.
-Use pre-defined .text-green, .text-red, and .text-yellow classes to highlight the severity of the issue.
-Wrap sample names in <sample> tags, make sure to add one of .text-green, .text-red, .text-yellow classes.
+Use markdown to format your reponse for readability. Use directives with pre-defined classes 
+.text-green, .text-red, and .text-yellow to highlight the severity of the issue, e.g. 
+:sample[A1001.2003]{.text-yellow} for sample names, or :span[39.2%]{.text-red} for other text spans like values.
 
 After the summary, add a very short abstract of the summary, limited to 1-2 bullet points. Highlight
 sample names with the pre-defined classes as well.
 
 Finally, add your recommendations for the next steps.
 
-Example:
+Example, formatted as YAML of 3 requires sections (summary, short_abstract, and recommendations):
 
-summary: |-
-    <ul>
-        <li>
-            <sample class="text-yellow">A1002</sample> and <sample class="text-yellow">A1003</sample> groups (<span class="text-green">11/13 samples</span>)
-            show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
-        </li>
-        <li><sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</sample> show severe quality issues:
-            <ul>
-                <li>Extremely high duplicate rates (<span class="text-red">65.54%</span> and <span class="text-red">83.14%</span>)</li>
-                <li>Low percentages of valid pairs (<span class="text-red">37.2%</span> and <span class="text-red">39.2%</span>)</li>
-                <li>High percentages of failed modules in FastQC (<span class="text-red">33.33%</span>)</li>
-                <li>Significantly higher total sequence counts (<span class="text-red">141.9M</span> and <span class="text-red">178.0M</span>) compared to other samples</li>
-                <li>FastQC results indicate that <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</span>
-                    have a slight <span class="text-red">GC content</span> bias: at 39.5% against most other samples having 38.0%,
-                    which indicates a potential contamination that could be the source of other anomalities in quality metrics.
-                </li>
-            </ul>
-        </li>
-        <li>
-            <sample class="text-yellow">A1002-1007</sample> shows some quality concerns:
-            <ul>
-                <li>Low percentage of valid pairs (<span class="text-yellow">48.08%</span>)</li>
-                <li>Low percentage of passed Di-Tags (<span class="text-yellow">22.51%</span>)</li>
-            </ul>
-        </li>
-        <li>
-            Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in 
-            <sample class="text-yellow">A1001.2003</sample> (up to <span class="text-yellow">35.82%</span> in Read 1).
-        </li>
-        <li>
-            HiCUP analysis shows that most samples have acceptable levels of valid pairs, with <sample class="text-green">A1003</sample>
-            group generally performing better than <sample class="text-yellow">A1002</sample> group.
-        </li>
-    </ul>
+summary: |
+  - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
+    - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
+    - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
+    - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
+    - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
+    - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+  - :sample[A1002-1007]{.text-yellow} shows some quality concerns:
+    - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
+    - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
+  - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
+  - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
-short_abstract: |-
-    <ul>
-        <li>
-            <span class="text-green">11/13 samples</span> show consistent metrics within expected ranges.
-        </li>
-        <li>
-            <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</sample> exhibit extremely
-            high percentage of <span class="text-red">duplicates</span> (<span class="text-red">65.54%</span> and
-            <span class="text-red">83.14%</span>, respectively).
-        </li>
-    </ul>
+short_abstract: |
+  - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
+  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
-recommendations: |-
-    <ul>
-        <li>Remove <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1200.2004</sample> from further analysis due to severe quality issues.</li>
-        <li>Investigate the cause of low valid pairs and passed Di-Tags in <sample class="text-yellow">A1002-1007</sample>. Consider removing it if the issue cannot be resolved.</li>
-        <li>Perform adapter trimming on all samples, particularly focusing on <sample class="text-red">A1001</sample> group.</li>
-        <li>Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.</li>
-        <li>Investigate the cause of higher duplication rates in <sample class="text-yellow">A1002</sample> group compared to <sample class="text-green">A1003</sample> group, although they are still within acceptable ranges.</li>
-        <li>Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for <sample class="text-yellow">A1002</sample> group.</li>
-    </ul>
+recommendations: |
+  - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
+  - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
+  - Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
+  - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
+  - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
+  - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
 """
 
 
