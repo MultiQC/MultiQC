@@ -662,7 +662,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 + " |\n"
             )
 
-        print(prompt)
         return prompt
 
 
