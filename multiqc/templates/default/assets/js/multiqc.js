@@ -106,25 +106,25 @@ $(document).ready(function () {
   $("#continue-in-chat").click(function (e) {
     e.preventDefault();
     let el = $(this);
-    let url = el.data("url");
-    let prompt = el.data("prompt");
-    let messages = el.data("messages");
-    const chatWindow = window.open(url, "_blank");
+    let website = el.data("website");
+    let encodedSystemMessage = el.data("encoded-system-message");
+    let encodedChatMessages = el.data("encoded-chat-messages");
+    let key = el.data("key");
 
-    // strip until the first slash
-    // http://localhost:9000/intern/?key=f47ac10b-58cc-4372-a567-0e02b2c3d479 -> http://localhost:9000
-    const baseUrl = url.split("/").slice(0, 3).join("/");
-    console.log(baseUrl);
+    const chatWindow = window.open(website + "/ask-ai/?key=" + key, "_blank");
 
     function sendMessage() {
       chatWindow.postMessage(
         {
           type: "chatInitialMessages",
-          content: { chatMessages: messages, systemMessage: prompt },
+          content: {
+            encodedSystemMessage: encodedSystemMessage,
+            encodedChatMessages: encodedChatMessages,
+          },
         },
-        baseUrl,
+        website,
       );
     }
-    setTimeout(sendMessage, 1000);
+    setTimeout(sendMessage, 2000);
   });
 });

@@ -1056,14 +1056,14 @@ td.column-hidden {
 tr.row-empty {
   display: none;
 }
-.ai-summary .good {
-  color: rgb(9, 110, 9);
+.text-green {
+  color: rgb(21 128 61);
 }
-.ai-summary .warning {
-  color: rgb(194, 166, 23);
+.text-yellow {
+  color: rgb(202 138 4);
 }
-.ai-summary .bad {
-  color: rgb(234, 25, 25);
+.text-red {
+  color: rgb(220 38 38);
 }
 .ai-summary {
   background-color: #e7f6f9;

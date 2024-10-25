@@ -29,7 +29,7 @@ class InterpretationOutput(BaseModel):
 
     def _html_to_markdown(self, text: str) -> str:
         soup = BeautifulSoup(text, "html.parser")
-        for tag in soup.find_all(["ul", "li", "b", "p"]):
+        for tag in soup.find_all(["ul", "li", "b", "p", "span"]):
             if tag.name == "ul":
                 tag.insert_before("\n")
                 tag.insert_after("\n")
@@ -42,6 +42,9 @@ class InterpretationOutput(BaseModel):
             elif tag.name == "p":
                 tag.insert_before("\n")
                 tag.insert_after("\n")
+            elif tag.name == "span":
+                tag.insert_before(":span[")
+                tag.insert_after(f"]{{.{tag.get('class')[0]}}}")
         return soup.get_text()
 
     def format_html(self) -> str:
@@ -83,7 +86,7 @@ critical QC issues, and only for the samples that have those. Do not list every 
 mention the sections that worth attention.
 
 Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists,
-and pre-defined .good, .bad, and .warning classes to highlight the severity of the issue.
+and pre-defined .text-green, .text-red, and .text-yellow classes to highlight the severity of the issue.
 
 Do no add headers or intro words, rather just get to the point. Separately add a short summary,
 your analysis, and your recommendations. Use lists to format analysis and recommendations as well!
@@ -92,32 +95,32 @@ Example of summary of the general stats section:
 
 <ul>
     <li>
-        <span class="good">11/13 samples</span> show consistent metrics within expected ranges.
+        <span class="text-green">11/13 samples</span> show consistent metrics within expected ranges.
     </li>
     <li>
-        <span class="bad">A1001.2003</span> and <span class="bad">A1200.2004</span> exhibit extremely
-        high percentage of <span class="bad">duplicates</span> (<span class="bad">65.54%</span> and
-        <span class="bad">83.14%</span>, respectively) and the percentage of <span class="bad">fails (33.33%)</span>.
-        <span class="bad">A1001.2003</span> also registers a very low <span class="bad"> mapping rate (38.61%)</span>.
+        <span class="text-red">A1001.2003</span> and <span class="text-red">A1200.2004</span> exhibit extremely
+        high percentage of <span class="text-red">duplicates</span> (<span class="text-red">65.54%</span> and
+        <span class="text-red">83.14%</span>, respectively) and the percentage of <span class="text-red">fails (33.33%)</span>.
+        <span class="text-red">A1001.2003</span> also registers a very low <span class="text-red"> mapping rate (38.61%)</span>.
     </li>
     <li>
-        <span class="warning">A1002-1007</span> displays a relatively low percentage of <span class="warning">valid pairs (48.08%)</span>
-        and <span class="warning">passed Di-Tags (22.51%)</span>.
+        <span class="text-yellow">A1002-1007</span> displays a relatively low percentage of <span class="text-yellow">valid pairs (48.08%)</span>
+        and <span class="text-yellow">passed Di-Tags (22.51%)</span>.
     </li>
 </ul>
 
 Analysis:
 
 <p>
-    FastQC results indicate that <span class="bad">A1001.2003</span> and <span class="bad">A1001.2004</span>
-    have a slight <span class="bad">GC content</span> bias: at 39.5% against most other samples having 38.0%,
+    FastQC results indicate that <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span>
+    have a slight <span class="text-red">GC content</span> bias: at 39.5% against most other samples having 38.0%,
     which indicates a potential contamination that could be the source of other anomalities in quality metrics.
 </p>
 
 Recommendations:
 
 <p>
-    It is recommended to check the samples from the group <span class="bad">A1001</span> for contamination,
+    It is recommended to check the samples from the group <span class="text-red">A1001</span> for contamination,
     and consider removing them from the analysis.
 </p>
 """
@@ -290,24 +293,25 @@ Section: {section.name}{description}{helptext}
         disclaimer += f", model: {client.model}"
 
     continue_chat = ""
-    if url := os.environ.get("SEQERA_CHAT_URL"):
-        messages = [
-            {"role": "user", "content": content},
-            {"role": "assistant", "content": interpretation.format_text()},
-        ]
-        messages_json = json.dumps(messages)
-        messages_base64 = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
-        prompt_base64 = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
+    website_url = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
+    messages = [
+        {"role": "user", "content": content},
+        {"role": "assistant", "content": interpretation.format_text()},
+    ]
+    messages_json = json.dumps(messages)
+    encoded_chat_messages = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
+    encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
+    key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
-        continue_chat = (
-            "<button class='btn btn-primary'"
-            + "id='continue-in-chat' "
-            + f"data-prompt={prompt_base64} "
-            + f"data-messages={messages_base64} "
-            + f"data-url={url}>"
-            + "Continue with Seqera Chat"
-            "</button>"
-        )
+    continue_chat = (
+        "<button class='btn btn-primary'"
+        + "id='continue-in-chat'"
+        + f" data-encoded-system-message={encoded_system_message}"
+        + f" data-encoded-chat-messages={encoded_chat_messages}"
+        + f" data-website={website_url}"
+        + f" {key}"
+        + ">Continue with Seqera Chat</button>"
+    )
 
     report.ai_summary = f"""
     <details>
