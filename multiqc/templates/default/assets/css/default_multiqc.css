@@ -1081,17 +1081,6 @@ tr.row-empty {
   padding-bottom: 20px;
   position: relative;
 }
-/* bottom border thingie */
-/* .ai-summary::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -18px;
-  right: -12px;
-  height: 5px;
-  background: #99bfc7;
-  pointer-events: none;
-} */
 .ai-summary:hover {
   border-color: #7aa6af;
 }
@@ -1110,7 +1099,7 @@ tr.row-empty {
   padding: 0;
 }
 .ai-summary details .btn {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .ai-summary .show-more-btn {
