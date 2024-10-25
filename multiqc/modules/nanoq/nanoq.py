@@ -146,9 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
         min_quality = 10
 
         for name, d in data_by_sample.items():
-            reads_by_q = {
-                int(k.split("> Q")[1]): v for k, v in d.items() if k.startswith("Reads > Q")
-            }
+            reads_by_q = {int(k.split("> Q")[1]): v for k, v in d.items() if k.startswith("Reads > Q")}
             if not reads_by_q:
                 continue
 
@@ -165,15 +163,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             last_key = f">Q{thresholds[-1]}"
             keys.append(last_key)
-            barplot_data[name][f"<Q{min_quality}"] = (
-                d["Number of reads"] - reads_by_q[thresholds[0]]
-            )
+            barplot_data[name][f"<Q{min_quality}"] = d["Number of reads"] - reads_by_q[thresholds[0]]
             barplot_data[name][last_key] = reads_by_q[thresholds[-1]]
 
         colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
         cats = {
-            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)}
-            for idx, k in enumerate(keys[::-1])
+            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)} for idx, k in enumerate(keys[::-1])
         }
 
         # Plot
@@ -270,9 +265,7 @@ def parse_nanoq_log(f) -> Dict[str, float]:
             match = re.match(r">\s*(\d+)\s+(\d+)\s+(\d+\.\d+)%", _line)
             if match:
                 _threshold, _num_reads, _percentage = match.groups()
-                _thresholds["Threshold"].append(
-                    _threshold + (threshold_type if threshold_type == "bp" else "")
-                )
+                _thresholds["Threshold"].append(_threshold + (threshold_type if threshold_type == "bp" else ""))
                 _thresholds["Number of Reads"].append(int(_num_reads))
                 _thresholds["Percentage"].append(float(_percentage))
         return _thresholds
@@ -280,15 +273,10 @@ def parse_nanoq_log(f) -> Dict[str, float]:
     read_length_thresholds = parse_thresholds(length_threshold_lines, "bp")
     read_quality_thresholds = parse_thresholds(quality_threshold_lines, "")
 
-    for threshold, num_reads in zip(
-        read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]
-    ):
+    for threshold, num_reads in zip(read_length_thresholds["Threshold"], read_length_thresholds["Number of Reads"]):
         stats[f"Reads > {threshold}"] = num_reads
 
-    for threshold, num_reads in zip(
-        read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]
-    ):
+    for threshold, num_reads in zip(read_quality_thresholds["Threshold"], read_quality_thresholds["Number of Reads"]):
         stats[f"Reads > Q{threshold}"] = num_reads
 
     return stats
-
