@@ -4,6 +4,7 @@ import logging
 import os
 from textwrap import dedent
 from typing import Optional, cast, TYPE_CHECKING
+import bs4
 from pydantic import BaseModel, Field
 import requests
 
@@ -29,6 +30,7 @@ class InterpretationOutput(BaseModel):
 
     def _html_to_markdown(self, text: str) -> str:
         soup = BeautifulSoup(text, "html.parser")
+        tag: bs4.element.Tag
         for tag in soup.find_all(["ul", "li", "b", "p", "sample", "span"]):
             if tag.name == "ul":
                 tag.insert_before("\n")
@@ -42,16 +44,14 @@ class InterpretationOutput(BaseModel):
             elif tag.name == "p":
                 tag.insert_before("\n")
                 tag.insert_after("\n")
-            elif tag.name == "sample":
+            elif tag.name in ["sample", "span"]:
                 clz = tag.get("class")
                 if clz:
-                    tag.insert_before(":span[")
-                    tag.insert_after(f"]{{.{clz}}}")
-            elif tag.name == "span":
-                clz = tag.get("class")
-                if clz:
-                    tag.insert_before(":span[")
-                    tag.insert_after(f"]{{.{clz}}}")
+                    try:
+                        tag.insert_before(":span[")
+                        tag.insert_after(f"]{{.{clz[0]}}}")
+                    except Exception as e:
+                        logger.error(f"Error inserting span for sample tag: {e}")
         return soup.get_text()
 
     def format_html(self) -> str:
