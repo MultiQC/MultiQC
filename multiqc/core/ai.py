@@ -43,11 +43,15 @@ class InterpretationOutput(BaseModel):
                 tag.insert_before("\n")
                 tag.insert_after("\n")
             elif tag.name == "sample":
-                tag.insert_before(":span[")
-                tag.insert_after(f"]{{.{tag.get('class')[0]}}}")
+                clz = tag.get("class")
+                if clz:
+                    tag.insert_before(":span[")
+                    tag.insert_after(f"]{{.{clz}}}")
             elif tag.name == "span":
-                tag.insert_before(":span[")
-                tag.insert_after(f"]{{.{tag.get('class')[0]}}}")
+                clz = tag.get("class")
+                if clz:
+                    tag.insert_before(":span[")
+                    tag.insert_after(f"]{{.{clz}}}")
         return soup.get_text()
 
     def format_html(self) -> str:
@@ -92,8 +96,9 @@ give a short and concise overall summary for the results, followed by an even mo
 Don't waste words: mention only the important QC issues. Only mention the sections that worth 
 attention. If there are no issues, just say so.
 
-Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists,
-and pre-defined .text-green, .text-red, and .text-yellow classes to highlight the severity of the issue.
+Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists.
+Use pre-defined .text-green, .text-red, and .text-yellow classes to highlight the severity of the issue.
+Wrap sample names in <sample> tags, make sure to add one of .text-green, .text-red, .text-yellow classes.
 
 After the summary, add a very short abstract of the summary, limited to 1-2 bullet points. Highlight
 sample names with the pre-defined classes as well.
@@ -319,6 +324,7 @@ Section: {section.name}{description}{helptext}
         return
 
     interpretation = client.interpret_report(content)
+    logger.debug(f"Interpretation: {interpretation}")
 
     if not interpretation:
         return None

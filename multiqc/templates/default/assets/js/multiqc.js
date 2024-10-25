@@ -127,4 +127,34 @@ $(document).ready(function () {
     }
     setTimeout(sendMessage, 2000);
   });
+
+  // Add "Show More" button to AI summary
+  $(".ai-summary").each(function () {
+    const $summary = $(this).find("summary");
+    const $details = $(this).find("details");
+    const $showMoreBtn = $('<button class="show-more-btn">Show More</button>');
+
+    $(this).append($showMoreBtn);
+
+    $showMoreBtn.on("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if ($details.prop("open")) {
+        $details.prop("open", false);
+        $(this).text("Show More");
+      } else {
+        $details.prop("open", true);
+        $(this).text("Hide");
+      }
+    });
+
+    $details.on("toggle", function () {
+      if ($(this).prop("open")) {
+        $showMoreBtn.text("Hide");
+      } else {
+        $showMoreBtn.text("Show More");
+      }
+    });
+  });
 });
