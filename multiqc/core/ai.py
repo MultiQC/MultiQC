@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 
 class InterpretationOutput(BaseModel):
-    summary: str = Field(description="A short and concise summary")
-    analysis: Optional[str] = Field(default=None, description="An analysis of the results")
+    summary: str = Field(description="Summary")
+    short_abstract: str = Field(description="Short abstract of the summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
     def _html_to_markdown(self, text: str) -> str:
@@ -48,25 +48,29 @@ class InterpretationOutput(BaseModel):
         return soup.get_text()
 
     def format_html(self) -> str:
-        return dedent(f"""
+        html = dedent(f"""
         <summary>
         <b>✨ AI Summary</b>
-        {self.summary}
+        {self.short_abstract}
         </summary>
         <p>
-        <b>Analysis</b> {self.analysis}
+        <b>Detailed summary</b> {self.summary}
         </p>
-        <p>
-        <b>Recommendations</b> {self.recommendations}
-        </p>""")
+        """)
+        if self.recommendations:
+            html += dedent(f"""
+            <p>
+            <b>Recommendations</b> {self.recommendations}
+            </p>""")
+        return html
 
     def format_text(self) -> str:
         """
         Format to markdown to display in Seqera Chat
         """
         return (
-            f"## Summary\n{self._html_to_markdown(self.summary)}"
-            + (f"## Analysis\n{self._html_to_markdown(self.analysis)}" if self.analysis else "")
+            f"## Summary\n{self._html_to_markdown(self.short_abstract)}"
+            + (f"## Detailed summary\n{self._html_to_markdown(self.summary)}")
             + (f"## Recommendations\n{self._html_to_markdown(self.recommendations)}" if self.recommendations else "")
         )
 
@@ -80,49 +84,77 @@ it aggregates results from different tools. It outputs a "General Statistics" se
 has a table with a summary of key metrics from all modules across each sample. That table
 is followed by module-specific sections that usually have more detail on the same samples.
 
-You are given data from such a report, split by segeneratorur task is to analyse the data, and
-give a short and concise overall summary for the results. Don't waste words: mention only
-critical QC issues, and only for the samples that have those. Do not list every section, but only
-mention the sections that worth attention.
+You are given data from such a report, split by section. Your task is to analyse the data, and
+give a short and concise overall summary for the results, followed by an even more concise abstract. 
+Don't waste words: mention only the important QC issues. Only mention the sections that worth 
+attention. If there are no issues, just say so.
 
 Use limited HTML to format your reponse for readability: p and ul/li tags for paragraphs and lists,
 and pre-defined .text-green, .text-red, and .text-yellow classes to highlight the severity of the issue.
 
-Do no add headers or intro words, rather just get to the point. Separately add a short summary,
-your analysis, and your recommendations. Use lists to format analysis and recommendations as well!
+After the summary, add a very short abstract of the summary, limited to 1-2 bullet points. Highlight
+sample names with the pre-defined classes as well.
 
-Example of summary of the general stats section:
+Finally, add your recommendations for the next steps.
 
-<ul>
-    <li>
-        <span class="text-green">11/13 samples</span> show consistent metrics within expected ranges.
-    </li>
-    <li>
-        <span class="text-red">A1001.2003</span> and <span class="text-red">A1200.2004</span> exhibit extremely
-        high percentage of <span class="text-red">duplicates</span> (<span class="text-red">65.54%</span> and
-        <span class="text-red">83.14%</span>, respectively) and the percentage of <span class="text-red">fails (33.33%)</span>.
-        <span class="text-red">A1001.2003</span> also registers a very low <span class="text-red"> mapping rate (38.61%)</span>.
-    </li>
-    <li>
-        <span class="text-yellow">A1002-1007</span> displays a relatively low percentage of <span class="text-yellow">valid pairs (48.08%)</span>
-        and <span class="text-yellow">passed Di-Tags (22.51%)</span>.
-    </li>
-</ul>
+Example:
 
-Analysis:
+summary: |-
+    <ul>
+        <li>
+            <span class="text-yellow">A1002</span> and <span class="text-yellow">A1003</span> groups (<span class="text-green">11/13 samples</span>)
+            show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+        </li>
+        <li><span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span> show severe quality issues:
+            <ul>
+                <li>Extremely high duplicate rates (<span class="text-red">65.54%</span> and <span class="text-red">83.14%</span>)</li>
+                <li>Low percentages of valid pairs (<span class="text-red">37.2%</span> and <span class="text-red">39.2%</span>)</li>
+                <li>High percentages of failed modules in FastQC (<span class="text-red">33.33%</span>)</li>
+                <li>Significantly higher total sequence counts (<span class="text-red">141.9M</span> and <span class="text-red">178.0M</span>) compared to other samples</li>
+                <li>FastQC results indicate that <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span>
+                    have a slight <span class="text-red">GC content</span> bias: at 39.5% against most other samples having 38.0%,
+                    which indicates a potential contamination that could be the source of other anomalities in quality metrics.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <span class="text-yellow">A1002-1007</span> shows some quality concerns:
+            <ul>
+                <li>Low percentage of valid pairs (<span class="text-yellow">48.08%</span>)</li>
+                <li>Low percentage of passed Di-Tags (<span class="text-yellow">22.51%</span>)</li>
+            </ul>
+        </li>
+        <li>
+            Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in 
+            <span class="text-yellow">A1001.2003</span> (up to <span class="text-yellow">35.82%</span> in Read 1).
+        </li>
+        <li>
+            HiCUP analysis shows that most samples have acceptable levels of valid pairs, with <span class="text-green">A1003</span>
+            group generally performing better than <span class="text-yellow">A1002</span> group.
+        </li>
+    </ul>
 
-<p>
-    FastQC results indicate that <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span>
-    have a slight <span class="text-red">GC content</span> bias: at 39.5% against most other samples having 38.0%,
-    which indicates a potential contamination that could be the source of other anomalities in quality metrics.
-</p>
+short_abstract: |-
+    <ul>
+        <li>
+            <span class="text-green">11/13 samples</span> show consistent metrics within expected ranges.
+        </li>
+        <li>
+            <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span> exhibit extremely
+            high percentage of <span class="text-red">duplicates</span> (<span class="text-red">65.54%</span> and
+            <span class="text-red">83.14%</span>, respectively).
+        </li>
+    </ul>
 
-Recommendations:
-
-<p>
-    It is recommended to check the samples from the group <span class="text-red">A1001</span> for contamination,
-    and consider removing them from the analysis.
-</p>
+recommendations: |-
+    <ul>
+        <li>Remove <span class="text-red">A1001.2003</span> and <span class="text-red">A1200.2004</span> from further analysis due to severe quality issues.</li>
+        <li>Investigate the cause of low valid pairs and passed Di-Tags in <span class="text-yellow">A1002-1007</span. Consider removing it if the issue cannot be resolved.</li>
+        <li>Perform adapter trimming on all samples, particularly focusing on <span class="text-red">A1001</span> group.</li>
+        <li>Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.</li>
+        <li>Investigate the cause of higher duplication rates in <span class="text-yellow">A1002</span> group compared to <span class="text-green">A1003</span> group, although they are still within acceptable ranges.</li>
+        <li>Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for <span class="text-yellow">A1002</span> group.</li>
+    </ul>
 """
 
 
