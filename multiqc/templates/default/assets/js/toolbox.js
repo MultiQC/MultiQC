@@ -189,6 +189,24 @@ $(function () {
     }
   });
 
+  // Add click event listeners to clickable samples
+  $(document).on("click", "sample", function (e) {
+    e.preventDefault();
+    var sampleName = $(this).text();
+    var highlightedSamples = window.mqc_highlight_f_texts;
+    if (!highlightedSamples.includes(sampleName)) {
+      $("#mqc_colour_filter").val(sampleName);
+    } else {
+      $("#mqc_col_filters li").each(function () {
+        if ($(this).children("input").attr("value") === sampleName) {
+          $(this).children(".close").click();
+        }
+      });
+    }
+    $("#mqc_color_form").trigger("submit");
+    $("#mqc_cols_apply").click();
+  });
+
   // Rename samples
   let mqc_renamesamples_idx = 300;
   $("#mqc_renamesamples_form").submit(function (event) {
@@ -778,6 +796,7 @@ function apply_mqc_highlights() {
   var f_cols = [];
   var regex_mode = $("#mqc_cols .mqc_regex_mode .re_mode").hasClass("on");
   var num_errors = 0;
+
   $("#mqc_col_filters li").each(function () {
     var inputElement = $(this).find(".f_text");
     var pattern = inputElement.val();

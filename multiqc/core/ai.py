@@ -29,7 +29,7 @@ class InterpretationOutput(BaseModel):
 
     def _html_to_markdown(self, text: str) -> str:
         soup = BeautifulSoup(text, "html.parser")
-        for tag in soup.find_all(["ul", "li", "b", "p", "span"]):
+        for tag in soup.find_all(["ul", "li", "b", "p", "sample", "span"]):
             if tag.name == "ul":
                 tag.insert_before("\n")
                 tag.insert_after("\n")
@@ -42,6 +42,9 @@ class InterpretationOutput(BaseModel):
             elif tag.name == "p":
                 tag.insert_before("\n")
                 tag.insert_after("\n")
+            elif tag.name == "sample":
+                tag.insert_before(":span[")
+                tag.insert_after(f"]{{.{tag.get('class')[0]}}}")
             elif tag.name == "span":
                 tag.insert_before(":span[")
                 tag.insert_after(f"]{{.{tag.get('class')[0]}}}")
@@ -102,23 +105,23 @@ Example:
 summary: |-
     <ul>
         <li>
-            <span class="text-yellow">A1002</span> and <span class="text-yellow">A1003</span> groups (<span class="text-green">11/13 samples</span>)
+            <sample class="text-yellow">A1002</sample> and <sample class="text-yellow">A1003</sample> groups (<span class="text-green">11/13 samples</span>)
             show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
         </li>
-        <li><span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span> show severe quality issues:
+        <li><sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</sample> show severe quality issues:
             <ul>
                 <li>Extremely high duplicate rates (<span class="text-red">65.54%</span> and <span class="text-red">83.14%</span>)</li>
                 <li>Low percentages of valid pairs (<span class="text-red">37.2%</span> and <span class="text-red">39.2%</span>)</li>
                 <li>High percentages of failed modules in FastQC (<span class="text-red">33.33%</span>)</li>
                 <li>Significantly higher total sequence counts (<span class="text-red">141.9M</span> and <span class="text-red">178.0M</span>) compared to other samples</li>
-                <li>FastQC results indicate that <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span>
+                <li>FastQC results indicate that <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</span>
                     have a slight <span class="text-red">GC content</span> bias: at 39.5% against most other samples having 38.0%,
                     which indicates a potential contamination that could be the source of other anomalities in quality metrics.
                 </li>
             </ul>
         </li>
         <li>
-            <span class="text-yellow">A1002-1007</span> shows some quality concerns:
+            <sample class="text-yellow">A1002-1007</sample> shows some quality concerns:
             <ul>
                 <li>Low percentage of valid pairs (<span class="text-yellow">48.08%</span>)</li>
                 <li>Low percentage of passed Di-Tags (<span class="text-yellow">22.51%</span>)</li>
@@ -126,11 +129,11 @@ summary: |-
         </li>
         <li>
             Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in 
-            <span class="text-yellow">A1001.2003</span> (up to <span class="text-yellow">35.82%</span> in Read 1).
+            <sample class="text-yellow">A1001.2003</sample> (up to <span class="text-yellow">35.82%</span> in Read 1).
         </li>
         <li>
-            HiCUP analysis shows that most samples have acceptable levels of valid pairs, with <span class="text-green">A1003</span>
-            group generally performing better than <span class="text-yellow">A1002</span> group.
+            HiCUP analysis shows that most samples have acceptable levels of valid pairs, with <sample class="text-green">A1003</sample>
+            group generally performing better than <sample class="text-yellow">A1002</sample> group.
         </li>
     </ul>
 
@@ -140,7 +143,7 @@ short_abstract: |-
             <span class="text-green">11/13 samples</span> show consistent metrics within expected ranges.
         </li>
         <li>
-            <span class="text-red">A1001.2003</span> and <span class="text-red">A1001.2004</span> exhibit extremely
+            <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1001.2004</sample> exhibit extremely
             high percentage of <span class="text-red">duplicates</span> (<span class="text-red">65.54%</span> and
             <span class="text-red">83.14%</span>, respectively).
         </li>
@@ -148,12 +151,12 @@ short_abstract: |-
 
 recommendations: |-
     <ul>
-        <li>Remove <span class="text-red">A1001.2003</span> and <span class="text-red">A1200.2004</span> from further analysis due to severe quality issues.</li>
-        <li>Investigate the cause of low valid pairs and passed Di-Tags in <span class="text-yellow">A1002-1007</span. Consider removing it if the issue cannot be resolved.</li>
-        <li>Perform adapter trimming on all samples, particularly focusing on <span class="text-red">A1001</span> group.</li>
+        <li>Remove <sample class="text-red">A1001.2003</sample> and <sample class="text-red">A1200.2004</sample> from further analysis due to severe quality issues.</li>
+        <li>Investigate the cause of low valid pairs and passed Di-Tags in <sample class="text-yellow">A1002-1007</sample>. Consider removing it if the issue cannot be resolved.</li>
+        <li>Perform adapter trimming on all samples, particularly focusing on <sample class="text-red">A1001</sample> group.</li>
         <li>Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.</li>
-        <li>Investigate the cause of higher duplication rates in <span class="text-yellow">A1002</span> group compared to <span class="text-green">A1003</span> group, although they are still within acceptable ranges.</li>
-        <li>Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for <span class="text-yellow">A1002</span> group.</li>
+        <li>Investigate the cause of higher duplication rates in <sample class="text-yellow">A1002</sample> group compared to <sample class="text-green">A1003</sample> group, although they are still within acceptable ranges.</li>
+        <li>Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for <sample class="text-yellow">A1002</sample> group.</li>
     </ul>
 """
 
