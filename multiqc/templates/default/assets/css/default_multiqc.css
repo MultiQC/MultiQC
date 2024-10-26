@@ -1086,7 +1086,11 @@ tr.row-empty {
   padding: 0;
 }
 .ai-summary #ai-continue-in-chat {
-  margin-right: -4px;
+  margin-top: -2px;
+  margin-right: -6px;
+  margin-bottom: 4px;
+  background-color: #d9edf7;
+  padding: 2px 8px;
 }
 .ai-summary .mqc-table-expand {
   margin-left: -18px;

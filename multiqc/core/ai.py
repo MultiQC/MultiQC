@@ -306,7 +306,7 @@ Section: {section.name}{description}{helptext}
     key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
     continue_chat_btn = (
-        "<button class='btn btn-default btn-sm'"
+        "<button class='btn btn-secondary btn-sm'"
         + "id='ai-continue-in-chat'"
         + f" data-encoded-system-message={encoded_system_message}"
         + f" data-encoded-chat-messages={encoded_chat_messages}"
