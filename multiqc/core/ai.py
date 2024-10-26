@@ -1,5 +1,4 @@
 import base64
-from functools import lru_cache
 import json
 import logging
 import os
@@ -129,43 +128,39 @@ class LangchainClient(Client):
         self.llm: BaseChatModel
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
-        @lru_cache(maxsize=1000)
-        def _interpret_report(report_content: str) -> Optional[InterpretationOutput]:
-            from langsmith import Client as LangSmithClient  # type: ignore
-            from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
+        from langsmith import Client as LangSmithClient  # type: ignore
+        from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
-            structured_llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
-            with tracing_v2_enabled(
-                project_name=os.environ.get("LANGCHAIN_PROJECT"),
-                client=LangSmithClient(
-                    api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                    api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+        structured_llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
+        with tracing_v2_enabled(
+            project_name=os.environ.get("LANGCHAIN_PROJECT"),
+            client=LangSmithClient(
+                api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+            ),
+        ):
+            result = cast(
+                Dict,
+                structured_llm.invoke(
+                    [
+                        {"role": "system", "content": PROMPT},
+                        {"role": "user", "content": report_content},
+                    ],
                 ),
-            ):
-                result = cast(
-                    Dict,
-                    structured_llm.invoke(
-                        [
-                            {"role": "system", "content": PROMPT},
-                            {"role": "user", "content": report_content},
-                        ],
-                    ),
-                )
-            if result["parsed"]:
-                return result["parsed"]
-            elif result["raw"]:
-                msg = f"Failed to parse the response from the LLM: {result['raw']}"
-                if config.strict:
-                    raise RuntimeError(msg)
-                logger.error(msg)
-            else:
-                msg = f"Failed to get a response from the LLM {self.name} {self.model}"
-                if config.strict:
-                    raise RuntimeError(msg)
-                logger.error(msg)
-            return None
-
-        return _interpret_report(report_content)
+            )
+        if result["parsed"]:
+            return result["parsed"]
+        elif result["raw"]:
+            msg = f"Failed to parse the response from the LLM: {result['raw']}"
+            if config.strict:
+                raise RuntimeError(msg)
+            logger.error(msg)
+        else:
+            msg = f"Failed to get a response from the LLM {self.name} {self.model}"
+            if config.strict:
+                raise RuntimeError(msg)
+            logger.error(msg)
+        return None
 
 
 class OpenAiClient(LangchainClient):
@@ -211,25 +206,21 @@ class SeqeraClient(Client):
         self.token = token
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
-        @lru_cache(maxsize=1000)
-        def _interpret_report(report_content: str) -> Optional[InterpretationOutput]:
-            response = requests.post(
-                f"{self.url}/interpret-multiqc-report",
-                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
-                json={
-                    "system_message": PROMPT,
-                    "report": report_content,
-                },
-            )
-            if response.status_code != 200:
-                msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
-                logger.error(msg)
-                if config.strict:
-                    raise RuntimeError(msg)
-                return None
-            return InterpretationOutput(**response.json())
-
-        return _interpret_report(report_content)
+        response = requests.post(
+            f"{self.url}/interpret-multiqc-report",
+            headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+            json={
+                "system_message": PROMPT,
+                "report": report_content,
+            },
+        )
+        if response.status_code != 200:
+            msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
+            logger.error(msg)
+            if config.strict:
+                raise RuntimeError(msg)
+            return None
+        return InterpretationOutput(**response.json())
 
 
 def get_llm_client() -> Optional[Client]:
