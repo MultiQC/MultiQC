@@ -109,23 +109,31 @@ $(document).ready(function () {
     let website = el.data("website");
     let encodedSystemMessage = el.data("encoded-system-message");
     let encodedChatMessages = el.data("encoded-chat-messages");
+    let reportUuid = el.data("report-uuid");
     let key = el.data("key");
 
-    const chatWindow = window.open(website + "/ask-ai/?key=" + key, "_blank");
-
-    function sendMessage() {
-      chatWindow.postMessage(
-        {
-          type: "chatInitialMessages",
-          content: {
-            encodedSystemMessage: encodedSystemMessage,
-            encodedChatMessages: encodedChatMessages,
-          },
-        },
-        website,
-      );
+    let url = website + "/ask-ai/?key=" + key;
+    if (reportUuid) {
+      url += "&multiqc-report-uuid=" + reportUuid;
     }
-    setTimeout(sendMessage, 2000);
+
+    const chatWindow = window.open(url, "_blank");
+
+    if (encodedSystemMessage && encodedChatMessages) {
+      function sendMessage() {
+        chatWindow.postMessage(
+          {
+            type: "chatInitialMessages",
+            content: {
+              encodedSystemMessage: encodedSystemMessage,
+              encodedChatMessages: encodedChatMessages,
+            },
+          },
+          website,
+        );
+      }
+      setTimeout(sendMessage, 2000);
+    }
   });
 
   // Add "Show More" button to AI summary

@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from textwrap import dedent
-from typing import Any, Dict, Optional, cast, TYPE_CHECKING
+from typing import Any, Dict, Optional, Tuple, cast, TYPE_CHECKING
 from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
@@ -21,41 +21,6 @@ if TYPE_CHECKING:
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-
-
-class InterpretationOutput(BaseModel):
-    summary: str = Field(description="Summary")
-    detailed_summary: str = Field(description="Detailed summary")
-    recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
-
-    def markdown_to_html(self, text: str) -> str:
-        """
-        Convert markdown to HTML. Convert directives like :sample[A1001.2003]{.text-yellow} to HTML tags <sample class="text-yellow">A1001.2003</sample>
-        """
-        text = re.sub(r"^  -", "    -", text, flags=re.MULTILINE)  # replace 2-spaced list indentation with 4-spaced
-        html = markdown(text)
-        # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
-        html = re.sub(
-            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<span class='text-\2'>\1</span>",
-            html,
-        )
-        html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
-            html,
-        )
-        return html
-
-    def format_text(self) -> str:
-        """
-        Format to markdown to display in Seqera AI Chat
-        """
-        return (
-            f"## Summary\n{self.summary}"
-            + (f"\n## Detailed summary\n{self.detailed_summary}")
-            + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
-        )
 
 
 PROMPT = """\
@@ -112,12 +77,52 @@ recommendations: |
 """
 
 
+class InterpretationOutput(BaseModel):
+    summary: str = Field(description="Summary")
+    detailed_summary: str = Field(description="Detailed summary")
+    recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
+
+    def markdown_to_html(self, text: str) -> str:
+        """
+        Convert markdown to HTML. Convert directives like :sample[A1001.2003]{.text-yellow} to HTML tags <sample class="text-yellow">A1001.2003</sample>
+        """
+        text = re.sub(r"^  -", "    -", text, flags=re.MULTILINE)  # replace 2-spaced list indentation with 4-spaced
+        html = markdown(text)
+        # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
+        html = re.sub(
+            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
+            r"<span class='text-\2'>\1</span>",
+            html,
+        )
+        html = re.sub(
+            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
+            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            html,
+        )
+        return html
+
+    def format_text(self) -> str:
+        """
+        Format to markdown to display in Seqera AI Chat
+        """
+        return (
+            f"## Summary\n{self.summary}"
+            + (f"\n## Detailed summary\n{self.detailed_summary}")
+            + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
+        )
+
+
+class InterpretationResponse(BaseModel):
+    interpretation: InterpretationOutput
+    uuid: Optional[str] = None
+
+
 class Client:
     def __init__(self):
         self.name: str
         self.model: Optional[str] = None
 
-    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+    def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         raise NotImplementedError
 
 
@@ -127,7 +132,7 @@ class LangchainClient(Client):
         self.model: str
         self.llm: BaseChatModel
 
-    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+    def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
@@ -148,19 +153,20 @@ class LangchainClient(Client):
                     ],
                 ),
             )
-        if result["parsed"]:
-            return result["parsed"]
-        elif result["raw"]:
-            msg = f"Failed to parse the response from the LLM: {result['raw']}"
-            if config.strict:
-                raise RuntimeError(msg)
-            logger.error(msg)
-        else:
-            msg = f"Failed to get a response from the LLM {self.name} {self.model}"
-            if config.strict:
-                raise RuntimeError(msg)
-            logger.error(msg)
-        return None
+        if not result["parsed"]:
+            if result["raw"]:
+                msg = f"Failed to parse the response from the LLM: {result['raw']}"
+                if config.strict:
+                    raise RuntimeError(msg)
+                logger.error(msg)
+                return None
+            else:
+                msg = f"Got empty response from the LLM {self.name} {self.model}"
+                if config.strict:
+                    raise RuntimeError(msg)
+                logger.error(msg)
+                return None
+        return InterpretationResponse(interpretation=InterpretationOutput(**result["parsed"]))
 
 
 class OpenAiClient(LangchainClient):
@@ -205,7 +211,7 @@ class SeqeraClient(Client):
         self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
         self.token = token
 
-    def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
+    def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         response = requests.post(
             f"{self.url}/interpret-multiqc-report",
             headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
@@ -220,7 +226,8 @@ class SeqeraClient(Client):
             if config.strict:
                 raise RuntimeError(msg)
             return None
-        return InterpretationOutput(**response.json())
+
+        return InterpretationResponse(**response.json())
 
 
 def get_llm_client() -> Optional[Client]:
@@ -285,11 +292,15 @@ Section: {section.name}{description}{helptext}
     if not content:
         return
 
-    interpretation = client.interpret_report(content)
-    logger.debug(f"Interpretation: {interpretation}")
-
-    if not interpretation:
+    response: Optional[InterpretationResponse] = client.interpret_report(content)
+    if not response:
         return None
+
+    logger.debug(f"Interpretation: {response.interpretation}")
+    if not response.interpretation:
+        return None
+
+    interpretation: InterpretationOutput = response.interpretation
 
     disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {client.name}"
     if client.model:
@@ -305,15 +316,23 @@ Section: {section.name}{description}{helptext}
     encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
     key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
-    continue_chat_btn = (
-        "<button class='btn btn-secondary btn-sm'"
-        + "id='ai-continue-in-chat'"
-        + f" data-encoded-system-message={encoded_system_message}"
-        + f" data-encoded-chat-messages={encoded_chat_messages}"
-        + f" data-website={website_url}"
-        + f" {key}"
-        + ">Continue with Seqera AI Chat</button>"
-    )
+    if response.uuid:
+        continue_chat_btn = (
+            "<button class='btn btn-secondary btn-sm' id='ai-continue-in-chat'"
+            + f" data-report-uuid={response.uuid}"
+            + f" data-website={website_url}"
+            + f" {key}"
+            + ">Continue with Seqera AI Chat</button>"
+        )
+    else:
+        continue_chat_btn = (
+            "<button class='btn btn-secondary btn-sm' id='ai-continue-in-chat'"
+            + f" data-encoded-system-message={encoded_system_message}"
+            + f" data-encoded-chat-messages={encoded_chat_messages}"
+            + f" data-website={website_url}"
+            + f" {key}"
+            + ">Continue with Seqera AI Chat</button>"
+        )
 
     recommendations = ""
     if interpretation.recommendations:
