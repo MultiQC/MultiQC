@@ -1090,7 +1090,12 @@ tr.row-empty {
   margin-right: -6px;
   margin-bottom: 4px;
   background-color: #d9edf7;
+  border-color: #bce8f1;
   padding: 2px 8px;
+}
+.ai-summary #ai-continue-in-chat:hover {
+  background-color: #cedfe8;
+  border-color: #a5cbd3;
 }
 .ai-summary .mqc-table-expand {
   margin-left: -18px;
