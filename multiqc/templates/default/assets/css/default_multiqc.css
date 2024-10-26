@@ -1096,3 +1096,6 @@ tr.row-empty {
 .ai-summary sample {
   cursor: pointer;
 }
+.ai-summary sample:hover {
+  opacity: 0.9;
+}

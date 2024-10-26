@@ -145,7 +145,10 @@ $(document).ready(function () {
     // Do no expand when clicked on the whole area
     $details.on("click", function (e) {
       e.preventDefault();
-      e.stopPropagation();
     });
+  });
+
+  $(".ai-summary sample").hover(function () {
+    $(this).css("opacity", 0.9);
   });
 });

@@ -62,6 +62,7 @@ make_pdf: false
 ai_summary: false
 ai_provider: "seqera" # or "openai" or "anthropic"
 # ai_provider: "openai" # or "openai" or "seqera"
+# ai_provider: "anthropic"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
