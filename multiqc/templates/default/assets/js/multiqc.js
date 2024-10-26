@@ -103,7 +103,7 @@ $(function () {
 });
 
 $(document).ready(function () {
-  $("#continue-in-chat").click(function (e) {
+  $("#ai-continue-in-chat").click(function (e) {
     e.preventDefault();
     let el = $(this);
     let website = el.data("website");
@@ -130,33 +130,22 @@ $(document).ready(function () {
 
   // Add "Show More" button to AI summary
   $(".ai-summary").each(function () {
-    const $summary = $(this).find("summary");
     const $details = $(this).find("details");
-    const $showMoreBtn = $(
-      '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>',
-    );
-
-    $(this).append($showMoreBtn);
-
+    const $showMoreBtn = $(this).find("#ai-summary-expand");
     $showMoreBtn.on("click", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-
+      // e.preventDefault();
+      // e.stopPropagation();
       if ($details.prop("open")) {
         $details.prop("open", false);
-        // $(this).text("\\25BC");
       } else {
         $details.prop("open", true);
-        // $(this).text("Hide");
       }
     });
 
-    $details.on("toggle", function () {
-      if ($(this).prop("open")) {
-        // $showMoreBtn.text("Hide");
-      } else {
-        // $showMoreBtn.text("\\25BC");
-      }
+    // Do no expand when clicked on the whole area
+    $details.on("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
     });
   });
 });

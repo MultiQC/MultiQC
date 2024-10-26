@@ -50,7 +50,7 @@ class InterpretationOutput(BaseModel):
 
     def format_text(self) -> str:
         """
-        Format to markdown to display in Seqera Chat
+        Format to markdown to display in Seqera AI Chat
         """
         return (
             f"## Summary\n{self.short_abstract}"
@@ -181,7 +181,7 @@ class AnthropicClient(LangchainClient):
 class SeqeraClient(Client):
     def __init__(self):
         super().__init__()
-        self.name = "Seqera Chat"
+        self.name = "Seqera AI"
         token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
         if not token:
             logger.error(
@@ -279,7 +279,6 @@ Section: {section.name}{description}{helptext}
     if client.model:
         disclaimer += f", model: {client.model}"
 
-    continue_chat = ""
     website_url = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
     messages = [
         {"role": "user", "content": content},
@@ -290,9 +289,9 @@ Section: {section.name}{description}{helptext}
     encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
     key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
-    continue_chat = (
-        "<button class='btn btn-primary'"
-        + "id='continue-in-chat'"
+    continue_chat_btn = (
+        "<button class='btn btn-default btn-sm'"
+        + "id='ai-continue-in-chat'"
         + f" data-encoded-system-message={encoded_system_message}"
         + f" data-encoded-chat-messages={encoded_chat_messages}"
         + f" data-website={website_url}"
@@ -310,9 +309,11 @@ Section: {section.name}{description}{helptext}
     report.ai_summary = f"""
     <details>
     <summary>
-    <b>✨ AI Summary</b>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <b>AI Summary</b>
+        {continue_chat_btn}
+    </div>
     {interpretation.markdown_to_html(interpretation.short_abstract)}
-    {continue_chat}
     </summary>
     <p>
     <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.summary)}
@@ -320,4 +321,5 @@ Section: {section.name}{description}{helptext}
     </p>
     <p style="color: gray; font-style: italic">{disclaimer}</p>
     </details>
+    <div class="mqc-table-expand" id="ai-summary-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>
     """
