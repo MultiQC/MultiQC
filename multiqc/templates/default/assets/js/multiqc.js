@@ -132,7 +132,9 @@ $(document).ready(function () {
   $(".ai-summary").each(function () {
     const $summary = $(this).find("summary");
     const $details = $(this).find("details");
-    const $showMoreBtn = $('<button class="show-more-btn">Show More</button>');
+    const $showMoreBtn = $(
+      '<div class="mqc-table-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>',
+    );
 
     $(this).append($showMoreBtn);
 
@@ -142,18 +144,18 @@ $(document).ready(function () {
 
       if ($details.prop("open")) {
         $details.prop("open", false);
-        $(this).text("Show More");
+        // $(this).text("\\25BC");
       } else {
         $details.prop("open", true);
-        $(this).text("Hide");
+        // $(this).text("Hide");
       }
     });
 
     $details.on("toggle", function () {
       if ($(this).prop("open")) {
-        $showMoreBtn.text("Hide");
+        // $showMoreBtn.text("Hide");
       } else {
-        $showMoreBtn.text("Show More");
+        // $showMoreBtn.text("\\25BC");
       }
     });
   });

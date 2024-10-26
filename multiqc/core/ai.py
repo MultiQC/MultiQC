@@ -36,53 +36,16 @@ class InterpretationOutput(BaseModel):
         """
         html = markdown(text)
         # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
-        html = re.sub(r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}", r"<span class='text-\2'>\1</span>", html)
         html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}", r"<sample class='text-\2'>\1</sample>", html
+            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
+            r"<span class='text-\2'>\1</span>",
+            html,
         )
-        return html
-
-    # def _html_to_markdown(self, text: str) -> str:
-    #     soup = BeautifulSoup(text, "html.parser")
-    #     tag: bs4.element.Tag
-    #     for tag in soup.find_all(["ul", "li", "b", "p", "sample", "span"]):
-    #         if tag.name == "ul":
-    #             tag.insert_before("\n")
-    #             tag.insert_after("\n")
-    #         elif tag.name == "li":
-    #             tag.insert_before("- ")
-    #             tag.insert_after("\n")
-    #         elif tag.name == "b":
-    #             tag.insert_before("**")
-    #             tag.insert_after("**")
-    #         elif tag.name == "p":
-    #             tag.insert_before("\n")
-    #             tag.insert_after("\n")
-    #         elif tag.name in ["sample", "span"]:
-    #             clz = tag.get("class")
-    #             if clz:
-    #                 try:
-    #                     tag.insert_before(":span[")
-    #                     tag.insert_after(f"]{{.{clz[0]}}}")
-    #                 except Exception as e:
-    #                     logger.error(f"Error inserting span for sample tag: {e}")
-    #     return soup.get_text()
-
-    def format_html(self) -> str:
-        html = dedent(f"""
-        <summary>
-        <b>✨ AI Summary</b>
-        {self.markdown_to_html(self.short_abstract)}
-        </summary>
-        <p>
-        <b>Detailed summary</b> {self.markdown_to_html(self.summary)}
-        </p>
-        """)
-        if self.recommendations:
-            html += dedent(f"""
-            <p>
-            <b>Recommendations</b> {self.markdown_to_html(self.recommendations)}
-            </p>""")
+        html = re.sub(
+            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
+            r"<sample title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            html,
+        )
         return html
 
     def format_text(self) -> str:
@@ -334,13 +297,27 @@ Section: {section.name}{description}{helptext}
         + f" data-encoded-chat-messages={encoded_chat_messages}"
         + f" data-website={website_url}"
         + f" {key}"
-        + ">Continue with Seqera Chat</button>"
+        + ">Continue with Seqera AI Chat</button>"
     )
+
+    recommendations = ""
+    if interpretation.recommendations:
+        recommendations = dedent(f"""
+        <p>
+        <b>Recommendations</b> {interpretation.markdown_to_html(interpretation.recommendations)}
+        </p>""")
 
     report.ai_summary = f"""
     <details>
-    {interpretation.format_html()}
-    <p style="color: gray; font-style: italic">{disclaimer}</p>
+    <summary>
+    <b>✨ AI Summary</b>
+    {interpretation.markdown_to_html(interpretation.short_abstract)}
     {continue_chat}
+    </summary>
+    <p>
+    <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.summary)}
+    {recommendations}
+    </p>
+    <p style="color: gray; font-style: italic">{disclaimer}</p>
     </details>
     """
