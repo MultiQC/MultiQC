@@ -12,7 +12,6 @@ from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv  # type: ignore
 
 from multiqc import config, report
@@ -28,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="Summary")
-    abstract: str = Field(description="Short abstract of the summary")
+    detailed_summary: str = Field(description="Detailed summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
     def markdown_to_html(self, text: str) -> str:
@@ -45,7 +44,7 @@ class InterpretationOutput(BaseModel):
         )
         html = re.sub(
             r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
             html,
         )
         return html
@@ -55,8 +54,8 @@ class InterpretationOutput(BaseModel):
         Format to markdown to display in Seqera AI Chat
         """
         return (
-            f"## Summary\n{self.abstract}"
-            + (f"\n## Detailed summary\n{self.summary}")
+            f"## Summary\n{self.summary}"
+            + (f"\n## Detailed summary\n{self.detailed_summary}")
             + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
         )
 
@@ -71,24 +70,25 @@ has a table with a summary of key metrics from all modules across each sample. T
 is followed by module-specific sections that usually have more detail on the same samples.
 
 You are given data from such a report, split by section. Your task is to analyse the data, and
-give a short and concise overall summary for the results, followed by an even more concise abstract. 
-Don't waste words: mention only the important QC issues. Only mention the sections that worth 
-attention. If there are no issues, just say so.
+give a very short and concise overall summary for the results. Don't waste words: mention only 
+the important QC issues. If there are no issues, just say so. Limit it to 1-2 bullet points.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes 
 .text-green, .text-red, and .text-yellow to highlight the severity of the issue, e.g. 
 :sample[A1001.2003]{.text-yellow} for sample names, or :span[39.2%]{.text-red} for other text spans like values.
 
-After the summary, add a very short abstract of the summary, limited to 1-2 bullet points. Highlight
-sample names with the pre-defined classes as well. The abstract is required.
+After the summary, add a more detailed summary (detailed_summary). Highlight sample names with 
+the pre-defined classes as well.
 
 Finally, add your recommendations for the next steps.
 
-Note that you absolutely must include the abstract section.
+Example, formatted as YAML of 3 sections (summary, detailed_summary, and recommendations):
 
-Example, formatted as YAML of 3 requires sections (summary, abstract, and recommendations):
+sumamry: |
+  - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
+  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
-summary: |
+detailed_summary: |
   - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
   - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
       - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
@@ -103,10 +103,6 @@ summary: |
 
   - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
   - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
-
-abstract: |
-  - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
-  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
 recommendations: |
   - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
@@ -337,10 +333,10 @@ Section: {section.name}{description}{helptext}
         <b>AI Summary</b>
         {continue_chat_btn}
     </div>
-    {interpretation.markdown_to_html(interpretation.abstract)}
+    {interpretation.markdown_to_html(interpretation.summary)}
     </summary>
     <p>
-    <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.summary)}
+    <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.detailed_summary)}
     {recommendations}
     </p>
     <p style="color: gray; font-style: italic">{disclaimer}</p>
