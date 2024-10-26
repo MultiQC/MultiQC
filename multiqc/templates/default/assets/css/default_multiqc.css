@@ -1074,12 +1074,6 @@ tr.row-empty {
   padding-bottom: 8px;
   position: relative;
 }
-.ai-summary:hover {
-  border-color: #7aa6af;
-}
-.ai-summary:hover summary::after {
-  background: #7aa6af;
-}
 .ai-summary ul {
   margin: 0;
   margin-top: -5px;
