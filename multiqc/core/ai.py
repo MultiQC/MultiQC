@@ -1,10 +1,11 @@
 import base64
+from functools import lru_cache
 import json
 import logging
 import os
 import re
 from textwrap import dedent
-from typing import Optional, cast, TYPE_CHECKING
+from typing import Any, Dict, Optional, cast, TYPE_CHECKING
 import bs4
 from markdown import markdown
 from pydantic import BaseModel, Field
@@ -27,13 +28,14 @@ logger = logging.getLogger(__name__)
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="Summary")
-    short_abstract: str = Field(description="Short abstract of the summary")
+    abstract: str = Field(description="Short abstract of the summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
     def markdown_to_html(self, text: str) -> str:
         """
         Convert markdown to HTML. Convert directives like :sample[A1001.2003]{.text-yellow} to HTML tags <sample class="text-yellow">A1001.2003</sample>
         """
+        text = re.sub(r"^  -", "    -", text, flags=re.MULTILINE)  # replace 2-spaced list indentation with 4-spaced
         html = markdown(text)
         # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
         html = re.sub(
@@ -53,7 +55,7 @@ class InterpretationOutput(BaseModel):
         Format to markdown to display in Seqera AI Chat
         """
         return (
-            f"## Summary\n{self.short_abstract}"
+            f"## Summary\n{self.abstract}"
             + (f"\n## Detailed summary\n{self.summary}")
             + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
         )
@@ -78,27 +80,31 @@ Use markdown to format your reponse for readability. Use directives with pre-def
 :sample[A1001.2003]{.text-yellow} for sample names, or :span[39.2%]{.text-red} for other text spans like values.
 
 After the summary, add a very short abstract of the summary, limited to 1-2 bullet points. Highlight
-sample names with the pre-defined classes as well.
+sample names with the pre-defined classes as well. The abstract is required.
 
 Finally, add your recommendations for the next steps.
 
-Example, formatted as YAML of 3 requires sections (summary, short_abstract, and recommendations):
+Note that you absolutely must include the abstract section.
+
+Example, formatted as YAML of 3 requires sections (summary, abstract, and recommendations):
 
 summary: |
   - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
   - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
-    - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
-    - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
-    - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
-    - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
-    - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+      - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
+      - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
+      - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
+      - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
+      - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+
   - :sample[A1002-1007]{.text-yellow} shows some quality concerns:
-    - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
-    - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
+      - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
+      - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
+
   - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
   - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
-short_abstract: |
+abstract: |
   - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
   - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
@@ -127,10 +133,12 @@ class LangchainClient(Client):
         self.model: str
         self.llm: BaseChatModel
 
+    @lru_cache(maxsize=1000)
     def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
         from langsmith import Client as LangSmithClient  # type: ignore
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
+        structured_llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
         with tracing_v2_enabled(
             project_name=os.environ.get("LANGCHAIN_PROJECT"),
             client=LangSmithClient(
@@ -138,16 +146,28 @@ class LangchainClient(Client):
                 api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
             ),
         ):
-            structured_llm = self.llm.with_structured_output(InterpretationOutput)
-            return cast(
-                InterpretationOutput,
+            result = cast(
+                Dict,
                 structured_llm.invoke(
                     [
                         {"role": "system", "content": PROMPT},
                         {"role": "user", "content": report_content},
-                    ]
+                    ],
                 ),
             )
+        if result["parsed"]:
+            return result["parsed"]
+        elif result["raw"]:
+            msg = f"Failed to parse the response from the LLM: {result['raw']}"
+            if config.strict:
+                raise RuntimeError(msg)
+            logger.error(msg)
+        else:
+            msg = f"Failed to get a response from the LLM {self.name} {self.model}"
+            if config.strict:
+                raise RuntimeError(msg)
+            logger.error(msg)
+        return None
 
 
 class OpenAiClient(LangchainClient):
@@ -192,6 +212,7 @@ class SeqeraClient(Client):
         self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
         self.token = token
 
+    @lru_cache(maxsize=1000)
     def interpret_report(self, report_content: str) -> Optional[InterpretationOutput]:
         response = requests.post(
             f"{self.url}/interpret-multiqc-report",
@@ -202,7 +223,10 @@ class SeqeraClient(Client):
             },
         )
         if response.status_code != 200:
-            logger.error(f"Failed to get a response from Seqera: {response.status_code} {response.text}")
+            msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
+            logger.error(msg)
+            if config.strict:
+                raise RuntimeError(msg)
             return None
         return InterpretationOutput(**response.json())
 
@@ -313,7 +337,7 @@ Section: {section.name}{description}{helptext}
         <b>AI Summary</b>
         {continue_chat_btn}
     </div>
-    {interpretation.markdown_to_html(interpretation.short_abstract)}
+    {interpretation.markdown_to_html(interpretation.abstract)}
     </summary>
     <p>
     <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.summary)}
