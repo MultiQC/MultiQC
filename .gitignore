@@ -49,7 +49,7 @@ runTest.sh
 .direnv/*
 
 # Typical name for virtualenv
-venv/
+venv*
 
 # Related repos
 /test-data/
