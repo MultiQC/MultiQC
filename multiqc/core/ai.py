@@ -80,7 +80,7 @@ recommendations: |
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="Summary")
-    detailed_summary: str = Field(description="Detailed summary")
+    detailed_summary: Optional[str] = Field(default=None, description="Detailed summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
     def markdown_to_html(self, text: str) -> str:
@@ -108,7 +108,7 @@ class InterpretationOutput(BaseModel):
         """
         return (
             f"## Summary\n{self.summary}"
-            + (f"\n## Detailed summary\n{self.detailed_summary}")
+            + (f"\n## Detailed summary\n{self.detailed_summary}" if self.detailed_summary else "")
             + (f"\n## Recommendations\n{self.recommendations}" if self.recommendations else "")
         )
 
