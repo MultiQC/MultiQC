@@ -363,6 +363,26 @@ def iterate_using_progress_bar(items: List, desc: str, update_fn, item_to_str_fn
             progress.update(mqc_task, s_fn="")
 
 
+def run_with_spinner(module_name, desc, update_fn):
+    disable_progress = config.no_ansi or config.quiet or os.getenv("CI") is not None
+    N_SPACES_BEFORE_PIPE = 17  # to align bar desc with other log entries
+    need_to_add_spaces = max(0, N_SPACES_BEFORE_PIPE - len(module_name))
+    with rich.progress.Progress(
+        " " * need_to_add_spaces,
+        "[blue]" + module_name + "[/]",
+        "|",
+        rich.progress.SpinnerColumn(),
+        "{task.description}",
+        console=rich_console,
+        disable=disable_progress,
+        transient=True,
+    ) as progress:
+        task = progress.add_task(desc, total=None)
+        result = update_fn()
+        progress.update(task, completed=True)
+        return result
+
+
 def rich_console_print(*args, **kwargs):
     if rich_console is not None:
         rich_console.print(*args, **kwargs)

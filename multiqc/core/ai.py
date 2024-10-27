@@ -4,15 +4,17 @@ import logging
 import os
 import re
 from textwrap import dedent
-from typing import Any, Dict, Optional, Tuple, cast, TYPE_CHECKING
+from typing import Dict, Optional, cast, TYPE_CHECKING
 from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
-from dotenv import load_dotenv  # type: ignore
+from dotenv import load_dotenv
+import rich.progress
 
 from multiqc import config, report
+from multiqc.core.log_and_rich import run_with_spinner
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
@@ -144,15 +146,20 @@ class LangchainClient(Client):
                 api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
             ),
         ):
-            result = cast(
-                Dict,
-                structured_llm.invoke(
-                    [
-                        {"role": "system", "content": PROMPT},
-                        {"role": "user", "content": report_content},
-                    ],
-                ),
-            )
+
+            def update_fn():
+                return cast(
+                    Dict,
+                    structured_llm.invoke(
+                        [
+                            {"role": "system", "content": PROMPT},
+                            {"role": "user", "content": report_content},
+                        ],
+                    ),
+                )
+
+            result = run_with_spinner("ai", "Interpreting MultiQC report...", update_fn)
+
         if not result["parsed"]:
             if result["raw"]:
                 msg = f"Failed to parse the response from the LLM: {result['raw']}"
@@ -212,21 +219,23 @@ class SeqeraClient(Client):
         self.token = token
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
-        response = requests.post(
-            f"{self.url}/interpret-multiqc-report",
-            headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
-            json={
-                "system_message": PROMPT,
-                "report": report_content,
-            },
-        )
+        def update_fn():
+            return requests.post(
+                f"{self.url}/interpret-multiqc-report",
+                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+                json={
+                    "system_message": PROMPT,
+                    "report": report_content,
+                },
+            )
+
+        response = run_with_spinner("ai", "Summarizing report with AI...", update_fn)
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
             logger.error(msg)
             if config.strict:
                 raise RuntimeError(msg)
             return None
-
         return InterpretationResponse(**response.json())
 
 
