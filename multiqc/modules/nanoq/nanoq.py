@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 from copy import deepcopy
-from typing import Callable, Dict, List, Any, Tuple
+from typing import Callable, Dict, List, Any, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table, bargraph
@@ -304,7 +304,7 @@ def get_ranges_from_cumsum(
     return ranges, keys
 
 
-def bp_formatter(key: int | str) -> str:
+def bp_formatter(key: Union[int, str]) -> str:
     """Format bp values"""
     key = str(key)
     numbers = [int(x) for x in re.findall(r"\d+", key)]
