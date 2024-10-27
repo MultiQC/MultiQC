@@ -2,10 +2,11 @@ import logging
 import re
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, List, Any
+from typing import Callable, Dict, List, Any, Tuple
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import table, bargraph, linegraph
+from multiqc.plots import table, bargraph
+from multiqc.plots.plotly.bar import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.utils import mqc_colour
 
@@ -143,10 +144,11 @@ class MultiqcModule(BaseMultiqcModule):
     def reads_by_quality_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
         # Get data for plot
         barplot_data: Dict[str, Dict[str, float]] = defaultdict(dict)
+        keys: List[str] = []
         min_quality = 10
 
         for name, d in data_by_sample.items():
-            reads_by_q = {int(k.split("> Q")[1]): v for k, v in d.items() if k.startswith("Reads > Q")}
+            reads_by_q = {int(re.search(r"\d+", k).group(0)): v for k, v in d.items() if k.startswith("Reads > Q")}
             if not reads_by_q:
                 continue
 
@@ -154,17 +156,9 @@ class MultiqcModule(BaseMultiqcModule):
             if not thresholds:
                 continue
 
-            keys = [f"<Q{min_quality}"]
-
-            for th, thn in zip(thresholds[:-1], thresholds[1:]):
-                key = f"Q{th}-{thn}"
-                keys.append(key)
-                barplot_data[name][key] = reads_by_q[th] - reads_by_q[thn]
-
-            last_key = f">Q{thresholds[-1]}"
-            keys.append(last_key)
-            barplot_data[name][f"<Q{min_quality}"] = d["Number of reads"] - reads_by_q[thresholds[0]]
-            barplot_data[name][last_key] = reads_by_q[thresholds[-1]]
+            barplot_data[name], keys = get_ranges_from_cumsum(
+                data=reads_by_q, thresholds=thresholds, total=d["Number of reads"], formatter=lambda x: f"Q{x}"
+            )
 
         colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
         cats = {
@@ -185,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(
                 barplot_data,
                 cats,
-                pconfig=dict(
+                pconfig=bargraph.BarPlotConfig(
                     id="nanoq_plot_quality_plot",
                     title="Nanoq: read qualities",
                 ),
@@ -193,28 +187,38 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def reads_by_length_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
-        # sourcery skip: simplify-len-comparison
         # Get data for plot
-        linegraph_data: Dict[str, Dict[int, float]] = defaultdict(dict)
+        barplot_data: Dict[str, Dict[int, float]] = defaultdict(dict)
+        keys: List[str] = []
+
         for name, d in data_by_sample.items():
-            reads_by_l = {k: v for k, v in d.items() if re.match(r"Reads > \d+bp", k)}
-            if len(reads_by_l) == 0:
+            reads_by_l = {int(re.search(r"\d+", k).group(0)): v for k, v in d.items() if re.match(r"Reads > \d+bp", k)}
+
+            if not reads_by_l:
                 continue
 
-            for k, v in reads_by_l.items():
-                threshold = int(k.split(" > ")[1].strip("bp"))
-                linegraph_data[name][threshold] = v
+            barplot_data[name], keys = get_ranges_from_cumsum(
+                data=reads_by_l,
+                thresholds=sorted(reads_by_l.keys()),
+                total=d["Number of reads"],
+                formatter=bp_formatter,
+            )
+
+        colours = mqc_colour.mqc_colour_scale("RdYlGn-rev", 0, len(keys))
+        cats = {
+            k: {"name": f"Reads {k}", "color": colours.get_colour(idx, lighten=1)} for idx, k in enumerate(keys[::-1])
+        }
 
         self.add_section(
             name="Read lengths",
             anchor="nanoq_plot_length",
             description="Read counts categorised by read length.",
-            plot=linegraph.plot(
-                linegraph_data,
-                linegraph.LinePlotConfig(
+            plot=bargraph.plot(
+                barplot_data,
+                cats,
+                pconfig=bargraph.BarPlotConfig(
                     id="nanoq_plot_length_plot",
                     title="Nanoq: read lengths",
-                    xlog=True,
                 ),
             ),
         )
@@ -280,3 +284,37 @@ def parse_nanoq_log(f) -> Dict[str, float]:
         stats[f"Reads > Q{threshold}"] = num_reads
 
     return stats
+
+
+def get_ranges_from_cumsum(
+    data: Dict[int, int], thresholds: List[int], total: int, formatter: Callable = lambda x: x
+) -> Tuple[Dict[str, int], List[str]]:
+    """Calculate ranges from cumulative sum data"""
+    keys = [f"<{formatter(thresholds[0])}"]
+    ranges = {keys[0]: total - data[thresholds[0]]}
+    for th, next_th in zip(thresholds[:-1], thresholds[1:]):
+        key = formatter(f"{th}-{next_th}")
+        keys.append(key)
+        ranges[key] = data[th] - data[next_th]
+
+    last_key = f">{formatter(thresholds[-1])}"
+    keys.append(last_key)
+    ranges[last_key] = data[thresholds[-1]]
+
+    return ranges, keys
+
+
+def bp_formatter(key: int | str) -> str:
+    """Format bp values"""
+    key = str(key)
+    numbers = [int(x) for x in re.findall(r"\d+", key)]
+    thresholds = ((1_000_000, "Mbp"), (1_000, "Kbp"))
+
+    for threshold, suffix in thresholds:
+        if all(n >= threshold for n in numbers):
+            for n in numbers:
+                key = key.replace(str(n), str(n // threshold))
+
+            return f"{key} {suffix}"
+
+    return f"{key} bp"
