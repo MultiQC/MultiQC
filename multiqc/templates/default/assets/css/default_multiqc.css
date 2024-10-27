@@ -1103,6 +1103,8 @@ tr.row-empty {
 }
 .ai-summary sample {
   cursor: pointer;
+  /* dotted underline */
+  text-decoration: underline dotted;
 }
 .ai-summary sample:hover {
   opacity: 0.9;
