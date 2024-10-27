@@ -193,7 +193,6 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def reads_by_length_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
-        # sourcery skip: simplify-len-comparison
         # Get data for plot
         linegraph_data: Dict[str, Dict[int, float]] = defaultdict(dict)
         for name, d in data_by_sample.items():
