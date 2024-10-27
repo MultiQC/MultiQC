@@ -11,7 +11,6 @@ import requests
 
 from pydantic.types import SecretStr
 from dotenv import load_dotenv
-import rich.progress
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
@@ -139,26 +138,24 @@ class LangchainClient(Client):
         from langchain_core.tracers.context import tracing_v2_enabled  # type: ignore
 
         structured_llm = self.llm.with_structured_output(InterpretationOutput, include_raw=True)
-        with tracing_v2_enabled(
-            project_name=os.environ.get("LANGCHAIN_PROJECT"),
-            client=LangSmithClient(
-                api_key=os.environ.get("LANGCHAIN_API_KEY"),
-                api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
-            ),
-        ):
 
-            def update_fn():
-                return cast(
-                    Dict,
-                    structured_llm.invoke(
-                        [
-                            {"role": "system", "content": PROMPT},
-                            {"role": "user", "content": report_content},
-                        ],
-                    ),
+        def send_request() -> Dict:
+            with tracing_v2_enabled(
+                project_name=os.environ.get("LANGCHAIN_PROJECT"),
+                client=LangSmithClient(
+                    api_key=os.environ.get("LANGCHAIN_API_KEY"),
+                    api_url=os.environ.get("LANGCHAIN_ENDPOINT"),
+                ),
+            ):
+                response = structured_llm.invoke(
+                    [
+                        {"role": "system", "content": PROMPT},
+                        {"role": "user", "content": report_content},
+                    ],
                 )
+            return cast(Dict, response)
 
-            result = run_with_spinner("ai", "Interpreting MultiQC report...", update_fn)
+        result = run_with_spinner("ai", "Interpreting MultiQC report...", send_request, disable_progress=config.verbose)
 
         if not result["parsed"]:
             if result["raw"]:
@@ -219,7 +216,7 @@ class SeqeraClient(Client):
         self.token = token
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
-        def update_fn():
+        def send_request() -> requests.Response:
             return requests.post(
                 f"{self.url}/interpret-multiqc-report",
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
@@ -229,7 +226,9 @@ class SeqeraClient(Client):
                 },
             )
 
-        response = run_with_spinner("ai", "Summarizing report with AI...", update_fn)
+        response = run_with_spinner(
+            "ai", "Summarizing report with AI...", send_request, disable_progress=config.verbose
+        )
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
             logger.error(msg)
