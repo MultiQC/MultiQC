@@ -166,7 +166,7 @@ class LangchainClient(Client):
                     raise RuntimeError(msg)
                 logger.error(msg)
                 return None
-        return InterpretationResponse(interpretation=InterpretationOutput(**result["parsed"]))
+        return InterpretationResponse(interpretation=result["parsed"])
 
 
 class OpenAiClient(LangchainClient):
