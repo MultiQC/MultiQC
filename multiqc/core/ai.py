@@ -174,7 +174,7 @@ class LangchainClient(Client):
 
 
 class OpenAiClient(LangchainClient):
-    def __init__(self):
+    def __init__(self, token: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
         super().__init__()
@@ -182,36 +182,29 @@ class OpenAiClient(LangchainClient):
         self.model = "gpt-4o"
         self.llm = ChatOpenAI(
             model=self.model,
-            api_key=SecretStr(os.environ["OPENAI_API_KEY"]),
+            api_key=SecretStr(token),
             temperature=0.0,
         )
 
 
 class AnthropicClient(LangchainClient):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, token: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
+        super().__init__()
         self.name = "Anthropic"
         self.model = "claude-3-5-sonnet-20240620"
         self.llm = ChatAnthropic(
             model=self.model,  # type: ignore
-            api_key=SecretStr(os.environ["ANTHROPIC_API_KEY"]),
+            api_key=SecretStr(token),
             temperature=0.0,
         )  # type: ignore
 
 
 class SeqeraClient(Client):
-    def __init__(self):
+    def __init__(self, token: str):
         super().__init__()
         self.name = "Seqera AI"
-        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
-        if not token:
-            logger.error(
-                "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
-                "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
-            )
-            return None
         self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
         self.token = token
 
@@ -243,7 +236,14 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        return SeqeraClient()
+        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        if not token:
+            logger.error(
+                "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
+                "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
+            )
+            return None
+        return SeqeraClient(token)
 
     if config.ai_provider == "anthropic":
         token = os.environ.get("ANTHROPIC_API_KEY")
@@ -253,7 +253,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        return AnthropicClient()
+        return AnthropicClient(token)
 
     if config.ai_provider == "openai":
         token = os.environ.get("OPENAI_API_KEY")
@@ -263,7 +263,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        return OpenAiClient()
+        return OpenAiClient(token)
 
     return None
 
