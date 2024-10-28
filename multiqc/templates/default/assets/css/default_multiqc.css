@@ -1067,7 +1067,19 @@ tr.row-empty {
 }
 .ai-summary {
   position: relative;
-  padding: 8px 12px 0px 18px; /* Increased bottom padding */
+  padding: 8px 12px 0px 18px;
+  background: linear-gradient(
+    135deg,
+    rgb(253, 241, 251) 0%,
+    rgba(228, 242, 249, 0.97) 20%,
+    rgba(230, 247, 244, 0.95) 40%,
+    /* Slight cyan tint */ rgba(233, 242, 252, 0.95) 50%,
+    /* Slight blue tint */ rgba(242, 240, 252, 0.95) 60%,
+    /* Slight purple tint */ rgba(252, 240, 245, 0.95) 80%,
+    /* Slight pink tint */ rgba(228, 242, 249, 1) 100%
+  );
+  border-color: #bce8f1;
+  color: #10445e;
 }
 .ai-summary summary {
   padding-bottom: 8px;
@@ -1103,8 +1115,8 @@ tr.row-empty {
 }
 .ai-summary sample {
   cursor: pointer;
-  /* dotted underline */
-  text-decoration: underline dotted;
+  /* dashed underline */
+  text-decoration: underline dashed;
 }
 .ai-summary sample:hover {
   opacity: 0.9;
