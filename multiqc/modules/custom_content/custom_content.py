@@ -207,7 +207,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     s_name = m_config.get("sample_name")
                 else:
                     c_id = config_custom_data_id
-                    m_config = ccdict_by_id.setdefault(c_id, CcDict()).config
+                    m_config = (ccdict_by_id.get(c_id) or CcDict()).config
 
                 # Guess sample name if not given
                 if s_name is None:
@@ -356,6 +356,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     mod_order = getattr(config, "custom_content", {}).get("order", [])
     # after each element, also add a version with a "-module" next to it for back-compat with < 1.24
     mod_order = [x for x in mod_order for x in [x, re.sub("-module$", "", x), f"{x}-module"]]
+    # remove duplicates, but keep order
+    mod_order = list(dict.fromkeys(mod_order))
     modules__not_in_order: List[BaseMultiqcModule] = [
         parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order
     ]
@@ -502,7 +504,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if no_violin is not None:
                     pconfig["no_violin"] = no_violin
 
-                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)
+                plot = table.plot(plot_datasets, headers=headers, pconfig=pconfig)  # type: ignore
 
             # Bar plot
             elif plot_type == PlotType.BAR:
@@ -511,7 +513,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Line plot
             elif plot_type == PlotType.LINE:
-                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))
+                plot = linegraph.plot(plot_datasets, pconfig=LinePlotConfig(**pconfig))  # type: ignore
 
             # Scatter plot
             elif plot_type == PlotType.SCATTER:
@@ -519,11 +521,11 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))
+                plot = box.plot(plot_datasets, pconfig=BoxPlotConfig(**pconfig))  # type: ignore
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))
+                plot = violin.plot(plot_datasets, pconfig=TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
             elif plot_type == PlotType.HTML:

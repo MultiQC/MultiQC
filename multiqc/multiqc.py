@@ -23,6 +23,7 @@ from multiqc.core.order_modules_and_sections import order_modules_and_sections
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.core.version_check import check_version
 from multiqc.core.write_results import write_results
+from multiqc.utils import util_functions
 from multiqc.validation import ModuleConfigValidationError
 
 logger = logging.getLogger(__name__)
@@ -492,7 +493,8 @@ def run(*analysis_dir, clean_up: bool = True, cfg: Optional[ClConfig] = None, in
     # In case if run() is called multiple times in the same session:
     report.reset()
     config.reset()
-    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive)
+
+    update_config(*analysis_dir, cfg=cfg, log_to_file=not interactive, print_intro_fn=print_intro)
 
     check_version()
 
@@ -594,3 +596,36 @@ def _check_pdf_export_possible():
         return RunResult(message="LaTeX is required to create PDF reports", sys_exit_code=1)
 
     logger.info("--pdf specified. Using non-interactive HTML template.")
+
+
+def print_intro():
+    if not config.quiet:
+        if util_functions.is_running_in_notebook():
+            _print_intro_with_coloredlogs()
+        else:
+            _print_intro_with_rich()
+
+
+def _print_intro_with_coloredlogs():
+    # Print intro
+    if config.no_ansi is False:
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
+        RESET = "\033[0m"
+    else:
+        BOLD = ""
+        DIM = ""
+        DARK_ORANGE = ""
+        RESET = ""
+    emoji = log_and_rich.choose_emoji()
+    emoji = f" {emoji}" if emoji else ""
+    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
+    if not util_functions.is_running_in_notebook():
+        intro = f"\n{intro}\n"
+    logger.info(intro)
+
+
+def _print_intro_with_rich():
+    if log_and_rich.rich_console is not None:
+        log_and_rich.rich_console.print(f"\n{log_and_rich.rich_click.rich_click.HEADER_TEXT}\n")

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from multiqc import report, config
 from multiqc.core.exceptions import RunError
 from multiqc.core import log_and_rich, plugin_hooks
+from multiqc.utils import util_functions
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class ClConfig(BaseModel):
     unknown_options: Optional[Dict] = None
 
 
-def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False):
+def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
     """
     Update config and re-initialize logger.
 
@@ -87,7 +88,10 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.no_ansi = cfg.no_ansi
     if cfg.verbose is not None:
         config.verbose = cfg.verbose > 0
+
     log_and_rich.init_log(log_to_file=log_to_file)
+    if print_intro_fn is not None:
+        print_intro_fn()
 
     logger.debug(f"This is MultiQC v{config.version}")
     logger.debug("Running Python " + sys.version.replace("\n", " "))

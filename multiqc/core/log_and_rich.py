@@ -91,12 +91,6 @@ def init_log(log_to_file: bool = False):
 
     _setup_coloredlogs(log_level, logger)
 
-    if not config.quiet:
-        if util_functions.is_running_in_notebook():
-            _print_intro_with_coloredlogs()
-        else:
-            _print_intro_with_rich()
-
     if log_to_file:
         _add_file_handler()
 
@@ -195,31 +189,6 @@ def _setup_rich_handler(log_level, console, logger):
     else:
         console_handler.setFormatter(InfoFormatter())
     logger.addHandler(console_handler)
-
-
-def _print_intro_with_coloredlogs():
-    # Print intro
-    if config.no_ansi is False:
-        BOLD = "\033[1m"
-        DIM = "\033[2m"
-        DARK_ORANGE = "\033[38;5;208m"  # ANSI code for dark orange color
-        RESET = "\033[0m"
-    else:
-        BOLD = ""
-        DIM = ""
-        DARK_ORANGE = ""
-        RESET = ""
-    emoji = choose_emoji()
-    emoji = f" {emoji}" if emoji else ""
-    intro = f"{DARK_ORANGE}///{RESET} {BOLD}https://multiqc.info{RESET}{emoji} {DIM}v{config.version}{RESET}"
-    if not util_functions.is_running_in_notebook():
-        intro = f"\n{intro}\n"
-    print(intro)
-
-
-def _print_intro_with_rich():
-    if rich_console is not None:
-        rich_console.print(f"\n{rich_click.rich_click.HEADER_TEXT}\n")
 
 
 def remove_file_handler():
