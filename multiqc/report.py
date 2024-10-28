@@ -212,7 +212,7 @@ def file_line_block_iterator(fp: TextIO, block_size: int = 4096) -> Iterator[Tup
         if number_of_newlines == 0:
             # Use readline function so only one call is needed to complete the
             # block.
-            block = fp.readline()
+            block += fp.readline()
             number_of_newlines = 1
             block_end = len(block)
         else:
