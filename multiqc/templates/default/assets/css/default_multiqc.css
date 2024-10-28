@@ -1078,8 +1078,8 @@ tr.row-empty {
     /* Slight purple tint */ rgba(252, 240, 245, 0.95) 80%,
     /* Slight pink tint */ rgba(228, 242, 249, 1) 100%
   );
-  border-color: #bce8f1;
-  color: #10445e;
+  border: 0px solid;
+  color: #160f26;
 }
 .ai-summary summary {
   padding-bottom: 8px;
