@@ -196,9 +196,11 @@ $(function () {
     var color = $(this).css("color");
     var highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
+      $(this).css("font-weight", "bold");
       $("#mqc_colour_filter").val(sampleName);
       $("#mqc_colour_filter_color").val(rgbToHex(color));
     } else {
+      $(this).css("font-weight", "normal");
       $("#mqc_col_filters li").each(function () {
         if ($(this).children("input").attr("value") === sampleName) {
           $(this).children(".close").click();
