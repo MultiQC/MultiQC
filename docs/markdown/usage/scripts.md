@@ -275,7 +275,7 @@ plot = multiqc.get_plot("QUAST", "Number of Contigs")
 
 ## Show plot
 
-Show plot in the notebook cell.
+Prepare plot to be shown in the notebook cell.
 
 ```python
 class Plot:
@@ -295,7 +295,7 @@ Create a bar graph and show it in the notebook cell:
 ```python
 from multiqc.plots import bargraph
 plot = bargraph.plot(...)
-plot.show(violin=True)
+display(plot.show(violin=True))
 ```
 
 Get "fastp GC Content" plot and show it in the notebook cell. Since it has multiple
@@ -303,15 +303,19 @@ tabs, we can select which tab to show with the `dataset_id` option (defaults to 
 
 ```python
 plot = multiqc.get_plot("fastp", "GC Content")
-plot.show(dataset_id="Read 2: Before filtering")
+display(plot.show(dataset_id="Read 2: Before filtering"))
 ```
 
 Shows Samtools alignment stats as a violin plot. Use flat image without interactivity.
 
 ```python
 plot = multiqc.get_plot("Flagstat", "Alignment stats")
-plot.show("Read counts", violin=True, flat=True)
+display(plot.show("Read counts", violin=True, flat=True))
 ```
+
+:::note
+Calling the notebook's built-in `display` function is optional when the `show` call is the last line in your cell.
+:::
 
 ## Save plot to file
 
