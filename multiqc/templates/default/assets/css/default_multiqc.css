@@ -1057,13 +1057,13 @@ tr.row-empty {
   display: none;
 }
 .text-green {
-  color: rgb(21 128 61);
+  color: rgb(18, 106, 50);
 }
 .text-yellow {
-  color: rgb(202 138 4);
+  color: rgb(178, 122, 3);
 }
 .text-red {
-  color: rgb(220 38 38);
+  color: rgb(184, 31, 31);
 }
 .ai-summary {
   position: relative;
