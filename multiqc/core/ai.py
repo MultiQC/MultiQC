@@ -355,6 +355,14 @@ Section: {section.name}{description}{helptext}
         <b>Recommendations</b> {interpretation.markdown_to_html(interpretation.recommendations)}
         </p>""")
 
+    detailed_summary = ""
+    if interpretation.detailed_summary:
+        detailed_summary = f"""
+        <p>
+        <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.detailed_summary)}
+        </p>
+        """
+
     seqera_ai_beta_icon = """
     <span style="vertical-align: middle">
         <svg width="30" height="12" viewBox="0 0 49 19" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -373,10 +381,8 @@ Section: {section.name}{description}{helptext}
     </div>
     {interpretation.markdown_to_html(interpretation.summary)}
     </summary>
-    <p>
-    <b>Detailed summary</b> {interpretation.markdown_to_html(interpretation.detailed_summary)}
+    {detailed_summary}
     {recommendations}
-    </p>
     <p style="color: gray; font-style: italic">{disclaimer}</p>
     </details>
     <div class="mqc-table-expand" id="ai-summary-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>
