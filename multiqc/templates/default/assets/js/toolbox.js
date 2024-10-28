@@ -193,9 +193,11 @@ $(function () {
   $(document).on("click", "sample", function (e) {
     e.preventDefault();
     var sampleName = $(this).text();
+    var color = $(this).css("color");
     var highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
       $("#mqc_colour_filter").val(sampleName);
+      $("#mqc_colour_filter_color").val(rgbToHex(color));
     } else {
       $("#mqc_col_filters li").each(function () {
         if ($(this).children("input").attr("value") === sampleName) {
@@ -690,6 +692,22 @@ function hashCode(str) {
     hash = hash & hash; // Convert to 32bit integer
   }
   return hash;
+}
+
+// Convert RGB color to hex format
+function rgbToHex(rgb) {
+  // Extract numbers from rgb(r, g, b) format
+  const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+  if (!matches) return rgb; // Return original if not RGB format
+
+  // Convert each component to hex
+  function componentToHex(c) {
+    const hex = parseInt(c).toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
+  }
+
+  // Combine components with # prefix
+  return "#" + componentToHex(matches[1]) + componentToHex(matches[2]) + componentToHex(matches[3]);
 }
 
 //////////////////////////////////////////////////////
