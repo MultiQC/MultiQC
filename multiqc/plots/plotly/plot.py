@@ -226,6 +226,24 @@ class BaseDataset(BaseModel):
     def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
         return None, None
 
+    @staticmethod
+    def fmt_value_for_llm(value: Union[float, int, str, None]) -> str:
+        if isinstance(value, str):
+            return value
+        if value is None:
+            return "N/A"
+        if isinstance(value, int):
+            return f"{value:,d}"
+        try:  # maybe float can be formatted as int?
+            value = int(value)
+            return f"{value:,d}"
+        except ValueError:
+            pass
+        return f"{value:.1f}"
+
+    def format_for_ai_prompt(self, pconfig: PConfig) -> str:
+        return ""
+
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
@@ -743,7 +761,19 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return f"<{self.__class__.__name__} {self.id} {d}>"
 
     def format_for_ai_prompt(self) -> str:
-        return ""
+        if len(self.datasets) == 1:
+            return self.datasets[0].format_for_ai_prompt(self.pconfig)
+
+        prompt = ""
+        for dataset in self.datasets:
+            formatted_dataset = dataset.format_for_ai_prompt(self.pconfig)
+            if not formatted_dataset:
+                continue
+            prompt += f"### {dataset.label}\n"
+            prompt += "\n"
+            prompt += formatted_dataset
+            prompt += "\n\n"
+        return prompt
 
     def add_to_report(self, plots_dir_name: Optional[str] = None) -> str:
         """

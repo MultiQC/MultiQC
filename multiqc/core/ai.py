@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
+from multiqc.types import PlotType
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
@@ -155,7 +156,10 @@ class LangchainClient(Client):
                 )
             return cast(Dict, response)
 
-        result = run_with_spinner("ai", "Interpreting MultiQC report...", send_request, disable_progress=config.verbose)
+        if config.verbose:
+            result = send_request()
+        else:
+            result = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
 
         if not result["parsed"]:
             if result["raw"]:
@@ -219,9 +223,11 @@ class SeqeraClient(Client):
                 },
             )
 
-        response = run_with_spinner(
-            "ai", "Summarizing report with AI...", send_request, disable_progress=config.verbose
-        )
+        if config.verbose:
+            response = send_request()
+        else:
+            response = run_with_spinner("ai", "Summarizing report with AI...", send_request)
+
         if response.status_code != 200:
             msg = f"Failed to get a response from Seqera: {response.status_code} {response.text}"
             logger.error(msg)
@@ -272,6 +278,9 @@ def _strip_html(text: str) -> str:
     return text.replace("<p>", "").replace("</p>", "")
 
 
+PLOT_TYPES_FOR_OVERALL_SUMMARY = [PlotType.TABLE.value, PlotType.BAR.value]
+
+
 def add_ai_summary_to_report():
     if not (client := get_llm_client()):
         return
@@ -281,21 +290,27 @@ def add_ai_summary_to_report():
         content += f"""
 Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
 
+Plot type: table
+
 {report.general_stats_plot.format_for_ai_prompt()}
 """
 
     for section in report.get_all_sections():
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
+            if plot.plot_type not in PLOT_TYPES_FOR_OVERALL_SUMMARY:
+                continue
             if plot_content := plot.format_for_ai_prompt():
-                helptext = (
-                    ("\n\n" + f"More detail about interpreting the data: {section.helptext}")
-                    if section.helptext
-                    else ""
-                )
+                helptext = f"More detail about interpreting the data: {section.helptext}" if section.helptext else ""
                 description = f" ({_strip_html(section.description)})" if section.description else ""
                 content += f"""
-Tool: {section.module} ({section.module_info}), section: {section.name}{description}{helptext}
+Tool: {section.module} ({section.module_info})
+
+Section: {section.name}{description}
+
+Plot type: {plot.plot_type}
+
+{helptext}
 
 {plot_content}
 
@@ -304,6 +319,9 @@ Tool: {section.module} ({section.module_info}), section: {section.name}{descript
 
     if not content:
         return
+
+    # strip triple newlines
+    content = re.sub(r"\n\n\n", "\n\n", content)
 
     response: Optional[InterpretationResponse] = client.interpret_report(content)
     if not response:

@@ -62,6 +62,7 @@ class Dataset(BaseDataset):
     scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
     all_samples: List[SampleName]  # unique list of all samples in this dataset
     scatter_trace_params: Dict[str, Any]
+    dt: DataTable
 
     @staticmethod
     def values_and_headers_from_dt(
@@ -220,6 +221,7 @@ class Dataset(BaseDataset):
             scatter_value_by_sample_by_metric=scatter_value_by_sample_by_metric,
             all_samples=sorted(all_samples),
             scatter_trace_params=dict(),
+            dt=dt,
         )
 
         ds.trace_params.update(
@@ -373,6 +375,31 @@ class Dataset(BaseDataset):
 
         report.write_data_file(data, self.uid)
 
+    def format_for_ai_prompt(self, pconfig: TableConfig) -> str:
+        """Format as a markdown table"""
+        headers = self.dt.get_headers_in_order()
+
+        value_by_sample_by_rid: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
+        for idx, metric_name, header in headers:
+            for _, group_rows in self.dt.sections[idx].rows_by_sgroup.items():
+                row = group_rows[0]  # take only the first row in a group
+                v = row.formatted_data.get(metric_name, "")
+                if header.suffix:
+                    v += header.suffix
+                value_by_sample_by_rid.setdefault(row.sample, {})[header.rid] = v
+
+        prompt = "| Sample | " + " | ".join(dt_column.description for (_, _, dt_column) in headers) + " |\n"
+        prompt += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
+
+        for sample, val_by_rid in value_by_sample_by_rid.items():
+            prompt += (
+                f"| {sample} | "
+                + " | ".join(val_by_rid.get(dt_column.rid, "") for (_, _, dt_column) in headers)
+                + " |\n"
+            )
+
+        return prompt
+
 
 class ViolinPlot(Plot[Dataset, TableConfig]):
     datasets: List[Dataset]
@@ -382,7 +409,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     show_table: bool
     show_table_by_default: bool
     n_samples: int
-    main_table_dt: DataTable
 
     @staticmethod
     def create(
@@ -398,13 +424,11 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 ds_samples.update(section.rows_by_sgroup.keys())
             samples_per_dataset.append(ds_samples)
 
-        main_table_dt: DataTable = dts[0]  # used for the table
-
         model: Plot[Dataset, TableConfig] = Plot.initialize(
             plot_type=PlotType.VIOLIN,
-            pconfig=main_table_dt.pconfig,
+            pconfig=dts[0].pconfig,
             n_samples_per_dataset=[len(x) for x in samples_per_dataset],
-            id=main_table_dt.id,
+            id=dts[0].id,
             default_tt_label=": %{x}",
             # Violins scale well, so can always keep them interactive and visible:
             defer_render_if_large=False,
@@ -469,7 +493,6 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             show_table=show_table,
             show_table_by_default=show_table_by_default,
             n_samples=max_n_samples,
-            main_table_dt=main_table_dt,
         )
 
     def buttons(self, flat: bool) -> List[str]:
@@ -480,7 +503,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 self._btn(
                     cls="mqc_table_config_modal_btn",
                     label="<span class='glyphicon glyphicon-th'></span> Configure columns",
-                    data_attrs={"toggle": "modal", "target": f"#{self.main_table_dt.anchor}_config_modal"},
+                    data_attrs={"toggle": "modal", "target": f"#{self.datasets[0].dt.anchor}_config_modal"},
                 )
             )
         if self.show_table:
@@ -488,7 +511,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                 self._btn(
                     cls="mqc-violin-to-table",
                     label="<span class='glyphicon glyphicon-th-list'></span> Table",
-                    data_attrs={"table-anchor": self.main_table_dt.anchor, "violin-anchor": self.anchor},
+                    data_attrs={"table-anchor": self.datasets[0].dt.anchor, "violin-anchor": self.anchor},
                 )
             )
 
@@ -510,9 +533,9 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             # we only support one dataset, and the flat mode is not applicable.
 
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
-            for idx, col_key, header in self.main_table_dt.get_headers_in_order():
+            for idx, col_key, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.rid
-                for _, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                for _, group_rows in self.datasets[0].dt.sections[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if col_key in row.raw_data:
                             val = row.raw_data[col_key]
@@ -544,16 +567,16 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         if self.show_table_by_default and violin is not True or table is True:
             # Make Plotly go.Table object and save it
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
-            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+            for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.rid
-                for _, group_rows in self.main_table_dt.sections[idx].rows_by_sgroup.items():
+                for _, group_rows in self.datasets[0].dt.sections[idx].rows_by_sgroup.items():
                     for row in group_rows:
                         if metric in row.raw_data:
                             val = row.raw_data[metric]
                             data.setdefault(row.sample, {})[rid] = val
 
             values: List[List[Any]] = [list(data.keys())]
-            for idx, metric, header in self.main_table_dt.get_headers_in_order():
+            for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.rid
                 values.append([data[s].get(rid, "") for s in data.keys()])
 
@@ -615,14 +638,14 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             # happen if violin.plot() is called directly, and "no_violin" is passed, which doesn't make sense.
             html = warning + super().add_to_report(plots_dir_name=plots_dir_name)
         elif self.no_violin:
-            assert self.main_table_dt is not None
+            assert self.datasets[0].dt is not None
             # Show table alone
-            table_html, configuration_modal = make_table(self.main_table_dt)
+            table_html, configuration_modal = make_table(self.datasets[0].dt)
             html = warning + table_html + configuration_modal
         else:
-            assert self.main_table_dt is not None
+            assert self.datasets[0].dt is not None
             # Render both, add a switch between table and violin
-            table_html, configuration_modal = make_table(self.main_table_dt, violin_anchor=self.anchor)
+            table_html, configuration_modal = make_table(self.datasets[0].dt, violin_anchor=self.anchor)
             violin_html = super().add_to_report(plots_dir_name=plots_dir_name)
 
             violin_visibility = "style='display: none;'" if self.show_table_by_default else ""
@@ -630,39 +653,12 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
             table_visibility = "style='display: none;'" if not self.show_table_by_default else ""
             html += (
-                f"<div id='mqc_violintable_wrapper_{self.main_table_dt.anchor}' {table_visibility}>{table_html}</div>"
+                f"<div id='mqc_violintable_wrapper_{self.datasets[0].dt.anchor}' {table_visibility}>{table_html}</div>"
             )
 
             html += configuration_modal
 
         return html
-
-    def format_for_ai_prompt(self) -> str:
-        """Format as a markdown table"""
-        dt = self.main_table_dt
-
-        headers = self.main_table_dt.get_headers_in_order()
-
-        value_by_sample_by_rid: Dict[SampleName, Dict[ColumnAnchor, str]] = {}
-        for idx, metric_name, header in headers:
-            for _, group_rows in dt.sections[idx].rows_by_sgroup.items():
-                row = group_rows[0]  # take only the first row in a group
-                v = row.formatted_data.get(metric_name, "")
-                if header.suffix:
-                    v += header.suffix
-                value_by_sample_by_rid.setdefault(row.sample, {})[header.rid] = v
-
-        prompt = "| Sample | " + " | ".join(dt_column.description for (_, _, dt_column) in headers) + " |\n"
-        prompt += "| --- | " + " | ".join("---" for _ in headers) + " |\n"
-
-        for sample, val_by_rid in value_by_sample_by_rid.items():
-            prompt += (
-                f"| {sample} | "
-                + " | ".join(val_by_rid.get(dt_column.rid, "") for (_, _, dt_column) in headers)
-                + " |\n"
-            )
-
-        return prompt
 
 
 def find_outliers(

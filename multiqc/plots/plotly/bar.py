@@ -169,23 +169,17 @@ class Dataset(BaseDataset):
                 val_by_cat_by_sample[s_name][cat.name] = str(d_val)
         report.write_data_file(val_by_cat_by_sample, self.uid)
 
-    def format_for_ai_prompt(self, use_pct: bool = False) -> str:
+    def format_for_ai_prompt(self, pconfig: BarPlotConfig) -> str:
         """Format as a markdown table"""
-
-        def _format_value(value: float) -> str:
-            try:
-                value = int(value)
-            except ValueError:
-                return f"{value:.1f}"
-            else:
-                return f"{value:,d}"
-
         prompt = "| Sample | " + " | ".join(cat.name for cat in self.cats) + " |\n"
         prompt += "| --- | " + " | ".join("---" for _ in self.cats) + " |\n"
         for sidx, sample in enumerate(self.samples):
             prompt += (
                 f"| {sample} | "
-                + " | ".join(_format_value((cat.data if not use_pct else cat.data_pct)[sidx]) for cat in self.cats)
+                + " | ".join(
+                    self.fmt_value_for_llm((cat.data if pconfig.cpswitch_c_active else cat.data_pct)[sidx])
+                    for cat in self.cats
+                )
                 + " |\n"
             )
         return prompt
@@ -388,15 +382,3 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 model.layout.legend.traceorder = "reversed"
 
         return BarPlot(**model.__dict__)
-
-    def format_for_ai_prompt(self) -> str:
-        if len(self.datasets) == 1:
-            return self.datasets[0].format_for_ai_prompt(use_pct=not self.pconfig.cpswitch_c_active)
-
-        prompt = ""
-        for dataset in self.datasets:
-            prompt += f"### {dataset.label}\n"
-            prompt += "\n"
-            prompt += dataset.format_for_ai_prompt(use_pct=not self.pconfig.cpswitch_c_active)
-            prompt += "\n\n"
-        return prompt
