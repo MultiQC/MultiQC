@@ -404,7 +404,7 @@ Plot type: {plot.plot_type}
     <details>
     <summary>
     <div style="display: flex; justify-content: space-between; align-items: center">
-        <b>{client.name} Summary {seqera_ai_beta_icon if client.name == 'Seqera AI' else ''}</b>
+        <b>Report AI Summary {seqera_ai_beta_icon if client.name == 'Seqera AI' else ''}</b>
         {continue_chat_btn}
     </div>
     {interpretation.markdown_to_html(interpretation.summary)}
