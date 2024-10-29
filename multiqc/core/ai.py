@@ -268,6 +268,10 @@ def get_llm_client() -> Optional[Client]:
     return None
 
 
+def _strip_html(text: str) -> str:
+    return text.replace("<p>", "").replace("</p>", "")
+
+
 def add_ai_summary_to_report():
     if not (client := get_llm_client()):
         return
@@ -277,20 +281,21 @@ def add_ai_summary_to_report():
         content += f"""
 Section: MultiQC General Statistics (Overview of key QC metrics for each sample)
 
-{report.general_stats_plot.data_for_ai_prompt()}
+{report.general_stats_plot.format_for_ai_prompt()}
 """
 
     for section in report.get_all_sections():
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
-            if plot_content := plot.data_for_ai_prompt():
+            if plot_content := plot.format_for_ai_prompt():
                 helptext = (
-                    ("\n" + f"More detail about interpreting the data: {section.helptext}") if section.helptext else ""
+                    ("\n\n" + f"More detail about interpreting the data: {section.helptext}")
+                    if section.helptext
+                    else ""
                 )
-                description = f" ({section.description})" if section.description else ""
+                description = f" ({_strip_html(section.description)})" if section.description else ""
                 content += f"""
-Tool: {section.module} ({section.module_info})
-Section: {section.name}{description}{helptext}
+Tool: {section.module} ({section.module_info}), section: {section.name}{description}{helptext}
 
 {plot_content}
 

@@ -270,6 +270,12 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         else:
             report.write_data_file(y_by_x_by_sample, self.uid)
 
+    def format_for_ai_prompt(self) -> str:
+        prompt = ""
+        for series in self.lines:
+            prompt += f"{series.name}: {series.pairs}\n"
+        return prompt
+
 
 class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
     datasets: List[Dataset[KeyT, ValT]]

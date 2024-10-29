@@ -637,7 +637,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
         return html
 
-    def data_for_ai_prompt(self) -> str:
+    def format_for_ai_prompt(self) -> str:
         """Format as a markdown table"""
         dt = self.main_table_dt
 
