@@ -30,6 +30,7 @@ class Plot {
     this.lActive = dump["l_active"];
     this.pActive = dump["p_active"];
     this.deferRender = dump["defer_render"];
+    this.plotType = dump["plot_type"];
   }
 
   activeDatasetSize() {

@@ -99,6 +99,8 @@ software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to uniq
 plot_compressed_json: str
 general_stats_ai_summary: str = ""
 ai_summary: str = ""
+seqera_ai_token: str = ""
+seqera_ai_url: str = ""
 
 
 def reset():

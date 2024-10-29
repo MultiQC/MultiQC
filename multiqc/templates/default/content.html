@@ -10,7 +10,7 @@ the output from each module and print it in sections.
 {% for m in report.modules %}
   {% if not m.hidden %}
     {% if m.sections | length > 0 %}
-    <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section" data-module-anchor="{{ m.anchor }}">
+    <div id="mqc-module-section-{{ m.anchor }}" class="mqc-module-section">
       {% for s in m.sections %}
         {% if loop.first %}
         <div class="mqc-module-section-first">
@@ -48,27 +48,56 @@ the output from each module and print it in sections.
                 Help
               </button>
             {% endif %}
-            <div class="mqc-section mqc-section-{{ m.anchor }}">
+            <div class="mqc-section mqc-section-{{ m.anchor }}" id="mqc-section-wrapper-{{ s['anchor'] }}">
               {% if s['name'] is not none and s['name'] | length > 0 %}
-                <h3 id="{{ s['anchor'] }}">
-                    {{ s['name'] }}
-                    {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
-                      <button class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
-                        <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-                        Help
-                      </button>
-                    {% endif %}
+              <h3 id="{{ s['anchor'] }}">
+                {{ s['name'] }}
+                {% if s['plot_anchor'] is not none %}
+                <button 
+                    class="btn btn-default btn-sm pull-right btn-ai-generate-summary" 
+                    type="button" 
+                    data-toggle="collapse" 
+                    data-section-anchor="{{ s['anchor'] }}" 
+                    data-plot-anchor="{{ s['plot_anchor'] }}"
+                    data-module-anchor="{{ m.anchor }}"
+                    data-section-name="{{ s['name'] }}"
+                    data-seqera-ai-token="{{ report.seqera_ai_token }}"
+                    data-seqera-ai-url="{{ report.seqera_ai_url }}"
+                    aria-expanded="false" 
+                    aria-controls="{{ s['anchor'] }}_ai_summary"
+                >
+                  <span style="vertical-align: baseline">
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
+                      <path d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z" stroke="#160F26" stroke-width="0.5" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                  AI summary
+                </button>
+                {% endif %}
+                {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
+                      <button style="margin-right: 8px;" class="btn btn-default btn-sm pull-right btn-help" type="button" data-toggle="collapse" data-target="#{{ s['anchor'] }}_helptext" aria-expanded="false" aria-controls="{{ s['anchor'] }}_helptext">
+                    <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                    Help
+                  </button>
+                {% endif %}
                 </h3>
               {% endif %}
-              {% if s.ai_summary | length > 0 %}
-              <div class="alert alert-info ai-summary">{{ s.ai_summary }}</div>
-              {% endif %}
+              <div class="ai-summary" id="{{ s['anchor'] }}_ai_summary" style="display: none; margin-bottom: 7px;">
+                <details>
+                  <summary></summary>
+                  <div class="ai-summary-extra-content"></div>
+                </details>
+                <div class="mqc-table-expand ai-summary-expand">
+                  <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </div>
+              </div>
               {% if s['description'] is not none and s['description'] | length > 0 %}<div class="mqc-section-description">{{ s['description'] }}</div>{% endif %}
               {% if s['comment'] is not none and s['comment'] | length > 0 %}<blockquote class="mqc-section-comment">{{ s['comment'] }}</blockquote>{% endif %}
               {% if s['helptext'] is not none and s['helptext'] | length > 0 %}
                 <div class="collapse mqc-section-helptext " id="{{ s['anchor'] }}_helptext">
                   <div class="well">{{ s['helptext'] }}</div>
-                </div>
+                </div>  
               {% endif %}
               {{ s['content_before_plot'] if s['content_before_plot'] }}
               {% if s['plot'] is not none %}<div class="mqc-section-plot">{{ s['plot'] }}</div>{% endif %}

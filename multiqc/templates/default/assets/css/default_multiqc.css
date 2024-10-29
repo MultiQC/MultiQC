@@ -848,7 +848,7 @@ tbody .sorthandle {
     margin-left: 0;
   }
   /* no need to print buttons */
-  button.btn-help {
+  button {
     display: none;
   }
   /* printed link text is fairly ugly */
@@ -1068,7 +1068,7 @@ tr.row-empty {
 .ai-summary {
   position: relative;
   padding: 8px 12px 0px 18px;
-  border: 1px solid #969696;
+  border: 1px solid #ccc;
   border-radius: 4px;
   color: #160f26;
 }
