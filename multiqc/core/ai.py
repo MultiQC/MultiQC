@@ -51,7 +51,7 @@ Make sure to use a multiple of 4 spaces to indent nested lists.
 
 Example, formatted as YAML of 3 sections (summary, detailed_summary, and recommendations):
 
-sumamry: |
+summary: |
     - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
     - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
