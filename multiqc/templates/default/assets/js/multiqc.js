@@ -110,11 +110,10 @@ $(document).ready(function () {
     let encodedSystemMessage = el.data("encoded-system-message");
     let encodedChatMessages = el.data("encoded-chat-messages");
     let reportUuid = el.data("report-uuid");
-    let key = el.data("key");
 
-    let url = website + "/ask-ai/?key=" + key;
+    let url = website + "/ask-ai/";
     if (reportUuid) {
-      url += "&multiqc-report-uuid=" + reportUuid;
+      url += "?multiqc-report-uuid=" + reportUuid;
     }
 
     const chatWindow = window.open(url, "_blank");

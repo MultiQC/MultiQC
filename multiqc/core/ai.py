@@ -327,7 +327,6 @@ Tool: {section.module} ({section.module_info}), section: {section.name}{descript
     messages_json = json.dumps(messages)
     encoded_chat_messages = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
     encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
-    key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
     seqera_ai_icon = """
     <span style="vertical-align: middle">
@@ -343,7 +342,6 @@ Tool: {section.module} ({section.module_info}), section: {section.name}{descript
             "<button class='btn btn-default btn-sm' id='ai-continue-in-chat'"
             + f" data-report-uuid={response.uuid}"
             + f" data-website={website_url}"
-            + f" {key}"
             + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
         )
     else:
@@ -352,7 +350,6 @@ Tool: {section.module} ({section.module_info}), section: {section.name}{descript
             + f" data-encoded-system-message={encoded_system_message}"
             + f" data-encoded-chat-messages={encoded_chat_messages}"
             + f" data-website={website_url}"
-            + f" {key}"
             + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
         )
 
