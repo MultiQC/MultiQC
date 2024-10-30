@@ -1046,6 +1046,12 @@ tr.expandable-row-primary.expanded .expandable-row-caret {
 tr.expandable-row-secondary-hidden {
   visibility: collapse;
 }
+/* Safari doesn't support visibility: collapse */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
+}
 tr.sample-hidden {
   display: none;
 }
