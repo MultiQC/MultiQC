@@ -82,8 +82,8 @@ recommendations: |
 
 
 class InterpretationOutput(BaseModel):
-    summary: str = Field(description="Summary")
-    detailed_summary: Optional[str] = Field(default=None, description="Detailed summary")
+    summary: str = Field(description="A very short and concise overall summary")
+    detailed_summary: Optional[str] = Field(default=None, description="A more detailed summary")
     recommendations: Optional[str] = Field(default=None, description="Recommendations for the next steps")
 
     def markdown_to_html(self, text: str) -> str:
@@ -118,7 +118,7 @@ class InterpretationOutput(BaseModel):
 
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
-    key: Optional[str] = None
+    uuid: Optional[str] = None
 
 
 class Client:
@@ -225,7 +225,23 @@ class SeqeraClient(Client):
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT,
-                    "report": report_content,
+                    "report_data": report_content,
+                    "response_schema": {
+                        "name": "Interpretation",
+                        "description": "Interpretation of a MultiQC report",
+                        "input_schema": {
+                            "type": "object",
+                            "required": ["summary"],
+                            "properties": {
+                                key: {
+                                    "type": "string",
+                                    "description": value.description,
+                                    **({"default": value.default} if value.default is None else {}),
+                                }
+                                for key, value in InterpretationOutput.model_fields.items()
+                            },
+                        },
+                    },
                 },
             )
 
@@ -362,10 +378,10 @@ Plot type: {plot.plot_type}
     </span>
     """
 
-    if response.key:
+    if response.uuid:
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm' id='ai-continue-in-chat'"
-            + f" data-report-key={response.key}"
+            + f" data-report-uuid={response.uuid}"
             + f" data-website={website_url}"
             + f" {seqera_token}"
             + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
