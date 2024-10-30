@@ -116,7 +116,7 @@ class InterpretationOutput(BaseModel):
 
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
-    uuid: Optional[str] = None
+    key: Optional[str] = None
 
 
 class Client:
@@ -347,7 +347,7 @@ Plot type: {plot.plot_type}
     messages_json = json.dumps(messages)
     encoded_chat_messages = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
     encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
-    key = f"data-key={key} " if (key := os.environ.get("SEQERA_CHAT_KEY")) else ""
+    seqera_token = f"data-token={seqera_token} " if (seqera_token := os.environ.get("SEQERA_CHAT_KEY")) else ""
 
     seqera_ai_icon = """
     <span style="vertical-align: middle">
@@ -358,12 +358,12 @@ Plot type: {plot.plot_type}
     </span>
     """
 
-    if response.uuid:
+    if response.key:
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm' id='ai-continue-in-chat'"
-            + f" data-report-uuid={response.uuid}"
+            + f" data-report-key={response.key}"
             + f" data-website={website_url}"
-            + f" {key}"
+            + f" {seqera_token}"
             + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
         )
     else:
@@ -372,7 +372,7 @@ Plot type: {plot.plot_type}
             + f" data-encoded-system-message={encoded_system_message}"
             + f" data-encoded-chat-messages={encoded_chat_messages}"
             + f" data-website={website_url}"
-            + f" {key}"
+            + f" {seqera_token}"
             + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
         )
 
