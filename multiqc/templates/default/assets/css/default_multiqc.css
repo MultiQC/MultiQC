@@ -1081,7 +1081,14 @@ tr.row-empty {
 .ai-summary summary {
   padding-bottom: 8px;
   position: relative;
+  list-style: none; /* Removes default marker in some browsers */
 }
+
+/* Hide the default triangle in Safari */
+.ai-summary summary::-webkit-details-marker {
+  display: none;
+}
+
 .ai-summary ul {
   margin: 0;
   margin-top: -5px;
@@ -1113,8 +1120,9 @@ tr.row-empty {
 }
 .ai-summary sample {
   cursor: pointer;
-  /* dashed underline */
-  text-decoration: underline dashed;
+  -webkit-text-decoration: underline dashed; /* Safari support */
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
 }
 .ai-summary sample:hover {
   opacity: 0.9;
