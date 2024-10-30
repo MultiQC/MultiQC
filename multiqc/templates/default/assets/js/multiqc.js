@@ -109,11 +109,11 @@ $(document).ready(function () {
     let website = el.data("website");
     let encodedSystemMessage = el.data("encoded-system-message");
     let encodedChatMessages = el.data("encoded-chat-messages");
-    let reportKey = el.data("report-key");
+    let reportUuid = el.data("report-uuid");
 
     let url = website + "/ask-ai/";
-    if (reportKey) {
-      url += "?multiqc-report-key=" + reportKey;
+    if (reportUuid) {
+      url += "?multiqc-report-uuid=" + reportUuid;
     }
 
     const chatWindow = window.open(url, "_blank");
