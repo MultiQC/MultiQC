@@ -46,35 +46,37 @@ the pre-defined classes as well.
 
 Finally, add your recommendations for the next steps.
 
+Make sure to use a multiple of 4 spaces to indent nested lists.
+
 Example, formatted as YAML of 3 sections (summary, detailed_summary, and recommendations):
 
 sumamry: |
-  - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
-  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
+    - :span[11/13 samples]{.text-green} show consistent metrics within expected ranges.
+    - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} exhibit extremely high percentage of :span[duplicates]{.text-red} (:span[65.54%]{.text-red} and :span[83.14%]{.text-red}, respectively).
 
 detailed_summary: |
-  - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
-  - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
-      - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
-      - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
-      - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
-      - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
-      - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+    - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+    - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
+        - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
+        - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
+        - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
+        - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
+        - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
 
-  - :sample[A1002-1007]{.text-yellow} shows some quality concerns:
-      - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
-      - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
+    - :sample[A1002-1007]{.text-yellow} shows some quality concerns:
+        - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
+        - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
 
-  - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
-  - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
+    - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
+    - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
 recommendations: |
-  - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
-  - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
-  - Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
-  - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
-  - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
-  - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
+    - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
+    - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
+    - Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
+    - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
+    - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
+    - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
 """
 
 
@@ -85,16 +87,16 @@ class InterpretationOutput(BaseModel):
 
     def markdown_to_html(self, text: str) -> str:
         """
-        Convert markdown to HTML. Convert directives like :sample[A1001.2003]{.text-yellow} to HTML tags <sample class="text-yellow">A1001.2003</sample>
+        Convert markdown to HTML
         """
-        text = re.sub(r"^  -", "    -", text, flags=re.MULTILINE)  # replace 2-spaced list indentation with 4-spaced
         html = markdown(text)
-        # find and replace :span[11/13 samples]{.text-green}, handle multiple matches in one string
+        # Find and replace directives :span[1.23%]{.text-red} -> <span>..., handle multiple matches in one string
         html = re.sub(
             r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
             r"<span class='text-\2'>\1</span>",
             html,
         )
+        # similarly, find and replace directives:sample[A1001.2003]{.text-red} -> <sample>...
         html = re.sub(
             r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
             r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
