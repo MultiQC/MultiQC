@@ -1056,3 +1056,12 @@ td.column-hidden {
 tr.row-empty {
   display: none;
 }
+
+/* Safari-specific fix using @supports
+ Safari doesn't support visibility: collapse, so we use display: none instead
+ */
+@supports (-webkit-hyphens: none) {
+  tr.expandable-row-secondary-hidden {
+    display: none;
+  }
+}
