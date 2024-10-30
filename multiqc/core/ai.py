@@ -211,7 +211,9 @@ class SeqeraClient(Client):
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{self.url}/interpret-multiqc-report",
+                f"{self.url}/interpret-multiqc-report-with-token"
+                if self.token
+                else f"{self.url}/interpret-multiqc-report",
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT,
