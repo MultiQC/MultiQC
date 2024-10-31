@@ -21,6 +21,28 @@ function notEmptyObj(obj) {
   return true;
 }
 
+function markdownToHtml(text) {
+  if (!text) return null;
+
+  // Convert markdown lists to HTML
+  let html = text.replace(/^(\s*)-\s+(.+)$/gm, function (match, indent, content) {
+    let spaces = indent.length;
+    let tag = spaces >= 4 ? "ul" : "ul";
+    return `<${tag}><li>${content}</li></${tag}>`;
+  });
+
+  // Convert directives :span[text]{.text-color} -> <span>...
+  html = html.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
+
+  // Convert directives :sample[text]{.text-color} -> <sample>...
+  html = html.replace(
+    /:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g,
+    '<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-$2">$1</sample>',
+  );
+
+  return html;
+}
+
 $(function () {
   // Enable the bootstrap tooltip hovers
   $('[data-toggle="tooltip"]').tooltip();
@@ -253,9 +275,6 @@ $(document).ready(function () {
       }
 
       const result = await response.json();
-      console.log(result);
-
-      let interp = result.interpretation;
 
       const betaIcon = `
         <span style="vertical-align: middle">
@@ -273,17 +292,22 @@ $(document).ready(function () {
             </svg>
         </span>`;
 
-      let summary = `<div style="display: flex; justify-content: space-between; align-items: center">
-            <b>Section AI Summary ${betaIcon}</b>
-            <button class='btn btn-default btn-sm' id='ai-continue-in-chat'>Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>
-        </div>`;
+      let summaryHtml = markdownToHtml(result.interpretation.summary);
+      let detailedSummaryHtml = markdownToHtml(result.interpretation.detailed_summary);
+      let recommendationsHtml = markdownToHtml(result.interpretation.recommendations);
 
-      summary += interp.summary;
-      $("#" + sectionAnchor + "_ai_summary summary").html(summary);
+      $("#" + sectionAnchor + "_ai_summary summary").html(
+        `<div style="display: flex; justify-content: space-between; align-items: center">
+        <b>Section AI Summary ${betaIcon}</b>
+        <button class='btn btn-default btn-sm' id='ai-continue-in-chat'>Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>
+      </div>` + summaryHtml,
+      );
+
       $("#" + sectionAnchor + "_ai_summary .ai-summary-extra-content").html(`
-          ${interp.detailed_summary ? `<p>${interp.detailed_summary}</p>` : ""}
-          ${interp.recommendations ? `<p>${interp.recommendations}</p>` : ""}
-        `);
+          ${detailedSummaryHtml ? `<p><b>Detailed summary</b><br>${detailedSummaryHtml}</p>` : ""}
+          ${recommendationsHtml ? `<p><b>Recommendations</b><br>${recommendationsHtml}</p>` : ""}
+      `);
+
       $("#" + sectionAnchor + "_ai_summary").show();
 
       // Hide the button after successful generation
