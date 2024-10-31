@@ -97,10 +97,12 @@ general_stats_data: List[Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
-general_stats_ai_summary: str = ""
-ai_summary: str = ""
-seqera_ai_token: str = ""
-seqera_ai_url: str = ""
+
+# AI stuff
+ai_summary: str = ""  # set in ai.py
+seqera_api_token: str | None = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
+seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
 
 
 def reset():

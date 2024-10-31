@@ -1,36 +1,63 @@
-$(document).ready(function () {
-  $("#ai-continue-in-chat").click(function (e) {
-    e.preventDefault();
-    let el = $(this);
-    let website = el.data("website");
-    let encodedSystemMessage = el.data("encoded-system-message");
-    let encodedChatMessages = el.data("encoded-chat-messages");
-    let reportUuid = el.data("report-uuid");
+////////////////////////////////////////////////
+// AI stuff
+////////////////////////////////////////////////
 
-    let url = website + "/ask-ai/";
-    if (reportUuid) {
-      url += "?multiqc-report-uuid=" + reportUuid;
-    }
+function markdownToHtml(text) {
+  if (!text) return null;
 
-    const chatWindow = window.open(url, "_blank");
-
-    if (encodedSystemMessage && encodedChatMessages) {
-      function sendMessage() {
-        chatWindow.postMessage(
-          {
-            type: "chatInitialMessages",
-            content: {
-              encodedSystemMessage: encodedSystemMessage,
-              encodedChatMessages: encodedChatMessages,
-            },
-          },
-          website,
-        );
-      }
-      setTimeout(sendMessage, 2000);
-    }
+  // Convert markdown lists to HTML
+  let html = text.replace(/^(\s*)-\s+(.+)$/gm, function (match, indent, content) {
+    let spaces = indent.length;
+    let tag = spaces >= 4 ? "ul" : "ul";
+    return `<${tag}><li>${content}</li></${tag}>`;
   });
 
+  // Convert directives :span[text]{.text-color} -> <span>...
+  html = html.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
+
+  // Convert directives :sample[text]{.text-color} -> <sample>...
+  html = html.replace(
+    /:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g,
+    '<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-$2">$1</sample>',
+  );
+
+  return html;
+}
+
+function continueInChatHandler(element) {
+  let el = $(element);
+  let seqeraWebsite = el.data("seqera-website");
+
+  // Either report uuid, or encoded system and chat messages
+  let reportUuid = el.data("report-uuid");
+  let encodedSystemMessage = el.data("encoded-system-message");
+  let encodedChatMessages = el.data("encoded-chat-messages");
+
+  let url = seqeraWebsite + "/ask-ai/";
+  if (reportUuid) {
+    url += "?multiqc-report-uuid=" + reportUuid;
+  }
+
+  const chatWindow = window.open(url, "_blank");
+
+  // This is used only for Anthropic and OpenAI providers:
+  if (encodedSystemMessage && encodedChatMessages) {
+    function sendMessage() {
+      chatWindow.postMessage(
+        {
+          type: "chatInitialMessages",
+          content: {
+            encodedSystemMessage: encodedSystemMessage,
+            encodedChatMessages: encodedChatMessages,
+          },
+        },
+        seqeraWebsite,
+      );
+    }
+    setTimeout(sendMessage, 2000);
+  }
+}
+$(function () {
   // Add "Show More" button to AI summary
   $(".ai-summary").each(function () {
     const $details = $(this).find("details");
@@ -65,7 +92,9 @@ $(document).ready(function () {
       let moduleAnchor = el.data("module-anchor");
       let sectionAnchor = el.data("section-anchor");
       let plotAnchor = el.data("plot-anchor");
-      let url = el.data("seqera-ai-url");
+      let seqeraApiUrl = el.data("seqera-api-url");
+      let seqeraApiToken = el.data("seqera-api-token");
+      let seqeraWebsite = el.data("seqera-website");
       let plot = mqc_plots[plotAnchor];
       let data = plot.prepData();
 
@@ -98,7 +127,7 @@ $(document).ready(function () {
             Make sure to use a multiple of 4 spaces to indent nested lists.
         `;
 
-      let report_data = `
+      let reportData = `
             QC tool that generated data for the plot: ${moduleName} (${moduleSummary}). ${
               moduleComment ? `\nComment: ${moduleComment}` : ""
             }
@@ -114,14 +143,15 @@ $(document).ready(function () {
             Data: ${JSON.stringify(data)}
         `;
 
-      const response = await fetch(`${url}/interpret-multiqc-report`, {
+      const response = await fetch(`${seqeraApiUrl}/interpret-multiqc-report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(seqeraApiToken ? { Authorization: `Bearer ${seqeraApiToken}` } : {}),
         },
         body: JSON.stringify({
           system_message: prompt,
-          report_data: report_data,
+          report_data: reportData,
           response_schema: {
             name: "Interpretation",
             description: "Interpretation of a MultiQC section",
@@ -170,17 +200,28 @@ $(document).ready(function () {
       let detailedSummaryHtml = markdownToHtml(result.interpretation.detailed_summary);
       let recommendationsHtml = markdownToHtml(result.interpretation.recommendations);
 
+      let continueButton = "";
+      if (result.uuid) {
+        continueButton = `
+            <button class='btn btn-default btn-sm ai-continue-in-chat'
+                data-report-uuid="${result.uuid}"
+                data-seqera-website="${seqeraWebsite}"
+                onclick="continueInChatHandler(this)"
+            >Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>`;
+      }
+
       $("#" + sectionAnchor + "_ai_summary summary").html(
         `<div style="display: flex; justify-content: space-between; align-items: center">
-            <b>Section AI Summary ${betaIcon}</b>
-            <button class='btn btn-default btn-sm' id='ai-continue-in-chat'>Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>
-        </div>` + summaryHtml,
+            <b>AI Summary ${betaIcon}</b>
+            ${continueButton}
+        </div>
+        ${summaryHtml}`,
       );
 
       $("#" + sectionAnchor + "_ai_summary .ai-summary-extra-content").html(`
-            ${detailedSummaryHtml ? `<p><b>Detailed summary</b><br>${detailedSummaryHtml}</p>` : ""}
-            ${recommendationsHtml ? `<p><b>Recommendations</b><br>${recommendationsHtml}</p>` : ""}
-        `);
+        ${detailedSummaryHtml ? `<p><b>Detailed summary</b><br>${detailedSummaryHtml}</p>` : ""}
+        ${recommendationsHtml ? `<p><b>Recommendations</b><br>${recommendationsHtml}</p>` : ""}
+      `);
 
       $("#" + sectionAnchor + "_ai_summary").show();
 
@@ -225,4 +266,6 @@ $(document).ready(function () {
     $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
+
+  $(".ai-continue-in-chat").click(continueInChatHandler);
 });

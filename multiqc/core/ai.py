@@ -211,17 +211,14 @@ class SeqeraClient(Client):
     def __init__(self, token: str):
         super().__init__()
         self.name = "Seqera AI"
-        self.url = os.environ.get("SEQERA_API_URL", "https://seqera.io")
         self.token = token
-        report.seqera_ai_token = token
-        report.seqera_ai_url = self.url
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{self.url}/interpret-multiqc-report-with-token"
-                if self.token
-                else f"{self.url}/interpret-multiqc-report",
+                f"{report.seqera_api_url}/interpret-multiqc-report-with-token"
+                if report.seqera_api_token
+                else f"{report.seqera_api_url}/interpret-multiqc-report",
                 headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT,
@@ -264,7 +261,7 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        token = report.seqera_api_token
         if not token:
             logger.error(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
@@ -359,7 +356,6 @@ Plot type: {plot.plot_type}
     if client.model:
         disclaimer += f", model: {client.model}"
 
-    website_url = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
     messages = [
         {"role": "user", "content": content},
         {"role": "assistant", "content": interpretation.format_text()},
@@ -367,9 +363,9 @@ Plot type: {plot.plot_type}
     messages_json = json.dumps(messages)
     encoded_chat_messages = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
     encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
-    seqera_token = f"data-token={seqera_token} " if (seqera_token := os.environ.get("SEQERA_CHAT_KEY")) else ""
+    seqera_api_token = f"data-seqera-api-token={report.seqera_api_token} " if report.seqera_api_token else ""
 
-    seqera_ai_icon = """
+    sparkle_icon = """
     <span style="vertical-align: middle">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z" stroke="black" stroke-width="0.75" stroke-linejoin="round"/>
@@ -380,20 +376,20 @@ Plot type: {plot.plot_type}
 
     if response.uuid:
         continue_chat_btn = (
-            "<button class='btn btn-default btn-sm' id='ai-continue-in-chat'"
+            "<button class='btn btn-default btn-sm ai-continue-in-chat'"
             + f" data-report-uuid={response.uuid}"
-            + f" data-website={website_url}"
-            + f" {seqera_token}"
-            + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
+            + f" data-seqera-website={report.seqera_website}"
+            + f" {seqera_api_token}"
+            + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
     else:
         continue_chat_btn = (
-            "<button class='btn btn-default btn-sm' id='ai-continue-in-chat'"
+            "<button class='btn btn-default btn-sm ai-continue-in-chat'"
             + f" data-encoded-system-message={encoded_system_message}"
             + f" data-encoded-chat-messages={encoded_chat_messages}"
-            + f" data-website={website_url}"
-            + f" {seqera_token}"
-            + f">Continue with {seqera_ai_icon} <strong>Seqera AI</strong></button>"
+            + f" data-seqera-website={report.seqera_website}"
+            + f" {seqera_api_token}"
+            + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
 
     recommendations = ""
