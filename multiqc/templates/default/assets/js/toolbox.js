@@ -189,36 +189,6 @@ $(function () {
     }
   });
 
-  // Add click event listeners to clickable samples
-  $(document).on("click", "sample", function (e) {
-    e.preventDefault();
-    var sampleName = $(this).text();
-    var color = $(this).css("color");
-    var highlightedSamples = window.mqc_highlight_f_texts;
-    if (!highlightedSamples.includes(sampleName)) {
-      $("#mqc_colour_filter").val(sampleName);
-      $("#mqc_colour_filter_color").val(rgbToHex(color));
-      $(this).css("font-weight", "bold");
-      // also highlight all <sample> elements in text that match the sample name
-      $("sample").each(function () {
-        if ($(this).text().indexOf(sampleName) > -1) $(this).css("font-weight", "bold");
-      });
-    } else {
-      $("#mqc_col_filters li").each(function () {
-        if ($(this).children("input").attr("value") === sampleName) {
-          $(this).children(".close").click();
-        }
-      });
-      $(this).css("font-weight", "normal");
-      // also remove the bold from all <sample> elements in text that match the sample name
-      $("sample").each(function () {
-        if ($(this).text().indexOf(sampleName) > -1) $(this).css("font-weight", "normal");
-      });
-    }
-    $("#mqc_color_form").trigger("submit");
-    $("#mqc_cols_apply").click();
-  });
-
   // Rename samples
   let mqc_renamesamples_idx = 300;
   $("#mqc_renamesamples_form").submit(function (event) {
