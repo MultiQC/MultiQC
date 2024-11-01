@@ -5,22 +5,18 @@
 function markdownToHtml(text) {
   if (!text) return null;
 
-  // Convert markdown lists to HTML
-  let html = text.replace(/^(\s*)-\s+(.+)$/gm, function (match, indent, content) {
-    let spaces = indent.length;
-    let tag = spaces >= 4 ? "ul" : "ul";
-    return `<${tag}><li>${content}</li></${tag}>`;
-  });
-
   // Convert directives :span[text]{.text-color} -> <span>...
-  html = html.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
+  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
 
   // Convert directives :sample[text]{.text-color} -> <sample>...
-  html = html.replace(
+  text = text.replace(
     /:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g,
     '<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-$2">$1</sample>',
   );
 
+  // Convert markdown to html
+  let converter = new showdown.Converter(),
+    html = converter.makeHtml(text);
   return html;
 }
 
