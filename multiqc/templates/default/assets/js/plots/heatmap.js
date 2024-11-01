@@ -44,6 +44,9 @@ class HeatmapPlot extends Plot {
 
   prepDataForLlm() {
     let [rows, xcats, ycats] = this.prepData();
+    rows = rows.map((row) =>
+      row.map((val) => (Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val)),
+    );
     return "```\n" + JSON.stringify([rows, xcats, ycats], null, 2) + "\n```";
   }
 

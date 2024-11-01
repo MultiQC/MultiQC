@@ -29,7 +29,9 @@ class LinePlot extends Plot {
     let lines = dataset.lines.map((line) => {
       return {
         name: line.name,
-        pairs: line.pairs.map((p) => p.map((x) => (Number.isInteger(x) ? x : x.toFixed(2)))),
+        pairs: line.pairs.map((p) =>
+          p.map((x) => (Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x)),
+        ),
       };
     });
 

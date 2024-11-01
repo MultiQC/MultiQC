@@ -25,7 +25,18 @@ class BoxPlot extends Plot {
 
   prepDataForLlm() {
     let [data, samples] = this.prepData();
-    return JSON.stringify([data, samples], null, 2);
+    data = data.map((d) => d.map((x) => (Number.isInteger(x) ? x : Number.isFinite(x) ? parseFloat(x.toFixed(2)) : x)));
+
+    return (
+      "Samples: " +
+      samples.join(", ") +
+      "\n\n" +
+      data
+        .map((values, idx) => {
+          return samples[idx] + " " + values.map((p) => "(" + p.join(": ") + ")").join(", ");
+        })
+        .join("\n\n")
+    );
   }
 
   resize(newHeight) {

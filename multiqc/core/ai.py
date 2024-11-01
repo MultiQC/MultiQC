@@ -223,6 +223,8 @@ class SeqeraClient(Client):
                 json={
                     "system_message": PROMPT,
                     "report_data": report_content,
+                    "model": config.ai_model,
+                    "multiqc_version": config.version,
                     "response_schema": {
                         "name": "Interpretation",
                         "description": "Interpretation of a MultiQC report",

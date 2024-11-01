@@ -97,6 +97,7 @@ $(function () {
       let seqeraWebsite = el.data("seqera-website");
       let llmProvider = el.data("llm-provider");
       let llmModel = el.data("llm-model");
+      let multiqcVersion = el.data("multiqc-version");
       let plot = mqc_plots[plotAnchor];
       let formattedData = plot.prepDataForLlm();
 
@@ -155,6 +156,7 @@ ${formattedData}
           system_message: prompt,
           report_data: reportData,
           model: llmModel,
+          multiqc_version: multiqcVersion,
           response_schema: {
             name: "Interpretation",
             description: "Interpretation of a MultiQC section",

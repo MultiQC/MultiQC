@@ -49,7 +49,7 @@ class BarPlot extends Plot {
         cats
           .map((cat) => {
             let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
-            return Number.isInteger(val) ? val : val.toFixed(2);
+            return Number.isInteger(val) ? val : Number.isFinite(val) ? parseFloat(val.toFixed(2)) : val;
           })
           .join(" | ") +
         " |\n";
