@@ -180,12 +180,12 @@ class LangchainClient(Client):
 
 
 class OpenAiClient(LangchainClient):
-    def __init__(self, token: str):
+    def __init__(self, token: str, model: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
         super().__init__()
         self.name = "OpenAI"
-        self.model = "gpt-4o"
+        self.model = model
         self.llm = ChatOpenAI(
             model=self.model,
             api_key=SecretStr(token),
@@ -194,12 +194,12 @@ class OpenAiClient(LangchainClient):
 
 
 class AnthropicClient(LangchainClient):
-    def __init__(self, token: str):
+    def __init__(self, token: str, model: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
         super().__init__()
         self.name = "Anthropic"
-        self.model = "claude-3-5-sonnet-20240620"
+        self.model = model
         self.llm = ChatAnthropic(
             model=self.model,  # type: ignore
             api_key=SecretStr(token),
@@ -208,10 +208,11 @@ class AnthropicClient(LangchainClient):
 
 
 class SeqeraClient(Client):
-    def __init__(self, token: str):
+    def __init__(self, token: str, model: str):
         super().__init__()
         self.name = "Seqera AI"
         self.token = token
+        self.model = model
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
@@ -223,7 +224,7 @@ class SeqeraClient(Client):
                 json={
                     "system_message": PROMPT,
                     "report_data": report_content,
-                    "model": config.ai_model,
+                    "model": self.model,
                     "multiqc_version": config.version,
                     "response_schema": {
                         "name": "Interpretation",
@@ -270,7 +271,7 @@ def get_llm_client() -> Optional[Client]:
                 "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
             )
             return None
-        return SeqeraClient(token)
+        return SeqeraClient(token, config.ai_model)
 
     if config.ai_provider == "anthropic":
         token = os.environ.get("ANTHROPIC_API_KEY")
@@ -280,7 +281,8 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        return AnthropicClient(token)
+        model = config.ai_model if config.ai_model.startswith("claude") else "claude-3-5-sonnet-20240620"
+        return AnthropicClient(token, model)
 
     if config.ai_provider == "openai":
         token = os.environ.get("OPENAI_API_KEY")
@@ -290,7 +292,8 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
             return None
-        return OpenAiClient(token)
+        model = config.ai_model if config.ai_model.startswith("gpt") else "gpt-4o"
+        return OpenAiClient(token, model)
 
     return None
 
