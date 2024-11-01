@@ -352,10 +352,6 @@ Plot type: {plot.plot_type}
 
     interpretation: InterpretationOutput = response.interpretation
 
-    disclaimer = f"This summary is AI-generated. Take with a grain of salt. LLM provider: {client.name}"
-    if client.model:
-        disclaimer += f", model: {client.model}"
-
     messages = [
         {"role": "user", "content": content},
         {"role": "assistant", "content": interpretation.format_text()},
@@ -416,6 +412,11 @@ Plot type: {plot.plot_type}
         </svg>
     </span>
     """
+
+    disclaimer = f"This summary is AI-generated. Take with a grain of salt. Provider: {client.name}"
+    if client.model:
+        disclaimer += f", model: {client.model}"
+
     report.ai_summary = f"""
     <details>
     <summary>

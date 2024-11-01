@@ -65,6 +65,8 @@ the output from each module and print it in sections.
                     data-seqera-api-url="{{ report.seqera_api_url }}"
                     data-seqera-api-token="{{ report.seqera_api_token }}"
                     data-seqera-website="{{ report.seqera_website }}"
+                    data-llm-provider="Seqera AI"
+                    data-llm-model="{{ config.ai_model }}"
                     aria-expanded="false" 
                     aria-controls="{{ s['anchor'] }}_ai_summary"
                 >
@@ -89,6 +91,7 @@ the output from each module and print it in sections.
                 <details>
                   <summary></summary>
                   <div class="ai-summary-extra-content"></div>
+                  <p class="ai-disclaimer" style="color: gray; font-style: italic"></p>
                 </details>
                 <div class="mqc-table-expand ai-summary-expand">
                   <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>

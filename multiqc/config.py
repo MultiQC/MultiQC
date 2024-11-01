@@ -111,7 +111,8 @@ export_plots: bool
 make_report: bool
 make_pdf: bool
 ai_summary: bool
-ai_provider: Literal["openai", "anthropic", "seqera"]
+ai_provider: Literal["seqera", "openai", "anthropic"]
+ai_model: str
 
 plots_force_flat: bool
 plots_export_font_scale: float

@@ -95,6 +95,8 @@ $(function () {
       let seqeraApiUrl = el.data("seqera-api-url");
       let seqeraApiToken = el.data("seqera-api-token");
       let seqeraWebsite = el.data("seqera-website");
+      let llmProvider = el.data("llm-provider");
+      let llmModel = el.data("llm-model");
       let plot = mqc_plots[plotAnchor];
       let formattedData = plot.prepDataForLlm();
 
@@ -152,6 +154,7 @@ ${formattedData}
         body: JSON.stringify({
           system_message: prompt,
           report_data: reportData,
+          model: llmModel,
           response_schema: {
             name: "Interpretation",
             description: "Interpretation of a MultiQC section",
@@ -221,6 +224,11 @@ ${formattedData}
       $("#" + sectionAnchor + "_ai_summary .ai-summary-extra-content").html(`
         ${detailedSummaryHtml ? `<p><b>Detailed summary</b><br>${detailedSummaryHtml}</p>` : ""}
         ${recommendationsHtml ? `<p><b>Recommendations</b><br>${recommendationsHtml}</p>` : ""}
+     `);
+
+      $("#" + sectionAnchor + "_ai_summary .ai-disclaimer").html(`
+        This summary is AI-generated. Take with a grain of salt. 
+        Provider: ${llmProvider}, model: ${llmModel}
       `);
 
       $("#" + sectionAnchor + "_ai_summary").show();
