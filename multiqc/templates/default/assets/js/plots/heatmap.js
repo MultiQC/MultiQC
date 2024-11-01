@@ -42,6 +42,11 @@ class HeatmapPlot extends Plot {
     return [rows, xcats, ycats];
   }
 
+  prepDataForLlm() {
+    let [rows, xcats, ycats] = this.prepData();
+    return "```\n" + JSON.stringify([rows, xcats, ycats], null, 2) + "\n```";
+  }
+
   buildTraces() {
     let [rows, xcats, ycats] = this.prepData();
     if (rows.length === 0 || xcats.length === 0 || ycats.length === 0) return [];

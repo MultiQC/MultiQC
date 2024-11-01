@@ -75,6 +75,26 @@ class ViolinPlot extends Plot {
     ];
   }
 
+  prepDataForLlm() {
+    let [
+      metrics,
+      headerByMetric,
+      allSamples,
+      sampleSettings,
+      violinValuesBySampleByMetric,
+      scatterValuesBySampleByMetric,
+    ] = this.prepData();
+    let prompt = "| Metric | " + allSamples.join(" | ") + " |\n";
+    prompt += "| --- | " + allSamples.map(() => "---").join(" | ") + " |\n";
+    metrics.forEach((metric) => {
+      prompt +=
+        `| ${headerByMetric[metric].title} | ` +
+        allSamples.map((sample) => violinValuesBySampleByMetric[metric][sample]).join(" | ") +
+        " |\n";
+    });
+    return prompt;
+  }
+
   // Constructs and returns traces for the Plotly plot
   buildTraces() {
     let dataset = this.datasets[this.activeDatasetIdx];

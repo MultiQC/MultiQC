@@ -23,6 +23,11 @@ class BoxPlot extends Plot {
     return [data, samples];
   }
 
+  prepDataForLlm() {
+    let [data, samples] = this.prepData();
+    return JSON.stringify([data, samples], null, 2);
+  }
+
   resize(newHeight) {
     this.layout.height = newHeight;
 

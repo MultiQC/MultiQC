@@ -22,6 +22,29 @@ class LinePlot extends Plot {
     return [samples, lines];
   }
 
+  prepDataForLlm() {
+    // Prepare data to be sent to the LLM. LLM doesn't need things like colors, etc.
+    let dataset = this.datasets[this.activeDatasetIdx];
+
+    let lines = dataset.lines.map((line) => {
+      return {
+        name: line.name,
+        pairs: line.pairs.map((p) => p.map((x) => (Number.isInteger(x) ? x : x.toFixed(2)))),
+      };
+    });
+
+    return (
+      "Samples: " +
+      lines.map((line) => line.name).join(", ") +
+      "\n\n" +
+      lines
+        .map((line) => {
+          return line.name + " " + line.pairs.map((p) => "(" + p.join(": ") + ")").join(", ");
+        })
+        .join("\n\n")
+    );
+  }
+
   buildTraces() {
     let dataset = this.datasets[this.activeDatasetIdx];
 

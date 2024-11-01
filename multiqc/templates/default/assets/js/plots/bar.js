@@ -33,6 +33,31 @@ class BarPlot extends Plot {
     return [cats, samples];
   }
 
+  prepDataForLlm() {
+    let cats = this.datasets[this.activeDatasetIdx]["cats"];
+    let samples = this.datasets[this.activeDatasetIdx]["samples"];
+
+    // Create header row
+    let prompt = "| Sample | " + cats.map((cat) => cat.name).join(" | ") + " |\n";
+    // Create separator row
+    prompt += "| --- | " + cats.map(() => "---").join(" | ") + " |\n";
+
+    // Create data rows
+    samples.forEach((sample, idx) => {
+      prompt +=
+        `| ${sample} | ` +
+        cats
+          .map((cat) => {
+            let val = this.pActive ? cat.data_pct[idx] : cat.data[idx];
+            return Number.isInteger(val) ? val : val.toFixed(2);
+          })
+          .join(" | ") +
+        " |\n";
+    });
+
+    return prompt;
+  }
+
   resize(newHeight) {
     this.layout.height = newHeight;
 
