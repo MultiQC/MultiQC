@@ -1,7 +1,6 @@
-from typing import Dict
-
+from typing import Dict, Union
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
+from multiqc.plots import table
 import logging
 
 log = logging.getLogger(__name__)
@@ -16,23 +15,101 @@ class MultiqcModule(BaseMultiqcModule):
             info="Haplocheck detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
             doi=["10.1101/gr.256545.119"],
         )
-        self.haplocheck_data: Dict = dict()
+        haplocheck_data: Dict = dict()
 
-        for f in self.find_log_files("haplocheck", filehandles=True):
-            self.parse_logs(f)
+        for f in self.find_log_files("haplocheck"):
+            haplocheck_data = self.parse_logs(f)
+            print(haplocheck_data)
 
-        self.haplocheck_data = self.ignore_samples(self.haplocheck_data)
+        haplocheck_data = self.ignore_samples(haplocheck_data)
 
-        if len(self.haplocheck_data) == 0:
+        if len(haplocheck_data) == 0:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.haplocheck_data)} reports")
+        log.info(f"Found {len(haplocheck_data)} Haplocheck reports")
 
         # Write data to file
-        self.write_data_file(self.haplocheck_data, "haplocheck")
+        self.write_data_file(haplocheck_data, "multiqc_haplocheck")
 
-        # trigger plots and gen stats
-        ## TODO here
+        self.add_software_version(None)
 
-    def parse_logs(self, f):
-        pass
+        # Configuration for Haplocheck Table
+        config_table = {
+            "id": "haplocheck",
+            "title": "Haplocheck",
+        }
+
+        # Headers dictionary for Contamination Data
+        headers = {
+            "Contamination Status": {
+                "title": "Contamination Status",
+                "description": "Indicates whether contamination was detected in the sample.",
+                "namespace": "haplocheck",
+                "scale": False,
+            },
+            "Contamination Level": {
+                "title": "Contamination Level",
+                "description": "Estimated level of contamination (if applicable).",
+                "namespace": "haplocheck",
+                "min": 0,
+                "scale": "Oranges",
+                "format": "{:,.2f}",
+            },
+            "Distance": {
+                "title": "Distance",
+                "description": "Genomic distance value associated with contamination.",
+                "namespace": "haplocheck",
+                "min": 0,
+                "scale": "Greens",
+                "format": "{:,.0f}",
+            },
+            "Sample Coverage": {
+                "title": "Sample Coverage",
+                "description": "The total coverage of the sample sequence.",
+                "namespace": "haplocheck",
+                "min": 0,
+                "scale": "Blues",
+                "format": "{:,.0f}",
+            },
+        }
+
+        self.add_section(
+            name="Haplocheck",
+            anchor="haplocheck",
+            description='<a href="https://github.com/genepi/haplocheck/" target="_blank">Haplocheck</a>'
+            " detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
+            plot=table.plot(data=haplocheck_data, headers=headers, pconfig=config_table),
+        )
+
+        for header in headers.values():
+            header["hidden"] = True
+        headers["Contamination Status"]["hidden"] = False
+
+        self.general_stats_addcols(haplocheck_data, headers)
+
+    def parse_logs(self, f: str) -> Dict[str, Dict[str, Union[float, str]]]:
+        parsed_data: Dict[str, Dict[str, Union[float, str]]] = {}
+        file_content = f["f"]
+        lines = file_content.strip().splitlines()
+
+        # Assuming the first line contains headers
+        headers = [header.strip().replace('"', "") for header in lines[0].strip().split("\t")[1:]]
+
+        for line in lines[1:]:
+            columns = line.strip().split("\t")
+            sample_name = columns[0]  # First column is the sample name
+            s_name = sample_name.replace("_haplocheck", "").replace('"', "")  # Clean sample name and remove quotes
+            values = columns[1:]
+            self.add_data_source(f, s_name)
+
+            # Map headers to values for this sample
+            parsed_data[s_name] = {
+                key: (
+                    float(value.strip().replace('"', ""))
+                    if value.strip().replace('"', "").replace(".", "", 1).isdigit()
+                    else value.strip().replace('"', "")
+                )
+                for key, value in zip(headers, values)
+            }
+
+        return parsed_data

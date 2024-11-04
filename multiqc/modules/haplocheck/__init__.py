@@ -1,3 +1,3 @@
-from .mymodule import MultiqcModule
+from .haplocheck import MultiqcModule
 
 __all__ = ["MultiqcModule"]
