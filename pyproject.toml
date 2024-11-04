@@ -123,6 +123,7 @@ eigenstratdatabasetools = "multiqc.modules.eigenstratdatabasetools:MultiqcModule
 fastp = "multiqc.modules.fastp:MultiqcModule"
 fastq_screen = "multiqc.modules.fastq_screen:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
+fastqe = "multiqc.modules.fastqe:MultiqcModule"
 featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
 flash = "multiqc.modules.flash:MultiqcModule"

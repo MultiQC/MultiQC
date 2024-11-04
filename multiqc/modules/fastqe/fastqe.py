@@ -81,3 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
                 plot_data.append({"name": s_name, "qualities": f'<code style="white-space:nowrap;">{d["mean"]}</code>'})
 
         return {"id": "fastqe_quality_plot", "plot_type": "html", "data": plot_data}
+
+    # TODO Add to general stats table?
+    # TODO Add section?
+    # TODO Add test data to test-data repo
