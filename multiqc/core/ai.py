@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 import requests
 
 from pydantic.types import SecretStr
-from dotenv import load_dotenv
 
 from multiqc import config, report
 from multiqc.core.log_and_rich import run_with_spinner
@@ -19,8 +18,6 @@ from multiqc.types import PlotType
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel  # type: ignore
 
-
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 

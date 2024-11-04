@@ -32,6 +32,7 @@ from typing import (
     Union,
 )
 
+from dotenv import load_dotenv
 import yaml
 from pydantic import BaseModel, Field
 
@@ -53,6 +54,8 @@ from multiqc.utils.util_functions import (
     replace_defaultdicts,
     rmtree_with_retries,
 )
+
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
