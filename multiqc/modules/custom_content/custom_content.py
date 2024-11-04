@@ -154,9 +154,9 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "section_name": f["s_name"].replace("_", " ").replace("-", " ").replace(".", " "),
                     "data": img_html,
                 }
-                # # If the search pattern 'k' has an associated custom content section config, use it:
-                # if config_custom_data_id in ccdict_by_id:
-                #     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)
+                # If the search pattern 'k' has an associated custom content section config, use it:
+                if config_custom_data_id in ccdict_by_id:
+                    parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
             elif f_extension == ".html":
                 parsed_dict = {"id": f["s_name"], "plot_type": "html", "data": str(f["f"])}
                 parsed_dict.update(_find_html_file_header(f))
@@ -529,13 +529,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Raw HTML
             elif plot_type == PlotType.HTML:
-                if len(ccdict.data) > 1:
+                if isinstance(ccdict.data, list) and len(ccdict.data) > 1:
                     log.warning(f"HTML plot type found with more than one dataset in {section_id}")
                 content = cast(str, ccdict.data)
 
             # Raw image file as html
             elif plot_type == PlotType.IMAGE:
-                if len(ccdict.data) > 1:
+                if isinstance(ccdict.data, list) and len(ccdict.data) > 1:
                     log.warning(f"Image plot type found with more than one dataset in {section_id}")
                 content = cast(str, ccdict.data)
 

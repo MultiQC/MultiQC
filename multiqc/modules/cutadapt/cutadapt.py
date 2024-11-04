@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         with open(path, "r") as fh:
             data = json.load(fh)
 
-        s_name = SampleName(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path")], f=f))
+        s_name = SampleName(self.clean_s_name([v for k, v in data["input"].items() if k.startswith("path") and v], f=f))
         if s_name in self.cutadapt_data:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -162,6 +162,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             for read in ["read1", "read2"]:
                 if f"input_{read}" not in data["basepair_counts"]:
+                    continue
+                if not data[f"adapters_{read}"]:
                     continue
                 for adapter_data in data[f"adapters_{read}"]:
                     end_data = adapter_data.get(end_key)
