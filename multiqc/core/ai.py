@@ -205,10 +205,9 @@ class AnthropicClient(LangchainClient):
 
 
 class SeqeraClient(Client):
-    def __init__(self, token: str, model: str):
+    def __init__(self, model: str):
         super().__init__()
         self.name = "Seqera AI"
-        self.token = token
         self.model = model
 
     def interpret_report(self, report_content: str) -> Optional[InterpretationResponse]:
@@ -217,7 +216,7 @@ class SeqeraClient(Client):
                 f"{report.seqera_api_url}/interpret-multiqc-report-with-token"
                 if report.seqera_api_token
                 else f"{report.seqera_api_url}/interpret-multiqc-report",
-                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
+                headers={"Authorization": f"Bearer {report.seqera_api_token}"} if report.seqera_api_token else {},
                 json={
                     "system_message": PROMPT,
                     "report_data": report_content,
@@ -261,14 +260,12 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        token = report.seqera_api_token
-        if not token:
-            logger.error(
+        if not report.seqera_api_token:
+            logger.warning(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
                 "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
             )
-            return None
-        return SeqeraClient(token, config.ai_model)
+        return SeqeraClient(config.ai_model)
 
     if config.ai_provider == "anthropic":
         token = os.environ.get("ANTHROPIC_API_KEY")
