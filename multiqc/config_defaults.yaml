@@ -60,6 +60,7 @@ export_plots: false
 make_report: true
 make_pdf: false
 ai_summary: false
+ai_summary_full: false
 ai_provider: "anthropic" # or "openai" or "seqera"
 ai_model: "claude-3-5-sonnet-20241022"
 

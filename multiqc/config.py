@@ -111,6 +111,7 @@ export_plots: bool
 make_report: bool
 make_pdf: bool
 ai_summary: bool
+ai_summary_full: bool
 ai_provider: Literal["seqera", "openai", "anthropic"]
 ai_model: str
 
