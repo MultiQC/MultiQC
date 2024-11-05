@@ -20,8 +20,8 @@ function markdownToHtml(text) {
   return html;
 }
 
-function continueInChatHandler() {
-  let el = $(this);
+window.continueInChatHandler = function (event) {
+  let el = $(event.currentTarget);
   let seqeraWebsite = el.data("seqera-website");
 
   // Either report uuid, or encoded system and chat messages
@@ -52,10 +52,8 @@ function continueInChatHandler() {
     }
     setTimeout(sendMessage, 2000);
   }
-}
+};
 $(function () {
-  $(".ai-continue-in-chat").click(continueInChatHandler);
-
   // Add "Show More" button to AI summary
   $(".ai-summary").each(function () {
     const $details = $(this).find("details");
@@ -209,6 +207,7 @@ ${formattedData}
             <button class='btn btn-default btn-sm ai-continue-in-chat'
                 data-report-uuid="${result.uuid}"
                 data-seqera-website="${seqeraWebsite}"
+                onclick="continueInChatHandler(event)"
             >Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>`;
       }
 
@@ -273,6 +272,4 @@ ${formattedData}
     $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
-
-  $(".ai-continue-in-chat").click(continueInChatHandler);
 });

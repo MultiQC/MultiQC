@@ -375,6 +375,7 @@ Plot type: {plot.plot_type}
             + f" data-report-uuid={response.uuid}"
             + f" data-seqera-website={report.seqera_website}"
             + f" {seqera_api_token}"
+            + " onclick='continueInChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
     else:
@@ -384,6 +385,7 @@ Plot type: {plot.plot_type}
             + f" data-encoded-chat-messages={encoded_chat_messages}"
             + f" data-seqera-website={report.seqera_website}"
             + f" {seqera_api_token}"
+            + " onclick='continueInChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
 
