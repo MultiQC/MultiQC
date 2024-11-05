@@ -36,8 +36,10 @@ give a very short and concise overall summary for the results. Don't waste words
 the important QC issues. If there are no issues, just say so. Limit it to 1-2 bullet points.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
-.text-green, .text-red, and .text-yellow to highlight the severity of the issue, e.g.
-:sample[A1001.2003]{.text-yellow} for sample names, or :span[39.2%]{.text-red} for other text spans like values.
+.text-green, .text-red, and .text-yellow to highlight the severity of the number, e.g. 
+:span[39.2%]{.text-red}. If a value corresponds to a sample name or a sample prefix/suffix, 
+add it in a `sample` directive, using the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}.
 
 After the summary, add a more detailed summary (detailed_summary). Highlight sample names with
 the pre-defined classes as well.
@@ -351,15 +353,6 @@ Plot type: {plot.plot_type}
 
     interpretation: InterpretationOutput = response.interpretation
 
-    messages = [
-        {"role": "user", "content": content},
-        {"role": "assistant", "content": interpretation.format_text()},
-    ]
-    messages_json = json.dumps(messages)
-    encoded_chat_messages = base64.b64encode(messages_json.encode("utf-8")).decode("utf-8")
-    encoded_system_message = base64.b64encode(PROMPT.encode("utf-8")).decode("utf-8")
-    seqera_api_token = f"data-seqera-api-token={report.seqera_api_token} " if report.seqera_api_token else ""
-
     sparkle_icon = """
     <span style="vertical-align: middle">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -370,6 +363,7 @@ Plot type: {plot.plot_type}
     """
 
     if response.uuid:
+        seqera_api_token = f"data-seqera-api-token={report.seqera_api_token} " if report.seqera_api_token else ""
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm ai-continue-in-chat'"
             + f" data-report-uuid={response.uuid}"
@@ -379,16 +373,7 @@ Plot type: {plot.plot_type}
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
         )
     else:
-        continue_chat_btn = (
-            "<button class='btn btn-default btn-sm ai-continue-in-chat'"
-            + f" data-encoded-system-message={encoded_system_message}"
-            + f" data-encoded-chat-messages={encoded_chat_messages}"
-            + f" data-seqera-website={report.seqera_website}"
-            + f" {seqera_api_token}"
-            + " onclick='continueInChatHandler(event)'"
-            + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
-        )
-
+        continue_chat_btn = ""
     recommendations = ""
     if interpretation.recommendations:
         recommendations = dedent(f"""
