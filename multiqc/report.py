@@ -103,7 +103,7 @@ plot_compressed_json: str
 
 # AI stuff
 ai_summary: str = ""  # set in ai.py
-seqera_api_token: str | None = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+seqera_api_token: Optional[str] = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
 seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
 seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
 
