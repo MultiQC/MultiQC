@@ -525,7 +525,7 @@ Plot type: {plot.plot_type}
         report.ai_summary = f"""
         <details>
         <summary>
-        <div style="display: flex; justify-content: space-between; align-items: center">
+        <div class="ai-summary-header">
             <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b>
             {continue_chat_btn}
         </div>
@@ -543,7 +543,8 @@ Plot type: {plot.plot_type}
         generate_more_button = f"""
         <button 
             class="btn btn-sm btn-default ai-generate-more" 
-            data-ai-provider="{config.ai_provider}"
+            data-seqera-api-url="{report.seqera_api_url}"
+            data-ai-provider-title="{client.title}"
             data-ai-model="{client.model}"
             data-ai-token="{client.token}"
             data-content-base64="{content_base64}"
@@ -555,8 +556,10 @@ Plot type: {plot.plot_type}
 
         report.ai_summary = f"""
         <div class="ai-short-summary">
-        <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b> 
-        <span class="ai-summary-disclaimer">&nbsp;Provider: {client.title}, model: {client.model}</span>
+        <div class="ai-summary-header">
+            <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b> 
+            <span class="ai-summary-disclaimer">&nbsp;Provider: {client.title}, model: {client.model}</span>
+        </div>
         {interpretation.markdown_to_html(interpretation.summary)}
         </div>
         {generate_more_button}

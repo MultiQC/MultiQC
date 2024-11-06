@@ -1084,6 +1084,13 @@ tr.row-empty {
   list-style: none; /* Removes default marker in some browsers */
 }
 
+.ai-summary .ai-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .ai-summary .ai-short-summary {
   margin-bottom: 8px;
 }
@@ -1100,6 +1107,8 @@ tr.row-empty {
 
 .ai-summary ul {
   margin: 0;
+  margin-top: -5px;
+  margin-bottom: 5px;
   list-style: disc outside;
 }
 .ai-summary li {
@@ -1135,9 +1144,12 @@ tr.row-empty {
 .ai-summary sample:hover {
   opacity: 0.9;
 }
-.ai-summary .ai-generate-more {
+.ai-summary button.ai-generate-more {
   margin-left: -4px;
   padding: 3px 8px;
+  margin-bottom: 10px;
+}
+.ai-summary .ai-detailed-summary {
   margin-bottom: 10px;
 }
 
