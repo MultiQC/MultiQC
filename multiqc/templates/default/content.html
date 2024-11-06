@@ -49,11 +49,12 @@ the output from each module and print it in sections.
               </button>
             {% endif %}
             <div class="mqc-section mqc-section-{{ m.anchor }}" id="mqc-section-wrapper-{{ s['anchor'] }}">
-              {% if s['name'] is not none and s['name'] | length > 0 %}
               <h3 id="{{ s['anchor'] }}">
-                {{ s['name'] }}
+                {% if s['name'] is not none and s['name'] | length > 0 %}
+                  {{ s['name'] }}
+                {% endif %}
                 {% if s['plot_anchor'] is not none %}
-                <button 
+                  <button
                     class="btn btn-default btn-sm pull-right btn-ai-generate-summary" 
                     style="margin-left: 8px;"
                     type="button" 
@@ -86,8 +87,7 @@ the output from each module and print it in sections.
                     Help
                   </button>
                 {% endif %}
-                </h3>
-              {% endif %}
+              </h3>
               <div class="ai-summary" id="{{ s['anchor'] }}_ai_summary" style="display: none; margin-bottom: 7px">
                 <details>
                   <summary></summary>
