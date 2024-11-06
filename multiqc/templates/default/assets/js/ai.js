@@ -3,7 +3,7 @@
 ////////////////////////////////////////////////
 
 function markdownToHtml(text) {
-  if (!text) return null;
+  if (!text) return "";
 
   // Convert directives :span[text]{.text-color} -> <span>...
   text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, '<span class="text-$2">$1</span>');
@@ -15,9 +15,12 @@ function markdownToHtml(text) {
   );
 
   // Convert markdown to html
-  let converter = new showdown.Converter(),
-    html = converter.makeHtml(text);
-  return html;
+  try {
+    let converter = new showdown.Converter();
+    return converter.makeHtml(text);
+  } catch (e) {
+    return text;
+  }
 }
 
 window.continueInChatHandler = function (event) {
@@ -347,7 +350,6 @@ async function generateMoreHandler(event) {
   `;
 
   try {
-    // Start streaming request to Anthropic
     const response = await fetch(`${seqeraApiUrl}/invoke`, {
       method: "POST",
       headers: {
@@ -360,33 +362,47 @@ async function generateMoreHandler(event) {
         model: aiModel,
         tags: ["multiqc", "multiqc-generate-more"],
         stream: true,
+        cache: false,
       }),
     });
 
     // Handle streaming response
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let buffer = "";
+    let receievedText = "";
 
     while (true) {
       const { value, done } = await reader.read();
-      if (done) break;
 
-      // Decode chunk and handle SSE format
-      buffer += decoder.decode(value);
-
+      // Once we receive the first chunk, hide the button
       if (button) {
         button.hide();
         button = null;
       }
 
-      try {
-        const html = markdownToHtml(buffer);
+      if (done) {
+        detailedDiv.html(markdownToHtml(receievedText));
+        break;
+      }
+
+      // Decode chunk and add to buffer
+      const valueStr = decoder.decode(value);
+      receievedText += valueStr;
+
+      // Generation not yet complete, and we want to convert to HTML only complete lines.
+      // Thus rendering only when recieved a line break character.
+      if (valueStr.includes("\n")) {
+        // Split at the last line break, drop the remainder
+        const lines = receievedText.split("\n");
+        lines.pop();
+        const completedText = lines.join("\n");
+        // Process complete lines with markdown
+        const html = completedText.length > 0 ? markdownToHtml(completedText) : "";
+        // Add remainder as raw text
         detailedDiv.html(html);
-      } catch (e) {
-        detailedDiv.text(buffer);
       }
     }
+
     detailedDiv.append(`
       <span class="ai-summary-disclaimer">
         This summary is AI-generated. Provider: ${aiProviderTitle}, model: ${aiModel}
@@ -394,7 +410,7 @@ async function generateMoreHandler(event) {
     `);
   } catch (error) {
     console.error("Error generating detailed summary:", error);
-    detailedDiv.html("<span style='color: red'>Failed to generate details</span>");
+    detailedDiv.after($("<span style='color: red; font-style: italic;'>Error while generating details</span>"));
   }
 
   const endTime = performance.now();
