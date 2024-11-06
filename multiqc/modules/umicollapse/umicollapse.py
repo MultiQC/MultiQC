@@ -65,12 +65,12 @@ class MultiqcModule(BaseMultiqcModule):
         in_m = re.search(r"Arguments\t\[(\S+, )+-i, ([^,]+)", f["f"])
         if in_m:
             in_name = in_m.group(2)
-            return self.clean_s_name(in_name)
+            return self.clean_s_name(in_name, f)
 
         out_m = re.search(r"Arguments\t\[(\S+, )+-o, ([^,]+)", f["f"])
         if out_m:
             out_name = out_m.group(2)
-            return self.clean_s_name(out_name)
+            return self.clean_s_name(out_name, f)
 
         return f["s_name"]
 

@@ -8,7 +8,7 @@ description: Importing MultiQC as a library in scripts and notebooks
 Even though the primary way to run MultiQC is as a command line, it can also be imported
 like a Python module in order to build the report interactively,
 such as in custom Python scripts or in a Jupyter notebook environment
-(See an [example notebook](https://deploy-preview-94--multiqc.netlify.app/example-reports/jupyter/)).
+(See an [example notebook](https://multiqc.info/example-reports/jupyter/)).
 
 MultiQC provides a set of commands to iteratively parse logs and add sections to a report.
 All of them are available via importing MultiQC as a module:
@@ -20,7 +20,7 @@ import multiqc
 ## Parse logs
 
 Find files that MultiQC recognizes in `analysis_dir` and parse them, without generating a report.
-Data can be accessed with other methods: `list_modules`, `show_plot`, `get_summarized_data`, etc.
+Data can be accessed with other methods: `list_modules`, `list_plots`, etc.
 
 ```python
 def parse_logs(*analysis_dir, **kwargs)
@@ -275,7 +275,7 @@ plot = multiqc.get_plot("QUAST", "Number of Contigs")
 
 ## Show plot
 
-Show plot in the notebook cell.
+Prepare plot to be shown in the notebook cell.
 
 ```python
 class Plot:
@@ -295,7 +295,7 @@ Create a bar graph and show it in the notebook cell:
 ```python
 from multiqc.plots import bargraph
 plot = bargraph.plot(...)
-plot.show(violin=True)
+display(plot.show(violin=True))
 ```
 
 Get "fastp GC Content" plot and show it in the notebook cell. Since it has multiple
@@ -303,15 +303,19 @@ tabs, we can select which tab to show with the `dataset_id` option (defaults to 
 
 ```python
 plot = multiqc.get_plot("fastp", "GC Content")
-plot.show(dataset_id="Read 2: Before filtering")
+display(plot.show(dataset_id="Read 2: Before filtering"))
 ```
 
 Shows Samtools alignment stats as a violin plot. Use flat image without interactivity.
 
 ```python
 plot = multiqc.get_plot("Flagstat", "Alignment stats")
-plot.show("Read counts", violin=True, flat=True)
+display(plot.show("Read counts", violin=True, flat=True))
 ```
+
+:::note
+Calling the notebook's built-in `display` function is optional when the `show` call is the last line in your cell.
+:::
 
 ## Save plot to file
 
