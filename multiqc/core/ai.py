@@ -38,10 +38,10 @@ give a very short and concise overall summary for the results. Don't waste words
 the important QC issues. If there are no issues, just say so. Limit it to 1-2 bullet points.
 
 Use markdown to format your reponse for readability. Use directives with pre-defined classes
-.text-green, .text-red, and .text-yellow to highlight the severity of the number, e.g. 
-:span[39.2%]{.text-red}. If a value corresponds to a sample name or a sample prefix/suffix, 
-add it in a `sample` directive, using the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
-or :sample[A1001]{.text-yellow}.
+.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}. 
+Highlight any mentioned sample names or sample named prefixes or suffixes with a sample directive, 
+and make sure to use the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. Do not put multiple sample names inside one directive.
 
 Please do not add any extra headers to the response.
 """
