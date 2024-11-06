@@ -1,11 +1,9 @@
 import base64
-import json
 import logging
 import os
 import re
 from textwrap import dedent
 from typing import Dict, Optional, cast, TYPE_CHECKING
-from unittest import result
 from markdown import markdown
 from pydantic import BaseModel, Field
 import requests
@@ -21,6 +19,9 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
+seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")
 
 
 _PROMPT_BASE = """\
@@ -56,7 +57,7 @@ Two examples of short summaries:
 """
 
 _PROMPT_FULL_DETAILED_SUMMARY_INSTRUCTIONS = """
-Generate a more detailed summary of the results, and your recommendations for the next steps.
+Next, generate a more detailed summary of the results, and your recommendations for the next steps.
 
 Make sure to use a multiple of 4 spaces to indent nested lists.
 
@@ -104,12 +105,6 @@ PROMPT_SHORT = f"""\
 {_SHORT_EXAMPLE}
 """
 
-DETAIL_SUMMARY_PROMPT = f"""\
-{_PROMPT_FULL_DETAILED_SUMMARY_INSTRUCTIONS}
-
-{_EXAMPLE_DETAILED_SUMMARY}
-"""
-
 PROMPT_FULL = f"""\
 {_PROMPT_BASE}
 
@@ -117,7 +112,7 @@ PROMPT_FULL = f"""\
 
 {_EXAMPLE_SUMMARY_FOR_FULL}
 
-{DETAIL_SUMMARY_PROMPT}
+{_EXAMPLE_DETAILED_SUMMARY}
 """
 
 
@@ -162,9 +157,10 @@ class InterpretationResponse(BaseModel):
 
 
 class Client:
-    def __init__(self):
-        self.name: str
-        self.model: Optional[str] = None
+    def __init__(self, model: str, token: Optional[str]):
+        self.title: str
+        self.model: str = model
+        self.token: Optional[str] = token
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         raise NotImplementedError
@@ -174,9 +170,8 @@ class Client:
 
 
 class LangchainClient(Client):
-    def __init__(self):
-        self.name: str
-        self.model: str
+    def __init__(self, model: str, token: Optional[str]):
+        super().__init__(model, token)
         self.llm: BaseChatModel
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
@@ -207,7 +202,7 @@ class LangchainClient(Client):
             response = run_with_spinner("ai", "Interpreting MultiQC report...", send_request)
 
         if not response:
-            msg = f"Got empty response from the LLM {self.name} {self.model}"
+            msg = f"Got empty response from the LLM {self.title} {self.model}"
             if config.strict:
                 raise RuntimeError(msg)
             logger.error(msg)
@@ -250,7 +245,7 @@ class LangchainClient(Client):
                 logger.error(msg)
                 return None
             else:
-                msg = f"Got empty response from the LLM {self.name} {self.model}"
+                msg = f"Got empty response from the LLM {self.title} {self.model}"
                 if config.strict:
                     raise RuntimeError(msg)
                 logger.error(msg)
@@ -259,12 +254,11 @@ class LangchainClient(Client):
 
 
 class OpenAiClient(LangchainClient):
-    def __init__(self, token: str, model: str):
+    def __init__(self, model: str, token: str):
         from langchain_openai import ChatOpenAI  # type: ignore
 
-        super().__init__()
-        self.name = "OpenAI"
-        self.model = model
+        super().__init__(model, token)
+        self.title = "OpenAI"
         self.llm = ChatOpenAI(
             model=self.model,
             api_key=SecretStr(token),
@@ -273,12 +267,11 @@ class OpenAiClient(LangchainClient):
 
 
 class AnthropicClient(LangchainClient):
-    def __init__(self, token: str, model: str):
+    def __init__(self, model: str, token: str):
         from langchain_anthropic import ChatAnthropic  # type: ignore
 
-        super().__init__()
-        self.name = "Anthropic"
-        self.model = model
+        super().__init__(model, token)
+        self.title = "Anthropic"
         self.llm = ChatAnthropic(
             model=self.model,  # type: ignore
             api_key=SecretStr(token),
@@ -287,23 +280,20 @@ class AnthropicClient(LangchainClient):
 
 
 class SeqeraClient(Client):
-    def __init__(self, model: str):
-        super().__init__()
-        self.name = "Seqera AI"
-        self.model = model
+    def __init__(self, model: str, token: Optional[str]):
+        super().__init__(model, token)
+        self.title = "Seqera AI"
 
     def interpret_report_short(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{report.seqera_api_url}/interpret-multiqc-report-with-token"
-                if report.seqera_api_token
-                else f"{report.seqera_api_url}/interpret-multiqc-report",
-                headers={"Authorization": f"Bearer {report.seqera_api_token}"} if report.seqera_api_token else {},
+                f"{seqera_api_url}/invoke-with-token" if self.token else f"{seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT_SHORT,
-                    "report_data": report_content,
+                    "user_message": report_content,
                     "model": self.model,
-                    "multiqc_version": config.version,
+                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
                 },
             )
 
@@ -318,20 +308,25 @@ class SeqeraClient(Client):
             if config.strict:
                 raise RuntimeError(msg)
             return None
-        return InterpretationResponse(**response.json())
+
+        response_dict = response.json()
+        uuid = response_dict.get("uuid")
+        generation = response_dict.get("generation")
+        return InterpretationResponse(
+            uuid=uuid,
+            interpretation=InterpretationOutput(summary=generation),
+        )
 
     def interpret_report_full(self, report_content: str) -> Optional[InterpretationResponse]:
         def send_request() -> requests.Response:
             return requests.post(
-                f"{report.seqera_api_url}/interpret-multiqc-report-with-token"
-                if report.seqera_api_token
-                else f"{report.seqera_api_url}/interpret-multiqc-report",
-                headers={"Authorization": f"Bearer {report.seqera_api_token}"} if report.seqera_api_token else {},
+                f"{seqera_api_url}/invoke-with-token" if self.token else f"{seqera_api_url}/invoke",
+                headers={"Authorization": f"Bearer {self.token}"} if self.token else {},
                 json={
                     "system_message": PROMPT_FULL,
-                    "report_data": report_content,
+                    "user_message": report_content,
                     "model": self.model,
-                    "multiqc_version": config.version,
+                    "tags": ["multiqc", f"multiqc_version:{config.version}"],
                     "response_schema": {
                         "name": "Interpretation",
                         "description": "Interpretation of a MultiQC report",
@@ -362,7 +357,14 @@ class SeqeraClient(Client):
             if config.strict:
                 raise RuntimeError(msg)
             return None
-        return InterpretationResponse(**response.json())
+
+        response_dict = response.json()
+        uuid = response_dict.get("uuid")
+        generation: Dict[str, str] = response_dict.get("generation")
+        return InterpretationResponse(
+            uuid=uuid,
+            interpretation=InterpretationOutput(**generation),
+        )
 
 
 def get_llm_client() -> Optional[Client]:
@@ -370,12 +372,13 @@ def get_llm_client() -> Optional[Client]:
         return None
 
     if config.ai_provider == "seqera":
-        if not report.seqera_api_token:
+        token = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
+        if not token:
             logger.warning(
                 "config.ai_summary is set to true, and config.ai_provider is set to 'seqera', but Seqera tower access "
                 "token is not set. Please set the TOWER_ACCESS_TOKEN environment variable, or change config.ai_provider"
             )
-        return SeqeraClient(config.ai_model)
+        return SeqeraClient(config.ai_model, token)
 
     if config.ai_provider == "anthropic":
         token = os.environ.get("ANTHROPIC_API_KEY")
@@ -386,7 +389,7 @@ def get_llm_client() -> Optional[Client]:
             )
             return None
         model = config.ai_model if config.ai_model.startswith("claude") else "claude-3-5-sonnet-20240620"
-        return AnthropicClient(token, model)
+        return AnthropicClient(model, token)
 
     if config.ai_provider == "openai":
         token = os.environ.get("OPENAI_API_KEY")
@@ -397,7 +400,7 @@ def get_llm_client() -> Optional[Client]:
             )
             return None
         model = config.ai_model if config.ai_model.startswith("gpt") else "gpt-4o"
-        return OpenAiClient(token, model)
+        return OpenAiClient(model, token)
 
     return None
 
@@ -412,6 +415,10 @@ PLOT_TYPES_FOR_OVERALL_SUMMARY = [PlotType.TABLE.value, PlotType.BAR.value]
 def add_ai_summary_to_report():
     if not (client := get_llm_client()):
         return
+
+    report.ai_provider_title = client.title
+    report.ai_model = client.model
+    report.ai_token = client.token
 
     content: str = ""  # data formatted for the LLM
     if report.general_stats_plot:
@@ -451,7 +458,7 @@ Plot type: {plot.plot_type}
     # strip triple newlines
     content = re.sub(r"\n\n\n", "\n\n", content)
 
-    if config.ai_summary == "full":
+    if config.ai_summary_full:
         response: Optional[InterpretationResponse] = client.interpret_report_full(content)
     else:
         response: Optional[InterpretationResponse] = client.interpret_report_short(content)
@@ -474,11 +481,11 @@ Plot type: {plot.plot_type}
     """
 
     if response.uuid:
-        seqera_api_token = f"data-seqera-api-token={report.seqera_api_token} " if report.seqera_api_token else ""
+        seqera_api_token = f"data-seqera-api-token={client.token} " if client.token else ""
         continue_chat_btn = (
             "<button class='btn btn-default btn-sm ai-continue-in-chat'"
-            + f" data-report-uuid={response.uuid}"
-            + f" data-seqera-website={report.seqera_website}"
+            + f" data-generation-id={response.uuid}"
+            + f" data-seqera-website={seqera_website}"
             + f" {seqera_api_token}"
             + " onclick='continueInChatHandler(event)'"
             + f">Continue with {sparkle_icon} <strong>Seqera AI</strong></button>"
@@ -510,22 +517,47 @@ Plot type: {plot.plot_type}
     </span>
     """
 
-    disclaimer = f"This summary is AI-generated. Take with a grain of salt. Provider: {client.name}"
-    if client.model:
-        disclaimer += f", model: {client.model}"
+    if config.ai_summary_full:
+        disclaimer = f"This summary is AI-generated. Take with a grain of salt. Provider: {client.title}"
+        if client.model:
+            disclaimer += f", model: {client.model}"
 
-    report.ai_summary = f"""
-    <details>
-    <summary>
-    <div style="display: flex; justify-content: space-between; align-items: center">
-        <b>Report AI Summary {seqera_ai_beta_icon if client.name == 'Seqera AI' else ''}</b>
-        {continue_chat_btn}
-    </div>
-    {interpretation.markdown_to_html(interpretation.summary)}
-    </summary>
-    {detailed_summary}
-    {recommendations}
-    <p style="color: gray; font-style: italic">{disclaimer}</p>
-    </details>
-    <div class="mqc-table-expand ai-summary-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>
-    """
+        report.ai_summary = f"""
+        <details>
+        <summary>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+            <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b>
+            {continue_chat_btn}
+        </div>
+        {interpretation.markdown_to_html(interpretation.summary)}
+        </summary>
+        {detailed_summary}
+        {recommendations}
+        <p class="ai-summary-disclaimer">{disclaimer}</p>
+        </details>
+        <div class="mqc-table-expand ai-summary-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>
+        """
+    else:
+        content_base64 = base64.b64encode(content.encode()).decode()
+
+        generate_more_button = f"""
+        <button 
+            class="btn btn-sm btn-default ai-generate-more" 
+            data-ai-provider="{config.ai_provider}"
+            data-ai-model="{client.model}"
+            data-ai-token="{client.token}"
+            data-content-base64="{content_base64}"
+            onclick="generateMoreHandler(event)"
+        >
+            Generate more details
+        </button>
+        """
+
+        report.ai_summary = f"""
+        <div class="ai-short-summary">
+        <b>Report AI Summary {seqera_ai_beta_icon if client.title == 'Seqera AI' else ''}</b> 
+        <span class="ai-summary-disclaimer">&nbsp;Provider: {client.title}, model: {client.model}</span>
+        {interpretation.markdown_to_html(interpretation.summary)}
+        </div>
+        {generate_more_button}
+        """

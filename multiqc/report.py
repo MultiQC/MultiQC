@@ -101,8 +101,13 @@ general_stats_headers: List[Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
 plot_compressed_json: str
 
-# AI stuff
-ai_summary: str = ""  # set in ai.py
+# AI stuff, set dynamically in ai.py to be used in content.html and ai.js
+ai_summary: str = ""
+ai_provider_title: str = ""
+ai_model: str = ""
+ai_token: Optional[str] = None
+
+# For "Continue in Seqera AI" buttons defined in templates/default/content.html
 seqera_api_token: Optional[str] = os.environ.get("SEQERA_API_KEY", os.environ.get("TOWER_ACCESS_TOKEN"))
 seqera_api_url: str = os.environ.get("SEQERA_API_URL", "https://seqera.io")
 seqera_website: str = os.environ.get("SEQERA_WEBSITE", "https://seqera.io")

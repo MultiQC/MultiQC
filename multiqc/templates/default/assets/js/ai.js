@@ -25,13 +25,13 @@ window.continueInChatHandler = function (event) {
   let seqeraWebsite = el.data("seqera-website");
 
   // Either report uuid, or encoded system and chat messages
-  let reportUuid = el.data("report-uuid");
+  let generationId = el.data("generation-id");
   let encodedSystemMessage = el.data("encoded-system-message");
   let encodedChatMessages = el.data("encoded-chat-messages");
 
   let url = seqeraWebsite + "/ask-ai/";
-  if (reportUuid) {
-    url += "?multiqc-report-uuid=" + reportUuid;
+  if (generationId) {
+    url += "?generation-id=" + generationId;
   }
 
   const chatWindow = window.open(url, "_blank");
@@ -53,6 +53,7 @@ window.continueInChatHandler = function (event) {
     setTimeout(sendMessage, 2000);
   }
 };
+
 $(function () {
   // Add "Show More" button to AI summary
   $(".ai-summary").each(function () {
@@ -88,11 +89,12 @@ $(function () {
       let moduleAnchor = el.data("module-anchor");
       let sectionAnchor = el.data("section-anchor");
       let plotAnchor = el.data("plot-anchor");
-      let seqeraApiUrl = el.data("seqera-api-url");
-      let seqeraApiToken = el.data("seqera-api-token");
-      let seqeraWebsite = el.data("seqera-website");
-      let llmProvider = el.data("llm-provider");
-      let llmModel = el.data("llm-model");
+      let aiProvider = el.data("ai-provider");
+      let aiProviderTitle = el.data("ai-provider-title");
+      let aiModel = el.data("ai-model");
+      let aiToken = el.data("ai-token");
+      let seqeraApiUrl = el.data("seqera-api-url"); // if provider is Seqera
+      let seqeraWebsite = el.data("seqera-website"); // if provider is Seqera, for "continue in Seqera" button
       let multiqcVersion = el.data("multiqc-version");
       let plot = mqc_plots[plotAnchor];
       let formattedData = plot.prepDataForLlm();
@@ -142,17 +144,17 @@ Plot type: ${plot.plotType}. ${plot.plotDescription ? `\nPlot description: ${plo
 ${formattedData}
 `;
 
-      const response = await fetch(`${seqeraApiUrl}/interpret-multiqc-report`, {
+      const response = await fetch(`${seqeraApiUrl}/invoke`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(seqeraApiToken ? { Authorization: `Bearer ${seqeraApiToken}` } : {}),
+          ...(aiToken ? { Authorization: `Bearer ${aiToken}` } : {}),
         },
         body: JSON.stringify({
           system_message: prompt,
-          report_data: reportData,
-          model: llmModel,
-          multiqc_version: multiqcVersion,
+          user_message: reportData,
+          model: aiModel,
+          tags: ["multiqc", `multiqc_version:${multiqcVersion}`],
           response_schema: {
             name: "Interpretation",
             description: "Interpretation of a MultiQC section",
@@ -197,15 +199,15 @@ ${formattedData}
                 </svg>
             </span>`;
 
-      let summaryHtml = markdownToHtml(result.interpretation.summary);
-      let detailedSummaryHtml = markdownToHtml(result.interpretation.detailed_summary);
-      let recommendationsHtml = markdownToHtml(result.interpretation.recommendations);
+      let summaryHtml = markdownToHtml(result.generation.summary);
+      let detailedSummaryHtml = markdownToHtml(result.generation.detailed_summary);
+      let recommendationsHtml = markdownToHtml(result.generation.recommendations);
 
       let continueButton = "";
       if (result.uuid) {
         continueButton = `
             <button class='btn btn-default btn-sm ai-continue-in-chat'
-                data-report-uuid="${result.uuid}"
+                data-generation-id="${result.uuid}"
                 data-seqera-website="${seqeraWebsite}"
                 onclick="continueInChatHandler(event)"
             >Continue with ${sparkleIcon} <strong>Seqera AI</strong></button>`;
@@ -226,7 +228,7 @@ ${formattedData}
 
       $("#" + sectionAnchor + "_ai_summary .ai-disclaimer").html(`
         This summary is AI-generated. Take with a grain of salt. 
-        Provider: ${llmProvider}, model: ${llmModel}
+        Provider: ${aiProviderTitle}, model: ${aiModel}
       `);
 
       $("#" + sectionAnchor + "_ai_summary").show();
@@ -272,4 +274,167 @@ ${formattedData}
     $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
+});
+
+$(".ai-generate-more").click(function (e) {
+  e.preventDefault();
+  generateMoreHandler(e);
+});
+
+async function generateMoreHandler(event) {
+  event.preventDefault();
+  const button = $(event.currentTarget);
+  const summaryDiv = button.prev(".ai-short-summary");
+
+  const aiProvider = button.data("ai-provider");
+  const aiModel = button.data("ai-model");
+  const aiToken = button.data("ai-token");
+  const contentBase64 = button.data("content-base64");
+
+  // Disable button and show loading state
+  button.prop("disabled", true);
+  button.text("Generating...");
+
+  const apiEndpoint =
+    aiProvider === "anthropic"
+      ? "https://api.anthropic.com/v1/messages"
+      : aiProvider === "openai"
+        ? "https://api.openai.com/v1/chat/completions"
+        : null;
+
+  try {
+    // Create a new div for the detailed summary
+    const detailedDiv = $('<div class="ai-detailed-summary"></div>');
+    summaryDiv.after(detailedDiv);
+
+    // Create elements for streaming content
+    const detailsElement = $(
+      '<details open><summary><b>Detailed Analysis</b></summary><div class="content"></div></summary></details>',
+    );
+    detailedDiv.append(detailsElement);
+    const contentDiv = detailsElement.find(".content");
+
+    let systemPrompt = `\
+    You are an expert in bioinformatics, sequencing technologies, and genomics data analysis.
+    You are given findings from a MultiQC report, generated by a bioinformatics workflow.
+    MultiQC consists of so called modules that support different tools that output QC metrics
+    (e.g. bclconvert, FastQC, samtools stats, bcftools stats, fastp, Picard, SnpEff, etc), and
+    it aggregates results from different tools. It outputs a "General Statistics" section that
+    has a table with a summary of key metrics from all modules across each sample. That table
+    is followed by module-specific sections that usually have more detail on the same samples.
+
+    You are given data from such a report, split by section. Your task is to analyse the data, and
+    give an overall summary for the results. Don't waste words: mention only the important QC issues.
+    If there are no issues, just say so. Give a bullet-point list of main points of your analysis.
+    Follow with your recommendations for the next steps.
+
+    Use markdown to format your reponse for readability. Use directives with pre-defined classes
+    .text-green, .text-red, and .text-yellow to highlight the severity of the number, e.g. 
+    :span[39.2%]{.text-red}. If a value corresponds to a sample name or a sample prefix/suffix, 
+    add it in a sample directive, using the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
+    or :sample[A1001]{.text-yellow}.
+
+    Please do not add any extra headers to the response.
+
+    Make sure to use a multiple of 4 spaces to indent nested lists.
+
+    Example response:
+
+    *Analysis:*
+
+        - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
+        - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
+            - Extremely high duplicate rates (:span[65.54%]{.text-red} and :span[83.14%]{.text-red})
+            - Low percentages of valid pairs (:span[37.2%]{.text-red} and :span[39.2%]{.text-red})
+            - High percentages of failed modules in FastQC (:span[33.33%]{.text-red})
+            - Significantly higher total sequence counts (:span[141.9M]{.text-red} and :span[178.0M]{.text-red}) compared to other samples
+            - FastQC results indicate that :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} have a slight :span[GC content]{.text-red} bias at 39.5% against most other samples having 38.0%, which indicates a potential contamination that could be the source of other anomalies in quality metrics.
+
+        - :sample[A1002-1007]{.text-yellow} shows some quality concerns:
+            - Low percentage of valid pairs (:span[48.08%]{.text-yellow})
+            - Low percentage of passed Di-Tags (:span[22.51%]{.text-yellow})
+
+        - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
+        - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
+
+    *Recommendations:*
+
+        - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
+        - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
+        - Perform adapter trimming on all samples, particularly focusing on :sample[A1001]{.text-red} group.
+        - Re-run the Hi-C analysis pipeline after removing problematic samples and performing adapter trimming.
+        - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
+        - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
+    `;
+
+    // Start streaming request to Anthropic
+    const response = await fetch(apiEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": aiToken,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: aiModel,
+        max_tokens: 4096,
+        stream: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: atob(contentBase64) },
+        ],
+      }),
+    });
+
+    // Handle streaming response
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      // Decode chunk and handle SSE format
+      buffer += decoder.decode(value);
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const data = line.slice(6);
+          if (data === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+              const html = markdownToHtml(parsed.delta.text);
+              contentDiv.append(html);
+            }
+          } catch (e) {
+            console.error("Error parsing SSE message:", e);
+          }
+        }
+      }
+    }
+
+    // Add expand/collapse button
+    const expandBtn = $(
+      '<div class="mqc-table-expand ai-summary-expand"><span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span></div>',
+    );
+    detailedDiv.append(expandBtn);
+
+    // Hide original generate more button
+    button.hide();
+  } catch (error) {
+    console.error("Error generating detailed summary:", error);
+    button.text("Failed to generate details");
+  } finally {
+    button.prop("disabled", false);
+  }
+}
+
+// Add click handler for the generate more button
+$(".ai-generate-more").click(function (e) {
+  generateMoreHandler(e);
 });
