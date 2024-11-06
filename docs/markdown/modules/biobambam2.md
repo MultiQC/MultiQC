@@ -1,5 +1,6 @@
 ---
 title: biobambam2
+displayed_sidebar: multiqcSidebar
 description: >
   Tools for early stage alignment file processing
 ---

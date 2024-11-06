@@ -1,5 +1,6 @@
 ---
 title: phantompeakqualtools
+displayed_sidebar: multiqcSidebar
 description: >
   Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data
 ---

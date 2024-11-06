@@ -1,5 +1,6 @@
 ---
 title: BioBloom Tools
+displayed_sidebar: multiqcSidebar
 description: >
   Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection
 ---

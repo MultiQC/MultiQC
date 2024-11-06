@@ -1,5 +1,6 @@
 ---
 title: Long Ranger
+displayed_sidebar: multiqcSidebar
 description: >
   Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling
 ---

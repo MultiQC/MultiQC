@@ -1,5 +1,6 @@
 ---
 title: Conpair
+displayed_sidebar: multiqcSidebar
 description: >
   Estimates concordance and contamination for tumor–normal pairs
 ---

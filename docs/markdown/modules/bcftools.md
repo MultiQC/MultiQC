@@ -1,5 +1,6 @@
 ---
 title: Bcftools
+displayed_sidebar: multiqcSidebar
 description: >
   Utilities for variant calling and manipulating VCFs and BCFs
 ---

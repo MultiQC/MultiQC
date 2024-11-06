@@ -1,5 +1,6 @@
 ---
 title: Cell Ranger
+displayed_sidebar: multiqcSidebar
 description: >
   Analyzes single cell expression or VDJ data produced by 10X Genomics
 ---

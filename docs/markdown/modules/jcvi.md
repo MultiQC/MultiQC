@@ -1,5 +1,6 @@
 ---
 title: JCVI Genome Annotation
+displayed_sidebar: multiqcSidebar
 description: >
   Computes statistics on genome annotation
 ---

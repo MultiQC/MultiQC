@@ -1,5 +1,6 @@
 ---
 title: Freyja
+displayed_sidebar: multiqcSidebar
 description: >
   Recovers relative lineage abundances from mixed SARS-CoV-2 samples
 ---

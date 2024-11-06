@@ -1,5 +1,6 @@
 ---
 title: VEP
+displayed_sidebar: multiqcSidebar
 description: >
   Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions
 ---

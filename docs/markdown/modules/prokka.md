@@ -1,5 +1,6 @@
 ---
 title: Prokka
+displayed_sidebar: multiqcSidebar
 description: >
   Rapid annotation of prokaryotic genomes
 ---

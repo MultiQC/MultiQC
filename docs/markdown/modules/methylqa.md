@@ -1,5 +1,6 @@
 ---
 title: methylQA
+displayed_sidebar: multiqcSidebar
 description: >
   Methylation sequencing data quality assessment tool
 ---

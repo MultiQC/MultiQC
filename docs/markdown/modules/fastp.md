@@ -1,5 +1,6 @@
 ---
 title: fastp
+displayed_sidebar: multiqcSidebar
 description: >
   All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...)
 ---

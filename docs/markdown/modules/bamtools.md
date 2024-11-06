@@ -1,5 +1,6 @@
 ---
 title: Bamtools
+displayed_sidebar: multiqcSidebar
 description: >
   Provides both a programmer's API and an end-user's toolkit for handling BAM files
 ---

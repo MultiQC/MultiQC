@@ -109,7 +109,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 with (Path("docs") / "markdown" / "modules.mdx").open("w") as fh:
     fh.write(f"""\
 ---
-title: MultiQC Modules
+title: Supported Tools
 description: Tools supported by MultiQC
 displayed_sidebar: multiqcSidebar
 ---

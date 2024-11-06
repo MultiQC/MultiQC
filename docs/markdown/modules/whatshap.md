@@ -1,5 +1,6 @@
 ---
 title: WhatsHap
+displayed_sidebar: multiqcSidebar
 description: >
   Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)
 ---

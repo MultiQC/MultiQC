@@ -1,5 +1,6 @@
 ---
 title: Bowtie 2 / HiSAT2
+displayed_sidebar: multiqcSidebar
 description: >
   Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome
 ---

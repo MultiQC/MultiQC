@@ -1,5 +1,6 @@
 ---
 title: pbmarkdup
+displayed_sidebar: multiqcSidebar
 description: >
   Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates
 ---

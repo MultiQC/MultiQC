@@ -1,5 +1,6 @@
 ---
 title: Nonpareil
+displayed_sidebar: multiqcSidebar
 description: >
   Estimates metagenomic coverage and sequence diversity
 ---

@@ -1,5 +1,6 @@
 ---
 title: BISCUIT
+displayed_sidebar: multiqcSidebar
 description: >
   Maps bisulfite converted DNA sequence reads and determines cytosine methylation states
 ---

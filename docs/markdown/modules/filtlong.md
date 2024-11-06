@@ -1,5 +1,6 @@
 ---
 title: Filtlong
+displayed_sidebar: multiqcSidebar
 description: >
   Filters long reads by quality
 ---
