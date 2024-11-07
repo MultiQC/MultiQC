@@ -124,7 +124,7 @@ If you would like another tool to to be supported, please [open an issue](https:
 import MultiqcModules from "@site/src/components/MultiqcModules";
 
 <MultiqcModules
-  modules={str(json.dumps(modules_data))}
+  modules={{{str(json.dumps(modules_data))}}}
 />
 
 """)
